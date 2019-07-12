@@ -8,7 +8,6 @@ webpack.generated.js
 
 .idea/*
 *.iml
-/modules/m001/_data/webdrivers/
 config.properties
 
 # Created by .ignore support plugin (hsz.mobi)
@@ -178,3 +177,9 @@ operadriver-mac-64bit.version
 operadriver-mac-64bit/
 phantomjs-mac-64bit
 phantomjs-mac-64bit.version
+/flow-security/node/
+/flow-security/node_modules/
+/flow-security-test/node/
+/flow-security-test/node_modules/
+/node/
+/node_modules/
