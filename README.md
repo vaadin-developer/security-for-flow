@@ -5,8 +5,36 @@
 </center>
 
 
-# Nano Vaadin - Ramp up in a second.
-A nano project to start a Vaadin project. Perfect for Micro-UIs packed as fat jar in a docker image.
+# POC Vaadin Flow Security
+How to build different Security Aspects into a Flow Application.
+
+* Login
+* Free View and Restricted Views
+* MenuBar based on User-Roles/Rights
+* Components are visible based on User-Roles/Rights
+* 
+
+
+
+
+
+
+
+## Example/Pseudo Code
+
+```java
+@VisibleTo(UserRole.Admin, UserRole.Nerd)
+public class MyView extends Composite<Div>{}
+```
+
+```java
+@VisibleToDynamic(UserRole.Admin, UserRole.Nerd)
+public class MyView extends Composite<Div>{}
+```
+
+
+
+
 
 ## Supported JDK
 This example is running from JDK8 up to JDK13

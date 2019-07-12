@@ -24,12 +24,12 @@
   <parent>
     <groupId>org.rapidpm</groupId>
     <artifactId>rapidpm-dependencies</artifactId>
-    <version>04.01.01-RPM</version>
+    <version>04.01.02-RPM</version>
   </parent>
 
 
-  <groupId>org.rapidpm.vaadin</groupId>
-  <artifactId>nano-vaadin-jetty-kotlin-v10</artifactId>
+  <groupId>org.rapidpm.vaadin.poc</groupId>
+  <artifactId>flow-security</artifactId>
   <version>1.0.0-SNAPSHOT</version>
 
   <packaging>jar</packaging>
@@ -39,15 +39,15 @@
     <name>Vaadin</name>
     <url>http://www.vaadin.com</url>
   </organization>
-  <url>https://github.com/vaadin-developer/nano-vaadin-jetty-kotlin-v10</url>
+  <url>https://github.com/vaadin-developer/poc-flow-security</url>
 
   <scm>
-    <url>https://github.com/vaadin-developer/nano-vaadin-jetty-kotlin-v10</url>
+    <url>https://github.com/vaadin-developer/poc-flow-security</url>
     <connection>
-      scm:git:https://github.com/vaadin-developer/nano-vaadin-jetty-kotlin-v10.git
+      scm:git:https://github.com/vaadin-developer/poc-flow-security.git
     </connection>
     <developerConnection>
-      scm:git:https://github.com/vaadin-developer/nano-vaadin-jetty-kotlin-v10
+      scm:git:https://github.com/vaadin-developer/poc-flow-security
     </developerConnection>
     <tag>HEAD</tag>
   </scm>
@@ -64,7 +64,7 @@
   <issueManagement>
     <system>Github</system>
     <url>
-      https://github.com/vaadin-developer/nano-vaadin-jetty-kotlin-v10/issues
+      https://github.com/vaadin-developer/poc-flow-security/issues
     </url>
   </issueManagement>
   <licenses>
@@ -80,29 +80,38 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <compiler.target>11</compiler.target>
+    <jdk.version>1.8</jdk.version>
     <!--technical-->
-    <maven.compiler.release>${compiler.target}</maven.compiler.release>
-    <maven.compiler.target>${compiler.target}</maven.compiler.target>
-    <maven.compiler.source>${compiler.target}</maven.compiler.source>
+    <!--<maven.compiler.release>1.8</maven.compiler.release> &lt;!&ndash;release makes source and target&ndash;&gt;-->
+    <maven.compiler.source>${jdk.version}</maven.compiler.source> <!--redundant, but IntelliJ doesn't-->
+    <maven.compiler.target>${jdk.version}</maven.compiler.target> <!--use release when importing-->
+
+    <!--    <maven.compiler.testRelease>11</maven.compiler.testRelease>-->
+    <maven.compiler.testSource>${jdk.version}</maven.compiler.testSource>
+    <maven.compiler.testTarget>${jdk.version}</maven.compiler.testTarget>
 
     <!--Kotlin-->
-    <kotlin.compiler.jvmTarget>${compiler.target}</kotlin.compiler.jvmTarget>
-    <!--    <kotlin.version>1.3.40</kotlin.version>-->
+    <kotlin.compiler.jvmTarget>${jdk.version}</kotlin.compiler.jvmTarget>
+    <kotlin.version>1.3.41</kotlin.version>
     <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
 
     <!--Vaadin-->
     <vaadin.productionMode>true</vaadin.productionMode>
-    <vaadin.version>14.0.0.rc3</vaadin.version>
+    <vaadin.version>14.0.0.rc4</vaadin.version>
     <activateNodeJS_NPM>true</activateNodeJS_NPM>
     <frontend-maven-plugin.nodeVersion>v10.16.0</frontend-maven-plugin.nodeVersion>
     <frontend-maven-plugin.npmVersion>6.9.0</frontend-maven-plugin.npmVersion>
 
-    <jetty.version>9.4.18.v20190429</jetty.version>
+    <jetty.version>9.4.19.v20190610</jetty.version>
 
     <!--logging-->
     <slf4j.version>1.7.25</slf4j.version>
     <log4j-api.version>2.8.1</log4j-api.version>
+
+
+    <!--    APM-->
+    <opentracing-api.version>0.31.0</opentracing-api.version>
+
   </properties>
 
   <repositories>
@@ -221,6 +230,26 @@
       </exclusions>
     </dependency>
 
+    <dependency>
+      <groupId>org.rapidpm.vaadin</groupId>
+      <artifactId>id-generator-for-flow</artifactId>
+      <version>00.09.00-RPM</version>
+    </dependency>
+
+    <!--    APM-->
+    <dependency>
+      <groupId>org.stagemonitor</groupId>
+      <artifactId>stagemonitor-web-servlet</artifactId>
+      <version>0.88.9</version>
+    </dependency>
+
+    <dependency>
+      <groupId>net.bytebuddy</groupId>
+      <artifactId>byte-buddy</artifactId>
+      <version>1.8.11</version>
+    </dependency>
+
+
     <!--Logging-->
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -235,12 +264,12 @@
       <artifactId>kotlin-stdlib-jdk8</artifactId>
       <version>${kotlin.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.jetbrains.kotlin</groupId>
-      <artifactId>kotlin-test</artifactId>
-      <version>${kotlin.version}</version>
-      <scope>test</scope>
-    </dependency>
+    <!--    <dependency>-->
+    <!--      <groupId>org.jetbrains.kotlin</groupId>-->
+    <!--      <artifactId>kotlin-test</artifactId>-->
+    <!--      <version>${kotlin.version}</version>-->
+    <!--      <scope>test</scope>-->
+    <!--    </dependency>-->
   </dependencies>
 
   <build>

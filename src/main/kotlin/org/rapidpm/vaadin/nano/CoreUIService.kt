@@ -20,14 +20,16 @@ package org.rapidpm.vaadin.nano
 
 import org.eclipse.jetty.annotations.AnnotationConfiguration
 import org.eclipse.jetty.server.Server
+import org.eclipse.jetty.util.component.AbstractLifeCycle
+import org.eclipse.jetty.util.component.LifeCycle
 import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.webapp.*
 import org.rapidpm.dependencies.core.logger.HasLogger
 import org.rapidpm.frp.model.Result
-
+import org.rapidpm.frp.model.Result.failure
+import org.stagemonitor.web.servlet.initializer.ServletContainerInitializerUtil
 import java.lang.Integer.valueOf
 import java.lang.System.getProperty
-import org.rapidpm.frp.model.Result.failure
 
 /**
  *
@@ -53,6 +55,15 @@ class CoreUIService : HasLogger {
       val server = Server(valueOf(getProperty(CORE_UI_SERVER_PORT, CORE_UI_SERVER_PORT_DEFAULT)))
       server.handler = context
 
+//            Start APM
+      val servletHandler = context.servletHandler
+
+      servletHandler.addLifeCycleListener(object : AbstractLifeCycle.AbstractLifeCycleListener() {
+        override fun lifeCycleStarting(event: LifeCycle?) {
+          ServletContainerInitializerUtil.registerStagemonitorServletContainerInitializers(context.servletContext)
+        }
+      })
+
       server.start()
       server.join()
       jetty = Result.success(server)
@@ -65,7 +76,6 @@ class CoreUIService : HasLogger {
   companion object {
 
     val JAR_PATTERN = "org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern"
-
 
     val CORE_UI_SERVER_HOST_DEFAULT = "0.0.0.0"
     val CORE_UI_SERVER_PORT_DEFAULT = "8899"
