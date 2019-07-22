@@ -5,8 +5,44 @@
 </center>
 
 
-# POC Vaadin Flow Security
+#Vaadin Flow Security
 How to build different Security Aspects into a Flow Application.
+
+## Module flow-security
+This module contains al generic parts that could be shared between projects.
+
+
+## Module flow-security-test
+This module is a demo app using the module **flow-security**
+
+## Different possibilities
+### Basic LoginView
+This LoginView will have basic elements you need for an authorization.
+What ever is part of the base LoginView, it will never be the right thing.
+How to extend this, have a look into the custom implementation
+in the the demo app. The class name is **MyLoginView**. 
+
+### Roles and Permissions
+Every System will have its own way to describe Roles and Permission.
+The only thing I assume here is, that for example a Role will have a name.
+
+```java
+public final class RoleName
+    extends Single<String> {
+  public RoleName(String s) {
+    super(s);
+  }
+  public String roleName() {
+    return getT1();
+  }
+}
+```
+
+The interface ```HasRoles``` will be used inside the generic implementation to get access to this information.
+The custom part will be responsible to map from the existing system to this Interfaces.
+The demo app will show this inside the class ```MyAuthorizationService```.
+
+
 
 * Login
 * Free View and Restricted Views
@@ -16,23 +52,19 @@ How to build different Security Aspects into a Flow Application.
 
 
 
+## How to use it in your project
+In this section I will describe the steps that are needed to use this in your project.
+If you want to have a starter app that is always containing this and some other features like 
+I18N, have a look at the following: **XXXXX**
 
+For every step I will give you the name of the corresponding implementation inside the demo app.
 
-
-
-## Example/Pseudo Code
-
-```java
-@VisibleTo(UserRole.Admin, UserRole.Nerd)
-public class MyView extends Composite<Div>{}
-```
-
-```java
-@VisibleToDynamic(UserRole.Admin, UserRole.Nerd)
-public class MyView extends Composite<Div>{}
-```
-
-
+* Define the class that will hold your user informations inside a session: **MyUSer**
+* Access to your DataSource including the mapping: **UserStorage** 
+* Define your Role enum: **AuthorizationRole**
+* Define the Annotation you want to use in your app to declare the role: **VisibleFor**
+* extend the class RoleAccessEvaluator: **MyRoleAccessEvaluator**
+* implement the AuthorizationService: **MyAuthenticationService**
 
 
 

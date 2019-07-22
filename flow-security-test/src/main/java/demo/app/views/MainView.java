@@ -9,24 +9,16 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.Route;
-import demo.app.security.model.MyUser;
-import demo.app.security.roles.AuthorizationRole;
 import demo.app.security.roles.VisibleFor;
 import demo.app.views.workspaces.*;
 import org.jetbrains.annotations.NotNull;
 import org.rapidpm.dependencies.core.logger.HasLogger;
-import org.rapidpm.frp.model.Result;
-import org.rapidpm.vaadin.security.authorization.api.AuthorizationService;
-import org.rapidpm.vaadin.security.authorization.api.AuthorizationServiceProvider;
-import org.rapidpm.vaadin.security.authorization.api.roles.RoleName;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import static demo.app.MySessionAccessor.isCurrentUserAuthorizedFor;
 import static demo.app.security.roles.AuthorizationRole.*;
-import static java.util.Arrays.asList;
-import static org.rapidpm.vaadin.security.authorization.api.SessionAccessor.currentSubject;
 
 @Route(MainView.NAV)
 @VisibleFor(USER) //TODO indirect assumption
@@ -43,12 +35,8 @@ public class MainView
                 new Image("https://i.imgur.com/GPpnszs.png", "Vaadin Logo") {{
                   setHeight("44px");
                 }});
-
     addToDrawer(createMainMenu());
-
     setContent(new Span("start working.."));
-
-
   }
 
   //maybe tab to Supplier<Compnent>
@@ -58,12 +46,12 @@ public class MainView
   private Tabs createMainMenu() {
     final Tabs tabs = new Tabs();
     tabs.setOrientation(Tabs.Orientation.VERTICAL);
-    if (authorizedFor(ADMIN)) tabs.add(adminTab());
-    if (authorizedFor(ADMIN, NERD)) tabs.add(nerdTab());
-    if (authorizedFor(USER)) tabs.add(userTab());
+    if (isCurrentUserAuthorizedFor(ADMIN)) tabs.add(adminTab());
+    if (isCurrentUserAuthorizedFor(ADMIN, NERD)) tabs.add(nerdTab());
+    if (isCurrentUserAuthorizedFor(USER)) tabs.add(userTab());
     tabs.add(publicAllTab());
     //For demo only
-    if (authorizedFor(null)) tabs.add(demoUselessTab());
+    if (isCurrentUserAuthorizedFor(null)) tabs.add(demoUselessTab());
 
     tabs.addSelectedChangeListener(event -> {
       final Tab selectedTab = event.getSelectedTab();
@@ -109,22 +97,6 @@ public class MainView
     tab2Workspace.put(tab, new AdminWorkspace());
     return tab;
   }
-
-  private final AuthorizationService<MyUser> authorizationService = new AuthorizationServiceProvider<MyUser>().load();
-
-
-  private boolean authorizedFor(AuthorizationRole... authorizationRoles) {
-    if (authorizationRoles == null) return true;
-    if (authorizationRoles.length == 0) return true;
-    final List<AuthorizationRole> roles          = asList(authorizationRoles);
-    final Result<MyUser>          currentSubject = currentSubject();
-    return (currentSubject.isPresent()) && authorizationService.rolesFor(currentSubject.get())
-                                                               .roleNames()
-                                                               .map(RoleName::roleName)
-                                                               .anyMatch(subjectRole -> roles.contains(
-                                                                   AuthorizationRole.valueOf(subjectRole)));
-  }
-
 
   //For Reusable Components
 //  @VisibleFor(ADMIN)

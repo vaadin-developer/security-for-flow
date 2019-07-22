@@ -18,17 +18,52 @@
       <artifactId>flow-security</artifactId>
     </dependency>
 
-    <!--    APM-->
+    <!--    APM Stagemonitor Start -->
     <dependency>
       <groupId>org.stagemonitor</groupId>
       <artifactId>stagemonitor-web-servlet</artifactId>
       <version>0.88.9</version>
+<!--      <version>0.89.0-SNAPSHOT</version>-->
     </dependency>
 
     <dependency>
       <groupId>net.bytebuddy</groupId>
       <artifactId>byte-buddy</artifactId>
       <version>1.8.11</version>
+    </dependency>
+    <!--    APM Stagemonitor End -->
+
+
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+      <version>1.11.4</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>selenium</artifactId>
+      <version>1.11.4</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-chrome-driver</artifactId>
+      <version>3.141.59</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-testbench</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.seleniumhq.selenium</groupId>
+          <artifactId>selenium-server</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
   </dependencies>

@@ -52,7 +52,6 @@ public abstract class RoleBasedAccessEvaluator<T extends Annotation, U>
 
     if (roleNames.isEmpty()) return granted();
 
-    //TODO implicit assumption that there will be only one active Role!
     final Result<U> currentSubject = SessionAccessor.currentSubject();
     if (currentSubject.isAbsent())
       return restricted(alternativeNavigationTarget(location, navigationTarget, annotation), false);

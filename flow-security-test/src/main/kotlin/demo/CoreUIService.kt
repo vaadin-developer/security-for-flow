@@ -73,6 +73,10 @@ class CoreUIService : HasLogger {
 
   }
 
+  fun stop(){
+    jetty.get().stop()
+  }
+
   companion object {
 
     val JAR_PATTERN = "org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern"

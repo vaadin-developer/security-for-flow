@@ -7,24 +7,14 @@ import com.vaadin.flow.component.html.Span;
 /**
  * this Component will have a view elements that are only visible for Role Admin..
  */
-public class UserWorkspace extends Composite<Div> {
+public class UserWorkspace
+    extends Composite<Div> {
 
 
   public UserWorkspace() {
 
 
-
-
-//Button only for Admin
-
-
-
-
-
-
-
-
-
+     //Button only for Admin
 
 
     getContent().add(new Span("UserWorkspace"));
