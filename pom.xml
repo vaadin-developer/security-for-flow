@@ -30,7 +30,7 @@
 
   <groupId>org.rapidpm.vaadin</groupId>
   <artifactId>flow-security-parent</artifactId>
-  <version>00.08.00-RPM</version>
+  <version>00.09.00-RPM-SNAPSHOT</version>
 
   <packaging>pom</packaging>
 
@@ -96,7 +96,7 @@
       <dependency>
         <groupId>org.rapidpm.vaadin</groupId>
         <artifactId>flow-security</artifactId>
-        <version>00.08.00-RPM</version>
+        <version>00.09.00-RPM-SNAPSHOT</version>
       </dependency>
       <!--Vaadin -->
       <dependency>
