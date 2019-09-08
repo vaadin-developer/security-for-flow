@@ -21,7 +21,6 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.Route;
 import demo.app.security.model.UserStorage.Credentials;
 import org.rapidpm.dependencies.core.logger.HasLogger;
-import org.rapidpm.vaadin.addon.idgenerator.VaadinIDGenerator;
 import org.rapidpm.vaadin.security.authorization.LoginView;
 import org.rapidpm.vaadin.security.authorization.api.AuthenticationService;
 import org.rapidpm.vaadin.security.authorization.api.AuthenticationServiceProvider;
@@ -37,8 +36,7 @@ public class MyLoginView
 
   public static final String NAV = "login";
 
-  public static final String DEMO_GROUPS_ID = VaadinIDGenerator.selectID()
-                                                               .apply(MyLoginView.class, "demo-groups");
+  public static final String DEMO_GROUPS_ID = "my-login-view-demo-groups";
 
   //TODO demo for customizing the LoginView
   private final Select<String> select = new Select<String>() {{

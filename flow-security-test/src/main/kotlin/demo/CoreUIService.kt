@@ -17,14 +17,11 @@ package demo
 
 import org.eclipse.jetty.annotations.AnnotationConfiguration
 import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.util.component.AbstractLifeCycle
-import org.eclipse.jetty.util.component.LifeCycle
 import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.webapp.*
 import org.rapidpm.dependencies.core.logger.HasLogger
 import org.rapidpm.frp.model.Result
 import org.rapidpm.frp.model.Result.failure
-import org.stagemonitor.web.servlet.initializer.ServletContainerInitializerUtil
 import java.lang.Integer.valueOf
 import java.lang.System.getProperty
 
@@ -55,11 +52,11 @@ class CoreUIService : HasLogger {
 //            Start APM
       val servletHandler = context.servletHandler
 
-      servletHandler.addLifeCycleListener(object : AbstractLifeCycle.AbstractLifeCycleListener() {
-        override fun lifeCycleStarting(event: LifeCycle?) {
-          ServletContainerInitializerUtil.registerStagemonitorServletContainerInitializers(context.servletContext)
-        }
-      })
+//      servletHandler.addLifeCycleListener(object : AbstractLifeCycle.AbstractLifeCycleListener() {
+//        override fun lifeCycleStarting(event: LifeCycle?) {
+//          ServletContainerInitializerUtil.registerStagemonitorServletContainerInitializers(context.servletContext)
+//        }
+//      })
 
       server.start()
       server.join()

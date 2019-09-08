@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # Copyright © 2017 Sven Ruppert (sven.ruppert@gmail.com)
 #
@@ -14,20 +15,11 @@
 # limitations under the License.
 #
 
-version: '3.5'
 
-services:
-  deploy:
-    image: svenruppert/maven-3.6.1-adopt:1.8.212-04
-    container_name: deploy
-    hostname: deploy
-    volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-      - $PWD/:/usr/src/mymaven
-      - ~/.m2/settings.xml:/root/.m2/settings.xml
-      - ~/.gnupg/:/root/.gnupg/
-    working_dir: /usr/src/mymaven
-    #    command: 'mvn help:active-profiles
-    command: 'mvn license:format clean deploy
-                    -P_release
-                    -Dmaven.test.skip=true '
+docker run \
+       --rm \
+       --name compile \
+       -v "$(pwd)":/usr/src/mymaven \
+       -w /usr/src/mymaven \
+       svenruppert/maven-3.6.2-adopt:1.8.212-04 \
+       mvn clean install

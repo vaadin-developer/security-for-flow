@@ -20,17 +20,56 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
-    <artifactId>flow-security-parent</artifactId>
-    <groupId>org.rapidpm.vaadin</groupId>
-    <version>00.09.00-RPM</version>
+    <groupId>org.rapidpm</groupId>
+    <artifactId>rapidpm-vaadin-dependencies-v14</artifactId>
+    <version>04.01.12-RPM</version>
   </parent>
+
   <modelVersion>4.0.0</modelVersion>
 
+  <groupId>org.rapidpm.vaadin</groupId>
   <artifactId>flow-security-test</artifactId>
+  <version>00.09.00-RPM</version>
 
-  <!--  <properties>-->
-  <!--    <maven.deploy.skip>true</maven.deploy.skip>-->
-  <!--  </properties>-->
+
+  <properties>
+    <jdk.version>1.8</jdk.version>
+    <jetty.version>9.4.19.v20190610</jetty.version>
+    <!--logging-->
+    <slf4j.version>1.7.25</slf4j.version>
+    <log4j-api.version>2.8.1</log4j-api.version>
+  </properties>
+
+  <!-- Just to disable any accidential deployment to maven.central -->
+  <distributionManagement>
+    <repository>
+      <id>localhost</id>
+      <url>file://${basedir}/target/repo/</url>
+    </repository>
+    <snapshotRepository>
+      <id>localhost</id>
+      <url>file://${basedir}/target/snapshot-repo/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <dependencyManagement>
+    <dependencies>
+      <!--      Project modules-->
+      <dependency>
+        <groupId>org.rapidpm.vaadin</groupId>
+        <artifactId>flow-security</artifactId>
+        <version>00.09.00-RPM</version>
+      </dependency>
+      <!--Vaadin -->
+      <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-bom</artifactId>
+        <version>${vaadin-v14.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <dependency>
@@ -38,10 +77,48 @@
       <artifactId>flow-security</artifactId>
     </dependency>
 
+    <!--    <dependency>-->
+    <!--      <groupId>org.rapidpm.vaadin</groupId>-->
+    <!--      <artifactId>id-generator-for-flow</artifactId>-->
+    <!--      <version>${id-generator-for-flow.version}</version>-->
+    <!--    </dependency>-->
+
     <dependency>
-      <groupId>org.rapidpm.vaadin</groupId>
-      <artifactId>id-generator-for-flow</artifactId>
-      <version>${id-generator-for-flow.version}</version>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-lumo-theme</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-button-flow</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-checkbox-flow</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-text-field-flow</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-ordered-layout-flow</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-tabs-flow</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-select-flow</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-notification-flow</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-app-layout-flow</artifactId>
     </dependency>
 
     <dependency>
@@ -70,6 +147,15 @@
       <version>${jetty.version}</version>
     </dependency>
 
+    <!--Logging-->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.testcontainers</groupId>

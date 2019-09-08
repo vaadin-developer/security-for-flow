@@ -20,15 +20,71 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
-    <artifactId>flow-security-parent</artifactId>
-    <groupId>org.rapidpm.vaadin</groupId>
-    <version>00.09.00-RPM</version>
+    <groupId>org.rapidpm</groupId>
+    <artifactId>rapidpm-vaadin-dependencies-v14</artifactId>
+    <version>04.01.12-RPM</version>
   </parent>
+
   <modelVersion>4.0.0</modelVersion>
-
+  <groupId>org.rapidpm.vaadin</groupId>
   <artifactId>flow-security</artifactId>
+  <version>00.09.00-RPM</version>
 
 
+  <inceptionYear>2017</inceptionYear>
+  <organization>
+    <name>Vaadin</name>
+    <url>http://www.vaadin.com</url>
+  </organization>
+  <url>https://github.com/vaadin-developer/flow-security</url>
+
+  <scm>
+    <url>https://github.com/vaadin-developer/flow-security</url>
+    <connection>
+      scm:git:https://github.com/vaadin-developer/flow-security.git
+    </connection>
+    <developerConnection>
+      scm:git:https://github.com/vaadin-developer/flow-security
+    </developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+  <developers>
+    <developer>
+      <name>Sven Ruppert</name>
+      <email>sven.ruppert@gmail.com</email>
+      <roles>
+        <role>Developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+  </developers>
+  <issueManagement>
+    <system>Github</system>
+    <url>
+      https://github.com/vaadin-developer/flow-security/issues
+    </url>
+  </issueManagement>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+      <comments>A business-friendly OSS license</comments>
+    </license>
+  </licenses>
+
+  <dependencyManagement>
+    <dependencies>
+      <!--Vaadin -->
+      <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-bom</artifactId>
+        <version>${vaadin-v14.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <dependency>
@@ -53,11 +109,34 @@
       <artifactId>vaadin-ordered-layout-flow</artifactId>
     </dependency>
 
-<!--    <dependency>-->
-<!--      <groupId>org.rapidpm.vaadin</groupId>-->
-<!--      <artifactId>id-generator-for-flow</artifactId>-->
-<!--      <version>${id-generator-for-flow.version}</version>-->
-<!--    </dependency>-->
+    <!--    <dependency>-->
+    <!--      <groupId>org.rapidpm.vaadin</groupId>-->
+    <!--      <artifactId>id-generator-for-flow</artifactId>-->
+    <!--      <version>${id-generator-for-flow.version}</version>-->
+    <!--    </dependency>-->
   </dependencies>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-maven-plugin</artifactId>
+        <version>${vaadin-v14.version}</version>
+        <executions>
+          <execution>
+            <phase>none</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.github.eirslett</groupId>
+        <artifactId>frontend-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>none</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>
