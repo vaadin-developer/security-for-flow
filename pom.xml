@@ -24,13 +24,13 @@
   <parent>
     <groupId>org.rapidpm</groupId>
     <artifactId>rapidpm-vaadin-dependencies-v14</artifactId>
-    <version>04.01.05-RPM</version>
+    <version>04.01.12-RPM</version>
   </parent>
 
 
   <groupId>org.rapidpm.vaadin</groupId>
   <artifactId>flow-security-parent</artifactId>
-  <version>00.09.00-RPM-SNAPSHOT</version>
+  <version>00.09.00-RPM</version>
 
   <packaging>pom</packaging>
 
@@ -82,6 +82,8 @@
     <!--logging-->
     <slf4j.version>1.7.25</slf4j.version>
     <log4j-api.version>2.8.1</log4j-api.version>
+
+    <id-generator-for-flow.version>00.09.00-RPM</id-generator-for-flow.version>
   </properties>
 
   <modules>
@@ -92,7 +94,7 @@
 
   <dependencyManagement>
     <dependencies>
-<!--      Project modules-->
+      <!--      Project modules-->
       <dependency>
         <groupId>org.rapidpm.vaadin</groupId>
         <artifactId>flow-security</artifactId>
@@ -110,37 +112,7 @@
   </dependencyManagement>
 
   <dependencies>
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-    </dependency>
-    <!--Infrastructure-->
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-continuation</artifactId>
-      <version>${jetty.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-server</artifactId>
-      <version>${jetty.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty.websocket</groupId>
-      <artifactId>websocket-server</artifactId>
-      <version>${jetty.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty.websocket</groupId>
-      <artifactId>javax-websocket-server-impl</artifactId>
-      <version>${jetty.version}</version>
-    </dependency>
 
-    <dependency>
-      <groupId>org.rapidpm.vaadin</groupId>
-      <artifactId>id-generator-for-flow</artifactId>
-      <version>00.09.00-RPM</version>
-    </dependency>
 
     <!--Logging-->
     <dependency>
@@ -156,27 +128,21 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>3.2.1</version>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-maven-plugin</artifactId>
+        <version>${vaadin-v14.version}</version>
         <executions>
           <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <finalName>vaadin-app</finalName>
-              <transformers>
-                <transformer
-                    implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <manifestEntries>
-                    <Main-Class>demo.NanoVaadinOnKotlinKt</Main-Class>
-                  </manifestEntries>
-                </transformer>
-              </transformers>
-            </configuration>
+            <phase>none</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.github.eirslett</groupId>
+        <artifactId>frontend-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>none</phase>
           </execution>
         </executions>
       </plugin>

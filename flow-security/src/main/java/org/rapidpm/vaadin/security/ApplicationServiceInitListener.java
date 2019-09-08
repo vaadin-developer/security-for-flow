@@ -16,8 +16,6 @@
 package org.rapidpm.vaadin.security;
 
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.server.ErrorHandler;
 import com.vaadin.flow.server.ServiceInitEvent;
 import com.vaadin.flow.server.UIInitListener;
 import com.vaadin.flow.server.VaadinServiceInitListener;
@@ -42,11 +40,11 @@ public class ApplicationServiceInitListener
        loginRegistration = ui.addBeforeEnterListener(loginListener);
 
        //TODO same as LoginInit
-       ui.getSession()
-         .setErrorHandler((ErrorHandler) errorEvent -> {
-           logger().warning("Uncaught UI exception", errorEvent.getThrowable());
-           Notification.show("We are sorry, but an internal error occurred");
-         });
+//       ui.getSession()
+//         .setErrorHandler((ErrorHandler) errorEvent -> {
+//           logger().warning("Uncaught UI exception", errorEvent.getThrowable());
+//           Notification.show("We are sorry, but an internal error occurred");
+//         });
      });
   }
 }

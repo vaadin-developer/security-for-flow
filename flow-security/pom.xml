@@ -22,28 +22,42 @@
   <parent>
     <artifactId>flow-security-parent</artifactId>
     <groupId>org.rapidpm.vaadin</groupId>
-    <version>00.09.00-RPM-SNAPSHOT</version>
+    <version>00.09.00-RPM</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>flow-security</artifactId>
 
-<!--  <build>-->
-<!--    <plugins>-->
-<!--      <plugin>-->
-<!--        <groupId>com.vaadin</groupId>-->
-<!--        <artifactId>vaadin-maven-plugin</artifactId>-->
-<!--        <version>${vaadin-v14.version}</version>-->
-<!--        <executions>-->
-<!--          <execution>-->
-<!--            <goals>-->
-<!--              <goal>prepare-frontend</goal>-->
-<!--              <goal>build-frontend</goal>-->
-<!--            </goals>-->
-<!--          </execution>-->
-<!--        </executions>-->
-<!--      </plugin>-->
-<!--    </plugins>-->
-<!--  </build>-->
+
+
+  <dependencies>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-button-flow</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-checkbox-flow</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-text-field-flow</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-ordered-layout-flow</artifactId>
+    </dependency>
+
+<!--    <dependency>-->
+<!--      <groupId>org.rapidpm.vaadin</groupId>-->
+<!--      <artifactId>id-generator-for-flow</artifactId>-->
+<!--      <version>${id-generator-for-flow.version}</version>-->
+<!--    </dependency>-->
+  </dependencies>
 
 </project>

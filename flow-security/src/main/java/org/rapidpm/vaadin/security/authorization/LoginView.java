@@ -1,12 +1,12 @@
 /**
  * Copyright © 2017 Sven Ruppert (sven.ruppert@gmail.com)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,18 +29,16 @@ import org.rapidpm.dependencies.core.logger.HasLogger;
 
 import java.time.LocalDateTime;
 
-import static org.rapidpm.vaadin.addon.idgenerator.VaadinIDGenerator.*;
-
 
 public abstract class LoginView
     extends Composite<HorizontalLayout>
     implements HasLogger {
 
-  public static final String BTN_LOGIN_ID      = buttonID().apply(LoginView.class, "btn-login");
-  public static final String BTN_CANCEL_ID     = buttonID().apply(LoginView.class, "btn-cancel");
-  public static final String TF_USERNAME_ID    = textfieldID().apply(LoginView.class, "tf-username");
-  public static final String PF_PASSWORD_ID    = passwordID().apply(LoginView.class, "pf-password");
-  public static final String CB_REMEMBER_ME_ID = checkboxID().apply(LoginView.class, "cb-remember-me");
+  public static final String BTN_LOGIN_ID      = "loginview-btn-login";
+  public static final String BTN_CANCEL_ID     = "loginview-btn-cancel";
+  public static final String TF_USERNAME_ID    = "loginview-tf-username";
+  public static final String PF_PASSWORD_ID    = "loginview-pf-password";
+  public static final String CB_REMEMBER_ME_ID = "loginview-cb-remember-me";
 
   private final TextField username = new TextField() {{
     setId(TF_USERNAME_ID);

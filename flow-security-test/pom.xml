@@ -22,15 +22,15 @@
   <parent>
     <artifactId>flow-security-parent</artifactId>
     <groupId>org.rapidpm.vaadin</groupId>
-    <version>00.09.00-RPM-SNAPSHOT</version>
+    <version>00.09.00-RPM</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>flow-security-test</artifactId>
 
-<!--  <properties>-->
-<!--    <maven.deploy.skip>true</maven.deploy.skip>-->
-<!--  </properties>-->
+  <!--  <properties>-->
+  <!--    <maven.deploy.skip>true</maven.deploy.skip>-->
+  <!--  </properties>-->
 
   <dependencies>
     <dependency>
@@ -38,33 +38,48 @@
       <artifactId>flow-security</artifactId>
     </dependency>
 
-    <!--    APM Stagemonitor Start -->
     <dependency>
-      <groupId>org.stagemonitor</groupId>
-      <artifactId>stagemonitor-web-servlet</artifactId>
-      <version>0.88.9</version>
-<!--      <version>0.89.0-SNAPSHOT</version>-->
+      <groupId>org.rapidpm.vaadin</groupId>
+      <artifactId>id-generator-for-flow</artifactId>
+      <version>${id-generator-for-flow.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>net.bytebuddy</groupId>
-      <artifactId>byte-buddy</artifactId>
-      <version>1.8.11</version>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
     </dependency>
-    <!--    APM Stagemonitor End -->
+    <!--Infrastructure-->
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-continuation</artifactId>
+      <version>${jetty.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <version>${jetty.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>websocket-server</artifactId>
+      <version>${jetty.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>javax-websocket-server-impl</artifactId>
+      <version>${jetty.version}</version>
+    </dependency>
 
 
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers</artifactId>
-      <version>1.11.4</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>selenium</artifactId>
-      <version>1.11.4</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -73,37 +88,5 @@
       <version>3.141.59</version>
       <scope>test</scope>
     </dependency>
-
-<!--    <dependency>-->
-<!--      <groupId>com.vaadin</groupId>-->
-<!--      <artifactId>vaadin-testbench</artifactId>-->
-<!--      <scope>test</scope>-->
-<!--      <exclusions>-->
-<!--        <exclusion>-->
-<!--          <groupId>org.seleniumhq.selenium</groupId>-->
-<!--          <artifactId>selenium-server</artifactId>-->
-<!--        </exclusion>-->
-<!--      </exclusions>-->
-<!--    </dependency>-->
-
   </dependencies>
-
-<!--  <build>-->
-<!--    <plugins>-->
-<!--      <plugin>-->
-<!--        <groupId>com.vaadin</groupId>-->
-<!--        <artifactId>vaadin-maven-plugin</artifactId>-->
-<!--        <version>${vaadin-v14.version}</version>-->
-<!--        <executions>-->
-<!--          <execution>-->
-<!--            <goals>-->
-<!--              <goal>prepare-frontend</goal>-->
-<!--              <goal>build-frontend</goal>-->
-<!--            </goals>-->
-<!--          </execution>-->
-<!--        </executions>-->
-<!--      </plugin>-->
-<!--    </plugins>-->
-<!--  </build>-->
-
 </project>
