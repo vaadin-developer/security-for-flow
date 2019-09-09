@@ -29,7 +29,7 @@
 
   <groupId>org.rapidpm.vaadin</groupId>
   <artifactId>flow-security</artifactId>
-  <version>00.10.00-RPM</version>
+  <version>00.11.00-RPM-SNAPSHOT</version>
 
 
   <inceptionYear>2017</inceptionYear>
