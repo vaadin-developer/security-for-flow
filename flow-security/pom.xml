@@ -21,15 +21,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
     <groupId>org.rapidpm</groupId>
-    <artifactId>rapidpm-vaadin-dependencies-vXX</artifactId>
-    <version>04.01.15-RPM</version>
+    <artifactId>rapidpm-vaadin-dependencies-v14</artifactId>
+    <version>04.05.02-RPM</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.rapidpm.vaadin</groupId>
   <artifactId>flow-security</artifactId>
-  <version>00.11.00-RPM</version>
+  <version>00.12.00-RPM</version>
 
 
   <inceptionYear>2017</inceptionYear>
@@ -74,18 +74,18 @@
     </license>
   </licenses>
 
-  <dependencyManagement>
-    <dependencies>
-      <!--Vaadin -->
-      <dependency>
-        <groupId>com.vaadin</groupId>
-        <artifactId>vaadin-bom</artifactId>
-        <version>${vaadin-v14.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
+<!--  <dependencyManagement>-->
+<!--    <dependencies>-->
+<!--      &lt;!&ndash;Vaadin &ndash;&gt;-->
+<!--      <dependency>-->
+<!--        <groupId>com.vaadin</groupId>-->
+<!--        <artifactId>vaadin-bom</artifactId>-->
+<!--        <version>${vaadin-v14.version}</version>-->
+<!--        <type>pom</type>-->
+<!--        <scope>import</scope>-->
+<!--      </dependency>-->
+<!--    </dependencies>-->
+<!--  </dependencyManagement>-->
 
   <dependencies>
     <dependency>

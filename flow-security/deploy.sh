@@ -15,5 +15,5 @@
 # limitations under the License.
 #
 
-docker rm deploy
+docker rm deploy-flow-security
 docker-compose up

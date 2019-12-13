@@ -39,12 +39,6 @@ public class ApplicationServiceInitListener
        final LoginListener loginListener = new LoginListenerProvider().load();
        loginRegistration = ui.addBeforeEnterListener(loginListener);
 
-       //TODO same as LoginInit
-//       ui.getSession()
-//         .setErrorHandler((ErrorHandler) errorEvent -> {
-//           logger().warning("Uncaught UI exception", errorEvent.getThrowable());
-//           Notification.show("We are sorry, but an internal error occurred");
-//         });
      });
   }
 }

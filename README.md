@@ -9,7 +9,7 @@
 How to build different Security Aspects into a Flow Application.
 
 ## Module flow-security
-This module contains al generic parts that could be shared between projects.
+This module contains all generic parts that could be shared between projects.
 
 
 ## Module flow-security-test
