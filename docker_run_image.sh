@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Copyright © 2018 Sven Ruppert (sven.ruppert@gmail.com)
 #
@@ -14,5 +15,11 @@
 # limitations under the License.
 #
 
-java.runtime.version=1.8
-maven.version=3.3.9
+
+docker run \
+       -it \
+       -p 8899:8899 \
+       --rm \
+       --name demoapp-flow-security-for-flow \
+       demoapps/flow-security-for-flow:latest
+

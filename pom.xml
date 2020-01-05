@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright © 2018 Sven Ruppert (sven.ruppert@gmail.com)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.rapidpm</groupId>
+    <artifactId>rapidpm-vaadin-dependencies-v14</artifactId>
+    <version>04.06.01-RPM-SNAPSHOT</version>
+  </parent>
+
+  <groupId>org.rapidpm.vaadin</groupId>
+  <artifactId>flow-security-for-flow-parent</artifactId>
+  <version>00.13.00-RPM-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <inceptionYear>2018</inceptionYear>
+  <organization>
+    <name>Sven Ruppert</name>
+    <url>https://github.com/svenruppert</url>
+  </organization>
+  <url>https://github.com/vaadin-developer/flow-security</url>
+
+  <scm>
+    <url>https://github.com/vaadin-developer/flow-security</url>
+    <connection>
+      scm:git:https://github.com/vaadin-developer/flow-security.git
+    </connection>
+    <developerConnection>
+      scm:git:https://github.com/vaadin-developer/flow-security.git
+    </developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+  <developers>
+    <developer>
+      <name>Sven Ruppert</name>
+      <email>sven.ruppert@gmail.com</email>
+      <roles>
+        <role>Developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+  </developers>
+  <issueManagement>
+    <system>Github</system>
+    <url>
+      https://github.com/vaadin-developer/flow-security/issues
+    </url>
+  </issueManagement>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+      <comments>A business-friendly OSS license</comments>
+    </license>
+  </licenses>
+
+  <modules>
+    <module>01_impl</module>
+    <module>02_test</module>
+    <module>03_demo</module>
+  </modules>
+
+  <properties>
+    <!--technical-->
+    <jdk.version>1.8</jdk.version>
+    <jetty.version>9.4.19.v20190610</jetty.version>
+  </properties>
+
+  <repositories>
+    <repository>
+      <id>sven-ruppert</id>
+      <name>Dev Repo with SNAPSHOTS</name>
+      <layout>default</layout>
+      <url>http://repo.sven-ruppert.de/repository/maven-public/</url>
+    </repository>
+  </repositories>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.rapidpm.vaadin</groupId>
+        <artifactId>flow-security-for-flow</artifactId>
+        <version>00.13.00-RPM-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>org.rapidpm.vaadin</groupId>
+        <artifactId>nano-vaadin-undertow</artifactId>
+        <version>01.00.04-RPM</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.appreciated</groupId>
+        <artifactId>vaadin-css-grid</artifactId>
+        <version>2.0.0.beta3</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+    </dependency>
+  </dependencies>
+
+</project>

@@ -14,5 +14,20 @@
 # limitations under the License.
 #
 
-java.runtime.version=1.8
-maven.version=3.3.9
+version: '3.5'
+
+services:
+  deploy:
+    image: svenruppert/deploy:1.8.0-222
+    container_name: deploy_flow-security-for-flow
+    hostname: deploy_flow-security-for-flow
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - $PWD/:/usr/src/mymaven
+    working_dir: /usr/src/mymaven
+    #    command: 'mvn help:active-profiles
+    command: 'mvn license:format clean deploy
+                    -P_release_prepare
+                    -P_release_sign-artifacts
+                    -Pvaadin-install-nodejs
+                    -Dmaven.test.skip=false '

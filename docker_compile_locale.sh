@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # Copyright © 2018 Sven Ruppert (sven.ruppert@gmail.com)
 #
@@ -14,5 +15,12 @@
 # limitations under the License.
 #
 
-java.runtime.version=1.8
-maven.version=3.3.9
+
+docker run \
+      --rm \
+      --name compile \
+      -v "$(pwd)":/usr/src/mymaven \
+      -w /usr/src/mymaven \
+      svenruppert/maven-3.6.1-adopt:1.8.212-04:latest \
+      mvn clean package -Dmaven.test.skip=false -Dvaadin-install-nodejs
+

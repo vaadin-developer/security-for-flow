@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # Copyright © 2018 Sven Ruppert (sven.ruppert@gmail.com)
 #
@@ -14,5 +15,5 @@
 # limitations under the License.
 #
 
-java.runtime.version=1.8
-maven.version=3.3.9
+docker rm deploy_component-project-template-for-flow
+docker-compose up
