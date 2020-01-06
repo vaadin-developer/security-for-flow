@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/01_impl/flow-security-for-flow.iml" filepath="$PROJECT_DIR$/01_impl/flow-security-for-flow.iml" />
+      <module fileurl="file://$PROJECT_DIR$/03_demo/flow-security-for-flow-demo.iml" filepath="$PROJECT_DIR$/03_demo/flow-security-for-flow-demo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/flow-security-for-flow-parent.iml" filepath="$PROJECT_DIR$/flow-security-for-flow-parent.iml" />
+      <module fileurl="file://$PROJECT_DIR$/02_test/flow-security-for-flow-test.iml" filepath="$PROJECT_DIR$/02_test/flow-security-for-flow-test.iml" />
+    </modules>
+  </component>
+</project>
