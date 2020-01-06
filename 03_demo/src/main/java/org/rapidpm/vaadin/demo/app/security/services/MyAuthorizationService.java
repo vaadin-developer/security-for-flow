@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package demo.app.security.services;
+package org.rapidpm.vaadin.demo.app.security.services;
 
-import demo.app.security.model.MyUser;
+import org.rapidpm.vaadin.demo.app.security.model.MyUser;
 import org.rapidpm.vaadin.security.authorization.api.AuthorizationService;
 import org.rapidpm.vaadin.security.authorization.api.permissions.HasPermissions;
 import org.rapidpm.vaadin.security.authorization.api.roles.HasRoles;

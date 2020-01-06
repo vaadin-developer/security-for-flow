@@ -1,1 +1,1 @@
-demo.app.security.roles.MyRoleAccessEvaluator
+org.rapidpm.vaadin.demo.app.security.roles.MyRoleAccessEvaluator

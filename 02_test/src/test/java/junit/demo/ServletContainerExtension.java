@@ -39,6 +39,6 @@ public class ServletContainerExtension
   public void afterEach(ExtensionContext extensionContext) throws Exception {
     final CoreUIServiceJava coreUIService = extensionContext.getStore(GLOBAL)
                                                         .get(CORE_SERVICE, CoreUIServiceJava.class);
-    coreUIService.shutdown();
+//    coreUIService.jetty.();
   }
 }

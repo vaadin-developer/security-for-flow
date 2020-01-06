@@ -13,6 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package demo.app.security.permissions;
+package org.rapidpm.vaadin.demo.app.security.permissions;
 
 public @interface RequiredPermissions { }

@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package demo.app.security.roles;
+package org.rapidpm.vaadin.demo.app.security.roles;
 
 import com.vaadin.flow.router.Location;
-import demo.app.security.model.MyUser;
-import demo.app.views.MainView;
-import demo.app.views.MyLoginView;
+import org.rapidpm.vaadin.demo.app.security.model.MyUser;
+import org.rapidpm.vaadin.demo.app.views.MainView;
+import org.rapidpm.vaadin.demo.app.views.MyLoginView;
 import org.rapidpm.dependencies.core.logger.HasLogger;
 import org.rapidpm.vaadin.security.authorization.api.roles.RoleBasedAccessEvaluator;
 import org.rapidpm.vaadin.security.authorization.api.roles.RoleName;

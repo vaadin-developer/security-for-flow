@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package demo.app.views;
+package org.rapidpm.vaadin.demo.app.views;
 
 
 import com.vaadin.flow.component.Component;
@@ -24,16 +24,16 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.Route;
-import demo.app.security.roles.VisibleFor;
-import demo.app.views.workspaces.*;
+import org.rapidpm.vaadin.demo.app.security.roles.VisibleFor;
+import org.rapidpm.vaadin.demo.app.views.workspaces.*;
 import org.jetbrains.annotations.NotNull;
 import org.rapidpm.dependencies.core.logger.HasLogger;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static demo.app.MySessionAccessor.isCurrentUserAuthorizedFor;
-import static demo.app.security.roles.AuthorizationRole.*;
+import static org.rapidpm.vaadin.demo.app.MySessionAccessor.isCurrentUserAuthorizedFor;
+import static org.rapidpm.vaadin.demo.app.security.roles.AuthorizationRole.*;
 
 @Route(MainView.NAV)
 @VisibleFor(USER) //TODO indirect assumption

@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package demo.app.security.model;
+package org.rapidpm.vaadin.demo.app.security.model;
 
-import demo.app.security.roles.AuthorizationRole;
+import org.rapidpm.vaadin.demo.app.security.roles.AuthorizationRole;
 import org.rapidpm.dependencies.core.logger.HasLogger;
 import org.rapidpm.frp.model.Triple;
 

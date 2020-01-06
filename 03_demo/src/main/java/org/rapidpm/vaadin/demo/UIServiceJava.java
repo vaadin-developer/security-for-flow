@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package demo;
+package org.rapidpm.vaadin.demo;
 
 import com.vaadin.flow.server.Constants;
 import org.apache.commons.cli.ParseException;

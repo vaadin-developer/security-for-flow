@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package demo.app;
+package org.rapidpm.vaadin.demo.app;
 
-import demo.app.security.model.MyUser;
-import demo.app.security.roles.AuthorizationRole;
+import org.rapidpm.vaadin.demo.app.security.model.MyUser;
+import org.rapidpm.vaadin.demo.app.security.roles.AuthorizationRole;
 import org.rapidpm.frp.model.Result;
 import org.rapidpm.vaadin.security.authorization.api.*;
 import org.rapidpm.vaadin.security.authorization.api.roles.RoleName;

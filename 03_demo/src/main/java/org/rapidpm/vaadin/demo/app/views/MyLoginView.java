@@ -13,20 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package demo.app.views;
+package org.rapidpm.vaadin.demo.app.views;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.Route;
-import demo.app.security.model.UserStorage.Credentials;
+import org.rapidpm.vaadin.demo.app.security.model.UserStorage.Credentials;
 import org.rapidpm.dependencies.core.logger.HasLogger;
 import org.rapidpm.vaadin.security.authorization.LoginView;
 import org.rapidpm.vaadin.security.authorization.api.AuthenticationService;
 import org.rapidpm.vaadin.security.authorization.api.AuthenticationServiceProvider;
 
-import static demo.app.security.model.UserStorage.userByCredentials;
-import static demo.app.views.MyLoginView.NAV;
+import static org.rapidpm.vaadin.demo.app.security.model.UserStorage.userByCredentials;
+import static org.rapidpm.vaadin.demo.app.views.MyLoginView.NAV;
 import static org.rapidpm.vaadin.security.authorization.api.SessionAccessor.setCurrentSubject;
 
 @Route(NAV)

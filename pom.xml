@@ -84,7 +84,6 @@
   <properties>
     <!--technical-->
     <jdk.version>1.8</jdk.version>
-    <jetty.version>9.4.19.v20190610</jetty.version>
   </properties>
 
   <repositories>
@@ -105,8 +104,8 @@
       </dependency>
       <dependency>
         <groupId>org.rapidpm.vaadin</groupId>
-        <artifactId>nano-vaadin-undertow</artifactId>
-        <version>01.00.04-RPM</version>
+        <artifactId>nano-vaadin-jetty</artifactId>
+        <version>01.00.01-RPM</version>
       </dependency>
       <dependency>
         <groupId>com.github.appreciated</groupId>

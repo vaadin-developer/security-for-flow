@@ -13,15 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package demo.app.views.workspaces;
+package org.rapidpm.vaadin.demo.app.views.workspaces;
 
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 
-public class AdminWorkspace
-    extends Composite<Div> {
-  public AdminWorkspace() {
-    getContent().add(new Span("AdminWorkspace"));
+public class PublicAllWorkspace extends Composite<Div> {
+
+  public PublicAllWorkspace() {
+    getContent().add(new Span("PublicAllWorkspace"));
   }
+
+
 }

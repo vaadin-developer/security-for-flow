@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package demo.app.security.roles;
+package org.rapidpm.vaadin.demo.app.security.roles;
 
-public enum AuthorizationRole {
-  Q_ADMIN,
-  ADMIN,
-  USER,
-  NOBODY,
-  NERD
+import org.rapidpm.vaadin.security.authorization.annotations.NavigationAnnotation;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
+@Retention(RetentionPolicy.RUNTIME)
+@NavigationAnnotation(MyRoleAccessEvaluator.class)
+public @interface VisibleFor {
+  AuthorizationRole[] value();
 }

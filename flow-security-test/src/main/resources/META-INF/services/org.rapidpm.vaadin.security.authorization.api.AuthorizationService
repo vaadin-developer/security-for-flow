@@ -1,1 +1,1 @@
-demo.app.security.services.MyAuthorizationService
+org.rapidpm.vaadin.demo.app.security.services.MyAuthorizationService

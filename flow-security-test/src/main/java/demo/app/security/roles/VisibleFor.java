@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package demo.app.security.roles;
+package org.rapidpm.vaadin.demo.app.security.roles;
 
 import org.rapidpm.vaadin.security.authorization.annotations.NavigationAnnotation;
 

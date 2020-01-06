@@ -1,1 +1,1 @@
-demo.app.security.MyLoginListener
+org.rapidpm.vaadin.demo.app.security.MyLoginListener

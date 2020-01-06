@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package demo.app.security.services;
+package org.rapidpm.vaadin.demo.app.security.services;
 
-import demo.app.security.model.MyUser;
-import demo.app.security.model.UserStorage;
+import org.rapidpm.vaadin.demo.app.security.model.MyUser;
+import org.rapidpm.vaadin.demo.app.security.model.UserStorage;
 import org.rapidpm.dependencies.core.logger.HasLogger;
 import org.rapidpm.vaadin.security.authorization.api.AuthenticationService;
 

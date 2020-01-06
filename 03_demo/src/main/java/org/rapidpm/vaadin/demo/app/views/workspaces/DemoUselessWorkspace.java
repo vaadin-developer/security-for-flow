@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package demo.app.views.workspaces;
+package org.rapidpm.vaadin.demo.app.views.workspaces;
 
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 
-public class NerdWorkspace extends Composite<Div> {
+public class DemoUselessWorkspace extends Composite<Div> {
 
-  public NerdWorkspace() {
-    getContent().add(new Span("NerdWorkspace"));
+  public DemoUselessWorkspace() {
+    getContent().add(new Span("DemoUselessWorkspace"));
   }
-
 
 }

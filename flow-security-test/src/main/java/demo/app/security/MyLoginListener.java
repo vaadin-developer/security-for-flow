@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package demo.app.security;
+package org.rapidpm.vaadin.demo.app.security;
 
 import com.vaadin.flow.component.Component;
-import demo.app.security.model.MyUser;
-import demo.app.security.roles.VisibleFor;
-import demo.app.views.MainView;
-import demo.app.views.MyLoginView;
+import org.rapidpm.vaadin.demo.app.security.model.MyUser;
+import org.rapidpm.vaadin.demo.app.security.roles.VisibleFor;
+import org.rapidpm.vaadin.demo.app.views.MainView;
+import org.rapidpm.vaadin.demo.app.views.MyLoginView;
 import org.jetbrains.annotations.NotNull;
 import org.rapidpm.vaadin.security.authorization.LoginListener;
 import org.rapidpm.vaadin.security.authorization.LoginView;
