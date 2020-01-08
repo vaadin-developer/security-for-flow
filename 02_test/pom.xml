@@ -43,6 +43,11 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.rapidpm.vaadin</groupId>
+      <artifactId>security-for-flow-parent</artifactId>
+    </dependency>
+
+    <dependency>
     <groupId>org.rapidpm.vaadin</groupId>
     <artifactId>nano-vaadin-jetty</artifactId>
   </dependency>

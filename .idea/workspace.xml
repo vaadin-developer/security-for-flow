@@ -27,58 +27,9 @@
     <list default="true" id="f7f88d9c-f028-4962-bbe1-5edb6abfacfe" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_impl/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/01_impl/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/02_test/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/02_test/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/02_test/src/test/java/junit/demo/ServletContainerExtension.java" beforeDir="false" afterPath="$PROJECT_DIR$/02_test/src/test/java/junit/demo/ServletContainerExtension.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/03_demo/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/UIServiceJava.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/UIServiceJava.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/MySessionAccessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/MySessionAccessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/security/MyLoginListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/security/MyLoginListener.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/security/model/MyUser.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/security/model/MyUser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/security/model/UserStorage.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/security/model/UserStorage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/security/permissions/RequiredPermissions.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/security/permissions/RequiredPermissions.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/security/roles/AuthorizationRole.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/security/roles/AuthorizationRole.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/security/roles/MyRoleAccessEvaluator.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/security/roles/MyRoleAccessEvaluator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/security/roles/VisibleFor.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/security/roles/VisibleFor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/security/services/MyAuthenticationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/security/services/MyAuthenticationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/security/services/MyAuthorizationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/security/services/MyAuthorizationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/views/AdminView.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/views/AdminView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/views/MainView.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/views/MainView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/views/MyLoginView.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/views/MyLoginView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/views/NerdView.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/views/NerdView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/views/PublicView.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/views/PublicView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/views/workspaces/AdminWorkspace.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/views/workspaces/AdminWorkspace.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/views/workspaces/DemoUselessWorkspace.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/views/workspaces/DemoUselessWorkspace.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/views/workspaces/NerdWorkspace.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/views/workspaces/NerdWorkspace.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/views/workspaces/PublicAllWorkspace.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/views/workspaces/PublicAllWorkspace.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/java/demo/app/views/workspaces/UserWorkspace.java" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/java/org/rapidpm/vaadin/demo/app/views/workspaces/UserWorkspace.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/resources/META-INF/services/org.rapidpm.vaadin.security.authorization.LoginListener" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/resources/META-INF/services/org.rapidpm.vaadin.security.authorization.LoginListener" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/resources/META-INF/services/org.rapidpm.vaadin.security.authorization.api.AccessEvaluator" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/resources/META-INF/services/org.rapidpm.vaadin.security.authorization.api.AccessEvaluator" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/resources/META-INF/services/org.rapidpm.vaadin.security.authorization.api.AuthenticationService" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/resources/META-INF/services/org.rapidpm.vaadin.security.authorization.api.AuthenticationService" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_demo/src/main/resources/META-INF/services/org.rapidpm.vaadin.security.authorization.api.AuthorizationService" beforeDir="false" afterPath="$PROJECT_DIR$/03_demo/src/main/resources/META-INF/services/org.rapidpm.vaadin.security.authorization.api.AuthorizationService" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/MySessionAccessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/MySessionAccessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/security/MyLoginListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/security/MyLoginListener.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/security/model/MyUser.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/security/model/MyUser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/security/model/UserStorage.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/security/model/UserStorage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/security/permissions/RequiredPermissions.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/security/permissions/RequiredPermissions.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/security/roles/AuthorizationRole.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/security/roles/AuthorizationRole.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/security/roles/MyRoleAccessEvaluator.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/security/roles/MyRoleAccessEvaluator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/security/roles/VisibleFor.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/security/roles/VisibleFor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/security/services/MyAuthenticationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/security/services/MyAuthenticationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/security/services/MyAuthorizationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/security/services/MyAuthorizationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/AdminView.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/AdminView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/MainView.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/MainView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/MyLoginView.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/MyLoginView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/NerdView.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/NerdView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/PublicView.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/PublicView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/workspaces/AdminWorkspace.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/workspaces/AdminWorkspace.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/workspaces/DemoUselessWorkspace.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/workspaces/DemoUselessWorkspace.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/workspaces/NerdWorkspace.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/workspaces/NerdWorkspace.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/workspaces/PublicAllWorkspace.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/workspaces/PublicAllWorkspace.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/workspaces/UserWorkspace.java" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/java/demo/app/views/workspaces/UserWorkspace.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/resources/META-INF/services/org.rapidpm.vaadin.security.authorization.LoginListener" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/resources/META-INF/services/org.rapidpm.vaadin.security.authorization.LoginListener" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/resources/META-INF/services/org.rapidpm.vaadin.security.authorization.api.AccessEvaluator" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/resources/META-INF/services/org.rapidpm.vaadin.security.authorization.api.AccessEvaluator" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/resources/META-INF/services/org.rapidpm.vaadin.security.authorization.api.AuthenticationService" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/resources/META-INF/services/org.rapidpm.vaadin.security.authorization.api.AuthenticationService" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flow-security-test/src/main/resources/META-INF/services/org.rapidpm.vaadin.security.authorization.api.AuthorizationService" beforeDir="false" afterPath="$PROJECT_DIR$/flow-security-test/src/main/resources/META-INF/services/org.rapidpm.vaadin.security.authorization.api.AuthorizationService" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -116,9 +67,9 @@
     <property name="node.js.path.for.package.tslint" value="project" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
-    <property name="project.structure.last.edited" value="Modules" />
+    <property name="project.structure.last.edited" value="Project" />
     <property name="project.structure.proportion" value="0.0" />
-    <property name="project.structure.side.proportion" value="0.0" />
+    <property name="project.structure.side.proportion" value="0.2" />
     <property name="settings.editor.selected.configurable" value="JFrog" />
   </component>
   <component name="RecentsManager">
@@ -171,6 +122,7 @@
       <updated>1578172685135</updated>
       <workItem from="1578172687226" duration="7971000" />
       <workItem from="1578303640614" duration="598000" />
+      <workItem from="1578522249980" duration="362000" />
     </task>
     <task id="LOCAL-00001" summary="structure change for TC">
       <created>1578259536699</created>
@@ -198,26 +150,31 @@
       <screen x="0" y="23" width="2048" height="1257" />
     </state>
     <state x="417" y="320" key="CommitChangelistDialog2/0.-1417.2560.1417/0.23.2048.1257@0.23.2048.1257" timestamp="1578259536388" />
-    <state width="1849" height="430" key="GridCell.Tab.0.bottom" timestamp="1578261099393">
+    <state width="2006" height="467" key="GridCell.Tab.0.bottom" timestamp="1578522623524">
       <screen x="0" y="23" width="2048" height="1257" />
     </state>
     <state width="1849" height="430" key="GridCell.Tab.0.bottom/0.-1417.2560.1417/0.23.2048.1257@0.23.2048.1257" timestamp="1578261099393" />
-    <state width="1849" height="430" key="GridCell.Tab.0.center" timestamp="1578261099392">
+    <state width="2006" height="467" key="GridCell.Tab.0.bottom/0.23.2048.1257@0.23.2048.1257" timestamp="1578522623524" />
+    <state width="2006" height="467" key="GridCell.Tab.0.center" timestamp="1578522623523">
       <screen x="0" y="23" width="2048" height="1257" />
     </state>
     <state width="1849" height="430" key="GridCell.Tab.0.center/0.-1417.2560.1417/0.23.2048.1257@0.23.2048.1257" timestamp="1578261099392" />
-    <state width="1849" height="430" key="GridCell.Tab.0.left" timestamp="1578261099392">
+    <state width="2006" height="467" key="GridCell.Tab.0.center/0.23.2048.1257@0.23.2048.1257" timestamp="1578522623523" />
+    <state width="2006" height="467" key="GridCell.Tab.0.left" timestamp="1578522623522">
       <screen x="0" y="23" width="2048" height="1257" />
     </state>
     <state width="1849" height="430" key="GridCell.Tab.0.left/0.-1417.2560.1417/0.23.2048.1257@0.23.2048.1257" timestamp="1578261099392" />
-    <state width="1849" height="430" key="GridCell.Tab.0.right" timestamp="1578261099393">
+    <state width="2006" height="467" key="GridCell.Tab.0.left/0.23.2048.1257@0.23.2048.1257" timestamp="1578522623522" />
+    <state width="2006" height="467" key="GridCell.Tab.0.right" timestamp="1578522623524">
       <screen x="0" y="23" width="2048" height="1257" />
     </state>
     <state width="1849" height="430" key="GridCell.Tab.0.right/0.-1417.2560.1417/0.23.2048.1257@0.23.2048.1257" timestamp="1578261099393" />
-    <state x="457" y="299" width="1342" height="828" key="SettingsEditor" timestamp="1578256970976">
+    <state width="2006" height="467" key="GridCell.Tab.0.right/0.23.2048.1257@0.23.2048.1257" timestamp="1578522623524" />
+    <state x="457" y="299" width="1342" height="828" key="SettingsEditor" timestamp="1578522290801">
       <screen x="0" y="23" width="2048" height="1257" />
     </state>
     <state x="457" y="299" width="1342" height="828" key="SettingsEditor/0.-1417.2560.1417/0.23.2048.1257@0.23.2048.1257" timestamp="1578256970976" />
+    <state x="457" y="299" key="SettingsEditor/0.23.2048.1257@0.23.2048.1257" timestamp="1578522290801" />
     <state x="569" y="446" key="Vcs.Push.Dialog.v2" timestamp="1578259711221">
       <screen x="0" y="23" width="2048" height="1257" />
     </state>
