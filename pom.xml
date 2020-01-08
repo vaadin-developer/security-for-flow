@@ -38,15 +38,15 @@
     <name>Sven Ruppert</name>
     <url>https://github.com/svenruppert</url>
   </organization>
-  <url>https://github.com/vaadin-developer/flow-security</url>
+  <url>https://github.com/vaadin-developer/security-for-flow</url>
 
   <scm>
-    <url>https://github.com/vaadin-developer/flow-security</url>
+    <url>https://github.com/vaadin-developer/security-for-flow</url>
     <connection>
-      scm:git:https://github.com/vaadin-developer/flow-security.git
+      scm:git:https://github.com/vaadin-developer/security-for-flow.git
     </connection>
     <developerConnection>
-      scm:git:https://github.com/vaadin-developer/flow-security.git
+      scm:git:https://github.com/vaadin-developer/security-for-flow.git
     </developerConnection>
     <tag>HEAD</tag>
   </scm>
@@ -63,7 +63,7 @@
   <issueManagement>
     <system>Github</system>
     <url>
-      https://github.com/vaadin-developer/flow-security/issues
+      https://github.com/vaadin-developer/security-for-flow/issues
     </url>
   </issueManagement>
   <licenses>
