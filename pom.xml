@@ -105,7 +105,7 @@
       <dependency>
         <groupId>org.rapidpm.vaadin</groupId>
         <artifactId>nano-vaadin-jetty</artifactId>
-        <version>01.00.01-RPM</version>
+        <version>01.00.02-RPM-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.github.appreciated</groupId>
