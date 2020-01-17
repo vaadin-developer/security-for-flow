@@ -1,12 +1,12 @@
 /**
  * Copyright © 2017 Sven Ruppert (sven.ruppert@gmail.com)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,42 +29,50 @@ import java.util.Optional;
 import static org.junit.jupiter.api.extension.ExtensionContext.Namespace.GLOBAL;
 import static org.testcontainers.containers.BrowserWebDriverContainer.VncRecordingMode.RECORD_ALL;
 
-public class WebdriverExtension implements BeforeEachCallback, AfterEachCallback {
+public class WebdriverExtension
+    implements BeforeEachCallback, AfterEachCallback {
 
   @Override
-  public void beforeEach(ExtensionContext extensionContext) throws Exception {
+  public void beforeEach(ExtensionContext extensionContext)
+      throws Exception {
 
     final BrowserWebDriverContainer container = new BrowserWebDriverContainer()
         .withCapabilities(new ChromeOptions())
-        .withRecordingMode(RECORD_ALL , new File("./target/"))
+        .withRecordingMode(RECORD_ALL, new File("./target/"))
 //        .withRecordingMode(SKIP , new File("./target/"))
         .withRecordingFileFactory(new DefaultRecordingFileFactory());
 
     container.start();
     extensionContext
         .getStore(GLOBAL)
-        .put(BrowserWebDriverContainer.class.getSimpleName() , container);
+        .put(BrowserWebDriverContainer.class.getSimpleName(), container);
 
   }
 
   @Override
-  public void afterEach(ExtensionContext extensionContext) throws Exception {
+  public void afterEach(ExtensionContext extensionContext)
+      throws Exception {
 
     final BrowserWebDriverContainer container = extensionContext
         .getStore(GLOBAL)
-        .get(BrowserWebDriverContainer.class.getSimpleName() , BrowserWebDriverContainer.class);
+        .get(BrowserWebDriverContainer.class.getSimpleName(), BrowserWebDriverContainer.class);
 
     final String uniqueId = extensionContext.getUniqueId();
-    final String name = extensionContext.getRequiredTestMethod().getName();
+    final String name = extensionContext.getRequiredTestMethod()
+                                        .getName();
 
 
     container.afterTest(new TestDescription() {
       @Override
-      public String getTestId() { return uniqueId; }
+      public String getTestId() {
+        return uniqueId;
+      }
 
       @Override
-      public String getFilesystemFriendlyName() { return name; }
-    } , Optional.empty());
+      public String getFilesystemFriendlyName() {
+        return name;
+      }
+    }, Optional.empty());
 
     container
         .stop();

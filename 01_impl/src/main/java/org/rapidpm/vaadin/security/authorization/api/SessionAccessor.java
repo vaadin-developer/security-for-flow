@@ -1,12 +1,12 @@
 /**
  * Copyright © 2017 Sven Ruppert (sven.ruppert@gmail.com)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,8 @@ public interface SessionAccessor
     extends HasLogger {
 
   Class SUBJECT_TYPE = new AuthenticationServiceProvider().load()
-                                                          .subjectType();
+      .get()
+      .subjectType();
 
   /**
    * This Class describes the "User" class that is used in the current project to hold the
@@ -39,7 +40,7 @@ public interface SessionAccessor
 
   static <T> Result<T> currentSubject() {
     return Result.ofNullable(VaadinSession.getCurrent()
-                                          .getAttribute(subjectType()));
+        .getAttribute(subjectType()));
   }
 
   /**
@@ -51,12 +52,12 @@ public interface SessionAccessor
     Objects.requireNonNull(subject);
 //    final Object cast = subjectType().cast(subject);
     VaadinSession.getCurrent()
-                 .setAttribute(subjectType(), subject);
+        .setAttribute(subjectType(), subject);
   }
 
   static void deleteCurrentSubject() {
     VaadinSession.getCurrent()
-                 .setAttribute(subjectType(), null);
+        .setAttribute(subjectType(), null);
   }
 
 

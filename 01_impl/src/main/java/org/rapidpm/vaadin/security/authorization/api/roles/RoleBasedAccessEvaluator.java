@@ -36,7 +36,7 @@ import static org.rapidpm.vaadin.security.authorization.impl.Access.restricted;
 public abstract class RoleBasedAccessEvaluator<T extends Annotation, U>
     implements AccessEvaluator<T> {
 
-  private final AuthorizationService<U> authorizationService = new AuthorizationServiceProvider().load();
+  private final AuthorizationService<U> authorizationService = (AuthorizationService<U>) new AuthorizationServiceProvider().load().get();
 
   /**
    * Mapping from a custom type to a defined type inside the generic implementation.
