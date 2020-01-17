@@ -1,12 +1,12 @@
 /**
  * Copyright © 2017 Sven Ruppert (sven.ruppert@gmail.com)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,12 +15,17 @@
  */
 package org.rapidpm.vaadin.security.authorization.api;
 
-import org.rapidpm.vaadin.ServiceProvider;
+import org.rapidpm.dependencies.core.serviceprovider.ServiceProvider;
+
+import java.lang.reflect.AnnotatedElement;
 
 public class AuthorizationServiceProvider<U>
     implements ServiceProvider<AuthorizationService<U>> {
   @Override
-  public AuthorizationService<U> load() {
-    return ServiceProvider.<AuthorizationService>loadService().apply(AuthorizationService.class);
+  public Class<AuthorizationService<U>> serviceInterface() {
+    AnnotatedElement authorizationServiceClass = AuthorizationService.class;
+    return (Class<AuthorizationService<U>>) authorizationServiceClass;
   }
+
+
 }
