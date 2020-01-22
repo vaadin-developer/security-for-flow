@@ -17,9 +17,7 @@ package org.rapidpm.vaadin.security.authorization.api.roles;
 
 import com.vaadin.flow.router.Location;
 import org.rapidpm.frp.model.Result;
-import org.rapidpm.vaadin.security.authorization.api.AccessEvaluator;
 import org.rapidpm.vaadin.security.authorization.api.AuthorizationService;
-import org.rapidpm.vaadin.security.authorization.api.AuthorizationServiceProvider;
 import org.rapidpm.vaadin.security.authorization.api.SessionAccessor;
 import org.rapidpm.vaadin.security.authorization.impl.Access;
 
@@ -34,40 +32,7 @@ import static org.rapidpm.vaadin.security.authorization.impl.Access.restricted;
  * @param <U> The User - class
  */
 public abstract class RoleBasedAccessEvaluator<T extends Annotation, U>
-        implements AccessEvaluator<T> {
-
-    /**
-     * This will call the ServiceLocator to get the Service.
-     * If you need to deal with another technology, override this method in your implementation.
-     * The default implementation is NOT caching!
-     * @return the AuthorizationService of your choice.
-     */
-    public AuthorizationService<U> authorizationService() {
-        return (AuthorizationService<U>) new AuthorizationServiceProvider().load().get();
-    }
-
-    /**
-     * Mapping from a custom type to a defined type inside the generic implementation.
-     * The Mapping could include dynamic parts, based on situation/date/time and so on.
-     * For example, the Admin Role could be expanded to a set of custom specific
-     * Admin Role Names.
-     *
-     * @param annotation the project specific annotation with the static content, something like UserRole.USER
-     * @return a set of RoleName´s that are required by this annotation.
-     */
-    public abstract Set<RoleName> requiredRoles(T annotation);
-
-    /**
-     * based on the situation a alternative navigation target could be
-     * defined. This method will be called if the the original navigation target could not
-     * be ued based on missing Roles/Permissions of the active user.
-     *
-     * @param location         actual position on the side
-     * @param navigationTarget where to go next
-     * @param annotation       the annotation that holds the info
-     * @return granted Access or a restricted one with an alternative navigation target
-     */
-    public abstract String alternativeNavigationTarget(Location location, Class<?> navigationTarget, T annotation);
+        implements RoleBasedAccessEvaluatorAPI<T, U> {
 
     @Override
     public Access evaluate(Location location, Class<?> navigationTarget, T annotation) {
@@ -79,7 +44,7 @@ public abstract class RoleBasedAccessEvaluator<T extends Annotation, U>
         if (currentSubject.isAbsent())
             return restricted(alternativeNavigationTarget(location, navigationTarget, annotation), false);
 
-        final AuthorizationService<U> authorizationService = authorizationService();
+        final AuthorizationService<U> authorizationService = this.authorizationService();
 
         return currentSubject.stream()
                 .map(authorizationService::rolesFor)
