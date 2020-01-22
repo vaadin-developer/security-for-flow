@@ -36,13 +36,14 @@ import static org.rapidpm.vaadin.security.authorization.impl.Access.restricted;
 public abstract class RoleBasedAccessEvaluator<T extends Annotation, U>
         implements AccessEvaluator<T> {
 
-  /**
-   * This will call the ServiceLocator to get the Service.
-   * If you need to deal with another technology, override this method in your implementation.
-   * @return the AuthorizationService of your choice.
-   */
-    public AuthorizationService<U> authorizationService(){
-      return (AuthorizationService<U>) new AuthorizationServiceProvider().load().get();
+    /**
+     * This will call the ServiceLocator to get the Service.
+     * If you need to deal with another technology, override this method in your implementation.
+     * The default implementation is NOT caching!
+     * @return the AuthorizationService of your choice.
+     */
+    public AuthorizationService<U> authorizationService() {
+        return (AuthorizationService<U>) new AuthorizationServiceProvider().load().get();
     }
 
     /**
@@ -61,9 +62,9 @@ public abstract class RoleBasedAccessEvaluator<T extends Annotation, U>
      * defined. This method will be called if the the original navigation target could not
      * be ued based on missing Roles/Permissions of the active user.
      *
-     * @param location actual position on the side
+     * @param location         actual position on the side
      * @param navigationTarget where to go next
-     * @param annotation the annotation that holds the info
+     * @param annotation       the annotation that holds the info
      * @return granted Access or a restricted one with an alternative navigation target
      */
     public abstract String alternativeNavigationTarget(Location location, Class<?> navigationTarget, T annotation);
@@ -77,6 +78,8 @@ public abstract class RoleBasedAccessEvaluator<T extends Annotation, U>
         final Result<U> currentSubject = SessionAccessor.currentSubject();
         if (currentSubject.isAbsent())
             return restricted(alternativeNavigationTarget(location, navigationTarget, annotation), false);
+
+        final AuthorizationService<U> authorizationService = authorizationService();
 
         return currentSubject.stream()
                 .map(authorizationService::rolesFor)
