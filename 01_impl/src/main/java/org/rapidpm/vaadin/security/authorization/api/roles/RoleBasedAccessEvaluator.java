@@ -1,12 +1,12 @@
 /**
  * Copyright © 2017 Sven Ruppert (sven.ruppert@gmail.com)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,49 +34,59 @@ import static org.rapidpm.vaadin.security.authorization.impl.Access.restricted;
  * @param <U> The User - class
  */
 public abstract class RoleBasedAccessEvaluator<T extends Annotation, U>
-    implements AccessEvaluator<T> {
+        implements AccessEvaluator<T> {
 
-  private final AuthorizationService<U> authorizationService = (AuthorizationService<U>) new AuthorizationServiceProvider().load().get();
+    /**
+     * This will call the ServiceLocator to get the Service.
+     * If you need to deal with another technology, override this method in your implementation.
+     * The default implementation is NOT caching!
+     * @return the AuthorizationService of your choice.
+     */
+    public AuthorizationService<U> authorizationService() {
+        return (AuthorizationService<U>) new AuthorizationServiceProvider().load().get();
+    }
 
-  /**
-   * Mapping from a custom type to a defined type inside the generic implementation.
-   * The Mapping could include dynamic parts, based on situation/date/time and so on.
-   * For example, the Admin Role could be expanded to a set of custom specific
-   * Admin Role Names.
-   *
-   * @param annotation the project specific annotation with the static content, something like UserRole.USER
-   * @return a set of RoleName´s that are required by this annotation.
-   */
-  public abstract Set<RoleName> requiredRoles(T annotation);
+    /**
+     * Mapping from a custom type to a defined type inside the generic implementation.
+     * The Mapping could include dynamic parts, based on situation/date/time and so on.
+     * For example, the Admin Role could be expanded to a set of custom specific
+     * Admin Role Names.
+     *
+     * @param annotation the project specific annotation with the static content, something like UserRole.USER
+     * @return a set of RoleName´s that are required by this annotation.
+     */
+    public abstract Set<RoleName> requiredRoles(T annotation);
 
-  /**
-   * based on the situation a alternative navigation target could be
-   * defined. This method will be called if the the original navigation target could not
-   * be ued based on missing Roles/Permissions of the active user.
-   *
-   * @param location actual position on the side
-   * @param navigationTarget where to go next
-   * @param annotation the annotation that holds the info
-   * @return granted Access or a restricted one with an alternative navigation target
-   */
-  public abstract String alternativeNavigationTarget(Location location, Class<?> navigationTarget, T annotation);
+    /**
+     * based on the situation a alternative navigation target could be
+     * defined. This method will be called if the the original navigation target could not
+     * be ued based on missing Roles/Permissions of the active user.
+     *
+     * @param location         actual position on the side
+     * @param navigationTarget where to go next
+     * @param annotation       the annotation that holds the info
+     * @return granted Access or a restricted one with an alternative navigation target
+     */
+    public abstract String alternativeNavigationTarget(Location location, Class<?> navigationTarget, T annotation);
 
-  @Override
-  public Access evaluate(Location location, Class<?> navigationTarget, T annotation) {
-    final Set<RoleName> roleNames = requiredRoles(annotation);
+    @Override
+    public Access evaluate(Location location, Class<?> navigationTarget, T annotation) {
+        final Set<RoleName> roleNames = requiredRoles(annotation);
 
-    if (roleNames.isEmpty()) return granted();
+        if (roleNames.isEmpty()) return granted();
 
-    final Result<U> currentSubject = SessionAccessor.currentSubject();
-    if (currentSubject.isAbsent())
-      return restricted(alternativeNavigationTarget(location, navigationTarget, annotation), false);
+        final Result<U> currentSubject = SessionAccessor.currentSubject();
+        if (currentSubject.isAbsent())
+            return restricted(alternativeNavigationTarget(location, navigationTarget, annotation), false);
 
-    return currentSubject.stream()
-                         .map(authorizationService::rolesFor)
-                         .flatMap(HasRoles::roleNames)
-                         .filter(roleNames::contains)
-                         .findFirst()
-                         .map(rn -> granted())
-                         .orElse(restricted(alternativeNavigationTarget(location, navigationTarget, annotation), true));
-  }
+        final AuthorizationService<U> authorizationService = authorizationService();
+
+        return currentSubject.stream()
+                .map(authorizationService::rolesFor)
+                .flatMap(HasRoles::roleNames)
+                .filter(roleNames::contains)
+                .findFirst()
+                .map(rn -> granted())
+                .orElse(restricted(alternativeNavigationTarget(location, navigationTarget, annotation), true));
+    }
 }
