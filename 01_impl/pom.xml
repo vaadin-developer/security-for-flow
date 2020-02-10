@@ -25,7 +25,7 @@
     <version>00.20.00-alpha</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.rapidpm.vaadin</groupId>
+
   <artifactId>security-for-flow</artifactId>
 
   <dependencies>

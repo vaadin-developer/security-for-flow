@@ -139,10 +139,6 @@
         <artifactId>nano-vaadin-jetty</artifactId>
         <version>01.01.00-alpha-b2</version>
       </dependency>
-      <dependency>
-        <groupId>com.github.appreciated</groupId>
-        <artifactId>vaadin-css-grid</artifactId>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
