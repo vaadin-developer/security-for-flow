@@ -26,6 +26,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
+  <groupId>org.rapidpm.vaadin</groupId>
   <artifactId>security-for-flow-test</artifactId>
 
   <!-- Just to disable any accidental deployment to maven.central -->
