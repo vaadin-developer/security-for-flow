@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.rapidpm.vaadin</groupId>
     <artifactId>security-for-flow-parent</artifactId>
-    <version>00.13.00-RPM-SNAPSHOT</version>
+    <version>00.20.00-alpha</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
