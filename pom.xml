@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.rapidpm.vaadin</groupId>
     <artifactId>rapidpm-vaadin-dependencies-v14</artifactId>
-    <version>05.00.00-alpha-b10</version>
+    <version>05.00.00-alpha-b12</version>
   </parent>
 
   <groupId>org.rapidpm.vaadin</groupId>
@@ -130,6 +130,11 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>org.rapidpm</groupId>
+        <artifactId>rapidpm-dependencies-core</artifactId>
+        <version>04.07.00-alpha-b10</version>
+      </dependency>
+      <dependency>
         <groupId>org.rapidpm.vaadin</groupId>
         <artifactId>security-for-flow</artifactId>
         <version>${project.version}</version>
@@ -137,7 +142,7 @@
       <dependency>
         <groupId>org.rapidpm.vaadin</groupId>
         <artifactId>nano-vaadin-jetty</artifactId>
-        <version>01.01.00-alpha-b24</version>
+        <version>01.01.00-alpha-b27</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
