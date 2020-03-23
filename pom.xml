@@ -30,7 +30,7 @@
 
   <groupId>org.rapidpm.vaadin</groupId>
   <artifactId>security-for-flow-parent</artifactId>
-  <version>00.20.00-alpha</version>
+  <version>00.20.01</version>
   <packaging>pom</packaging>
 
   <inceptionYear>2018</inceptionYear>
@@ -114,7 +114,6 @@
       <id>central</id>
       <name>libs-release</name>
       <url>http://jfrog-repo.sven-ruppert.de:8081/artifactory/libs-release</url>
-      <!--      <url>${deploy-repo-url}</url>-->
     </pluginRepository>
     <pluginRepository>
       <snapshots>
