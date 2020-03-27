@@ -141,7 +141,7 @@
       <dependency>
         <groupId>org.rapidpm.vaadin</groupId>
         <artifactId>nano-vaadin-jetty</artifactId>
-        <version>01.01.01-79</version>
+        <version>01.01.01-80</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
