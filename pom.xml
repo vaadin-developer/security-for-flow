@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.rapidpm.vaadin</groupId>
     <artifactId>rapidpm-vaadin-dependencies-v14</artifactId>
-    <version>05.00.00-alpha-b116</version>
+    <version>05.00.01-129</version>
   </parent>
 
   <groupId>org.rapidpm.vaadin</groupId>
@@ -131,7 +131,7 @@
       <dependency>
         <groupId>org.rapidpm</groupId>
         <artifactId>rapidpm-dependencies-core</artifactId>
-        <version>04.07.01-102</version>
+        <version>04.07.01-107</version>
       </dependency>
       <dependency>
         <groupId>org.rapidpm.vaadin</groupId>
@@ -141,7 +141,7 @@
       <dependency>
         <groupId>org.rapidpm.vaadin</groupId>
         <artifactId>nano-vaadin-jetty</artifactId>
-        <version>01.01.01-47</version>
+        <version>01.01.01-79</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
