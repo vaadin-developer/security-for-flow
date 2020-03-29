@@ -93,7 +93,6 @@
       </snapshots>
       <id>central</id>
       <name>libs-release</name>
-      <!--      <url>${deploy-repo-url}</url>-->
       <url>http://jfrog-repo.sven-ruppert.de:8081/artifactory/libs-release</url>
     </repository>
     <repository>
@@ -140,8 +139,8 @@
       </dependency>
       <dependency>
         <groupId>org.rapidpm.vaadin</groupId>
-        <artifactId>nano-vaadin-jetty</artifactId>
-        <version>01.01.01-83</version>
+        <artifactId>nano-vaadin-undertow</artifactId>
+        <version>01.01.01-58</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

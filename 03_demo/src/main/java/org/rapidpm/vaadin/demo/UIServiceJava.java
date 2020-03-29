@@ -25,9 +25,9 @@ public class UIServiceJava extends CoreUIServiceJava {
   }
 
   public static void main(String[] args) throws ParseException {
-    System.setProperty(Constants.SERVLET_PARAMETER_ENABLE_DEV_SERVER, "false");
+    System.setProperty(Constants.SERVLET_PARAMETER_ENABLE_DEV_SERVER, "true");
     System.setProperty("vaadin.compatibilityMode", "false");
-    System.setProperty("vaadin.productionMode", "true");
+    System.setProperty("vaadin.productionMode", "false");
     CoreUIServiceJava uiService = new UIServiceJava().executeCLI(args);
     uiService.startup();
   }
