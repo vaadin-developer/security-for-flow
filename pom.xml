@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.rapidpm.vaadin</groupId>
     <artifactId>rapidpm-vaadin-dependencies-v14</artifactId>
-    <version>05.00.01-164</version>
+    <version>05.00.01-162</version>
   </parent>
 
   <groupId>org.rapidpm.vaadin</groupId>
@@ -135,7 +135,7 @@
       <dependency>
         <groupId>org.rapidpm.vaadin</groupId>
         <artifactId>security-for-flow</artifactId>
-        <version>00.20.01-70</version>
+        <version>00.20.01-71</version>
       </dependency>
       <dependency>
         <groupId>org.rapidpm.vaadin</groupId>
