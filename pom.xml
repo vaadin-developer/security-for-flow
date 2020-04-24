@@ -135,7 +135,7 @@
       <dependency>
         <groupId>org.rapidpm.vaadin</groupId>
         <artifactId>security-for-flow</artifactId>
-        <version>00.20.01-71</version>
+        <version>00.20.01-72</version>
       </dependency>
       <dependency>
         <groupId>org.rapidpm.vaadin</groupId>
