@@ -135,12 +135,12 @@
       <dependency>
         <groupId>org.rapidpm.vaadin</groupId>
         <artifactId>security-for-flow</artifactId>
-        <version>00.20.01-79</version>
+        <version>00.20.01-80</version>
       </dependency>
       <dependency>
         <groupId>org.rapidpm.vaadin</groupId>
         <artifactId>nano-vaadin-undertow</artifactId>
-        <version>01.01.01-76</version>
+        <version>01.01.01-78</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
