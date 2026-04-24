@@ -19,16 +19,20 @@ package com.svenruppert.vaadin.security.authorization.api.permissions;
 import com.svenruppert.vaadin.security.authorization.api.AccessEvaluator;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
 import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
-import com.svenruppert.vaadin.security.authorization.impl.Access;
+import com.svenruppert.vaadin.security.authorization.navigation.AuthorizationDecision;
 import com.vaadin.flow.router.Location;
 
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
-import static com.svenruppert.vaadin.security.authorization.impl.Access.granted;
-import static com.svenruppert.vaadin.security.authorization.impl.Access.restricted;
-
-@ExperimentalSecurityApi("Permission-based access evaluation is experimental. Use role-based access for stable production use.")
+/**
+ * Base implementation for permission-based access evaluation.
+ *
+ * @param <T> the restriction annotation type
+ * @param <U> the user/subject type
+ */
+@ExperimentalSecurityApi("Permission-based access evaluation is experimental. "
+    + "Use role-based access for stable production use.")
 public abstract class PermissionBasedAccessEvaluator<T extends Annotation, U>
     implements AccessEvaluator<T> {
 
@@ -39,31 +43,33 @@ public abstract class PermissionBasedAccessEvaluator<T extends Annotation, U>
   public abstract Set<PermissionName> requiredPermissions(T annotation);
 
   /**
-   * based on the situation a alternative navigation target could be
-   * defined. This method will be called if the original navigation target could not
-   * be ued based on missing Roles/Permissions of the active user.
+   * Determines the alternative navigation target when the subject
+   * lacks the required permissions.
    *
-   * @param location actual position
-   * @param navigationTarget next target to go
-   * @param annotation that holds the static info
-   * @return granted Access or a restricted one with an alternative navigation target
+   * @param location         current location
+   * @param navigationTarget the restricted target class
+   * @param annotation       the restriction annotation
+   * @return route string for the alternative target
    */
-  public abstract String alternativeNavigationTarget(Location location, Class<?> navigationTarget, T annotation);
+  public abstract String alternativeNavigationTarget(
+      Location location, Class<?> navigationTarget, T annotation);
 
   @Override
-  public Access evaluate(Location location, Class<?> navigationTarget, T annotation) {
+  public AuthorizationDecision evaluateAccess(
+      Location location, Class<?> navigationTarget, T annotation) {
     final Set<PermissionName> permissions = requiredPermissions(annotation);
 
-    //TODO implicit assumption that there will be only one active Role!
-    return authorizationService().permissionsFor(activeSubject())
-                                 .permissionNames()
-                                 .stream()
-                                 .filter(permissions::contains)
-                                 .findFirst()
-                                 .map(rn -> granted())
-                                 .orElse(restricted(alternativeNavigationTarget(location, navigationTarget, annotation),
-                                                    true));
+    boolean hasPermission = authorizationService()
+        .permissionsFor(activeSubject())
+        .permissionNames()
+        .stream()
+        .anyMatch(permissions::contains);
+
+    if (hasPermission) {
+      return AuthorizationDecision.granted();
+    }
+
+    return AuthorizationDecision.denied(
+        alternativeNavigationTarget(location, navigationTarget, annotation), true);
   }
-
-
 }

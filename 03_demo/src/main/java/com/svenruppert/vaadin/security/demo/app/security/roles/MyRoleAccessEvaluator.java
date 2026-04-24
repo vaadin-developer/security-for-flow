@@ -17,6 +17,7 @@
 package com.svenruppert.vaadin.security.demo.app.security.roles;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
+import com.svenruppert.vaadin.security.authorization.api.AccessEvaluator;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SessionAccessor;
@@ -25,8 +26,6 @@ import com.svenruppert.vaadin.security.authorization.navigation.AuthorizationDec
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.demo.app.views.MainView;
 import com.svenruppert.vaadin.security.demo.app.views.MyLoginView;
-import com.svenruppert.vaadin.security.authorization.api.AccessEvaluator;
-import com.svenruppert.vaadin.security.authorization.impl.Access;
 import com.vaadin.flow.router.Location;
 
 import java.util.Set;
@@ -36,17 +35,14 @@ import static java.util.Arrays.stream;
 
 /**
  * Role-based access evaluator for the demo application.
- * <p>
- * Uses the new {@link AuthorizationDecision} model via
- * {@link #evaluateAccess(Location, Class, VisibleFor)}.
- * The legacy {@link #evaluate(Location, Class, VisibleFor)} delegates
- * to the same logic for backward compatibility.
  */
 public class MyRoleAccessEvaluator
     implements AccessEvaluator<VisibleFor>, HasLogger {
 
   @Override
-  public AuthorizationDecision evaluateAccess(Location location, Class<?> navigationTarget, VisibleFor annotation) {
+  public AuthorizationDecision evaluateAccess(
+      Location location, Class<?> navigationTarget, VisibleFor annotation) {
+
     Set<RoleName> requiredRoles = stream(annotation.value())
         .map(Enum::name)
         .map(RoleName::new)
@@ -61,7 +57,8 @@ public class MyRoleAccessEvaluator
       return AuthorizationDecision.denied(MyLoginView.NAV, false);
     }
 
-    AuthorizationService<MyUser> authorizationService = SecurityServiceResolver.authorizationService();
+    AuthorizationService<MyUser> authorizationService =
+        SecurityServiceResolver.authorizationService();
     boolean hasRole = authorizationService.rolesFor(currentSubject.get())
         .roleNames()
         .stream()
@@ -72,18 +69,5 @@ public class MyRoleAccessEvaluator
     }
 
     return AuthorizationDecision.denied(MainView.NAV, true);
-  }
-
-  @Override
-  @SuppressWarnings("deprecation")
-  public Access evaluate(Location location, Class<?> navigationTarget, VisibleFor annotation) {
-    // Bridge: convert the new decision back to legacy Access for callers
-    // that still use the old API path.
-    AuthorizationDecision decision = evaluateAccess(location, navigationTarget, annotation);
-    return switch (decision) {
-      case AuthorizationDecision.Granted() -> Access.granted();
-      case AuthorizationDecision.Denied(String route, boolean asForward) -> Access.restricted(route, asForward);
-      case AuthorizationDecision.DeniedWithError(var errorType, var msg) -> Access.restricted(errorType);
-    };
   }
 }

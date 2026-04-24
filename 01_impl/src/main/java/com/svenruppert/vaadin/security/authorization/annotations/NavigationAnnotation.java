@@ -36,7 +36,7 @@ import java.lang.annotation.*;
  * <p>
  * The RoleBasedAccessEvaluator is an {@link AccessEvaluator} that could look something like the
  * following. Note that the generic type for this AccessEvaluator is the type of the annotation and
- * the annotation is the last parameter of 'evaluate'.
+ * the annotation is the last parameter of 'evaluateAccess'.
  *
  * <pre>
  * class RoleBasedAccessEvaluator implements AccessEvaluator&lt;VisibleTo&gt; {
@@ -44,10 +44,11 @@ import java.lang.annotation.*;
  *     Supplier&lt;UserRoleDescription&gt; userRoleProvider;
  *
  *     &#064;Override
- *     public Access evaluate(Location location, Class&lt;?&gt; navigationTarget, VisibleTo annotation) {
+ *     public AuthorizationDecision evaluateAccess(Location location, Class&lt;?&gt; navigationTarget, VisibleTo annotation) {
  *         final boolean hasRole = annotation.value().equals(userRoleProvider.get());
  *
- *         return hasRole ? Access.granted() : Access.restricted(UserNotInRoleException.class);
+ *         return hasRole ? AuthorizationDecision.granted()
+ *                        : AuthorizationDecision.deniedWithError(UserNotInRoleException.class, null);
  *     }
  * }
  * </pre>

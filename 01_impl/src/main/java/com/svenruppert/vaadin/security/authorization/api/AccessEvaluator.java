@@ -17,7 +17,6 @@
 package com.svenruppert.vaadin.security.authorization.api;
 
 import com.svenruppert.vaadin.security.authorization.annotations.NavigationAnnotation;
-import com.svenruppert.vaadin.security.authorization.impl.Access;
 import com.svenruppert.vaadin.security.authorization.navigation.AuthorizationDecision;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.Location;
@@ -31,10 +30,6 @@ import java.lang.annotation.Annotation;
  * {@link NavigationAnnotation}. The framework calls
  * {@link #evaluateAccess(Location, Class, Annotation)} to obtain a
  * Vaadin-free {@link AuthorizationDecision}.
- * <p>
- * Existing implementations that override {@link #evaluate(Location, Class, Annotation)}
- * continue to work: the default {@code evaluateAccess} implementation
- * bridges through {@link Access#toDecision()}.
  *
  * @param <T> the restriction annotation type
  */
@@ -42,23 +37,6 @@ public interface AccessEvaluator<T extends Annotation> {
 
   /**
    * Evaluate access and return a Vaadin-free decision.
-   * <p>
-   * New implementations should override this method directly.
-   * The default implementation delegates to the legacy
-   * {@link #evaluate(Location, Class, Annotation)} method and
-   * converts the result via {@link Access#toDecision()}.
-   *
-   * @param location         the location being navigated to
-   * @param navigationTarget the target class
-   * @param annotation       the restriction annotation
-   * @return the authorization decision
-   */
-  default AuthorizationDecision evaluateAccess(Location location, Class<?> navigationTarget, T annotation) {
-    return evaluate(location, navigationTarget, annotation).toDecision();
-  }
-
-  /**
-   * Evaluate access and return a legacy {@link Access} object.
    *
    * @param location         the {@link Location} to be navigated to, see {@link
    *                         BeforeEnterEvent#getLocation()}
@@ -67,10 +45,7 @@ public interface AccessEvaluator<T extends Annotation> {
    * @param annotation       the {@link Annotation} on the route-target that itself is annotated
    *                         with a {@link NavigationAnnotation}. This annotation may carry
    *                         additional data which can be used to evaluate the access.
-   * @return the {@link Access}
-   * @deprecated Override {@link #evaluateAccess(Location, Class, Annotation)} instead.
-   *     This method remains as a bridge for existing implementations.
+   * @return the {@link AuthorizationDecision}
    */
-  @Deprecated(since = "0.50.0", forRemoval = false)
-  Access evaluate(Location location, Class<?> navigationTarget, T annotation);
+  AuthorizationDecision evaluateAccess(Location location, Class<?> navigationTarget, T annotation);
 }

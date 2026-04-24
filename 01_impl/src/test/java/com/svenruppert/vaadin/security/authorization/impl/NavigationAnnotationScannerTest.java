@@ -18,6 +18,7 @@ package com.svenruppert.vaadin.security.authorization.impl;
 
 import com.svenruppert.vaadin.security.authorization.annotations.NavigationAnnotation;
 import com.svenruppert.vaadin.security.authorization.api.AccessEvaluator;
+import com.svenruppert.vaadin.security.authorization.navigation.AuthorizationDecision;
 import com.vaadin.flow.router.Location;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -85,8 +86,8 @@ class NavigationAnnotationScannerTest {
 
   static class StubEvaluator implements AccessEvaluator<Annotation> {
     @Override
-    public Access evaluate(Location location, Class<?> navigationTarget, Annotation annotation) {
-      return Access.granted();
+    public AuthorizationDecision evaluateAccess(Location location, Class<?> navigationTarget, Annotation annotation) {
+      return AuthorizationDecision.granted();
     }
   }
 

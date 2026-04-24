@@ -19,40 +19,50 @@ package com.svenruppert.vaadin.security.authorization.api.roles;
 import com.svenruppert.functional.model.Result;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
 import com.svenruppert.vaadin.security.authorization.api.SessionAccessor;
-import com.svenruppert.vaadin.security.authorization.impl.Access;
+import com.svenruppert.vaadin.security.authorization.navigation.AuthorizationDecision;
 import com.vaadin.flow.router.Location;
 
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
-import static com.svenruppert.vaadin.security.authorization.impl.Access.granted;
-import static com.svenruppert.vaadin.security.authorization.impl.Access.restricted;
-
 /**
- * @param <T> Annotation on the View class , something like VisibleFor(..)
- * @param <U> The User - class
+ * Base implementation for role-based access evaluation.
+ * <p>
+ * Returns an {@link AuthorizationDecision} based on whether the current
+ * subject has any of the required roles.
+ *
+ * @param <T> the restriction annotation type
+ * @param <U> the user/subject type
  */
 public abstract class RoleBasedAccessEvaluator<T extends Annotation, U>
         implements RoleBasedAccessEvaluatorAPI<T, U> {
 
     @Override
-    public Access evaluate(Location location, Class<?> navigationTarget, T annotation) {
+    public AuthorizationDecision evaluateAccess(Location location, Class<?> navigationTarget, T annotation) {
         final Set<RoleName> roleNames = requiredRoles(annotation);
 
-        if (roleNames.isEmpty()) return granted();
+        if (roleNames.isEmpty()) {
+            return AuthorizationDecision.granted();
+        }
 
         final Result<U> currentSubject = SessionAccessor.currentSubject();
-        if (currentSubject.isAbsent())
-            return restricted(alternativeNavigationTarget(location, navigationTarget, annotation), false);
+        if (currentSubject.isAbsent()) {
+            return AuthorizationDecision.denied(
+                alternativeNavigationTarget(location, navigationTarget, annotation), false);
+        }
 
         final AuthorizationService<U> authorizationService = this.authorizationService();
 
-        return currentSubject.stream()
+        boolean hasRole = currentSubject.stream()
                 .map(authorizationService::rolesFor)
                 .flatMap(hr -> hr.roleNames().stream())
-                .filter(roleNames::contains)
-                .findFirst()
-                .map(rn -> granted())
-                .orElse(restricted(alternativeNavigationTarget(location, navigationTarget, annotation), true));
+                .anyMatch(roleNames::contains);
+
+        if (hasRole) {
+            return AuthorizationDecision.granted();
+        }
+
+        return AuthorizationDecision.denied(
+            alternativeNavigationTarget(location, navigationTarget, annotation), true);
     }
 }

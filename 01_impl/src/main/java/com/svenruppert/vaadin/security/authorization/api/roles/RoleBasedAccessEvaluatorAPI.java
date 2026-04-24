@@ -24,9 +24,14 @@ import com.vaadin.flow.router.Location;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
+/**
+ * Contract for role-based access evaluators.
+ *
+ * @param <T> the restriction annotation type
+ * @param <U> the user/subject type
+ */
 public interface RoleBasedAccessEvaluatorAPI<T extends Annotation, U>
         extends AccessEvaluator<T> {
-
 
     /**
      * Resolves the {@link AuthorizationService} via SPI using {@link SecurityServiceResolver}.
@@ -40,29 +45,24 @@ public interface RoleBasedAccessEvaluatorAPI<T extends Annotation, U>
         return SecurityServiceResolver.authorizationService();
     }
 
-
     /**
-     * Mapping from a custom type to a defined type inside the generic implementation.
-     * The Mapping could include dynamic parts, based on situation/date/time and so on.
-     * For example, the Admin Role could be expanded to a set of custom specific
-     * Admin Role Names.
+     * Mapping from a custom annotation to the set of role names required
+     * for access. The mapping may include dynamic parts based on
+     * situation, date/time, etc.
      *
-     * @param annotation the project specific annotation with the static content, something like UserRole.USER
-     * @return a set of RoleName´s that are required by this annotation.
+     * @param annotation the restriction annotation instance
+     * @return the set of required role names
      */
     Set<RoleName> requiredRoles(T annotation);
 
-
     /**
-     * based on the situation a alternative navigation target could be
-     * defined. This method will be called if the the original navigation target could not
-     * be ued based on missing Roles/Permissions of the active user.
+     * Determines the alternative navigation target when the subject
+     * lacks the required roles.
      *
-     * @param location         actual position on the side
-     * @param navigationTarget where to go next
-     * @param annotation       the annotation that holds the info
-     * @return granted Access or a restricted one with an alternative navigation target
+     * @param location         current location
+     * @param navigationTarget the restricted target class
+     * @param annotation       the restriction annotation
+     * @return route string for the alternative target
      */
     String alternativeNavigationTarget(Location location, Class<?> navigationTarget, T annotation);
-
 }

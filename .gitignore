@@ -192,3 +192,5 @@ local.properties
 .scala_dependencies
 .worksheet
 
+/03_demo/src/main/bundles/
+/03_demo/src/main/frontend/generated/

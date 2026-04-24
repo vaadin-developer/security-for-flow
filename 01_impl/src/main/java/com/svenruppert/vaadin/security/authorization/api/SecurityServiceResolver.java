@@ -17,17 +17,16 @@
 package com.svenruppert.vaadin.security.authorization.api;
 
 import com.svenruppert.vaadin.security.authorization.LoginListener;
-import com.svenruppert.vaadin.security.authorization.LoginListenerProvider;
 
 import java.util.Optional;
+import java.util.ServiceLoader;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Central resolver for security-related SPI services.
  * <p>
- * Replaces scattered direct calls like {@code new AuthenticationServiceProvider().load().get()}
- * with a single point of access that caches resolved services and produces
- * actionable error messages when an implementation is missing.
+ * Provides a single point of access for SPI-registered security services
+ * with caching and actionable error messages when an implementation is missing.
  * <p>
  * Thread-safe: resolved services are cached via {@link AtomicReference} so
  * repeated lookups do not trigger SPI discovery again.
@@ -70,8 +69,8 @@ public final class SecurityServiceResolver {
     }
 
     AuthenticationService<T, U> loaded =
-        (AuthenticationService<T, U>) new AuthenticationServiceProvider()
-            .load()
+        (AuthenticationService<T, U>) ServiceLoader.load(AuthenticationService.class)
+            .findFirst()
             .orElseThrow(() -> new IllegalStateException(
                 "Unable to resolve AuthenticationService — "
                     + "no implementation found in META-INF/services/"
@@ -110,8 +109,8 @@ public final class SecurityServiceResolver {
     }
 
     AuthorizationService<U> loaded =
-        (AuthorizationService<U>) new AuthorizationServiceProvider<U>()
-            .load()
+        (AuthorizationService<U>) ServiceLoader.load(AuthorizationService.class)
+            .findFirst()
             .orElseThrow(() -> new IllegalStateException(
                 "Unable to resolve AuthorizationService — "
                     + "no implementation found in META-INF/services/"
@@ -149,8 +148,8 @@ public final class SecurityServiceResolver {
       return (LoginListener<U>) cached;
     }
 
-    LoginListener<U> loaded = (LoginListener<U>) new LoginListenerProvider()
-        .load()
+    LoginListener<U> loaded = (LoginListener<U>) ServiceLoader.load(LoginListener.class)
+        .findFirst()
         .orElseThrow(() -> new IllegalStateException(
             "Unable to resolve LoginListener — "
                 + "no implementation found in META-INF/services/"
