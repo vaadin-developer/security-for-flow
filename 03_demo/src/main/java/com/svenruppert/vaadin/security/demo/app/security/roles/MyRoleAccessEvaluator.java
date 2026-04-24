@@ -1,56 +1,89 @@
 /**
  * Copyright © 2017 Sven Ruppert (sven.ruppert@gmail.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the EUPL, Version 1.2 or - as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence"); You may not use this work except in
+ * compliance with the Licence. You may obtain a copy of the Licence at:
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * https://joinup.ec.europa.eu/software/page/eupl
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the Licence is distributed on an "AS IS" basis,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
  */
 package com.svenruppert.vaadin.security.demo.app.security.roles;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
-import com.vaadin.flow.router.Location;
+import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
+import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.SessionAccessor;
+import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
+import com.svenruppert.vaadin.security.authorization.navigation.AuthorizationDecision;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.demo.app.views.MainView;
 import com.svenruppert.vaadin.security.demo.app.views.MyLoginView;
-import com.svenruppert.vaadin.security.authorization.api.roles.RoleBasedAccessEvaluator;
-import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
+import com.svenruppert.vaadin.security.authorization.api.AccessEvaluator;
+import com.svenruppert.vaadin.security.authorization.impl.Access;
+import com.vaadin.flow.router.Location;
 
-import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
-import static com.svenruppert.vaadin.security.authorization.api.SessionAccessor.currentSubject;
 
+/**
+ * Role-based access evaluator for the demo application.
+ * <p>
+ * Uses the new {@link AuthorizationDecision} model via
+ * {@link #evaluateAccess(Location, Class, VisibleFor)}.
+ * The legacy {@link #evaluate(Location, Class, VisibleFor)} delegates
+ * to the same logic for backward compatibility.
+ */
 public class MyRoleAccessEvaluator
-    extends RoleBasedAccessEvaluator<VisibleFor, MyUser>
-    implements HasLogger {
+    implements AccessEvaluator<VisibleFor>, HasLogger {
 
   @Override
-  public Set<RoleName> requiredRoles(VisibleFor annotation) {
-    return stream(annotation.value()).map(Enum::name)
-                                     .map(RoleName::new)
-                                     .collect(Collectors.toSet());
+  public AuthorizationDecision evaluateAccess(Location location, Class<?> navigationTarget, VisibleFor annotation) {
+    Set<RoleName> requiredRoles = stream(annotation.value())
+        .map(Enum::name)
+        .map(RoleName::new)
+        .collect(Collectors.toSet());
+
+    if (requiredRoles.isEmpty()) {
+      return AuthorizationDecision.granted();
+    }
+
+    var currentSubject = SessionAccessor.<MyUser>currentSubject();
+    if (currentSubject.isAbsent()) {
+      return AuthorizationDecision.denied(MyLoginView.NAV, false);
+    }
+
+    AuthorizationService<MyUser> authorizationService = SecurityServiceResolver.authorizationService();
+    boolean hasRole = authorizationService.rolesFor(currentSubject.get())
+        .roleNames()
+        .stream()
+        .anyMatch(requiredRoles::contains);
+
+    if (hasRole) {
+      return AuthorizationDecision.granted();
+    }
+
+    return AuthorizationDecision.denied(MainView.NAV, true);
   }
 
   @Override
-  public String alternativeNavigationTarget(Location location, Class<?> navigationTarget, VisibleFor annotation) {
-    logger().info("alternativeNavigationTarget - {}", location.getPath());
-    logger().info("alternativeNavigationTarget - {}", navigationTarget.getSimpleName());
-    logger().info("alternativeNavigationTarget - {}", Arrays.asList(annotation.value()));
-    //TODO target is only on customer project known
-
-    return (currentSubject().isPresent())
-           ? MainView.NAV
-           : MyLoginView.NAV;
+  @SuppressWarnings("deprecation")
+  public Access evaluate(Location location, Class<?> navigationTarget, VisibleFor annotation) {
+    // Bridge: convert the new decision back to legacy Access for callers
+    // that still use the old API path.
+    AuthorizationDecision decision = evaluateAccess(location, navigationTarget, annotation);
+    return switch (decision) {
+      case AuthorizationDecision.Granted() -> Access.granted();
+      case AuthorizationDecision.Denied(String route, boolean asForward) -> Access.restricted(route, asForward);
+      case AuthorizationDecision.DeniedWithError(var errorType, var msg) -> Access.restricted(errorType);
+    };
   }
-
 }

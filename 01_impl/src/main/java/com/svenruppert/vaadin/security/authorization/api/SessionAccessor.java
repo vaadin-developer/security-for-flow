@@ -1,17 +1,18 @@
 /**
  * Copyright © 2017 Sven Ruppert (sven.ruppert@gmail.com)
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ * Licensed under the EUPL, Version 1.2 or - as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence"); You may not use this work except in
+ * compliance with the Licence. You may obtain a copy of the Licence at:
+ *
+ * https://joinup.ec.europa.eu/software/page/eupl
+ *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the Licence is distributed on an "AS IS" basis,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
  */
 package com.svenruppert.vaadin.security.authorization.api;
 
@@ -26,8 +27,10 @@ import java.util.concurrent.atomic.AtomicReference;
  * {@link VaadinSessionSubjectStore}, but it can be replaced for testing
  * via {@link #setSubjectStore(SubjectStore)}.
  * <p>
- * The public API ({@code currentSubject()}, {@code setCurrentSubject(...)},
- * {@code deleteCurrentSubject()}) is unchanged from prior versions.
+ * The subject type is lazily resolved from the registered
+ * {@link AuthenticationService} via {@link SecurityServiceResolver}.
+ * For testing, the subject type can be explicitly set via
+ * {@link #setSubjectType(Class)}.
  *
  * @see SubjectStore
  * @see VaadinSessionSubjectStore
@@ -36,6 +39,9 @@ public final class SessionAccessor {
 
   private static final AtomicReference<SubjectStore> STORE_REF =
       new AtomicReference<>(new VaadinSessionSubjectStore());
+
+  private static final AtomicReference<Class<?>> SUBJECT_TYPE_REF =
+      new AtomicReference<>();
 
   private SessionAccessor() {
   }
@@ -55,9 +61,35 @@ public final class SessionAccessor {
     return STORE_REF.get();
   }
 
+  /**
+   * Explicitly sets the subject type.
+   * Intended for testing or environments where the
+   * {@link AuthenticationService} SPI is not registered.
+   */
+  public static void setSubjectType(Class<?> type) {
+    SUBJECT_TYPE_REF.set(type);
+  }
+
+  /**
+   * Resets both the subject store and the cached subject type
+   * to their defaults. Intended for test cleanup.
+   */
+  public static void reset() {
+    STORE_REF.set(new VaadinSessionSubjectStore());
+    SUBJECT_TYPE_REF.set(null);
+  }
+
   @SuppressWarnings("unchecked")
   private static <T> Class<T> subjectType() {
-    return (Class<T>) SubjectTypeHolder.SUBJECT_TYPE;
+    Class<?> cached = SUBJECT_TYPE_REF.get();
+    if (cached != null) {
+      return (Class<T>) cached;
+    }
+    Class<?> resolved = SecurityServiceResolver
+        .<Object, Object>authenticationService()
+        .subjectType();
+    SUBJECT_TYPE_REF.compareAndSet(null, resolved);
+    return (Class<T>) SUBJECT_TYPE_REF.get();
   }
 
   @SuppressWarnings("unchecked")
@@ -75,11 +107,5 @@ public final class SessionAccessor {
 
   public static void deleteCurrentSubject() {
     STORE_REF.get().deleteCurrentSubject(subjectType());
-  }
-
-  private static final class SubjectTypeHolder {
-    static final Class<?> SUBJECT_TYPE = SecurityServiceResolver
-        .<Object, Object>authenticationService()
-        .subjectType();
   }
 }

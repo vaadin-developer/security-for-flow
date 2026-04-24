@@ -1,17 +1,18 @@
 /**
  * Copyright © 2017 Sven Ruppert (sven.ruppert@gmail.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the EUPL, Version 1.2 or - as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence"); You may not use this work except in
+ * compliance with the Licence. You may obtain a copy of the Licence at:
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * https://joinup.ec.europa.eu/software/page/eupl
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the Licence is distributed on an "AS IS" basis,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
  */
 package com.svenruppert.vaadin.security.demo.app.security;
 
@@ -20,7 +21,6 @@ import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.demo.app.security.roles.VisibleFor;
 import com.svenruppert.vaadin.security.demo.app.views.MainView;
 import com.svenruppert.vaadin.security.demo.app.views.MyLoginView;
-import org.jetbrains.annotations.NotNull;
 import com.svenruppert.vaadin.security.authorization.LoginListener;
 import com.svenruppert.vaadin.security.authorization.LoginView;
 
@@ -31,17 +31,14 @@ public class MyLoginListener
     logger().info("NavigationTarget is not a restricted View - no login required {}", navigationTarget.getSimpleName());
   }
 
-  @NotNull
   public Class<VisibleFor> restrictionAnnotation() {
     return VisibleFor.class;
   }
 
-  @NotNull
   public Class<? extends LoginView> loginNavigationTarget() {
     return MyLoginView.class;
   }
 
-  @NotNull
   public Class<? extends Component> defaultNavigationTarget() {
     return MainView.class;
   }

@@ -1,29 +1,35 @@
 /**
  * Copyright © 2017 Sven Ruppert (sven.ruppert@gmail.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the EUPL, Version 1.2 or - as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence"); You may not use this work except in
+ * compliance with the Licence. You may obtain a copy of the Licence at:
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * https://joinup.ec.europa.eu/software/page/eupl
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the Licence is distributed on an "AS IS" basis,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
  */
 package com.svenruppert.vaadin.security.demo.app.security.services;
 
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
-import com.svenruppert.vaadin.security.authorization.api.permissions.HasPermissions;
 import com.svenruppert.vaadin.security.authorization.api.roles.HasRoles;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 
-import java.util.List;
 import java.util.Objects;
 
+/**
+ * Demo implementation of {@link AuthorizationService}.
+ * <p>
+ * Only provides role-based authorization. Permission support is not
+ * needed — the default empty-permissions implementation from
+ * {@link AuthorizationService#permissionsFor(Object)} applies.
+ */
 public class MyAuthorizationService
     implements AuthorizationService<MyUser> {
 
@@ -34,11 +40,5 @@ public class MyAuthorizationService
                         .stream()
                         .map(r -> new RoleName(r.name()))
                         .toList();
-  }
-
-  @Override
-  public HasPermissions permissionsFor(MyUser subject) {
-    Objects.requireNonNull(subject);
-    return List::of;
   }
 }

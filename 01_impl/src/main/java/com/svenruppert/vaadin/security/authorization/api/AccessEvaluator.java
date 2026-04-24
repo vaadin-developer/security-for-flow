@@ -1,31 +1,64 @@
 /**
  * Copyright © 2017 Sven Ruppert (sven.ruppert@gmail.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the EUPL, Version 1.2 or - as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence"); You may not use this work except in
+ * compliance with the Licence. You may obtain a copy of the Licence at:
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * https://joinup.ec.europa.eu/software/page/eupl
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the Licence is distributed on an "AS IS" basis,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
  */
 package com.svenruppert.vaadin.security.authorization.api;
 
 import com.svenruppert.vaadin.security.authorization.annotations.NavigationAnnotation;
 import com.svenruppert.vaadin.security.authorization.impl.Access;
+import com.svenruppert.vaadin.security.authorization.navigation.AuthorizationDecision;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.Location;
 
 import java.lang.annotation.Annotation;
 
+/**
+ * Evaluates whether the current subject has access to a route target.
+ * <p>
+ * Implementations are linked to restriction annotations via
+ * {@link NavigationAnnotation}. The framework calls
+ * {@link #evaluateAccess(Location, Class, Annotation)} to obtain a
+ * Vaadin-free {@link AuthorizationDecision}.
+ * <p>
+ * Existing implementations that override {@link #evaluate(Location, Class, Annotation)}
+ * continue to work: the default {@code evaluateAccess} implementation
+ * bridges through {@link Access#toDecision()}.
+ *
+ * @param <T> the restriction annotation type
+ */
 public interface AccessEvaluator<T extends Annotation> {
 
   /**
-   * evaluate what access the current user has to the route-target in question.
+   * Evaluate access and return a Vaadin-free decision.
+   * <p>
+   * New implementations should override this method directly.
+   * The default implementation delegates to the legacy
+   * {@link #evaluate(Location, Class, Annotation)} method and
+   * converts the result via {@link Access#toDecision()}.
+   *
+   * @param location         the location being navigated to
+   * @param navigationTarget the target class
+   * @param annotation       the restriction annotation
+   * @return the authorization decision
+   */
+  default AuthorizationDecision evaluateAccess(Location location, Class<?> navigationTarget, T annotation) {
+    return evaluate(location, navigationTarget, annotation).toDecision();
+  }
+
+  /**
+   * Evaluate access and return a legacy {@link Access} object.
    *
    * @param location         the {@link Location} to be navigated to, see {@link
    *                         BeforeEnterEvent#getLocation()}
@@ -35,6 +68,9 @@ public interface AccessEvaluator<T extends Annotation> {
    *                         with a {@link NavigationAnnotation}. This annotation may carry
    *                         additional data which can be used to evaluate the access.
    * @return the {@link Access}
+   * @deprecated Override {@link #evaluateAccess(Location, Class, Annotation)} instead.
+   *     This method remains as a bridge for existing implementations.
    */
+  @Deprecated(since = "0.50.0", forRemoval = false)
   Access evaluate(Location location, Class<?> navigationTarget, T annotation);
 }

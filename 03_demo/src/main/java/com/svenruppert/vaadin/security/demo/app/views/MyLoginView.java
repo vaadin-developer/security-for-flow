@@ -1,17 +1,18 @@
 /**
  * Copyright © 2017 Sven Ruppert (sven.ruppert@gmail.com)
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ * Licensed under the EUPL, Version 1.2 or - as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence"); You may not use this work except in
+ * compliance with the Licence. You may obtain a copy of the Licence at:
+ *
+ * https://joinup.ec.europa.eu/software/page/eupl
+ *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the Licence is distributed on an "AS IS" basis,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
  */
 package com.svenruppert.vaadin.security.demo.app.views;
 
@@ -20,10 +21,11 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.Route;
+import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.demo.app.security.model.UserStorage.Credentials;
 import com.svenruppert.vaadin.security.authorization.LoginView;
 import com.svenruppert.vaadin.security.authorization.api.AuthenticationService;
-import com.svenruppert.vaadin.security.authorization.api.AuthenticationServiceProvider;
+import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 
 import static com.svenruppert.vaadin.security.demo.app.security.model.UserStorage.userByCredentials;
 import static com.svenruppert.vaadin.security.demo.app.views.MyLoginView.NAV;
@@ -48,12 +50,12 @@ public class MyLoginView
   }};
 
 
-  private final AuthenticationService authenticationService = new AuthenticationServiceProvider().load()
-                                                                                                 .get();
-
+  private final AuthenticationService<Credentials, MyUser> authenticationService
+      = SecurityServiceResolver.authenticationService();
 
   public MyLoginView() {
     super();
+    //adding custom element to LoginView
     setCustomElements(select);
   }
 
@@ -76,8 +78,8 @@ public class MyLoginView
   public boolean checkCredentials() {
     final String username = username();
     final String password = password();
-    logger().info("checkCredentials - username " + username);
-    logger().info("checkCredentials - password " + password);
+    logger().info("checkCredentials - username {}", username);
+    logger().info("checkCredentials - password {}", password);
     final Credentials credentials = new Credentials(username, password);
     final boolean permitted = authenticationService.checkCredentials(credentials);
     if (permitted) setCurrentSubject(userByCredentials(credentials));

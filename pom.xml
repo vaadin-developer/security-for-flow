@@ -3,17 +3,12 @@
 
     Copyright © 2018 Sven Ruppert (sven.ruppert@gmail.com)
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+    Licensed under the EUPL, Version 1.2 or - as soon they will be
+    approved by the European Commission - subsequent versions of the
+    EUPL (the "Licence"); You may not use this work except in
+    compliance with the Licence. You may obtain a copy of the Licence at:
 
-        http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+    https://joinup.ec.europa.eu/software/page/eupl
 
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -25,7 +20,7 @@
   <parent>
     <groupId>com.svenruppert</groupId>
     <artifactId>dependencies</artifactId>
-    <version>06.00.16</version>
+    <version>06.01.00</version>
   </parent>
 
   <artifactId>security-for-flow-parent</artifactId>
@@ -80,6 +75,7 @@
   </modules>
 
   <properties>
+    <licenseName>European Union Public Licence 1.2</licenseName>
 
     <!--        <app.main.class>com.svenruppert.rest.Application</app.main.class>-->
 
@@ -260,7 +256,30 @@
     <defaultGoal>jetty:run</defaultGoal>
     <!--        <finalName>${warName}-${project.version}</finalName>-->
     <plugins>
-
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <configuration>
+          <verbose>true</verbose>
+          <addSvnKeyWords>true</addSvnKeyWords>
+        </configuration>
+        <executions>
+          <execution>
+            <id>first</id>
+            <goals>
+              <goal>update-file-header</goal>
+            </goals>
+            <phase>process-sources</phase>
+            <configuration>
+              <licenseName>eupl_v1_1</licenseName>
+              <roots>
+                <root>src/main/java</root>
+                <root>src/test</root>
+              </roots>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
 
       <plugin>
         <groupId>com.vaadin</groupId>

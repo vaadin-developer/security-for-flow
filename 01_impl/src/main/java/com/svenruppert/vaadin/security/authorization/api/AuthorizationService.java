@@ -1,28 +1,62 @@
 /**
  * Copyright © 2017 Sven Ruppert (sven.ruppert@gmail.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the EUPL, Version 1.2 or - as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence"); You may not use this work except in
+ * compliance with the Licence. You may obtain a copy of the Licence at:
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * https://joinup.ec.europa.eu/software/page/eupl
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the Licence is distributed on an "AS IS" basis,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
  */
 package com.svenruppert.vaadin.security.authorization.api;
 
 import com.svenruppert.vaadin.security.authorization.api.permissions.HasPermissions;
 import com.svenruppert.vaadin.security.authorization.api.roles.HasRoles;
 
+import java.util.List;
+
 /**
- * @param <U> the User class
+ * Maps a user subject to its authorization data.
+ * <p>
+ * The stable API requires only {@link #rolesFor(Object)}.
+ * The permission-based method {@link #permissionsFor(Object)} has a default
+ * implementation returning empty permissions, making it optional.
+ * Implementations that need permission support should also implement
+ * {@link PermissionAuthorizationService}.
+ *
+ * @param <U> the user/subject type
+ * @see PermissionAuthorizationService
  */
 public interface AuthorizationService<U> {
+
+  /**
+   * Returns the roles assigned to the given subject.
+   *
+   * @param subject the authenticated user
+   * @return the roles for this subject
+   */
   HasRoles rolesFor(U subject);
 
-  HasPermissions permissionsFor(U subject);
+  /**
+   * Returns the permissions assigned to the given subject.
+   * <p>
+   * The default implementation returns empty permissions. Override this
+   * method or implement {@link PermissionAuthorizationService} to provide
+   * permission-based authorization.
+   *
+   * @param subject the authenticated user
+   * @return the permissions for this subject
+   * @see PermissionAuthorizationService
+   */
+  @ExperimentalSecurityApi("Permission-based authorization is experimental. "
+      + "Override this method or implement PermissionAuthorizationService.")
+  default HasPermissions permissionsFor(U subject) {
+    return List::of;
+  }
 }
