@@ -18,6 +18,17 @@ package com.svenruppert.vaadin.security.authorization.api.roles;
 
 import java.util.Collection;
 
+/**
+ * Provides the set of role names assigned to a subject.
+ *
+ * @see RoleName
+ */
 public interface HasRoles {
+
+  /**
+   * Returns the role names assigned to the subject.
+   *
+   * @return collection of role names, never {@code null}
+   */
   Collection<RoleName> roleNames();
 }

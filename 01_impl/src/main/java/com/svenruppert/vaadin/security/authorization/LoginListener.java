@@ -41,7 +41,12 @@ import java.lang.annotation.Annotation;
 public abstract class LoginListener<U>
     implements BeforeEnterListener, HasLogger {
 
+  /** Decision service for authentication-phase navigation checks. */
   private final NavigationAccessDecisionService decisionService = new NavigationAccessDecisionService();
+
+  /** Creates a new login listener. */
+  protected LoginListener() {
+  }
 
   @Override
   public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
@@ -84,6 +89,11 @@ public abstract class LoginListener<U>
     }
   }
 
+  /**
+   * Called when the navigation target does not carry a restriction annotation.
+   *
+   * @param navigationTarget the unrestricted target class
+   */
   public abstract void notARestrictedTarget(Class<?> navigationTarget);
 
   /**

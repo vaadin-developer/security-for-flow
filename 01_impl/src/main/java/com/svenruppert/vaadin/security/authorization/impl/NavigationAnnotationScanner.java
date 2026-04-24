@@ -36,6 +36,10 @@ import static java.util.Arrays.stream;
  */
 public final class NavigationAnnotationScanner {
 
+  /** Creates a new scanner with an empty cache. */
+  public NavigationAnnotationScanner() {
+  }
+
   private final Map<Class<?>, Optional<AnnotationAccessEvaluatorPair<Annotation>>> cache =
       new ConcurrentHashMap<>();
 

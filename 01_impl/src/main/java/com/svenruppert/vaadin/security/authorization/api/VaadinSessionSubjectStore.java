@@ -28,6 +28,10 @@ import java.util.Optional;
  */
 public final class VaadinSessionSubjectStore implements SubjectStore {
 
+  /** Creates a new instance. */
+  public VaadinSessionSubjectStore() {
+  }
+
   @Override
   public <T> Optional<T> currentSubject(Class<T> subjectType) {
     VaadinSession session = VaadinSession.getCurrent();

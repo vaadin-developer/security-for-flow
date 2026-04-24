@@ -17,12 +17,20 @@
     <parent>
         <groupId>com.svenruppert</groupId>
         <artifactId>security-for-flow-parent</artifactId>
-        <version>00.50.00-SNAPSHOT</version>
+        <version>00.50.01-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>security-for-flow-demo</artifactId>
     <packaging>war</packaging>
+    <name>Security for Vaadin - Demo</name>
+    <description>A Core Java Security Framework for Vaadin - Demo</description>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <maven.install.skip>true</maven.install.skip>
+        <gpg.skip>true</gpg.skip>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>com.svenruppert</groupId>
@@ -33,6 +41,13 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
             <!-- Skip the inherited license-maven-plugin: EUPL 1.2 headers are
                  maintained directly in the source files. -->
             <plugin>

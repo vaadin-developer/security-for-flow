@@ -16,4 +16,9 @@
  */
 package com.svenruppert.vaadin.security.authorization.api.roles;
 
+/**
+ * Wrapper for a role name string.
+ *
+ * @param roleName the role identifier
+ */
 public record RoleName(String roleName) { }

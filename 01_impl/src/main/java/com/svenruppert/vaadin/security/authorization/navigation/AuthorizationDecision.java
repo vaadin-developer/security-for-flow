@@ -60,14 +60,33 @@ public sealed interface AuthorizationDecision
   ) implements AuthorizationDecision {
   }
 
+  /**
+   * Creates a {@link Granted} decision.
+   *
+   * @return access granted
+   */
   static AuthorizationDecision granted() {
     return new Granted();
   }
 
+  /**
+   * Creates a {@link Denied} decision with a redirect target.
+   *
+   * @param alternativeRoute the route to redirect to
+   * @param asForward        {@code true} for forward, {@code false} for reroute
+   * @return access denied with redirect
+   */
   static AuthorizationDecision denied(String alternativeRoute, boolean asForward) {
     return new Denied(alternativeRoute, asForward);
   }
 
+  /**
+   * Creates a {@link DeniedWithError} decision that reroutes to an error page.
+   *
+   * @param errorType    the exception class for the error page
+   * @param errorMessage optional message (may be {@code null})
+   * @return access denied with error
+   */
   static AuthorizationDecision deniedWithError(Class<? extends Exception> errorType, String errorMessage) {
     return new DeniedWithError(errorType, errorMessage);
   }

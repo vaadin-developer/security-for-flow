@@ -36,10 +36,30 @@ import java.util.Set;
 public abstract class PermissionBasedAccessEvaluator<T extends Annotation, U>
     implements AccessEvaluator<T> {
 
+  /** Creates a new instance. */
+  protected PermissionBasedAccessEvaluator() {
+  }
+
+  /**
+   * Returns the authorization service used to resolve permissions.
+   *
+   * @return the authorization service
+   */
   public abstract AuthorizationService<U> authorizationService();
 
+  /**
+   * Returns the currently active subject whose permissions are checked.
+   *
+   * @return the current subject
+   */
   public abstract U activeSubject();
 
+  /**
+   * Extracts the set of required permissions from the restriction annotation.
+   *
+   * @param annotation the restriction annotation instance
+   * @return the required permission names
+   */
   public abstract Set<PermissionName> requiredPermissions(T annotation);
 
   /**

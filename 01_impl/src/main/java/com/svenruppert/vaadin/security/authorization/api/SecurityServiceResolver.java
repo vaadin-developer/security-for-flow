@@ -59,6 +59,9 @@ public final class SecurityServiceResolver {
   /**
    * Returns the registered {@link AuthenticationService}.
    *
+   * @param <T> the credentials type
+   * @param <U> the subject type
+   * @return the resolved service (cached after first lookup)
    * @throws IllegalStateException if no implementation is registered
    */
   @SuppressWarnings("unchecked")
@@ -85,6 +88,10 @@ public final class SecurityServiceResolver {
   /**
    * Returns the registered {@link AuthenticationService}, or empty
    * if none is registered.
+   *
+   * @param <T> the credentials type
+   * @param <U> the subject type
+   * @return the service, or empty
    */
   public static <T, U> Optional<AuthenticationService<T, U>> findAuthenticationService() {
     try {
@@ -99,6 +106,8 @@ public final class SecurityServiceResolver {
   /**
    * Returns the registered {@link AuthorizationService}.
    *
+   * @param <U> the subject type
+   * @return the resolved service (cached after first lookup)
    * @throws IllegalStateException if no implementation is registered
    */
   @SuppressWarnings("unchecked")
@@ -125,6 +134,9 @@ public final class SecurityServiceResolver {
   /**
    * Returns the registered {@link AuthorizationService}, or empty
    * if none is registered.
+   *
+   * @param <U> the subject type
+   * @return the service, or empty
    */
   public static <U> Optional<AuthorizationService<U>> findAuthorizationService() {
     try {
@@ -139,6 +151,8 @@ public final class SecurityServiceResolver {
   /**
    * Returns the registered {@link LoginListener}.
    *
+   * @param <U> the subject type
+   * @return the resolved listener (cached after first lookup)
    * @throws IllegalStateException if no implementation is registered
    */
   @SuppressWarnings("unchecked")
@@ -164,6 +178,9 @@ public final class SecurityServiceResolver {
   /**
    * Returns the registered {@link LoginListener}, or empty
    * if none is registered.
+   *
+   * @param <U> the subject type
+   * @return the listener, or empty
    */
   public static <U> Optional<LoginListener<U>> findLoginListener() {
     try {

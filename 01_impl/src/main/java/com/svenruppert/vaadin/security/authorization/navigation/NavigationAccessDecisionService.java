@@ -35,10 +35,14 @@ package com.svenruppert.vaadin.security.authorization.navigation;
  * </ul>
  * <p>
  * Authorization (role/permission checks) is handled by
- * {@link #evaluateAuthorization(boolean, String)}, which is called
- * after authentication passes.
+ * {@link #evaluateAuthorization(boolean, String, boolean)}, which is
+ * called after authentication passes.
  */
 public final class NavigationAccessDecisionService {
+
+  /** Creates a new instance. */
+  public NavigationAccessDecisionService() {
+  }
 
   /**
    * Evaluates whether the current subject is authenticated for the given

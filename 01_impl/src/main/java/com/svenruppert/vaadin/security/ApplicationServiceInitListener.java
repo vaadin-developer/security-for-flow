@@ -24,15 +24,25 @@ import com.vaadin.flow.server.UIInitListener;
 import com.vaadin.flow.server.VaadinServiceInitListener;
 import com.vaadin.flow.shared.Registration;
 
+/**
+ * Vaadin service initializer that registers the {@link com.svenruppert.vaadin.security.authorization.LoginListener}
+ * as a {@link com.vaadin.flow.router.BeforeEnterListener} on every UI.
+ * <p>
+ * Registered via {@code META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener}.
+ */
 public class ApplicationServiceInitListener
     implements VaadinServiceInitListener, HasLogger {
+
+  /** Creates a new instance. */
+  public ApplicationServiceInitListener() {
+  }
 
   @Override
   public void serviceInit(ServiceInitEvent e) {
     e.getSource()
         .addUIInitListener((UIInitListener) uiInitEvent -> {
           UI ui = uiInitEvent.getUI();
-          logger().info("init LoginListener for .. " + ui);
+          logger().info("init LoginListener for .. {}", ui);
           SecurityServiceResolver.findLoginListener()
               .ifPresentOrElse(
                   loginListener -> {

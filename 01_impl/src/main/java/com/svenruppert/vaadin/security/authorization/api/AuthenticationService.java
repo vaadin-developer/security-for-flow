@@ -16,12 +16,39 @@
  */
 package com.svenruppert.vaadin.security.authorization.api;
 
+/**
+ * SPI contract for credential validation and subject loading.
+ * <p>
+ * Implementations must be registered in
+ * {@code META-INF/services/com.svenruppert.vaadin.security.authorization.api.AuthenticationService}.
+ *
+ * @param <T> the credentials type (e.g. a username/password record)
+ * @param <U> the subject (user) type
+ */
 public interface AuthenticationService<T, U> {
 
+  /**
+   * Validates the given credentials.
+   *
+   * @param credentials the credentials to check
+   * @return {@code true} if the credentials are valid
+   */
   boolean checkCredentials(T credentials);
 
+  /**
+   * Loads the subject for the given (already validated) credentials.
+   *
+   * @param credentials the validated credentials
+   * @return the authenticated subject
+   */
   U loadSubject(T credentials);
 
+  /**
+   * Returns the class token for the subject type.
+   * Used by {@link SessionAccessor} to store and retrieve the subject.
+   *
+   * @return the subject class
+   */
   Class<U> subjectType();
 
 }

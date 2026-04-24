@@ -51,7 +51,12 @@ public class AuthorizationListener
   @Serial
   private static final long serialVersionUID = 974589421761348380L;
 
+  /** Cached scanner for restriction annotations. */
   private final NavigationAnnotationScanner scanner = new NavigationAnnotationScanner();
+
+  /** Creates a new instance. */
+  public AuthorizationListener() {
+  }
 
   @Override
   public void serviceInit(ServiceInitEvent event) {

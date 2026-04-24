@@ -37,6 +37,10 @@ import java.util.Set;
 public abstract class RoleBasedAccessEvaluator<T extends Annotation, U>
         implements RoleBasedAccessEvaluatorAPI<T, U> {
 
+    /** Creates a new instance. */
+    protected RoleBasedAccessEvaluator() {
+    }
+
     @Override
     public AuthorizationDecision evaluateAccess(Location location, Class<?> navigationTarget, T annotation) {
         final Set<RoleName> roleNames = requiredRoles(annotation);

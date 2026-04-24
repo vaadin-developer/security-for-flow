@@ -60,18 +60,40 @@ public sealed interface NavigationAccessDecision
   record AccessDenied(String alternativeRoute, boolean asForward) implements NavigationAccessDecision {
   }
 
+  /**
+   * Creates an {@link Allowed} decision.
+   *
+   * @return navigation allowed
+   */
   static NavigationAccessDecision allowed() {
     return new Allowed();
   }
 
+  /**
+   * Creates a {@link LoginRequired} decision.
+   *
+   * @return login required
+   */
   static NavigationAccessDecision loginRequired() {
     return new LoginRequired();
   }
 
+  /**
+   * Creates an {@link AlreadyLoggedIn} decision.
+   *
+   * @return already logged in
+   */
   static NavigationAccessDecision alreadyLoggedIn() {
     return new AlreadyLoggedIn();
   }
 
+  /**
+   * Creates an {@link AccessDenied} decision with a redirect target.
+   *
+   * @param alternativeRoute the route to redirect to
+   * @param asForward        {@code true} for forward, {@code false} for reroute
+   * @return access denied with redirect
+   */
   static NavigationAccessDecision accessDenied(String alternativeRoute, boolean asForward) {
     return new AccessDenied(alternativeRoute, asForward);
   }

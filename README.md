@@ -28,7 +28,7 @@ cd 03_demo && mvn jetty:run
 <dependency>
   <groupId>com.svenruppert</groupId>
   <artifactId>security-for-flow</artifactId>
-  <version>00.50.00-SNAPSHOT</version>
+  <version>00.50.01-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -69,15 +69,13 @@ com.example.MyAuthenticationService
 
 ### 3. Implement `AuthorizationService<U>`
 
-Maps a user to roles and permissions.
+Maps a user to roles. Only `rolesFor()` is required — `permissionsFor()`
+has a default implementation returning empty permissions.
 
 ```java
 public class MyAuthorizationService implements AuthorizationService<MyUser> {
   @Override
   public HasRoles rolesFor(MyUser subject) { /* ... */ }
-
-  @Override
-  public HasPermissions permissionsFor(MyUser subject) { /* ... */ }
 }
 ```
 
@@ -93,7 +91,22 @@ public @interface VisibleFor {
 }
 ```
 
-### 5. Extend `RoleBasedAccessEvaluator`
+### 5. Implement `AccessEvaluator`
+
+```java
+public class MyRoleAccessEvaluator
+    implements AccessEvaluator<VisibleFor> {
+
+  @Override
+  public AuthorizationDecision evaluateAccess(
+      Location location, Class<?> target, VisibleFor annotation) {
+    // check roles, return AuthorizationDecision.granted() or
+    // AuthorizationDecision.denied("login", false)
+  }
+}
+```
+
+Or extend the provided `RoleBasedAccessEvaluator` base class:
 
 ```java
 public class MyRoleAccessEvaluator
@@ -151,14 +164,14 @@ public class AdminView extends Div { /* ... */ }
 The framework uses a two-phase navigation check:
 
 1. **Authentication** (`LoginListener` / `NavigationAccessDecisionService`):
-   - Public route → allow
-   - Restricted route, no subject → redirect to login
-   - Restricted route, subject present on login page → forward to default view
-   - Restricted route, subject present → allow (proceed to authorization)
+   - Public route -> allow
+   - Restricted route, no subject -> redirect to login
+   - Restricted route, subject present on login page -> forward to default view
+   - Restricted route, subject present -> allow (proceed to authorization)
 
 2. **Authorization** (`AuthorizationListener` / `AccessEvaluator`):
    - Evaluator checks the subject's roles/permissions against the annotation
-   - Returns `Access.granted()` or `Access.restricted(...)` with an alternative target
+   - Returns `AuthorizationDecision.granted()` or `AuthorizationDecision.denied(...)` with an alternative target
 
 ## Key Framework Types
 
@@ -167,8 +180,9 @@ The framework uses a two-phase navigation check:
 | `SecurityServiceResolver` | `api` | Central SPI resolver with caching and error messages |
 | `SubjectStore` | `api` | Session abstraction (testable without Vaadin) |
 | `SessionAccessor` | `api` | Static facade for subject read/write/delete |
-| `NavigationAccessDecisionService` | `navigation` | Pure decision logic (no Vaadin deps) |
-| `NavigationAccessDecision` | `navigation` | Sealed decision type |
+| `AuthorizationDecision` | `navigation` | Sealed authorization decision type |
+| `NavigationAccessDecisionService` | `navigation` | Pure authentication decision logic (no Vaadin deps) |
+| `NavigationAccessDecision` | `navigation` | Sealed authentication-phase decision type |
 | `NavigationSecurityContext` | `navigation` | Vaadin-free navigation context record |
 | `@NavigationAnnotation` | `annotations` | Meta-annotation linking restrictions to evaluators |
 | `@ExperimentalSecurityApi` | `api` | Marks experimental API surface |
@@ -176,12 +190,14 @@ The framework uses a two-phase navigation check:
 ## Stable vs. Experimental API
 
 **Stable** (role-based access):
-`RoleBasedAccessEvaluator`, `RoleName`, `HasRoles`, and all types above.
+`RoleBasedAccessEvaluator`, `RoleName`, `HasRoles`, `AuthorizationDecision`,
+and all types listed above.
 
 **Experimental** (permission-based access — marked with `@ExperimentalSecurityApi`):
-`PermissionBasedAccessEvaluator`, `PermissionName`, `HasPermissions`.
+`PermissionBasedAccessEvaluator`, `PermissionName`, `HasPermissions`,
+`PermissionAuthorizationService`.
 These may change in incompatible ways in future releases.
 
 ## License
 
-Apache License 2.0
+EUPL 1.2

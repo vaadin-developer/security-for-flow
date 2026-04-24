@@ -36,5 +36,11 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
 public @interface ExperimentalSecurityApi {
+
+  /**
+   * Description of the experimental nature.
+   *
+   * @return the description
+   */
   String value() default "This API is experimental and may change without notice.";
 }

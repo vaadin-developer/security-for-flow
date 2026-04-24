@@ -18,5 +18,10 @@ package com.svenruppert.vaadin.security.authorization.api.permissions;
 
 import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 
+/**
+ * Wrapper for a permission name string.
+ *
+ * @param permissionName the permission identifier
+ */
 @ExperimentalSecurityApi("Permission-based access is experimental. Use role-based access for stable production use.")
 public record PermissionName(String permissionName) { }

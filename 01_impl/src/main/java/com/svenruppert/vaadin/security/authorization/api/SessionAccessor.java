@@ -49,6 +49,8 @@ public final class SessionAccessor {
   /**
    * Replaces the active {@link SubjectStore}.
    * Intended for testing or non-Vaadin environments.
+   *
+   * @param store the new subject store
    */
   public static void setSubjectStore(SubjectStore store) {
     STORE_REF.set(store);
@@ -56,6 +58,8 @@ public final class SessionAccessor {
 
   /**
    * Returns the active {@link SubjectStore}.
+   *
+   * @return the current subject store
    */
   public static SubjectStore subjectStore() {
     return STORE_REF.get();
@@ -65,6 +69,8 @@ public final class SessionAccessor {
    * Explicitly sets the subject type.
    * Intended for testing or environments where the
    * {@link AuthenticationService} SPI is not registered.
+   *
+   * @param type the subject class token
    */
   public static void setSubjectType(Class<?> type) {
     SUBJECT_TYPE_REF.set(type);
@@ -92,6 +98,12 @@ public final class SessionAccessor {
     return (Class<T>) SUBJECT_TYPE_REF.get();
   }
 
+  /**
+   * Returns the current subject from the active store.
+   *
+   * @param <T> the subject type
+   * @return a {@link Result} containing the subject, or absent
+   */
   @SuppressWarnings("unchecked")
   public static <T> Result<T> currentSubject() {
     Class<T> type = subjectType();
@@ -99,12 +111,21 @@ public final class SessionAccessor {
         (T) STORE_REF.get().currentSubject(type).orElse(null));
   }
 
+  /**
+   * Stores the given subject in the active store.
+   *
+   * @param subject the subject to store
+   * @param <T>     the subject type
+   */
   @SuppressWarnings("unchecked")
   public static <T> void setCurrentSubject(T subject) {
     Class<T> type = subjectType();
     STORE_REF.get().setCurrentSubject(subject, type);
   }
 
+  /**
+   * Removes the current subject from the active store.
+   */
   public static void deleteCurrentSubject() {
     STORE_REF.get().deleteCurrentSubject(subjectType());
   }

@@ -20,6 +20,15 @@ import com.svenruppert.vaadin.security.authorization.api.AccessEvaluator;
 
 import java.lang.annotation.Annotation;
 
+/**
+ * Pairs a restriction annotation instance with the
+ * {@link AccessEvaluator} class declared via
+ * {@link com.svenruppert.vaadin.security.authorization.annotations.NavigationAnnotation}.
+ *
+ * @param annotation          the restriction annotation instance
+ * @param accessEvaluatorClass the evaluator class to instantiate
+ * @param <T> the annotation type
+ */
 record AnnotationAccessEvaluatorPair<T extends Annotation>(
     T annotation,
     Class<? extends AccessEvaluator<T>> accessEvaluatorClass

@@ -20,7 +20,18 @@ import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi
 
 import java.util.Collection;
 
+/**
+ * Provides the set of permission names assigned to a subject.
+ *
+ * @see PermissionName
+ */
 @ExperimentalSecurityApi("Permission-based access is experimental. Use role-based access for stable production use.")
 public interface HasPermissions {
+
+  /**
+   * Returns the permission names assigned to the subject.
+   *
+   * @return collection of permission names, never {@code null}
+   */
   Collection<PermissionName> permissionNames();
 }

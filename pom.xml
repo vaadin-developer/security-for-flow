@@ -15,549 +15,550 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-  <modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>com.svenruppert</groupId>
-    <artifactId>dependencies</artifactId>
-    <version>06.01.00</version>
-  </parent>
+    <parent>
+        <groupId>com.svenruppert</groupId>
+        <artifactId>dependencies</artifactId>
+        <version>06.01.00</version>
+    </parent>
 
-  <artifactId>security-for-flow-parent</artifactId>
-  <version>00.50.00-SNAPSHOT</version>
-  <packaging>pom</packaging>
+    <artifactId>security-for-flow-parent</artifactId>
+    <version>00.50.01-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
-  <inceptionYear>2018</inceptionYear>
-  <organization>
-    <name>Sven Ruppert</name>
-    <url>https://github.com/svenruppert</url>
-  </organization>
-  <url>https://github.com/vaadin-developer/security-for-flow</url>
-
-  <scm>
+    <name>Security for Vaadin</name>
+    <description>A Core Java Security Framework for Vaadin</description>
+    <inceptionYear>2018</inceptionYear>
+    <organization>
+        <name>Sven Ruppert</name>
+        <url>https://github.com/svenruppert</url>
+    </organization>
     <url>https://github.com/vaadin-developer/security-for-flow</url>
-    <connection>
-      scm:git:https://github.com/vaadin-developer/security-for-flow.git
-    </connection>
-    <developerConnection>
-      scm:git:https://github.com/vaadin-developer/security-for-flow.git
-    </developerConnection>
-    <tag>HEAD</tag>
-  </scm>
-  <developers>
-    <developer>
-      <name>Sven Ruppert</name>
-      <email>sven.ruppert@gmail.com</email>
-      <roles>
-        <role>Developer</role>
-      </roles>
-      <timezone>+1</timezone>
-    </developer>
-  </developers>
-  <issueManagement>
-    <system>Github</system>
-    <url>
-      https://github.com/vaadin-developer/security-for-flow/issues
-    </url>
-  </issueManagement>
-  <licenses>
-    <license>
-      <name>The Apache Software License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-      <comments>A business-friendly OSS license</comments>
-    </license>
-  </licenses>
 
-  <modules>
-    <module>01_impl</module>
-    <module>03_demo</module>
-  </modules>
+    <scm>
+        <url>https://github.com/vaadin-developer/security-for-flow</url>
+        <connection>
+            scm:git:https://github.com/vaadin-developer/security-for-flow.git
+        </connection>
+        <developerConnection>
+            scm:git:https://github.com/vaadin-developer/security-for-flow.git
+        </developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+    <developers>
+        <developer>
+            <name>Sven Ruppert</name>
+            <email>sven.ruppert@gmail.com</email>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
+    </developers>
+    <issueManagement>
+        <system>Github</system>
+        <url>
+            https://github.com/vaadin-developer/security-for-flow/issues
+        </url>
+    </issueManagement>
+    <licenses>
+        <license>
+            <name>European Union Public Licence 1.2</name>
+            <url>https://joinup.ec.europa.eu/software/page/eupl</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
-  <properties>
-    <licenseName>European Union Public Licence 1.2</licenseName>
+    <modules>
+        <module>01_impl</module>
+        <module>03_demo</module>
+    </modules>
 
-    <!--        <app.main.class>com.svenruppert.rest.Application</app.main.class>-->
+    <properties>
+        <licenseName>European Union Public Licence 1.2</licenseName>
 
-    <deploy-repo-url>https://repo.maven.apache.org/maven2/</deploy-repo-url>
-    <deploy-repo-snapshots-url>https://repo.maven.apache.org/maven2/</deploy-repo-snapshots-url>
+        <!--        <app.main.class>com.svenruppert.rest.Application</app.main.class>-->
 
-    <jdk.version>25</jdk.version>
+        <deploy-repo-url>https://repo.maven.apache.org/maven2/</deploy-repo-url>
+        <deploy-repo-snapshots-url>https://repo.maven.apache.org/maven2/</deploy-repo-snapshots-url>
 
-    <maven.compiler.release>${jdk.version}</maven.compiler.release>
-    <maven.compiler.source>${jdk.version}</maven.compiler.source> <!--redundant, but IntelliJ doesn't-->
-    <maven.compiler.target>${jdk.version}</maven.compiler.target> <!--use release when importing-->
+        <jdk.version>25</jdk.version>
 
-    <maven.compiler.testRelease>${jdk.version}</maven.compiler.testRelease>
-    <maven.compiler.testSource>${jdk.version}</maven.compiler.testSource>
-    <maven.compiler.testTarget>${jdk.version}</maven.compiler.testTarget>
+        <maven.compiler.release>${jdk.version}</maven.compiler.release>
+        <maven.compiler.source>${jdk.version}</maven.compiler.source> <!--redundant, but IntelliJ doesn't-->
+        <maven.compiler.target>${jdk.version}</maven.compiler.target> <!--use release when importing-->
 
-    <minimum-maven.version>3.9.9</minimum-maven.version>
+        <maven.compiler.testRelease>${jdk.version}</maven.compiler.testRelease>
+        <maven.compiler.testSource>${jdk.version}</maven.compiler.testSource>
+        <maven.compiler.testTarget>${jdk.version}</maven.compiler.testTarget>
 
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <minimum-maven.version>3.9.9</minimum-maven.version>
 
-    <pitest-prod-classes>com.svenruppert.*</pitest-prod-classes>
-    <pitest-test-classes>junit.com.svenruppert.*</pitest-test-classes>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <!--TDD jUnit5-->
-    <junit-platform-maven-plugin.timeout>300</junit-platform-maven-plugin.timeout>
+        <pitest-prod-classes>com.svenruppert.*</pitest-prod-classes>
+        <pitest-test-classes>junit.com.svenruppert.*</pitest-test-classes>
 
-    <spotbugs.skip>true</spotbugs.skip>
+        <!--TDD jUnit5-->
+        <junit-platform-maven-plugin.timeout>300</junit-platform-maven-plugin.timeout>
 
-    <!--
-        Workshop toggle. Default false so ${...} interpolation always
-        yields a valid JVM arg. Enable the live smoke test against a
-        locally running Ollama with:
-          mvn test -Dworkshop.live=true
-    -->
-    <workshop.live>false</workshop.live>
+        <spotbugs.skip>true</spotbugs.skip>
 
-    <!--        Vaadin Flow Properties-->
-    <failOnMissingWebXml>false</failOnMissingWebXml>
-    <vaadin.version>25.1.1</vaadin.version>
-    <drivers.downloader.phase>pre-integration-test</drivers.downloader.phase>
-    <jetty.version>12.1.8</jetty.version>
-    <warName>ROOT</warName>
-    <slf4j-api.version>2.0.17</slf4j-api.version>
-  </properties>
-
-  <repositories>
-    <!-- The order of definitions matters. Explicitly defining central here to make sure it has the highest priority. -->
-    <repository>
-      <id>central</id>
-      <url>https://repo.maven.apache.org/maven2</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>vaadin-prereleases</id>
-      <url>
-        https://maven.vaadin.com/vaadin-prereleases/
-      </url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-    <!-- Repository used by many Vaadin add-ons -->
-    <repository>
-      <id>Vaadin Directory</id>
-      <url>https://maven.vaadin.com/vaadin-addons</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>apache snapshots</id>
-      <url>https://repository.apache.org/content/repositories/snapshots</url>
-    </repository>
-  </repositories>
-
-  <pluginRepositories>
-    <!-- The order of definitions matters. Explicitly defining central here to make sure it has the highest priority. -->
-    <pluginRepository>
-      <id>central</id>
-      <url>https://repo.maven.apache.org/maven2</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </pluginRepository>
-    <pluginRepository>
-      <id>vaadin-prereleases</id>
-      <url>
-        https://maven.vaadin.com/vaadin-prereleases/
-      </url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </pluginRepository>
-  </pluginRepositories>
-
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>com.vaadin</groupId>
-        <artifactId>vaadin-bom</artifactId>
-        <type>pom</type>
-        <scope>import</scope>
-        <version>${vaadin.version}</version>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-
-  <dependencies>
-
-    <dependency>
-      <groupId>com.vaadin</groupId>
-      <!-- Replace artifactId with vaadin-core to use only free components -->
-      <artifactId>vaadin-core</artifactId>
-      <!-- Remove the following exclussion if you want to enable Hilla -->
-      <exclusions>
-        <exclusion>
-          <groupId>com.vaadin</groupId>
-          <artifactId>vaadin-dev</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.vaadin</groupId>
-          <artifactId>vaadin-dev-server</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>functional-reactive</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>tools.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-      <version>3.1.2</version>
-    </dependency>
-    <dependency>
-      <groupId>tools.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>3.1.2</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-annotations</artifactId>
-      <version>2.21</version>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>${slf4j-api.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
-      <version>${slf4j-api.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>log4j-over-slf4j</artifactId>
-      <version>${slf4j-api.version}</version>
-    </dependency>
-    <!-- Workshop modules use JUnit 5 for their core-Java tests. -->
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <version>5.11.3</version>
-      <scope>test</scope>
-    </dependency>
-   </dependencies>
-
-  <build>
-    <defaultGoal>jetty:run</defaultGoal>
-    <!--        <finalName>${warName}-${project.version}</finalName>-->
-    <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>license-maven-plugin</artifactId>
-        <configuration>
-          <verbose>true</verbose>
-          <addSvnKeyWords>true</addSvnKeyWords>
-        </configuration>
-        <executions>
-          <execution>
-            <id>first</id>
-            <goals>
-              <goal>update-file-header</goal>
-            </goals>
-            <phase>process-sources</phase>
-            <configuration>
-              <licenseName>eupl_v1_1</licenseName>
-              <roots>
-                <root>src/main/java</root>
-                <root>src/test</root>
-              </roots>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>com.vaadin</groupId>
-        <artifactId>vaadin-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>none</phase>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <inherited>true</inherited>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-enforcer-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>enforce-maven-3</id>
-            <goals>
-              <goal>enforce</goal>
-            </goals>
-            <configuration>
-              <rules>
-                <requireMavenVersion>
-                  <version>${minimum-maven.version}</version>
-                </requireMavenVersion>
-              </rules>
-              <fail>true</fail>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>versions-maven-plugin</artifactId>
-        <configuration>
-          <!--                    <rulesUri>version-number-rules.xml</rulesUri>-->
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-scm-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <!--<goal>jar</goal> do not define it here again !!-->
-              <goal>test-jar</goal>
-            </goals>
-          </execution>
-        </executions>
-        <!--                <configuration>-->
-        <!--                    <archive>-->
-        <!--                        <manifest>-->
-        <!--                            <mainClass>${app.main.class}</mainClass>-->
-        <!--                        </manifest>-->
-        <!--                    </archive>-->
-        <!--                </configuration>-->
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-resources-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-repository-plugin</artifactId>
-      </plugin>
-
-      <!--Enable mutation testing-->
-      <plugin>
-        <groupId>org.pitest</groupId>
-        <artifactId>pitest-maven</artifactId>
-        <dependencies>
-          <dependency>
-            <groupId>org.pitest</groupId>
-            <artifactId>pitest-junit5-plugin</artifactId>
-            <version>1.2.3</version>
-          </dependency>
-
-        </dependencies>
-        <configuration>
-          <threads>2</threads>
-          <outputFormats>
-            <outputFormat>XML</outputFormat>
-            <outputFormat>HTML</outputFormat>
-          </outputFormats>
-          <targetClasses>
-            <param>${pitest-prod-classes}</param>
-            <!--<param>org.reflections.*</param>-->
-          </targetClasses>
-          <targetTests>
-            <param>${pitest-test-classes}</param>
-          </targetTests>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-      </plugin>
-
-      <!--
-          The grandparent pins junit-platform-maven-plugin (sormuras) as
-          the test executor. It forks a JVM for tests and does NOT
-          forward -D flags from the mvn command line by default.
-          Forward the workshop.live toggle explicitly so the live
-          Ollama smoke test can be enabled with:
+        <!--
+            Workshop toggle. Default false so ${...} interpolation always
+            yields a valid JVM arg. Enable the live smoke test against a
+            locally running Ollama with:
               mvn test -Dworkshop.live=true
-      -->
-      <plugin>
-        <groupId>de.sormuras.junit</groupId>
-        <artifactId>junit-platform-maven-plugin</artifactId>
-        <configuration>
-          <javaOptions>
-            <additionalOptions combine.children="append">
-              <additionalOption>-Dworkshop.live=${workshop.live}</additionalOption>
-            </additionalOptions>
-          </javaOptions>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.cyclonedx</groupId>
-        <artifactId>cyclonedx-maven-plugin</artifactId>
-        <version>2.9.1</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>makeAggregateBom</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <projectType>library</projectType>
-          <schemaVersion>1.4</schemaVersion>
-          <includeBomSerialNumber>true</includeBomSerialNumber>
-          <includeCompileScope>true</includeCompileScope>
-          <includeProvidedScope>true</includeProvidedScope>
-          <includeRuntimeScope>true</includeRuntimeScope>
-          <includeSystemScope>true</includeSystemScope>
-          <includeTestScope>false</includeTestScope>
-          <includeLicenseText>false</includeLicenseText>
-          <outputReactorProjects>true</outputReactorProjects>
-          <outputFormat>all</outputFormat>
-          <outputName>CycloneDX-SBom</outputName>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.pitest</groupId>
-        <artifactId>pitest-maven</artifactId>
-        <reportSets>
-          <reportSet>
-            <reports>
-              <report>report</report>
-            </reports>
-          </reportSet>
-        </reportSets>
-      </plugin>
+        -->
+        <workshop.live>false</workshop.live>
 
-    </plugins>
-  </reporting>
-  <profiles>
-    <profile>
-      <id>_java</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <dependencies>
-              <dependency>
-                <groupId>org.ow2.asm</groupId>
-                <artifactId>asm</artifactId>
-                <version>9.8</version> <!-- Use a newer version of ASM -->
-              </dependency>
-            </dependencies>
-          </plugin>
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>build-helper-maven-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>add sources</id>
-                <phase>compile</phase>
-                <goals>
-                  <goal>add-source</goal>
-                </goals>
-                <configuration>
-                  <sources>
-                    <source>${project.build.directory}/generated-sources/annotations</source>
-                    <source>src/main/java</source>
-                  </sources>
-                </configuration>
-              </execution>
-              <execution>
-                <id>add generated sources</id>
-                <phase>generate-sources</phase>
-                <goals>
-                  <goal>add-source</goal>
-                </goals>
-                <configuration>
-                  <sources>
-                    <source>${project.build.directory}/generated-sources/annotations</source>
-                    <source>src/main/java</source>
-                  </sources>
-                </configuration>
-              </execution>
-              <execution>
-                <id>add generated test sources</id>
-                <phase>generate-test-sources</phase>
-                <goals>
-                  <goal>add-test-source</goal>
-                </goals>
-                <configuration>
-                  <sources>
-                    <source>${project.build.directory}/generated-test-sources/test-annotations
-                    </source>
-                    <source>src/test/java</source>
-                    <source>src/test/kotlin</source>
-                  </sources>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <!-- Production mode is activated using -Pproduction -->
-      <id>production</id>
+        <!--        Vaadin Flow Properties-->
+        <failOnMissingWebXml>false</failOnMissingWebXml>
+        <vaadin.version>25.1.1</vaadin.version>
+        <drivers.downloader.phase>pre-integration-test</drivers.downloader.phase>
+        <jetty.version>12.1.8</jetty.version>
+        <warName>ROOT</warName>
+        <slf4j-api.version>2.0.17</slf4j-api.version>
+    </properties>
 
-      <dependencies>
-        <!-- Exclude development dependencies from production -->
+    <repositories>
+        <!-- The order of definitions matters. Explicitly defining central here to make sure it has the highest priority. -->
+        <repository>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>vaadin-prereleases</id>
+            <url>
+                https://maven.vaadin.com/vaadin-prereleases/
+            </url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <!-- Repository used by many Vaadin add-ons -->
+        <repository>
+            <id>Vaadin Directory</id>
+            <url>https://maven.vaadin.com/vaadin-addons</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>apache snapshots</id>
+            <url>https://repository.apache.org/content/repositories/snapshots</url>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <!-- The order of definitions matters. Explicitly defining central here to make sure it has the highest priority. -->
+        <pluginRepository>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+        <pluginRepository>
+            <id>vaadin-prereleases</id>
+            <url>
+                https://maven.vaadin.com/vaadin-prereleases/
+            </url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-bom</artifactId>
+                <type>pom</type>
+                <scope>import</scope>
+                <version>${vaadin.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+
         <dependency>
-          <groupId>com.vaadin</groupId>
-          <artifactId>vaadin-core</artifactId>
-          <exclusions>
-            <exclusion>
-              <groupId>com.vaadin</groupId>
-              <artifactId>vaadin-dev</artifactId>
-            </exclusion>
-          </exclusions>
-        </dependency>
-      </dependencies>
-      <build>
-        <plugins>
-          <plugin>
             <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-maven-plugin</artifactId>
-            <version>${vaadin.version}</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>build-frontend</goal>
-                </goals>
-                <phase>compile</phase>
-              </execution>
-            </executions>
-          </plugin>
+            <!-- Replace artifactId with vaadin-core to use only free components -->
+            <artifactId>vaadin-core</artifactId>
+            <!-- Remove the following exclussion if you want to enable Hilla -->
+            <exclusions>
+                <exclusion>
+                    <groupId>com.vaadin</groupId>
+                    <artifactId>vaadin-dev</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.vaadin</groupId>
+                    <artifactId>vaadin-dev-server</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.svenruppert</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.svenruppert</groupId>
+            <artifactId>functional-reactive</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>3.1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>3.1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.21</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>log4j-over-slf4j</artifactId>
+            <version>${slf4j-api.version}</version>
+        </dependency>
+        <!-- Workshop modules use JUnit 5 for their core-Java tests. -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.11.3</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <defaultGoal>jetty:run</defaultGoal>
+        <!--        <finalName>${warName}-${project.version}</finalName>-->
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <configuration>
+                    <verbose>true</verbose>
+                    <addSvnKeyWords>true</addSvnKeyWords>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>first</id>
+                        <goals>
+                            <goal>update-file-header</goal>
+                        </goals>
+                        <phase>process-sources</phase>
+                        <configuration>
+                            <licenseName>eupl_v1_1</licenseName>
+                            <roots>
+                                <root>src/main/java</root>
+                                <root>src/test</root>
+                            </roots>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <inherited>true</inherited>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>enforce-maven-3</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>${minimum-maven.version}</version>
+                                </requireMavenVersion>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <configuration>
+                    <!--                    <rulesUri>version-number-rules.xml</rulesUri>-->
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-scm-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <!--<goal>jar</goal> do not define it here again !!-->
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <!--                <configuration>-->
+                <!--                    <archive>-->
+                <!--                        <manifest>-->
+                <!--                            <mainClass>${app.main.class}</mainClass>-->
+                <!--                        </manifest>-->
+                <!--                    </archive>-->
+                <!--                </configuration>-->
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-repository-plugin</artifactId>
+            </plugin>
+
+            <!--Enable mutation testing-->
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-junit5-plugin</artifactId>
+                        <version>1.2.3</version>
+                    </dependency>
+
+                </dependencies>
+                <configuration>
+                    <threads>2</threads>
+                    <outputFormats>
+                        <outputFormat>XML</outputFormat>
+                        <outputFormat>HTML</outputFormat>
+                    </outputFormats>
+                    <targetClasses>
+                        <param>${pitest-prod-classes}</param>
+                        <!--<param>org.reflections.*</param>-->
+                    </targetClasses>
+                    <targetTests>
+                        <param>${pitest-test-classes}</param>
+                    </targetTests>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+
+            <!--
+                The grandparent pins junit-platform-maven-plugin (sormuras) as
+                the test executor. It forks a JVM for tests and does NOT
+                forward -D flags from the mvn command line by default.
+                Forward the workshop.live toggle explicitly so the live
+                Ollama smoke test can be enabled with:
+                    mvn test -Dworkshop.live=true
+            -->
+            <plugin>
+                <groupId>de.sormuras.junit</groupId>
+                <artifactId>junit-platform-maven-plugin</artifactId>
+                <configuration>
+                    <javaOptions>
+                        <additionalOptions combine.children="append">
+                            <additionalOption>-Dworkshop.live=${workshop.live}</additionalOption>
+                        </additionalOptions>
+                    </javaOptions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.cyclonedx</groupId>
+                <artifactId>cyclonedx-maven-plugin</artifactId>
+                <version>2.9.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>makeAggregateBom</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <projectType>library</projectType>
+                    <schemaVersion>1.4</schemaVersion>
+                    <includeBomSerialNumber>true</includeBomSerialNumber>
+                    <includeCompileScope>true</includeCompileScope>
+                    <includeProvidedScope>true</includeProvidedScope>
+                    <includeRuntimeScope>true</includeRuntimeScope>
+                    <includeSystemScope>true</includeSystemScope>
+                    <includeTestScope>false</includeTestScope>
+                    <includeLicenseText>false</includeLicenseText>
+                    <outputReactorProjects>true</outputReactorProjects>
+                    <outputFormat>all</outputFormat>
+                    <outputName>CycloneDX-SBom</outputName>
+                </configuration>
+            </plugin>
         </plugins>
-      </build>
-    </profile>
-  </profiles>
+    </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>report</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+
+        </plugins>
+    </reporting>
+    <profiles>
+        <profile>
+            <id>_java</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.ow2.asm</groupId>
+                                <artifactId>asm</artifactId>
+                                <version>9.8</version> <!-- Use a newer version of ASM -->
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>add sources</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>${project.build.directory}/generated-sources/annotations</source>
+                                        <source>src/main/java</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>add generated sources</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>${project.build.directory}/generated-sources/annotations</source>
+                                        <source>src/main/java</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>add generated test sources</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>add-test-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>${project.build.directory}/generated-test-sources/test-annotations
+                                        </source>
+                                        <source>src/test/java</source>
+                                        <source>src/test/kotlin</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <!-- Production mode is activated using -Pproduction -->
+            <id>production</id>
+
+            <dependencies>
+                <!-- Exclude development dependencies from production -->
+                <dependency>
+                    <groupId>com.vaadin</groupId>
+                    <artifactId>vaadin-core</artifactId>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>com.vaadin</groupId>
+                            <artifactId>vaadin-dev</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.vaadin</groupId>
+                        <artifactId>vaadin-maven-plugin</artifactId>
+                        <version>${vaadin.version}</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>build-frontend</goal>
+                                </goals>
+                                <phase>compile</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
