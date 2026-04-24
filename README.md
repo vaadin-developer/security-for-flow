@@ -1,130 +1,187 @@
+# Vaadin Flow Security
 
-<center>
-<a href="https://vaadin.com">
- <img src="https://vaadin.com/images/hero-reindeer.svg" width="200" height="200"  alt="Vaadin Logo"/></a>
-</center>
+Pluggable authentication, authorization, and annotation-driven view protection
+for Vaadin Flow applications. Uses Java SPI (`ServiceLoader`) for all extension points.
 
+## Module Structure
 
-#Vaadin Flow Security
-How to build different Security Aspects into a Flow Application.
+| Module | Artifact | Description |
+|--------|----------|-------------|
+| `01_impl` | `security-for-flow` | Core library JAR — add this as a dependency |
+| `03_demo` | `security-for-flow-demo` | Reference implementation / demo WAR |
 
-## Module flow-security
-This module contains all generic parts that could be shared between projects.
+## Quick Start
 
+### Build
 
-## Module flow-security-test
-This module is a demo app using the module **flow-security**
+```bash
+# Full build (requires Maven 3.9.9+, Java 25+)
+mvn clean install
 
-## Different possibilities
-### Basic LoginView
-This LoginView will have basic elements you need for an authorization.
-What ever is part of the base LoginView, it will never be the right thing.
-How to extend this, have a look into the custom implementation
-in the the demo app. The class name is **MyLoginView**. 
+# Run demo app (http://localhost:8080/)
+cd 03_demo && mvn jetty:run
+```
 
-### Roles and Permissions
-Every System will have its own way to describe Roles and Permission.
-The only thing I assume here is, that for example a Role will have a name.
+### Add the dependency
+
+```xml
+<dependency>
+  <groupId>com.svenruppert</groupId>
+  <artifactId>security-for-flow</artifactId>
+  <version>00.50.00-SNAPSHOT</version>
+</dependency>
+```
+
+## Integration Guide
+
+To secure your Vaadin Flow application, implement the following interfaces
+and register them via `META-INF/services/` files.
+
+### 1. Define a user type
 
 ```java
-public final class RoleName
-    extends Single<String> {
-  public RoleName(String s) {
-    super(s);
-  }
-  public String roleName() {
-    return getT1();
-  }
+public record MyUser(String username, Set<String> roles) {}
+```
+
+### 2. Implement `AuthenticationService<T, U>`
+
+Validates credentials and loads the user subject.
+
+```java
+public class MyAuthenticationService
+    implements AuthenticationService<Credentials, MyUser> {
+
+  @Override
+  public boolean checkCredentials(Credentials credentials) { /* ... */ }
+
+  @Override
+  public MyUser loadSubject(Credentials credentials) { /* ... */ }
+
+  @Override
+  public Class<MyUser> subjectType() { return MyUser.class; }
 }
 ```
 
-The interface ```HasRoles``` will be used inside the generic implementation to get access to this information.
-The custom part will be responsible to map from the existing system to this Interfaces.
-The demo app will show this inside the class ```MyAuthorizationService```.
+Register in `META-INF/services/com.svenruppert.vaadin.security.authorization.api.AuthenticationService`:
+```
+com.example.MyAuthenticationService
+```
 
+### 3. Implement `AuthorizationService<U>`
 
+Maps a user to roles and permissions.
 
-* Login
-* Free View and Restricted Views
-* MenuBar based on User-Roles/Rights
-* Components are visible based on User-Roles/Rights
-* 
+```java
+public class MyAuthorizationService implements AuthorizationService<MyUser> {
+  @Override
+  public HasRoles rolesFor(MyUser subject) { /* ... */ }
 
-
-
-## How to use it in your project
-In this section I will describe the steps that are needed to use this in your project.
-If you want to have a starter app that is always containing this and some other features like 
-I18N, have a look at the following: **XXXXX**
-
-For every step I will give you the name of the corresponding implementation inside the demo app.
-
-* Define the class that will hold your user informations inside a session: **MyUSer**
-* Access to your DataSource including the mapping: **UserStorage** 
-* Define your Role enum: **AuthorizationRole**
-* Define the Annotation you want to use in your app to declare the role: **VisibleFor**
-* extend the class RoleAccessEvaluator: **MyRoleAccessEvaluator**
-* implement the AuthorizationService: **MyAuthenticationService**
-
-
-
-## Supported JDK
-This example is running from JDK8 up to JDK13
-
-## target of this project
-The target of this project is a minimal rampup time for a first hello world.
-Why we need one more HelloWorld? Well, the answer is quite easy. 
-If you have to try something out, or you want to make a small POC to present something,
-there is no time and budget to create a demo project.
-You don´t want to copy paste all small things together.
-Here you will get a Nano-Project that will give you all in a second.
-
-Clone the repo and start editing the file ```NanoVaadinOnKotlin.kt```.
-Nothing more. 
-
-## How does it work?
-Internally it will ramp up a Jetty. If you want to see how this is done, have a look inside
-the class ```CoreUIService```.
-
-## How a developer can use this
-You as a developer can use it like it is shown in the demo folder inside the src path.
-
-```kotlin
-fun main() {
-  CoreUIService().startup()
+  @Override
+  public HasPermissions permissionsFor(MyUser subject) { /* ... */ }
 }
 ```
 
+Register in `META-INF/services/com.svenruppert.vaadin.security.authorization.api.AuthorizationService`.
 
-```kotlin
-@Route("")
-class VaadinApp : Composite<Div>(), HasLogger {
+### 4. Create a restriction annotation with `@NavigationAnnotation`
 
-  private val btnClickMe = Button("click me")
-  private val lbClickCount = Span("0")
-  private val layout = VerticalLayout(btnClickMe, lbClickCount)
-
-  private var clickcount = 0
-
-  init {
-    btnClickMe.setId(BTN_CLICK_ME)
-    btnClickMe.addClickListener { event -> lbClickCount.text = (++clickcount).toString() }
-
-    lbClickCount.setId(LB_CLICK_COUNT)
-
-    logger().info("and now..  setting the main content.. ")
-    content.add(layout)
-  }
-
-  companion object {
-
-    val BTN_CLICK_ME = "btn-click-me"
-    val LB_CLICK_COUNT = "lb-click-count"
-  }
+```java
+@Retention(RUNTIME)
+@NavigationAnnotation(MyRoleAccessEvaluator.class)
+public @interface VisibleFor {
+  MyRole[] value();
 }
 ```
 
-Happy Coding.
+### 5. Extend `RoleBasedAccessEvaluator`
 
-if you have any questions: ping me on Twitter [https://twitter.com/SvenRuppert](https://twitter.com/SvenRuppert)
-or via mail.
+```java
+public class MyRoleAccessEvaluator
+    extends RoleBasedAccessEvaluator<VisibleFor, MyUser> {
+
+  @Override
+  public Set<RoleName> requiredRoles(VisibleFor annotation) { /* ... */ }
+
+  @Override
+  public String alternativeNavigationTarget(
+      Location location, Class<?> target, VisibleFor annotation) { /* ... */ }
+}
+```
+
+Register in `META-INF/services/com.svenruppert.vaadin.security.authorization.api.AccessEvaluator`.
+
+### 6. Extend `LoginListener<U>`
+
+```java
+public class MyLoginListener extends LoginListener<MyUser> {
+  @Override
+  public Class<? extends Annotation> restrictionAnnotation() {
+    return VisibleFor.class;
+  }
+  @Override
+  public Class<? extends LoginView> loginNavigationTarget() {
+    return MyLoginView.class;
+  }
+  @Override
+  public Class<? extends Component> defaultNavigationTarget() {
+    return MainView.class;
+  }
+  @Override
+  public void notARestrictedTarget(Class<?> target) { /* optional logging */ }
+}
+```
+
+Register in `META-INF/services/com.svenruppert.vaadin.security.authorization.LoginListener`.
+
+### 7. Extend `LoginView` for the login UI
+
+Create your login view by extending the abstract `LoginView` base class
+and implementing the three abstract methods.
+
+### 8. Annotate route views
+
+```java
+@Route("admin")
+@VisibleFor(MyRole.ADMIN)
+public class AdminView extends Div { /* ... */ }
+```
+
+## Navigation Decision Flow
+
+The framework uses a two-phase navigation check:
+
+1. **Authentication** (`LoginListener` / `NavigationAccessDecisionService`):
+   - Public route → allow
+   - Restricted route, no subject → redirect to login
+   - Restricted route, subject present on login page → forward to default view
+   - Restricted route, subject present → allow (proceed to authorization)
+
+2. **Authorization** (`AuthorizationListener` / `AccessEvaluator`):
+   - Evaluator checks the subject's roles/permissions against the annotation
+   - Returns `Access.granted()` or `Access.restricted(...)` with an alternative target
+
+## Key Framework Types
+
+| Type | Package | Purpose |
+|------|---------|---------|
+| `SecurityServiceResolver` | `api` | Central SPI resolver with caching and error messages |
+| `SubjectStore` | `api` | Session abstraction (testable without Vaadin) |
+| `SessionAccessor` | `api` | Static facade for subject read/write/delete |
+| `NavigationAccessDecisionService` | `navigation` | Pure decision logic (no Vaadin deps) |
+| `NavigationAccessDecision` | `navigation` | Sealed decision type |
+| `NavigationSecurityContext` | `navigation` | Vaadin-free navigation context record |
+| `@NavigationAnnotation` | `annotations` | Meta-annotation linking restrictions to evaluators |
+| `@ExperimentalSecurityApi` | `api` | Marks experimental API surface |
+
+## Stable vs. Experimental API
+
+**Stable** (role-based access):
+`RoleBasedAccessEvaluator`, `RoleName`, `HasRoles`, and all types above.
+
+**Experimental** (permission-based access — marked with `@ExperimentalSecurityApi`):
+`PermissionBasedAccessEvaluator`, `PermissionName`, `HasPermissions`.
+These may change in incompatible ways in future releases.
+
+## License
+
+Apache License 2.0
