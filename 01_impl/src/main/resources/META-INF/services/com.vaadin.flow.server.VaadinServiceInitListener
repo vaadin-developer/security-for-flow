@@ -1,2 +1,2 @@
-org.rapidpm.vaadin.security.ApplicationServiceInitListener
-org.rapidpm.vaadin.security.authorization.impl.AuthorizationListener
+com.svenruppert.vaadin.security.ApplicationServiceInitListener
+com.svenruppert.vaadin.security.authorization.impl.AuthorizationListener

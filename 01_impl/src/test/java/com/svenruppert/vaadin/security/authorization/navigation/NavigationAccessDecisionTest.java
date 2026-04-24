@@ -1,0 +1,41 @@
+package com.svenruppert.vaadin.security.authorization.navigation;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@DisplayName("NavigationAccessDecision factory methods")
+class NavigationAccessDecisionTest {
+
+  @Test
+  @DisplayName("allowed() returns Allowed instance")
+  void allowed() {
+    var decision = NavigationAccessDecision.allowed();
+    assertInstanceOf(NavigationAccessDecision.Allowed.class, decision);
+  }
+
+  @Test
+  @DisplayName("loginRequired() returns LoginRequired instance")
+  void loginRequired() {
+    var decision = NavigationAccessDecision.loginRequired();
+    assertInstanceOf(NavigationAccessDecision.LoginRequired.class, decision);
+  }
+
+  @Test
+  @DisplayName("alreadyLoggedIn() returns AlreadyLoggedIn instance")
+  void alreadyLoggedIn() {
+    var decision = NavigationAccessDecision.alreadyLoggedIn();
+    assertInstanceOf(NavigationAccessDecision.AlreadyLoggedIn.class, decision);
+  }
+
+  @Test
+  @DisplayName("accessDenied() carries route and forward flag")
+  void accessDenied() {
+    var decision = NavigationAccessDecision.accessDenied("error-page", true);
+    assertInstanceOf(NavigationAccessDecision.AccessDenied.class, decision);
+    var denied = (NavigationAccessDecision.AccessDenied) decision;
+    assertEquals("error-page", denied.alternativeRoute());
+    assertTrue(denied.asForward());
+  }
+}
