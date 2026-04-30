@@ -125,12 +125,12 @@ Register in `META-INF/services/com.svenruppert.vaadin.security.authorization.api
 
 ### 6. Extend `LoginListener<U>`
 
+The login phase uses the same `@SecurityAnnotation`-based scanning as the
+authorization phase. A project listener only defines the login/default targets;
+it does not declare a single restriction annotation type.
+
 ```java
 public class MyLoginListener extends LoginListener<MyUser> {
-  @Override
-  public Class<? extends Annotation> restrictionAnnotation() {
-    return VisibleFor.class;
-  }
   @Override
   public Class<? extends LoginView> loginNavigationTarget() {
     return MyLoginView.class;

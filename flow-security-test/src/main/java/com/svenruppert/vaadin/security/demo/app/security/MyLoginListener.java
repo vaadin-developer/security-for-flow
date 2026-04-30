@@ -18,7 +18,6 @@ package com.svenruppert.vaadin.security.demo.app.security;
 
 import com.vaadin.flow.component.Component;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
-import com.svenruppert.vaadin.security.demo.app.security.roles.VisibleFor;
 import com.svenruppert.vaadin.security.demo.app.views.MainView;
 import com.svenruppert.vaadin.security.demo.app.views.MyLoginView;
 import com.svenruppert.vaadin.security.authorization.LoginListener;
@@ -29,10 +28,6 @@ public class MyLoginListener
 
   public void notARestrictedTarget(Class<?> navigationTarget) {
     logger().info("NavigationTarget is not a restricted View - no login required {}", navigationTarget.getSimpleName());
-  }
-
-  public Class<VisibleFor> restrictionAnnotation() {
-    return VisibleFor.class;
   }
 
   public Class<? extends LoginView> loginNavigationTarget() {

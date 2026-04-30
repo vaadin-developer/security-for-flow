@@ -31,6 +31,8 @@ public class UserStorage {
   private static final Map<Long, MyUser> ID_TO_USER = new ConcurrentHashMap<>();
 
   static {
+    // DEMO ONLY: hard-coded plaintext credentials make the sample easy to run.
+    // Never use this storage model or these credentials in production code.
     STORAGE.put(new Credentials("admin", "admin"), createMyUser(1L, "Herr Admin", AuthorizationRole.ADMIN));
     STORAGE.put(new Credentials("user", "user"), createMyUser(2L, "Herr User", AuthorizationRole.USER));
     STORAGE.put(new Credentials("demo", "demo"), createMyUser(3L, "Herr Demo", AuthorizationRole.NERD));

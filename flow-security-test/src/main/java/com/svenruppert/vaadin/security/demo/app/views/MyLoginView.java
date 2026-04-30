@@ -79,7 +79,6 @@ public class MyLoginView
     final String username = username();
     final String password = password();
     logger().info("checkCredentials - username {}", username);
-    logger().info("checkCredentials - password {}", password);
     final Credentials credentials = new Credentials(username, password);
     final boolean permitted = authenticationService.checkCredentials(credentials);
     if (permitted) {

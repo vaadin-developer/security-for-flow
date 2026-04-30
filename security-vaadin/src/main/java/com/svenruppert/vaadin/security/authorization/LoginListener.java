@@ -19,13 +19,13 @@ package com.svenruppert.vaadin.security.authorization;
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
+import com.svenruppert.vaadin.security.authorization.impl.SecurityAnnotationScanner;
 import com.svenruppert.vaadin.security.authorization.navigation.NavigationAccessDecision;
 import com.svenruppert.vaadin.security.authorization.navigation.NavigationAccessDecisionService;
 import com.svenruppert.vaadin.security.authorization.navigation.NavigationSecurityContext;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterListener;
-import java.lang.annotation.Annotation;
 
 
 /**
@@ -45,6 +45,9 @@ public abstract class LoginListener<U>
   /** Decision service for authentication-phase navigation checks. */
   private final NavigationAccessDecisionService decisionService = new NavigationAccessDecisionService();
 
+  /** Scanner for framework security annotations. */
+  private final SecurityAnnotationScanner scanner = new SecurityAnnotationScanner();
+
   /** Creates a new login listener. */
   protected LoginListener() {
   }
@@ -52,7 +55,7 @@ public abstract class LoginListener<U>
   @Override
   public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
     final Class<?> navigationTarget = beforeEnterEvent.getNavigationTarget();
-    final boolean isRestricted = navigationTarget.isAnnotationPresent(restrictionAnnotation());
+    final boolean isRestricted = isRestrictedTarget(navigationTarget);
     final boolean isLoginView = navigationTarget.equals(loginNavigationTarget());
     final boolean subjectAvailable = SubjectStores.subjectStore()
         .currentSubject(subjectType())
@@ -63,26 +66,27 @@ public abstract class LoginListener<U>
 
     NavigationAccessDecision decision = decisionService.evaluateAuthentication(ctx);
 
-    applyDecision(decision, beforeEnterEvent, navigationTarget);
+    applyDecision(decision, beforeEnterEvent, navigationTarget, isRestricted);
   }
 
   private void applyDecision(NavigationAccessDecision decision,
                              BeforeEnterEvent event,
-                             Class<?> navigationTarget) {
+                             Class<?> navigationTarget,
+                             boolean isRestricted) {
     switch (decision) {
       case NavigationAccessDecision.Allowed() -> {
-        if (!navigationTarget.isAnnotationPresent(restrictionAnnotation())) {
+        if (!isRestricted) {
           notARestrictedTarget(navigationTarget);
         } else {
           logger().info("User is already logged in");
         }
       }
       case NavigationAccessDecision.LoginRequired() -> {
-        logger().info("Login required — forwarding to login view");
+        logger().info("Login required - forwarding to login view");
         event.forwardTo(loginNavigationTarget());
       }
       case NavigationAccessDecision.AlreadyLoggedIn() -> {
-        logger().info("Already logged in — forwarding to default view");
+        logger().info("Already logged in - forwarding to default view");
         event.forwardTo(defaultNavigationTarget());
       }
       case NavigationAccessDecision.AccessDenied(String route, boolean asForward) -> {
@@ -92,20 +96,17 @@ public abstract class LoginListener<U>
     }
   }
 
+  private boolean isRestrictedTarget(Class<?> navigationTarget) {
+    return scanner.scan(navigationTarget)
+        .isPresent();
+  }
+
   /**
    * Called when the navigation target does not carry a restriction annotation.
    *
    * @param navigationTarget the unrestricted target class
    */
   public abstract void notARestrictedTarget(Class<?> navigationTarget);
-
-  /**
-   * This is the Annotation - Type that is used for the restriction declaration on class-level.
-   * For Example VisibleFor.class
-   *
-   * @return the restriction Annotation class for the current project
-   */
-  public abstract Class<? extends Annotation> restrictionAnnotation();
 
   /**
    * The LoginView that should be used.
