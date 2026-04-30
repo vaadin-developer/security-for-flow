@@ -7,27 +7,28 @@ for Vaadin Flow applications. Uses Java SPI (`ServiceLoader`) for all extension 
 
 | Module | Artifact | Description |
 |--------|----------|-------------|
-| `01_impl` | `security-for-flow` | Core library JAR — add this as a dependency |
-| `03_demo` | `security-for-flow-demo` | Reference implementation / demo WAR |
+| `security-core` | `security-core` | Core authentication and authorization contracts without Vaadin dependencies |
+| `security-vaadin` | `security-vaadin` | Vaadin Flow adapter — add this as a dependency in Vaadin applications |
+| `flow-security-test` | `flow-security-test` | Reference implementation / demo WAR |
 
 ## Quick Start
 
 ### Build
 
 ```bash
-# Full build (requires Maven 3.9.9+, Java 25+)
+# Full build (requires Maven 3.9.9+, Java 26+)
 mvn clean install
 
 # Run demo app (http://localhost:8080/)
-cd 03_demo && mvn jetty:run
+cd flow-security-test && mvn jetty:run
 ```
 
 ### Add the dependency
 
 ```xml
-<dependency>
+  <dependency>
   <groupId>com.svenruppert</groupId>
-  <artifactId>security-for-flow</artifactId>
+  <artifactId>security-vaadin</artifactId>
   <version>00.50.01-SNAPSHOT</version>
 </dependency>
 ```
@@ -81,11 +82,11 @@ public class MyAuthorizationService implements AuthorizationService<MyUser> {
 
 Register in `META-INF/services/com.svenruppert.vaadin.security.authorization.api.AuthorizationService`.
 
-### 4. Create a restriction annotation with `@NavigationAnnotation`
+### 4. Create a restriction annotation with `@SecurityAnnotation`
 
 ```java
 @Retention(RUNTIME)
-@NavigationAnnotation(MyRoleAccessEvaluator.class)
+@SecurityAnnotation(MyRoleAccessEvaluator.class)
 public @interface VisibleFor {
   MyRole[] value();
 }
@@ -98,10 +99,9 @@ public class MyRoleAccessEvaluator
     implements AccessEvaluator<VisibleFor> {
 
   @Override
-  public AuthorizationDecision evaluateAccess(
-      Location location, Class<?> target, VisibleFor annotation) {
-    // check roles, return AuthorizationDecision.granted() or
-    // AuthorizationDecision.denied("login", false)
+  public AccessDecision evaluate(AccessContext context, VisibleFor annotation) {
+    // check roles, return AccessDecision.granted() or
+    // AccessDecision.denied("login", false)
   }
 }
 ```
@@ -117,7 +117,7 @@ public class MyRoleAccessEvaluator
 
   @Override
   public String alternativeNavigationTarget(
-      Location location, Class<?> target, VisibleFor annotation) { /* ... */ }
+      AccessContext context, VisibleFor annotation) { /* ... */ }
 }
 ```
 
@@ -171,26 +171,27 @@ The framework uses a two-phase navigation check:
 
 2. **Authorization** (`AuthorizationListener` / `AccessEvaluator`):
    - Evaluator checks the subject's roles/permissions against the annotation
-   - Returns `AuthorizationDecision.granted()` or `AuthorizationDecision.denied(...)` with an alternative target
+   - Returns `AccessDecision.granted()` or `AccessDecision.denied(...)` with an alternative target
 
 ## Key Framework Types
 
 | Type | Package | Purpose |
 |------|---------|---------|
-| `SecurityServiceResolver` | `api` | Central SPI resolver with caching and error messages |
-| `SubjectStore` | `api` | Session abstraction (testable without Vaadin) |
-| `SessionAccessor` | `api` | Static facade for subject read/write/delete |
-| `AuthorizationDecision` | `navigation` | Sealed authorization decision type |
+| `SecurityServiceResolver` | `api` | Central SPI resolver for authentication and authorization services |
+| `SubjectStore` | `api` | Subject storage abstraction |
+| `SubjectStores` | `api` | ServiceLoader-backed subject store resolver |
+| `AccessDecision` | `navigation` | Sealed authorization decision type |
+| `AccessContext` | `navigation` | Vaadin-free access evaluation context |
 | `NavigationAccessDecisionService` | `navigation` | Pure authentication decision logic (no Vaadin deps) |
 | `NavigationAccessDecision` | `navigation` | Sealed authentication-phase decision type |
 | `NavigationSecurityContext` | `navigation` | Vaadin-free navigation context record |
-| `@NavigationAnnotation` | `annotations` | Meta-annotation linking restrictions to evaluators |
+| `@SecurityAnnotation` | `annotations` | Meta-annotation linking restrictions to evaluators |
 | `@ExperimentalSecurityApi` | `api` | Marks experimental API surface |
 
 ## Stable vs. Experimental API
 
 **Stable** (role-based access):
-`RoleBasedAccessEvaluator`, `RoleName`, `HasRoles`, `AuthorizationDecision`,
+`RoleBasedAccessEvaluator`, `RoleName`, `HasRoles`, `AccessDecision`,
 and all types listed above.
 
 **Experimental** (permission-based access — marked with `@ExperimentalSecurityApi`):
