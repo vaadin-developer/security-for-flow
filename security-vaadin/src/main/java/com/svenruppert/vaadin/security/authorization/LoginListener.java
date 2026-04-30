@@ -20,6 +20,7 @@ import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.authorization.impl.SecurityAnnotationScanner;
+import com.svenruppert.vaadin.security.authorization.impl.VaadinNavigationAccessDecisionMapper;
 import com.svenruppert.vaadin.security.authorization.navigation.NavigationAccessDecision;
 import com.svenruppert.vaadin.security.authorization.navigation.NavigationAccessDecisionService;
 import com.svenruppert.vaadin.security.authorization.navigation.NavigationSecurityContext;
@@ -48,6 +49,10 @@ public abstract class LoginListener<U>
   /** Scanner for framework security annotations. */
   private final SecurityAnnotationScanner scanner = new SecurityAnnotationScanner();
 
+  /** Maps authentication-phase decisions to Vaadin navigation operations. */
+  private final VaadinNavigationAccessDecisionMapper decisionMapper =
+      new VaadinNavigationAccessDecisionMapper();
+
   /** Creates a new login listener. */
   protected LoginListener() {
   }
@@ -66,32 +71,22 @@ public abstract class LoginListener<U>
 
     NavigationAccessDecision decision = decisionService.evaluateAuthentication(ctx);
 
-    applyDecision(decision, beforeEnterEvent, navigationTarget, isRestricted);
+    handleAllowedDecision(decision, navigationTarget, isRestricted);
+    decisionMapper.apply(
+        decision,
+        beforeEnterEvent,
+        this::loginNavigationTarget,
+        this::defaultNavigationTarget);
   }
 
-  private void applyDecision(NavigationAccessDecision decision,
-                             BeforeEnterEvent event,
-                             Class<?> navigationTarget,
-                             boolean isRestricted) {
-    switch (decision) {
-      case NavigationAccessDecision.Allowed() -> {
-        if (!isRestricted) {
-          notARestrictedTarget(navigationTarget);
-        } else {
-          logger().info("User is already logged in");
-        }
-      }
-      case NavigationAccessDecision.LoginRequired() -> {
-        logger().info("Login required - forwarding to login view");
-        event.forwardTo(loginNavigationTarget());
-      }
-      case NavigationAccessDecision.AlreadyLoggedIn() -> {
-        logger().info("Already logged in - forwarding to default view");
-        event.forwardTo(defaultNavigationTarget());
-      }
-      case NavigationAccessDecision.AccessDenied(String route, boolean asForward) -> {
-        if (asForward) event.forwardTo(route);
-        else event.rerouteTo(route);
+  private void handleAllowedDecision(NavigationAccessDecision decision,
+                                     Class<?> navigationTarget,
+                                     boolean isRestricted) {
+    if (decision instanceof NavigationAccessDecision.Allowed) {
+      if (!isRestricted) {
+        notARestrictedTarget(navigationTarget);
+      } else {
+        logger().info("User is already logged in");
       }
     }
   }
