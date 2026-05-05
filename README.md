@@ -16,7 +16,7 @@ applications or demo modules — never in the library.
 | `security-vaadin` | `security-vaadin` | Vaadin Flow adapter — view and navigation security |
 | `security-rest` | `security-rest` | Framework-light REST adapter — request and handler security |
 | `demo-vaadin` | `demo-vaadin` | Vaadin reference implementation (WAR) |
-| `demo-rest` | `demo-rest` | REST reference implementation (JAR) |
+| `demo-rest` | `demo-rest` | Runnable REST reference: JDK-only HTTP server + CLI client |
 
 ### Dependency Rules
 
@@ -38,12 +38,33 @@ demo-rest        -> security-core, security-rest
 ```bash
 # Full build (requires Maven 3.9.9+, Java 26+)
 mvn clean install
+```
 
-# Run Vaadin demo (http://localhost:8080/)
+### Run the Vaadin demo
+
+```bash
 cd demo-vaadin && mvn jetty:run
+# http://localhost:8080/
+```
 
-# Run REST demo tests
-mvn -pl demo-rest -am test
+### Run the REST demo (server + CLI)
+
+```bash
+# Terminal 1 — start the JDK-only HTTP server on http://localhost:8080
+mvn -pl :demo-rest exec:java
+
+# Terminal 2 — interactive CLI
+mvn -pl :demo-rest exec:java \
+    -Dexec.mainClass=com.svenruppert.vaadin.security.demo.rest.cli.DemoRestCli
+```
+
+Demo users: `admin/admin`, `editor/editor`, `viewer/viewer`. Full walkthrough
+with example sessions in [`docs/demo-rest.md`](docs/demo-rest.md).
+
+```bash
+# Tests for either demo
+mvn -pl :demo-rest -am test
+mvn -pl :demo-vaadin -am test
 ```
 
 ### Add the dependency
@@ -199,7 +220,13 @@ public class AdminView extends Div { /* ... */ }
 
 To secure REST handlers, implement `RestSubjectResolver`, annotate handlers with
 generic permission annotations, and run them through `RestAuthorizationFilter`.
-Reference: `demo-rest`.
+
+A complete runnable reference lives in `demo-rest`: a JDK-only HTTP server
+(`com.sun.net.httpserver.HttpServer`) and an interactive CLI
+(`java.net.http.HttpClient`) demonstrating login, server-side operation
+filtering, and the `200 / 401 / 403` decision flow. See
+[`docs/demo-rest.md`](docs/demo-rest.md) for run instructions and example
+sessions.
 
 ### 1. Define project permissions and role mapping
 
@@ -263,6 +290,13 @@ The filter:
 4. Runs the matching `AuthorizationEvaluator`.
 5. Maps the decision: `Granted` runs the handler; `Unauthenticated` → `401`;
    `Forbidden` → `403`. Error bodies are short and generic — no internals leak.
+
+### 5. (Optional) Operation discovery filtered server-side
+
+`demo-rest` also shows a `GET /api/operations` endpoint that returns only the
+operations the current subject is allowed to invoke. The same permission model
+that protects the handlers is used to filter the discovery list — clients
+never make local authorization decisions.
 
 ## Decision Model
 

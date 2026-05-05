@@ -14,24 +14,8 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.demo.rest;
+package com.svenruppert.vaadin.security.demo.rest.domain;
 
-import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
-
-/**
- * Demo-only REST roles.
- */
-public enum DemoRole {
-  ROLE_ADMIN,
-  ROLE_EDITOR,
-  ROLE_VIEWER;
-
-  /**
-   * Returns the role name.
-   *
-   * @return role name
-   */
-  public RoleName roleName() {
-    return new RoleName(name());
-  }
+/** Demo document record. */
+public record DemoDocument(long id, String title) {
 }

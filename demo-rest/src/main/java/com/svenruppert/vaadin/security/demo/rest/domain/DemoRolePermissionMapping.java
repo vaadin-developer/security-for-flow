@@ -14,7 +14,7 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.demo.rest;
+package com.svenruppert.vaadin.security.demo.rest.domain;
 
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.permissions.RolePermissionMapping;
@@ -22,11 +22,9 @@ import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 
 import java.util.Set;
 
-import static com.svenruppert.vaadin.security.demo.rest.DemoPermission.*;
+import static com.svenruppert.vaadin.security.demo.rest.domain.DemoPermission.*;
 
-/**
- * Demo role-permission mapping.
- */
+/** Demo role-to-permission mapping. */
 public final class DemoRolePermissionMapping implements RolePermissionMapping {
 
   @Override

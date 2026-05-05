@@ -14,32 +14,20 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.demo.rest;
+package com.svenruppert.vaadin.security.demo.rest.shared;
 
-import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
+/** Demo endpoint path constants shared between server and CLI. */
+public final class DemoEndpoints {
 
-/**
- * Demo-only REST permissions.
- */
-public enum DemoPermission {
-  DOCUMENT_READ("document:read"),
-  DOCUMENT_CREATE("document:create"),
-  DOCUMENT_UPDATE("document:update"),
-  DOCUMENT_DELETE("document:delete"),
-  ADMIN_ACCESS("admin:access");
+  public static final String API_PREFIX = "/api";
+  public static final String LOGIN = "/api/login";
+  public static final String LOGOUT = "/api/logout";
+  public static final String ME = "/api/me";
+  public static final String OPERATIONS = "/api/operations";
+  public static final String DOCUMENTS = "/api/documents";
+  public static final String DOCUMENT_BY_ID = "/api/documents/";
+  public static final String ADMIN_STATUS = "/api/admin/status";
 
-  private final PermissionName permissionName;
-
-  DemoPermission(String value) {
-    this.permissionName = new PermissionName(value);
-  }
-
-  /**
-   * Returns the permission name.
-   *
-   * @return permission name
-   */
-  public PermissionName permissionName() {
-    return permissionName;
+  private DemoEndpoints() {
   }
 }
