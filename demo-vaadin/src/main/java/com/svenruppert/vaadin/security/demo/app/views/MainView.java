@@ -17,8 +17,12 @@
 package com.svenruppert.vaadin.security.demo.app.views;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
+import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
+import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
+import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
+import com.svenruppert.vaadin.security.demo.app.security.permissions.DemoPermission;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
 import com.svenruppert.vaadin.security.demo.app.security.roles.VisibleFor;
 import com.svenruppert.vaadin.security.demo.app.views.workspaces.*;
@@ -32,6 +36,7 @@ import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -144,7 +149,14 @@ public class MainView
         "Use the side navigation to explore sections you have access to. "
             + "Each section is protected by a role-based access evaluator.");
 
-    VerticalLayout card = new VerticalLayout(greeting, badgeRow, hint);
+    Button adminAction = new Button("Demo admin action", VaadinIcon.LOCK.create(), event -> {
+      requirePermission(DemoPermission.DEMO_ADMIN.permissionName());
+      Notification.show("Permission checked again on server-side action execution.");
+    });
+    adminAction.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+    adminAction.setVisible(hasPermission(DemoPermission.DEMO_ADMIN.permissionName()));
+
+    VerticalLayout card = new VerticalLayout(greeting, badgeRow, hint, adminAction);
     card.addClassName("welcome-card");
     card.setAlignItems(FlexComponent.Alignment.START);
     card.setSpacing(false);
@@ -166,6 +178,28 @@ public class MainView
       case Q_ADMIN -> "primary";
       default -> "";
     };
+  }
+
+  private boolean hasPermission(PermissionName permission) {
+    return currentUser()
+        .map(user -> authorizationService().permissionsFor(user)
+            .permissionNames()
+            .contains(permission))
+        .orElse(false);
+  }
+
+  private void requirePermission(PermissionName permission) {
+    if (!hasPermission(permission)) {
+      throw new SecurityException("Missing permission: " + permission.value());
+    }
+  }
+
+  private AuthorizationService<MyUser> authorizationService() {
+    return SecurityServiceResolver.authorizationService();
+  }
+
+  private Optional<MyUser> currentUser() {
+    return SubjectStores.subjectStore().currentSubject(MyUser.class);
   }
 
   // ── Logout ─────────────────────────────────────────────────────

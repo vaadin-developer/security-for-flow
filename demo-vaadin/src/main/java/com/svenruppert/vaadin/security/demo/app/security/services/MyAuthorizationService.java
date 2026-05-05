@@ -18,17 +18,21 @@ package com.svenruppert.vaadin.security.demo.app.security.services;
 
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
+import com.svenruppert.vaadin.security.authorization.api.permissions.HasPermissions;
+import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.roles.HasRoles;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
+import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
 
+import java.util.Set;
 import java.util.Objects;
+
+import static com.svenruppert.vaadin.security.demo.app.security.permissions.DemoPermission.*;
 
 /**
  * Demo implementation of {@link AuthorizationService}.
  * <p>
- * Only provides role-based authorization. Permission support is not
- * needed — the default empty-permissions implementation from
- * {@link AuthorizationService#permissionsFor(Object)} applies.
+ * Provides role-based authorization and demo-only permissions for UI examples.
  */
 public class MyAuthorizationService
     implements AuthorizationService<MyUser> {
@@ -40,5 +44,26 @@ public class MyAuthorizationService
                         .stream()
                         .map(r -> new RoleName(r.name()))
                         .toList();
+  }
+
+  @Override
+  public HasPermissions permissionsFor(MyUser subject) {
+    Objects.requireNonNull(subject);
+    return () -> subject.roles()
+        .stream()
+        .flatMap(role -> permissionsFor(role).stream())
+        .toList();
+  }
+
+  private Set<PermissionName> permissionsFor(AuthorizationRole role) {
+    return switch (role) {
+      case ADMIN, Q_ADMIN -> Set.of(
+          DEMO_VIEW.permissionName(),
+          DEMO_EDIT.permissionName(),
+          DEMO_ADMIN.permissionName());
+      case NERD -> Set.of(DEMO_VIEW.permissionName(), DEMO_EDIT.permissionName());
+      case USER -> Set.of(DEMO_VIEW.permissionName());
+      case NOBODY -> Set.of();
+    };
   }
 }

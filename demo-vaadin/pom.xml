@@ -21,10 +21,10 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>flow-security-test</artifactId>
+    <artifactId>demo-vaadin</artifactId>
     <packaging>war</packaging>
-    <name>Security for Vaadin - Demo</name>
-    <description>A Core Java Security Framework for Vaadin - Demo</description>
+    <name>Security for Vaadin - Vaadin Demo</name>
+    <description>Demo application for Vaadin view security, roles, permissions, and UI integration.</description>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
@@ -32,6 +32,11 @@
         <gpg.skip>true</gpg.skip>
     </properties>
     <dependencies>
+        <dependency>
+            <groupId>com.svenruppert</groupId>
+            <artifactId>security-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.svenruppert</groupId>
             <artifactId>security-vaadin</artifactId>

@@ -14,6 +14,19 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.demo.app.security.permissions;
+package com.svenruppert.vaadin.security.authorization.api.permissions;
 
-public @interface RequiredPermissions { }
+import java.util.Set;
+
+/**
+ * Application-provided catalog of known permissions.
+ */
+public interface PermissionCatalog {
+
+  /**
+   * Returns all known permission names.
+   *
+   * @return permissions
+   */
+  Set<PermissionName> allPermissions();
+}
