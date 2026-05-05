@@ -1,18 +1,35 @@
-# Vaadin Flow Security
+# Security for Flow
 
-Pluggable authentication, authorization, and annotation-driven view protection
-for Vaadin Flow and lightweight REST applications. Uses Java SPI (`ServiceLoader`)
+Pluggable authentication, authorization, and annotation-driven protection for
+Vaadin Flow and lightweight REST applications. Uses Java SPI (`ServiceLoader`)
 for application-provided services.
+
+The library is split into framework-neutral core, two adapters (Vaadin and
+REST), and two reference demos. Concrete roles and permissions live in
+applications or demo modules — never in the library.
 
 ## Module Structure
 
 | Module | Artifact | Description |
-|--------|----------|-------------|
-| `security-core` | `security-core` | Core authentication and authorization contracts without Vaadin dependencies |
-| `security-vaadin` | `security-vaadin` | Vaadin Flow adapter — add this as a dependency in Vaadin applications |
-| `security-rest` | `security-rest` | Framework-light REST adapter for HTTP request and handler security |
-| `demo-vaadin` | `demo-vaadin` | Vaadin reference implementation / demo WAR |
-| `demo-rest` | `demo-rest` | REST reference implementation / demo JAR |
+|---|---|---|
+| `security-core` | `security-core` | Generic, framework-neutral security concepts and decision logic |
+| `security-vaadin` | `security-vaadin` | Vaadin Flow adapter — view and navigation security |
+| `security-rest` | `security-rest` | Framework-light REST adapter — request and handler security |
+| `demo-vaadin` | `demo-vaadin` | Vaadin reference implementation (WAR) |
+| `demo-rest` | `demo-rest` | REST reference implementation (JAR) |
+
+### Dependency Rules
+
+```text
+security-core    -> (no project deps)
+security-vaadin  -> security-core
+security-rest    -> security-core
+demo-vaadin      -> security-core, security-vaadin
+demo-rest        -> security-core, security-rest
+```
+
+`security-core` has no Vaadin, Servlet, or REST-framework dependencies.
+`security-vaadin` and `security-rest` never depend on each other.
 
 ## Quick Start
 
@@ -22,24 +39,41 @@ for application-provided services.
 # Full build (requires Maven 3.9.9+, Java 26+)
 mvn clean install
 
-# Run demo app (http://localhost:8080/)
+# Run Vaadin demo (http://localhost:8080/)
 cd demo-vaadin && mvn jetty:run
+
+# Run REST demo tests
+mvn -pl demo-rest -am test
 ```
 
 ### Add the dependency
 
+For a Vaadin Flow application:
+
 ```xml
-  <dependency>
+<dependency>
   <groupId>com.svenruppert</groupId>
   <artifactId>security-vaadin</artifactId>
   <version>00.50.01-SNAPSHOT</version>
 </dependency>
 ```
 
-## Integration Guide
+For a REST handler / servlet application:
 
-To secure your Vaadin Flow application, implement the following interfaces
-and register them via `META-INF/services/` files.
+```xml
+<dependency>
+  <groupId>com.svenruppert</groupId>
+  <artifactId>security-rest</artifactId>
+  <version>00.50.01-SNAPSHOT</version>
+</dependency>
+```
+
+`security-core` is pulled in transitively by either adapter.
+
+## Vaadin Integration
+
+To secure a Vaadin Flow application, implement the following SPI contracts and
+register them via `META-INF/services/` files. Reference: `demo-vaadin`.
 
 ### 1. Define a user type
 
@@ -73,8 +107,8 @@ com.example.MyAuthenticationService
 
 ### 3. Implement `AuthorizationService<U>`
 
-Maps a user to roles. Only `rolesFor()` is required — `permissionsFor()`
-has a default implementation returning empty permissions.
+Maps a user to roles. Only `rolesFor()` is required — `permissionsFor()` has a
+default implementation returning empty permissions.
 
 ```java
 public class MyAuthorizationService implements AuthorizationService<MyUser> {
@@ -85,7 +119,7 @@ public class MyAuthorizationService implements AuthorizationService<MyUser> {
 
 Register in `META-INF/services/com.svenruppert.vaadin.security.authorization.api.AuthorizationService`.
 
-### 4. Create a restriction annotation with `@SecurityAnnotation`
+### 4. Define a restriction annotation with `@SecurityAnnotation`
 
 ```java
 @Retention(RUNTIME)
@@ -93,6 +127,13 @@ Register in `META-INF/services/com.svenruppert.vaadin.security.authorization.api
 public @interface VisibleFor {
   MyRole[] value();
 }
+```
+
+Or use the generic annotations from `security-core`:
+
+```java
+@RequiresRole("ROLE_ADMIN")
+@RequiresPermission("demo:edit")
 ```
 
 ### 5. Implement `AccessEvaluator`
@@ -103,13 +144,12 @@ public class MyRoleAccessEvaluator
 
   @Override
   public AccessDecision evaluate(AccessContext context, VisibleFor annotation) {
-    // check roles, return AccessDecision.granted() or
-    // AccessDecision.denied("login", false)
+    // return AccessDecision.granted() or AccessDecision.denied("login", false)
   }
 }
 ```
 
-Or extend the provided `RoleBasedAccessEvaluator` base class:
+Or extend `RoleBasedAccessEvaluator`:
 
 ```java
 public class MyRoleAccessEvaluator
@@ -128,10 +168,6 @@ Register in `META-INF/services/com.svenruppert.vaadin.security.authorization.api
 
 ### 6. Extend `LoginListener<U>`
 
-The login phase uses the same `@SecurityAnnotation`-based scanning as the
-authorization phase. A project listener only defines the login/default targets;
-it does not declare a single restriction annotation type.
-
 ```java
 public class MyLoginListener extends LoginListener<MyUser> {
   @Override
@@ -142,17 +178,14 @@ public class MyLoginListener extends LoginListener<MyUser> {
   public Class<? extends Component> defaultNavigationTarget() {
     return MainView.class;
   }
-  @Override
-  public void notARestrictedTarget(Class<?> target) { /* optional logging */ }
 }
 ```
 
 Register in `META-INF/services/com.svenruppert.vaadin.security.authorization.LoginListener`.
 
-### 7. Extend `LoginView` for the login UI
+### 7. Extend `LoginView`
 
-Create your login view by extending the abstract `LoginView` base class
-and implementing the three abstract methods.
+Create your login UI by extending the abstract `LoginView` base class.
 
 ### 8. Annotate route views
 
@@ -162,45 +195,128 @@ and implementing the three abstract methods.
 public class AdminView extends Div { /* ... */ }
 ```
 
-## Navigation Decision Flow
+## REST Integration
 
-The framework uses a two-phase navigation check:
+To secure REST handlers, implement `RestSubjectResolver`, annotate handlers with
+generic permission annotations, and run them through `RestAuthorizationFilter`.
+Reference: `demo-rest`.
 
-1. **Authentication** (`LoginListener` / `NavigationAccessDecisionService`):
-   - Public route -> allow
-   - Restricted route, no subject -> redirect to login
-   - Restricted route, subject present on login page -> forward to default view
-   - Restricted route, subject present -> allow (proceed to authorization)
+### 1. Define project permissions and role mapping
 
-2. **Authorization** (`AuthorizationListener` / `AccessEvaluator`):
-   - Evaluator checks the subject's roles/permissions against the annotation
-   - Returns `AccessDecision.granted()` or `AccessDecision.denied(...)` with an alternative target
+```java
+public enum DemoPermission {
+  DOCUMENT_READ("document:read"),
+  DOCUMENT_DELETE("document:delete");
 
-## Key Framework Types
+  private final PermissionName permissionName;
+  // ...
+}
+```
 
-| Type | Package | Purpose |
-|------|---------|---------|
-| `SecurityServiceResolver` | `api` | Central SPI resolver for authentication and authorization services |
-| `SubjectStore` | `api` | Subject storage abstraction |
-| `SubjectStores` | `api` | ServiceLoader-backed subject store resolver |
-| `AccessDecision` | `navigation` | Sealed authorization decision type |
-| `AccessContext` | `navigation` | Vaadin-free access evaluation context |
-| `NavigationAccessDecisionService` | `navigation` | Pure authentication decision logic (no Vaadin deps) |
-| `NavigationAccessDecision` | `navigation` | Sealed authentication-phase decision type |
-| `NavigationSecurityContext` | `navigation` | Vaadin-free navigation context record |
-| `@SecurityAnnotation` | `annotations` | Meta-annotation linking restrictions to evaluators |
-| `@ExperimentalSecurityApi` | `api` | Marks experimental API surface |
+```java
+public final class DemoRolePermissionMapping implements RolePermissionMapping {
+  @Override
+  public Set<PermissionName> permissionsFor(RoleName role) { /* ... */ }
+}
+```
+
+### 2. Implement `RestSubjectResolver`
+
+```java
+public final class MyRestSubjectResolver implements RestSubjectResolver {
+  @Override
+  public Optional<SecuritySubject> resolveSubject(RestRequest request) {
+    // resolve from header, token, session — your choice
+  }
+}
+```
+
+The library does not enforce a token strategy.
+
+### 3. Annotate handlers
+
+```java
+public final class DocumentHandlers {
+  @RequiresPermission("document:read")
+  public void read(RestRequest request, RestResponse response) { /* ... */ }
+
+  @RequiresPermission("document:delete")
+  public void delete(RestRequest request, RestResponse response) { /* ... */ }
+}
+```
+
+### 4. Wire the filter
+
+```java
+RestAuthorizationFilter filter =
+    new RestAuthorizationFilter(new MyRestSubjectResolver());
+
+filter.authorizeAndHandle(
+    request, response, handlers::delete, handlerMethod);
+```
+
+The filter:
+
+1. Resolves the subject from the request.
+2. Scans the handler method/class for a security annotation.
+3. Builds an `AccessContext` with `resourceType="rest-endpoint"`.
+4. Runs the matching `AuthorizationEvaluator`.
+5. Maps the decision: `Granted` runs the handler; `Unauthenticated` → `401`;
+   `Forbidden` → `403`. Error bodies are short and generic — no internals leak.
+
+## Decision Model
+
+The library uses two decision types:
+
+| Type | Module | Purpose |
+|---|---|---|
+| `AuthorizationDecision` | `security-core` | Adapter-neutral: `Granted` / `Unauthenticated` / `Forbidden` |
+| `AccessDecision` | `security-core` | Vaadin-oriented (legacy, kept for backward compatibility) |
+
+Adapters map these to framework-specific behavior:
+
+- `security-vaadin` → navigation: continue, reroute to login, or reroute to error.
+- `security-rest` → HTTP status: `200`/handler, `401`, or `403`.
+
+## Annotation-Driven Protection
+
+`SecurityAnnotationScanner` scans classes, methods, or any `AnnotatedElement`
+for restriction annotations meta-annotated with `@SecurityAnnotation`. Both
+adapters use the same scanner.
+
+Generic annotations (in `security-core`):
+
+- `@RequiresRole({"ROLE_ADMIN"})` → `RequiresRoleEvaluator`
+- `@RequiresPermission("document:delete")` → `RequiresPermissionEvaluator`
+- `@ProtectedBy(...)` → `ProtectedByEvaluator`
+
+Project-specific annotations are encouraged for Vaadin views (e.g. `@VisibleFor`).
 
 ## Stable vs. Experimental API
 
-**Stable** (role-based access):
-`RoleBasedAccessEvaluator`, `RoleName`, `HasRoles`, `AccessDecision`,
-and all types listed above.
+**Stable**: role-based access, REST adapter contracts, `SecuritySubject`,
+`AccessContext`, `AuthorizationDecision`, scanner.
 
-**Experimental** (permission-based access — marked with `@ExperimentalSecurityApi`):
-`PermissionBasedAccessEvaluator`, `PermissionName`, `HasPermissions`,
-`PermissionAuthorizationService`.
-These may change in incompatible ways in future releases.
+**Experimental** (marked with `@ExperimentalSecurityApi`): permission-based
+access types — `PermissionBasedAccessEvaluator`, `PermissionName`,
+`HasPermissions`, `PermissionAuthorizationService`. May change in incompatible
+ways in future releases.
+
+## Project-Specific Permissions Live in Applications
+
+Library modules contain no concrete business permissions. Examples like
+`document:read` belong in `demo-rest`. Real applications define their own
+catalog (e.g. `shortlink:create`, `audit:read`) inside the consuming project.
+
+See [`docs/security-modules.md`](docs/security-modules.md) for the full
+extension model.
+
+## Roadmap
+
+`Konzept-V00.60.00.md` outlines the planned next step: `PasswordHashingService`,
+`SecurityAuditService`, `LoginAttemptPolicy` (brute-force), minimal
+`SessionPolicy`, central `LogoutService`, and `ActionAuthorizationService`
+(`isAllowed` / `requireAllowed`). None of these are implemented yet.
 
 ## License
 
