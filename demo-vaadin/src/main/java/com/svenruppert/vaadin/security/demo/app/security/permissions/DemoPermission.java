@@ -14,32 +14,30 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.authorization.api.roles;
+package com.svenruppert.vaadin.security.demo.app.security.permissions;
+
+import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 
 /**
- * Wrapper for a role name string.
- *
- * @param roleName the role identifier
+ * Demo-only Vaadin permissions.
  */
-public record RoleName(String roleName) {
+public enum DemoPermission {
+  DEMO_VIEW("demo:view"),
+  DEMO_EDIT("demo:edit"),
+  DEMO_ADMIN("demo:admin");
 
-  /**
-   * Creates a role name.
-   *
-   * @param roleName the role identifier
-   */
-  public RoleName {
-    if (roleName == null || roleName.isBlank()) {
-      throw new IllegalArgumentException("Role name must not be blank");
-    }
+  private final PermissionName permissionName;
+
+  DemoPermission(String value) {
+    this.permissionName = new PermissionName(value);
   }
 
   /**
-   * Alias for generic code that treats names as values.
+   * Returns the permission name.
    *
-   * @return the role identifier
+   * @return permission name
    */
-  public String value() {
-    return roleName;
+  public PermissionName permissionName() {
+    return permissionName;
   }
 }

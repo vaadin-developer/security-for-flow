@@ -17,14 +17,17 @@
 package com.svenruppert.vaadin.security.authorization.annotations;
 
 import com.svenruppert.vaadin.security.authorization.api.AccessEvaluator;
+import com.svenruppert.vaadin.security.authorization.api.AuthorizationEvaluator;
 
 import java.lang.annotation.*;
 
 /**
  * This annotation is to be placed on other annotations, marking them as restriction-annotations and
- * assigning {@link AccessEvaluator}s to them. Take for example the case that a certain route-target
- * is only to be accessed by users that have the role 'administrator'. Now the first step would be
- * to create an annotation called VisibleTo and annotate it with SecurityAnnotation
+ * assigning evaluator classes to them. Existing Vaadin-oriented annotations may use
+ * {@link AccessEvaluator}; adapter-neutral annotations may use {@link AuthorizationEvaluator}.
+ * Take for example the case that a certain route-target is only to be accessed by users that have
+ * the role 'administrator'. Now the first step would be to create an annotation called VisibleTo
+ * and annotate it with SecurityAnnotation.
  *
  * <pre>
  *     &#064;Retention(RUNTIME)
@@ -67,9 +70,9 @@ import java.lang.annotation.*;
 @Target(ElementType.ANNOTATION_TYPE)
 public @interface SecurityAnnotation {
   /**
-   * The {@link AccessEvaluator} that is to be assigned to the annotation.
+   * The evaluator class that is to be assigned to the annotation.
    *
-   * @return the {@link AccessEvaluator}
+   * @return the evaluator class
    */
-  Class<? extends AccessEvaluator<? extends Annotation>> value();
+  Class<?> value();
 }

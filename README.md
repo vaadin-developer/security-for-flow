@@ -1,7 +1,8 @@
 # Vaadin Flow Security
 
 Pluggable authentication, authorization, and annotation-driven view protection
-for Vaadin Flow applications. Uses Java SPI (`ServiceLoader`) for all extension points.
+for Vaadin Flow and lightweight REST applications. Uses Java SPI (`ServiceLoader`)
+for application-provided services.
 
 ## Module Structure
 
@@ -9,7 +10,9 @@ for Vaadin Flow applications. Uses Java SPI (`ServiceLoader`) for all extension 
 |--------|----------|-------------|
 | `security-core` | `security-core` | Core authentication and authorization contracts without Vaadin dependencies |
 | `security-vaadin` | `security-vaadin` | Vaadin Flow adapter — add this as a dependency in Vaadin applications |
-| `flow-security-test` | `flow-security-test` | Reference implementation / demo WAR |
+| `security-rest` | `security-rest` | Framework-light REST adapter for HTTP request and handler security |
+| `demo-vaadin` | `demo-vaadin` | Vaadin reference implementation / demo WAR |
+| `demo-rest` | `demo-rest` | REST reference implementation / demo JAR |
 
 ## Quick Start
 
@@ -20,7 +23,7 @@ for Vaadin Flow applications. Uses Java SPI (`ServiceLoader`) for all extension 
 mvn clean install
 
 # Run demo app (http://localhost:8080/)
-cd flow-security-test && mvn jetty:run
+cd demo-vaadin && mvn jetty:run
 ```
 
 ### Add the dependency

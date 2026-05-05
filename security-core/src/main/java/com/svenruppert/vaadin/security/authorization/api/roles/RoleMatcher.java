@@ -16,30 +16,24 @@
  */
 package com.svenruppert.vaadin.security.authorization.api.roles;
 
-/**
- * Wrapper for a role name string.
- *
- * @param roleName the role identifier
- */
-public record RoleName(String roleName) {
+import java.util.Collection;
 
-  /**
-   * Creates a role name.
-   *
-   * @param roleName the role identifier
-   */
-  public RoleName {
-    if (roleName == null || roleName.isBlank()) {
-      throw new IllegalArgumentException("Role name must not be blank");
-    }
+/**
+ * Generic role matching helper.
+ */
+public final class RoleMatcher {
+
+  private RoleMatcher() {
   }
 
   /**
-   * Alias for generic code that treats names as values.
+   * Checks whether any required role is present in the granted set.
    *
-   * @return the role identifier
+   * @param granted  granted roles
+   * @param required required roles
+   * @return true if at least one required role is granted
    */
-  public String value() {
-    return roleName;
+  public static boolean containsAny(Collection<RoleName> granted, Collection<RoleName> required) {
+    return required.stream().anyMatch(granted::contains);
   }
 }

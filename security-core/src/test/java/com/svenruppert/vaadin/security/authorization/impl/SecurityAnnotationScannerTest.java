@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -54,7 +55,20 @@ class SecurityAnnotationScannerTest {
     assertTrue(result.isPresent());
     var pair = result.get();
     assertEquals(StubEvaluator.class, pair.accessEvaluatorClass());
+    assertEquals(StubEvaluator.class, pair.evaluatorClass());
     assertInstanceOf(StubRestriction.class, pair.annotation());
+  }
+
+  @Test
+  @DisplayName("method with restriction annotation returns pair")
+  void methodWithAnnotation_returnsPair() throws NoSuchMethodException {
+    Method method = ProtectedHandler.class.getDeclaredMethod("delete");
+
+    var result = scanner.scan(method);
+
+    assertTrue(result.isPresent());
+    assertEquals(StubEvaluator.class, result.get().evaluatorClass());
+    assertInstanceOf(StubRestriction.class, result.get().annotation());
   }
 
   @Test
@@ -101,5 +115,11 @@ class SecurityAnnotationScannerTest {
   @StubRestriction
   @AnotherRestriction
   static class DualAnnotatedView {
+  }
+
+  static class ProtectedHandler {
+    @StubRestriction
+    void delete() {
+    }
   }
 }

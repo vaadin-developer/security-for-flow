@@ -14,32 +14,23 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.authorization.api.roles;
+package com.svenruppert.vaadin.security.rest;
+
+import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+
+import java.util.Optional;
 
 /**
- * Wrapper for a role name string.
- *
- * @param roleName the role identifier
+ * Resolves the current security subject from a REST request.
  */
-public record RoleName(String roleName) {
+@FunctionalInterface
+public interface RestSubjectResolver {
 
   /**
-   * Creates a role name.
+   * Resolves the current subject.
    *
-   * @param roleName the role identifier
+   * @param request request
+   * @return subject, or empty if no subject is authenticated
    */
-  public RoleName {
-    if (roleName == null || roleName.isBlank()) {
-      throw new IllegalArgumentException("Role name must not be blank");
-    }
-  }
-
-  /**
-   * Alias for generic code that treats names as values.
-   *
-   * @return the role identifier
-   */
-  public String value() {
-    return roleName;
-  }
+  Optional<SecuritySubject> resolveSubject(RestRequest request);
 }

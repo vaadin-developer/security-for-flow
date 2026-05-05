@@ -14,32 +14,24 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.authorization.api.roles;
+package com.svenruppert.vaadin.security.rest;
 
 /**
- * Wrapper for a role name string.
- *
- * @param roleName the role identifier
+ * Minimal framework-independent REST response abstraction.
  */
-public record RoleName(String roleName) {
+public interface RestResponse {
 
   /**
-   * Creates a role name.
+   * Sets the response status.
    *
-   * @param roleName the role identifier
+   * @param statusCode HTTP status code
    */
-  public RoleName {
-    if (roleName == null || roleName.isBlank()) {
-      throw new IllegalArgumentException("Role name must not be blank");
-    }
-  }
+  void status(int statusCode);
 
   /**
-   * Alias for generic code that treats names as values.
+   * Sets the response body.
    *
-   * @return the role identifier
+   * @param body response body
    */
-  public String value() {
-    return roleName;
-  }
+  void body(String body);
 }

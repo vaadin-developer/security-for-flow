@@ -22,14 +22,25 @@ import java.lang.annotation.Annotation;
 
 /**
  * Pairs a restriction annotation instance with the
- * {@link AccessEvaluator} class declared via
+ * evaluator class declared via
  * {@link com.svenruppert.vaadin.security.authorization.annotations.SecurityAnnotation}.
  *
- * @param annotation          the restriction annotation instance
- * @param accessEvaluatorClass the evaluator class to instantiate
- * @param <T> the annotation type
+ * @param annotation     the restriction annotation instance
+ * @param evaluatorClass the evaluator class to instantiate
+ * @param <T>            the annotation type
  */
-record AnnotationAccessEvaluatorPair<T extends Annotation>(
+public record AnnotationAccessEvaluatorPair<T extends Annotation>(
     T annotation,
-    Class<? extends AccessEvaluator<T>> accessEvaluatorClass
-) { }
+    Class<?> evaluatorClass
+) {
+
+  /**
+   * Compatibility accessor for Vaadin-oriented {@link AccessEvaluator}s.
+   *
+   * @return evaluator class cast to the legacy access evaluator type
+   */
+  @SuppressWarnings("unchecked")
+  public Class<? extends AccessEvaluator<T>> accessEvaluatorClass() {
+    return (Class<? extends AccessEvaluator<T>>) evaluatorClass;
+  }
+}

@@ -14,32 +14,22 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.authorization.api.roles;
+package com.svenruppert.vaadin.security.authorization.api.permissions;
+
+import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
+
+import java.util.Set;
 
 /**
- * Wrapper for a role name string.
- *
- * @param roleName the role identifier
+ * Application-provided mapping from roles to permissions.
  */
-public record RoleName(String roleName) {
+public interface RolePermissionMapping {
 
   /**
-   * Creates a role name.
+   * Returns permissions assigned to the given role.
    *
-   * @param roleName the role identifier
+   * @param role role name
+   * @return permissions for role
    */
-  public RoleName {
-    if (roleName == null || roleName.isBlank()) {
-      throw new IllegalArgumentException("Role name must not be blank");
-    }
-  }
-
-  /**
-   * Alias for generic code that treats names as values.
-   *
-   * @return the role identifier
-   */
-  public String value() {
-    return roleName;
-  }
+  Set<PermissionName> permissionsFor(RoleName role);
 }

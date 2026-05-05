@@ -73,7 +73,9 @@
     <modules>
         <module>security-core</module>
         <module>security-vaadin</module>
-        <module>flow-security-test</module>
+        <module>security-rest</module>
+        <module>demo-vaadin</module>
+        <module>demo-rest</module>
     </modules>
 
     <properties>

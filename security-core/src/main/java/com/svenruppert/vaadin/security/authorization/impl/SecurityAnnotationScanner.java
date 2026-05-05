@@ -17,9 +17,10 @@
 package com.svenruppert.vaadin.security.authorization.impl;
 
 import com.svenruppert.vaadin.security.authorization.annotations.SecurityAnnotation;
-import com.svenruppert.vaadin.security.authorization.api.AccessEvaluator;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,8 +29,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import static java.util.Arrays.stream;
 
 /**
- * Scans navigation target classes for {@link SecurityAnnotation}-meta-annotated
- * restriction annotations and resolves the corresponding {@link AccessEvaluator}.
+ * Scans annotated elements for {@link SecurityAnnotation}-meta-annotated
+ * restriction annotations and resolves the corresponding evaluator class.
  * <p>
  * Results are cached per class. This class is Vaadin-free and can be
  * unit-tested independently.
@@ -40,7 +41,7 @@ public final class SecurityAnnotationScanner {
   public SecurityAnnotationScanner() {
   }
 
-  private final Map<Class<?>, Optional<AnnotationAccessEvaluatorPair<Annotation>>> cache =
+  private final Map<AnnotatedElement, Optional<AnnotationAccessEvaluatorPair<Annotation>>> cache =
       new ConcurrentHashMap<>();
 
   /**
@@ -53,11 +54,37 @@ public final class SecurityAnnotationScanner {
    * @throws IllegalStateException if more than one restriction annotation is found
    */
   public Optional<AnnotationAccessEvaluatorPair<Annotation>> scan(Class<?> navigationTarget) {
-    return cache.computeIfAbsent(navigationTarget, this::doScan);
+    return scan((AnnotatedElement) navigationTarget);
   }
 
-  private Optional<AnnotationAccessEvaluatorPair<Annotation>> doScan(Class<?> classToCheck) {
-    List<Annotation> list = stream(classToCheck.getAnnotations())
+  /**
+   * Scans the given method for a restriction annotation and returns the
+   * annotation together with the evaluator class declared via
+   * {@link SecurityAnnotation}.
+   *
+   * @param method the method to scan
+   * @return the pair, or empty if no restriction annotation is present
+   * @throws IllegalStateException if more than one restriction annotation is found
+   */
+  public Optional<AnnotationAccessEvaluatorPair<Annotation>> scan(Method method) {
+    return scan((AnnotatedElement) method);
+  }
+
+  /**
+   * Scans the given annotated element for a restriction annotation and returns
+   * the annotation together with the evaluator class declared via
+   * {@link SecurityAnnotation}.
+   *
+   * @param element the annotated element to scan
+   * @return the pair, or empty if no restriction annotation is present
+   * @throws IllegalStateException if more than one restriction annotation is found
+   */
+  public Optional<AnnotationAccessEvaluatorPair<Annotation>> scan(AnnotatedElement element) {
+    return cache.computeIfAbsent(element, this::doScan);
+  }
+
+  private Optional<AnnotationAccessEvaluatorPair<Annotation>> doScan(AnnotatedElement element) {
+    List<Annotation> list = stream(element.getAnnotations())
         .filter(a -> a.annotationType().isAnnotationPresent(SecurityAnnotation.class))
         .toList();
 
@@ -67,14 +94,12 @@ public final class SecurityAnnotationScanner {
         Annotation annotation = list.getFirst();
         SecurityAnnotation navAnno = annotation.annotationType()
             .getAnnotation(SecurityAnnotation.class);
-        Class<? extends AccessEvaluator<? extends Annotation>> evaluatorClass = navAnno.value();
-        @SuppressWarnings("unchecked")
-        var pair = new AnnotationAccessEvaluatorPair<>(
-            annotation, (Class<? extends AccessEvaluator<Annotation>>) evaluatorClass);
+        Class<?> evaluatorClass = navAnno.value();
+        var pair = new AnnotationAccessEvaluatorPair<>(annotation, evaluatorClass);
         yield Optional.of(pair);
       }
       default -> throw new IllegalStateException(
-          "More than one @SecurityAnnotation is not allowed on " + classToCheck.getName());
+          "More than one @SecurityAnnotation is not allowed on " + element);
     };
   }
 }

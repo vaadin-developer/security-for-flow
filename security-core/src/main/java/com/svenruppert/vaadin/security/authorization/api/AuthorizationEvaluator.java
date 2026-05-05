@@ -14,32 +14,25 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.authorization.api.roles;
+package com.svenruppert.vaadin.security.authorization.api;
+
+import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
+
+import java.lang.annotation.Annotation;
 
 /**
- * Wrapper for a role name string.
+ * Evaluates access and returns a semantic adapter-neutral decision.
  *
- * @param roleName the role identifier
+ * @param <A> annotation type
  */
-public record RoleName(String roleName) {
+public interface AuthorizationEvaluator<A extends Annotation> {
 
   /**
-   * Creates a role name.
+   * Evaluates access.
    *
-   * @param roleName the role identifier
+   * @param context    neutral access context
+   * @param annotation security annotation
+   * @return semantic authorization decision
    */
-  public RoleName {
-    if (roleName == null || roleName.isBlank()) {
-      throw new IllegalArgumentException("Role name must not be blank");
-    }
-  }
-
-  /**
-   * Alias for generic code that treats names as values.
-   *
-   * @return the role identifier
-   */
-  public String value() {
-    return roleName;
-  }
+  AuthorizationDecision evaluate(AccessContext context, A annotation);
 }

@@ -18,6 +18,8 @@ package com.svenruppert.vaadin.security.authorization.impl;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.vaadin.security.authorization.api.AccessEvaluator;
+import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
+import com.svenruppert.vaadin.security.authorization.api.AuthorizationEvaluator;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessDecision;
 import com.vaadin.flow.component.UI;
@@ -83,11 +85,11 @@ public class AuthorizationListener
 
     scanner.scan(navigationTarget).ifPresent(pair -> {
       // 1. Resolve evaluator via Vaadin instantiator
-      Class<? extends AccessEvaluator<Annotation>> evaluatorClass = pair.accessEvaluatorClass();
+      Class<?> evaluatorClass = pair.evaluatorClass();
       requireNonNull(evaluatorClass,
           "AccessEvaluator class must not be null for " + navigationTarget.getName());
 
-      AccessEvaluator<Annotation> evaluator = VaadinService.getCurrent()
+      Object evaluator = VaadinService.getCurrent()
           .getInstantiator()
           .getOrCreate(evaluatorClass);
       requireNonNull(evaluator,
@@ -97,10 +99,33 @@ public class AuthorizationListener
       Annotation annotation = pair.annotation();
       logger().info("Evaluating access for {} with {}", event.getLocation(), annotation);
       AccessContext context = contextFactory.create(event);
-      AccessDecision decision = evaluator.evaluate(context, annotation);
+      AccessDecision decision = evaluate(evaluator, context, annotation);
 
       // 3. Apply the decision to the Vaadin event
       decisionMapper.apply(decision, event);
     });
+  }
+
+  @SuppressWarnings("unchecked")
+  private AccessDecision evaluate(Object evaluator, AccessContext context, Annotation annotation) {
+    if (evaluator instanceof AccessEvaluator<?> accessEvaluator) {
+      return ((AccessEvaluator<Annotation>) accessEvaluator).evaluate(context, annotation);
+    }
+    if (evaluator instanceof AuthorizationEvaluator<?> authorizationEvaluator) {
+      AuthorizationDecision decision =
+          ((AuthorizationEvaluator<Annotation>) authorizationEvaluator).evaluate(context, annotation);
+      return map(decision);
+    }
+    throw new IllegalStateException(
+        "Unsupported evaluator type: " + evaluator.getClass().getName());
+  }
+
+  private AccessDecision map(AuthorizationDecision decision) {
+    return switch (decision) {
+      case AuthorizationDecision.Granted() -> AccessDecision.granted();
+      case AuthorizationDecision.Unauthenticated(String reason) -> AccessDecision.denied("login", false);
+      case AuthorizationDecision.Forbidden(String reason) ->
+          AccessDecision.deniedWithError(SecurityException.class, reason);
+    };
   }
 }

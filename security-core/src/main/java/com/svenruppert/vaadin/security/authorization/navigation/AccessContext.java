@@ -16,18 +16,99 @@
  */
 package com.svenruppert.vaadin.security.authorization.navigation;
 
+import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Vaadin-free context for access evaluation.
  *
- * @param path       requested path
- * @param target     navigation target class
- * @param attributes adapter-provided contextual attributes
+ * @param subject      authenticated subject, if available
+ * @param resourceType adapter-neutral resource type
+ * @param resourceName adapter-neutral resource name
+ * @param operation    requested operation
+ * @param attributes   adapter-provided contextual attributes
  */
 public record AccessContext(
-    String path,
-    Class<?> target,
+    Optional<SecuritySubject> subject,
+    String resourceType,
+    String resourceName,
+    String operation,
     Map<String, Object> attributes
 ) {
+
+  /**
+   * Creates an access context with defensive copies.
+   *
+   * @param subject      authenticated subject, if available
+   * @param resourceType adapter-neutral resource type
+   * @param resourceName adapter-neutral resource name
+   * @param operation    requested operation
+   * @param attributes   adapter-provided contextual attributes
+   */
+  public AccessContext {
+    subject = subject == null ? Optional.empty() : subject;
+    resourceType = requireNotBlank(resourceType, "resourceType");
+    resourceName = requireNotBlank(resourceName, "resourceName");
+    operation = requireNotBlank(operation, "operation");
+    attributes = Map.copyOf(requireNonNull(attributes, "attributes must not be null"));
+  }
+
+  /**
+   * Compatibility constructor for existing Vaadin navigation code.
+   *
+   * @param path       requested path
+   * @param target     navigation target class
+   * @param attributes adapter-provided contextual attributes
+   */
+  public AccessContext(String path, Class<?> target, Map<String, Object> attributes) {
+    this(
+        Optional.empty(),
+        "vaadin-view",
+        requireNonNull(target, "target must not be null").getSimpleName(),
+        "navigate",
+        vaadinAttributes(path, target, attributes));
+  }
+
+  /**
+   * Compatibility accessor for the former path component.
+   *
+   * @return requested path, if known
+   */
+  public String path() {
+    Object path = attributes.get("path");
+    return path == null ? resourceName : String.valueOf(path);
+  }
+
+  /**
+   * Compatibility accessor for the former target component.
+   *
+   * @return target class, if known
+   */
+  public Class<?> target() {
+    Object target = attributes.get("target");
+    return target instanceof Class<?> targetClass ? targetClass : null;
+  }
+
+  private static String requireNotBlank(String value, String name) {
+    if (value == null || value.isBlank()) {
+      throw new IllegalArgumentException(name + " must not be blank");
+    }
+    return value;
+  }
+
+  private static Map<String, Object> vaadinAttributes(
+      String path,
+      Class<?> target,
+      Map<String, Object> attributes) {
+    Map<String, Object> result = new LinkedHashMap<>(
+        attributes == null ? Map.of() : attributes);
+    result.put("path", requireNotBlank(path, "path"));
+    result.put("target", requireNonNull(target, "target must not be null"));
+    return result;
+  }
 }

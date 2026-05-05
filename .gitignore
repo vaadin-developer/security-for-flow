@@ -19,6 +19,8 @@ webpack.generated.js
 */webpack.generated.js
 
 target/*
+*/src/main/bundles/
+*/src/main/frontend/generated/
 
 *.iml
 .idea/*

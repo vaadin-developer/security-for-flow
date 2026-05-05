@@ -14,32 +14,29 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.authorization.api.roles;
+package com.svenruppert.vaadin.security.authorization.annotations;
+
+import com.svenruppert.vaadin.security.authorization.api.roles.RequiresRoleEvaluator;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
 
 /**
- * Wrapper for a role name string.
- *
- * @param roleName the role identifier
+ * Requires the current subject to have at least one listed role.
  */
-public record RoleName(String roleName) {
+@Retention(RetentionPolicy.RUNTIME)
+@Target({TYPE, METHOD})
+@SecurityAnnotation(RequiresRoleEvaluator.class)
+public @interface RequiresRole {
 
   /**
-   * Creates a role name.
+   * Required role names.
    *
-   * @param roleName the role identifier
+   * @return role names
    */
-  public RoleName {
-    if (roleName == null || roleName.isBlank()) {
-      throw new IllegalArgumentException("Role name must not be blank");
-    }
-  }
-
-  /**
-   * Alias for generic code that treats names as values.
-   *
-   * @return the role identifier
-   */
-  public String value() {
-    return roleName;
-  }
+  String[] value();
 }

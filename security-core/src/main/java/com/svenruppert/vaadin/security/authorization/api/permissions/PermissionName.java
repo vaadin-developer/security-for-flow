@@ -24,4 +24,25 @@ import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi
  * @param permissionName the permission identifier
  */
 @ExperimentalSecurityApi("Permission-based access is experimental. Use role-based access for stable production use.")
-public record PermissionName(String permissionName) { }
+public record PermissionName(String permissionName) {
+
+  /**
+   * Creates a permission name.
+   *
+   * @param permissionName the permission identifier
+   */
+  public PermissionName {
+    if (permissionName == null || permissionName.isBlank()) {
+      throw new IllegalArgumentException("Permission name must not be blank");
+    }
+  }
+
+  /**
+   * Alias for generic code that treats names as values.
+   *
+   * @return the permission identifier
+   */
+  public String value() {
+    return permissionName;
+  }
+}
