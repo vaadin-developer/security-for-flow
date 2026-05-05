@@ -74,4 +74,13 @@ class AccessContextTest {
     assertEquals("admin", context.path());
     assertEquals(AccessContextTest.class, context.target());
   }
+
+  @Test
+  @DisplayName("compatibility constructor accepts the empty Vaadin root path")
+  void compatibilityConstructorAcceptsRootPath() {
+    AccessContext context = new AccessContext("", AccessContextTest.class, Map.of());
+
+    assertEquals("", context.path());
+    assertEquals(AccessContextTest.class, context.target());
+  }
 }

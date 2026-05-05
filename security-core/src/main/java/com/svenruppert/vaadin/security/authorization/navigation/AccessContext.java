@@ -107,7 +107,7 @@ public record AccessContext(
       Map<String, Object> attributes) {
     Map<String, Object> result = new LinkedHashMap<>(
         attributes == null ? Map.of() : attributes);
-    result.put("path", requireNotBlank(path, "path"));
+    result.put("path", requireNonNull(path, "path must not be null"));
     result.put("target", requireNonNull(target, "target must not be null"));
     return result;
   }
