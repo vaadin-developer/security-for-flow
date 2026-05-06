@@ -14,17 +14,17 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.demo.rest.domain;
+package com.svenruppert.vaadin.security.bootstrap;
 
 /**
- * Demo-only user record. Stores a hashed password — never plaintext.
+ * Tells the operator how to obtain the current bootstrap token.
  * <p>
- * Production systems must replace this with a real authentication store.
+ * Implementations decide whether the actual token value is shown
+ * (transient/console) or only a pointer to the file is logged
+ * (persistent/file). The token value must never be sent to the regular
+ * application logger.
  */
-public record DemoUser(
-    String username,
-    String displayName,
-    String passwordHash,
-    DemoRole role
-) {
+public interface BootstrapTokenOutput {
+
+  void emit(BootstrapToken token, BootstrapConfiguration configuration);
 }

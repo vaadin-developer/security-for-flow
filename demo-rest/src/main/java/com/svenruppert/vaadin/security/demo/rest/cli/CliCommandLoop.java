@@ -19,9 +19,12 @@ package com.svenruppert.vaadin.security.demo.rest.cli;
 import com.svenruppert.vaadin.security.demo.rest.shared.DemoJson;
 
 import java.io.BufferedReader;
+import java.io.Console;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.http.HttpResponse;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -94,6 +97,10 @@ public final class CliCommandLoop {
         logout();
         yield true;
       }
+      case "init-admin" -> {
+        initAdmin();
+        yield true;
+      }
       case "exit", "quit" -> false;
       default -> {
         out.println("Unknown command: " + command + ". Type 'help'.");
@@ -109,6 +116,7 @@ public final class CliCommandLoop {
     out.println("  operations");
     out.println("  call <operation-id> [argument]");
     out.println("  logout");
+    out.println("  init-admin              create the first administrator (interactive)");
     out.println("  help");
     out.println("  exit");
   }
@@ -207,6 +215,97 @@ public final class CliCommandLoop {
       return true;
     }
     return false;
+  }
+
+  // ── init-admin ─────────────────────────────────────────────
+
+  private void initAdmin() throws IOException, InterruptedException {
+    HttpResponse<String> status = client.bootstrapStatus();
+    if (status.statusCode() != 200) {
+      out.println("Could not query bootstrap status: " + status.statusCode());
+      return;
+    }
+    Map<String, Object> body = DemoJson.decodeObject(status.body());
+    if (!Boolean.TRUE.equals(body.get("bootstrapRequired"))) {
+      out.println("Bootstrap is not required — an administrator already exists.");
+      return;
+    }
+    out.println("Initial administrator setup. The bootstrap token must be obtained from");
+    out.println("the server console (transient mode) or the token file (persistent mode).");
+
+    String token = readSecret("Bootstrap token");
+    if (token.isEmpty()) {
+      out.println("Aborted: bootstrap token must not be empty.");
+      return;
+    }
+    String username = prompt("Admin username [admin]");
+    if (username.isEmpty()) username = "admin";
+    char[] pwd = readPassword("New admin password");
+    if (pwd.length == 0) {
+      out.println("Aborted: password must not be empty.");
+      return;
+    }
+    char[] confirm = readPassword("Repeat password");
+    if (!Arrays.equals(pwd, confirm)) {
+      Arrays.fill(pwd, '\0');
+      Arrays.fill(confirm, '\0');
+      out.println("Aborted: passwords do not match.");
+      return;
+    }
+    String displayName = prompt("Display name (optional)");
+    String email = prompt("Email (optional)");
+
+    Map<String, Object> payload = new LinkedHashMap<>();
+    payload.put("bootstrapToken", token);
+    payload.put("username", username);
+    payload.put("password", new String(pwd));
+    if (!displayName.isEmpty()) payload.put("displayName", displayName);
+    if (!email.isEmpty()) payload.put("email", email);
+
+    try {
+      HttpResponse<String> response = client.bootstrapAdmin(DemoJson.encode(payload));
+      switch (response.statusCode()) {
+        case 201 -> out.println("Administrator created. You can now log in with the chosen password.");
+        case 409 -> out.println("System already initialized — bootstrap is no longer available.");
+        case 403 -> out.println("Bootstrap token rejected.");
+        case 400 -> {
+          Map<String, Object> error = DemoJson.decodeObject(response.body());
+          Object reason = error.get("reason");
+          out.println("Setup rejected: " + error.getOrDefault("error", "bad_request")
+              + (reason != null ? " — " + reason : ""));
+        }
+        default -> out.println("Unexpected response: " + response.statusCode());
+      }
+    } finally {
+      Arrays.fill(pwd, '\0');
+      Arrays.fill(confirm, '\0');
+    }
+  }
+
+  private String prompt(String label) throws IOException {
+    out.print(label + ": ");
+    out.flush();
+    String line = reader.readLine();
+    return line == null ? "" : line.trim();
+  }
+
+  private String readSecret(String label) throws IOException {
+    char[] chars = readPassword(label);
+    String result = new String(chars);
+    Arrays.fill(chars, '\0');
+    return result;
+  }
+
+  private char[] readPassword(String label) throws IOException {
+    Console console = System.console();
+    if (console != null) {
+      char[] chars = console.readPassword(label + ": ");
+      return chars == null ? new char[0] : chars;
+    }
+    out.print(label + " (input will be visible): ");
+    out.flush();
+    String line = reader.readLine();
+    return line == null ? new char[0] : line.toCharArray();
   }
 
   private static String statusText(int status) {

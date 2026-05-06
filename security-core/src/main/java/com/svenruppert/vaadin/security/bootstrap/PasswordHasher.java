@@ -14,17 +14,16 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.demo.rest.domain;
+package com.svenruppert.vaadin.security.bootstrap;
 
 /**
- * Demo-only user record. Stores a hashed password — never plaintext.
- * <p>
- * Production systems must replace this with a real authentication store.
+ * Minimal password hashing abstraction. The bootstrap service hashes the
+ * raw administrator password before handing it to the application's
+ * {@link AdministratorAccountStore}. Plaintext passwords are never stored.
  */
-public record DemoUser(
-    String username,
-    String displayName,
-    String passwordHash,
-    DemoRole role
-) {
+public interface PasswordHasher {
+
+  String hash(char[] rawPassword);
+
+  boolean verify(char[] rawPassword, String storedHash);
 }

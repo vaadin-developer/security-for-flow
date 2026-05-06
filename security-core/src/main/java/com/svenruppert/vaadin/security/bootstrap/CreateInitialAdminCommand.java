@@ -14,17 +14,28 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.demo.rest.domain;
+package com.svenruppert.vaadin.security.bootstrap;
+
+import java.util.Objects;
 
 /**
- * Demo-only user record. Stores a hashed password — never plaintext.
+ * Command consumed by {@link InitialAdminBootstrapService#createInitialAdmin}.
  * <p>
- * Production systems must replace this with a real authentication store.
+ * The {@code password} field uses {@code char[]} so the caller can clear it
+ * after use. The bootstrap service hashes it and clears the array before
+ * returning.
  */
-public record DemoUser(
+public record CreateInitialAdminCommand(
+    String bootstrapToken,
     String username,
+    char[] password,
     String displayName,
-    String passwordHash,
-    DemoRole role
+    String email
 ) {
+
+  public CreateInitialAdminCommand {
+    Objects.requireNonNull(bootstrapToken, "bootstrapToken");
+    Objects.requireNonNull(username, "username");
+    Objects.requireNonNull(password, "password");
+  }
 }

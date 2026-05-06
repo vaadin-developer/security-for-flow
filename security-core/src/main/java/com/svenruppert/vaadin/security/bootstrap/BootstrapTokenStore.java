@@ -14,17 +14,20 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.demo.rest.domain;
+package com.svenruppert.vaadin.security.bootstrap;
+
+import java.util.Optional;
 
 /**
- * Demo-only user record. Stores a hashed password — never plaintext.
- * <p>
- * Production systems must replace this with a real authentication store.
+ * Storage for the current bootstrap token. Implementations decide whether
+ * the token survives restarts (file-backed) or is forgotten on JVM exit
+ * (in-memory).
  */
-public record DemoUser(
-    String username,
-    String displayName,
-    String passwordHash,
-    DemoRole role
-) {
+public interface BootstrapTokenStore {
+
+  Optional<BootstrapToken> load();
+
+  void save(BootstrapToken token);
+
+  void invalidate();
 }

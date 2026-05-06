@@ -14,17 +14,31 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.demo.rest.domain;
+package com.svenruppert.vaadin.security.bootstrap;
+
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Demo-only user record. Stores a hashed password — never plaintext.
- * <p>
- * Production systems must replace this with a real authentication store.
+ * In-memory token store used by {@link BootstrapMode#TRANSIENT_CONSOLE}.
+ * The token is forgotten when the JVM exits.
  */
-public record DemoUser(
-    String username,
-    String displayName,
-    String passwordHash,
-    DemoRole role
-) {
+public final class InMemoryBootstrapTokenStore implements BootstrapTokenStore {
+
+  private final AtomicReference<BootstrapToken> token = new AtomicReference<>();
+
+  @Override
+  public Optional<BootstrapToken> load() {
+    return Optional.ofNullable(token.get());
+  }
+
+  @Override
+  public void save(BootstrapToken token) {
+    this.token.set(token);
+  }
+
+  @Override
+  public void invalidate() {
+    this.token.set(null);
+  }
 }

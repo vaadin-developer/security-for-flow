@@ -134,7 +134,9 @@ vaadin-app-layout::part(drawer) {
    ═══════════════════════════════════════════════════════════════════ */
 .workspace {
     padding: var(--lumo-space-xl);
-    max-width: 680px;
+    max-width: 880px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .workspace h2 {
@@ -169,8 +171,9 @@ vaadin-app-layout::part(drawer) {
     border-image: linear-gradient(90deg, #4f46e5, #7c3aed, #ec4899) 1 0 0;
     box-shadow: 0 4px 32px rgba(0, 0, 0, 0.10), 0 0 0 1px rgba(0, 0, 0, 0.04);
     padding: var(--lumo-space-xl);
-    max-width: 520px;
+    max-width: 880px;
     width: 100%;
+    box-sizing: border-box;
 }
 
 .welcome-card h2 {
@@ -184,4 +187,33 @@ vaadin-app-layout::part(drawer) {
     color: var(--lumo-secondary-text-color);
     line-height: var(--lumo-line-height-m);
     margin-top: var(--lumo-space-m);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Permission demo + view navigation cards
+   The button rows use Vaadin HorizontalLayout which does not wrap by
+   default. Force flex-wrap so they never overflow the parent card.
+   ═══════════════════════════════════════════════════════════════════ */
+.permission-demo-card,
+.view-navigation-card {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.permission-demo-card vaadin-horizontal-layout,
+.view-navigation-card vaadin-horizontal-layout {
+    flex-wrap: wrap;
+    row-gap: var(--lumo-space-s);
+}
+
+.permission-demo-card h3,
+.view-navigation-card h3 {
+    margin: var(--lumo-space-m) 0 var(--lumo-space-xs);
+    color: #1e1b4b;
+}
+
+.permission-demo-card h4 {
+    margin: var(--lumo-space-m) 0 var(--lumo-space-xs);
+    color: var(--lumo-body-text-color);
+    font-size: var(--lumo-font-size-m);
 }

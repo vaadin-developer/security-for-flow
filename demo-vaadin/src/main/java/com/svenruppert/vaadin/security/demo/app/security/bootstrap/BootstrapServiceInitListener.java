@@ -14,17 +14,20 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.demo.rest.domain;
+package com.svenruppert.vaadin.security.demo.app.security.bootstrap;
+
+import com.vaadin.flow.server.ServiceInitEvent;
+import com.vaadin.flow.server.VaadinServiceInitListener;
 
 /**
- * Demo-only user record. Stores a hashed password — never plaintext.
- * <p>
- * Production systems must replace this with a real authentication store.
+ * Eagerly initializes {@link BootstrapWiring} on Vaadin service start so the
+ * setup banner (transient mode) or the file path message (persistent mode)
+ * is shown immediately — without having to first navigate to {@code /login}.
  */
-public record DemoUser(
-    String username,
-    String displayName,
-    String passwordHash,
-    DemoRole role
-) {
+public class BootstrapServiceInitListener implements VaadinServiceInitListener {
+
+  @Override
+  public void serviceInit(ServiceInitEvent event) {
+    BootstrapWiring.instance();
+  }
 }

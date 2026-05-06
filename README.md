@@ -345,12 +345,25 @@ catalog (e.g. `shortlink:create`, `audit:read`) inside the consuming project.
 See [`docs/security-modules.md`](docs/security-modules.md) for the full
 extension model.
 
+## First-run bootstrap
+
+Both demos ship without any administrator account. The first administrator
+is created via a one-time **bootstrap token** in either `PERSISTENT_FILE`
+or `TRANSIENT_CONSOLE` mode. The same library powers the REST endpoint,
+the CLI `init-admin` command, and the Vaadin `/setup` view. Token values
+are never written to logs, never echoed in responses, and the mechanism
+turns itself off once an administrator exists.
+
+See [`docs/bootstrap.md`](docs/bootstrap.md) for modes, endpoints, and the
+operator workflow.
+
 ## Roadmap
 
-`Konzept-V00.60.00.md` outlines the planned next step: `PasswordHashingService`,
-`SecurityAuditService`, `LoginAttemptPolicy` (brute-force), minimal
-`SessionPolicy`, central `LogoutService`, and `ActionAuthorizationService`
-(`isAllowed` / `requireAllowed`). None of these are implemented yet.
+`Konzept-V00.60.00.md` outlines further steps: `SecurityAuditService`,
+`LoginAttemptPolicy` (brute-force), minimal `SessionPolicy`, central
+`LogoutService`, and `ActionAuthorizationService` (`isAllowed` /
+`requireAllowed`). The bootstrap mechanism and `PasswordHasher`
+abstraction are now in place; the rest is pending.
 
 ## License
 

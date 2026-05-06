@@ -17,9 +17,12 @@
 package com.svenruppert.vaadin.security.demo.app.views;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
+import com.svenruppert.vaadin.security.demo.app.security.bootstrap.BootstrapWiring;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.demo.app.security.model.UserStorage.Credentials;
@@ -34,7 +37,7 @@ import static com.svenruppert.vaadin.security.demo.app.views.MyLoginView.NAV;
 @Route(NAV)
 public class MyLoginView
     extends LoginView
-    implements HasLogger {
+    implements HasLogger, BeforeEnterObserver {
 
   public static final String NAV = "login";
 
@@ -72,6 +75,13 @@ public class MyLoginView
     //TODO redundant definition - see MyLoginListener
     UI.getCurrent()
       .navigate(MainView.class);
+  }
+
+  @Override
+  public void beforeEnter(BeforeEnterEvent event) {
+    if (BootstrapWiring.instance().stateService().bootstrapRequired()) {
+      event.forwardTo(SetupView.class);
+    }
   }
 
   @Override

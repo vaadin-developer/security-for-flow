@@ -16,32 +16,57 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.domain;
 
+import com.svenruppert.vaadin.security.bootstrap.PasswordHasher;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
 /**
  * In-memory demo user store. Demo-only — not for production.
+ * <p>
+ * When {@code bootstrapMode} is {@code true}, the administrator user is
+ * not pre-populated; the first administrator must be created via the
+ * bootstrap mechanism.
  */
 public final class DemoUserStore {
 
   private final Map<String, DemoUser> users = new LinkedHashMap<>();
+  private final PasswordHasher hasher;
 
-  public DemoUserStore() {
-    register(new DemoUser("admin", "Admin User", "admin", DemoRole.ROLE_ADMIN));
-    register(new DemoUser("editor", "Editor User", "editor", DemoRole.ROLE_EDITOR));
-    register(new DemoUser("viewer", "Viewer User", "viewer", DemoRole.ROLE_VIEWER));
+  public DemoUserStore(PasswordHasher hasher) {
+    this(hasher, false);
   }
 
-  private void register(DemoUser user) {
+  public DemoUserStore(PasswordHasher hasher, boolean bootstrapMode) {
+    this.hasher = hasher;
+    if (!bootstrapMode) {
+      register("admin", "admin", "Admin User", DemoRole.ROLE_ADMIN);
+    }
+    register("editor", "editor", "Editor User", DemoRole.ROLE_EDITOR);
+    register("viewer", "viewer", "Viewer User", DemoRole.ROLE_VIEWER);
+  }
+
+  private void register(String username, String plaintextPassword, String displayName, DemoRole role) {
+    String hash = hasher.hash(plaintextPassword.toCharArray());
+    users.put(username, new DemoUser(username, displayName, hash, role));
+  }
+
+  public synchronized Optional<DemoUser> authenticate(String username, String password) {
+    DemoUser user = users.get(username);
+    if (user == null) return Optional.empty();
+    if (!hasher.verify(password.toCharArray(), user.passwordHash())) return Optional.empty();
+    return Optional.of(user);
+  }
+
+  public synchronized void register(DemoUser user) {
+    if (users.containsKey(user.username())) {
+      throw new IllegalStateException("user already exists: " + user.username());
+    }
     users.put(user.username(), user);
   }
 
-  public Optional<DemoUser> authenticate(String username, String password) {
-    DemoUser user = users.get(username);
-    if (user == null || !user.password().equals(password)) {
-      return Optional.empty();
-    }
-    return Optional.of(user);
+  public synchronized boolean hasAnyAdministrator() {
+    return users.values().stream().anyMatch(u -> u.role() == DemoRole.ROLE_ADMIN);
   }
 }

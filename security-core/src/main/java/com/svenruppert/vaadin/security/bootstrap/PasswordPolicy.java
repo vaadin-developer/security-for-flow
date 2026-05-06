@@ -14,17 +14,23 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.demo.rest.domain;
+package com.svenruppert.vaadin.security.bootstrap;
 
 /**
- * Demo-only user record. Stores a hashed password — never plaintext.
- * <p>
- * Production systems must replace this with a real authentication store.
+ * Validates a candidate password against the minimum acceptance rules.
+ * Applications can plug stronger policies in.
  */
-public record DemoUser(
-    String username,
-    String displayName,
-    String passwordHash,
-    DemoRole role
-) {
+public interface PasswordPolicy {
+
+  PasswordPolicyResult validate(char[] password);
+
+  record PasswordPolicyResult(boolean valid, String reason) {
+    public static PasswordPolicyResult ok() {
+      return new PasswordPolicyResult(true, null);
+    }
+
+    public static PasswordPolicyResult violation(String reason) {
+      return new PasswordPolicyResult(false, reason);
+    }
+  }
 }

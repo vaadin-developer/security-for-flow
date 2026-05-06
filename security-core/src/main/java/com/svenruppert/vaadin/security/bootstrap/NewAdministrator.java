@@ -14,17 +14,25 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.demo.rest.domain;
+package com.svenruppert.vaadin.security.bootstrap;
+
+import java.util.Objects;
 
 /**
- * Demo-only user record. Stores a hashed password — never plaintext.
- * <p>
- * Production systems must replace this with a real authentication store.
+ * Carrier record handed to {@link AdministratorAccountStore#createAdministrator(NewAdministrator)}.
+ * The password is already hashed.
  */
-public record DemoUser(
+public record NewAdministrator(
     String username,
     String displayName,
-    String passwordHash,
-    DemoRole role
+    String email,
+    String passwordHash
 ) {
+
+  public NewAdministrator {
+    Objects.requireNonNull(username, "username");
+    if (username.isBlank()) throw new IllegalArgumentException("username must not be blank");
+    Objects.requireNonNull(passwordHash, "passwordHash");
+    if (passwordHash.isBlank()) throw new IllegalArgumentException("passwordHash must not be blank");
+  }
 }

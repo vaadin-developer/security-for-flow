@@ -52,6 +52,21 @@ public final class CliOperationClient {
     return http.send(request, HttpResponse.BodyHandlers.ofString());
   }
 
+  public HttpResponse<String> bootstrapStatus() throws IOException, InterruptedException {
+    HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl + DemoEndpoints.BOOTSTRAP_STATUS))
+        .GET()
+        .build();
+    return http.send(request, HttpResponse.BodyHandlers.ofString());
+  }
+
+  public HttpResponse<String> bootstrapAdmin(String body) throws IOException, InterruptedException {
+    HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl + DemoEndpoints.BOOTSTRAP_ADMIN))
+        .header("Content-Type", "application/json")
+        .POST(HttpRequest.BodyPublishers.ofString(body))
+        .build();
+    return http.send(request, HttpResponse.BodyHandlers.ofString());
+  }
+
   public HttpResponse<String> me(String token) throws IOException, InterruptedException {
     return send("GET", DemoEndpoints.ME, token, null);
   }

@@ -1,0 +1,284 @@
+# Demo REST application
+
+`demo-rest` is a self-contained, runnable example showing how to use
+`security-core` and `security-rest` to protect HTTP handlers with permissions.
+
+It uses **JDK APIs only** (`com.sun.net.httpserver.HttpServer` for the server,
+`java.net.http.HttpClient` for the CLI). No web framework is involved.
+
+The demo is **not** production-grade authentication. Token storage,
+password handling, and the user store are intentionally simple. Real systems
+must replace these with hashed credentials, signed tokens, expiry/refresh,
+and a proper authentication backend.
+
+---
+
+## Module layout
+
+```text
+demo-rest/
+├── server/
+│   ├── DemoRestServer          main, starts HttpServer
+│   ├── DemoHttpRouter          HttpHandler, dispatches by method+path
+│   ├── DemoHandlers            login/me/operations/documents/admin/logout
+│   ├── DemoHttpRequest         RestRequest impl carrying body
+│   ├── DemoHttpResponse        buffering RestResponse impl
+│   ├── DemoSubjectResolver     RestSubjectResolver — Bearer token lookup
+│   ├── DemoTokenStore          in-memory token → user
+│   └── DemoOperationRegistry   server-side operation list, filtered by perms
+│
+├── cli/
+│   ├── DemoRestCli             main
+│   ├── CliCommandLoop          read/dispatch/print
+│   ├── CliSession              token + last operations cache
+│   └── CliOperationClient      HttpClient wrapper
+│
+├── domain/
+│   ├── DemoRole, DemoPermission, DemoRolePermissionMapping
+│   ├── DemoUser, DemoUserStore
+│   └── DemoDocument, DemoDocumentStore
+│
+└── shared/
+    ├── DemoEndpoints, DemoOperationDescriptor, DemoJson
+```
+
+---
+
+## Demo users
+
+| username | password | role          |
+|----------|----------|---------------|
+| `admin`  | `admin`  | `ROLE_ADMIN`  |
+| `editor` | `editor` | `ROLE_EDITOR` |
+| `viewer` | `viewer` | `ROLE_VIEWER` |
+
+These are **demo credentials only**. Do not reuse in production.
+
+When the bootstrap mechanism is enabled
+(`-Dsecurity.bootstrap.mode=TRANSIENT_CONSOLE` or
+`-Dsecurity.bootstrap.mode=PERSISTENT_FILE`), the `admin` user is **not**
+pre-populated. The first administrator must be created via the bootstrap
+token — see [`docs/bootstrap.md`](bootstrap.md) and the new CLI command
+`init-admin`.
+
+## Demo permissions and role mapping
+
+Permissions live in `demo-rest/.../domain/DemoPermission.java`:
+
+```text
+document:read
+document:create
+document:update
+document:delete
+admin:access
+```
+
+Role-permission mapping (`DemoRolePermissionMapping`):
+
+```text
+ROLE_ADMIN  -> document:read, document:create, document:update, document:delete, admin:access
+ROLE_EDITOR -> document:read, document:create, document:update
+ROLE_VIEWER -> document:read
+```
+
+These permissions are demo-specific. They live only in `demo-rest` and must
+not be moved into `security-core`, `security-vaadin`, or `security-rest`.
+
+---
+
+## Endpoints
+
+| Method | Path                    | Authorization                    |
+|--------|-------------------------|----------------------------------|
+| POST   | `/api/login`            | anonymous                        |
+| POST   | `/api/logout`           | authenticated                    |
+| GET    | `/api/me`               | authenticated                    |
+| GET    | `/api/operations`       | authenticated, filtered server-side |
+| GET    | `/api/documents`        | `@RequiresPermission("document:read")`   |
+| POST   | `/api/documents`        | `@RequiresPermission("document:create")` |
+| DELETE | `/api/documents/{id}`   | `@RequiresPermission("document:delete")` |
+| GET    | `/api/admin/status`     | `@RequiresPermission("admin:access")`    |
+
+Permission-protected endpoints run through `RestAuthorizationFilter` from
+`security-rest`. The filter resolves the subject, scans the handler method
+for a `@RequiresPermission` annotation, and maps the decision:
+
+- `Granted` → the handler runs.
+- `Unauthenticated` → 401 with body `Unauthorized`. The handler does **not** run.
+- `Forbidden` → 403 with body `Forbidden`. The handler does **not** run.
+
+Error bodies are short and generic — no stack traces, no internal class names.
+
+---
+
+## Run
+
+### Start the server
+
+```bash
+mvn -pl :demo-rest -am compile
+mvn -pl :demo-rest exec:java
+```
+
+The server binds to `http://localhost:8080`. Pass a different port as the
+first argument:
+
+```bash
+mvn -pl :demo-rest exec:java -Dexec.args="9000"
+```
+
+### Start the CLI in another terminal
+
+```bash
+mvn -pl :demo-rest exec:java \
+    -Dexec.mainClass=com.svenruppert.vaadin.security.demo.rest.cli.DemoRestCli
+```
+
+Pass a non-default base URL as an argument:
+
+```bash
+mvn -pl :demo-rest exec:java \
+    -Dexec.mainClass=com.svenruppert.vaadin.security.demo.rest.cli.DemoRestCli \
+    -Dexec.args="http://localhost:9000"
+```
+
+---
+
+## CLI commands
+
+```text
+login <username> <password>
+me
+operations
+call <operation-id> [argument]
+logout
+init-admin              create the first administrator (interactive)
+help
+exit
+```
+
+`init-admin` is only useful while the system is uninitialized. It prompts
+for the bootstrap token (masked when a TTY is available), the chosen admin
+username, the new password (twice), and optional displayName/email. The
+CLI calls the same `/api/bootstrap/admin` endpoint as the Vaadin `/setup`
+view.
+
+---
+
+## Example sessions
+
+### Viewer
+
+```text
+> login viewer viewer
+Login successful. Current user: Viewer User
+
+> operations
+Available operations:
+- list-documents     GET    /api/documents (List documents)
+
+> call list-documents
+200 OK
+{"documents":[{"id":1,"title":"Welcome"},{"id":2,"title":"Sample document"}]}
+
+> call delete-document 1
+Unknown operation. Run 'operations' first to refresh the server-provided list.
+```
+
+If the viewer crafts the call manually anyway, the server returns `403`:
+
+```text
+> call delete-document 1     # only available if previously cached for an admin session
+403 Forbidden
+Forbidden
+```
+
+### Editor
+
+```text
+> login editor editor
+Login successful. Current user: Editor User
+
+> operations
+Available operations:
+- list-documents     GET    /api/documents (List documents)
+- create-document    POST   /api/documents (Create document)
+
+> call create-document "Specs draft"
+201 Created
+{"id":3,"title":"\"Specs"}
+```
+
+### Admin
+
+```text
+> login admin admin
+Login successful. Current user: Admin User
+
+> operations
+Available operations:
+- list-documents     GET    /api/documents (List documents)
+- create-document    POST   /api/documents (Create document)
+- delete-document    DELETE /api/documents/{id} (Delete document)
+- admin-status       GET    /api/admin/status (Admin status)
+
+> call admin-status
+200 OK
+{"status":"ok","message":"Admin endpoint executed."}
+
+> call delete-document 1
+204 No Content
+```
+
+---
+
+## Authorization scenarios
+
+The demo demonstrates three outcomes:
+
+1. **Unauthenticated** — request without a token (or with an invalid token).
+   The server responds with `401 Unauthorized`. The handler does not run.
+
+2. **Authenticated but unauthorized** — valid token, missing permission.
+   The server responds with `403 Forbidden`. The handler does not run.
+
+3. **Authorized** — valid token, required permission present. The handler runs
+   and produces the normal response.
+
+These three cases are covered by `DemoRestServerTest` in
+`demo-rest/src/test/java/.../server/DemoRestServerTest.java`.
+
+---
+
+## CLI does not make local authorization decisions
+
+The CLI does not contain any role or permission logic. The list of available
+operations always comes from `GET /api/operations`, which is filtered by the
+server using the same permission model that protects the handlers.
+
+The CLI just renders the server-provided list. The server is the single source
+of truth.
+
+---
+
+## Relationship to `security-rest`
+
+`security-rest` provides:
+
+- `RestRequest`, `RestResponse`, `RestHandler` — minimal abstractions
+- `RestSubjectResolver` — contract for resolving the current subject
+- `RestAccessContextFactory` — neutral access context creation
+- `RestAuthorizationFilter` — pre-handler authorization
+- `HttpStatusDecisionMapper` — maps decisions to HTTP status
+
+`demo-rest` plugs in:
+
+- `DemoSubjectResolver` (bearer token lookup)
+- `DemoRolePermissionMapping` (role → permissions)
+- `DemoOperationRegistry` (callable operations)
+- `DemoHandlers` (annotated handler methods)
+
+The demo proves how a real project plugs its own domain rights into the
+generic library. URL-shortener-specific or other application-specific
+permissions are **not** part of this demo and must live in the consuming
+application.

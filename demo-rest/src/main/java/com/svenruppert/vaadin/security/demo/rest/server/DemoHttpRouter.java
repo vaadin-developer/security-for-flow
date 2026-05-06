@@ -40,6 +40,7 @@ import java.util.Map;
 public final class DemoHttpRouter implements HttpHandler {
 
   private final DemoHandlers handlers;
+  private final DemoBootstrapHandlers bootstrapHandlers;
   private final DemoSubjectResolver subjectResolver;
   private final RestAuthorizationFilter filter;
 
@@ -48,8 +49,12 @@ public final class DemoHttpRouter implements HttpHandler {
   private final Method deleteDocumentMethod;
   private final Method adminStatusMethod;
 
-  public DemoHttpRouter(DemoHandlers handlers, DemoSubjectResolver subjectResolver) {
+  public DemoHttpRouter(
+      DemoHandlers handlers,
+      DemoBootstrapHandlers bootstrapHandlers,
+      DemoSubjectResolver subjectResolver) {
     this.handlers = handlers;
+    this.bootstrapHandlers = bootstrapHandlers;
     this.subjectResolver = subjectResolver;
     this.filter = new RestAuthorizationFilter(subjectResolver);
     try {
@@ -87,6 +92,14 @@ public final class DemoHttpRouter implements HttpHandler {
     String method = request.method();
     String path = request.path();
 
+    if (DemoEndpoints.BOOTSTRAP_STATUS.equals(path) && "GET".equals(method)) {
+      bootstrapHandlers.status(request, response);
+      return;
+    }
+    if (DemoEndpoints.BOOTSTRAP_ADMIN.equals(path) && "POST".equals(method)) {
+      bootstrapHandlers.createInitialAdmin(request, response);
+      return;
+    }
     if (DemoEndpoints.LOGIN.equals(path) && "POST".equals(method)) {
       handlers.login(request, response);
       return;
