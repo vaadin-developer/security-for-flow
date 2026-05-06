@@ -200,3 +200,18 @@ local.properties
 /03_demo/src/main/frontend/generated/
 /flow-security-test/src/main/frontend/generated/
 /flow-security-test/src/main/bundles/
+
+# Current modules
+/demo-vaadin/src/main/bundles/
+/demo-vaadin/src/main/frontend/generated/
+
+# Bootstrap token files (must never be committed)
+*.token
+/data/
+/*/data/
+
+# macOS metadata
+__MACOSX/
+
+# Local commit message scratch files
+/commit-message.txt

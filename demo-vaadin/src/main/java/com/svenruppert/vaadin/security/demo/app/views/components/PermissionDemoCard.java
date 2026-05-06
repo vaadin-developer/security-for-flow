@@ -102,7 +102,7 @@ public class PermissionDemoCard extends Composite<VerticalLayout> {
           try {
             PermissionGuard.requirePermission(permission.permissionName());
             success(permission.permissionName());
-          } catch (SecurityException e) {
+          } catch (com.svenruppert.vaadin.security.authorization.api.AccessDeniedException e) {
             denied(permission.permissionName());
           }
         });

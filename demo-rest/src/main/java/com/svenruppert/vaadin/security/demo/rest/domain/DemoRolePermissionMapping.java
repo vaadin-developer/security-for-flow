@@ -18,29 +18,36 @@ package com.svenruppert.vaadin.security.demo.rest.domain;
 
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.permissions.RolePermissionMapping;
+import com.svenruppert.vaadin.security.authorization.api.permissions.StaticRolePermissionMapping;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 
 import java.util.Set;
 
 import static com.svenruppert.vaadin.security.demo.rest.domain.DemoPermission.*;
 
-/** Demo role-to-permission mapping. */
+/**
+ * Demo role-to-permission mapping. Implemented as a thin wrapper around
+ * {@link StaticRolePermissionMapping} so the demo only carries the data,
+ * not the merge/lookup logic.
+ */
 public final class DemoRolePermissionMapping implements RolePermissionMapping {
 
-  @Override
-  public Set<PermissionName> permissionsFor(RoleName role) {
-    return switch (DemoRole.valueOf(role.value())) {
-      case ROLE_ADMIN -> Set.of(
+  private final StaticRolePermissionMapping delegate = StaticRolePermissionMapping.builder()
+      .put(DemoRole.ROLE_ADMIN.roleName(), Set.of(
           DOCUMENT_READ.permissionName(),
           DOCUMENT_CREATE.permissionName(),
           DOCUMENT_UPDATE.permissionName(),
           DOCUMENT_DELETE.permissionName(),
-          ADMIN_ACCESS.permissionName());
-      case ROLE_EDITOR -> Set.of(
+          ADMIN_ACCESS.permissionName()))
+      .put(DemoRole.ROLE_EDITOR.roleName(), Set.of(
           DOCUMENT_READ.permissionName(),
           DOCUMENT_CREATE.permissionName(),
-          DOCUMENT_UPDATE.permissionName());
-      case ROLE_VIEWER -> Set.of(DOCUMENT_READ.permissionName());
-    };
+          DOCUMENT_UPDATE.permissionName()))
+      .put(DemoRole.ROLE_VIEWER.roleName(), Set.of(DOCUMENT_READ.permissionName()))
+      .build();
+
+  @Override
+  public Set<PermissionName> permissionsFor(RoleName role) {
+    return delegate.permissionsFor(role);
   }
 }

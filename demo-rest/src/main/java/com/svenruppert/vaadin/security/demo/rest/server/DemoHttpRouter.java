@@ -17,8 +17,8 @@
 package com.svenruppert.vaadin.security.demo.rest.server;
 
 import com.svenruppert.vaadin.security.demo.rest.shared.DemoEndpoints;
+import com.svenruppert.vaadin.security.rest.RestAuthenticationFilter;
 import com.svenruppert.vaadin.security.rest.RestAuthorizationFilter;
-import com.svenruppert.vaadin.security.rest.RestHandler;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -41,8 +41,8 @@ public final class DemoHttpRouter implements HttpHandler {
 
   private final DemoHandlers handlers;
   private final DemoBootstrapHandlers bootstrapHandlers;
-  private final DemoSubjectResolver subjectResolver;
   private final RestAuthorizationFilter filter;
+  private final RestAuthenticationFilter authenticationFilter;
 
   private final Method listDocumentsMethod;
   private final Method createDocumentMethod;
@@ -55,8 +55,8 @@ public final class DemoHttpRouter implements HttpHandler {
       DemoSubjectResolver subjectResolver) {
     this.handlers = handlers;
     this.bootstrapHandlers = bootstrapHandlers;
-    this.subjectResolver = subjectResolver;
     this.filter = new RestAuthorizationFilter(subjectResolver);
+    this.authenticationFilter = new RestAuthenticationFilter(subjectResolver);
     try {
       Class<?>[] sig = {
           com.svenruppert.vaadin.security.rest.RestRequest.class,
@@ -105,15 +105,15 @@ public final class DemoHttpRouter implements HttpHandler {
       return;
     }
     if (DemoEndpoints.ME.equals(path) && "GET".equals(method)) {
-      requireAuthenticated(request, response, handlers::me);
+      authenticationFilter.requireAuthenticated(request, response, handlers::me);
       return;
     }
     if (DemoEndpoints.OPERATIONS.equals(path) && "GET".equals(method)) {
-      requireAuthenticated(request, response, handlers::operations);
+      authenticationFilter.requireAuthenticated(request, response, handlers::operations);
       return;
     }
     if (DemoEndpoints.LOGOUT.equals(path) && "POST".equals(method)) {
-      requireAuthenticated(request, response, handlers::logout);
+      authenticationFilter.requireAuthenticated(request, response, handlers::logout);
       return;
     }
     if (DemoEndpoints.DOCUMENTS.equals(path)) {
@@ -134,15 +134,6 @@ public final class DemoHttpRouter implements HttpHandler {
     }
     response.status(404);
     response.body("Not Found");
-  }
-
-  private void requireAuthenticated(DemoHttpRequest request, DemoHttpResponse response, RestHandler handler) {
-    if (subjectResolver.resolveSubject(request).isEmpty()) {
-      response.status(401);
-      response.body("Unauthorized");
-      return;
-    }
-    handler.handle(request, response);
   }
 
   private static void notAllowed(DemoHttpResponse response) {

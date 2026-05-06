@@ -27,6 +27,11 @@ unset, the default applies.
 |---|---|---|---|
 | `security.bootstrap.mode` | `SECURITY_BOOTSTRAP_MODE` | `TRANSIENT_CONSOLE` | `DISABLED` / `TRANSIENT_CONSOLE` / `PERSISTENT_FILE` |
 | `security.bootstrap.token.file` | `SECURITY_BOOTSTRAP_TOKEN_FILE` | `./data/bootstrap.token` | filesystem path (used only in `PERSISTENT_FILE` mode) |
+| `security.bootstrap.token.ttl` | `SECURITY_BOOTSTRAP_TOKEN_TTL` | `PT24H` | ISO-8601 duration, e.g. `PT15M`, `PT12H` |
+
+Reading is centralized in `BootstrapConfigurationLoader` (security-core). The
+demos call it with their own defaults — no duplicated property parsing.
+Invalid values fail fast with `IllegalArgumentException`.
 
 ### Hard guard: DISABLED + no admin = startup failure
 
@@ -44,6 +49,8 @@ running.
 | Type | Purpose |
 |---|---|
 | `BootstrapMode`, `BootstrapConfiguration` | Configuration |
+| `BootstrapConfigurationLoader` | Loads config from sysprops + env vars (centralized) |
+| `BootstrapStatus` | Adapter-neutral, leak-safe status snapshot (never carries the token) |
 | `BootstrapToken`, `BootstrapTokenGenerator` | Token model + `SecureRandom` generator (XXXX-XXXX-XXXX-XXXX-XXXX, ~100 bits, no `O 0 I 1`) |
 | `BootstrapTokenStore`, `InMemoryBootstrapTokenStore`, `FileBootstrapTokenStore` | Token persistence |
 | `BootstrapTokenOutput`, `ConsoleBootstrapTokenOutput`, `FileBootstrapTokenOutput` | Operator-facing banner emitter |
@@ -54,6 +61,26 @@ running.
 | `PasswordPolicy`, `MinimumLengthPasswordPolicy` | Password validation |
 | `CreateInitialAdminCommand`, `InitialAdminCreationResult` | Service contract |
 | `InitialAdminBootstrapService` | Orchestrator: validate → check race → hash → create → invalidate token, all under a single `ReentrantLock` |
+
+### Other reusable security-core types extracted in this round
+
+| Type | Package | Purpose |
+|---|---|---|
+| `PermissionGuard` | `authorization.api` | `hasPermission` / `requirePermission` (and role variants) on any `HasPermissions`/`HasRoles`. Used by demo-vaadin's UI guard. |
+| `AccessDeniedException` | `authorization.api` | Generic exception thrown by `PermissionGuard.requirePermission`. |
+| `StaticRolePermissionMapping` | `authorization.api.permissions` | Immutable {role → permissions} mapping with a builder. |
+| `RolePermissionResolver` | `authorization.api.permissions` | Merges permissions across multiple roles. |
+| `SecuredOperationDescriptor`, `SecuredOperationRegistry`, `OperationVisibilityService` | `authorization.api.operations` | Generic operation discovery. Demo-rest uses this for the `/api/operations` endpoint and stores `httpMethod`/`path` in the descriptor's `attributes`. |
+
+### REST adapter additions (`security-rest`)
+
+| Type | Purpose |
+|---|---|
+| `RestHeaders` | Case-insensitive header lookup |
+| `BearerTokenExtractor` | Parses `Authorization: Bearer …` (case-insensitive scheme, trimmed token, never logged) |
+| `RestAuthenticationFilter` | Authenticated-only filter for endpoints without a specific permission gate (returns 401 + body `Unauthorized` when no subject is resolved) |
+| `BodyRestRequest` | Body-capable `RestRequest`. Adapters supply raw bytes; helpers decode as UTF-8 string. |
+| `BootstrapRestStatusMapper` | Maps `InitialAdminCreationResult` to HTTP status code + stable error code. |
 
 The library has no Vaadin, Servlet, or REST-framework dependencies.
 
@@ -100,6 +127,19 @@ Administrator created. You can now log in with the chosen password.
 The CLI calls the same `/api/bootstrap/*` endpoints. Passwords are read via
 `Console.readPassword()` when a TTY is available, otherwise fall back to
 visible input (e.g. when piped).
+
+### Standalone Vaadin demo vs. REST-authoritative architecture
+
+The `demo-vaadin` module wires `SetupView` directly to the in-JVM
+`InitialAdminBootstrapService`. This is convenient for the demo but means
+that, in this configuration, the Vaadin process is the security authority.
+
+In a target architecture where a separate REST server owns the user store
+(e.g. a URL-shortener backend), the Vaadin UI must call the REST endpoint
+`POST /api/bootstrap/admin` instead of using the in-JVM service. The UI
+then becomes a pure client; the REST server is the authoritative source of
+truth. The `BootstrapStatus` and `BootstrapRestStatusMapper` types are
+designed to support both setups without code duplication.
 
 ### 3. Vaadin `/setup` (`demo-vaadin`)
 

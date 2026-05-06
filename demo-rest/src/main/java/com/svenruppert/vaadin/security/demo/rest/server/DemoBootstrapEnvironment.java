@@ -17,67 +17,32 @@
 package com.svenruppert.vaadin.security.demo.rest.server;
 
 import com.svenruppert.vaadin.security.bootstrap.BootstrapConfiguration;
+import com.svenruppert.vaadin.security.bootstrap.BootstrapConfigurationLoader;
 import com.svenruppert.vaadin.security.bootstrap.BootstrapMode;
 
 import java.nio.file.Path;
 
 /**
- * Reads the bootstrap configuration from system properties (preferred) and
- * environment variables (fallback). Defaults to {@link BootstrapMode#TRANSIENT_CONSOLE}
- * so the demo "just works" when no administrator is provisioned.
- *
- * <ul>
- *   <li>Sysprop {@code security.bootstrap.mode} or env {@code SECURITY_BOOTSTRAP_MODE}
- *       — {@code DISABLED} / {@code TRANSIENT_CONSOLE} / {@code PERSISTENT_FILE}</li>
- *   <li>Sysprop {@code security.bootstrap.token.file} or env
- *       {@code SECURITY_BOOTSTRAP_TOKEN_FILE} — used in {@code PERSISTENT_FILE} mode
- *       (default {@code ./data/bootstrap.token})</li>
- * </ul>
+ * Demo-side defaults for the bootstrap configuration. The actual reading of
+ * system properties and environment variables happens in
+ * {@link BootstrapConfigurationLoader} (security-core).
+ * <p>
+ * Default for the demo is {@link BootstrapMode#TRANSIENT_CONSOLE} so the demo
+ * "just works" when no administrator is provisioned. Override via
+ * {@code security.bootstrap.mode} / {@code SECURITY_BOOTSTRAP_MODE}.
  */
 public final class DemoBootstrapEnvironment {
 
-  public static final String MODE_PROPERTY = "security.bootstrap.mode";
-  public static final String MODE_ENV = "SECURITY_BOOTSTRAP_MODE";
-  public static final String TOKEN_FILE_PROPERTY = "security.bootstrap.token.file";
-  public static final String TOKEN_FILE_ENV = "SECURITY_BOOTSTRAP_TOKEN_FILE";
-  public static final String DEFAULT_TOKEN_FILE = "./data/bootstrap.token";
+  public static final BootstrapMode DEFAULT_MODE = BootstrapMode.TRANSIENT_CONSOLE;
+  public static final Path DEFAULT_TOKEN_FILE = Path.of("./data/bootstrap.token");
 
   private DemoBootstrapEnvironment() {
   }
 
   public static BootstrapConfiguration fromEnvironment() {
-    String modeValue = firstNonBlank(
-        System.getProperty(MODE_PROPERTY),
-        System.getenv(MODE_ENV));
-    if (modeValue == null) modeValue = "TRANSIENT_CONSOLE";
-    BootstrapMode mode;
-    try {
-      mode = BootstrapMode.valueOf(modeValue.trim().toUpperCase());
-    } catch (IllegalArgumentException e) {
-      mode = BootstrapMode.TRANSIENT_CONSOLE;
-    }
-    return switch (mode) {
-      case DISABLED -> BootstrapConfiguration.disabled();
-      case TRANSIENT_CONSOLE -> BootstrapConfiguration.transientConsole();
-      case PERSISTENT_FILE -> {
-        String pathValue = firstNonBlank(
-            System.getProperty(TOKEN_FILE_PROPERTY),
-            System.getenv(TOKEN_FILE_ENV));
-        if (pathValue == null) pathValue = DEFAULT_TOKEN_FILE;
-        yield BootstrapConfiguration.persistent(Path.of(pathValue));
-      }
-    };
-  }
-
-  /** @deprecated Renamed; use {@link #fromEnvironment()}. */
-  @Deprecated
-  public static BootstrapConfiguration fromSystemProperties() {
-    return fromEnvironment();
-  }
-
-  private static String firstNonBlank(String a, String b) {
-    if (a != null && !a.isBlank()) return a;
-    if (b != null && !b.isBlank()) return b;
-    return null;
+    return new BootstrapConfigurationLoader().load(
+        DEFAULT_MODE,
+        DEFAULT_TOKEN_FILE,
+        BootstrapConfiguration.DEFAULT_VALIDITY);
   }
 }

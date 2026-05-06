@@ -23,8 +23,9 @@ import com.svenruppert.vaadin.security.demo.rest.domain.DemoDocumentStore;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUser;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUserStore;
 import com.svenruppert.vaadin.security.demo.rest.shared.DemoEndpoints;
+import com.svenruppert.vaadin.security.authorization.api.operations.SecuredOperationDescriptor;
 import com.svenruppert.vaadin.security.demo.rest.shared.DemoJson;
-import com.svenruppert.vaadin.security.demo.rest.shared.DemoOperationDescriptor;
+import com.svenruppert.vaadin.security.rest.BodyRestRequest;
 import com.svenruppert.vaadin.security.rest.RestRequest;
 import com.svenruppert.vaadin.security.rest.RestResponse;
 
@@ -62,7 +63,7 @@ public final class DemoHandlers {
   public void login(RestRequest request, RestResponse response) {
     Map<String, Object> body;
     try {
-      body = DemoJson.decodeObject(((DemoHttpRequest) request).body());
+      body = DemoJson.decodeObject(requireBody(request));
     } catch (RuntimeException e) {
       writeError(response, 400, "Bad Request");
       return;
@@ -133,7 +134,7 @@ public final class DemoHandlers {
   public void createDocument(RestRequest request, RestResponse response) {
     Map<String, Object> body;
     try {
-      body = DemoJson.decodeObject(((DemoHttpRequest) request).body());
+      body = DemoJson.decodeObject(requireBody(request));
     } catch (RuntimeException e) {
       writeError(response, 400, "Bad Request");
       return;
@@ -184,13 +185,13 @@ public final class DemoHandlers {
     return map;
   }
 
-  private static Map<String, Object> descriptorToJson(DemoOperationDescriptor descriptor) {
+  private static Map<String, Object> descriptorToJson(SecuredOperationDescriptor descriptor) {
     Map<String, Object> map = new LinkedHashMap<>();
     map.put("id", descriptor.id());
     map.put("label", descriptor.label());
     map.put("description", descriptor.description());
-    map.put("method", descriptor.httpMethod());
-    map.put("path", descriptor.path());
+    map.put("method", descriptor.attributes().get(DemoOperationRegistry.ATTR_HTTP_METHOD));
+    map.put("path", descriptor.attributes().get(DemoOperationRegistry.ATTR_HTTP_PATH));
     return map;
   }
 
@@ -199,14 +200,20 @@ public final class DemoHandlers {
     response.body(message);
   }
 
+  private static String requireBody(RestRequest request) {
+    if (request instanceof BodyRestRequest body) return body.bodyAsUtf8();
+    throw new IllegalArgumentException("body required");
+  }
+
   private static RestRequest withAuth(RestRequest request, String token) {
     Map<String, String> headers = new LinkedHashMap<>(request.headers());
     headers.put("Authorization", "Bearer " + token);
+    byte[] body = request instanceof BodyRestRequest existing ? existing.bodyBytes() : new byte[0];
     return new DemoHttpRequest(
         request.method(),
         request.path(),
         headers,
         request.queryParameters(),
-        request instanceof DemoHttpRequest demo ? demo.body() : "");
+        body);
   }
 }

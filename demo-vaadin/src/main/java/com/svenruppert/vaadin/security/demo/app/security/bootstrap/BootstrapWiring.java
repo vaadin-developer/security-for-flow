@@ -17,6 +17,7 @@
 package com.svenruppert.vaadin.security.demo.app.security.bootstrap;
 
 import com.svenruppert.vaadin.security.bootstrap.BootstrapConfiguration;
+import com.svenruppert.vaadin.security.bootstrap.BootstrapConfigurationLoader;
 import com.svenruppert.vaadin.security.bootstrap.BootstrapMode;
 import com.svenruppert.vaadin.security.bootstrap.BootstrapStartup;
 import com.svenruppert.vaadin.security.bootstrap.BootstrapStateService;
@@ -35,17 +36,19 @@ import java.nio.file.Path;
 
 /**
  * Lazy holder for the bootstrap services used by {@code SetupView}.
- * <p>
- * The bootstrap mode is controlled by system properties (matching the
- * REST demo):
- * <ul>
- *   <li>{@code security.bootstrap.mode} = {@code DISABLED} (default) /
- *       {@code TRANSIENT_CONSOLE} / {@code PERSISTENT_FILE}</li>
- *   <li>{@code security.bootstrap.token.file} = path used by
- *       {@code PERSISTENT_FILE}</li>
- * </ul>
+ * Configuration is read by {@link BootstrapConfigurationLoader} (security-core)
+ * — same sysprop / env-var keys as the REST demo.
+ *
+ * <p>This is the <em>standalone Vaadin demo</em> wiring: the setup view calls
+ * {@link InitialAdminBootstrapService} <em>in-JVM</em>. In a target deployment
+ * where the REST server is authoritative, the Vaadin UI would call the
+ * {@code /api/bootstrap/admin} endpoint instead of using this wiring.
  */
 public final class BootstrapWiring {
+
+  /** Demo default — bootstrap is on so the Vaadin demo "just works" when no admin is provisioned. */
+  public static final BootstrapMode DEFAULT_MODE = BootstrapMode.TRANSIENT_CONSOLE;
+  public static final Path DEFAULT_TOKEN_FILE = Path.of("./data/bootstrap.token");
 
   private static volatile BootstrapWiring current;
 
@@ -75,7 +78,8 @@ public final class BootstrapWiring {
   }
 
   private static BootstrapWiring build() {
-    BootstrapConfiguration config = readConfiguration();
+    BootstrapConfiguration config = new BootstrapConfigurationLoader().load(
+        DEFAULT_MODE, DEFAULT_TOKEN_FILE, BootstrapConfiguration.DEFAULT_VALIDITY);
     if (config.mode() != BootstrapMode.DISABLED) {
       UserStorage.enableBootstrapMode();
     }
@@ -98,39 +102,5 @@ public final class BootstrapWiring {
         new MinimumLengthPasswordPolicy(8),
         config.tokenValidity(), java.time.Clock.systemUTC());
     return new BootstrapWiring(state, service);
-  }
-
-  private static BootstrapConfiguration readConfiguration() {
-    // Demo default: TRANSIENT_CONSOLE so the Vaadin demo "just works" when the
-    // admin user is absent. Override with -Dsecurity.bootstrap.mode=DISABLED or
-    // env SECURITY_BOOTSTRAP_MODE=DISABLED to turn it off, or PERSISTENT_FILE
-    // to write the token to a file.
-    String modeValue = firstNonBlank(
-        System.getProperty("security.bootstrap.mode"),
-        System.getenv("SECURITY_BOOTSTRAP_MODE"));
-    if (modeValue == null) modeValue = "TRANSIENT_CONSOLE";
-    BootstrapMode mode;
-    try {
-      mode = BootstrapMode.valueOf(modeValue.trim().toUpperCase());
-    } catch (IllegalArgumentException e) {
-      mode = BootstrapMode.TRANSIENT_CONSOLE;
-    }
-    return switch (mode) {
-      case DISABLED -> BootstrapConfiguration.disabled();
-      case TRANSIENT_CONSOLE -> BootstrapConfiguration.transientConsole();
-      case PERSISTENT_FILE -> {
-        String path = firstNonBlank(
-            System.getProperty("security.bootstrap.token.file"),
-            System.getenv("SECURITY_BOOTSTRAP_TOKEN_FILE"));
-        if (path == null) path = "./data/bootstrap.token";
-        yield BootstrapConfiguration.persistent(Path.of(path));
-      }
-    };
-  }
-
-  private static String firstNonBlank(String a, String b) {
-    if (a != null && !a.isBlank()) return a;
-    if (b != null && !b.isBlank()) return b;
-    return null;
   }
 }

@@ -17,60 +17,58 @@
 package com.svenruppert.vaadin.security.demo.rest.server;
 
 import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
-import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
+import com.svenruppert.vaadin.security.authorization.api.operations.OperationVisibilityService;
+import com.svenruppert.vaadin.security.authorization.api.operations.SecuredOperationDescriptor;
+import com.svenruppert.vaadin.security.authorization.api.operations.SecuredOperationRegistry;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoPermission;
-import com.svenruppert.vaadin.security.demo.rest.shared.DemoOperationDescriptor;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * Demo operation registry. Lists callable demo operations and filters them
- * server-side based on the current subject's permissions.
+ * Thin demo wrapper around the generic
+ * {@link SecuredOperationRegistry} + {@link OperationVisibilityService}.
+ * <p>
+ * REST metadata (HTTP method, URL path) is stored in the descriptor's
+ * {@code attributes} so the registry stays adapter-neutral.
  */
 public final class DemoOperationRegistry {
 
-  private final List<DemoOperationDescriptor> operations = List.of(
-      new DemoOperationDescriptor(
-          "list-documents",
-          "List documents",
-          "List all documents",
-          "GET",
-          "/api/documents",
-          DemoPermission.DOCUMENT_READ.permissionName()),
-      new DemoOperationDescriptor(
-          "create-document",
-          "Create document",
-          "Create a document with the given title",
-          "POST",
-          "/api/documents",
-          DemoPermission.DOCUMENT_CREATE.permissionName()),
-      new DemoOperationDescriptor(
-          "delete-document",
-          "Delete document",
-          "Delete the document with the given id",
-          "DELETE",
-          "/api/documents/{id}",
-          DemoPermission.DOCUMENT_DELETE.permissionName()),
-      new DemoOperationDescriptor(
-          "admin-status",
-          "Admin status",
-          "Read the admin status endpoint",
-          "GET",
-          "/api/admin/status",
-          DemoPermission.ADMIN_ACCESS.permissionName()));
+  /** Attribute keys for REST descriptors. */
+  public static final String ATTR_HTTP_METHOD = "httpMethod";
+  public static final String ATTR_HTTP_PATH = "path";
 
-  public List<DemoOperationDescriptor> all() {
-    return operations;
+  private final SecuredOperationRegistry registry = new SecuredOperationRegistry();
+  private final OperationVisibilityService visibility;
+
+  public DemoOperationRegistry() {
+    register("list-documents", "List documents", "List all documents",
+        "GET", "/api/documents", DemoPermission.DOCUMENT_READ);
+    register("create-document", "Create document", "Create a document with the given title",
+        "POST", "/api/documents", DemoPermission.DOCUMENT_CREATE);
+    register("delete-document", "Delete document", "Delete the document with the given id",
+        "DELETE", "/api/documents/{id}", DemoPermission.DOCUMENT_DELETE);
+    register("admin-status", "Admin status", "Read the admin status endpoint",
+        "GET", "/api/admin/status", DemoPermission.ADMIN_ACCESS);
+    this.visibility = new OperationVisibilityService(registry);
   }
 
-  public List<DemoOperationDescriptor> visibleFor(SecuritySubject subject) {
-    return operations.stream()
-        .filter(op -> isAllowed(subject, op.requiredPermission()))
-        .toList();
+  private void register(String id, String label, String description,
+      String httpMethod, String path, DemoPermission requiredPermission) {
+    registry.register(new SecuredOperationDescriptor(
+        id, label, description,
+        "rest-endpoint", path, httpMethod.toLowerCase(),
+        Set.of(),
+        Set.of(requiredPermission.permissionName()),
+        Map.of(ATTR_HTTP_METHOD, httpMethod, ATTR_HTTP_PATH, path)));
   }
 
-  private static boolean isAllowed(SecuritySubject subject, PermissionName required) {
-    if (required == null) return true;
-    return subject.permissions().contains(required);
+  public List<SecuredOperationDescriptor> all() {
+    return registry.all();
+  }
+
+  public List<SecuredOperationDescriptor> visibleFor(SecuritySubject subject) {
+    return visibility.visibleFor(subject);
   }
 }

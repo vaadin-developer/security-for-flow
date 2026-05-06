@@ -16,32 +16,42 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.server;
 
-import com.svenruppert.vaadin.security.rest.RestRequest;
+import com.svenruppert.vaadin.security.rest.BodyRestRequest;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-/**
- * Demo {@link RestRequest} implementation that also carries the request body.
- */
-public final class DemoHttpRequest implements RestRequest {
+/** Demo {@link BodyRestRequest} implementation backed by raw byte payloads. */
+public final class DemoHttpRequest implements BodyRestRequest {
 
   private final String method;
   private final String path;
   private final Map<String, String> headers;
   private final Map<String, String> queryParameters;
-  private final String body;
+  private final byte[] body;
 
   public DemoHttpRequest(
       String method,
       String path,
       Map<String, String> headers,
       Map<String, String> queryParameters,
-      String body) {
+      byte[] body) {
     this.method = method;
     this.path = path;
     this.headers = Map.copyOf(headers);
     this.queryParameters = Map.copyOf(queryParameters);
-    this.body = body;
+    this.body = body == null ? new byte[0] : body.clone();
+  }
+
+  /** Convenience for callers that already have a string body (UTF-8 assumed). */
+  public DemoHttpRequest(
+      String method,
+      String path,
+      Map<String, String> headers,
+      Map<String, String> queryParameters,
+      String body) {
+    this(method, path, headers, queryParameters,
+        body == null ? new byte[0] : body.getBytes(StandardCharsets.UTF_8));
   }
 
   @Override
@@ -64,7 +74,8 @@ public final class DemoHttpRequest implements RestRequest {
     return queryParameters;
   }
 
-  public String body() {
-    return body;
+  @Override
+  public byte[] bodyBytes() {
+    return body.clone();
   }
 }

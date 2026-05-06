@@ -19,56 +19,38 @@ package com.svenruppert.vaadin.security.demo.app.security.permissions;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
+import com.svenruppert.vaadin.security.authorization.api.permissions.HasPermissions;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 
 import java.util.Optional;
 
 /**
- * Demo-only helper for UI permission checks.
- * <p>
- * Encapsulates the two recurring patterns:
- * <ul>
- *   <li>{@link #hasPermission(PermissionName)} — used to decide whether a UI
- *       element is visible or enabled (UX hint, not a security boundary).</li>
- *   <li>{@link #requirePermission(PermissionName)} — used inside event
- *       handlers immediately before any sensitive action runs (the actual
- *       server-side guard).</li>
- * </ul>
- * Hiding a button is convenience. Re-checking on click is the protection.
+ * Demo-side adapter around the generic
+ * {@link com.svenruppert.vaadin.security.authorization.api.PermissionGuard}.
+ * Reads the current Vaadin-session user, asks the authorization service for
+ * its permissions, and delegates the actual decision to the generic guard.
  */
 public final class PermissionGuard {
 
   private PermissionGuard() {
   }
 
-  /**
-   * Returns {@code true} when the current subject has the given permission.
-   * Use only for UX adaptation (visibility/enablement).
-   */
   public static boolean hasPermission(PermissionName permission) {
-    return currentUser()
-        .map(user -> authorizationService().permissionsFor(user)
-            .permissionNames()
-            .contains(permission))
-        .orElse(false);
+    return com.svenruppert.vaadin.security.authorization.api.PermissionGuard
+        .hasPermission(currentSubject(), permission);
   }
 
-  /**
-   * Throws when the current subject lacks the given permission. Call this
-   * inside any sensitive click handler before performing the action.
-   */
   public static void requirePermission(PermissionName permission) {
-    if (!hasPermission(permission)) {
-      throw new SecurityException("Missing permission: " + permission.value());
-    }
+    com.svenruppert.vaadin.security.authorization.api.PermissionGuard
+        .requirePermission(currentSubject(), permission);
   }
 
-  private static AuthorizationService<MyUser> authorizationService() {
-    return SecurityServiceResolver.authorizationService();
-  }
-
-  private static Optional<MyUser> currentUser() {
-    return SubjectStores.subjectStore().currentSubject(MyUser.class);
+  /** Builds a {@link HasPermissions} view of the currently logged-in user, or empty. */
+  private static HasPermissions currentSubject() {
+    Optional<MyUser> user = SubjectStores.subjectStore().currentSubject(MyUser.class);
+    if (user.isEmpty()) return java.util.Collections::emptyList;
+    AuthorizationService<MyUser> auth = SecurityServiceResolver.authorizationService();
+    return auth.permissionsFor(user.get());
   }
 }

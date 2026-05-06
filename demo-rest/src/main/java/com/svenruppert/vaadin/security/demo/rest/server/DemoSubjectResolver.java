@@ -21,6 +21,7 @@ import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionN
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoRolePermissionMapping;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUser;
+import com.svenruppert.vaadin.security.rest.BearerTokenExtractor;
 import com.svenruppert.vaadin.security.rest.RestRequest;
 import com.svenruppert.vaadin.security.rest.RestSubjectResolver;
 
@@ -29,11 +30,12 @@ import java.util.Set;
 
 /**
  * Demo {@link RestSubjectResolver} that resolves a {@code Bearer} token from
- * the {@code Authorization} header using {@link DemoTokenStore}.
+ * the {@code Authorization} header (parsed via {@link BearerTokenExtractor})
+ * and looks it up in {@link DemoTokenStore}.
  */
 public final class DemoSubjectResolver implements RestSubjectResolver {
 
-  private static final String BEARER_PREFIX = "Bearer ";
+  private static final BearerTokenExtractor BEARER = new BearerTokenExtractor();
 
   private final DemoTokenStore tokens;
   private final DemoRolePermissionMapping mapping;
@@ -49,11 +51,7 @@ public final class DemoSubjectResolver implements RestSubjectResolver {
   }
 
   static Optional<String> extractToken(RestRequest request) {
-    String header = request.headers().get("Authorization");
-    if (header == null) header = request.headers().get("authorization");
-    if (header == null || !header.startsWith(BEARER_PREFIX)) return Optional.empty();
-    String token = header.substring(BEARER_PREFIX.length()).trim();
-    return token.isEmpty() ? Optional.empty() : Optional.of(token);
+    return BEARER.extract(request);
   }
 
   private SecuritySubject toSubject(DemoUser user) {

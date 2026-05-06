@@ -17,10 +17,13 @@
 package com.svenruppert.vaadin.security.demo.rest.server;
 
 import com.svenruppert.vaadin.security.bootstrap.BootstrapStateService;
+import com.svenruppert.vaadin.security.bootstrap.BootstrapStatus;
 import com.svenruppert.vaadin.security.bootstrap.CreateInitialAdminCommand;
 import com.svenruppert.vaadin.security.bootstrap.InitialAdminBootstrapService;
 import com.svenruppert.vaadin.security.bootstrap.InitialAdminCreationResult;
 import com.svenruppert.vaadin.security.demo.rest.shared.DemoJson;
+import com.svenruppert.vaadin.security.rest.BodyRestRequest;
+import com.svenruppert.vaadin.security.rest.BootstrapRestStatusMapper;
 import com.svenruppert.vaadin.security.rest.RestRequest;
 import com.svenruppert.vaadin.security.rest.RestResponse;
 
@@ -30,12 +33,14 @@ import java.util.Map;
 /**
  * REST handlers for {@code /api/bootstrap/*}.
  * <p>
- * The handlers do not log the bootstrap token, never echo it in responses,
- * and never put it in error messages. The actual security decision happens
- * inside {@link InitialAdminBootstrapService}; the handlers only translate
- * the result to an HTTP status code.
+ * The handlers never log the bootstrap token, never echo it in responses,
+ * and never put it in error messages. The security decision lives in
+ * {@link InitialAdminBootstrapService}; the handlers translate the result
+ * to an HTTP status via {@link BootstrapRestStatusMapper}.
  */
 public final class DemoBootstrapHandlers {
+
+  private static final BootstrapRestStatusMapper STATUS_MAPPER = new BootstrapRestStatusMapper();
 
   private final BootstrapStateService stateService;
   private final InitialAdminBootstrapService bootstrapService;
@@ -48,19 +53,24 @@ public final class DemoBootstrapHandlers {
   }
 
   public void status(RestRequest request, RestResponse response) {
+    BootstrapStatus snapshot = BootstrapStatus.from(stateService);
     Map<String, Object> payload = new LinkedHashMap<>();
-    payload.put("bootstrapRequired", stateService.bootstrapRequired());
-    payload.put("mode", stateService.mode().name());
+    payload.put("bootstrapRequired", snapshot.bootstrapRequired());
+    payload.put("mode", snapshot.mode().name());
     response.status(200);
     response.body(DemoJson.encode(payload));
   }
 
   public void createInitialAdmin(RestRequest request, RestResponse response) {
+    if (!(request instanceof BodyRestRequest bodyRequest)) {
+      writeJson(response, 400, Map.of("error", "bad_request"));
+      return;
+    }
     Map<String, Object> body;
     try {
-      body = DemoJson.decodeObject(((DemoHttpRequest) request).body());
+      body = DemoJson.decodeObject(bodyRequest.bodyAsUtf8());
     } catch (RuntimeException e) {
-      writeError(response, 400, "bad_request");
+      writeJson(response, 400, Map.of("error", "bad_request"));
       return;
     }
     String token = string(body, "bootstrapToken");
@@ -69,36 +79,27 @@ public final class DemoBootstrapHandlers {
     String displayName = string(body, "displayName");
     String email = string(body, "email");
     if (token == null || username == null || password == null) {
-      writeError(response, 400, "bad_request");
+      writeJson(response, 400, Map.of("error", "bad_request"));
       return;
     }
     char[] pwd = password.toCharArray();
     InitialAdminCreationResult result = bootstrapService.createInitialAdmin(
         new CreateInitialAdminCommand(token, username, pwd, displayName, email));
-    switch (result) {
-      case InitialAdminCreationResult.Created created -> {
-        response.status(201);
-        response.body(DemoJson.encode(Map.of("status", "created")));
+
+    int status = STATUS_MAPPER.statusFor(result);
+    String code = STATUS_MAPPER.errorCodeFor(result);
+    Map<String, Object> payload = new LinkedHashMap<>();
+    if (result instanceof InitialAdminCreationResult.Created) {
+      payload.put("status", code);
+    } else {
+      payload.put("error", code);
+      if (result instanceof InitialAdminCreationResult.PasswordPolicyViolation policy) {
+        payload.put("reason", policy.reason() == null ? "" : policy.reason());
+      } else if (result instanceof InitialAdminCreationResult.InvalidUsername invalid) {
+        payload.put("reason", invalid.reason() == null ? "" : invalid.reason());
       }
-      case InitialAdminCreationResult.AlreadyInitialized ignored ->
-          writeError(response, 409, "system_already_initialized");
-      case InitialAdminCreationResult.InvalidBootstrapToken ignored ->
-          writeError(response, 403, "invalid_bootstrap_token");
-      case InitialAdminCreationResult.PasswordPolicyViolation policy -> {
-        response.status(400);
-        response.body(DemoJson.encode(Map.of(
-            "error", "password_policy_violation",
-            "reason", policy.reason() == null ? "" : policy.reason())));
-      }
-      case InitialAdminCreationResult.InvalidUsername invalid -> {
-        response.status(400);
-        response.body(DemoJson.encode(Map.of(
-            "error", "invalid_username",
-            "reason", invalid.reason() == null ? "" : invalid.reason())));
-      }
-      case InitialAdminCreationResult.InternalError internal ->
-          writeError(response, 500, "internal_error");
     }
+    writeJson(response, status, payload);
   }
 
   private static String string(Map<String, Object> body, String key) {
@@ -106,8 +107,8 @@ public final class DemoBootstrapHandlers {
     return value instanceof String s ? s : null;
   }
 
-  private static void writeError(RestResponse response, int status, String error) {
+  private static void writeJson(RestResponse response, int status, Map<String, Object> payload) {
     response.status(status);
-    response.body(DemoJson.encode(Map.of("error", error)));
+    response.body(DemoJson.encode(payload));
   }
 }
