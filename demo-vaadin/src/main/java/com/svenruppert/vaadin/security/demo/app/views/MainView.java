@@ -25,7 +25,6 @@ import com.svenruppert.vaadin.security.demo.app.views.components.PermissionDemoC
 import com.svenruppert.vaadin.security.demo.app.views.components.ViewNavigationCard;
 import com.svenruppert.vaadin.security.demo.app.views.workspaces.*;
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.button.Button;
@@ -187,8 +186,14 @@ public class MainView
 
   // ── Logout ─────────────────────────────────────────────────────
 
+  private static final com.svenruppert.vaadin.security.authorization.api.LogoutService LOGOUT_SERVICE =
+      new com.svenruppert.vaadin.security.authorization.vaadin.VaadinLogoutService<>(
+          SubjectStores.subjectStore(), MyUser.class);
+
   private void logout() {
-    SubjectStores.subjectStore().deleteCurrentSubject(MyUser.class);
-    UI.getCurrent().navigate(MyLoginView.class);
+    LOGOUT_SERVICE.logout(
+        com.svenruppert.vaadin.security.authorization.api.LogoutContext.of(
+            com.svenruppert.vaadin.security.authorization.api.LogoutPolicy
+                .fullInvalidate("/" + MyLoginView.NAV)));
   }
 }
