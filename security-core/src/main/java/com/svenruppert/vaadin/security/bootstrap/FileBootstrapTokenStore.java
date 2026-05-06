@@ -19,8 +19,11 @@ package com.svenruppert.vaadin.security.bootstrap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.EnumSet;
@@ -83,11 +86,20 @@ public final class FileBootstrapTokenStore implements BootstrapTokenStore {
     try {
       Path parent = path.toAbsolutePath().getParent();
       if (parent != null) Files.createDirectories(parent);
+      // Create the file atomically with restrictive permissions so it never
+      // exists with default umask permissions, even briefly.
+      Files.deleteIfExists(path);
+      FileAttribute<?>[] attrs = path.getFileSystem().supportedFileAttributeViews().contains("posix")
+          ? new FileAttribute<?>[]{PosixFilePermissions.asFileAttribute(OWNER_RW)}
+          : new FileAttribute<?>[0];
       String content =
           "token=" + token.value() + System.lineSeparator()
               + "createdAt=" + token.createdAt() + System.lineSeparator();
-      Files.writeString(path, content);
-      tightenPermissions(path);
+      try (var channel = Files.newByteChannel(path,
+          EnumSet.of(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE),
+          attrs)) {
+        channel.write(StandardCharsets.UTF_8.encode(content));
+      }
     } catch (IOException e) {
       throw new IllegalStateException("Could not write bootstrap token file", e);
     }
@@ -104,14 +116,5 @@ public final class FileBootstrapTokenStore implements BootstrapTokenStore {
 
   public Path path() {
     return path;
-  }
-
-  private static void tightenPermissions(Path path) {
-    if (!path.getFileSystem().supportedFileAttributeViews().contains("posix")) return;
-    try {
-      Files.setPosixFilePermissions(path, PosixFilePermissions.asFileAttribute(OWNER_RW).value());
-    } catch (IOException | UnsupportedOperationException ignored) {
-      // best effort — non-POSIX platforms skip silently
-    }
   }
 }

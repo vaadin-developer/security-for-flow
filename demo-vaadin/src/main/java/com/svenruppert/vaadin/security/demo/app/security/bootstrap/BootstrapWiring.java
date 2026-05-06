@@ -95,15 +95,20 @@ public final class BootstrapWiring {
         state, tokenStore, new BootstrapTokenGenerator(), output, config);
     InitialAdminBootstrapService service = new InitialAdminBootstrapService(
         state, tokenStore, adminStore, UserStorage.passwordHasher(),
-        new MinimumLengthPasswordPolicy(8));
+        new MinimumLengthPasswordPolicy(8),
+        config.tokenValidity(), java.time.Clock.systemUTC());
     return new BootstrapWiring(state, service);
   }
 
   private static BootstrapConfiguration readConfiguration() {
     // Demo default: TRANSIENT_CONSOLE so the Vaadin demo "just works" when the
-    // admin user is absent. Override with -Dsecurity.bootstrap.mode=DISABLED to
-    // turn it off, or PERSISTENT_FILE to write the token to a file.
-    String modeValue = System.getProperty("security.bootstrap.mode", "TRANSIENT_CONSOLE");
+    // admin user is absent. Override with -Dsecurity.bootstrap.mode=DISABLED or
+    // env SECURITY_BOOTSTRAP_MODE=DISABLED to turn it off, or PERSISTENT_FILE
+    // to write the token to a file.
+    String modeValue = firstNonBlank(
+        System.getProperty("security.bootstrap.mode"),
+        System.getenv("SECURITY_BOOTSTRAP_MODE"));
+    if (modeValue == null) modeValue = "TRANSIENT_CONSOLE";
     BootstrapMode mode;
     try {
       mode = BootstrapMode.valueOf(modeValue.trim().toUpperCase());
@@ -114,9 +119,18 @@ public final class BootstrapWiring {
       case DISABLED -> BootstrapConfiguration.disabled();
       case TRANSIENT_CONSOLE -> BootstrapConfiguration.transientConsole();
       case PERSISTENT_FILE -> {
-        String path = System.getProperty("security.bootstrap.token.file", "./data/bootstrap.token");
+        String path = firstNonBlank(
+            System.getProperty("security.bootstrap.token.file"),
+            System.getenv("SECURITY_BOOTSTRAP_TOKEN_FILE"));
+        if (path == null) path = "./data/bootstrap.token";
         yield BootstrapConfiguration.persistent(Path.of(path));
       }
     };
+  }
+
+  private static String firstNonBlank(String a, String b) {
+    if (a != null && !a.isBlank()) return a;
+    if (b != null && !b.isBlank()) return b;
+    return null;
   }
 }

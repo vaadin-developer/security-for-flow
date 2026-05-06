@@ -17,32 +17,50 @@
 package com.svenruppert.vaadin.security.bootstrap;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Objects;
 
 /**
  * Bootstrap configuration record.
  *
- * @param mode          mode of operation
- * @param tokenFilePath token file path (required for {@link BootstrapMode#PERSISTENT_FILE}).
+ * @param mode           mode of operation
+ * @param tokenFilePath  token file path (required for {@link BootstrapMode#PERSISTENT_FILE})
+ * @param tokenValidity  how long a generated token stays valid before it is
+ *                       regenerated on startup and rejected by the service
  */
-public record BootstrapConfiguration(BootstrapMode mode, Path tokenFilePath) {
+public record BootstrapConfiguration(BootstrapMode mode, Path tokenFilePath, Duration tokenValidity) {
+
+  /** Default token lifetime — 24 hours. */
+  public static final Duration DEFAULT_VALIDITY = Duration.ofHours(24);
 
   public BootstrapConfiguration {
     Objects.requireNonNull(mode, "mode must not be null");
+    Objects.requireNonNull(tokenValidity, "tokenValidity must not be null");
+    if (tokenValidity.isNegative() || tokenValidity.isZero()) {
+      throw new IllegalArgumentException("tokenValidity must be positive");
+    }
     if (mode == BootstrapMode.PERSISTENT_FILE && tokenFilePath == null) {
       throw new IllegalArgumentException("tokenFilePath required for PERSISTENT_FILE");
     }
   }
 
   public static BootstrapConfiguration disabled() {
-    return new BootstrapConfiguration(BootstrapMode.DISABLED, null);
+    return new BootstrapConfiguration(BootstrapMode.DISABLED, null, DEFAULT_VALIDITY);
   }
 
   public static BootstrapConfiguration persistent(Path tokenFilePath) {
-    return new BootstrapConfiguration(BootstrapMode.PERSISTENT_FILE, tokenFilePath);
+    return persistent(tokenFilePath, DEFAULT_VALIDITY);
+  }
+
+  public static BootstrapConfiguration persistent(Path tokenFilePath, Duration tokenValidity) {
+    return new BootstrapConfiguration(BootstrapMode.PERSISTENT_FILE, tokenFilePath, tokenValidity);
   }
 
   public static BootstrapConfiguration transientConsole() {
-    return new BootstrapConfiguration(BootstrapMode.TRANSIENT_CONSOLE, null);
+    return transientConsole(DEFAULT_VALIDITY);
+  }
+
+  public static BootstrapConfiguration transientConsole(Duration tokenValidity) {
+    return new BootstrapConfiguration(BootstrapMode.TRANSIENT_CONSOLE, null, tokenValidity);
   }
 }

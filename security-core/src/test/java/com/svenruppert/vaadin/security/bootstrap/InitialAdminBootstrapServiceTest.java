@@ -25,13 +25,22 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -225,6 +234,118 @@ class InitialAdminBootstrapServiceTest {
   }
 
   @Test
+  @DisplayName("expired token is rejected (fixed clock past validity)")
+  void expiredTokenRejected() {
+    FakeAdministratorStore admins = new FakeAdministratorStore();
+    InMemoryBootstrapTokenStore tokens = new InMemoryBootstrapTokenStore();
+    BootstrapStateService state = new BootstrapStateService(admins, BootstrapMode.TRANSIENT_CONSOLE);
+    // Save a token "now"; later the clock will have advanced past the validity
+    BootstrapStartup.initializeIfRequired(
+        state, tokens, new BootstrapTokenGenerator(),
+        new ConsoleBootstrapTokenOutput(new PrintStream(new ByteArrayOutputStream()), ""),
+        BootstrapConfiguration.transientConsole(Duration.ofMinutes(5)));
+    String token = tokens.load().orElseThrow().value();
+
+    Clock future = Clock.fixed(Instant.now().plus(Duration.ofMinutes(10)), ZoneOffset.UTC);
+    InitialAdminBootstrapService service = new InitialAdminBootstrapService(
+        state, tokens, admins, new Pbkdf2PasswordHasher(),
+        new MinimumLengthPasswordPolicy(8),
+        Duration.ofMinutes(5), future);
+
+    var result = service.createInitialAdmin(
+        new CreateInitialAdminCommand(token, "root", OK_PASSWORD.toCharArray(), "Root", null));
+    assertInstanceOf(InitialAdminCreationResult.InvalidBootstrapToken.class, result);
+    assertFalse(admins.hasAnyAdministrator());
+  }
+
+  @Test
+  @DisplayName("startup regenerates the token when the persisted token is expired")
+  void startupRegeneratesExpiredPersistentToken(@TempDir Path tmp) throws Exception {
+    Path tokenFile = tmp.resolve("bootstrap.token");
+    FileBootstrapTokenStore store = new FileBootstrapTokenStore(tokenFile);
+    // pre-seed with an expired token
+    store.save(new BootstrapToken("STAL-EOLD-VALU-EHER-EXXX", Instant.now().minus(Duration.ofDays(2))));
+
+    FakeAdministratorStore admins = new FakeAdministratorStore();
+    BootstrapStartup.initializeIfRequired(
+        new BootstrapStateService(admins, BootstrapMode.PERSISTENT_FILE),
+        store, new BootstrapTokenGenerator(),
+        new FileBootstrapTokenOutput(new PrintStream(new ByteArrayOutputStream())),
+        BootstrapConfiguration.persistent(tokenFile, Duration.ofHours(1)));
+
+    String fresh = store.load().orElseThrow().value();
+    assertNotEquals("STAL-EOLD-VALU-EHER-EXXX", fresh);
+  }
+
+  @Test
+  @DisplayName("token-store deletion failure is logged with a warning (no token value)")
+  void deletionFailureSurfacesLogWarning() {
+    FakeAdministratorStore admins = new FakeAdministratorStore();
+    BootstrapTokenStore tokens = new BootstrapTokenStore() {
+      private Optional<BootstrapToken> stored = Optional.empty();
+      @Override public Optional<BootstrapToken> load() { return stored; }
+      @Override public void save(BootstrapToken t) { stored = Optional.of(t); }
+      @Override public void invalidate() { throw new RuntimeException("simulated cleanup failure"); }
+    };
+    BootstrapStateService state = new BootstrapStateService(admins, BootstrapMode.TRANSIENT_CONSOLE);
+    BootstrapStartup.initializeIfRequired(
+        state, tokens, new BootstrapTokenGenerator(),
+        new ConsoleBootstrapTokenOutput(new PrintStream(new ByteArrayOutputStream()), ""),
+        BootstrapConfiguration.transientConsole());
+    String token = tokens.load().orElseThrow().value();
+
+    InitialAdminBootstrapService service = new InitialAdminBootstrapService(
+        state, tokens, admins, new Pbkdf2PasswordHasher(),
+        new MinimumLengthPasswordPolicy(8));
+
+    Logger serviceLogger = Logger.getLogger(InitialAdminBootstrapService.class.getName());
+    CapturingHandler captured = new CapturingHandler();
+    serviceLogger.addHandler(captured);
+    try {
+      var result = service.createInitialAdmin(
+          new CreateInitialAdminCommand(token, "root", OK_PASSWORD.toCharArray(), "Root", null));
+      // Setup still succeeds — the admin is in place
+      assertInstanceOf(InitialAdminCreationResult.Created.class, result);
+    } finally {
+      serviceLogger.removeHandler(captured);
+    }
+    boolean warned = captured.records.stream()
+        .anyMatch(r -> r.getLevel() == Level.WARNING
+            && r.getMessage().contains("invalidating the bootstrap token failed"));
+    assertTrue(warned, "Expected WARNING about failed token invalidation");
+    // Token value must NEVER appear in any log record
+    boolean leaked = captured.records.stream()
+        .anyMatch(r -> r.getMessage().contains(token));
+    assertFalse(leaked, "Token value must not appear in log output");
+  }
+
+  @Test
+  @DisplayName("DISABLED mode with no administrator fails fast on startup")
+  void disabledModeWithoutAdminFailsFast() {
+    FakeAdministratorStore admins = new FakeAdministratorStore();
+    BootstrapStateService state = new BootstrapStateService(admins, BootstrapMode.DISABLED);
+    IllegalStateException ex = assertThrows(IllegalStateException.class,
+        () -> BootstrapStartup.initializeIfRequired(
+            state, new InMemoryBootstrapTokenStore(), new BootstrapTokenGenerator(),
+            new ConsoleBootstrapTokenOutput(new PrintStream(new ByteArrayOutputStream()), ""),
+            BootstrapConfiguration.disabled()));
+    assertTrue(ex.getMessage().contains("DISABLED"));
+    assertTrue(ex.getMessage().contains("administrator"));
+  }
+
+  @Test
+  @DisplayName("DISABLED mode with an existing administrator does not fail")
+  void disabledModeWithAdminIsFine() {
+    FakeAdministratorStore admins = new FakeAdministratorStore();
+    admins.createAdministrator(new NewAdministrator("root", "Root", null, "pbkdf2$1$A$B"));
+    BootstrapStateService state = new BootstrapStateService(admins, BootstrapMode.DISABLED);
+    BootstrapStartup.initializeIfRequired(
+        state, new InMemoryBootstrapTokenStore(), new BootstrapTokenGenerator(),
+        new ConsoleBootstrapTokenOutput(new PrintStream(new ByteArrayOutputStream()), ""),
+        BootstrapConfiguration.disabled());
+  }
+
+  @Test
   @DisplayName("parallel initial admin creation results in exactly one administrator")
   void parallelCreation() throws Exception {
     FakeAdministratorStore admins = new FakeAdministratorStore();
@@ -265,6 +386,13 @@ class InitialAdminBootstrapServiceTest {
   }
 
   // ── Test fixture ──────────────────────────────────────────────
+
+  static final class CapturingHandler extends Handler {
+    final List<LogRecord> records = new ArrayList<>();
+    @Override public void publish(LogRecord record) { records.add(record); }
+    @Override public void flush() { }
+    @Override public void close() throws SecurityException { }
+  }
 
   static final class FakeAdministratorStore implements AdministratorAccountStore {
     private final List<NewAdministrator> admins = new ArrayList<>();

@@ -36,12 +36,24 @@ public final class BootstrapStartup {
       BootstrapTokenGenerator generator,
       BootstrapTokenOutput output,
       BootstrapConfiguration configuration) {
+    if (stateService.mode() == BootstrapMode.DISABLED && !stateService.hasAdministrator()) {
+      throw new IllegalStateException(
+          "Bootstrap is DISABLED but no administrator account exists. "
+              + "The application would be unusable in this state. Set "
+              + "SECURITY_BOOTSTRAP_MODE=TRANSIENT_CONSOLE or "
+              + "SECURITY_BOOTSTRAP_MODE=PERSISTENT_FILE (or the matching "
+              + "security.bootstrap.mode system property) to enable initial "
+              + "administrator setup, or pre-provision an administrator before "
+              + "starting the server.");
+    }
     if (!stateService.bootstrapRequired()) return;
-    BootstrapToken token = tokenStore.load().orElseGet(() -> {
-      BootstrapToken fresh = generator.generate();
-      tokenStore.save(fresh);
-      return fresh;
-    });
+    BootstrapToken token = tokenStore.load()
+        .filter(existing -> !existing.isExpired(java.time.Instant.now(), configuration.tokenValidity()))
+        .orElseGet(() -> {
+          BootstrapToken fresh = generator.generate();
+          tokenStore.save(fresh);
+          return fresh;
+        });
     output.emit(token, configuration);
   }
 }

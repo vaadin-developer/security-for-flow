@@ -18,6 +18,7 @@ package com.svenruppert.vaadin.security.bootstrap;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
@@ -45,5 +46,14 @@ public record BootstrapToken(String value, Instant createdAt) {
     byte[] a = value.getBytes(StandardCharsets.UTF_8);
     byte[] b = candidate.getBytes(StandardCharsets.UTF_8);
     return MessageDigest.isEqual(a, b);
+  }
+
+  /**
+   * @return {@code true} when {@code now} is after {@code createdAt + validity}.
+   */
+  public boolean isExpired(Instant now, Duration validity) {
+    Objects.requireNonNull(now, "now");
+    Objects.requireNonNull(validity, "validity");
+    return now.isAfter(createdAt.plus(validity));
   }
 }

@@ -19,12 +19,23 @@ during setup; that password is hashed and stored.
 | `TRANSIENT_CONSOLE` | On every server start while uninitialized | In memory only | No — a new token is generated next start |
 | `DISABLED` | Never | n/a | n/a |
 
-Configuration (system properties or environment variables):
+Configuration. System properties take precedence; if a property is unset
+or blank, the corresponding environment variable is consulted; if both are
+unset, the default applies.
 
-```text
-security.bootstrap.mode        DISABLED (default) | TRANSIENT_CONSOLE | PERSISTENT_FILE
-security.bootstrap.token.file  ./data/bootstrap.token    (PERSISTENT_FILE only)
-```
+| System property | Environment variable | Default (demos) | Values |
+|---|---|---|---|
+| `security.bootstrap.mode` | `SECURITY_BOOTSTRAP_MODE` | `TRANSIENT_CONSOLE` | `DISABLED` / `TRANSIENT_CONSOLE` / `PERSISTENT_FILE` |
+| `security.bootstrap.token.file` | `SECURITY_BOOTSTRAP_TOKEN_FILE` | `./data/bootstrap.token` | filesystem path (used only in `PERSISTENT_FILE` mode) |
+
+### Hard guard: DISABLED + no admin = startup failure
+
+`BootstrapStartup.initializeIfRequired(...)` refuses to start the
+application if the bootstrap mode is `DISABLED` **and** no administrator
+account exists. This catches the "nobody can ever log in"
+misconfiguration and surfaces it immediately with a clear
+`IllegalStateException`, instead of leaving a quietly unusable server
+running.
 
 ---
 
@@ -131,15 +142,25 @@ flow on every restart, comment out the `addUser("admin", ...)` line in
 - The token is **never** echoed in HTTP responses.
 - The token is **never** included in Vaadin notifications.
 - In persistent mode, only the **path** to the token file is logged.
-- Token files use `rw-------` (0600) on POSIX file systems.
+- Token files are created **atomically** with `rw-------` (0600) on POSIX
+  file systems via `Files.newByteChannel(..., CREATE_NEW, ...,
+  PosixFilePermissions.asFileAttribute(...))`. There is no window during
+  which the file exists with default umask permissions.
+- Tokens have a configurable validity (default `BootstrapConfiguration.DEFAULT_VALIDITY`
+  = 24 h). Tokens older than the validity are
+  - **regenerated** on the next startup in `PERSISTENT_FILE` mode, and
+  - **rejected** by `InitialAdminBootstrapService` (returned as
+    `InvalidBootstrapToken`, with no leak about whether the rejection was
+    "wrong value" or "expired").
 - Passwords are passed as `char[]` and cleared after hashing.
 - Passwords are stored as PBKDF2-HMAC-SHA256 hashes, never plaintext.
-- The `check-admin-exists / create / invalidate-token` sequence runs under a
-  `ReentrantLock`, so two parallel setup requests cannot both create an
+- The `check-admin-exists / create / invalidate-token` sequence runs under
+  a `ReentrantLock`, so two parallel setup requests cannot both create an
   administrator. There is a dedicated parallelism test for this.
 - After successful setup the token is invalidated. Persistent mode also
-  deletes the token file. If deletion fails, the setup still succeeds —
-  the failure is not surfaced to the client.
+  deletes the token file. If deletion fails, the setup still succeeds and
+  a `WARNING` is emitted via `java.util.logging` (without the token
+  value) so operators can manually clean the stale token store.
 
 ---
 

@@ -16,6 +16,7 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.server;
 
+import com.svenruppert.vaadin.security.bootstrap.BootstrapConfiguration;
 import com.svenruppert.vaadin.security.demo.rest.cli.CliOperationClient;
 import com.svenruppert.vaadin.security.demo.rest.shared.DemoJson;
 import org.junit.jupiter.api.AfterAll;
@@ -40,7 +41,9 @@ class DemoRestServerTest {
 
   @BeforeAll
   void start() throws IOException {
-    server = DemoRestServer.start(0);
+    // These tests rely on the pre-populated admin/editor/viewer accounts,
+    // so explicitly disable the bootstrap mechanism (admin/admin must exist).
+    server = DemoRestServer.start(0, BootstrapConfiguration.disabled());
     client = new CliOperationClient("http://localhost:" + server.port());
   }
 

@@ -47,7 +47,7 @@ public class SetupView extends Composite<Div> implements BeforeEnterObserver {
 
   public static final String NAV = "setup";
 
-  private final TextField tokenField = new TextField("Bootstrap token");
+  private final PasswordField tokenField = new PasswordField("Bootstrap token");
   private final TextField usernameField = new TextField("Admin username");
   private final PasswordField passwordField = new PasswordField("New password");
   private final PasswordField confirmField = new PasswordField("Repeat password");

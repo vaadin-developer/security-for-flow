@@ -37,6 +37,14 @@ public final class BootstrapStateService {
     return mode != BootstrapMode.DISABLED && !administratorStore.hasAnyAdministrator();
   }
 
+  /**
+   * @return {@code true} when at least one administrator account exists.
+   *         Independent of the configured {@link BootstrapMode}.
+   */
+  public boolean hasAdministrator() {
+    return administratorStore.hasAnyAdministrator();
+  }
+
   public BootstrapMode mode() {
     return mode;
   }

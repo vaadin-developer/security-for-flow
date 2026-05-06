@@ -16,10 +16,14 @@
  */
 package com.svenruppert.vaadin.security.bootstrap;
 
+import java.time.Clock;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -35,12 +39,15 @@ import java.util.regex.Pattern;
 public final class InitialAdminBootstrapService {
 
   private static final Pattern USERNAME = Pattern.compile("[A-Za-z0-9._-]{1,64}");
+  private static final Logger LOGGER = Logger.getLogger(InitialAdminBootstrapService.class.getName());
 
   private final BootstrapStateService stateService;
   private final BootstrapTokenStore tokenStore;
   private final AdministratorAccountStore administratorStore;
   private final PasswordHasher passwordHasher;
   private final PasswordPolicy passwordPolicy;
+  private final Duration tokenValidity;
+  private final Clock clock;
   private final ReentrantLock lock = new ReentrantLock();
 
   public InitialAdminBootstrapService(
@@ -49,11 +56,25 @@ public final class InitialAdminBootstrapService {
       AdministratorAccountStore administratorStore,
       PasswordHasher passwordHasher,
       PasswordPolicy passwordPolicy) {
+    this(stateService, tokenStore, administratorStore, passwordHasher, passwordPolicy,
+        BootstrapConfiguration.DEFAULT_VALIDITY, Clock.systemUTC());
+  }
+
+  public InitialAdminBootstrapService(
+      BootstrapStateService stateService,
+      BootstrapTokenStore tokenStore,
+      AdministratorAccountStore administratorStore,
+      PasswordHasher passwordHasher,
+      PasswordPolicy passwordPolicy,
+      Duration tokenValidity,
+      Clock clock) {
     this.stateService = Objects.requireNonNull(stateService);
     this.tokenStore = Objects.requireNonNull(tokenStore);
     this.administratorStore = Objects.requireNonNull(administratorStore);
     this.passwordHasher = Objects.requireNonNull(passwordHasher);
     this.passwordPolicy = Objects.requireNonNull(passwordPolicy);
+    this.tokenValidity = Objects.requireNonNull(tokenValidity);
+    this.clock = Objects.requireNonNull(clock);
   }
 
   public InitialAdminCreationResult createInitialAdmin(CreateInitialAdminCommand command) {
@@ -69,6 +90,11 @@ public final class InitialAdminBootstrapService {
         }
         Optional<BootstrapToken> stored = tokenStore.load();
         if (stored.isEmpty() || !stored.get().matches(command.bootstrapToken())) {
+          return new InitialAdminCreationResult.InvalidBootstrapToken();
+        }
+        if (stored.get().isExpired(clock.instant(), tokenValidity)) {
+          // Expired tokens are treated like invalid ones — same outcome,
+          // generic message. Persistent mode regenerates on next startup.
           return new InitialAdminCreationResult.InvalidBootstrapToken();
         }
         if (command.username() == null
@@ -98,7 +124,15 @@ public final class InitialAdminBootstrapService {
         try {
           tokenStore.invalidate();
         } catch (RuntimeException e) {
-          // setup succeeded; deletion failed — never echo the token
+          // Setup succeeded but the token store could not be cleaned up.
+          // Surface a clear warning (without ever printing the token value)
+          // so operators can manually remove the stale token file.
+          LOGGER.log(Level.WARNING,
+              "Bootstrap setup completed for user '" + command.username()
+                  + "' but invalidating the bootstrap token failed. "
+                  + "Manual cleanup of the token store is required. "
+                  + "(The token value is never logged.)",
+              e);
           return new InitialAdminCreationResult.Created(command.username());
         }
         return new InitialAdminCreationResult.Created(command.username());

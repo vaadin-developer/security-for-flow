@@ -22,43 +22,62 @@ import com.svenruppert.vaadin.security.bootstrap.BootstrapMode;
 import java.nio.file.Path;
 
 /**
- * Reads the bootstrap configuration from system properties / environment
- * variables. Defaults to {@link BootstrapMode#DISABLED} so the existing
- * demo flows keep working.
+ * Reads the bootstrap configuration from system properties (preferred) and
+ * environment variables (fallback). Defaults to {@link BootstrapMode#TRANSIENT_CONSOLE}
+ * so the demo "just works" when no administrator is provisioned.
  *
  * <ul>
- *   <li>{@code security.bootstrap.mode} = {@code DISABLED} (default) /
- *       {@code TRANSIENT_CONSOLE} / {@code PERSISTENT_FILE}</li>
- *   <li>{@code security.bootstrap.token.file} =
- *       {@code ./data/bootstrap.token} (used in {@code PERSISTENT_FILE}
- *       mode)</li>
+ *   <li>Sysprop {@code security.bootstrap.mode} or env {@code SECURITY_BOOTSTRAP_MODE}
+ *       — {@code DISABLED} / {@code TRANSIENT_CONSOLE} / {@code PERSISTENT_FILE}</li>
+ *   <li>Sysprop {@code security.bootstrap.token.file} or env
+ *       {@code SECURITY_BOOTSTRAP_TOKEN_FILE} — used in {@code PERSISTENT_FILE} mode
+ *       (default {@code ./data/bootstrap.token})</li>
  * </ul>
  */
 public final class DemoBootstrapEnvironment {
 
   public static final String MODE_PROPERTY = "security.bootstrap.mode";
+  public static final String MODE_ENV = "SECURITY_BOOTSTRAP_MODE";
   public static final String TOKEN_FILE_PROPERTY = "security.bootstrap.token.file";
+  public static final String TOKEN_FILE_ENV = "SECURITY_BOOTSTRAP_TOKEN_FILE";
   public static final String DEFAULT_TOKEN_FILE = "./data/bootstrap.token";
 
   private DemoBootstrapEnvironment() {
   }
 
-  public static BootstrapConfiguration fromSystemProperties() {
-    String modeValue = System.getProperty(MODE_PROPERTY);
-    if (modeValue == null || modeValue.isBlank()) modeValue = "DISABLED";
+  public static BootstrapConfiguration fromEnvironment() {
+    String modeValue = firstNonBlank(
+        System.getProperty(MODE_PROPERTY),
+        System.getenv(MODE_ENV));
+    if (modeValue == null) modeValue = "TRANSIENT_CONSOLE";
     BootstrapMode mode;
     try {
       mode = BootstrapMode.valueOf(modeValue.trim().toUpperCase());
     } catch (IllegalArgumentException e) {
-      mode = BootstrapMode.DISABLED;
+      mode = BootstrapMode.TRANSIENT_CONSOLE;
     }
     return switch (mode) {
       case DISABLED -> BootstrapConfiguration.disabled();
       case TRANSIENT_CONSOLE -> BootstrapConfiguration.transientConsole();
       case PERSISTENT_FILE -> {
-        String pathValue = System.getProperty(TOKEN_FILE_PROPERTY, DEFAULT_TOKEN_FILE);
+        String pathValue = firstNonBlank(
+            System.getProperty(TOKEN_FILE_PROPERTY),
+            System.getenv(TOKEN_FILE_ENV));
+        if (pathValue == null) pathValue = DEFAULT_TOKEN_FILE;
         yield BootstrapConfiguration.persistent(Path.of(pathValue));
       }
     };
+  }
+
+  /** @deprecated Renamed; use {@link #fromEnvironment()}. */
+  @Deprecated
+  public static BootstrapConfiguration fromSystemProperties() {
+    return fromEnvironment();
+  }
+
+  private static String firstNonBlank(String a, String b) {
+    if (a != null && !a.isBlank()) return a;
+    if (b != null && !b.isBlank()) return b;
+    return null;
   }
 }

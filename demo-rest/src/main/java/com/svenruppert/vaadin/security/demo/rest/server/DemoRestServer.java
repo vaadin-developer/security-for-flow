@@ -61,7 +61,7 @@ public final class DemoRestServer {
   }
 
   public static DemoRestServer start(int port) throws IOException {
-    return start(port, DemoBootstrapEnvironment.fromSystemProperties());
+    return start(port, DemoBootstrapEnvironment.fromEnvironment());
   }
 
   public static DemoRestServer start(int port, BootstrapConfiguration bootstrapConfig) throws IOException {
@@ -80,7 +80,8 @@ public final class DemoRestServer {
     BootstrapTokenStore tokenStore = bootstrapTokenStore(bootstrapConfig);
     BootstrapTokenOutput tokenOutput = bootstrapTokenOutput(bootstrapConfig, port);
     InitialAdminBootstrapService bootstrapService = new InitialAdminBootstrapService(
-        stateService, tokenStore, adminStore, hasher, new MinimumLengthPasswordPolicy(8));
+        stateService, tokenStore, adminStore, hasher, new MinimumLengthPasswordPolicy(8),
+        bootstrapConfig.tokenValidity(), java.time.Clock.systemUTC());
     DemoBootstrapHandlers bootstrapHandlers = new DemoBootstrapHandlers(stateService, bootstrapService);
 
     BootstrapStartup.initializeIfRequired(
