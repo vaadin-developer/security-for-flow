@@ -16,54 +16,73 @@
  */
 package com.svenruppert.vaadin.security.demo.app.security.services;
 
-import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
 import com.svenruppert.vaadin.security.authorization.api.permissions.HasPermissions;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
+import com.svenruppert.vaadin.security.authorization.api.permissions.RolePermissionMapping;
+import com.svenruppert.vaadin.security.authorization.api.permissions.RolePermissionResolver;
+import com.svenruppert.vaadin.security.authorization.api.permissions.StaticRolePermissionMapping;
 import com.svenruppert.vaadin.security.authorization.api.roles.HasRoles;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
+import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
 
-import java.util.Set;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.svenruppert.vaadin.security.demo.app.security.permissions.DemoPermission.*;
 
 /**
  * Demo implementation of {@link AuthorizationService}.
  * <p>
- * Provides role-based authorization and demo-only permissions for UI examples.
+ * The role → permission table is expressed as a generic
+ * {@link StaticRolePermissionMapping} from {@code security-core}; merging
+ * permissions across the user's roles is delegated to
+ * {@link RolePermissionResolver}. This keeps the demo free of
+ * authorization helper code.
  */
 public class MyAuthorizationService
     implements AuthorizationService<MyUser> {
 
+  private static final RolePermissionMapping ROLE_PERMISSIONS = StaticRolePermissionMapping.builder()
+      .put(roleName(AuthorizationRole.ADMIN), Set.of(
+          DEMO_VIEW.permissionName(),
+          DEMO_EDIT.permissionName(),
+          DEMO_ADMIN.permissionName()))
+      .put(roleName(AuthorizationRole.Q_ADMIN), Set.of(
+          DEMO_VIEW.permissionName(),
+          DEMO_EDIT.permissionName(),
+          DEMO_ADMIN.permissionName()))
+      .put(roleName(AuthorizationRole.NERD), Set.of(
+          DEMO_VIEW.permissionName(),
+          DEMO_EDIT.permissionName()))
+      .put(roleName(AuthorizationRole.USER), Set.of(DEMO_VIEW.permissionName()))
+      .put(roleName(AuthorizationRole.NOBODY), Set.of())
+      .build();
+
   @Override
   public HasRoles rolesFor(MyUser subject) {
     Objects.requireNonNull(subject);
-    return () -> subject.roles()
-                        .stream()
-                        .map(r -> new RoleName(r.name()))
-                        .toList();
+    List<RoleName> roles = subject.roles().stream()
+        .map(MyAuthorizationService::roleName)
+        .toList();
+    return () -> roles;
   }
 
   @Override
   public HasPermissions permissionsFor(MyUser subject) {
     Objects.requireNonNull(subject);
-    return () -> subject.roles()
-        .stream()
-        .flatMap(role -> permissionsFor(role).stream())
-        .toList();
+    Set<RoleName> roles = subject.roles().stream()
+        .map(MyAuthorizationService::roleName)
+        .collect(Collectors.toSet());
+    Set<PermissionName> permissions =
+        RolePermissionResolver.permissionsForRoles(roles, ROLE_PERMISSIONS);
+    return () -> List.copyOf(permissions);
   }
 
-  private Set<PermissionName> permissionsFor(AuthorizationRole role) {
-    return switch (role) {
-      case ADMIN, Q_ADMIN -> Set.of(
-          DEMO_VIEW.permissionName(),
-          DEMO_EDIT.permissionName(),
-          DEMO_ADMIN.permissionName());
-      case NERD -> Set.of(DEMO_VIEW.permissionName(), DEMO_EDIT.permissionName());
-      case USER -> Set.of(DEMO_VIEW.permissionName());
-      case NOBODY -> Set.of();
-    };
+  private static RoleName roleName(AuthorizationRole role) {
+    return new RoleName(role.name());
   }
 }
