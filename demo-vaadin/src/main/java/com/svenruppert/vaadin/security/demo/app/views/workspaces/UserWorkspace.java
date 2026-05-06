@@ -16,6 +16,8 @@
  */
 package com.svenruppert.vaadin.security.demo.app.views.workspaces;
 
+import com.svenruppert.vaadin.security.demo.app.views.components.PermissionDemoCard;
+import com.svenruppert.vaadin.security.demo.app.views.components.ViewNavigationCard;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
@@ -42,7 +44,10 @@ public class UserWorkspace extends Composite<Div> {
         "Your personal workspace. View your profile, preferences, and activity. "
         + "All authenticated users have access to this section.");
 
-    VerticalLayout content = new VerticalLayout(badge, header, description);
+    VerticalLayout content = new VerticalLayout(
+        badge, header, description,
+        new PermissionDemoCard(),
+        new ViewNavigationCard());
     content.addClassNames("workspace", "workspace-user");
     content.setSpacing(false);
     content.getThemeList().add("spacing-s");

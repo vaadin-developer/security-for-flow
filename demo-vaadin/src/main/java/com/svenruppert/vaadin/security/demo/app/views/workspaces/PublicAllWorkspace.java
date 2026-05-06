@@ -16,6 +16,8 @@
  */
 package com.svenruppert.vaadin.security.demo.app.views.workspaces;
 
+import com.svenruppert.vaadin.security.demo.app.views.components.PermissionDemoCard;
+import com.svenruppert.vaadin.security.demo.app.views.components.ViewNavigationCard;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
@@ -42,7 +44,10 @@ public class PublicAllWorkspace extends Composite<Div> {
         "Publicly available content — no special role required. "
         + "This section is visible to all authenticated users regardless of their assigned roles.");
 
-    VerticalLayout content = new VerticalLayout(badge, header, description);
+    VerticalLayout content = new VerticalLayout(
+        badge, header, description,
+        new PermissionDemoCard(),
+        new ViewNavigationCard());
     content.addClassNames("workspace", "workspace-public");
     content.setSpacing(false);
     content.getThemeList().add("spacing-s");

@@ -16,18 +16,53 @@
  */
 package com.svenruppert.vaadin.security.demo.app.views;
 
+import com.svenruppert.vaadin.security.demo.app.views.components.PermissionDemoCard;
+import com.svenruppert.vaadin.security.demo.app.views.components.ViewNavigationCard;
 import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 
 @Route(PublicView.NAV)
-public class PublicView
-    extends Composite<Div> {
+public class PublicView extends Composite<Div> {
 
   public static final String NAV = "public";
 
   public PublicView() {
-    getContent().add(new Span("PublicView"));
+    Span badge = new Span("PUBLIC");
+    badge.getElement().getThemeList().add("badge");
+
+    H1 heading = new H1("Public standalone view");
+
+    Paragraph description = new Paragraph(
+        "Standalone route without @VisibleFor — everyone (including "
+            + "unauthenticated visitors) may reach it. The permission demo "
+            + "below still reads the current subject's permissions, so an "
+            + "anonymous visitor sees nothing in pattern A and red errors "
+            + "for every button in pattern B.");
+
+    Button back = new Button("Back to home", VaadinIcon.HOME.create(),
+        e -> UI.getCurrent().navigate(MainView.class));
+    back.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+    VerticalLayout layout = new VerticalLayout(
+        new HorizontalLayout(badge, heading),
+        description,
+        new PermissionDemoCard(),
+        new ViewNavigationCard(),
+        back);
+    layout.setSpacing(false);
+    layout.getThemeList().add("spacing-s");
+    layout.addClassNames("workspace", "workspace-public");
+
+    getContent().add(layout);
   }
 }

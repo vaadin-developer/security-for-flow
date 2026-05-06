@@ -16,20 +16,55 @@
  */
 package com.svenruppert.vaadin.security.demo.app.views;
 
-import com.vaadin.flow.component.Composite;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.router.Route;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
 import com.svenruppert.vaadin.security.demo.app.security.roles.VisibleFor;
+import com.svenruppert.vaadin.security.demo.app.views.components.PermissionDemoCard;
+import com.svenruppert.vaadin.security.demo.app.views.components.ViewNavigationCard;
+import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Route;
 
 @Route(AdminView.NAV)
 @VisibleFor({AuthorizationRole.ADMIN})
-public class AdminView
-    extends Composite<Div> {
+public class AdminView extends Composite<Div> {
+
   public static final String NAV = "admin";
 
   public AdminView() {
-    getContent().add(new Span("AdminView"));
+    Span badge = new Span("ADMIN ONLY");
+    badge.getElement().getThemeList().add("badge error");
+
+    H1 heading = new H1("Admin standalone view");
+
+    Paragraph description = new Paragraph(
+        "This is a standalone Vaadin route protected at view level by "
+            + "@VisibleFor({ADMIN}). Reaching this URL is the framework's "
+            + "responsibility — non-admin users are redirected by the "
+            + "AuthorizationListener before this view is rendered.");
+
+    Button back = new Button("Back to home", VaadinIcon.HOME.create(),
+        e -> UI.getCurrent().navigate(MainView.class));
+    back.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+    VerticalLayout layout = new VerticalLayout(
+        new HorizontalLayout(badge, heading),
+        description,
+        new PermissionDemoCard(),
+        new ViewNavigationCard(),
+        back);
+    layout.setSpacing(false);
+    layout.getThemeList().add("spacing-s");
+    layout.addClassNames("workspace", "workspace-admin");
+
+    getContent().add(layout);
   }
 }

@@ -16,6 +16,8 @@
  */
 package com.svenruppert.vaadin.security.demo.app.views.workspaces;
 
+import com.svenruppert.vaadin.security.demo.app.views.components.PermissionDemoCard;
+import com.svenruppert.vaadin.security.demo.app.views.components.ViewNavigationCard;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
@@ -47,7 +49,10 @@ public class NerdWorkspace extends Composite<Div> {
         "Advanced technical features and experimental tools. "
         + "Accessible to ADMIN and NERD roles — for those who appreciate the details.");
 
-    VerticalLayout content = new VerticalLayout(badges, header, description);
+    VerticalLayout content = new VerticalLayout(
+        badges, header, description,
+        new PermissionDemoCard(),
+        new ViewNavigationCard());
     content.addClassNames("workspace", "workspace-nerd");
     content.setSpacing(false);
     content.getThemeList().add("spacing-s");

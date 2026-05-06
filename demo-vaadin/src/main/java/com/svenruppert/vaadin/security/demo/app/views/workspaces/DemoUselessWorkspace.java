@@ -16,6 +16,8 @@
  */
 package com.svenruppert.vaadin.security.demo.app.views.workspaces;
 
+import com.svenruppert.vaadin.security.demo.app.views.components.PermissionDemoCard;
+import com.svenruppert.vaadin.security.demo.app.views.components.ViewNavigationCard;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
@@ -43,7 +45,10 @@ public class DemoUselessWorkspace extends Composite<Div> {
         + "isCurrentUserAuthorizedFor(null) check — it is always visible because "
         + "a null role list is treated as 'no restriction'.");
 
-    VerticalLayout content = new VerticalLayout(badge, header, description);
+    VerticalLayout content = new VerticalLayout(
+        badge, header, description,
+        new PermissionDemoCard(),
+        new ViewNavigationCard());
     content.addClassNames("workspace", "workspace-demo");
     content.setSpacing(false);
     content.getThemeList().add("spacing-s");

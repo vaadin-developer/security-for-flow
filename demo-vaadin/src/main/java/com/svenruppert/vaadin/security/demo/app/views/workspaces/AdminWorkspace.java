@@ -16,6 +16,8 @@
  */
 package com.svenruppert.vaadin.security.demo.app.views.workspaces;
 
+import com.svenruppert.vaadin.security.demo.app.views.components.PermissionDemoCard;
+import com.svenruppert.vaadin.security.demo.app.views.components.ViewNavigationCard;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
@@ -41,7 +43,10 @@ public class AdminWorkspace extends Composite<Div> {
         "Full system control. Manage users, assign roles, and configure security policies. "
         + "Access to this section is restricted to users with the ADMIN role.");
 
-    VerticalLayout content = new VerticalLayout(badge, header, description);
+    VerticalLayout content = new VerticalLayout(
+        badge, header, description,
+        new PermissionDemoCard(),
+        new ViewNavigationCard());
     content.addClassNames("workspace", "workspace-admin");
     content.setSpacing(false);
     content.getThemeList().add("spacing-s");
