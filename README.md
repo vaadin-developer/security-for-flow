@@ -251,14 +251,21 @@ public final class DemoRolePermissionMapping implements RolePermissionMapping {
 
 ```java
 public final class MyRestSubjectResolver implements RestSubjectResolver {
+
+  private static final BearerTokenExtractor BEARER = new BearerTokenExtractor();
+
   @Override
   public Optional<SecuritySubject> resolveSubject(RestRequest request) {
-    // resolve from header, token, session — your choice
+    return BEARER.extract(request)        // case-insensitive Bearer parser
+        .flatMap(myTokenStore::resolve)
+        .map(this::toSubject);
   }
 }
 ```
 
-The library does not enforce a token strategy.
+The library does not enforce a token strategy. `BearerTokenExtractor` and
+`RestHeaders` (case-insensitive header lookup) live in `security-rest` —
+no need to roll your own.
 
 ### 3. Annotate handlers
 
@@ -269,8 +276,20 @@ public final class DocumentHandlers {
 
   @RequiresPermission("document:delete")
   public void delete(RestRequest request, RestResponse response) { /* ... */ }
+
+  @RequiresPermission("document:create")
+  public void create(RestRequest request, RestResponse response) {
+    // Pattern-match instead of casting to a concrete adapter request type
+    if (request instanceof BodyRestRequest body) {
+      String json = body.bodyAsUtf8();
+      // ...
+    }
+  }
 }
 ```
+
+Use `BodyRestRequest` (in `security-rest`) when a handler needs the request
+body. Adapters supply the raw bytes; helpers decode UTF-8.
 
 ### 4. Wire the filter
 
@@ -291,12 +310,26 @@ The filter:
 5. Maps the decision: `Granted` runs the handler; `Unauthenticated` → `401`;
    `Forbidden` → `403`. Error bodies are short and generic — no internals leak.
 
-### 5. (Optional) Operation discovery filtered server-side
+### 5. Authenticated-only endpoints
 
-`demo-rest` also shows a `GET /api/operations` endpoint that returns only the
-operations the current subject is allowed to invoke. The same permission model
-that protects the handlers is used to filter the discovery list — clients
-never make local authorization decisions.
+For endpoints that need any authenticated subject but no specific permission
+(`/me`, `/logout`, …), use `RestAuthenticationFilter` instead of writing
+your own subject check:
+
+```java
+RestAuthenticationFilter authFilter = new RestAuthenticationFilter(resolver);
+authFilter.requireAuthenticated(request, response, handlers::me);
+// 401 with body "Unauthorized" if no subject; delegates otherwise
+```
+
+### 6. (Optional) Operation discovery filtered server-side
+
+`demo-rest` shows a `GET /api/operations` endpoint that returns only the
+operations the current subject is allowed to invoke. Built on
+`SecuredOperationRegistry` + `OperationVisibilityService` from
+`security-core` — the same permission model that protects the handlers is
+used to filter the discovery list. Clients never make local authorization
+decisions.
 
 ## Decision Model
 
@@ -326,6 +359,20 @@ Generic annotations (in `security-core`):
 
 Project-specific annotations are encouraged for Vaadin views (e.g. `@VisibleFor`).
 
+## Reusable security building blocks
+
+| Type | Module / package | Purpose |
+|---|---|---|
+| `PermissionGuard` | `security-core/.../authorization/api` | Stateless `hasPermission` / `requirePermission` (and role variants) on any `HasPermissions`/`HasRoles`. Throws `AccessDeniedException`. |
+| `StaticRolePermissionMapping` | `…/api/permissions` | Immutable role → permissions map with a builder. |
+| `RolePermissionResolver` | `…/api/permissions` | Merges permissions across multiple roles. |
+| `SecuredOperationDescriptor`, `SecuredOperationRegistry`, `OperationVisibilityService` | `…/api/operations` | Generic operation discovery with subject-aware filtering. Adapter metadata (HTTP method, path, view class) goes into the descriptor's `attributes`. |
+| `BootstrapConfigurationLoader`, `BootstrapStatus` | `security-core/.../bootstrap` | Centralised sysprop+env+default loading with TTL parsing; leak-safe status snapshot. |
+| `RestHeaders`, `BearerTokenExtractor` | `security-rest` | Case-insensitive header lookup and Bearer-token parsing. |
+| `RestAuthenticationFilter` | `security-rest` | 401-only filter for authenticated-only endpoints. |
+| `BodyRestRequest` | `security-rest` | Body-capable `RestRequest`. Avoids concrete-class casts in handlers. |
+| `BootstrapRestStatusMapper` | `security-rest` | `InitialAdminCreationResult` → HTTP status code + stable error code. |
+
 ## Stable vs. Experimental API
 
 **Stable**: role-based access, REST adapter contracts, `SecuritySubject`,
@@ -353,6 +400,15 @@ or `TRANSIENT_CONSOLE` mode. The same library powers the REST endpoint,
 the CLI `init-admin` command, and the Vaadin `/setup` view. Token values
 are never written to logs, never echoed in responses, and the mechanism
 turns itself off once an administrator exists.
+
+Configurable via system properties (preferred) or environment variables —
+both read centrally by `BootstrapConfigurationLoader`:
+
+| System property | Environment variable | Default (demos) |
+|---|---|---|
+| `security.bootstrap.mode` | `SECURITY_BOOTSTRAP_MODE` | `TRANSIENT_CONSOLE` |
+| `security.bootstrap.token.file` | `SECURITY_BOOTSTRAP_TOKEN_FILE` | `./data/bootstrap.token` |
+| `security.bootstrap.token.ttl` | `SECURITY_BOOTSTRAP_TOKEN_TTL` | `PT24H` |
 
 See [`docs/bootstrap.md`](docs/bootstrap.md) for modes, endpoints, and the
 operator workflow.

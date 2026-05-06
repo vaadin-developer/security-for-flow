@@ -18,29 +18,38 @@ and a proper authentication backend.
 ```text
 demo-rest/
 ├── server/
-│   ├── DemoRestServer          main, starts HttpServer
-│   ├── DemoHttpRouter          HttpHandler, dispatches by method+path
-│   ├── DemoHandlers            login/me/operations/documents/admin/logout
-│   ├── DemoHttpRequest         RestRequest impl carrying body
-│   ├── DemoHttpResponse        buffering RestResponse impl
-│   ├── DemoSubjectResolver     RestSubjectResolver — Bearer token lookup
-│   ├── DemoTokenStore          in-memory token → user
-│   └── DemoOperationRegistry   server-side operation list, filtered by perms
+│   ├── DemoRestServer            main, starts HttpServer
+│   ├── DemoHttpRouter            HttpHandler, dispatches by method+path
+│   ├── DemoHandlers              login/me/operations/documents/admin/logout
+│   ├── DemoBootstrapHandlers     /api/bootstrap/status + /api/bootstrap/admin
+│   ├── DemoHttpRequest           BodyRestRequest impl (byte[] body)
+│   ├── DemoHttpResponse          buffering RestResponse impl
+│   ├── DemoSubjectResolver       Bearer token lookup via BearerTokenExtractor
+│   ├── DemoTokenStore            in-memory token → user
+│   ├── DemoOperationRegistry     thin wrapper around SecuredOperationRegistry
+│   ├── DemoBootstrapEnvironment  one-line call to BootstrapConfigurationLoader
+│   └── DemoAdministratorAccountStore  bootstrap-side adapter over DemoUserStore
 │
 ├── cli/
-│   ├── DemoRestCli             main
-│   ├── CliCommandLoop          read/dispatch/print
-│   ├── CliSession              token + last operations cache
-│   └── CliOperationClient      HttpClient wrapper
+│   ├── DemoRestCli               main
+│   ├── CliCommandLoop            read/dispatch/print, includes init-admin
+│   ├── CliSession                token + last operations cache
+│   └── CliOperationClient        HttpClient wrapper
 │
 ├── domain/
-│   ├── DemoRole, DemoPermission, DemoRolePermissionMapping
-│   ├── DemoUser, DemoUserStore
+│   ├── DemoRole, DemoPermission
+│   ├── DemoRolePermissionMapping (delegates to StaticRolePermissionMapping)
+│   ├── DemoUser, DemoUserStore   hashed-password store
 │   └── DemoDocument, DemoDocumentStore
 │
 └── shared/
-    ├── DemoEndpoints, DemoOperationDescriptor, DemoJson
+    ├── DemoEndpoints
+    └── DemoJson                  tiny JDK-only JSON encoder/parser
 ```
+
+Generic logic — bearer extraction, authentication filter, operation
+registry, bootstrap configuration loading — lives in `security-core` /
+`security-rest`. `demo-rest` only carries demo data and demo wiring.
 
 ---
 
@@ -261,22 +270,36 @@ of truth.
 
 ---
 
-## Relationship to `security-rest`
+## Relationship to `security-rest` and `security-core`
 
 `security-rest` provides:
 
 - `RestRequest`, `RestResponse`, `RestHandler` — minimal abstractions
+- `BodyRestRequest` — body-capable request (handlers pattern-match on this)
 - `RestSubjectResolver` — contract for resolving the current subject
+- `RestHeaders`, `BearerTokenExtractor` — header lookup + Bearer parsing
 - `RestAccessContextFactory` — neutral access context creation
-- `RestAuthorizationFilter` — pre-handler authorization
+- `RestAuthenticationFilter` — 401-only filter for authenticated-only paths
+- `RestAuthorizationFilter` — pre-handler permission/role enforcement
 - `HttpStatusDecisionMapper` — maps decisions to HTTP status
+- `BootstrapRestStatusMapper` — `InitialAdminCreationResult` → status code
 
-`demo-rest` plugs in:
+`security-core` provides:
 
-- `DemoSubjectResolver` (bearer token lookup)
-- `DemoRolePermissionMapping` (role → permissions)
-- `DemoOperationRegistry` (callable operations)
-- `DemoHandlers` (annotated handler methods)
+- `SecuredOperationRegistry` + `OperationVisibilityService` — generic
+  operation discovery (the `/api/operations` endpoint sits on top)
+- `StaticRolePermissionMapping` + `RolePermissionResolver` — role→
+  permission helpers
+- `BootstrapConfigurationLoader` + `BootstrapStatus` — config + status
+- `PermissionGuard` + `AccessDeniedException` — generic permission checks
+
+`demo-rest` plugs in only the demo-specific pieces:
+
+- `DemoSubjectResolver` — wraps `BearerTokenExtractor`
+- `DemoRolePermissionMapping` — wraps `StaticRolePermissionMapping`
+- `DemoOperationRegistry` — wraps `SecuredOperationRegistry`
+- `DemoBootstrapEnvironment` — wraps `BootstrapConfigurationLoader`
+- `DemoHandlers` / `DemoBootstrapHandlers` — annotated handler methods
 
 The demo proves how a real project plugs its own domain rights into the
 generic library. URL-shortener-specific or other application-specific

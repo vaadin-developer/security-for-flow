@@ -19,17 +19,38 @@ permissions, and business operations belong to consuming applications or demo
 modules.
 
 `security-core` provides generic types such as `SecuritySubject`, `RoleName`,
-`PermissionName`, `AccessContext`, `AuthorizationDecision`, and evaluator
-contracts. It has no Vaadin, Servlet, REST framework, demo, or application
-dependencies.
+`PermissionName`, `AccessContext`, `AuthorizationDecision`, evaluator
+contracts, plus the reusable building blocks listed below. It has no
+Vaadin, Servlet, REST framework, demo, or application dependencies.
 
 `security-vaadin` maps security decisions to Vaadin navigation behavior.
 It owns Vaadin session access through `VaadinSessionSubjectStore`, login
 redirection, access-denied rerouting, and `BeforeEnterListener` integration.
 
-`security-rest` maps semantic authorization decisions to REST behavior. It uses
-minimal abstractions (`RestRequest`, `RestResponse`, `RestHandler`) and does not
-pull in Spring Security, Jakarta Security, OAuth2/OIDC, or a web framework.
+`security-rest` maps semantic authorization decisions to REST behavior. It
+uses minimal abstractions (`RestRequest`, `RestResponse`, `RestHandler`,
+`BodyRestRequest`) and does not pull in Spring Security, Jakarta Security,
+OAuth2/OIDC, or a web framework.
+
+### Reusable building blocks (security-core)
+
+| Type | Package | Purpose |
+|---|---|---|
+| `PermissionGuard`, `AccessDeniedException` | `authorization.api` | Stateless `hasPermission` / `requirePermission` and role variants on any `HasPermissions`/`HasRoles`. |
+| `StaticRolePermissionMapping`, `RolePermissionResolver` | `authorization.api.permissions` | Immutable role→permissions map (with a builder) and permission merger across roles. |
+| `SecuredOperationDescriptor`, `SecuredOperationRegistry`, `OperationVisibilityService` | `authorization.api.operations` | Adapter-neutral operation discovery, subject-aware filtering. Adapter metadata in the descriptor's `attributes`. |
+| `BootstrapConfigurationLoader` | `bootstrap` | Single source for sysprop + env + default loading; ISO-8601 TTL; fail-fast on invalid input. |
+| `BootstrapStatus` | `bootstrap` | Leak-safe status snapshot — never carries the token. |
+
+### Reusable building blocks (security-rest)
+
+| Type | Purpose |
+|---|---|
+| `RestHeaders` | Case-insensitive header lookup. |
+| `BearerTokenExtractor` | Parses `Authorization: Bearer …` (case-insensitive scheme, trimmed token, never logged). |
+| `RestAuthenticationFilter` | 401-only filter for endpoints requiring any authenticated subject. |
+| `BodyRestRequest` | Body-capable `RestRequest` so handlers pattern-match instead of casting to concrete adapter types. |
+| `BootstrapRestStatusMapper` | `InitialAdminCreationResult` → HTTP status + stable error code. |
 
 ## Permissions
 
@@ -69,7 +90,8 @@ REST security is driven by annotations on handler methods or handler classes.
 
 The REST adapter:
 
-1. Resolves a `SecuritySubject` from the request via `RestSubjectResolver`.
+1. Resolves a `SecuritySubject` from the request via `RestSubjectResolver`
+   (`BearerTokenExtractor` makes this a one-liner for token-based setups).
 2. Scans the secured method or class for a security annotation.
 3. Creates an adapter-neutral `AccessContext`.
 4. Runs the matching `AuthorizationEvaluator`.
@@ -77,8 +99,15 @@ The REST adapter:
 6. Maps `Unauthenticated` to `401 Unauthorized`.
 7. Maps `Forbidden` to `403 Forbidden`.
 
-REST responses intentionally use short generic messages and do not expose stack
-traces, package names, or internal implementation details.
+For endpoints that only need any authenticated subject (e.g. `/me`,
+`/logout`), use `RestAuthenticationFilter` instead of writing your own
+401-check. For body-bearing requests (POST/PUT/PATCH), pattern-match on
+`BodyRestRequest` rather than casting to a concrete adapter type. For
+bootstrap responses, `BootstrapRestStatusMapper` translates
+`InitialAdminCreationResult` into HTTP status code + stable error code.
+
+REST responses intentionally use short generic messages and do not expose
+stack traces, package names, or internal implementation details.
 
 ## Future Application Integration
 
