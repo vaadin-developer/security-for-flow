@@ -17,22 +17,24 @@
 package com.svenruppert.vaadin.security.demo.app.security.services;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
-import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
-import com.svenruppert.vaadin.security.demo.app.security.model.UserStorage;
 import com.svenruppert.vaadin.security.authorization.api.AuthenticationService;
+import com.svenruppert.vaadin.security.demo.app.security.model.Credentials;
+import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectory;
+import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectoryProvider;
+import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 
 public class MyAuthenticationService
-    implements AuthenticationService<UserStorage.Credentials, MyUser>, HasLogger {
+    implements AuthenticationService<Credentials, MyUser>, HasLogger {
 
   @Override
-  public boolean checkCredentials(UserStorage.Credentials credentials) {
+  public boolean checkCredentials(Credentials credentials) {
     if (credentials == null) return false;
-    return UserStorage.checkCredentials(credentials);
+    return directory().checkCredentials(credentials);
   }
 
   @Override
-  public MyUser loadSubject(UserStorage.Credentials credentials) {
-    return UserStorage.userByCredentials(credentials);
+  public MyUser loadSubject(Credentials credentials) {
+    return directory().findByCredentials(credentials).orElse(null);
   }
 
   @Override
@@ -40,6 +42,7 @@ public class MyAuthenticationService
     return MyUser.class;
   }
 
-
-
+  private static DemoUserDirectory directory() {
+    return DemoUserDirectoryProvider.directory();
+  }
 }

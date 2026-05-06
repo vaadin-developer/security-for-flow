@@ -30,7 +30,8 @@ import com.svenruppert.vaadin.security.bootstrap.FileBootstrapTokenStore;
 import com.svenruppert.vaadin.security.bootstrap.InMemoryBootstrapTokenStore;
 import com.svenruppert.vaadin.security.bootstrap.InitialAdminBootstrapService;
 import com.svenruppert.vaadin.security.bootstrap.MinimumLengthPasswordPolicy;
-import com.svenruppert.vaadin.security.demo.app.security.model.UserStorage;
+import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectory;
+import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectoryProvider;
 
 import java.nio.file.Path;
 
@@ -80,10 +81,11 @@ public final class BootstrapWiring {
   private static BootstrapWiring build() {
     BootstrapConfiguration config = new BootstrapConfigurationLoader().load(
         DEFAULT_MODE, DEFAULT_TOKEN_FILE, BootstrapConfiguration.DEFAULT_VALIDITY);
+    DemoUserDirectory directory = DemoUserDirectoryProvider.directory();
     if (config.mode() != BootstrapMode.DISABLED) {
-      UserStorage.enableBootstrapMode();
+      directory.enableBootstrapMode();
     }
-    VaadinAdministratorAccountStore adminStore = new VaadinAdministratorAccountStore();
+    VaadinAdministratorAccountStore adminStore = new VaadinAdministratorAccountStore(directory);
     BootstrapStateService state = new BootstrapStateService(adminStore, config.mode());
     BootstrapTokenStore tokenStore = config.mode() == BootstrapMode.PERSISTENT_FILE
         ? new FileBootstrapTokenStore(config.tokenFilePath())
@@ -98,7 +100,7 @@ public final class BootstrapWiring {
     BootstrapStartup.initializeIfRequired(
         state, tokenStore, new BootstrapTokenGenerator(), output, config);
     InitialAdminBootstrapService service = new InitialAdminBootstrapService(
-        state, tokenStore, adminStore, UserStorage.passwordHasher(),
+        state, tokenStore, adminStore, directory.passwordHasher(),
         new MinimumLengthPasswordPolicy(8),
         config.tokenValidity(), java.time.Clock.systemUTC());
     return new BootstrapWiring(state, service);

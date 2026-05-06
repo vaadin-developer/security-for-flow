@@ -18,24 +18,31 @@ package com.svenruppert.vaadin.security.demo.app.security.bootstrap;
 
 import com.svenruppert.vaadin.security.bootstrap.AdministratorAccountStore;
 import com.svenruppert.vaadin.security.bootstrap.NewAdministrator;
+import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectory;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
-import com.svenruppert.vaadin.security.demo.app.security.model.UserStorage;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Adapter that exposes {@link UserStorage} to the bootstrap library.
+ * Adapter that exposes a {@link DemoUserDirectory} to the bootstrap
+ * library.
  */
 public final class VaadinAdministratorAccountStore implements AdministratorAccountStore {
 
+  private final DemoUserDirectory directory;
   private final AtomicLong idSequence = new AtomicLong(1000);
+
+  public VaadinAdministratorAccountStore(DemoUserDirectory directory) {
+    this.directory = Objects.requireNonNull(directory, "directory");
+  }
 
   @Override
   public boolean hasAnyAdministrator() {
-    return UserStorage.hasAnyAdministrator();
+    return directory.hasAnyAdministrator();
   }
 
   @Override
@@ -47,6 +54,6 @@ public final class VaadinAdministratorAccountStore implements AdministratorAccou
         ? newAdministrator.username()
         : newAdministrator.displayName();
     MyUser user = new MyUser(idSequence.getAndIncrement(), displayName, roles);
-    UserStorage.registerHashed(newAdministrator.username(), newAdministrator.passwordHash(), user);
+    directory.registerWithHashedPassword(newAdministrator.username(), newAdministrator.passwordHash(), user);
   }
 }

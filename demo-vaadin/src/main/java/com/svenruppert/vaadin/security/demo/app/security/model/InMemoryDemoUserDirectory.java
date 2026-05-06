@@ -1,0 +1,143 @@
+/**
+ * Copyright © 2017 Sven Ruppert (sven.ruppert@gmail.com)
+ *
+ * Licensed under the EUPL, Version 1.2 or - as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence"); You may not use this work except in
+ * compliance with the Licence. You may obtain a copy of the Licence at:
+ *
+ * https://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the Licence is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
+ */
+package com.svenruppert.vaadin.security.demo.app.security.model;
+
+import com.svenruppert.vaadin.security.bootstrap.PasswordHasher;
+import com.svenruppert.vaadin.security.bootstrap.Pbkdf2PasswordHasher;
+import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
+
+/**
+ * In-memory {@link DemoUserDirectory}. Demo-only — never use as a
+ * production user store.
+ * <p>
+ * Pre-populates {@code user/user} (USER) and {@code demo/demo} (NERD).
+ * The administrator entry is intentionally absent — the bootstrap flow
+ * creates the first administrator.
+ */
+public final class InMemoryDemoUserDirectory implements DemoUserDirectory {
+
+  private final PasswordHasher hasher;
+  private final Map<String, StoredUser> byUsername = new ConcurrentHashMap<>();
+  private final Map<Long, MyUser> byId = new ConcurrentHashMap<>();
+
+  public InMemoryDemoUserDirectory() {
+    this(new Pbkdf2PasswordHasher());
+  }
+
+  public InMemoryDemoUserDirectory(PasswordHasher hasher) {
+    this.hasher = Objects.requireNonNull(hasher, "hasher");
+    addUser("user", "user", createMyUser(2L, "Herr User", AuthorizationRole.USER));
+    addUser("demo", "demo", createMyUser(3L, "Herr Demo", AuthorizationRole.NERD));
+  }
+
+  // ── Public API ────────────────────────────────────────────────
+
+  @Override
+  public Optional<MyUser> findByCredentials(Credentials credentials) {
+    return resolve(credentials);
+  }
+
+  @Override
+  public Optional<MyUser> findById(Long id) {
+    return Optional.ofNullable(byId.get(id));
+  }
+
+  @Override
+  public Stream<MyUser> all() {
+    return byUsername.values().stream().map(stored -> stored.user);
+  }
+
+  @Override
+  public synchronized boolean hasAnyAdministrator() {
+    return byUsername.values().stream()
+        .anyMatch(stored -> stored.user.roles().contains(AuthorizationRole.ADMIN));
+  }
+
+  @Override
+  public synchronized void addUser(String username, String plaintextPassword, MyUser user) {
+    Objects.requireNonNull(username);
+    Objects.requireNonNull(plaintextPassword);
+    Objects.requireNonNull(user);
+    String hash = hasher.hash(plaintextPassword.toCharArray());
+    byUsername.put(username, new StoredUser(user, hash));
+    byId.put(user.id(), user);
+  }
+
+  @Override
+  public synchronized void registerWithHashedPassword(String username, String passwordHash, MyUser user) {
+    if (byUsername.containsKey(username)) {
+      throw new IllegalStateException("user already exists: " + username);
+    }
+    byUsername.put(username, new StoredUser(user, passwordHash));
+    byId.put(user.id(), user);
+  }
+
+  @Override
+  public synchronized void deleteUser(Long id) {
+    MyUser removed = byId.remove(id);
+    if (removed == null) return;
+    byUsername.values().removeIf(stored -> stored.user.equals(removed));
+  }
+
+  @Override
+  public synchronized void enableBootstrapMode() {
+    byUsername.values().removeIf(stored -> stored.user.roles().contains(AuthorizationRole.ADMIN));
+    byId.values().removeIf(user -> user.roles().contains(AuthorizationRole.ADMIN));
+  }
+
+  @Override
+  public PasswordHasher passwordHasher() {
+    return hasher;
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────
+
+  static MyUser createMyUser(Long id, String name, AuthorizationRole... roles) {
+    Objects.requireNonNull(id);
+    Objects.requireNonNull(name);
+    Objects.requireNonNull(roles);
+    HashSet<AuthorizationRole> roleSet = new HashSet<>();
+    Collections.addAll(roleSet, roles);
+    roleSet.add(AuthorizationRole.USER);
+    return new MyUser(id, name, roleSet);
+  }
+
+  private Optional<MyUser> resolve(Credentials credentials) {
+    if (credentials == null
+        || credentials.username() == null
+        || credentials.password() == null) {
+      return Optional.empty();
+    }
+    StoredUser stored = byUsername.get(credentials.username());
+    if (stored == null) return Optional.empty();
+    if (!hasher.verify(credentials.password().toCharArray(), stored.passwordHash)) {
+      return Optional.empty();
+    }
+    return Optional.of(stored.user);
+  }
+
+  private record StoredUser(MyUser user, String passwordHash) {
+  }
+}
