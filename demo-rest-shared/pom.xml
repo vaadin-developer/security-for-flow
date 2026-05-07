@@ -21,37 +21,24 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>demo-rest</artifactId>
-  <name>Security for Vaadin - REST Demo</name>
-  <description>Demo application for REST security, permissions, protected handlers, and HTTP status mapping.</description>
+  <artifactId>demo-rest-shared</artifactId>
+  <name>Security for Vaadin - REST Demo shared</name>
+  <description>
+    Transport-level constants and helpers shared between the demo-rest
+    server and any client (CLI, Vaadin REST client). Demo-only.
+  </description>
 
   <properties>
     <!--
-      demo-rest is consumed as a test-scope dependency by
-      demo-vaadin-rest-client (HttpDemoBackendClientTest spins up an
-      in-process DemoRestServer). It must therefore land in the local
-      ~/.m2 — install must NOT be skipped. Remote deploy stays off.
+      Library-style demo module: do NOT push to a remote repository, but
+      DO install into the local ~/.m2 so demo-rest and
+      demo-vaadin-rest-client can resolve it outside of a reactor build.
     -->
     <maven.deploy.skip>true</maven.deploy.skip>
     <gpg.skip>true</gpg.skip>
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>security-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>security-rest</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>demo-rest-shared</artifactId>
-      <version>${project.version}</version>
-    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
@@ -62,7 +49,11 @@
 
   <build>
     <plugins>
-      <!-- deploy is suppressed via the maven.deploy.skip property above. -->
+      <!--
+        deploy is suppressed via the maven.deploy.skip property above —
+        no separate plugin block needed. install runs normally so the
+        artifact lands in ~/.m2 for non-reactor consumers.
+      -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>license-maven-plugin</artifactId>
@@ -72,14 +63,6 @@
             <phase>none</phase>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>3.5.0</version>
-        <configuration>
-          <mainClass>com.svenruppert.vaadin.security.demo.rest.server.DemoRestServer</mainClass>
-        </configuration>
       </plugin>
     </plugins>
   </build>

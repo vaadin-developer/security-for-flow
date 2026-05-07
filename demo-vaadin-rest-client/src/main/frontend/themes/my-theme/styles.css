@@ -1,0 +1,219 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Global Lumo overrides — swap the default corporate blue for violet
+   ═══════════════════════════════════════════════════════════════════ */
+html {
+    --lumo-primary-color:         #7c3aed;
+    --lumo-primary-color-50pct:   rgba(124, 58, 237, 0.5);
+    --lumo-primary-color-10pct:   rgba(124, 58, 237, 0.1);
+    --lumo-primary-text-color:    #7c3aed;
+    --lumo-primary-contrast-color: #ffffff;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Login page
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Deep space multi-radial gradient — not a boring flat colour */
+.login-view {
+    background:
+        radial-gradient(ellipse at 15% 65%, rgba(124, 58, 237, 0.40) 0%, transparent 52%),
+        radial-gradient(ellipse at 82% 25%, rgba(79,  70, 229, 0.38) 0%, transparent 52%),
+        radial-gradient(ellipse at 50% 90%, rgba(236, 72, 153, 0.20) 0%, transparent 45%),
+        linear-gradient(160deg, #0d0d1a 0%, #160d30 45%, #0d1b2a 100%);
+}
+
+/* White card with a vivid violet top stripe and depth shadow */
+.login-card {
+    background: #ffffff;
+    border-radius: var(--lumo-border-radius-l);
+    border-top: 5px solid #7c3aed;
+    box-shadow:
+        0 24px 64px rgba(0, 0, 0, 0.55),
+        0  0   40px rgba(124, 58, 237, 0.25);
+    padding: var(--lumo-space-xl) var(--lumo-space-xl) var(--lumo-space-l);
+}
+
+.login-card h2 {
+    margin: 0 0 var(--lumo-space-m);
+    color: #1e1b4b;
+    font-size: var(--lumo-font-size-xxl);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    text-align: center;
+}
+
+.login-card vaadin-text-field,
+.login-card vaadin-password-field {
+    margin-bottom: var(--lumo-space-xs);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   App navbar  —  indigo → violet gradient bar
+   ═══════════════════════════════════════════════════════════════════ */
+vaadin-app-layout::part(navbar) {
+    background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+    border-bottom: none;
+    box-shadow: 0 2px 20px rgba(79, 70, 229, 0.45);
+}
+
+/* Hamburger toggle inherits colour from the element */
+vaadin-app-layout [slot="navbar"] vaadin-drawer-toggle {
+    color: rgba(255, 255, 255, 0.90);
+}
+
+.app-title {
+    font-size: var(--lumo-font-size-l);
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.03em;
+    padding: 0 var(--lumo-space-s);
+}
+
+/* Sign-out button on the coloured navbar needs white text */
+vaadin-button.navbar-btn {
+    color: rgba(255, 255, 255, 0.88);
+}
+vaadin-button.navbar-btn::part(label) {
+    color: rgba(255, 255, 255, 0.88);
+}
+vaadin-button.navbar-btn vaadin-icon {
+    color: rgba(255, 255, 255, 0.88);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Drawer  —  dark sidebar, VS-Code style
+   ═══════════════════════════════════════════════════════════════════ */
+vaadin-app-layout::part(drawer) {
+    background: #0f172a;
+    border-right: none;
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.35);
+
+    /* Re-skin Lumo tokens for dark surface */
+    --lumo-primary-color:       #a78bfa;
+    --lumo-primary-color-10pct: rgba(167, 139, 250, 0.15);
+    --lumo-body-text-color:     #cbd5e1;
+    --lumo-secondary-text-color: #64748b;
+    --lumo-header-text-color:   #f1f5f9;
+    --lumo-contrast-5pct:       rgba(255, 255, 255, 0.04);
+    --lumo-contrast-10pct:      rgba(255, 255, 255, 0.10);
+}
+
+.nav-tabs {
+    width: 100%;
+    padding: var(--lumo-space-s) 0;
+}
+
+.nav-tabs vaadin-tab {
+    color: #94a3b8;
+    border-radius: var(--lumo-border-radius-m);
+    margin: 2px var(--lumo-space-s);
+    padding: var(--lumo-space-s) var(--lumo-space-m);
+    gap: var(--lumo-space-s);
+    border-left: 3px solid transparent;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav-tabs vaadin-tab:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: #e2e8f0;
+}
+
+.nav-tabs vaadin-tab[selected] {
+    background: rgba(167, 139, 250, 0.14);
+    color: #c4b5fd;
+    border-left-color: #a78bfa;
+}
+
+.nav-tabs vaadin-tab vaadin-icon {
+    color: inherit;
+    flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Workspace content areas
+   ═══════════════════════════════════════════════════════════════════ */
+.workspace {
+    padding: var(--lumo-space-xl);
+    max-width: 880px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.workspace h2 {
+    margin: 0;
+    color: var(--lumo-header-text-color);
+}
+
+.workspace p {
+    color: var(--lumo-secondary-text-color);
+    line-height: var(--lumo-line-height-m);
+    margin-top: var(--lumo-space-s);
+}
+
+/* Coloured left accent stripe per role */
+.workspace-admin  { border-left: 4px solid #ef4444; }
+.workspace-nerd   { border-left: 4px solid #6366f1; }
+.workspace-user   { border-left: 4px solid #22c55e; }
+.workspace-public { border-left: 4px solid #94a3b8; }
+.workspace-demo   { border-left: 4px solid #f59e0b; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Welcome screen
+   ═══════════════════════════════════════════════════════════════════ */
+.welcome-view {
+    background: #f1f5f9;
+}
+
+.welcome-card {
+    background: #ffffff;
+    border-radius: var(--lumo-border-radius-l);
+    border-top: 5px solid transparent;
+    border-image: linear-gradient(90deg, #4f46e5, #7c3aed, #ec4899) 1 0 0;
+    box-shadow: 0 4px 32px rgba(0, 0, 0, 0.10), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    padding: var(--lumo-space-xl);
+    max-width: 880px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.welcome-card h2 {
+    margin: 0 0 var(--lumo-space-xs);
+    color: #1e1b4b;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.welcome-card p {
+    color: var(--lumo-secondary-text-color);
+    line-height: var(--lumo-line-height-m);
+    margin-top: var(--lumo-space-m);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Permission demo + view navigation cards
+   The button rows use Vaadin HorizontalLayout which does not wrap by
+   default. Force flex-wrap so they never overflow the parent card.
+   ═══════════════════════════════════════════════════════════════════ */
+.permission-demo-card,
+.view-navigation-card {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.permission-demo-card vaadin-horizontal-layout,
+.view-navigation-card vaadin-horizontal-layout {
+    flex-wrap: wrap;
+    row-gap: var(--lumo-space-s);
+}
+
+.permission-demo-card h3,
+.view-navigation-card h3 {
+    margin: var(--lumo-space-m) 0 var(--lumo-space-xs);
+    color: #1e1b4b;
+}
+
+.permission-demo-card h4 {
+    margin: var(--lumo-space-m) 0 var(--lumo-space-xs);
+    color: var(--lumo-body-text-color);
+    font-size: var(--lumo-font-size-m);
+}

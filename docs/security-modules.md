@@ -9,8 +9,21 @@ This project is split into reusable library modules and demo modules.
 | `security-core` | Generic security concepts and adapter-neutral decision logic. |
 | `security-vaadin` | Vaadin Flow adapter for view and navigation security. |
 | `security-rest` | Framework-light REST adapter for request and handler security. |
-| `demo-vaadin` | Vaadin demo for login, roles, permissions, and UI integration. |
-| `demo-rest` | REST demo for protected handlers and HTTP status mapping. |
+| `demo-rest-shared` | Transport-level constants (`DemoEndpoints`) and a tiny JSON helper, shared between the REST server and any client. No project-specific code. |
+| `demo-vaadin` | Standalone Vaadin demo: login, roles, permissions, in-JVM auth and UI integration. |
+| `demo-rest` | JDK-only HTTP server + interactive CLI client. Protected handlers, HTTP status mapping, bootstrap. |
+| `demo-vaadin-rest-client` | Two-tier demo: Vaadin UI delegates auth/authz to a separate `demo-rest` backend through a single encapsulated `DemoBackendClient`. |
+
+## How to run each demo
+
+Each demo has its own walkthrough in `docs/`:
+
+| Demo | Run | Browser/CLI |
+|---|---|---|
+| `demo-vaadin` | `cd demo-vaadin && mvn jetty:run` | <http://localhost:8080/> — see [`demo-vaadin.md`](demo-vaadin.md) |
+| `demo-rest` server | `mvn -pl :demo-rest exec:java` | http://localhost:8080 — see [`demo-rest.md`](demo-rest.md) |
+| `demo-rest` CLI | `mvn -pl :demo-rest exec:java -Dexec.mainClass=com.svenruppert.vaadin.security.demo.rest.cli.DemoRestCli` | interactive terminal |
+| `demo-vaadin-rest-client` (UI) | `mvn -pl :demo-vaadin-rest-client jetty:run` | <http://localhost:9090/> — needs `demo-rest` running on port 8080. See [`demo-vaadin-rest-client.md`](demo-vaadin-rest-client.md) |
 
 ## Core Rule
 
@@ -65,9 +78,11 @@ The demo modules define demo permissions only to show expected usage:
 - `demo-vaadin` may define Vaadin demo permissions such as `demo:view`.
 - `demo-rest` defines document-oriented demo permissions such as
   `document:read` and `document:delete`.
+- `demo-vaadin-rest-client` carries no permissions of its own — it
+  consumes whatever the backend sends back.
 
-These values must not move into `security-core`, `security-vaadin`, or
-`security-rest`.
+These values must not move into `security-core`, `security-vaadin`,
+`security-rest`, or `demo-rest-shared`.
 
 ## Vaadin Security
 

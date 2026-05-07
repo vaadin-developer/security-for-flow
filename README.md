@@ -4,9 +4,10 @@ Pluggable authentication, authorization, and annotation-driven protection for
 Vaadin Flow and lightweight REST applications. Uses Java SPI (`ServiceLoader`)
 for application-provided services.
 
-The library is split into framework-neutral core, two adapters (Vaadin and
-REST), and two reference demos. Concrete roles and permissions live in
-applications or demo modules — never in the library.
+The library is split into framework-neutral core, two adapters (Vaadin
+and REST), one transport-level shared module, and three reference
+demos. Concrete roles and permissions live in applications or demo
+modules — never in the library.
 
 ## Module Structure
 
@@ -15,17 +16,22 @@ applications or demo modules — never in the library.
 | `security-core` | `security-core` | Generic, framework-neutral security concepts and decision logic |
 | `security-vaadin` | `security-vaadin` | Vaadin Flow adapter — view and navigation security |
 | `security-rest` | `security-rest` | Framework-light REST adapter — request and handler security |
-| `demo-vaadin` | `demo-vaadin` | Vaadin reference implementation (WAR) |
+| `demo-rest-shared` | `demo-rest-shared` | Transport-level constants + tiny JSON helper, shared between the REST server and any client |
+| `demo-vaadin` | `demo-vaadin` | Standalone Vaadin demo (WAR) — auth runs in-JVM |
 | `demo-rest` | `demo-rest` | Runnable REST reference: JDK-only HTTP server + CLI client |
+| `demo-vaadin-rest-client` | `demo-vaadin-rest-client` | Vaadin demo where `demo-rest` is the authoritative backend; UI talks to it through one encapsulated Java client |
 
 ### Dependency Rules
 
 ```text
-security-core    -> (no project deps)
-security-vaadin  -> security-core
-security-rest    -> security-core
-demo-vaadin      -> security-core, security-vaadin
-demo-rest        -> security-core, security-rest
+security-core              -> (no project deps)
+security-vaadin            -> security-core
+security-rest              -> security-core
+demo-rest-shared           -> (no project deps; transport-only)
+demo-vaadin                -> security-core, security-vaadin
+demo-rest                  -> security-core, security-rest, demo-rest-shared
+demo-vaadin-rest-client    -> security-core, security-vaadin, demo-rest-shared
+                              (test scope only: demo-rest)
 ```
 
 `security-core` has no Vaadin, Servlet, or REST-framework dependencies.
@@ -40,31 +46,79 @@ demo-rest        -> security-core, security-rest
 mvn clean install
 ```
 
-### Run the Vaadin demo
+`mvn install` is required at least once because the demos depend on
+each other through the local `~/.m2` repository (see § *Module
+Structure* — `demo-vaadin-rest-client` depends on `demo-rest` for tests,
+and `demo-rest-shared` is consumed by both REST-side modules).
+
+### Pick the right demo
+
+| You want to see … | Run |
+|---|---|
+| Vaadin role/permission UI in a single JVM, no backend | [`demo-vaadin`](docs/demo-vaadin.md) |
+| Pure REST security (HTTP server + interactive CLI), no UI | [`demo-rest`](docs/demo-rest.md) |
+| Vaadin UI talking to a separate REST backend (real two-tier setup) | [`demo-vaadin-rest-client`](docs/demo-vaadin-rest-client.md) |
+
+### `demo-vaadin` — Standalone Vaadin demo
 
 ```bash
 cd demo-vaadin && mvn jetty:run
-# http://localhost:8080/
+# Browser: http://localhost:8080/
 ```
 
-### Run the REST demo (server + CLI)
+First run shows the bootstrap setup (the demo prints a token to the
+console). After setup, log in as the chosen admin. Demo users
+`user/user` and `demo/demo` are pre-populated; `admin` is created via
+the bootstrap flow. Walkthrough: [`docs/demo-vaadin.md`](docs/demo-vaadin.md).
+
+### `demo-rest` — REST server + CLI
 
 ```bash
-# Terminal 1 — start the JDK-only HTTP server on http://localhost:8080
+# Terminal 1 — JDK-only HTTP server on http://localhost:8080
 mvn -pl :demo-rest exec:java
+# Prints a bootstrap token to the console (TRANSIENT_CONSOLE mode).
 
 # Terminal 2 — interactive CLI
 mvn -pl :demo-rest exec:java \
     -Dexec.mainClass=com.svenruppert.vaadin.security.demo.rest.cli.DemoRestCli
+# Use `init-admin` to create the first admin via the bootstrap token.
+# Then `login admin <new-password>` and play with `operations` / `call …`.
 ```
 
-Demo users: `admin/admin`, `editor/editor`, `viewer/viewer`. Full walkthrough
-with example sessions in [`docs/demo-rest.md`](docs/demo-rest.md).
+Demo users: `editor/editor`, `viewer/viewer`. `admin` is created via
+the bootstrap flow; with `-Dsecurity.bootstrap.mode=DISABLED` the
+default `admin/admin` is pre-populated instead. Walkthrough:
+[`docs/demo-rest.md`](docs/demo-rest.md).
+
+### `demo-vaadin-rest-client` — Vaadin UI + REST backend
 
 ```bash
-# Tests for either demo
+# Terminal 1 — backend (same as the REST demo above)
+mvn -pl :demo-rest exec:java
+# Prints a bootstrap token to the console.
+
+# Terminal 2 — Vaadin UI
+mvn -pl :demo-vaadin-rest-client jetty:run
+# Browser: http://localhost:9090/
+```
+
+Browser opens `/setup` (because the backend has no admin yet). Paste
+the token from the backend console, choose a username and password,
+submit — the **Vaadin UI calls** `POST /api/bootstrap/admin` against
+the backend, no in-JVM auth. Then log in. The UI never speaks HTTP
+directly: only the encapsulated `DemoBackendClient` does.
+Walkthrough: [`docs/demo-vaadin-rest-client.md`](docs/demo-vaadin-rest-client.md).
+
+### Tests
+
+```bash
+# Whole reactor — 170 tests across all modules
+mvn test
+
+# Single module
+mvn -pl :security-core -am test
 mvn -pl :demo-rest -am test
-mvn -pl :demo-vaadin -am test
+mvn -pl :demo-vaadin-rest-client -am test
 ```
 
 ### Add the dependency

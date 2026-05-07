@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright © 2018 Sven Ruppert (sven.ruppert@gmail.com)
+
+    Licensed under the EUPL, Version 1.2 or - as soon they will be
+    approved by the European Commission - subsequent versions of the
+    EUPL (the "Licence"); You may not use this work except in
+    compliance with the Licence. You may obtain a copy of the Licence at:
+
+    https://joinup.ec.europa.eu/software/page/eupl
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <groupId>com.svenruppert</groupId>
+    <artifactId>security-for-flow-parent</artifactId>
+    <version>00.50.01-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>demo-vaadin-rest-client</artifactId>
+  <packaging>war</packaging>
+  <name>Security for Vaadin - Vaadin REST-Client demo</name>
+  <description>
+    Vaadin Flow demo where the demo-rest server is the authoritative
+    source for users, roles and permissions; the Vaadin UI authenticates
+    and authorizes against it via a single encapsulated backend client.
+  </description>
+
+  <properties>
+    <maven.deploy.skip>true</maven.deploy.skip>
+    <maven.install.skip>true</maven.install.skip>
+    <gpg.skip>true</gpg.skip>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>security-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>security-vaadin</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- Transport-only — endpoint constants and tiny JSON helper -->
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>demo-rest-shared</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- Vaadin's prepare-frontend plugin needs Jackson on the classpath -->
+    <dependency>
+      <groupId>tools.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>3.1.2</version>
+    </dependency>
+    <dependency>
+      <groupId>tools.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>3.1.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+      <version>2.21</version>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <version>6.1.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <!-- Test-scope dependency on demo-rest so the backend-client test can
+         start an in-process DemoRestServer. NOT a runtime dependency. -->
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>demo-rest</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.11.3</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>first</id>
+            <phase>none</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.jetty.ee11</groupId>
+        <artifactId>jetty-ee11-maven-plugin</artifactId>
+        <version>${jetty.version}</version>
+        <configuration>
+          <scan>2</scan>
+          <httpConnector>
+            <port>9090</port>
+          </httpConnector>
+          <webApp>
+            <allowDuplicateFragmentNames>true</allowDuplicateFragmentNames>
+          </webApp>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j-api.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j-api.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+      <plugin>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-maven-plugin</artifactId>
+        <version>${vaadin.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>prepare-frontend</goal>
+              <goal>build-frontend</goal>
+            </goals>
+            <phase>compile</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <configuration>
+          <failOnMissingWebXml>false</failOnMissingWebXml>
+          <warName>${warName}</warName>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

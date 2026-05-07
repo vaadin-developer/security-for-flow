@@ -74,8 +74,10 @@
         <module>security-core</module>
         <module>security-vaadin</module>
         <module>security-rest</module>
+        <module>demo-rest-shared</module>
         <module>demo-vaadin</module>
         <module>demo-rest</module>
+        <module>demo-vaadin-rest-client</module>
     </modules>
 
     <properties>
@@ -222,6 +224,7 @@
             <plugin>
                 <groupId>com.vaadin</groupId>
                 <artifactId>vaadin-maven-plugin</artifactId>
+                <version>${vaadin.version}</version>
                 <executions>
                     <execution>
                         <phase>none</phase>

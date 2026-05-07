@@ -130,16 +130,17 @@ visible input (e.g. when piped).
 
 ### Standalone Vaadin demo vs. REST-authoritative architecture
 
-The `demo-vaadin` module wires `SetupView` directly to the in-JVM
-`InitialAdminBootstrapService`. This is convenient for the demo but means
-that, in this configuration, the Vaadin process is the security authority.
+There are two Vaadin demos in this repo, each wiring the bootstrap
+mechanism in a different way:
 
-In a target architecture where a separate REST server owns the user store
-(e.g. a URL-shortener backend), the Vaadin UI must call the REST endpoint
-`POST /api/bootstrap/admin` instead of using the in-JVM service. The UI
-then becomes a pure client; the REST server is the authoritative source of
-truth. The `BootstrapStatus` and `BootstrapRestStatusMapper` types are
-designed to support both setups without code duplication.
+| Demo | Where setup happens | When to use |
+|---|---|---|
+| `demo-vaadin` | In-JVM via `InitialAdminBootstrapService` | Single-tier app — Vaadin process owns the user store. See [`demo-vaadin.md`](demo-vaadin.md). |
+| `demo-vaadin-rest-client` | REST call to `POST /api/bootstrap/admin` against `demo-rest` | Two-tier app — separate REST backend owns the user store. See [`demo-vaadin-rest-client.md`](demo-vaadin-rest-client.md). |
+
+`BootstrapStatus` (in `security-core`) and `BootstrapRestStatusMapper`
+(in `security-rest`) are designed so both wirings reuse the same
+result types — no code duplication.
 
 ### 3. Vaadin `/setup` (`demo-vaadin`)
 
@@ -169,10 +170,36 @@ mvn -pl :demo-vaadin jetty:run -Dsecurity.bootstrap.mode=DISABLED
   the same authoritative service the REST endpoint uses. The UI never
   decides whether bootstrap is allowed; the service does.
 
-If you want to clear the pre-populated `Herr Admin` to play through the
-flow on every restart, comment out the `addUser("admin", ...)` line in
-`UserStorage` (or call `UserStorage.enableBootstrapMode()` programmatically
-— `BootstrapWiring` already does this when the mode is non-`DISABLED`).
+If you want to clear the pre-populated admin to play through the flow
+on every restart, the bootstrap wiring already does that for you when
+the mode is non-`DISABLED`: `BootstrapWiring.build()` calls
+`DemoUserDirectory.enableBootstrapMode()` which removes any
+admin-tagged entries from the in-memory user directory before the
+first navigation event.
+
+### 4. Vaadin `/setup` against a REST backend (`demo-vaadin-rest-client`)
+
+The second Vaadin demo treats the REST server as the authoritative
+source. The flow is identical from the user's perspective, but
+internally the form submits via `DemoBackendClient.createInitialAdmin(...)`
+which calls `POST http://localhost:8080/api/bootstrap/admin`.
+
+```bash
+# Terminal 1 — backend (TRANSIENT_CONSOLE prints the token to its console)
+mvn -pl :demo-rest exec:java
+
+# Terminal 2 — Vaadin frontend
+mvn -pl :demo-vaadin-rest-client jetty:run
+# Browser: http://localhost:9090/
+```
+
+`http://localhost:9090/` redirects to `/setup` because
+`backend.bootstrapStatus()` reports `bootstrapRequired = true`. Paste
+the token from the backend console and submit. Upon `Created`, the
+UI navigates to `/login`.
+
+This wiring is documented in detail in
+[`demo-vaadin-rest-client.md`](demo-vaadin-rest-client.md).
 
 ---
 

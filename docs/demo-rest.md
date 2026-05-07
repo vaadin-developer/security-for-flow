@@ -11,6 +11,18 @@ password handling, and the user store are intentionally simple. Real systems
 must replace these with hashed credentials, signed tokens, expiry/refresh,
 and a proper authentication backend.
 
+> **Related demos**: For the in-JVM Vaadin equivalent see
+> [`demo-vaadin.md`](demo-vaadin.md). For a Vaadin UI that talks to
+> *this* server over HTTP see
+> [`demo-vaadin-rest-client.md`](demo-vaadin-rest-client.md). The
+> three demos cover the same security model from three angles
+> (no UI / Vaadin in-JVM / Vaadin against REST).
+
+> Transport-level constants (`DemoEndpoints`) and the tiny JSON
+> helper (`DemoJson`) live in the dedicated `demo-rest-shared` module
+> so server and client code can share them without dragging in the
+> server's domain classes.
+
 ---
 
 ## Module layout
@@ -42,10 +54,13 @@ demo-rest/
 │   ├── DemoUser, DemoUserStore   hashed-password store
 │   └── DemoDocument, DemoDocumentStore
 │
-└── shared/
-    ├── DemoEndpoints
-    └── DemoJson                  tiny JDK-only JSON encoder/parser
 ```
+
+`DemoEndpoints` and `DemoJson` are not in this module — they live in
+`demo-rest-shared` (the small transport-level module shared with the
+Vaadin REST client demo). `demo-rest` depends on `demo-rest-shared`
+and re-uses them transparently.
+
 
 Generic logic — bearer extraction, authentication filter, operation
 registry, bootstrap configuration loading — lives in `security-core` /
