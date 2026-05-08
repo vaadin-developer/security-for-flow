@@ -68,6 +68,37 @@ class SubjectStoresTest {
   }
 
   @Test
+  @DisplayName("findSubjectStore returns the configured store when one is set")
+  void findSubjectStore_returnsConfigured() {
+    InMemorySubjectStore store = new InMemorySubjectStore();
+    SubjectStores.setSubjectStore(store);
+
+    var found = SubjectStores.findSubjectStore();
+    assertTrue(found.isPresent());
+    assertSame(store, found.get());
+  }
+
+  @Test
+  @DisplayName("subjectStore returns the same cached instance on repeated calls")
+  void subjectStore_returnsCachedInstance() {
+    InMemorySubjectStore store = new InMemorySubjectStore();
+    SubjectStores.setSubjectStore(store);
+
+    assertSame(store, SubjectStores.subjectStore());
+    assertSame(store, SubjectStores.subjectStore());
+  }
+
+  @Test
+  @DisplayName("setSubjectStore(null) restores the unconfigured behaviour")
+  void setNull_restoresUnconfigured() {
+    SubjectStores.setSubjectStore(new InMemorySubjectStore());
+    SubjectStores.setSubjectStore(null);
+
+    assertTrue(SubjectStores.findSubjectStore().isEmpty());
+    assertThrows(IllegalStateException.class, SubjectStores::subjectStore);
+  }
+
+  @Test
   @DisplayName("multiple SubjectStore implementations fail explicitly")
   void multipleSubjectStores_throwWithMessage() {
     var ex = assertThrows(IllegalStateException.class,

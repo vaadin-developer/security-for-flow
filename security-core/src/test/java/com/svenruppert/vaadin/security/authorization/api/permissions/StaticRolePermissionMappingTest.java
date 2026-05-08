@@ -61,4 +61,51 @@ class StaticRolePermissionMappingTest {
   void emptyRoles() {
     assertTrue(RolePermissionResolver.permissionsForRoles(Set.of(), mapping).isEmpty());
   }
+
+  @Test
+  @DisplayName("Builder.put(RoleName, Set) is fluent and registers the role")
+  void builderRoleNameOverloadIsFluent() {
+    RoleName admin = new RoleName("ROLE_ADMIN");
+    PermissionName p = new PermissionName("doc:read");
+
+    StaticRolePermissionMapping.Builder builder = StaticRolePermissionMapping.builder();
+    StaticRolePermissionMapping.Builder same = builder.put(admin, Set.of(p));
+
+    assertSame(builder, same, "builder.put must return the same builder for chaining");
+    assertEquals(Set.of(p), same.build().permissionsFor(admin));
+  }
+
+  @Test
+  @DisplayName("Builder.put(String, String...) is fluent and registers the role")
+  void builderStringOverloadIsFluent() {
+    StaticRolePermissionMapping.Builder builder = StaticRolePermissionMapping.builder();
+    StaticRolePermissionMapping.Builder same = builder.put("ROLE_X", "p:1", "p:2");
+
+    assertSame(builder, same);
+    Set<PermissionName> perms = same.build().permissionsFor(new RoleName("ROLE_X"));
+    assertEquals(2, perms.size());
+    assertTrue(perms.contains(new PermissionName("p:1")));
+    assertTrue(perms.contains(new PermissionName("p:2")));
+  }
+
+  @Test
+  @DisplayName("permissionsFor returned set is unmodifiable")
+  void returnedPermissionSetIsUnmodifiable() {
+    Set<PermissionName> perms = mapping.permissionsFor(new RoleName("ROLE_ADMIN"));
+    assertThrows(UnsupportedOperationException.class,
+        () -> perms.add(new PermissionName("evil:permission")));
+  }
+
+  @Test
+  @DisplayName("constructor copies its argument map (mutating the source after build is harmless)")
+  void constructorCopiesMap() {
+    java.util.Map<RoleName, Set<PermissionName>> source = new java.util.HashMap<>();
+    source.put(new RoleName("ROLE_X"), Set.of(new PermissionName("p:1")));
+    StaticRolePermissionMapping m = new StaticRolePermissionMapping(source);
+
+    source.put(new RoleName("ROLE_Y"), Set.of(new PermissionName("p:2")));
+
+    assertTrue(m.permissionsFor(new RoleName("ROLE_Y")).isEmpty(),
+        "later changes to the source map must not leak into the mapping");
+  }
 }

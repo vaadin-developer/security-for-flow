@@ -71,6 +71,26 @@ class AccessDecisionTest {
   }
 
   @Test
+  @DisplayName("reroute(target) returns a non-forward Reroute")
+  void rerouteFactory() {
+    var decision = AccessDecision.reroute("login");
+    assertInstanceOf(AccessDecision.Reroute.class, decision);
+    var r = (AccessDecision.Reroute) decision;
+    assertEquals("login", r.target());
+    assertFalse(r.asForward());
+  }
+
+  @Test
+  @DisplayName("forward(target) returns a forward Reroute")
+  void forwardFactory() {
+    var decision = AccessDecision.forward("setup");
+    assertInstanceOf(AccessDecision.Reroute.class, decision);
+    var r = (AccessDecision.Reroute) decision;
+    assertEquals("setup", r.target());
+    assertTrue(r.asForward());
+  }
+
+  @Test
   @DisplayName("switch expression covers all cases")
   void switchCoverage() {
     var decisions = new AccessDecision[]{

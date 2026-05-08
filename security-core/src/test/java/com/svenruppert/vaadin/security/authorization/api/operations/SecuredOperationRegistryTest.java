@@ -40,6 +40,12 @@ class SecuredOperationRegistryTest {
         Set.of(), perms, Map.of());
   }
 
+  private SecuredOperationDescriptor opWithRole(String id, RoleName r) {
+    return new SecuredOperationDescriptor(
+        id, "Op " + id, "", "rest-endpoint", "/op/" + id, "do",
+        Set.of(r), Set.of(), Map.of());
+  }
+
   @Test
   @DisplayName("register/findById round-trips")
   void registerFind() {
@@ -93,5 +99,104 @@ class SecuredOperationRegistryTest {
 
     SecuritySubject anon = new SecuritySubject("u", "Any", Set.of(), Set.of());
     assertEquals(1, service.visibleFor(anon).size());
+  }
+
+  @Test
+  @DisplayName("isEmpty true on a fresh registry, false after register")
+  void registryIsEmpty() {
+    SecuredOperationRegistry registry = new SecuredOperationRegistry();
+    assertTrue(registry.isEmpty());
+    registry.register(op("read", Set.of(read)));
+    assertFalse(registry.isEmpty());
+  }
+
+  @Test
+  @DisplayName("snapshot reflects registered descriptors and is independent of further registrations")
+  void snapshotIsIndependent() {
+    SecuredOperationRegistry registry = new SecuredOperationRegistry();
+    registry.register(op("read", Set.of(read)));
+    Map<String, SecuredOperationDescriptor> snap1 = registry.snapshot();
+    assertEquals(1, snap1.size());
+    assertTrue(snap1.containsKey("read"));
+
+    registry.register(op("delete", Set.of(del)));
+    assertEquals(1, snap1.size(), "earlier snapshot must not see later registrations");
+    assertEquals(2, registry.snapshot().size());
+  }
+
+  @Test
+  @DisplayName("snapshot is unmodifiable")
+  void snapshotIsUnmodifiable() {
+    SecuredOperationRegistry registry = new SecuredOperationRegistry();
+    registry.register(op("read", Set.of(read)));
+    Map<String, SecuredOperationDescriptor> snap = registry.snapshot();
+    assertThrows(UnsupportedOperationException.class,
+        () -> snap.put("delete", op("delete", Set.of(del))));
+  }
+
+  @Test
+  @DisplayName("operation requiring a role the subject lacks is filtered out")
+  void requiredRoleMissingFiltersOut() {
+    SecuredOperationRegistry registry = new SecuredOperationRegistry();
+    registry.register(opWithRole("admin-only", new RoleName("ROLE_ADMIN")));
+    OperationVisibilityService service = new OperationVisibilityService(registry);
+
+    SecuritySubject viewer = new SecuritySubject("u", "Viewer",
+        Set.of(new RoleName("ROLE_VIEWER")), Set.of());
+    assertTrue(service.visibleFor(viewer).isEmpty());
+  }
+
+  @Test
+  @DisplayName("operation requiring a role the subject has is visible")
+  void requiredRolePresentVisible() {
+    SecuredOperationRegistry registry = new SecuredOperationRegistry();
+    RoleName admin = new RoleName("ROLE_ADMIN");
+    registry.register(opWithRole("admin-only", admin));
+    OperationVisibilityService service = new OperationVisibilityService(registry);
+
+    SecuritySubject adminSubject = new SecuritySubject("u", "Admin",
+        Set.of(admin), Set.of());
+    assertEquals(1, service.visibleFor(adminSubject).size());
+  }
+
+  @Test
+  @DisplayName("isAuthenticatedOnly is true only when both required sets are empty")
+  void isAuthenticatedOnlySemantics() {
+    PermissionName p = new PermissionName("doc:read");
+    RoleName r = new RoleName("ROLE_X");
+
+    SecuredOperationDescriptor noGates = new SecuredOperationDescriptor(
+        "a", "A", "", "rest", "/a", "do", Set.of(), Set.of(), Map.of());
+    SecuredOperationDescriptor onlyRole = new SecuredOperationDescriptor(
+        "b", "B", "", "rest", "/b", "do", Set.of(r), Set.of(), Map.of());
+    SecuredOperationDescriptor onlyPerm = new SecuredOperationDescriptor(
+        "c", "C", "", "rest", "/c", "do", Set.of(), Set.of(p), Map.of());
+    SecuredOperationDescriptor both = new SecuredOperationDescriptor(
+        "d", "D", "", "rest", "/d", "do", Set.of(r), Set.of(p), Map.of());
+
+    assertTrue(noGates.isAuthenticatedOnly());
+    assertFalse(onlyRole.isAuthenticatedOnly());
+    assertFalse(onlyPerm.isAuthenticatedOnly());
+    assertFalse(both.isAuthenticatedOnly());
+  }
+
+  @Test
+  @DisplayName("descriptor constructor rejects blank id/label/resourceType/resourceName/operation")
+  void descriptorRejectsBlanks() {
+    assertThrows(IllegalArgumentException.class,
+        () -> new SecuredOperationDescriptor(" ", "L", "", "rt", "rn", "op",
+            Set.of(), Set.of(), Map.of()));
+    assertThrows(IllegalArgumentException.class,
+        () -> new SecuredOperationDescriptor("id", "", "", "rt", "rn", "op",
+            Set.of(), Set.of(), Map.of()));
+    assertThrows(IllegalArgumentException.class,
+        () -> new SecuredOperationDescriptor("id", "L", "", " ", "rn", "op",
+            Set.of(), Set.of(), Map.of()));
+    assertThrows(IllegalArgumentException.class,
+        () -> new SecuredOperationDescriptor("id", "L", "", "rt", "", "op",
+            Set.of(), Set.of(), Map.of()));
+    assertThrows(IllegalArgumentException.class,
+        () -> new SecuredOperationDescriptor("id", "L", "", "rt", "rn", null,
+            Set.of(), Set.of(), Map.of()));
   }
 }

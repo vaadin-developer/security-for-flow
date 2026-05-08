@@ -63,4 +63,34 @@ class PermissionGuardTest {
         () -> PermissionGuard.requireRole(withoutPerm, role));
     assertDoesNotThrow(() -> PermissionGuard.requireRole(withPermAndRole, role));
   }
+
+  @Test
+  @DisplayName("hasRole returns false for null subject or null role")
+  void hasRoleNullArguments() {
+    assertFalse(PermissionGuard.hasRole(null, role));
+    assertFalse(PermissionGuard.hasRole(withPermAndRole, null));
+    assertFalse(PermissionGuard.hasRole(null, null));
+  }
+
+  @Test
+  @DisplayName("requireRole rejects null role argument up-front")
+  void requireRoleRejectsNullRole() {
+    assertThrows(NullPointerException.class,
+        () -> PermissionGuard.requireRole(withPermAndRole, null));
+  }
+
+  @Test
+  @DisplayName("requireRole error message carries the role name")
+  void requireRoleErrorMessage() {
+    AccessDeniedException ex = assertThrows(AccessDeniedException.class,
+        () -> PermissionGuard.requireRole(withoutPerm, role));
+    assertTrue(ex.getMessage().contains(role.value()));
+  }
+
+  @Test
+  @DisplayName("requirePermission rejects null permission argument up-front")
+  void requirePermissionRejectsNullPermission() {
+    assertThrows(NullPointerException.class,
+        () -> PermissionGuard.requirePermission(withPermAndRole, null));
+  }
 }

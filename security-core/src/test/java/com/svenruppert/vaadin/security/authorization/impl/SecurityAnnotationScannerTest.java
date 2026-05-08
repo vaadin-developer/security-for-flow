@@ -86,6 +86,15 @@ class SecurityAnnotationScannerTest {
         () -> scanner.scan(DualAnnotatedView.class));
   }
 
+  @Test
+  @DisplayName("non-security annotations alongside the restriction are filtered out")
+  void filtersNonSecurityAnnotations() {
+    var result = scanner.scan(MixedAnnotatedView.class);
+    assertTrue(result.isPresent(),
+        "@Deprecated alongside @StubRestriction must not bump the security count past 1");
+    assertInstanceOf(StubRestriction.class, result.get().annotation());
+  }
+
   // ── Test fixtures ─────────────────────────────────────────────
 
   @Retention(RetentionPolicy.RUNTIME)
@@ -115,6 +124,12 @@ class SecurityAnnotationScannerTest {
   @StubRestriction
   @AnotherRestriction
   static class DualAnnotatedView {
+  }
+
+  @SuppressWarnings("DeprecatedIsStillUsed")
+  @StubRestriction
+  @Deprecated
+  static class MixedAnnotatedView {
   }
 
   static class ProtectedHandler {

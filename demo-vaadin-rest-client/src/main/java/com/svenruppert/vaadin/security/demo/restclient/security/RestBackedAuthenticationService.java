@@ -38,8 +38,8 @@ public class RestBackedAuthenticationService
   public boolean checkCredentials(Credentials credentials) {
     if (credentials == null) return false;
     LoginResult result = BackendClientProvider.client().login(credentials);
-    if (result instanceof LoginResult.Authenticated ok) {
-      ClientSecurityContext.setActiveLogin(ok.token(), ok.user());
+    if (result instanceof LoginResult.Authenticated(String token, RemoteUser user)) {
+      ClientSecurityContext.setActiveLogin(token, user);
       return true;
     }
     return false;

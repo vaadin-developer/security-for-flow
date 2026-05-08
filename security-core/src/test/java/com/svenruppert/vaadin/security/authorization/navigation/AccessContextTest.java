@@ -83,4 +83,70 @@ class AccessContextTest {
     assertEquals("", context.path());
     assertEquals(AccessContextTest.class, context.target());
   }
+
+  @Test
+  @DisplayName("compatibility constructor accepts a null attributes map")
+  void compatibilityConstructorAcceptsNullAttributes() {
+    AccessContext context = new AccessContext("p", AccessContextTest.class, null);
+
+    assertEquals("p", context.path());
+    assertEquals(AccessContextTest.class, context.target());
+    assertEquals("p", context.attributes().get("path"));
+    assertEquals(AccessContextTest.class, context.attributes().get("target"));
+  }
+
+  @Test
+  @DisplayName("compatibility constructor preserves caller-supplied attributes")
+  void compatibilityConstructorPreservesAttributes() {
+    Map<String, Object> caller = new LinkedHashMap<>();
+    caller.put("phase", "navigate");
+    caller.put("custom", 42);
+    AccessContext context = new AccessContext("p", AccessContextTest.class, caller);
+
+    assertEquals("navigate", context.attributes().get("phase"));
+    assertEquals(42, context.attributes().get("custom"));
+    assertEquals("p", context.attributes().get("path"));
+    assertEquals(AccessContextTest.class, context.attributes().get("target"));
+  }
+
+  @Test
+  @DisplayName("compatibility constructor rejects null path")
+  void compatibilityConstructorRejectsNullPath() {
+    assertThrows(NullPointerException.class,
+        () -> new AccessContext(null, AccessContextTest.class, Map.of()));
+  }
+
+  @Test
+  @DisplayName("compatibility constructor rejects null target")
+  void compatibilityConstructorRejectsNullTarget() {
+    assertThrows(NullPointerException.class,
+        () -> new AccessContext("p", null, Map.of()));
+  }
+
+  @Test
+  @DisplayName("path() falls back to resourceName when no 'path' attribute is set")
+  void pathFallsBackToResourceName() {
+    AccessContext context = new AccessContext(
+        Optional.empty(), "rest-endpoint", "/api", "read", Map.of());
+
+    assertEquals("/api", context.path());
+  }
+
+  @Test
+  @DisplayName("target() returns null when no 'target' attribute is set")
+  void targetIsNullWhenAbsent() {
+    AccessContext context = new AccessContext(
+        Optional.empty(), "rest-endpoint", "/api", "read", Map.of());
+
+    assertNull(context.target());
+  }
+
+  @Test
+  @DisplayName("a null subject is normalized to Optional.empty()")
+  void nullSubjectNormalized() {
+    AccessContext context = new AccessContext(
+        null, "rest-endpoint", "/api", "read", Map.of());
+
+    assertEquals(Optional.empty(), context.subject());
+  }
 }

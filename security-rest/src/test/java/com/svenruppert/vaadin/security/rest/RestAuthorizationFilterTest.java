@@ -91,6 +91,53 @@ class RestAuthorizationFilterTest {
     assertTrue(executed.get());
   }
 
+  @Test
+  @DisplayName("element without security annotation: handler runs without resolving a subject")
+  void unannotatedElement_invokesHandlerDirectly() throws NoSuchMethodException {
+    RecordingResponse response = new RecordingResponse();
+    AtomicBoolean executed = new AtomicBoolean();
+    AtomicBoolean resolverCalled = new AtomicBoolean();
+    RestAuthorizationFilter filter = new RestAuthorizationFilter(request -> {
+      resolverCalled.set(true);
+      return Optional.empty();
+    });
+
+    Method unsecured = HandlerFixture.class.getDeclaredMethod("open");
+    filter.authorizeAndHandle(
+        request(),
+        response,
+        (request, restResponse) -> {
+          executed.set(true);
+          restResponse.status(200);
+        },
+        unsecured);
+
+    assertTrue(executed.get(), "handler must run when element has no security annotation");
+    assertEquals(200, response.status);
+    assertFalse(resolverCalled.get(),
+        "no subject resolution should happen when element is unsecured");
+  }
+
+  @Test
+  @DisplayName("six-arg overload forwards null attributes to the access context")
+  void nullAttributesAreAccepted() throws NoSuchMethodException {
+    RecordingResponse response = new RecordingResponse();
+    AtomicBoolean executed = new AtomicBoolean();
+    RestAuthorizationFilter filter = new RestAuthorizationFilter(
+        request -> Optional.of(subject(Set.of(new PermissionName("document:delete")))));
+
+    filter.authorizeAndHandle(
+        request(),
+        response,
+        (request, restResponse) -> executed.set(true),
+        securedMethod(),
+        "delete",
+        null);
+
+    assertTrue(executed.get());
+    assertEquals(200, response.status);
+  }
+
   private static Method securedMethod() throws NoSuchMethodException {
     return HandlerFixture.class.getDeclaredMethod("delete");
   }
@@ -106,6 +153,9 @@ class RestAuthorizationFilterTest {
   static final class HandlerFixture {
     @RequiresPermission("document:delete")
     void delete() {
+    }
+
+    void open() {
     }
   }
 

@@ -77,4 +77,46 @@ class RestHeadersAndBearerTest {
   void emptyToken() {
     assertTrue(extractor.extract(req(Map.of("Authorization", "Bearer    "))).isEmpty());
   }
+
+  @Test
+  @DisplayName("RestHeaders.first returns empty when the directly-keyed value is blank")
+  void blankDirectMatchReturnsEmpty() {
+    Optional<String> result = RestHeaders.first(
+        req(Map.of("Authorization", "   ")), "Authorization");
+
+    assertTrue(result.isEmpty(),
+        "a blank value on a direct key match must NOT be returned");
+  }
+
+  @Test
+  @DisplayName("RestHeaders.first scans case-insensitively when no direct match exists")
+  void caseInsensitiveFallthroughFindsHeader() {
+    Optional<String> result = RestHeaders.first(
+        req(Map.of("AUTHORIZATION", "Bearer x")), "Authorization");
+
+    assertEquals("Bearer x", result.orElseThrow());
+  }
+
+  @Test
+  @DisplayName("RestHeaders.first ignores blank values during the case-insensitive scan")
+  void caseInsensitiveScanIgnoresBlank() {
+    Optional<String> result = RestHeaders.first(
+        req(Map.of("AUTHORIZATION", "   ")), "Authorization");
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  @DisplayName("RestHeaders.first returns empty for null request or null name")
+  void nullArguments() {
+    assertTrue(RestHeaders.first(null, "Authorization").isEmpty());
+    assertTrue(RestHeaders.first(req(Map.of("Authorization", "Bearer x")), null).isEmpty());
+  }
+
+  @Test
+  @DisplayName("RestHeaders.first returns empty when no header matches at all")
+  void noMatch() {
+    assertTrue(RestHeaders.first(
+        req(Map.of("Content-Type", "application/json")), "Authorization").isEmpty());
+  }
 }

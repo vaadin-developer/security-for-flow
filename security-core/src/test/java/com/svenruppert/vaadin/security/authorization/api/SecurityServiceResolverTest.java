@@ -106,6 +106,53 @@ class SecurityServiceResolverTest {
         SecurityServiceResolver::authenticationService);
   }
 
+  @Test
+  @DisplayName("resetAll also clears the SubjectStore cache")
+  void resetAll_clearsSubjectStore() {
+    SubjectStores.setSubjectStore(new InMemorySubjectStore());
+    assertTrue(SubjectStores.findSubjectStore().isPresent(),
+        "precondition: subject store cached");
+
+    SecurityServiceResolver.resetAll();
+
+    assertTrue(SubjectStores.findSubjectStore().isEmpty(),
+        "resetAll() must reset SubjectStores too");
+  }
+
+  @Test
+  @DisplayName("findSingleService returns the only registered service")
+  void findSingleService_singleEntry() {
+    FirstAuthenticationService only = new FirstAuthenticationService();
+
+    var found = SecurityServiceResolver.findSingleService(
+        AuthenticationService.class,
+        java.util.List.of(only));
+
+    assertTrue(found.isPresent());
+    assertSame(only, found.get());
+  }
+
+  @Test
+  @DisplayName("findSingleService returns empty for an empty service iterable")
+  void findSingleService_empty() {
+    var found = SecurityServiceResolver.findSingleService(
+        AuthenticationService.class, java.util.List.of());
+
+    assertTrue(found.isEmpty());
+  }
+
+  @Test
+  @DisplayName("requireSingleService returns the only registered service")
+  void requireSingleService_singleEntry() {
+    FirstAuthenticationService only = new FirstAuthenticationService();
+
+    AuthenticationService<?, ?> resolved = SecurityServiceResolver.requireSingleService(
+        AuthenticationService.class,
+        java.util.List.of(only));
+
+    assertSame(only, resolved);
+  }
+
   static class FirstAuthenticationService implements AuthenticationService<String, String> {
     @Override
     public boolean checkCredentials(String credentials) {
