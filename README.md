@@ -129,7 +129,7 @@ For a Vaadin Flow application:
 <dependency>
   <groupId>com.svenruppert</groupId>
   <artifactId>security-vaadin</artifactId>
-  <version>00.50.01-SNAPSHOT</version>
+  <version>00.51.00</version>
 </dependency>
 ```
 
@@ -139,7 +139,7 @@ For a REST handler / servlet application:
 <dependency>
   <groupId>com.svenruppert</groupId>
   <artifactId>security-rest</artifactId>
-  <version>00.50.01-SNAPSHOT</version>
+  <version>00.51.00</version>
 </dependency>
 ```
 

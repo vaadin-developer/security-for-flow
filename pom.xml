@@ -24,7 +24,7 @@
     </parent>
 
     <artifactId>security-for-flow-parent</artifactId>
-    <version>00.50.01-SNAPSHOT</version>
+    <version>00.51.00</version>
     <packaging>pom</packaging>
 
     <name>Security for Vaadin</name>
@@ -196,6 +196,20 @@
         <defaultGoal>jetty:run</defaultGoal>
         <!--        <finalName>${warName}-${project.version}</finalName>-->
         <plugins>
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <excludeArtifacts>
+                        <excludeArtifact>demo-rest-shared</excludeArtifact>
+                        <excludeArtifact>demo-rest</excludeArtifact>
+                        <excludeArtifact>demo-vaadin</excludeArtifact>
+                        <excludeArtifact>demo-vaadin-rest-client</excludeArtifact>
+                    </excludeArtifacts>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
