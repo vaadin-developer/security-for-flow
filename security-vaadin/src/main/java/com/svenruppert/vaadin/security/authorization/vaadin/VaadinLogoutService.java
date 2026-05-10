@@ -16,9 +16,13 @@
  */
 package com.svenruppert.vaadin.security.authorization.vaadin;
 
+import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
+import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
+import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.api.LogoutContext;
 import com.svenruppert.vaadin.security.authorization.api.LogoutPolicy;
 import com.svenruppert.vaadin.security.authorization.api.LogoutService;
+import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
 
 import java.util.Objects;
@@ -49,18 +53,36 @@ public final class VaadinLogoutService<U> implements LogoutService {
   private final SubjectStore subjectStore;
   private final Class<U> subjectType;
   private final VaadinLogoutGateway gateway;
+  private final SecurityAuditService auditService;
 
   public VaadinLogoutService(SubjectStore subjectStore, Class<U> subjectType) {
-    this(subjectStore, subjectType, new DefaultVaadinLogoutGateway());
+    this(subjectStore, subjectType, new DefaultVaadinLogoutGateway(), null);
   }
 
   public VaadinLogoutService(
       SubjectStore subjectStore,
       Class<U> subjectType,
       VaadinLogoutGateway gateway) {
+    this(subjectStore, subjectType, gateway, null);
+  }
+
+  /**
+   * @param subjectStore subject store to clear
+   * @param subjectType  subject type token
+   * @param gateway      Vaadin-side gateway for session/redirect calls
+   * @param auditService audit sink, or {@code null} to resolve from
+   *                     {@link SecurityServiceResolver#securityAuditService()}
+   *                     at logout time
+   */
+  public VaadinLogoutService(
+      SubjectStore subjectStore,
+      Class<U> subjectType,
+      VaadinLogoutGateway gateway,
+      SecurityAuditService auditService) {
     this.subjectStore = Objects.requireNonNull(subjectStore, "subjectStore");
     this.subjectType = Objects.requireNonNull(subjectType, "subjectType");
     this.gateway = Objects.requireNonNull(gateway, "gateway");
+    this.auditService = auditService;
   }
 
   @Override
@@ -68,11 +90,46 @@ public final class VaadinLogoutService<U> implements LogoutService {
     Objects.requireNonNull(context, "context");
     LogoutPolicy policy = context.policy();
 
+    auditLogout(context, policy);
+
     subjectStore.deleteCurrentSubject(subjectType);
     gateway.redirectTo(policy.targetRoute());
 
-    if (policy.clearSubjectOnly()) return;
-    if (policy.invalidateHttpSession()) gateway.invalidateHttpSession();
-    if (policy.closeVaadinSession()) gateway.closeVaadinSession();
+    if (policy.clearSubjectOnly()) {
+      return;
+    }
+    if (policy.invalidateHttpSession()) {
+      gateway.invalidateHttpSession();
+    }
+    if (policy.closeVaadinSession()) {
+      gateway.closeVaadinSession();
+    }
+  }
+
+  private void auditLogout(LogoutContext context, LogoutPolicy policy) {
+    SecurityAuditService sink = auditService != null
+        ? auditService
+        : SecurityServiceResolver.securityAuditService();
+    try {
+      sink.record(SecurityAuditEvent.builder(SecurityAuditEventType.LOGOUT)
+          .route(policy.targetRoute())
+          .decision(policy.clearSubjectOnly() ? "CLEAR_SUBJECT" : "INVALIDATE_SESSION")
+          .attribute("closeVaadinSession", String.valueOf(policy.closeVaadinSession()))
+          .attribute("invalidateHttpSession", String.valueOf(policy.invalidateHttpSession()))
+          .attributes(context.attributes() == null ? null : toStringMap(context.attributes()))
+          .build());
+    } catch (RuntimeException auditFailure) {
+      // never block a logout because the audit sink failed
+    }
+  }
+
+  private static java.util.Map<String, String> toStringMap(java.util.Map<String, Object> in) {
+    java.util.Map<String, String> out = new java.util.LinkedHashMap<>();
+    in.forEach((k, v) -> {
+      if (v != null) {
+        out.put(k, v.toString());
+      }
+    });
+    return out;
   }
 }

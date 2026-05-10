@@ -16,8 +16,12 @@
  */
 package com.svenruppert.vaadin.security.rest;
 
+import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
+import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
+import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationEvaluator;
+import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
 import com.svenruppert.vaadin.security.authorization.impl.SecurityAnnotationScanner;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
@@ -36,6 +40,7 @@ public final class RestAuthorizationFilter {
   private final SecurityAnnotationScanner scanner;
   private final RestAccessContextFactory contextFactory;
   private final HttpStatusDecisionMapper decisionMapper;
+  private final SecurityAuditService auditService;
 
   /**
    * Creates a REST authorization filter.
@@ -47,7 +52,8 @@ public final class RestAuthorizationFilter {
         subjectResolver,
         new SecurityAnnotationScanner(),
         new RestAccessContextFactory(),
-        new HttpStatusDecisionMapper());
+        new HttpStatusDecisionMapper(),
+        null);
   }
 
   RestAuthorizationFilter(
@@ -55,10 +61,20 @@ public final class RestAuthorizationFilter {
       SecurityAnnotationScanner scanner,
       RestAccessContextFactory contextFactory,
       HttpStatusDecisionMapper decisionMapper) {
+    this(subjectResolver, scanner, contextFactory, decisionMapper, null);
+  }
+
+  RestAuthorizationFilter(
+      RestSubjectResolver subjectResolver,
+      SecurityAnnotationScanner scanner,
+      RestAccessContextFactory contextFactory,
+      HttpStatusDecisionMapper decisionMapper,
+      SecurityAuditService auditService) {
     this.subjectResolver = subjectResolver;
     this.scanner = scanner;
     this.contextFactory = contextFactory;
     this.decisionMapper = decisionMapper;
+    this.auditService = auditService;
   }
 
   /**
@@ -109,8 +125,50 @@ public final class RestAuthorizationFilter {
     Optional<SecuritySubject> subject = subjectResolver.resolveSubject(request);
     AccessContext context = contextFactory.create(request, subject, operation, attributes);
     AuthorizationDecision decision = evaluate(pair.get().evaluatorClass(), context, pair.get().annotation());
+    audit(decision, context, subject);
     if (decisionMapper.apply(decision, response)) {
       handler.handle(request, response);
+    }
+  }
+
+  private void audit(AuthorizationDecision decision,
+                     AccessContext context,
+                     Optional<SecuritySubject> subject) {
+    SecurityAuditService sink = auditService != null
+        ? auditService
+        : SecurityServiceResolver.securityAuditService();
+
+    SecurityAuditEventType type;
+    String decisionLabel;
+    String reason = null;
+    switch (decision) {
+      case AuthorizationDecision.Granted ignored -> {
+        type = SecurityAuditEventType.ACCESS_GRANTED;
+        decisionLabel = "GRANTED";
+      }
+      case AuthorizationDecision.Unauthenticated unauth -> {
+        type = SecurityAuditEventType.ACCESS_DENIED;
+        decisionLabel = "UNAUTHENTICATED";
+        reason = unauth.reason();
+      }
+      case AuthorizationDecision.Forbidden forbidden -> {
+        type = SecurityAuditEventType.ACCESS_DENIED;
+        decisionLabel = "FORBIDDEN";
+        reason = forbidden.reason();
+      }
+    }
+
+    try {
+      sink.record(SecurityAuditEvent.builder(type)
+          .route(context.resourceName())
+          .decision(decisionLabel)
+          .subjectId(subject.map(SecuritySubject::subjectId).orElse(null))
+          .username(subject.map(SecuritySubject::displayName).orElse(null))
+          .attribute("operation", context.operation())
+          .attribute("reason", reason)
+          .build());
+    } catch (RuntimeException auditFailure) {
+      // never block authorization because the audit sink failed
     }
   }
 

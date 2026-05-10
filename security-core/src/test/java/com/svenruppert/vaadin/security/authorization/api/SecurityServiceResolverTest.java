@@ -16,9 +16,18 @@
  */
 package com.svenruppert.vaadin.security.authorization.api;
 
+import com.svenruppert.vaadin.security.action.ActionAuthorizationService;
+import com.svenruppert.vaadin.security.action.ActionPermission;
+import com.svenruppert.vaadin.security.audit.NoopSecurityAuditService;
+import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
+import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
+import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -181,5 +190,106 @@ class SecurityServiceResolverTest {
   }
 
   static final class SecondAuthorizationService extends FirstAuthorizationService {
+  }
+
+  // ── SecurityAuditService ─────────────────────────────────────
+
+  @Test
+  @DisplayName("securityAuditService falls back to NoopSecurityAuditService when no SPI is registered")
+  void auditService_defaultsToNoop() {
+    SecurityAuditService service = SecurityServiceResolver.securityAuditService();
+    assertSame(NoopSecurityAuditService.INSTANCE, service);
+  }
+
+  @Test
+  @DisplayName("findSecurityAuditService returns empty when no SPI is registered")
+  void findAuditService_emptyByDefault() {
+    assertTrue(SecurityServiceResolver.findSecurityAuditService().isEmpty());
+  }
+
+  @Test
+  @DisplayName("setSecurityAuditService overrides the cached service for both accessors")
+  void setSecurityAuditService_overrides() {
+    RecordingAuditService recorder = new RecordingAuditService();
+    SecurityServiceResolver.setSecurityAuditService(recorder);
+
+    assertSame(recorder, SecurityServiceResolver.securityAuditService());
+    assertSame(recorder, SecurityServiceResolver.findSecurityAuditService().orElseThrow());
+  }
+
+  @Test
+  @DisplayName("recorded events flow through the configured audit service")
+  void recordedEventsAreCaptured() {
+    RecordingAuditService recorder = new RecordingAuditService();
+    SecurityServiceResolver.setSecurityAuditService(recorder);
+
+    SecurityServiceResolver.securityAuditService()
+        .record(SecurityAuditEvent.of(SecurityAuditEventType.LOGIN_SUCCESS));
+
+    assertEquals(1, recorder.events.size());
+    assertSame(SecurityAuditEventType.LOGIN_SUCCESS, recorder.events.get(0).type());
+  }
+
+  @Test
+  @DisplayName("resetAll clears the audit-service cache")
+  void resetAll_clearsAuditService() {
+    SecurityServiceResolver.setSecurityAuditService(new RecordingAuditService());
+
+    SecurityServiceResolver.resetAll();
+
+    assertSame(NoopSecurityAuditService.INSTANCE,
+        SecurityServiceResolver.securityAuditService());
+  }
+
+  static final class RecordingAuditService implements SecurityAuditService {
+    final List<SecurityAuditEvent> events = new ArrayList<>();
+
+    @Override
+    public void record(SecurityAuditEvent event) {
+      events.add(event);
+    }
+  }
+
+  // ── ActionAuthorizationService ───────────────────────────────
+
+  @Test
+  @DisplayName("actionAuthorizationService throws when no SPI is registered")
+  void actionAuthorizationService_missing_throws() {
+    assertThrows(IllegalStateException.class,
+        SecurityServiceResolver::actionAuthorizationService);
+  }
+
+  @Test
+  @DisplayName("findActionAuthorizationService returns empty when no SPI is registered")
+  void findActionAuthorizationService_emptyByDefault() {
+    assertTrue(SecurityServiceResolver.findActionAuthorizationService().isEmpty());
+  }
+
+  @Test
+  @DisplayName("setActionAuthorizationService overrides the cached service for both accessors")
+  void setActionAuthorizationService_overrides() {
+    AlwaysDeny<String> svc = new AlwaysDeny<>();
+    SecurityServiceResolver.setActionAuthorizationService(svc);
+
+    assertSame(svc, SecurityServiceResolver.<String>actionAuthorizationService());
+    assertSame(svc, SecurityServiceResolver.<String>findActionAuthorizationService().orElseThrow());
+  }
+
+  @Test
+  @DisplayName("resetAll clears the action-authorization-service cache")
+  void resetAll_clearsActionAuthService() {
+    SecurityServiceResolver.setActionAuthorizationService(new AlwaysDeny<>());
+
+    SecurityServiceResolver.resetAll();
+
+    assertThrows(IllegalStateException.class,
+        SecurityServiceResolver::actionAuthorizationService);
+  }
+
+  static final class AlwaysDeny<U> implements ActionAuthorizationService<U> {
+    @Override
+    public boolean isAllowed(U subject, ActionPermission permission) {
+      return false;
+    }
   }
 }

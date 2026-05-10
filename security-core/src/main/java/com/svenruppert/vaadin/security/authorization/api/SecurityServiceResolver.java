@@ -16,6 +16,10 @@
  */
 package com.svenruppert.vaadin.security.authorization.api;
 
+import com.svenruppert.vaadin.security.action.ActionAuthorizationService;
+import com.svenruppert.vaadin.security.audit.NoopSecurityAuditService;
+import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+
 import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.concurrent.atomic.AtomicReference;
@@ -48,6 +52,11 @@ public final class SecurityServiceResolver {
       new AtomicReference<>();
   private static final AtomicReference<AuthorizationService<?>> AUTHORIZATION_SERVICE_REF =
       new AtomicReference<>();
+  private static final AtomicReference<SecurityAuditService> AUDIT_SERVICE_REF =
+      new AtomicReference<>();
+  private static final AtomicReference<ActionAuthorizationService<?>> ACTION_AUTH_SERVICE_REF =
+      new AtomicReference<>();
+
   private SecurityServiceResolver() {
   }
 
@@ -141,6 +150,124 @@ public final class SecurityServiceResolver {
     return Optional.ofNullable((AuthorizationService<U>) AUTHORIZATION_SERVICE_REF.get());
   }
 
+  // ── SecurityAuditService ───────────────────────────────────────
+
+  /**
+   * Returns the registered {@link SecurityAuditService}, or
+   * {@link NoopSecurityAuditService#INSTANCE} if no SPI implementation is
+   * registered. Unlike {@link #authenticationService()} and
+   * {@link #authorizationService()}, this method <strong>never</strong>
+   * throws — auditing is optional infrastructure and the framework must
+   * not refuse to operate when no sink is configured.
+   *
+   * @return the resolved audit service, never {@code null}
+   */
+  public static SecurityAuditService securityAuditService() {
+    SecurityAuditService cached = AUDIT_SERVICE_REF.get();
+    if (cached != null) {
+      return cached;
+    }
+
+    SecurityAuditService loaded = findSingleService(
+        SecurityAuditService.class,
+        ServiceLoader.load(SecurityAuditService.class))
+        .orElse(NoopSecurityAuditService.INSTANCE);
+
+    AUDIT_SERVICE_REF.compareAndSet(null, loaded);
+    return AUDIT_SERVICE_REF.get();
+  }
+
+  /**
+   * Returns the registered {@link SecurityAuditService}, or empty if
+   * the SPI is unconfigured. Use {@link #securityAuditService()} to
+   * obtain the noop fallback instead.
+   *
+   * @return the SPI-registered service, or empty
+   */
+  public static Optional<SecurityAuditService> findSecurityAuditService() {
+    SecurityAuditService cached = AUDIT_SERVICE_REF.get();
+    if (cached != null && cached != NoopSecurityAuditService.INSTANCE) {
+      return Optional.of(cached);
+    }
+    if (cached == NoopSecurityAuditService.INSTANCE) {
+      return Optional.empty();
+    }
+
+    Optional<SecurityAuditService> loaded = findSingleService(
+        SecurityAuditService.class,
+        ServiceLoader.load(SecurityAuditService.class));
+    loaded.ifPresent(service -> AUDIT_SERVICE_REF.compareAndSet(null, service));
+    return loaded;
+  }
+
+  /**
+   * Replaces the cached {@link SecurityAuditService}. Intended for tests
+   * and for applications that prefer programmatic wiring over SPI.
+   *
+   * @param service the audit service, or {@code null} to clear
+   */
+  public static void setSecurityAuditService(SecurityAuditService service) {
+    AUDIT_SERVICE_REF.set(service);
+  }
+
+  // ── ActionAuthorizationService ─────────────────────────────────
+
+  /**
+   * Returns the registered {@link ActionAuthorizationService}.
+   *
+   * @param <U> the subject type
+   * @return the resolved service
+   * @throws IllegalStateException if no implementation is registered
+   *                               or programmatically configured
+   */
+  @SuppressWarnings("unchecked")
+  public static <U> ActionAuthorizationService<U> actionAuthorizationService() {
+    ActionAuthorizationService<?> cached = ACTION_AUTH_SERVICE_REF.get();
+    if (cached != null) {
+      return (ActionAuthorizationService<U>) cached;
+    }
+
+    ActionAuthorizationService<U> loaded =
+        (ActionAuthorizationService<U>) requireSingleService(
+            ActionAuthorizationService.class,
+            ServiceLoader.load(ActionAuthorizationService.class));
+
+    ACTION_AUTH_SERVICE_REF.compareAndSet(null, loaded);
+    return (ActionAuthorizationService<U>) ACTION_AUTH_SERVICE_REF.get();
+  }
+
+  /**
+   * Returns the registered {@link ActionAuthorizationService}, or empty
+   * if none is configured.
+   *
+   * @param <U> the subject type
+   * @return the service, or empty
+   */
+  @SuppressWarnings("unchecked")
+  public static <U> Optional<ActionAuthorizationService<U>> findActionAuthorizationService() {
+    ActionAuthorizationService<?> cached = ACTION_AUTH_SERVICE_REF.get();
+    if (cached != null) {
+      return Optional.of((ActionAuthorizationService<U>) cached);
+    }
+
+    Optional<ActionAuthorizationService> loaded = findSingleService(
+        ActionAuthorizationService.class,
+        ServiceLoader.load(ActionAuthorizationService.class));
+    loaded.ifPresent(service -> ACTION_AUTH_SERVICE_REF.compareAndSet(null, service));
+    return Optional.ofNullable((ActionAuthorizationService<U>) ACTION_AUTH_SERVICE_REF.get());
+  }
+
+  /**
+   * Replaces the cached {@link ActionAuthorizationService}. Intended for
+   * tests and for applications that prefer programmatic wiring over SPI.
+   *
+   * @param service the action authorization service, or {@code null} to clear
+   * @param <U>     subject type
+   */
+  public static <U> void setActionAuthorizationService(ActionAuthorizationService<U> service) {
+    ACTION_AUTH_SERVICE_REF.set(service);
+  }
+
   // ── Reset (for testing) ────────────────────────────────────────
 
   /**
@@ -151,6 +278,8 @@ public final class SecurityServiceResolver {
   public static void resetAll() {
     AUTHENTICATION_SERVICE_REF.set(null);
     AUTHORIZATION_SERVICE_REF.set(null);
+    AUDIT_SERVICE_REF.set(null);
+    ACTION_AUTH_SERVICE_REF.set(null);
     SubjectStores.reset();
   }
 

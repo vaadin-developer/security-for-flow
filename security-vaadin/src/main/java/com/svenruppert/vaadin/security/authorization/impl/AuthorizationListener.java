@@ -17,9 +17,14 @@
 package com.svenruppert.vaadin.security.authorization.impl;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
+import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
+import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
+import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.api.AccessEvaluator;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationEvaluator;
+import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessDecision;
 import com.vaadin.flow.component.UI;
@@ -101,9 +106,39 @@ public class AuthorizationListener
       AccessContext context = contextFactory.create(event);
       AccessDecision decision = evaluate(evaluator, context, annotation);
 
-      // 3. Apply the decision to the Vaadin event
+      // 3. Audit the decision
+      audit(decision, context);
+
+      // 4. Apply the decision to the Vaadin event
       decisionMapper.apply(decision, event);
     });
+  }
+
+  private void audit(AccessDecision decision, AccessContext context) {
+    SecurityAuditEventType type = decision instanceof AccessDecision.Granted
+        ? SecurityAuditEventType.ACCESS_GRANTED
+        : SecurityAuditEventType.ACCESS_DENIED;
+
+    String decisionLabel = switch (decision) {
+      case AccessDecision.Granted ignored -> "GRANTED";
+      case AccessDecision.Reroute reroute -> "REROUTE_" + reroute.target();
+      case AccessDecision.RerouteToError err -> "ERROR_" + err.type().getSimpleName();
+      case AccessDecision.RerouteWithParameter<?> r -> "REROUTE_PARAM_" + r.target();
+      case AccessDecision.RerouteWithParameters<?> r -> "REROUTE_PARAMS_" + r.target();
+    };
+
+    SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
+    try {
+      sink.record(SecurityAuditEvent.builder(type)
+          .route(context.resourceName())
+          .decision(decisionLabel)
+          .subjectId(context.subject().map(SecuritySubject::subjectId).orElse(null))
+          .username(context.subject().map(SecuritySubject::displayName).orElse(null))
+          .attribute("operation", context.operation())
+          .build());
+    } catch (RuntimeException auditFailure) {
+      // never block navigation because the audit sink failed
+    }
   }
 
   @SuppressWarnings("unchecked")

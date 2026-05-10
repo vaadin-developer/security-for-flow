@@ -24,6 +24,8 @@ import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * PBKDF2-HMAC-SHA256 hasher using only JDK APIs. Encoded format:
@@ -35,6 +37,13 @@ public final class Pbkdf2PasswordHasher implements PasswordHasher {
   private static final int DEFAULT_ITERATIONS = 120_000;
   private static final int SALT_BYTES = 16;
   private static final int HASH_BITS = 256;
+
+  /** Algorithm identifier exposed by {@link PasswordHash#algorithm()}. */
+  public static final String ALGORITHM_ID = "pbkdf2";
+  /** Parameter key — iteration count. */
+  public static final String PARAM_ITERATIONS = "iterations";
+  /** Parameter key — base64-encoded salt. */
+  public static final String PARAM_SALT = "salt";
 
   private final int iterations;
   private final SecureRandom random;
@@ -77,6 +86,64 @@ public final class Pbkdf2PasswordHasher implements PasswordHasher {
     }
     byte[] candidate = derive(rawPassword, salt, storedIterations);
     return MessageDigest.isEqual(candidate, expected);
+  }
+
+  @Override
+  public PasswordHash parse(String storedHash) {
+    if (storedHash == null) {
+      throw new IllegalArgumentException("storedHash must not be null");
+    }
+    String[] parts = storedHash.split("\\$");
+    if (parts.length != 4 || !ALGORITHM_ID.equals(parts[0])) {
+      throw new IllegalArgumentException("Not a pbkdf2 hash");
+    }
+    try {
+      int iterations = Integer.parseInt(parts[1]);
+      Map<String, String> params = new LinkedHashMap<>();
+      params.put(PARAM_ITERATIONS, Integer.toString(iterations));
+      params.put(PARAM_SALT, parts[2]);
+      return new PasswordHash(ALGORITHM_ID, parts[3], params);
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Malformed iteration count", e);
+    }
+  }
+
+  @Override
+  public String serialize(PasswordHash hash) {
+    if (hash == null) {
+      throw new IllegalArgumentException("hash must not be null");
+    }
+    if (!ALGORITHM_ID.equals(hash.algorithm())) {
+      throw new IllegalArgumentException("Unexpected algorithm: " + hash.algorithm());
+    }
+    int iterations = hash.intParameter(PARAM_ITERATIONS, -1);
+    if (iterations <= 0) {
+      throw new IllegalArgumentException("Missing/invalid iterations parameter");
+    }
+    String salt = hash.parameters().get(PARAM_SALT);
+    if (salt == null || salt.isBlank()) {
+      throw new IllegalArgumentException("Missing salt parameter");
+    }
+    return ALGORITHM_ID + "$" + iterations + "$" + salt + "$" + hash.encoded();
+  }
+
+  /**
+   * @return {@code true} when {@code storedHash} is a pbkdf2 hash whose
+   *         iteration count differs from this hasher's current
+   *         {@code iterations}, or when its algorithm is not pbkdf2 at
+   *         all (in which case re-hashing migrates the user to the
+   *         current scheme on the next successful login).
+   */
+  @Override
+  public boolean needsRehash(PasswordHash storedHash) {
+    if (storedHash == null) {
+      return false;
+    }
+    if (!ALGORITHM_ID.equals(storedHash.algorithm())) {
+      return true;
+    }
+    int storedIterations = storedHash.intParameter(PARAM_ITERATIONS, -1);
+    return storedIterations != iterations;
   }
 
   private static byte[] derive(char[] password, byte[] salt, int iterations) {

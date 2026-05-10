@@ -16,12 +16,17 @@
  */
 package com.svenruppert.vaadin.security.authorization.vaadin;
 
+import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
+import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
+import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.api.LogoutContext;
 import com.svenruppert.vaadin.security.authorization.api.LogoutPolicy;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -72,6 +77,73 @@ class VaadinLogoutServiceTest {
     assertEquals(0, gateway.closedVaadin);
   }
 
+  @Test
+  @DisplayName("logout records a LOGOUT audit event with policy attributes")
+  void logout_emitsAuditEvent() {
+    RecordingSubjectStore store = new RecordingSubjectStore();
+    RecordingGateway gateway = new RecordingGateway();
+    RecordingAuditService audit = new RecordingAuditService();
+
+    new VaadinLogoutService<>(store, String.class, gateway, audit)
+        .logout(LogoutContext.of(LogoutPolicy.fullInvalidate("/bye")));
+
+    assertEquals(1, audit.events.size());
+    SecurityAuditEvent event = audit.events.get(0);
+    assertSame(SecurityAuditEventType.LOGOUT, event.type());
+    assertEquals("/bye", event.route());
+    assertEquals("INVALIDATE_SESSION", event.decision());
+    assertEquals("true", event.attributes().get("closeVaadinSession"));
+    assertEquals("true", event.attributes().get("invalidateHttpSession"));
+  }
+
+  @Test
+  @DisplayName("clearSubjectOnly logout decision is recorded as CLEAR_SUBJECT")
+  void logout_clearSubjectOnlyDecision() {
+    RecordingSubjectStore store = new RecordingSubjectStore();
+    RecordingGateway gateway = new RecordingGateway();
+    RecordingAuditService audit = new RecordingAuditService();
+
+    new VaadinLogoutService<>(store, String.class, gateway, audit)
+        .logout(LogoutContext.of(LogoutPolicy.clearSubjectOnly("/login")));
+
+    assertEquals("CLEAR_SUBJECT", audit.events.get(0).decision());
+    assertEquals("false", audit.events.get(0).attributes().get("closeVaadinSession"));
+    assertEquals("false", audit.events.get(0).attributes().get("invalidateHttpSession"));
+  }
+
+  @Test
+  @DisplayName("audit event is fired before subject removal so the subject id is still available downstream")
+  void logout_auditFiresFirst() {
+    RecordingSubjectStore store = new RecordingSubjectStore();
+    RecordingGateway gateway = new RecordingGateway();
+    RecordingAuditService audit = new RecordingAuditService();
+    audit.beforeRecord = () -> assertNull(store.deletedFor,
+        "audit must fire before the subject is dropped");
+
+    new VaadinLogoutService<>(store, String.class, gateway, audit)
+        .logout(LogoutContext.of(LogoutPolicy.fullInvalidate("/login")));
+
+    assertEquals(String.class, store.deletedFor);
+    assertEquals(1, audit.events.size());
+  }
+
+  @Test
+  @DisplayName("audit-sink failure must not break the logout flow")
+  void logout_auditFailureIsSwallowed() {
+    RecordingSubjectStore store = new RecordingSubjectStore();
+    RecordingGateway gateway = new RecordingGateway();
+    SecurityAuditService throwingAudit = event -> {
+      throw new RuntimeException("audit boom");
+    };
+
+    new VaadinLogoutService<>(store, String.class, gateway, throwingAudit)
+        .logout(LogoutContext.of(LogoutPolicy.fullInvalidate("/login")));
+
+    assertEquals(String.class, store.deletedFor);
+    assertEquals(1, gateway.closedVaadin);
+    assertEquals(1, gateway.invalidatedHttp);
+  }
+
   // ── Test fixtures ─────────────────────────────────────────────
 
   static final class RecordingSubjectStore implements SubjectStore {
@@ -79,6 +151,19 @@ class VaadinLogoutServiceTest {
     @Override public <T> Optional<T> currentSubject(Class<T> subjectType) { return Optional.empty(); }
     @Override public <T> void setCurrentSubject(T subject, Class<T> subjectType) { }
     @Override public <T> void deleteCurrentSubject(Class<T> subjectType) { deletedFor = subjectType; }
+  }
+
+  static final class RecordingAuditService implements SecurityAuditService {
+    final List<SecurityAuditEvent> events = new ArrayList<>();
+    Runnable beforeRecord;
+
+    @Override
+    public void record(SecurityAuditEvent event) {
+      if (beforeRecord != null) {
+        beforeRecord.run();
+      }
+      events.add(event);
+    }
   }
 
   static final class RecordingGateway implements VaadinLogoutGateway {
