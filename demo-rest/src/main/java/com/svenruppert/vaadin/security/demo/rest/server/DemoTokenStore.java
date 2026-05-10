@@ -19,6 +19,8 @@ package com.svenruppert.vaadin.security.demo.rest.server;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUser;
 
 import java.security.SecureRandom;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.HexFormat;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,26 +31,93 @@ import java.util.concurrent.ConcurrentMap;
  * <p>
  * Production systems must use cryptographically signed tokens with expiry,
  * refresh, and revocation policies.
+ *
+ * <h2>Per-token lifetime metadata</h2>
+ *
+ * <p>Each issued token also carries a {@link Metadata} record:
+ * <ul>
+ *   <li>{@code createdAt} — set once on {@link #issue(DemoUser)}.</li>
+ *   <li>{@code lastActivityAt} — bumped on {@link #markActivity(String)}
+ *       to drive {@code SessionPolicy.evaluate(SessionMetadata)} idle
+ *       timeouts.</li>
+ * </ul>
+ *
+ * <p>The store doesn't enforce expiry by itself — the framework's
+ * {@code SessionPolicy} does. The store only serves the timestamps.
  */
 public final class DemoTokenStore {
 
-  private final ConcurrentMap<String, DemoUser> tokens = new ConcurrentHashMap<>();
+  /** Per-token user + lifetime metadata. */
+  public record Metadata(DemoUser user, Instant createdAt, Instant lastActivityAt) {
+  }
+
+  private final ConcurrentMap<String, Metadata> tokens = new ConcurrentHashMap<>();
   private final SecureRandom random = new SecureRandom();
+  private final Clock clock;
+
+  /** Default — uses {@link Clock#systemUTC()}. */
+  public DemoTokenStore() {
+    this(Clock.systemUTC());
+  }
+
+  /** Test seam: inject a fixed clock. */
+  public DemoTokenStore(Clock clock) {
+    this.clock = clock;
+  }
 
   public String issue(DemoUser user) {
     byte[] bytes = new byte[16];
     random.nextBytes(bytes);
     String token = HexFormat.of().formatHex(bytes);
-    tokens.put(token, user);
+    Instant now = Instant.now(clock);
+    tokens.put(token, new Metadata(user, now, now));
     return token;
   }
 
   public Optional<DemoUser> resolve(String token) {
-    if (token == null || token.isBlank()) return Optional.empty();
+    if (token == null || token.isBlank()) {
+      return Optional.empty();
+    }
+    Metadata metadata = tokens.get(token);
+    return metadata == null ? Optional.empty() : Optional.of(metadata.user());
+  }
+
+  /**
+   * Returns the token's {@link Metadata}, or empty if the token is unknown.
+   * Used by the REST adapter to build {@code SessionMetadata} for
+   * {@code SessionPolicy.evaluate(...)}.
+   */
+  public Optional<Metadata> resolveMetadata(String token) {
+    if (token == null || token.isBlank()) {
+      return Optional.empty();
+    }
     return Optional.ofNullable(tokens.get(token));
   }
 
+  /**
+   * Bumps the {@code lastActivityAt} of a known token to "now" on the
+   * configured clock. No-op for unknown tokens. Returns the previous
+   * timestamp (or {@link Optional#empty()} if the token wasn't there
+   * before) so callers can build {@code SessionMetadata} that reflects
+   * the activity *before* this request — the policy's idle check
+   * compares the previous activity against the current time.
+   */
+  public Optional<Instant> markActivity(String token) {
+    if (token == null || token.isBlank()) {
+      return Optional.empty();
+    }
+    Instant now = Instant.now(clock);
+    final Instant[] previous = new Instant[1];
+    Metadata updated = tokens.computeIfPresent(token, (k, current) -> {
+      previous[0] = current.lastActivityAt();
+      return new Metadata(current.user(), current.createdAt(), now);
+    });
+    return updated == null ? Optional.empty() : Optional.ofNullable(previous[0]);
+  }
+
   public void revoke(String token) {
-    if (token != null) tokens.remove(token);
+    if (token != null) {
+      tokens.remove(token);
+    }
   }
 }

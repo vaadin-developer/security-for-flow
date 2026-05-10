@@ -25,6 +25,9 @@ import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver
 import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
 import com.svenruppert.vaadin.security.authorization.impl.SecurityAnnotationScanner;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
+import com.svenruppert.vaadin.security.session.SessionMetadata;
+import com.svenruppert.vaadin.security.session.SessionPolicy;
+import com.svenruppert.vaadin.security.session.SessionPolicyDecision;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -123,11 +126,48 @@ public final class RestAuthorizationFilter {
     }
 
     Optional<SecuritySubject> subject = subjectResolver.resolveSubject(request);
+
+    if (subject.isPresent()) {
+      Optional<SessionMetadata> metadata = subjectResolver.resolveSessionMetadata(request);
+      if (metadata.isPresent()) {
+        SessionPolicy<Object> policy = SecurityServiceResolver.sessionPolicy();
+        SessionPolicyDecision sessionDecision = policy.evaluate(metadata.get());
+        if (!(sessionDecision instanceof SessionPolicyDecision.Active)) {
+          auditSessionExpired(metadata.get(), subject.get(), sessionDecision);
+          response.status(401);
+          response.body("Unauthorized");
+          return;
+        }
+      }
+    }
+
     AccessContext context = contextFactory.create(request, subject, operation, attributes);
     AuthorizationDecision decision = evaluate(pair.get().evaluatorClass(), context, pair.get().annotation());
     audit(decision, context, subject);
     if (decisionMapper.apply(decision, response)) {
       handler.handle(request, response);
+    }
+  }
+
+  private void auditSessionExpired(SessionMetadata metadata,
+                                   SecuritySubject subject,
+                                   SessionPolicyDecision decision) {
+    String label = switch (decision) {
+      case SessionPolicyDecision.Active ignored -> "ACTIVE";
+      case SessionPolicyDecision.IdleTimeout ignored -> "IDLE_TIMEOUT";
+      case SessionPolicyDecision.AbsoluteLifetimeExceeded ignored -> "ABSOLUTE_LIFETIME";
+    };
+    SecurityAuditService sink = auditService != null
+        ? auditService
+        : SecurityServiceResolver.securityAuditService();
+    try {
+      sink.record(SecurityAuditEvent.builder(SecurityAuditEventType.SESSION_EXPIRED)
+          .subjectId(metadata.subjectId())
+          .username(subject == null ? null : subject.displayName())
+          .decision(label)
+          .build());
+    } catch (RuntimeException auditFailure) {
+      // never block the filter because the audit sink failed
     }
   }
 

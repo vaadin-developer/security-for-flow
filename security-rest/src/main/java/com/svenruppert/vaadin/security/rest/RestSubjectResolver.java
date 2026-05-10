@@ -17,6 +17,7 @@
 package com.svenruppert.vaadin.security.rest;
 
 import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.session.SessionMetadata;
 
 import java.util.Optional;
 
@@ -33,4 +34,22 @@ public interface RestSubjectResolver {
    * @return subject, or empty if no subject is authenticated
    */
   Optional<SecuritySubject> resolveSubject(RestRequest request);
+
+  /**
+   * Resolves session metadata for the current request.
+   * <p>
+   * The default returns {@link Optional#empty()} so existing
+   * implementations keep working. Implementations that want the
+   * REST filters to enforce idle / absolute lifetime via
+   * {@code SessionPolicy.evaluate(SessionMetadata)} should override
+   * this and return a populated record built from their token
+   * store's metadata (creation timestamp, last-activity timestamp).
+   *
+   * @param request request
+   * @return metadata for the current request, or empty when the
+   *         resolver doesn't track session lifetime
+   */
+  default Optional<SessionMetadata> resolveSessionMetadata(RestRequest request) {
+    return Optional.empty();
+  }
 }

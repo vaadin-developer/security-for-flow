@@ -24,6 +24,7 @@ import com.svenruppert.vaadin.security.demo.rest.domain.DemoUser;
 import com.svenruppert.vaadin.security.rest.BearerTokenExtractor;
 import com.svenruppert.vaadin.security.rest.RestRequest;
 import com.svenruppert.vaadin.security.rest.RestSubjectResolver;
+import com.svenruppert.vaadin.security.session.SessionMetadata;
 
 import java.util.Optional;
 import java.util.Set;
@@ -32,6 +33,14 @@ import java.util.Set;
  * Demo {@link RestSubjectResolver} that resolves a {@code Bearer} token from
  * the {@code Authorization} header (parsed via {@link BearerTokenExtractor})
  * and looks it up in {@link DemoTokenStore}.
+ * <p>
+ * Also implements {@link #resolveSessionMetadata(RestRequest)}: builds a
+ * {@link SessionMetadata} from the token's {@link DemoTokenStore.Metadata}
+ * and reports the {@code lastActivityAt} as it stood <em>before</em> the
+ * current request, so the {@code SessionPolicy.evaluate(...)} idle check
+ * sees the actual idle gap. After exposing the metadata the resolver
+ * bumps {@code lastActivityAt} to "now" so the next request observes the
+ * updated value.
  */
 public final class DemoSubjectResolver implements RestSubjectResolver {
 
@@ -48,6 +57,27 @@ public final class DemoSubjectResolver implements RestSubjectResolver {
   @Override
   public Optional<SecuritySubject> resolveSubject(RestRequest request) {
     return extractToken(request).flatMap(tokens::resolve).map(this::toSubject);
+  }
+
+  @Override
+  public Optional<SessionMetadata> resolveSessionMetadata(RestRequest request) {
+    Optional<String> token = extractToken(request);
+    if (token.isEmpty()) {
+      return Optional.empty();
+    }
+    Optional<DemoTokenStore.Metadata> metadata = tokens.resolveMetadata(token.get());
+    if (metadata.isEmpty()) {
+      return Optional.empty();
+    }
+    DemoTokenStore.Metadata m = metadata.get();
+    SessionMetadata snapshot = new SessionMetadata(
+        m.user().username(), m.createdAt(), m.lastActivityAt());
+    // Bump lastActivity so the *next* request observes the updated value.
+    // Using the snapshot above means the current request still sees the
+    // gap from the previous activity — that's the value the policy needs
+    // to detect an idle timeout.
+    tokens.markActivity(token.get());
+    return Optional.of(snapshot);
   }
 
   static Optional<String> extractToken(RestRequest request) {

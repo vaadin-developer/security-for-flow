@@ -81,4 +81,32 @@ public interface SessionPolicy<U> {
   default void onLogout(SessionContext<U> context) {
     // intentionally empty
   }
+
+  /**
+   * Pure-query lifetime check used by the Vaadin {@code SessionLifetimeListener}
+   * and the REST authentication / authorization filters.
+   * <p>
+   * Distinct from {@link #beforeNavigation(SessionContext)} in two ways:
+   * <ul>
+   *   <li>Input is the minimal {@link SessionMetadata} record — {@code subjectId},
+   *       {@code createdAt}, {@code lastActivityAt}. No subject reference, no
+   *       attribute bag, no client address.</li>
+   *   <li>Output is the minimal {@link SessionPolicyDecision} sealed type
+   *       — {@link SessionPolicyDecision.Active Active},
+   *       {@link SessionPolicyDecision.IdleTimeout IdleTimeout}, or
+   *       {@link SessionPolicyDecision.AbsoluteLifetimeExceeded AbsoluteLifetimeExceeded}.
+   *       The adapter decides what to do with each (Vaadin reroute, REST 401,
+   *       …).</li>
+   * </ul>
+   *
+   * <p>The default returns {@link SessionPolicyDecision#active()} so policies
+   * that only care about the lifecycle hooks remain valid. Implementations
+   * with timeout logic — {@code TimeoutSessionPolicy} — override this method.
+   *
+   * @param metadata current session view
+   * @return decision; never {@code null}
+   */
+  default SessionPolicyDecision evaluate(SessionMetadata metadata) {
+    return SessionPolicyDecision.active();
+  }
 }

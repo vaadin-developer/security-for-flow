@@ -1,2 +1,3 @@
 com.svenruppert.vaadin.security.ApplicationServiceInitListener
 com.svenruppert.vaadin.security.authorization.impl.AuthorizationListener
+com.svenruppert.vaadin.security.session.vaadin.SessionLifetimeListener

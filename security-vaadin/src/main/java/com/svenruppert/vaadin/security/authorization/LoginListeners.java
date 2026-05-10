@@ -74,6 +74,17 @@ public final class LoginListeners {
   }
 
   /**
+   * Replaces the cached {@link LoginListener}. Intended for tests and
+   * for applications that prefer programmatic wiring over SPI.
+   *
+   * @param listener the listener, or {@code null} to clear
+   * @param <U>      subject type
+   */
+  public static <U> void setLoginListener(LoginListener<U> listener) {
+    LOGIN_LISTENER_REF.set(listener);
+  }
+
+  /**
    * Clears cached listener.
    */
   public static void reset() {

@@ -16,12 +16,25 @@
  */
 package com.svenruppert.vaadin.security.rest;
 
+import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
+import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
+import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.session.SessionMetadata;
+import com.svenruppert.vaadin.security.session.SessionPolicy;
+import com.svenruppert.vaadin.security.session.SessionPolicyDecision;
+
+import java.util.Optional;
+
 /**
  * Authenticated-only REST filter for endpoints that require any subject but
  * no specific permission.
  * <p>
  * Returns {@code 401} with body {@code Unauthorized} when no subject is
- * resolved; delegates to the handler otherwise. Generic and side-effect-free.
+ * resolved or when the resolved session has exceeded its idle / absolute
+ * lifetime per the configured {@link SessionPolicy}; delegates to the
+ * handler otherwise. Generic and side-effect-free.
  */
 public final class RestAuthenticationFilter {
 
@@ -32,11 +45,43 @@ public final class RestAuthenticationFilter {
   }
 
   public void requireAuthenticated(RestRequest request, RestResponse response, RestHandler handler) {
-    if (subjectResolver.resolveSubject(request).isEmpty()) {
+    Optional<SecuritySubject> subject = subjectResolver.resolveSubject(request);
+    if (subject.isEmpty()) {
       response.status(401);
       response.body("Unauthorized");
       return;
     }
+    Optional<SessionMetadata> metadata = subjectResolver.resolveSessionMetadata(request);
+    if (metadata.isPresent()) {
+      SessionPolicy<Object> policy = SecurityServiceResolver.sessionPolicy();
+      SessionPolicyDecision decision = policy.evaluate(metadata.get());
+      if (!(decision instanceof SessionPolicyDecision.Active)) {
+        auditExpired(metadata.get(), subject.orElse(null), decision);
+        response.status(401);
+        response.body("Unauthorized");
+        return;
+      }
+    }
     handler.handle(request, response);
+  }
+
+  private static void auditExpired(SessionMetadata metadata,
+                                   SecuritySubject subject,
+                                   SessionPolicyDecision decision) {
+    String label = switch (decision) {
+      case SessionPolicyDecision.Active ignored -> "ACTIVE";
+      case SessionPolicyDecision.IdleTimeout ignored -> "IDLE_TIMEOUT";
+      case SessionPolicyDecision.AbsoluteLifetimeExceeded ignored -> "ABSOLUTE_LIFETIME";
+    };
+    SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
+    try {
+      sink.record(SecurityAuditEvent.builder(SecurityAuditEventType.SESSION_EXPIRED)
+          .subjectId(metadata.subjectId())
+          .username(subject == null ? null : subject.displayName())
+          .decision(label)
+          .build());
+    } catch (RuntimeException auditFailure) {
+      // never block the filter because the audit sink failed
+    }
   }
 }

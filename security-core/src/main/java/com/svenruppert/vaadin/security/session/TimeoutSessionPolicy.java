@@ -129,6 +129,40 @@ public final class TimeoutSessionPolicy<U> implements SessionPolicy<U> {
     return SessionDecision.Continue.INSTANCE;
   }
 
+  /**
+   * Pure-query lifetime check called by the Vaadin
+   * {@code SessionLifetimeListener} and by the REST filters.
+   * <p>
+   * Returns {@link SessionPolicyDecision.AbsoluteLifetimeExceeded} first
+   * when both bounds are tripped — the absolute lifetime trumps the
+   * idle timeout, mirroring the precedence in
+   * {@link #beforeNavigation(SessionContext)}.
+   * <p>
+   * Audit emit-sites are deliberately not duplicated here:
+   * {@link #beforeNavigation(SessionContext)} is the audit boundary,
+   * since the lifecycle hooks carry the richer
+   * {@link SessionContext#subject() subject} and
+   * {@link SessionContext#sessionId() sessionId}. The Vaadin / REST
+   * adapter that calls {@code evaluate(...)} is expected to emit the
+   * audit event itself when it acts on the decision.
+   *
+   * @param metadata current session view
+   * @return decision; never {@code null}
+   */
+  @Override
+  public SessionPolicyDecision evaluate(SessionMetadata metadata) {
+    Objects.requireNonNull(metadata, "metadata");
+    Instant now = Instant.now(clock);
+
+    if (now.isAfter(metadata.createdAt().plus(config.absoluteLifetime()))) {
+      return SessionPolicyDecision.absoluteLifetimeExceeded();
+    }
+    if (now.isAfter(metadata.lastActivityAt().plus(config.idleTimeout()))) {
+      return SessionPolicyDecision.idleTimeout();
+    }
+    return SessionPolicyDecision.active();
+  }
+
   @Override
   public void onLogout(SessionContext<U> context) {
     audit(context, SecurityAuditEventType.SESSION_INVALIDATED, "LOGOUT");

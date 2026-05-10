@@ -228,6 +228,95 @@ class TimeoutSessionPolicyTest {
     noop.onLogout(context);
   }
 
+  // ── evaluate(SessionMetadata) ────────────────────────────────
+
+  @Test
+  @DisplayName("evaluate returns Active when neither bound has tripped")
+  void evaluateActive() {
+    Instant t0 = Instant.parse("2026-05-08T10:00:00Z");
+    TimeoutSessionPolicy<String> policy = new TimeoutSessionPolicy<>(
+        CONFIG, Clock.fixed(t0.plus(Duration.ofMinutes(5)), ZoneOffset.UTC), null);
+
+    SessionPolicyDecision decision = policy.evaluate(
+        new SessionMetadata("alice", t0, t0.plus(Duration.ofMinutes(4))));
+
+    assertSame(SessionPolicyDecision.Active.INSTANCE, decision);
+  }
+
+  @Test
+  @DisplayName("evaluate returns IdleTimeout when only the idle bound has tripped")
+  void evaluateIdleTimeout() {
+    Instant t0 = Instant.parse("2026-05-08T10:00:00Z");
+    Instant lastActivity = t0.plusSeconds(60);
+    Instant now = lastActivity.plus(CONFIG.idleTimeout()).plusSeconds(1);
+
+    TimeoutSessionPolicy<String> policy = new TimeoutSessionPolicy<>(
+        CONFIG, Clock.fixed(now, ZoneOffset.UTC), null);
+
+    SessionPolicyDecision decision = policy.evaluate(
+        new SessionMetadata("alice", t0, lastActivity));
+
+    assertSame(SessionPolicyDecision.IdleTimeout.INSTANCE, decision);
+  }
+
+  @Test
+  @DisplayName("evaluate returns AbsoluteLifetimeExceeded when the absolute bound trumps idle")
+  void evaluateAbsoluteLifetimeWins() {
+    Instant t0 = Instant.parse("2026-05-08T10:00:00Z");
+    Instant now = t0.plus(CONFIG.absoluteLifetime()).plusSeconds(1);
+
+    TimeoutSessionPolicy<String> policy = new TimeoutSessionPolicy<>(
+        CONFIG, Clock.fixed(now, ZoneOffset.UTC), null);
+
+    // last activity is "now" — fine for idle alone, but absolute has expired
+    SessionPolicyDecision decision = policy.evaluate(
+        new SessionMetadata("alice", t0, now));
+
+    assertSame(SessionPolicyDecision.AbsoluteLifetimeExceeded.INSTANCE, decision);
+  }
+
+  @Test
+  @DisplayName("evaluate does not emit audit events (audit is the lifecycle hook's job)")
+  void evaluateDoesNotEmitAudit() {
+    Instant t0 = Instant.parse("2026-05-08T10:00:00Z");
+    Instant now = t0.plus(CONFIG.absoluteLifetime()).plusSeconds(1);
+    RecordingAudit audit = new RecordingAudit();
+
+    TimeoutSessionPolicy<String> policy = new TimeoutSessionPolicy<>(
+        CONFIG, Clock.fixed(now, ZoneOffset.UTC), audit);
+
+    policy.evaluate(new SessionMetadata("alice", t0, t0));
+
+    assertSame(0, audit.events.size());
+  }
+
+  @Test
+  @DisplayName("evaluate rejects null metadata")
+  void evaluateRejectsNull() {
+    Instant t0 = Instant.parse("2026-05-08T10:00:00Z");
+    TimeoutSessionPolicy<String> policy = new TimeoutSessionPolicy<>(
+        CONFIG, Clock.fixed(t0, ZoneOffset.UTC), null);
+
+    assertThrows(NullPointerException.class, () -> policy.evaluate(null));
+  }
+
+  @Test
+  @DisplayName("Default SessionPolicy.evaluate returns Active for any metadata")
+  void defaultEvaluateActive() {
+    SessionPolicy<String> defaultPolicy = new SessionPolicy<>() {
+      @Override
+      public SessionDecision beforeNavigation(SessionContext<String> context) {
+        return SessionDecision.Continue.INSTANCE;
+      }
+    };
+
+    Instant t0 = Instant.parse("2026-05-08T10:00:00Z");
+    SessionPolicyDecision decision = defaultPolicy.evaluate(
+        new SessionMetadata("alice", t0, t0));
+
+    assertSame(SessionPolicyDecision.Active.INSTANCE, decision);
+  }
+
   // ── Test fixtures ────────────────────────────────────────────
 
   static final class RecordingAudit implements SecurityAuditService {
