@@ -22,6 +22,14 @@ import com.svenruppert.vaadin.security.audit.NoopSecurityAuditService;
 import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
 import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
+import com.svenruppert.vaadin.security.bruteforce.NoopLoginAttemptPolicy;
+import com.svenruppert.vaadin.security.session.NoopSessionPolicy;
+import com.svenruppert.vaadin.security.session.SessionContext;
+import com.svenruppert.vaadin.security.session.SessionDecision;
+import com.svenruppert.vaadin.security.session.SessionPolicy;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -290,6 +298,100 @@ class SecurityServiceResolverTest {
     @Override
     public boolean isAllowed(U subject, ActionPermission permission) {
       return false;
+    }
+  }
+
+  // ── LoginAttemptPolicy ────────────────────────────────────────
+
+  @Test
+  @DisplayName("loginAttemptPolicy falls back to NoopLoginAttemptPolicy when no SPI is registered")
+  void loginAttemptPolicy_defaultsToNoop() {
+    assertSame(NoopLoginAttemptPolicy.INSTANCE,
+        SecurityServiceResolver.loginAttemptPolicy());
+  }
+
+  @Test
+  @DisplayName("findLoginAttemptPolicy returns empty when no SPI is registered")
+  void findLoginAttemptPolicy_emptyByDefault() {
+    assertTrue(SecurityServiceResolver.findLoginAttemptPolicy().isEmpty());
+  }
+
+  @Test
+  @DisplayName("setLoginAttemptPolicy overrides the cached policy for both accessors")
+  void setLoginAttemptPolicy_overrides() {
+    BlockEverything blocker = new BlockEverything();
+    SecurityServiceResolver.setLoginAttemptPolicy(blocker);
+
+    assertSame(blocker, SecurityServiceResolver.loginAttemptPolicy());
+    assertSame(blocker, SecurityServiceResolver.findLoginAttemptPolicy().orElseThrow());
+  }
+
+  @Test
+  @DisplayName("resetAll clears the login-attempt-policy cache")
+  void resetAll_clearsLoginAttemptPolicy() {
+    SecurityServiceResolver.setLoginAttemptPolicy(new BlockEverything());
+
+    SecurityServiceResolver.resetAll();
+
+    assertSame(NoopLoginAttemptPolicy.INSTANCE,
+        SecurityServiceResolver.loginAttemptPolicy());
+  }
+
+  static final class BlockEverything implements LoginAttemptPolicy {
+    @Override
+    public LoginAttemptDecision beforeAttempt(LoginAttemptContext context) {
+      return LoginAttemptDecision.lockedOut(java.time.Duration.ofSeconds(60), 99);
+    }
+
+    @Override
+    public void recordSuccess(LoginAttemptContext context) {
+    }
+
+    @Override
+    public void recordFailure(LoginAttemptContext context) {
+    }
+  }
+
+  // ── SessionPolicy ─────────────────────────────────────────────
+
+  @Test
+  @DisplayName("sessionPolicy falls back to NoopSessionPolicy when no SPI is registered")
+  void sessionPolicy_defaultsToNoop() {
+    SessionPolicy<String> policy = SecurityServiceResolver.sessionPolicy();
+    assertTrue(policy instanceof NoopSessionPolicy<?>);
+  }
+
+  @Test
+  @DisplayName("findSessionPolicy returns empty when no SPI is registered")
+  void findSessionPolicy_emptyByDefault() {
+    assertTrue(SecurityServiceResolver.findSessionPolicy().isEmpty());
+  }
+
+  @Test
+  @DisplayName("setSessionPolicy overrides the cached policy for both accessors")
+  void setSessionPolicy_overrides() {
+    AlwaysInvalidate<String> custom = new AlwaysInvalidate<>();
+    SecurityServiceResolver.setSessionPolicy(custom);
+
+    assertSame(custom, SecurityServiceResolver.<String>sessionPolicy());
+    assertSame(custom, SecurityServiceResolver.<String>findSessionPolicy().orElseThrow());
+  }
+
+  @Test
+  @DisplayName("resetAll clears the session-policy cache")
+  void resetAll_clearsSessionPolicy() {
+    SecurityServiceResolver.setSessionPolicy(new AlwaysInvalidate<String>());
+
+    SecurityServiceResolver.resetAll();
+
+    SessionPolicy<String> after = SecurityServiceResolver.sessionPolicy();
+    assertTrue(after instanceof NoopSessionPolicy<?>);
+  }
+
+  static final class AlwaysInvalidate<U> implements SessionPolicy<U> {
+    @Override
+    public SessionDecision beforeNavigation(SessionContext<U> context) {
+      return new SessionDecision.Invalidate("test", "/login");
     }
   }
 }

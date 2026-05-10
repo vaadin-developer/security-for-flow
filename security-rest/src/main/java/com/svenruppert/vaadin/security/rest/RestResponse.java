@@ -34,4 +34,18 @@ public interface RestResponse {
    * @param body response body
    */
   void body(String body);
+
+  /**
+   * Sets a response header.
+   * <p>
+   * Default is a safe no-op so existing implementations keep working
+   * even before they opt in. Implementations should override this to
+   * actually emit the header.
+   *
+   * @param name  header name; non-{@code null}, non-blank
+   * @param value header value; non-{@code null}
+   */
+  default void header(String name, String value) {
+    // implementations that don't yet support headers fall through silently
+  }
 }

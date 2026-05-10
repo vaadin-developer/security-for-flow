@@ -18,6 +18,10 @@ package com.svenruppert.vaadin.security.demo.rest.server;
 
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPermission;
 import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
+import com.svenruppert.vaadin.security.bruteforce.NoopLoginAttemptPolicy;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoDocument;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoDocumentStore;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUser;
@@ -26,12 +30,14 @@ import com.svenruppert.vaadin.security.demo.rest.shared.DemoEndpoints;
 import com.svenruppert.vaadin.security.authorization.api.operations.SecuredOperationDescriptor;
 import com.svenruppert.vaadin.security.demo.rest.shared.DemoJson;
 import com.svenruppert.vaadin.security.rest.BodyRestRequest;
+import com.svenruppert.vaadin.security.rest.RestHeaders;
 import com.svenruppert.vaadin.security.rest.RestRequest;
 import com.svenruppert.vaadin.security.rest.RestResponse;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -41,11 +47,15 @@ import java.util.Optional;
  */
 public final class DemoHandlers {
 
+  /** Header key under which {@code DemoHttpRouter} stashes the remote IP. */
+  public static final String REMOTE_ADDR_HEADER = "X-Demo-Remote-Addr";
+
   private final DemoUserStore userStore;
   private final DemoTokenStore tokenStore;
   private final DemoDocumentStore documents;
   private final DemoOperationRegistry registry;
   private final DemoSubjectResolver subjectResolver;
+  private final LoginAttemptPolicy loginAttemptPolicy;
 
   public DemoHandlers(
       DemoUserStore userStore,
@@ -53,11 +63,23 @@ public final class DemoHandlers {
       DemoDocumentStore documents,
       DemoOperationRegistry registry,
       DemoSubjectResolver subjectResolver) {
+    this(userStore, tokenStore, documents, registry, subjectResolver,
+        NoopLoginAttemptPolicy.INSTANCE);
+  }
+
+  public DemoHandlers(
+      DemoUserStore userStore,
+      DemoTokenStore tokenStore,
+      DemoDocumentStore documents,
+      DemoOperationRegistry registry,
+      DemoSubjectResolver subjectResolver,
+      LoginAttemptPolicy loginAttemptPolicy) {
     this.userStore = userStore;
     this.tokenStore = tokenStore;
     this.documents = documents;
     this.registry = registry;
     this.subjectResolver = subjectResolver;
+    this.loginAttemptPolicy = Objects.requireNonNull(loginAttemptPolicy, "loginAttemptPolicy");
   }
 
   public void login(RestRequest request, RestResponse response) {
@@ -74,11 +96,25 @@ public final class DemoHandlers {
       writeError(response, 400, "Bad Request");
       return;
     }
+
+    String clientAddress = RestHeaders.first(request, REMOTE_ADDR_HEADER).orElse(null);
+    LoginAttemptContext attempt = LoginAttemptContext.now(username, clientAddress, null);
+
+    LoginAttemptDecision decision = loginAttemptPolicy.beforeAttempt(attempt);
+    if (decision instanceof LoginAttemptDecision.LockedOut lockout) {
+      response.header("Retry-After",
+          Long.toString(Math.max(1L, lockout.remaining().toSeconds())));
+      writeError(response, 429, "Too Many Requests");
+      return;
+    }
+
     Optional<DemoUser> user = userStore.authenticate(username, password);
     if (user.isEmpty()) {
+      loginAttemptPolicy.recordFailure(attempt);
       writeError(response, 401, "Unauthorized");
       return;
     }
+    loginAttemptPolicy.recordSuccess(attempt);
     DemoUser u = user.get();
     String token = tokenStore.issue(u);
     SecuritySubject subject = subjectResolver

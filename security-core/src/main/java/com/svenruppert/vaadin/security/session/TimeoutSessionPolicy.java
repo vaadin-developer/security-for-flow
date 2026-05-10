@@ -1,0 +1,154 @@
+/**
+ * Copyright © 2017 Sven Ruppert (sven.ruppert@gmail.com)
+ *
+ * Licensed under the EUPL, Version 1.2 or - as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence"); You may not use this work except in
+ * compliance with the Licence. You may obtain a copy of the Licence at:
+ *
+ * https://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the Licence is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
+ */
+package com.svenruppert.vaadin.security.session;
+
+import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
+import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
+import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Objects;
+
+/**
+ * Minimal {@link SessionPolicy} with idle timeout, absolute lifetime, and
+ * optional session-id rotation after login.
+ * <p>
+ * The policy is Vaadin-free and stateless — it makes decisions purely
+ * from the {@link SessionContext}'s timestamps. Tracking last-activity
+ * inside the session is the adapter's job.
+ *
+ * <h2>Decisions</h2>
+ *
+ * <ul>
+ *   <li>{@link #onLogin(SessionContext)} — emits
+ *       {@link SecurityAuditEventType#SESSION_CREATED SESSION_CREATED}.
+ *       If {@link Config#rotateSessionAfterLogin()} is {@code true},
+ *       returns {@link SessionDecision.Invalidate} so the adapter rotates
+ *       the session id; otherwise {@link SessionDecision.Continue#INSTANCE}.</li>
+ *   <li>{@link #beforeNavigation(SessionContext)} — checks absolute
+ *       lifetime first, then idle timeout. Either trip emits
+ *       {@link SecurityAuditEventType#SESSION_EXPIRED SESSION_EXPIRED}
+ *       and returns {@link SessionDecision.Invalidate}.</li>
+ *   <li>{@link #onLogout(SessionContext)} — emits
+ *       {@link SecurityAuditEventType#SESSION_INVALIDATED
+ *       SESSION_INVALIDATED}.</li>
+ * </ul>
+ *
+ * @param <U> subject type
+ */
+public final class TimeoutSessionPolicy<U> implements SessionPolicy<U> {
+
+  /** Tunable thresholds. */
+  public record Config(
+      Duration idleTimeout,
+      Duration absoluteLifetime,
+      boolean rotateSessionAfterLogin,
+      String loginRoute
+  ) {
+    public Config {
+      Objects.requireNonNull(idleTimeout, "idleTimeout");
+      Objects.requireNonNull(absoluteLifetime, "absoluteLifetime");
+      Objects.requireNonNull(loginRoute, "loginRoute");
+      if (loginRoute.isBlank()) {
+        throw new IllegalArgumentException("loginRoute must not be blank");
+      }
+      if (idleTimeout.isNegative() || idleTimeout.isZero()) {
+        throw new IllegalArgumentException("idleTimeout must be positive");
+      }
+      if (absoluteLifetime.isNegative() || absoluteLifetime.isZero()) {
+        throw new IllegalArgumentException("absoluteLifetime must be positive");
+      }
+    }
+
+    /** Sensible defaults — 30 min idle, 12 h absolute, rotate after login, /login. */
+    public static Config defaults() {
+      return new Config(Duration.ofMinutes(30), Duration.ofHours(12), true, "/login");
+    }
+  }
+
+  private final Config config;
+  private final Clock clock;
+  private final SecurityAuditService auditService;
+
+  public TimeoutSessionPolicy() {
+    this(Config.defaults(), Clock.systemUTC(), null);
+  }
+
+  /**
+   * @param config       thresholds and post-login behaviour
+   * @param clock        time source — fixed clocks make testing deterministic
+   * @param auditService audit sink, or {@code null} to resolve from
+   *                     {@link SecurityServiceResolver} on each event
+   */
+  public TimeoutSessionPolicy(Config config, Clock clock, SecurityAuditService auditService) {
+    this.config = Objects.requireNonNull(config, "config");
+    this.clock = Objects.requireNonNull(clock, "clock");
+    this.auditService = auditService;
+  }
+
+  @Override
+  public SessionDecision onLogin(SessionContext<U> context) {
+    audit(context, SecurityAuditEventType.SESSION_CREATED, "LOGIN");
+    if (config.rotateSessionAfterLogin()) {
+      return new SessionDecision.Invalidate("Session rotated after login", config.loginRoute());
+    }
+    return SessionDecision.Continue.INSTANCE;
+  }
+
+  @Override
+  public SessionDecision beforeNavigation(SessionContext<U> context) {
+    Objects.requireNonNull(context, "context");
+    Instant now = Instant.now(clock);
+
+    if (now.isAfter(context.createdAt().plus(config.absoluteLifetime()))) {
+      audit(context, SecurityAuditEventType.SESSION_EXPIRED, "ABSOLUTE_LIFETIME");
+      return new SessionDecision.Invalidate("Session lifetime exceeded", config.loginRoute());
+    }
+    Instant lastActivity = context.lastActivity() == null ? context.createdAt() : context.lastActivity();
+    if (now.isAfter(lastActivity.plus(config.idleTimeout()))) {
+      audit(context, SecurityAuditEventType.SESSION_EXPIRED, "IDLE_TIMEOUT");
+      return new SessionDecision.Invalidate("Session idle timeout", config.loginRoute());
+    }
+    return SessionDecision.Continue.INSTANCE;
+  }
+
+  @Override
+  public void onLogout(SessionContext<U> context) {
+    audit(context, SecurityAuditEventType.SESSION_INVALIDATED, "LOGOUT");
+  }
+
+  private void audit(SessionContext<U> context,
+                     SecurityAuditEventType type,
+                     String reason) {
+    SecurityAuditService sink = auditService != null
+        ? auditService
+        : SecurityServiceResolver.securityAuditService();
+    try {
+      sink.record(SecurityAuditEvent.builder(type)
+          .sessionId(context.sessionId())
+          .clientAddress(context.clientAddress())
+          .username(context.subject() == null ? null : context.subject().toString())
+          .decision(reason)
+          .build());
+    } catch (RuntimeException auditFailure) {
+      // never block a session decision because the audit sink failed
+    }
+  }
+}

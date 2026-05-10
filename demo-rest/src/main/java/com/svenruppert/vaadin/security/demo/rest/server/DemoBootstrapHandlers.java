@@ -21,14 +21,20 @@ import com.svenruppert.vaadin.security.bootstrap.BootstrapStatus;
 import com.svenruppert.vaadin.security.bootstrap.CreateInitialAdminCommand;
 import com.svenruppert.vaadin.security.bootstrap.InitialAdminBootstrapService;
 import com.svenruppert.vaadin.security.bootstrap.InitialAdminCreationResult;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
+import com.svenruppert.vaadin.security.bruteforce.NoopLoginAttemptPolicy;
 import com.svenruppert.vaadin.security.demo.rest.shared.DemoJson;
 import com.svenruppert.vaadin.security.rest.BodyRestRequest;
 import com.svenruppert.vaadin.security.rest.BootstrapRestStatusMapper;
+import com.svenruppert.vaadin.security.rest.RestHeaders;
 import com.svenruppert.vaadin.security.rest.RestRequest;
 import com.svenruppert.vaadin.security.rest.RestResponse;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * REST handlers for {@code /api/bootstrap/*}.
@@ -42,14 +48,34 @@ public final class DemoBootstrapHandlers {
 
   private static final BootstrapRestStatusMapper STATUS_MAPPER = new BootstrapRestStatusMapper();
 
+  /**
+   * Pseudo-username used as the throttling key for the bootstrap endpoint.
+   * The bootstrap flow does not have a real authenticating subject yet;
+   * the throttler is keyed on the requester's address only, but the
+   * username field of {@link LoginAttemptContext} must be non-null so
+   * the existing {@link com.svenruppert.vaadin.security.bruteforce.InMemoryLoginAttemptPolicy}
+   * counter normalisation works.
+   */
+  static final String BOOTSTRAP_THROTTLE_KEY = "__bootstrap__";
+
   private final BootstrapStateService stateService;
   private final InitialAdminBootstrapService bootstrapService;
+  private final LoginAttemptPolicy bootstrapAttemptPolicy;
 
   public DemoBootstrapHandlers(
       BootstrapStateService stateService,
       InitialAdminBootstrapService bootstrapService) {
+    this(stateService, bootstrapService, NoopLoginAttemptPolicy.INSTANCE);
+  }
+
+  public DemoBootstrapHandlers(
+      BootstrapStateService stateService,
+      InitialAdminBootstrapService bootstrapService,
+      LoginAttemptPolicy bootstrapAttemptPolicy) {
     this.stateService = stateService;
     this.bootstrapService = bootstrapService;
+    this.bootstrapAttemptPolicy = Objects.requireNonNull(
+        bootstrapAttemptPolicy, "bootstrapAttemptPolicy");
   }
 
   public void status(RestRequest request, RestResponse response) {
@@ -62,6 +88,18 @@ public final class DemoBootstrapHandlers {
   }
 
   public void createInitialAdmin(RestRequest request, RestResponse response) {
+    String clientAddress = RestHeaders.first(request, DemoHandlers.REMOTE_ADDR_HEADER).orElse(null);
+    LoginAttemptContext attempt = LoginAttemptContext.now(
+        BOOTSTRAP_THROTTLE_KEY, clientAddress, null);
+
+    LoginAttemptDecision throttleDecision = bootstrapAttemptPolicy.beforeAttempt(attempt);
+    if (throttleDecision instanceof LoginAttemptDecision.LockedOut lockout) {
+      response.header("Retry-After",
+          Long.toString(Math.max(1L, lockout.remaining().toSeconds())));
+      writeJson(response, 429, Map.of("error", "too_many_requests"));
+      return;
+    }
+
     if (!(request instanceof BodyRestRequest bodyRequest)) {
       writeJson(response, 400, Map.of("error", "bad_request"));
       return;
@@ -85,6 +123,14 @@ public final class DemoBootstrapHandlers {
     char[] pwd = password.toCharArray();
     InitialAdminCreationResult result = bootstrapService.createInitialAdmin(
         new CreateInitialAdminCommand(token, username, pwd, displayName, email));
+
+    if (result instanceof InitialAdminCreationResult.Created) {
+      bootstrapAttemptPolicy.recordSuccess(attempt);
+    } else if (result instanceof InitialAdminCreationResult.InvalidBootstrapToken) {
+      // only token-rejection counts toward brute-force throttling.
+      // policy violations / bad usernames are operator errors, not attacks.
+      bootstrapAttemptPolicy.recordFailure(attempt);
+    }
 
     int status = STATUS_MAPPER.statusFor(result);
     String code = STATUS_MAPPER.errorCodeFor(result);

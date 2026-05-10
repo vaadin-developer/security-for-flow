@@ -147,12 +147,25 @@ public final class DemoHttpRouter implements HttpHandler {
       body = new String(in.readAllBytes(), StandardCharsets.UTF_8);
     }
     URI uri = exchange.getRequestURI();
+    Map<String, String> headers = flattenHeaders(exchange.getRequestHeaders());
+    addRemoteAddress(headers, exchange);
     return new DemoHttpRequest(
         exchange.getRequestMethod(),
         uri.getPath(),
-        flattenHeaders(exchange.getRequestHeaders()),
+        headers,
         parseQuery(uri.getRawQuery()),
         body);
+  }
+
+  private static void addRemoteAddress(Map<String, String> headers, HttpExchange exchange) {
+    try {
+      var remote = exchange.getRemoteAddress();
+      if (remote != null && remote.getAddress() != null) {
+        headers.put(DemoHandlers.REMOTE_ADDR_HEADER, remote.getAddress().getHostAddress());
+      }
+    } catch (RuntimeException ignored) {
+      // never block the request because we can't determine the remote address
+    }
   }
 
   private static Map<String, String> flattenHeaders(Headers headers) {
@@ -184,6 +197,7 @@ public final class DemoHttpRouter implements HttpHandler {
   private static void writeResponse(HttpExchange exchange, DemoHttpResponse response) throws IOException {
     byte[] payload = response.getBody().getBytes(StandardCharsets.UTF_8);
     exchange.getResponseHeaders().add("Content-Type", "application/json; charset=utf-8");
+    response.getHeaders().forEach((name, value) -> exchange.getResponseHeaders().add(name, value));
     int contentLength = payload.length == 0 ? -1 : payload.length;
     exchange.sendResponseHeaders(response.status(), contentLength);
     if (payload.length > 0) {

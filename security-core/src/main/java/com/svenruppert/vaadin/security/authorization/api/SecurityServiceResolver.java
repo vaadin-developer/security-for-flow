@@ -19,6 +19,10 @@ package com.svenruppert.vaadin.security.authorization.api;
 import com.svenruppert.vaadin.security.action.ActionAuthorizationService;
 import com.svenruppert.vaadin.security.audit.NoopSecurityAuditService;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
+import com.svenruppert.vaadin.security.bruteforce.NoopLoginAttemptPolicy;
+import com.svenruppert.vaadin.security.session.NoopSessionPolicy;
+import com.svenruppert.vaadin.security.session.SessionPolicy;
 
 import java.util.Optional;
 import java.util.ServiceLoader;
@@ -55,6 +59,10 @@ public final class SecurityServiceResolver {
   private static final AtomicReference<SecurityAuditService> AUDIT_SERVICE_REF =
       new AtomicReference<>();
   private static final AtomicReference<ActionAuthorizationService<?>> ACTION_AUTH_SERVICE_REF =
+      new AtomicReference<>();
+  private static final AtomicReference<LoginAttemptPolicy> LOGIN_ATTEMPT_POLICY_REF =
+      new AtomicReference<>();
+  private static final AtomicReference<SessionPolicy<?>> SESSION_POLICY_REF =
       new AtomicReference<>();
 
   private SecurityServiceResolver() {
@@ -268,6 +276,129 @@ public final class SecurityServiceResolver {
     ACTION_AUTH_SERVICE_REF.set(service);
   }
 
+  // ── LoginAttemptPolicy ─────────────────────────────────────────
+
+  /**
+   * Returns the registered {@link LoginAttemptPolicy}, or
+   * {@link NoopLoginAttemptPolicy#INSTANCE} if no SPI implementation is
+   * configured. Like {@link #securityAuditService()}, this method
+   * <strong>never</strong> throws — brute-force throttling is optional
+   * infrastructure.
+   *
+   * @return the resolved policy, never {@code null}
+   */
+  public static LoginAttemptPolicy loginAttemptPolicy() {
+    LoginAttemptPolicy cached = LOGIN_ATTEMPT_POLICY_REF.get();
+    if (cached != null) {
+      return cached;
+    }
+
+    LoginAttemptPolicy loaded = findSingleService(
+        LoginAttemptPolicy.class,
+        ServiceLoader.load(LoginAttemptPolicy.class))
+        .orElse(NoopLoginAttemptPolicy.INSTANCE);
+
+    LOGIN_ATTEMPT_POLICY_REF.compareAndSet(null, loaded);
+    return LOGIN_ATTEMPT_POLICY_REF.get();
+  }
+
+  /**
+   * Returns the registered {@link LoginAttemptPolicy}, or empty if none
+   * is configured. Use {@link #loginAttemptPolicy()} for the noop
+   * fallback.
+   *
+   * @return the SPI-registered policy, or empty
+   */
+  public static Optional<LoginAttemptPolicy> findLoginAttemptPolicy() {
+    LoginAttemptPolicy cached = LOGIN_ATTEMPT_POLICY_REF.get();
+    if (cached != null && cached != NoopLoginAttemptPolicy.INSTANCE) {
+      return Optional.of(cached);
+    }
+    if (cached == NoopLoginAttemptPolicy.INSTANCE) {
+      return Optional.empty();
+    }
+
+    Optional<LoginAttemptPolicy> loaded = findSingleService(
+        LoginAttemptPolicy.class,
+        ServiceLoader.load(LoginAttemptPolicy.class));
+    loaded.ifPresent(policy -> LOGIN_ATTEMPT_POLICY_REF.compareAndSet(null, policy));
+    return loaded;
+  }
+
+  /**
+   * Replaces the cached {@link LoginAttemptPolicy}. Intended for tests
+   * and for applications that prefer programmatic wiring over SPI.
+   *
+   * @param policy the policy, or {@code null} to clear
+   */
+  public static void setLoginAttemptPolicy(LoginAttemptPolicy policy) {
+    LOGIN_ATTEMPT_POLICY_REF.set(policy);
+  }
+
+  // ── SessionPolicy ──────────────────────────────────────────────
+
+  /**
+   * Returns the registered {@link SessionPolicy}, or
+   * {@link NoopSessionPolicy#instance()} if no SPI implementation is
+   * configured. Like the audit and login-attempt accessors, this method
+   * <strong>never</strong> throws — session policies are optional
+   * infrastructure.
+   *
+   * @param <U> subject type
+   * @return the resolved policy, never {@code null}
+   */
+  @SuppressWarnings("unchecked")
+  public static <U> SessionPolicy<U> sessionPolicy() {
+    SessionPolicy<?> cached = SESSION_POLICY_REF.get();
+    if (cached != null) {
+      return (SessionPolicy<U>) cached;
+    }
+
+    SessionPolicy<?> loaded = findSingleService(
+        SessionPolicy.class,
+        ServiceLoader.load(SessionPolicy.class))
+        .map(p -> (SessionPolicy<?>) p)
+        .orElseGet(NoopSessionPolicy::instance);
+
+    SESSION_POLICY_REF.compareAndSet(null, loaded);
+    return (SessionPolicy<U>) SESSION_POLICY_REF.get();
+  }
+
+  /**
+   * Returns the registered {@link SessionPolicy}, or empty if none is
+   * configured. Use {@link #sessionPolicy()} for the noop fallback.
+   *
+   * @param <U> subject type
+   * @return the SPI-registered policy, or empty
+   */
+  @SuppressWarnings("unchecked")
+  public static <U> Optional<SessionPolicy<U>> findSessionPolicy() {
+    SessionPolicy<?> cached = SESSION_POLICY_REF.get();
+    if (cached != null && !(cached instanceof NoopSessionPolicy<?>)) {
+      return Optional.of((SessionPolicy<U>) cached);
+    }
+    if (cached instanceof NoopSessionPolicy<?>) {
+      return Optional.empty();
+    }
+
+    Optional<SessionPolicy> loaded = findSingleService(
+        SessionPolicy.class,
+        ServiceLoader.load(SessionPolicy.class));
+    loaded.ifPresent(policy -> SESSION_POLICY_REF.compareAndSet(null, policy));
+    return loaded.map(p -> (SessionPolicy<U>) p);
+  }
+
+  /**
+   * Replaces the cached {@link SessionPolicy}. Intended for tests and for
+   * applications that prefer programmatic wiring over SPI.
+   *
+   * @param policy the policy, or {@code null} to clear
+   * @param <U>    subject type
+   */
+  public static <U> void setSessionPolicy(SessionPolicy<U> policy) {
+    SESSION_POLICY_REF.set(policy);
+  }
+
   // ── Reset (for testing) ────────────────────────────────────────
 
   /**
@@ -280,6 +411,8 @@ public final class SecurityServiceResolver {
     AUTHORIZATION_SERVICE_REF.set(null);
     AUDIT_SERVICE_REF.set(null);
     ACTION_AUTH_SERVICE_REF.set(null);
+    LOGIN_ATTEMPT_POLICY_REF.set(null);
+    SESSION_POLICY_REF.set(null);
     SubjectStores.reset();
   }
 

@@ -31,6 +31,8 @@ import com.svenruppert.vaadin.security.bootstrap.InitialAdminBootstrapService;
 import com.svenruppert.vaadin.security.bootstrap.MinimumLengthPasswordPolicy;
 import com.svenruppert.vaadin.security.bootstrap.PasswordHasher;
 import com.svenruppert.vaadin.security.bootstrap.Pbkdf2PasswordHasher;
+import com.svenruppert.vaadin.security.bruteforce.InMemoryLoginAttemptPolicy;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoDocumentStore;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoRolePermissionMapping;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUserStore;
@@ -61,10 +63,37 @@ public final class DemoRestServer {
   }
 
   public static DemoRestServer start(int port) throws IOException {
-    return start(port, DemoBootstrapEnvironment.fromEnvironment());
+    return start(port, DemoBootstrapEnvironment.fromEnvironment(),
+        new InMemoryLoginAttemptPolicy(),
+        new InMemoryLoginAttemptPolicy(
+            com.svenruppert.vaadin.security.bruteforce.LoginAttemptConfiguration.strictBootstrap(),
+            java.time.Clock.systemUTC(),
+            null));
   }
 
   public static DemoRestServer start(int port, BootstrapConfiguration bootstrapConfig) throws IOException {
+    return start(port, bootstrapConfig,
+        new InMemoryLoginAttemptPolicy(),
+        new InMemoryLoginAttemptPolicy(
+            com.svenruppert.vaadin.security.bruteforce.LoginAttemptConfiguration.strictBootstrap(),
+            java.time.Clock.systemUTC(),
+            null));
+  }
+
+  public static DemoRestServer start(int port,
+                                     BootstrapConfiguration bootstrapConfig,
+                                     LoginAttemptPolicy loginAttemptPolicy) throws IOException {
+    return start(port, bootstrapConfig, loginAttemptPolicy,
+        new InMemoryLoginAttemptPolicy(
+            com.svenruppert.vaadin.security.bruteforce.LoginAttemptConfiguration.strictBootstrap(),
+            java.time.Clock.systemUTC(),
+            null));
+  }
+
+  public static DemoRestServer start(int port,
+                                     BootstrapConfiguration bootstrapConfig,
+                                     LoginAttemptPolicy loginAttemptPolicy,
+                                     LoginAttemptPolicy bootstrapAttemptPolicy) throws IOException {
     boolean bootstrapMode = bootstrapConfig.mode() != BootstrapMode.DISABLED;
     PasswordHasher hasher = new Pbkdf2PasswordHasher();
     DemoUserStore users = new DemoUserStore(hasher, bootstrapMode);
@@ -73,7 +102,8 @@ public final class DemoRestServer {
     DemoRolePermissionMapping mapping = new DemoRolePermissionMapping();
     DemoSubjectResolver resolver = new DemoSubjectResolver(tokens, mapping);
     DemoOperationRegistry registry = new DemoOperationRegistry();
-    DemoHandlers handlers = new DemoHandlers(users, tokens, documents, registry, resolver);
+    DemoHandlers handlers = new DemoHandlers(
+        users, tokens, documents, registry, resolver, loginAttemptPolicy);
 
     DemoAdministratorAccountStore adminStore = new DemoAdministratorAccountStore(users);
     BootstrapStateService stateService = new BootstrapStateService(adminStore, bootstrapConfig.mode());
@@ -82,7 +112,8 @@ public final class DemoRestServer {
     InitialAdminBootstrapService bootstrapService = new InitialAdminBootstrapService(
         stateService, tokenStore, adminStore, hasher, new MinimumLengthPasswordPolicy(8),
         bootstrapConfig.tokenValidity(), java.time.Clock.systemUTC());
-    DemoBootstrapHandlers bootstrapHandlers = new DemoBootstrapHandlers(stateService, bootstrapService);
+    DemoBootstrapHandlers bootstrapHandlers = new DemoBootstrapHandlers(
+        stateService, bootstrapService, bootstrapAttemptPolicy);
 
     BootstrapStartup.initializeIfRequired(
         stateService, tokenStore, new BootstrapTokenGenerator(), tokenOutput, bootstrapConfig);

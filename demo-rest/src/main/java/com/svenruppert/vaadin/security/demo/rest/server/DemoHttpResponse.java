@@ -18,11 +18,15 @@ package com.svenruppert.vaadin.security.demo.rest.server;
 
 import com.svenruppert.vaadin.security.rest.RestResponse;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /** Buffering {@link RestResponse} implementation used by the demo server. */
 public final class DemoHttpResponse implements RestResponse {
 
   private int status = 200;
   private String body = "";
+  private final Map<String, String> headers = new LinkedHashMap<>();
 
   @Override
   public void status(int statusCode) {
@@ -34,11 +38,24 @@ public final class DemoHttpResponse implements RestResponse {
     this.body = body == null ? "" : body;
   }
 
+  @Override
+  public void header(String name, String value) {
+    if (name == null || name.isBlank() || value == null) {
+      return;
+    }
+    headers.put(name, value);
+  }
+
   public int status() {
     return status;
   }
 
   public String getBody() {
     return body;
+  }
+
+  /** Read-only view of the headers set via {@link #header(String, String)}. */
+  public Map<String, String> getHeaders() {
+    return Map.copyOf(headers);
   }
 }

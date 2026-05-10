@@ -18,18 +18,43 @@ package com.svenruppert.vaadin.security.demo.app.security.services;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.vaadin.security.authorization.api.AuthenticationService;
+import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.vaadin.security.demo.app.security.model.Credentials;
 import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectory;
 import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectoryProvider;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
+import com.vaadin.flow.server.VaadinRequest;
 
 public class MyAuthenticationService
     implements AuthenticationService<Credentials, MyUser>, HasLogger {
 
   @Override
   public boolean checkCredentials(Credentials credentials) {
-    if (credentials == null) return false;
-    return directory().checkCredentials(credentials);
+    if (credentials == null) {
+      return false;
+    }
+
+    LoginAttemptPolicy policy = SecurityServiceResolver.loginAttemptPolicy();
+    LoginAttemptContext attempt = LoginAttemptContext.now(
+        credentials.username(), currentClientAddress(), null);
+
+    LoginAttemptDecision decision = policy.beforeAttempt(attempt);
+    if (decision instanceof LoginAttemptDecision.LockedOut lockout) {
+      logger().warn("Login throttled for username={} (remaining={}s, failedAttempts={})",
+          credentials.username(), lockout.remaining().toSeconds(), lockout.failedAttempts());
+      return false;
+    }
+
+    boolean ok = directory().checkCredentials(credentials);
+    if (ok) {
+      policy.recordSuccess(attempt);
+    } else {
+      policy.recordFailure(attempt);
+    }
+    return ok;
   }
 
   @Override
@@ -44,5 +69,18 @@ public class MyAuthenticationService
 
   private static DemoUserDirectory directory() {
     return DemoUserDirectoryProvider.directory();
+  }
+
+  /**
+   * Best-effort: Vaadin exposes the current request only on the request
+   * thread. Returns {@code null} when called outside of one.
+   */
+  private static String currentClientAddress() {
+    try {
+      VaadinRequest request = VaadinRequest.getCurrent();
+      return request == null ? null : request.getRemoteAddr();
+    } catch (RuntimeException ignored) {
+      return null;
+    }
   }
 }
