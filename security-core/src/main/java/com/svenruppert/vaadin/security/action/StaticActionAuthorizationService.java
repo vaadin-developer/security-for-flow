@@ -16,14 +16,15 @@
  */
 package com.svenruppert.vaadin.security.action;
 
-import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
-import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
+import com.svenruppert.vaadin.security.audit.ActionDenied;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.api.AccessDeniedException;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Objects;
 
 /**
@@ -38,9 +39,8 @@ import java.util.Objects;
  * can keep a single string vocabulary across both APIs while opting
  * into the typed action layer.
  * <p>
- * On {@code requireAllowed} denial, this implementation emits a
- * {@link SecurityAuditEventType#ACTION_DENIED} audit event before
- * throwing.
+ * On {@code requireAllowed} denial, this implementation emits an
+ * {@link ActionDenied} audit event before throwing.
  *
  * @param <U> subject type
  */
@@ -102,12 +102,11 @@ public final class StaticActionAuthorizationService<U> implements ActionAuthoriz
         ? auditService
         : SecurityServiceResolver.securityAuditService();
     try {
-      sink.record(SecurityAuditEvent.builder(SecurityAuditEventType.ACTION_DENIED)
-          .decision("DENIED")
-          .subjectId(subject == null ? null : subject.getClass().getSimpleName()
-              + "@" + Integer.toHexString(System.identityHashCode(subject)))
-          .attribute("action", actionName)
-          .build());
+      String subjectId = subject == null ? null
+          : subject.getClass().getSimpleName()
+              + "@" + Integer.toHexString(System.identityHashCode(subject));
+      sink.publish(new ActionDenied(
+          Instant.now(Clock.systemUTC()), subjectId, actionName));
     } catch (RuntimeException auditFailure) {
       // never block the AccessDeniedException because the audit sink failed
     }

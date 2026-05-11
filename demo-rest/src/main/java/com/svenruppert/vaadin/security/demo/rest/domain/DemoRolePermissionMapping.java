@@ -38,7 +38,8 @@ public final class DemoRolePermissionMapping implements RolePermissionMapping {
           DOCUMENT_CREATE.permissionName(),
           DOCUMENT_UPDATE.permissionName(),
           DOCUMENT_DELETE.permissionName(),
-          ADMIN_ACCESS.permissionName()))
+          ADMIN_ACCESS.permissionName(),
+          AUDIT_READ.permissionName()))
       .put(DemoRole.ROLE_EDITOR.roleName(), Set.of(
           DOCUMENT_READ.permissionName(),
           DOCUMENT_CREATE.permissionName(),

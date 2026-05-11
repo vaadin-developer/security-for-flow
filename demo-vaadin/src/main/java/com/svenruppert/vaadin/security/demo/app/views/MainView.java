@@ -188,12 +188,19 @@ public class MainView
 
   private static final com.svenruppert.vaadin.security.authorization.api.LogoutService LOGOUT_SERVICE =
       new com.svenruppert.vaadin.security.authorization.vaadin.VaadinLogoutService<>(
-          SubjectStores.subjectStore(), MyUser.class);
+          SubjectStores.subjectStore(), MyUser.class,
+          new com.svenruppert.vaadin.security.authorization.vaadin.DefaultVaadinLogoutGateway(),
+          "/" + MyLoginView.NAV,
+          /* closeVaadinSession= */ true,
+          /* invalidateHttpSession= */ true);
 
   private void logout() {
-    LOGOUT_SERVICE.logout(
-        com.svenruppert.vaadin.security.authorization.api.LogoutContext.of(
-            com.svenruppert.vaadin.security.authorization.api.LogoutPolicy
-                .fullInvalidate("/" + MyLoginView.NAV)));
+    com.svenruppert.vaadin.security.authorization.api.SubjectId subjectId =
+        SubjectStores.subjectStore().currentSubject(MyUser.class)
+            .map(u -> com.svenruppert.vaadin.security.authorization.api.SubjectId.of(
+                String.valueOf(u.id())))
+            .orElse(com.svenruppert.vaadin.security.authorization.api.SubjectId.of("anonymous"));
+    LOGOUT_SERVICE.logout(subjectId,
+        com.svenruppert.vaadin.security.authorization.api.LogoutScope.CurrentSession);
   }
 }

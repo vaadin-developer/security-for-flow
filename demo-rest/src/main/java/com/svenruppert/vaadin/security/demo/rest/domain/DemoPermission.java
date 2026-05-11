@@ -24,7 +24,8 @@ public enum DemoPermission {
   DOCUMENT_CREATE("document:create"),
   DOCUMENT_UPDATE("document:update"),
   DOCUMENT_DELETE("document:delete"),
-  ADMIN_ACCESS("admin:access");
+  ADMIN_ACCESS("admin:access"),
+  AUDIT_READ("audit:read");
 
   private final PermissionName permissionName;
 

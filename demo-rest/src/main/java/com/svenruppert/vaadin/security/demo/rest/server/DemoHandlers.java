@@ -16,8 +16,13 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.server;
 
+import com.svenruppert.vaadin.security.audit.LoginSucceeded;
+import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPermission;
+import com.svenruppert.vaadin.security.authorization.api.LogoutScope;
 import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.SubjectId;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
@@ -34,6 +39,8 @@ import com.svenruppert.vaadin.security.rest.RestHeaders;
 import com.svenruppert.vaadin.security.rest.RestRequest;
 import com.svenruppert.vaadin.security.rest.RestResponse;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -117,6 +124,7 @@ public final class DemoHandlers {
     loginAttemptPolicy.recordSuccess(attempt);
     DemoUser u = user.get();
     String token = tokenStore.issue(u);
+    auditLoginSucceeded(u.username(), clientAddress, token);
     SecuritySubject subject = subjectResolver
         .resolveSubject(withAuth(request, token))
         .orElseThrow();
@@ -128,6 +136,16 @@ public final class DemoHandlers {
         subject.permissions().stream().map(p -> p.value()).sorted().toList());
     response.status(200);
     response.body(DemoJson.encode(payload));
+  }
+
+  private static void auditLoginSucceeded(String username, String clientAddress, String token) {
+    SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
+    try {
+      sink.publish(new LoginSucceeded(
+          Instant.now(Clock.systemUTC()), username, clientAddress, token));
+    } catch (RuntimeException ignored) {
+      // never block a successful login because the audit sink failed
+    }
   }
 
   public void me(RestRequest request, RestResponse response) {
@@ -152,7 +170,11 @@ public final class DemoHandlers {
   }
 
   public void logout(RestRequest request, RestResponse response) {
-    DemoSubjectResolver.extractToken(request).ifPresent(tokenStore::revoke);
+    Optional<String> token = DemoSubjectResolver.extractToken(request);
+    Optional<DemoUser> user = token.flatMap(tokenStore::resolve);
+    token.ifPresent(tokenStore::revoke);
+    user.ifPresent(u -> SecurityServiceResolver.logoutService()
+        .logout(SubjectId.of(u.username()), LogoutScope.CurrentSession));
     response.status(200);
     response.body(DemoJson.encode(Map.of("status", "logged-out")));
   }

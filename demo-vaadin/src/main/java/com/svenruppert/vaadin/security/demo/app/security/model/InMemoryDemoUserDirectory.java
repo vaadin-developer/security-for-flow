@@ -16,8 +16,8 @@
  */
 package com.svenruppert.vaadin.security.demo.app.security.model;
 
+import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.bootstrap.PasswordHasher;
-import com.svenruppert.vaadin.security.bootstrap.Pbkdf2PasswordHasher;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
 
 import java.util.Collections;
@@ -43,7 +43,7 @@ public final class InMemoryDemoUserDirectory implements DemoUserDirectory {
   private final Map<Long, MyUser> byId = new ConcurrentHashMap<>();
 
   public InMemoryDemoUserDirectory() {
-    this(new Pbkdf2PasswordHasher());
+    this(SecurityServiceResolver.passwordHashingService());
   }
 
   public InMemoryDemoUserDirectory(PasswordHasher hasher) {
@@ -131,11 +131,29 @@ public final class InMemoryDemoUserDirectory implements DemoUserDirectory {
       return Optional.empty();
     }
     StoredUser stored = byUsername.get(credentials.username());
-    if (stored == null) return Optional.empty();
-    if (!hasher.verify(credentials.password().toCharArray(), stored.passwordHash)) {
+    if (stored == null) {
       return Optional.empty();
     }
+    char[] raw = credentials.password().toCharArray();
+    if (!hasher.verify(raw, stored.passwordHash)) {
+      return Optional.empty();
+    }
+    if (hasher.needsRehash(stored.passwordHash)) {
+      try {
+        String freshHash = hasher.hash(raw);
+        byUsername.put(credentials.username(), new StoredUser(stored.user, freshHash));
+      } catch (RuntimeException rehashFailure) {
+        // Login already succeeded against the existing hash; failing to
+        // upgrade is not a security failure.
+      }
+    }
     return Optional.of(stored.user);
+  }
+
+  /** Test seam: returns the stored hash for the given username, or empty. */
+  public synchronized Optional<String> storedPasswordHash(String username) {
+    StoredUser stored = byUsername.get(username);
+    return stored == null ? Optional.empty() : Optional.of(stored.passwordHash);
   }
 
   private record StoredUser(MyUser user, String passwordHash) {

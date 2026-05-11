@@ -14,27 +14,26 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.authorization.api;
+package com.svenruppert.vaadin.security.audit;
 
-import java.util.Map;
+import java.time.Instant;
 import java.util.Objects;
 
 /**
- * Context for a single logout call. Adapter-neutral; the
- * {@link #attributes()} map carries adapter-specific data such as the
- * Vaadin {@code UI} reference, request ip, audit correlation id etc.
+ * A new session was opened for a subject (typically after successful login).
  *
- * @param policy     behaviour switches for the logout
- * @param attributes optional adapter-specific data
+ * @param timestamp UTC creation time, never {@code null}
+ * @param subjectId subject identifier, never {@code null}
+ * @param sessionId session identifier, or {@code null} if not tracked
  */
-public record LogoutContext(LogoutPolicy policy, Map<String, Object> attributes) {
+public record SessionCreated(
+    Instant timestamp,
+    String subjectId,
+    String sessionId
+) implements AuditEvent {
 
-  public LogoutContext {
-    Objects.requireNonNull(policy, "policy");
-    attributes = Map.copyOf(attributes == null ? Map.of() : attributes);
-  }
-
-  public static LogoutContext of(LogoutPolicy policy) {
-    return new LogoutContext(policy, Map.of());
+  public SessionCreated {
+    Objects.requireNonNull(timestamp, "timestamp");
+    Objects.requireNonNull(subjectId, "subjectId");
   }
 }

@@ -16,8 +16,10 @@
  */
 package com.svenruppert.vaadin.security.session;
 
-import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
-import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
+import com.svenruppert.vaadin.security.audit.AuditEvent;
+import com.svenruppert.vaadin.security.audit.SessionCreated;
+import com.svenruppert.vaadin.security.audit.SessionExpired;
+import com.svenruppert.vaadin.security.audit.SessionInvalidated;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 
@@ -38,17 +40,16 @@ import java.util.Objects;
  *
  * <ul>
  *   <li>{@link #onLogin(SessionContext)} — emits
- *       {@link SecurityAuditEventType#SESSION_CREATED SESSION_CREATED}.
+ *       {@link SessionCreated}.
  *       If {@link Config#rotateSessionAfterLogin()} is {@code true},
  *       returns {@link SessionDecision.Invalidate} so the adapter rotates
  *       the session id; otherwise {@link SessionDecision.Continue#INSTANCE}.</li>
  *   <li>{@link #beforeNavigation(SessionContext)} — checks absolute
  *       lifetime first, then idle timeout. Either trip emits
- *       {@link SecurityAuditEventType#SESSION_EXPIRED SESSION_EXPIRED}
+ *       {@link SessionExpired}
  *       and returns {@link SessionDecision.Invalidate}.</li>
  *   <li>{@link #onLogout(SessionContext)} — emits
- *       {@link SecurityAuditEventType#SESSION_INVALIDATED
- *       SESSION_INVALIDATED}.</li>
+ *       {@link SessionInvalidated}.</li>
  * </ul>
  *
  * @param <U> subject type
@@ -105,7 +106,8 @@ public final class TimeoutSessionPolicy<U> implements SessionPolicy<U> {
 
   @Override
   public SessionDecision onLogin(SessionContext<U> context) {
-    audit(context, SecurityAuditEventType.SESSION_CREATED, "LOGIN");
+    publish(new SessionCreated(
+        Instant.now(clock), subjectIdOf(context), context.sessionId()));
     if (config.rotateSessionAfterLogin()) {
       return new SessionDecision.Invalidate("Session rotated after login", config.loginRoute());
     }
@@ -118,12 +120,16 @@ public final class TimeoutSessionPolicy<U> implements SessionPolicy<U> {
     Instant now = Instant.now(clock);
 
     if (now.isAfter(context.createdAt().plus(config.absoluteLifetime()))) {
-      audit(context, SecurityAuditEventType.SESSION_EXPIRED, "ABSOLUTE_LIFETIME");
+      publish(new SessionExpired(
+          Instant.now(clock), subjectIdOf(context), context.sessionId(),
+          "AbsoluteLifetimeExceeded"));
       return new SessionDecision.Invalidate("Session lifetime exceeded", config.loginRoute());
     }
     Instant lastActivity = context.lastActivity() == null ? context.createdAt() : context.lastActivity();
     if (now.isAfter(lastActivity.plus(config.idleTimeout()))) {
-      audit(context, SecurityAuditEventType.SESSION_EXPIRED, "IDLE_TIMEOUT");
+      publish(new SessionExpired(
+          Instant.now(clock), subjectIdOf(context), context.sessionId(),
+          "IdleTimeout"));
       return new SessionDecision.Invalidate("Session idle timeout", config.loginRoute());
     }
     return SessionDecision.Continue.INSTANCE;
@@ -165,22 +171,20 @@ public final class TimeoutSessionPolicy<U> implements SessionPolicy<U> {
 
   @Override
   public void onLogout(SessionContext<U> context) {
-    audit(context, SecurityAuditEventType.SESSION_INVALIDATED, "LOGOUT");
+    publish(new SessionInvalidated(
+        Instant.now(clock), subjectIdOf(context), context.sessionId(), "Logout"));
   }
 
-  private void audit(SessionContext<U> context,
-                     SecurityAuditEventType type,
-                     String reason) {
+  private String subjectIdOf(SessionContext<U> context) {
+    return context.subject() == null ? "" : context.subject().toString();
+  }
+
+  private void publish(AuditEvent event) {
     SecurityAuditService sink = auditService != null
         ? auditService
         : SecurityServiceResolver.securityAuditService();
     try {
-      sink.record(SecurityAuditEvent.builder(type)
-          .sessionId(context.sessionId())
-          .clientAddress(context.clientAddress())
-          .username(context.subject() == null ? null : context.subject().toString())
-          .decision(reason)
-          .build());
+      sink.publish(event);
     } catch (RuntimeException auditFailure) {
       // never block a session decision because the audit sink failed
     }

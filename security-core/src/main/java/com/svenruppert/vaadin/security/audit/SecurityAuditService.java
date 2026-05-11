@@ -16,28 +16,36 @@
  */
 package com.svenruppert.vaadin.security.audit;
 
+import java.util.List;
+
 /**
- * SPI for sinking {@link SecurityAuditEvent}s.
+ * Read/write facade for security audit events.
  * <p>
- * Implementations may persist, forward, filter, or simply ignore events.
- * A {@link SecurityAuditService} <strong>must not throw</strong> from
- * {@link #record(SecurityAuditEvent)} — failure to record an audit event
- * must never break the security flow that emitted it.
+ * The write side ({@link #publish(AuditEvent)}) is the canonical entry
+ * point for every framework emit-site. Implementations typically fan the
+ * event out to one or more {@link AuditSink}s. The read side
+ * ({@link #query(AuditQuery)}) is optional — implementations that do not
+ * retain events should return an empty list.
  * <p>
- * If your sink can fail (e.g. database, network), catch the failure
- * inside {@link #record(SecurityAuditEvent)} and fall back to a local
- * log. The framework's default
- * ({@link NoopSecurityAuditService}) does nothing; the
- * provided {@link LoggingSecurityAuditService} writes a single
- * {@link java.util.logging.Logger} line per event and never throws.
+ * Implementations <strong>must not throw</strong> from either method.
+ * Audit failure must never break the security flow that emitted the
+ * event; an empty list is acceptable when no retained data is available.
  */
-@FunctionalInterface
 public interface SecurityAuditService {
 
   /**
-   * Records a security event.
+   * Records the given event. Never throws.
    *
-   * @param event non-{@code null} event
+   * @param event non-{@code null} typed audit event
    */
-  void record(SecurityAuditEvent event);
+  void publish(AuditEvent event);
+
+  /**
+   * Returns retained events matching {@code query}, oldest first.
+   * Implementations that do not retain events return an empty list.
+   *
+   * @param query filter, never {@code null}
+   * @return retained matching events, never {@code null}
+   */
+  List<AuditEvent> query(AuditQuery query);
 }

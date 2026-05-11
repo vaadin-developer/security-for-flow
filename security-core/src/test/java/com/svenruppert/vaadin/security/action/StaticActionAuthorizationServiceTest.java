@@ -16,8 +16,9 @@
  */
 package com.svenruppert.vaadin.security.action;
 
-import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
-import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
+import com.svenruppert.vaadin.security.audit.ActionDenied;
+import com.svenruppert.vaadin.security.audit.AuditEvent;
+import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.api.AccessDeniedException;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
@@ -100,10 +101,8 @@ class StaticActionAuthorizationServiceTest {
         () -> service.requireAllowed("alice", deleteUser));
 
     assertEquals(1, audit.events.size());
-    SecurityAuditEvent event = audit.events.get(0);
-    assertSame(SecurityAuditEventType.ACTION_DENIED, event.type());
-    assertEquals("DENIED", event.decision());
-    assertEquals(deleteUser.name(), event.attributes().get("action"));
+    ActionDenied event = (ActionDenied) audit.events.get(0);
+    assertEquals(deleteUser.name(), event.action());
     assertTrue(event.subjectId().startsWith("String@"),
         "subject id must lead with the subject's class simple name");
   }
@@ -111,8 +110,14 @@ class StaticActionAuthorizationServiceTest {
   @Test
   @DisplayName("audit-sink failure must not block the AccessDeniedException")
   void auditFailureIsSwallowed() {
-    SecurityAuditService throwingAudit = e -> {
-      throw new RuntimeException("audit boom");
+    SecurityAuditService throwingAudit = new SecurityAuditService() {
+      @Override public void publish(AuditEvent event) {
+        throw new RuntimeException("audit boom");
+      }
+
+      @Override public List<AuditEvent> query(AuditQuery query) {
+        return List.of();
+      }
     };
     StaticActionAuthorizationService<String> service =
         new StaticActionAuthorizationService<>(permissionsFor("alice"), throwingAudit);
@@ -151,11 +156,16 @@ class StaticActionAuthorizationServiceTest {
   }
 
   static final class RecordingAudit implements SecurityAuditService {
-    final List<SecurityAuditEvent> events = new ArrayList<>();
+    final List<AuditEvent> events = new ArrayList<>();
 
     @Override
-    public void record(SecurityAuditEvent event) {
+    public void publish(AuditEvent event) {
       events.add(event);
+    }
+
+    @Override
+    public List<AuditEvent> query(AuditQuery query) {
+      return List.of();
     }
   }
 }

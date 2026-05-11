@@ -217,8 +217,31 @@ class Pbkdf2PasswordHasherTest {
   }
 
   @Test
-  @DisplayName("needsRehash false for a null stored hash (nothing to migrate)")
+  @DisplayName("needsRehash(PasswordHash) false for a null stored hash (nothing to migrate)")
   void needsRehash_nullIsFalse() {
-    assertFalse(hasher().needsRehash(null));
+    assertFalse(hasher().needsRehash((PasswordHash) null));
+  }
+
+  @Test
+  @DisplayName("needsRehash(String) false for a null stored hash")
+  void needsRehashString_nullIsFalse() {
+    assertFalse(hasher().needsRehash((String) null));
+  }
+
+  @Test
+  @DisplayName("needsRehash(String) parses the wire format and returns true on iteration drift")
+  void needsRehashString_parsesAndDetectsDrift() {
+    Pbkdf2PasswordHasher older = new Pbkdf2PasswordHasher(1_000, new SecureRandom());
+    Pbkdf2PasswordHasher newer = new Pbkdf2PasswordHasher(2_000, new SecureRandom());
+    String stored = older.hash("p".toCharArray());
+
+    assertFalse(older.needsRehash(stored), "older sees its own iteration count as fresh");
+    assertTrue(newer.needsRehash(stored), "newer sees iteration drift in the older's output");
+  }
+
+  @Test
+  @DisplayName("needsRehash(String) returns false for malformed input")
+  void needsRehashString_falseOnMalformed() {
+    assertFalse(hasher().needsRehash("not-a-pbkdf2-hash"));
   }
 }

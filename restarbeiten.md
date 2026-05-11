@@ -1,9 +1,10 @@
 # Restarbeiten — security-for-flow
 
-> Stand: 2026-05-10. Zielversion 00.60.00 (Konzept-V00.60.00.md) +
+ok,        > Stand: 2026-05-11. Zielversion 00.60.00 (Konzept-V00.60.00.md) +
 > Part-5-Brief (production hardening).
 > Quelle: `Konzept-V00.60.00.md` + Part-5 Brief, abgeglichen mit
-> Code-Stand am Ende der Step-2-Iteration.
+> Code-Stand am Ende der Step-4-Iteration (`AuditEvent`-Migration +
+> AuditView).
 
 ## Erledigt seit 00.51.00
 
@@ -84,41 +85,57 @@
 
 ## Offen — Konzept-Punkte
 
-### § 4 — verbleibende Demo-/Lifecycle-Wiring-Punkte
+### § 4 — Lifecycle-Hook-Wiring ✅
 
-- [ ] SPI-Registrierung des `SessionLifetimeListener` als
-  `VaadinServiceInitListener` in `demo-vaadin` und
-  `demo-vaadin-rest-client` (`META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener`)
-  + `setSessionPolicy(new TimeoutSessionPolicy<>(...))` in der
-  jeweiligen Demo-Bootstrap-Sequenz, oder
-  `META-INF/services/com.svenruppert.vaadin.security.session.SessionPolicy`.
-- [ ] `demo-rest`: `DemoSubjectResolver.resolveSessionMetadata(...)`
-  implementieren (per-Token `createdAt` + `lastActivityAt` im
-  `DemoTokenStore` mitführen); ggf. `setSessionPolicy(...)`
-  programmatisch in `DemoRestServer`.
-- [ ] `LoginListener.beforeEnter` ruft `policy.onLogin(...)` nach
-  erfolgreichem Login (für Session-Rotation und `SESSION_CREATED`-
-  Audit).
-- [ ] `VaadinLogoutService` ruft `policy.onLogout(...)` zusätzlich
-  zum bestehenden `LOGOUT`-Audit.
+- ✅ SPI-Default-Registrierung des `SessionLifetimeListener`
+  (im Framework via `security-vaadin`-SPI) und
+  `TimeoutSessionPolicy` als Default-`SessionPolicy` in allen
+  drei Demos.
+- ✅ `demo-rest`: `DemoSubjectResolver.resolveSessionMetadata(...)`
+  implementiert; `DemoTokenStore` führt `Metadata(user,
+  createdAt, lastActivityAt)` und bietet `markActivity(...)`.
+- ✅ `LoginView.validate(...)` ruft `policy.onLogin(...)` nach
+  erfolgreichem `checkCredentials()`. Decision-Wert wird
+  derzeit informativ behandelt; Session-Rotation als
+  separate Iteration markiert.
+- ✅ `VaadinLogoutService` ruft `policy.onLogout(...)` zusätzlich
+  zum bestehenden `LOGOUT`-Audit. Failures werden geschluckt.
 
-### § 1.x — Re-Hash beim Login
+### Folgearbeit — Session-Rotation honour beim Login
 
-- [ ] Nach erfolgreichem `verify(...)` in den
-  Demo-`AuthenticationService`-Implementierungen prüfen, ob
-  `needsRehash == true` ist.
-- [ ] Bei Drift den frisch gehashten Wert über die User-Persistenz
-  zurückschreiben.
-- [ ] Tests für beide Pfade.
+- [ ] `SessionDecision.Invalidate(loginRoute)` aus
+  `policy.onLogin(...)` umsetzen: alte VaadinSession schließen,
+  Subject in neuer Session ablegen, redirect auf loginRoute
+  → konkret nur für `TimeoutSessionPolicy.Config.rotateSessionAfterLogin = true`
+  relevant. Dafür muss der Subject-Transfer über die alte
+  Session-Grenze hinweg geregelt werden (Vaadin-spezifisch).
 
-### `PasswordHasher` im `SecurityServiceResolver` registrieren
+### § 1.x — Re-Hash beim Login ✅
 
-- [ ] `passwordHashingService()` + `findPasswordHashingService()` +
-  `setPasswordHashingService(...)`.
-- [ ] Default-Verhalten: fällt auf `new Pbkdf2PasswordHasher()`
-  zurück, wenn kein SPI registriert ist.
-- [ ] Demos auf den Resolver umstellen — heute direkt
-  `new Pbkdf2PasswordHasher()`.
+- ✅ Konvenienz-`needsRehash(String)`-Default auf `PasswordHasher`
+  (parst Wire-Format intern, schluckt unsupported/malformed).
+- ✅ `DemoUserStore.authenticate(...)` (demo-rest) ersetzt den
+  Hash auf erfolgreichem verify, wenn der Hasher Drift meldet;
+  Failures beim Re-Hash unterbrechen den Login nicht.
+- ✅ `InMemoryDemoUserDirectory.resolve(...)` (demo-vaadin)
+  desgleichen.
+- ✅ Tests in beiden Demos: kein Drift → unverändert; Drift →
+  Hash mit neuen Parametern; falsches Passwort / unbekannter
+  User → keine Änderung. Test-Seam `storedPasswordHash(name)`
+  in beiden Stores.
+
+### `PasswordHasher` im `SecurityServiceResolver` registrieren ✅
+
+- ✅ `passwordHashingService()` / `findPasswordHashingService()` /
+  `setPasswordHashingService(...)` ergänzt. `passwordHashingService()`
+  fällt auf `new Pbkdf2PasswordHasher()` zurück (cached singleton);
+  `findPasswordHashingService()` meldet diesen Default als „kein
+  SPI" zurück, damit eine spätere SPI-Registrierung greift. In
+  `resetAll()` mit aufgeräumt.
+- [ ] **Folgearbeit:** Demos auf den Resolver umstellen — heute
+  weiter direkt `new Pbkdf2PasswordHasher()` in DemoRestServer +
+  InMemoryDemoUserDirectory. Migration ist trivial, aber eigene
+  Iteration.
 
 ### Strukturell
 
@@ -134,9 +151,12 @@
 
 #### `SecurityServiceResolver`-Lücken
 
-- [ ] `passwordHashingService()`.
-- [ ] `logoutService()` (heute wird `VaadinLogoutService` direkt
-  instanziiert).
+- ✅ `passwordHashingService()` (Pbkdf2-Default).
+- ✅ `logoutService()` mit `NoopLogoutService.INSTANCE`-Fallback.
+- ✅ Vollständig: `authenticationService` / `authorizationService` /
+  `securityAuditService` / `actionAuthorizationService` /
+  `loginAttemptPolicy` / `sessionPolicy` / `passwordHashingService` /
+  `logoutService`, jeweils strict + `find...()` + `set...()`.
 
 #### Vaadin-UI-Test-Infrastruktur
 
@@ -154,52 +174,157 @@
 
 ### Demo-Migration
 
-#### `PermissionDemoCard` auf `ActionAuthorizationService` umstellen
+#### `PermissionDemoCard` auf `ActionAuthorizationService` umstellen ✅
 
-- [ ] `demo-vaadin/.../views/components/PermissionDemoCard.java`
-  benutzt heute den statischen `PermissionGuard`.
-- [ ] Stable API `ActionAuthorizationService<U>` mit `isAllowed` /
-  `requireAllowed` ist im Core verfügbar.
+- ✅ `demo-vaadin/.../views/components/PermissionDemoCard.java`
+  benutzt jetzt `SecurityServiceResolver.actionAuthorizationService()`
+  mit `ActionPermission`.
+- ✅ `DemoActionAuthorizationService` (no-arg, SPI-registriert) wrappt
+  `StaticActionAuthorizationService<MyUser>`; SPI in
+  `META-INF/services/com.svenruppert.vaadin.security.action.ActionAuthorizationService`.
+- ✅ `DemoPermission.actionPermission()`-Accessor liefert das
+  passende `ActionPermission` (gleicher String wie `PermissionName.value()`).
+- ✅ Demo-side `PermissionGuard`-Wrapper komplett entfernt.
+
+#### Demos auf `passwordHashingService()`-Resolver ✅
+
+- ✅ `DemoRestServer` und `InMemoryDemoUserDirectory` nutzen jetzt
+  `SecurityServiceResolver.passwordHashingService()` statt
+  `new Pbkdf2PasswordHasher()` direkt. Tests behalten den direkten
+  Konstruktor — sinnvoll für deterministische Unit-Tests.
 
 ## Offen — Part-5-Brief, in der mit dir abgestimmten Form
 
-### Step 3 — Q3 (a) `LogoutService` API-Rewrite
+### Step 3 — Q3 (a) `LogoutService` API-Rewrite ✅
 
-- [ ] `record SubjectId(String value)` (Q7) in `security-core`.
-- [ ] `LogoutService.logout(SubjectId, LogoutScope)` mit
+- ✅ `record SubjectId(String value)` (Q7) in `security-core`.
+- ✅ `LogoutService.logout(SubjectId, LogoutScope)` mit
   `LogoutScope { CurrentSession | AllSessionsOfSubject }` —
   ersetzt das bestehende `logout(LogoutContext)` (invasiv).
-- [ ] `SubjectSessionRegistry`-SPI + `InMemorySubjectSessionRegistry`-Default.
-- [ ] `DemoTokenStore` mit Per-User-Index, implementiert
-  `SubjectSessionRegistry`.
-- [ ] `POST /api/logout` durch das SPI führen.
-- [ ] Vaadin `MainView` und Vaadin-rest-client auf neue API
-  umstellen.
+  `LogoutContext` + `LogoutPolicy` ersatzlos entfernt;
+  Konfiguration (`targetRoute`, `closeVaadinSession`,
+  `invalidateHttpSession`) hängt am `VaadinLogoutService`-Konstruktor.
+- ✅ `SubjectSessionRegistry`-SPI + `InMemorySubjectSessionRegistry`-Default.
+- ✅ `SubjectClearingLogoutService<U>` als adapter-neutraler Default
+  (CurrentSession löscht `SubjectStore`, AllSessionsOfSubject räumt
+  Registry leer, Audit + Listener-Fan-out je Session).
+- ✅ `LogoutListener`-Fanout (CopyOnWriteArrayList, swallowt
+  Listener-Fehler) + `SecurityServiceResolver.logoutService()` /
+  `setLogoutService(...)` mit `NoopLogoutService.INSTANCE`-Fallback.
+- ✅ `DemoTokenStore` mit Per-User-Index, implementiert
+  `SubjectSessionRegistry`; `issue`/`revoke` halten den Index aktuell.
+- ✅ `POST /api/logout` → resolved `SubjectId` aus dem Token, revoked
+  den eigenen Token und delegiert für Audit/Fan-out an
+  `SecurityServiceResolver.logoutService()`. Service ist in
+  `DemoRestServer.start(...)` mit Token-revokendem Listener
+  registriert.
+- ✅ Vaadin `MainView` (demo-vaadin und demo-vaadin-rest-client)
+  auf neue API umgestellt — `LogoutService.logout(SubjectId.of(...),
+  LogoutScope.CurrentSession)`.
+- ✅ Neue Tests: `SubjectIdTest`,
+  `InMemorySubjectSessionRegistryTest`, neuformulierter
+  `SubjectClearingLogoutServiceTest` (7 Cases), erweiterter
+  `SecurityServiceResolverTest` (4 Logout-Cases), neuer
+  `VaadinLogoutServiceTest` (7 Cases) und
+  `DemoTokenStoreLogoutTest` (3 Cases). Reactor grün (8 Module,
+  alle Tests grün, demo-rest 35/35).
 
-### Step 4 — Q4/Q5/Q6 — Audit-Migration + AuditView
+### Step 4 — Q4/Q5/Q6 — Audit-Migration + AuditView ✅
 
-- [ ] Sealed `AuditEvent` mit Record-Varianten ersetzt das
-  `SecurityAuditEvent` + `EventType`-Modell:
-  `LoginSucceeded`, `LoginFailed`, `AccessGranted`,
-  `AccessDenied`, `BootstrapAdminCreated`,
-  `BootstrapTokenRejected`, `LogoutPerformed`.
-- [ ] `SecurityAuditService.publish(AuditEvent)` +
-  `query(AuditQuery)`; `AuditSink` als separater Vertrag.
-- [ ] `RingBufferAuditSink` als zweite SPI-Senke (Q5 b), mit
-  Composite-Sink, der `LoggingSecurityAuditService` + Ring-Buffer
-  fan-out.
-- [ ] Bootstrap-Audit-Events: `BootstrapAdminCreated`,
-  `BootstrapTokenRejected` in `InitialAdminBootstrapService`.
-- [ ] `LoginSucceeded` aus den Authentication-Services
-  (`MyAuthenticationService`, `RestBackedAuthenticationService`,
-  `DemoHandlers.login`).
-- [ ] `audit:read`-Permission in beide Vaadin-Demo-
-  `DemoRolePermissionMapping` (`ROLE_ADMIN`).
-- [ ] Vaadin `/audit`-Route mit Grid + Filter, in beiden
-  Vaadin-Demos.
-- [ ] Cross-cutting: prüfen ob `demo-vaadin/InMemoryDemoUserDirectory`
-  noch irgendwo Klartext vergleicht (Konzept-Brief „plain-text
-  elimination").
+In vier Sub-Iterationen ausgeliefert (4A → 4B → 4C → 4D), je
+Reactor-grün vor dem nächsten Schritt.
+
+**4A — Sealed `AuditEvent`-Hierarchy + AuditSink ✅**
+
+- ✅ `AuditEvent` (sealed interface) + 14 Record-Subtypes in
+  `security-core/audit/`: `LoginSucceeded`, `LoginFailed`,
+  `LogoutPerformed`, `AccessGranted`, `AccessDenied`,
+  `ActionDenied`, `BruteForceLimitReached`, `SessionCreated`,
+  `SessionExpired`, `SessionInvalidated`, `RoleAssigned`,
+  `RoleRevoked`, `BootstrapAdminCreated`,
+  `BootstrapTokenRejected`. Felder pro Variante — kein
+  Free-Form-Attributes-Map.
+- ✅ `AuditQuery`-Record (`types`, `subjectId`, `from`, `to`,
+  `limit`) mit Factories `all()` / `ofType(...)` / `forSubject(...)`
+  und Pattern-matching-`matches(...)` (subject-Extraktion über
+  alle 14 Varianten).
+- ✅ `AuditSink`-Vertrag (single-method, write-only,
+  „must not throw").
+- ✅ `RingBufferAuditSink` (default cap. 256, oldest drops first,
+  thread-safe).
+- ✅ `LoggingAuditSink` (JUL, kompakter `AUDIT type=… field=value …`
+  Format, never throws).
+- ✅ Tests: `AuditQueryTest`, `RingBufferAuditSinkTest`,
+  `LoggingAuditSinkTest` (19 Cases).
+
+**4B — Service-Rewrite + Emit-Site-Migration + Type-Deletion ✅**
+
+- ✅ `SecurityAuditService` neu: `publish(AuditEvent)` +
+  `query(AuditQuery)`. `record(SecurityAuditEvent)` weg.
+- ✅ `NoopSecurityAuditService` auf neue API umgestellt
+  (`query` returns `List.of()`).
+- ✅ `CompositeAuditService` (`RingBuffer` + zusätzliche
+  Sinks; query gegen Ring-Buffer).
+- ✅ `DefaultCompositeAuditService` (no-arg, SPI-registrierbar) —
+  baut RingBuffer + LoggingAuditSink.
+- ✅ Emit-Sites umgestellt: `SubjectClearingLogoutService` →
+  `LogoutPerformed`; `StaticActionAuthorizationService` →
+  `ActionDenied`; `InMemoryLoginAttemptPolicy` → `LoginFailed` +
+  `BruteForceLimitReached` (mit `failedAttempts` +
+  `lockoutDuration`); `TimeoutSessionPolicy` → `SessionCreated`
+  / `SessionExpired` / `SessionInvalidated`;
+  `AuthorizationListener` (Vaadin) → `AccessGranted` /
+  `AccessDenied`; `SessionLifetimeListener` (Vaadin) →
+  `SessionExpired`; `RestAuthenticationFilter` +
+  `RestAuthorizationFilter` → `AccessGranted` / `AccessDenied`
+  / `SessionExpired`.
+- ✅ `SecurityAuditEvent`, `SecurityAuditEventType`,
+  `LoggingSecurityAuditService` ersatzlos entfernt; alle SPI-Files
+  in den 3 Demos auf `DefaultCompositeAuditService` umgestellt.
+- ✅ Tests: 3 obsolete Test-Files entfernt
+  (`SecurityAuditEventTest`,
+  `LoggingSecurityAuditServiceTest`, alter
+  `NoopSecurityAuditServiceTest`); 5 Tests auf neue API
+  migriert; neuer `NoopSecurityAuditServiceTest`.
+
+**4C — Neue Events ✅**
+
+- ✅ `LoginSucceeded` aus `MyAuthenticationService`
+  (demo-vaadin), `RestBackedAuthenticationService`
+  (demo-vaadin-rest-client) und `DemoHandlers.login`
+  (demo-rest). Username + clientAddress + (sessionId/Token wo
+  bekannt).
+- ✅ `BootstrapAdminCreated` an beiden `Created`-Returns in
+  `InitialAdminBootstrapService`.
+- ✅ `BootstrapTokenRejected` mit reason-Codes `"Unknown"` /
+  `"Mismatch"` / `"Expired"`. `InvalidBootstrapToken`-Branch
+  in zwei getrennte Pfade aufgeteilt, damit reason korrekt
+  vergeben wird.
+- ✅ Tests: `InitialAdminBootstrapAuditTest` (4 Cases — 1×
+  Created, 3× Rejected mit allen reason-Codes).
+
+**4D — `audit:read`-Permission + Vaadin `/audit`-Route ✅**
+
+- ✅ `audit:read`-Permission in demo-rest (`DemoPermission` +
+  `DemoRolePermissionMapping` → `ROLE_ADMIN`) und in
+  demo-vaadin (`DemoPermission` + `MyAuthorizationService` →
+  `ADMIN` und `Q_ADMIN`). demo-vaadin-rest-client bekommt
+  `audit:read` vom Backend, weil dort der Admin-User die
+  Permission via REST-Login mitgeliefert bekommt.
+- ✅ `demo-vaadin/.../views/AuditView` (`@Route("audit")` +
+  `@RequiresPermission("audit:read")`) mit
+  `Grid<AuditEvent>`, ComboBox-Typ-Filter,
+  TextField-Subject-Filter, Refresh + Back-Buttons.
+  Pattern-Match über alle 14 Varianten für Subject- und
+  Detail-Spalten. Newest-first-Sortierung. Link in
+  `ViewNavigationCard`.
+- ✅ `demo-vaadin-rest-client/.../views/standalone/AuditView`
+  (bewusste 1:1-Duplikation, andere `MainView`-Klasse).
+  Eingehängt in den Drawer „Standalone routes".
+- Out of scope (bewusst nicht in 4D): Backend-Audit (demo-rest)
+  über REST exponieren. Das müsste ein eigener
+  `GET /api/audit`-Endpoint mit `@RequiresPermission("audit:read")`
+  sein. Brief-Anforderung ist „Vaadin /audit-Route" — erfüllt.
 
 ### Bekannte Stabilitätsbeobachtung
 
@@ -214,37 +339,28 @@
 
 ## Empfohlene Reihenfolge der nächsten Iteration
 
-1. **§ 4 Demo-Wiring abschließen** — `SessionLifetimeListener`-SPI
-   in beiden Vaadin-Demos + `DemoSubjectResolver.resolveSessionMetadata`
-   in demo-rest mit per-Token-Timestamps.
-2. **Re-Hash beim Login** verdrahten — klein, abgeschlossen,
-   vervollständigt § 1.x.
-3. **`PasswordHasher` im Resolver** registrieren.
-4. **Step 3 — `LogoutService` Rewrite** (Q3 a + Q7) — invasiv,
-   eigene Iteration.
-5. **Step 4 — Audit-Migration + AuditView** (Q4 a + Q5 b + Q6) —
-   sehr invasiv, mehrteilige Iteration.
-6. **Demo-`PermissionDemoCard` auf `ActionAuthorizationService`**
-   umstellen.
-7. **Karibu / TestBench** als Grundlage für die UI-Adapter-Tests
-   aus dem § Strukturell-Block.
-8. **Optional:** Readiness-Check in `DemoRestServer.start(...)`,
+1. **Session-Rotation honour beim Login** (B3, vertagt) —
+   `SessionDecision.Invalidate(loginRoute)` aus `policy.onLogin(...)`
+   umsetzen (alte VaadinSession schließen, Subject transferieren,
+   redirect). Nur relevant wenn `rotateSessionAfterLogin = true`.
+   Erfordert Vaadin-spezifischen Subject-Handover-Mechanismus.
+2. **Karibu / TestBench** als Grundlage für die UI-Adapter-Tests
+   aus dem § Strukturell-Block. Ideal als erster Use-Case: die
+   neue `/audit`-Route.
+3. **Paket-Migration** (optional, post-V00.60): `authentication/`
+   und `logout/` als eigene Top-Level-Pakete extrahieren.
+4. **REST-`/api/audit`-Endpoint** (optional) — backend-seitiges
+   Audit-Log über REST exponieren, parallel zur Vaadin-Route.
+   Wäre konsistent mit dem demo-rest-Stil. Kein Brief-Punkt.
+5. **Optional:** Readiness-Check in `DemoRestServer.start(...)`,
    falls der Bootstrap-Test wirklich flaky bleibt.
 
 ## Offene Vorab-Entscheidungen
 
-- **`SessionPolicy`-Default für die Demos:** `TimeoutSessionPolicy`
-  mit aktivierter Rotation aktiv schalten, oder Noop bis das
-  Demo-Wiring rund ist?
 - **Idle/Absolute-Demo-Werte:** Konservative Defaults aus
   `Config.defaults()` (30 min idle / 12 h absolute) oder
   aggressive Demo-Werte (z. B. 2 min idle / 30 min absolute), damit
   Reviewer den Effekt bei manuellem Testen sehen?
-- **`PasswordHasher`-Resolver-Default:** Wenn kein SPI registriert
-  ist, transparent `Pbkdf2PasswordHasher` mit Standard-Iterations
-  zurückgeben — oder fail-fast verlangen?
-- **`LogoutService`-Rewrite-Reihenfolge:** Step 3 vor oder nach
-  Audit-Migration (Step 4)? Audit-Migration berührt jeden
-  Emit-Site; Logout-Rewrite berührt jeden Aufrufer. Beides
-  parallel würde Konflikte auslösen — Empfehlung: erst Step 3,
-  dann Step 4.
+- **`SessionPolicy`-Rotation in den Demos:** `rotateSessionAfterLogin`
+  per Default aktiv? Hängt an Punkt 1 oben — solange der Rotation-Honour
+  nicht implementiert ist, bleibt es bei `false`.

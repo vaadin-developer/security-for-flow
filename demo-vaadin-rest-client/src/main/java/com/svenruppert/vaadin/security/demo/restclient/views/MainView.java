@@ -17,10 +17,11 @@
 package com.svenruppert.vaadin.security.demo.restclient.views;
 
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresRole;
-import com.svenruppert.vaadin.security.authorization.api.LogoutContext;
-import com.svenruppert.vaadin.security.authorization.api.LogoutPolicy;
+import com.svenruppert.vaadin.security.authorization.api.LogoutScope;
 import com.svenruppert.vaadin.security.authorization.api.LogoutService;
+import com.svenruppert.vaadin.security.authorization.api.SubjectId;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
+import com.svenruppert.vaadin.security.authorization.vaadin.DefaultVaadinLogoutGateway;
 import com.svenruppert.vaadin.security.authorization.vaadin.VaadinLogoutService;
 import com.svenruppert.vaadin.security.demo.restclient.backend.BackendClientProvider;
 import com.svenruppert.vaadin.security.demo.restclient.backend.BackendException;
@@ -29,6 +30,7 @@ import com.svenruppert.vaadin.security.demo.restclient.security.ClientSecurityCo
 import com.svenruppert.vaadin.security.demo.restclient.views.components.BackendOperationCard;
 import com.svenruppert.vaadin.security.demo.restclient.views.components.PermissionDemoCard;
 import com.svenruppert.vaadin.security.demo.restclient.views.standalone.AdminStatusView;
+import com.svenruppert.vaadin.security.demo.restclient.views.standalone.AuditView;
 import com.svenruppert.vaadin.security.demo.restclient.views.standalone.DocumentsView;
 import com.svenruppert.vaadin.security.demo.restclient.views.standalone.NerdView;
 import com.vaadin.flow.component.Component;
@@ -61,7 +63,12 @@ public class MainView extends AppLayout {
   public static final String NAV = "";
 
   private static final LogoutService LOGOUT_SERVICE =
-      new VaadinLogoutService<>(SubjectStores.subjectStore(), RemoteUser.class);
+      new VaadinLogoutService<>(
+          SubjectStores.subjectStore(), RemoteUser.class,
+          new DefaultVaadinLogoutGateway(),
+          "/" + MyLoginView.NAV,
+          /* closeVaadinSession= */ true,
+          /* invalidateHttpSession= */ true);
 
   private final Map<Tab, Component> tab2Content = new HashMap<>();
 
@@ -110,7 +117,8 @@ public class MainView extends AppLayout {
         new VerticalLayout(
             new RouterLink("/documents — @RequiresPermission(\"document:read\")", DocumentsView.class),
             new RouterLink("/admin — @RequiresRole(\"ROLE_ADMIN\")", AdminStatusView.class),
-            new RouterLink("/nerd — @VisibleForRoles({ADMIN, EDITOR})", NerdView.class)
+            new RouterLink("/nerd — @VisibleForRoles({ADMIN, EDITOR})", NerdView.class),
+            new RouterLink("/audit — @RequiresPermission(\"audit:read\")", AuditView.class)
         )));
 
     tabs.add(home, documents, permissions, links);
@@ -154,6 +162,9 @@ public class MainView extends AppLayout {
         // Best-effort — backend may already have invalidated the token.
       }
     }
-    LOGOUT_SERVICE.logout(LogoutContext.of(LogoutPolicy.fullInvalidate("/" + MyLoginView.NAV)));
+    SubjectId subjectId = SubjectStores.subjectStore().currentSubject(RemoteUser.class)
+        .map(u -> SubjectId.of(u.subjectId()))
+        .orElse(SubjectId.of("anonymous"));
+    LOGOUT_SERVICE.logout(subjectId, LogoutScope.CurrentSession);
   }
 }

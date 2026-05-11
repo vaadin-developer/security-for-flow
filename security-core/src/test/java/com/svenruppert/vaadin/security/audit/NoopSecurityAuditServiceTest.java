@@ -19,22 +19,32 @@ package com.svenruppert.vaadin.security.audit;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import java.time.Instant;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@DisplayName("NoopSecurityAuditService")
 class NoopSecurityAuditServiceTest {
 
   @Test
-  @DisplayName("INSTANCE returns the singleton")
-  void singletonInstance() {
-    assertSame(NoopSecurityAuditService.INSTANCE, NoopSecurityAuditService.INSTANCE);
+  @DisplayName("publish silently discards the event")
+  void publishIsSilent() {
+    NoopSecurityAuditService.INSTANCE.publish(
+        new LoginSucceeded(Instant.now(), "alice", null, null));
+    // no exception, no side effect to assert; the type contract is that it must not throw
   }
 
   @Test
-  @DisplayName("record() never throws — neither for null nor for any populated event")
-  void neverThrows() {
-    SecurityAuditService service = NoopSecurityAuditService.INSTANCE;
-    assertDoesNotThrow(() -> service.record(null));
-    assertDoesNotThrow(() -> service.record(SecurityAuditEvent.of(SecurityAuditEventType.LOGOUT)));
+  @DisplayName("publish tolerates null events without throwing")
+  void publishTolerantOfNull() {
+    NoopSecurityAuditService.INSTANCE.publish(null);
+  }
+
+  @Test
+  @DisplayName("query returns an empty list regardless of the filter")
+  void queryReturnsEmpty() {
+    assertTrue(NoopSecurityAuditService.INSTANCE.query(AuditQuery.all()).isEmpty());
+    assertTrue(NoopSecurityAuditService.INSTANCE
+        .query(AuditQuery.ofType(LoginSucceeded.class)).isEmpty());
   }
 }

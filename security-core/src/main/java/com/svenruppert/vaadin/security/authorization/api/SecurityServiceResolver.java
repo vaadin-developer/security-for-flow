@@ -19,6 +19,8 @@ package com.svenruppert.vaadin.security.authorization.api;
 import com.svenruppert.vaadin.security.action.ActionAuthorizationService;
 import com.svenruppert.vaadin.security.audit.NoopSecurityAuditService;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.bootstrap.PasswordHasher;
+import com.svenruppert.vaadin.security.bootstrap.Pbkdf2PasswordHasher;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.vaadin.security.bruteforce.NoopLoginAttemptPolicy;
 import com.svenruppert.vaadin.security.session.NoopSessionPolicy;
@@ -63,6 +65,10 @@ public final class SecurityServiceResolver {
   private static final AtomicReference<LoginAttemptPolicy> LOGIN_ATTEMPT_POLICY_REF =
       new AtomicReference<>();
   private static final AtomicReference<SessionPolicy<?>> SESSION_POLICY_REF =
+      new AtomicReference<>();
+  private static final AtomicReference<PasswordHasher> PASSWORD_HASHER_REF =
+      new AtomicReference<>();
+  private static final AtomicReference<LogoutService> LOGOUT_SERVICE_REF =
       new AtomicReference<>();
 
   private SecurityServiceResolver() {
@@ -399,6 +405,130 @@ public final class SecurityServiceResolver {
     SESSION_POLICY_REF.set(policy);
   }
 
+  // ── PasswordHasher ─────────────────────────────────────────────
+
+  /**
+   * Returns the registered {@link PasswordHasher}, or a fresh
+   * {@link Pbkdf2PasswordHasher} when none is configured. Like the
+   * audit / login-attempt / session accessors, this method
+   * <strong>never</strong> throws — every application needs *some*
+   * hasher; falling back to PBKDF2 with default iterations is the
+   * least-surprising default.
+   *
+   * @return the resolved hasher, never {@code null}
+   */
+  public static PasswordHasher passwordHashingService() {
+    PasswordHasher cached = PASSWORD_HASHER_REF.get();
+    if (cached != null) {
+      return cached;
+    }
+
+    PasswordHasher loaded = findSingleService(
+        PasswordHasher.class,
+        ServiceLoader.load(PasswordHasher.class))
+        .orElseGet(Pbkdf2PasswordHasher::new);
+
+    PASSWORD_HASHER_REF.compareAndSet(null, loaded);
+    return PASSWORD_HASHER_REF.get();
+  }
+
+  /**
+   * Returns the SPI-registered {@link PasswordHasher}, or empty when
+   * the hasher is the default PBKDF2 fallback.
+   *
+   * @return the SPI-registered hasher, or empty
+   */
+  public static Optional<PasswordHasher> findPasswordHashingService() {
+    PasswordHasher cached = PASSWORD_HASHER_REF.get();
+    if (cached != null && !(cached instanceof Pbkdf2PasswordHasher)) {
+      return Optional.of(cached);
+    }
+    if (cached instanceof Pbkdf2PasswordHasher) {
+      // The cached instance is the default fallback. Allow SPI to
+      // override on the next lookup by reporting "no SPI" here.
+      return Optional.empty();
+    }
+
+    Optional<PasswordHasher> loaded = findSingleService(
+        PasswordHasher.class,
+        ServiceLoader.load(PasswordHasher.class));
+    loaded.ifPresent(hasher -> PASSWORD_HASHER_REF.compareAndSet(null, hasher));
+    return loaded;
+  }
+
+  /**
+   * Replaces the cached {@link PasswordHasher}. Intended for tests and
+   * for applications that prefer programmatic wiring over SPI.
+   *
+   * @param hasher the hasher, or {@code null} to clear
+   */
+  public static void setPasswordHashingService(PasswordHasher hasher) {
+    PASSWORD_HASHER_REF.set(hasher);
+  }
+
+  // ── LogoutService ──────────────────────────────────────────────
+
+  /**
+   * Returns the registered {@link LogoutService}, or
+   * {@link NoopLogoutService#INSTANCE} when none is configured.
+   * <p>
+   * Like the audit / login-attempt / session accessors, this method
+   * <strong>never</strong> throws — logout is optional infrastructure.
+   * Production applications register a real {@link LogoutService}
+   * (e.g. {@link SubjectClearingLogoutService} or the Vaadin adapter's
+   * {@code VaadinLogoutService}) during startup via
+   * {@link #setLogoutService(LogoutService)} or through
+   * {@code META-INF/services}.
+   *
+   * @return the resolved service, never {@code null}
+   */
+  public static LogoutService logoutService() {
+    LogoutService cached = LOGOUT_SERVICE_REF.get();
+    if (cached != null) {
+      return cached;
+    }
+
+    LogoutService loaded = findSingleService(
+        LogoutService.class,
+        ServiceLoader.load(LogoutService.class))
+        .orElse(NoopLogoutService.INSTANCE);
+
+    LOGOUT_SERVICE_REF.compareAndSet(null, loaded);
+    return LOGOUT_SERVICE_REF.get();
+  }
+
+  /**
+   * Returns the SPI-registered {@link LogoutService}, or empty when
+   * only the noop fallback is cached.
+   *
+   * @return the SPI-registered service, or empty
+   */
+  public static Optional<LogoutService> findLogoutService() {
+    LogoutService cached = LOGOUT_SERVICE_REF.get();
+    if (cached != null && cached != NoopLogoutService.INSTANCE) {
+      return Optional.of(cached);
+    }
+    if (cached == NoopLogoutService.INSTANCE) {
+      return Optional.empty();
+    }
+
+    Optional<LogoutService> loaded = findSingleService(
+        LogoutService.class,
+        ServiceLoader.load(LogoutService.class));
+    loaded.ifPresent(service -> LOGOUT_SERVICE_REF.compareAndSet(null, service));
+    return loaded;
+  }
+
+  /**
+   * Replaces the cached {@link LogoutService}. Intended for tests and
+   * for applications that prefer programmatic wiring over SPI.
+   *
+   * @param service the logout service, or {@code null} to clear
+   */
+  public static void setLogoutService(LogoutService service) {
+    LOGOUT_SERVICE_REF.set(service);
+  }
+
   // ── Reset (for testing) ────────────────────────────────────────
 
   /**
@@ -413,6 +543,8 @@ public final class SecurityServiceResolver {
     ACTION_AUTH_SERVICE_REF.set(null);
     LOGIN_ATTEMPT_POLICY_REF.set(null);
     SESSION_POLICY_REF.set(null);
+    PASSWORD_HASHER_REF.set(null);
+    LOGOUT_SERVICE_REF.set(null);
     SubjectStores.reset();
   }
 

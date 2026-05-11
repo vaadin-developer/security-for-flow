@@ -16,9 +16,13 @@
  */
 package com.svenruppert.vaadin.security.demo.app.views.components;
 
-import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
+import com.svenruppert.vaadin.security.action.ActionAuthorizationService;
+import com.svenruppert.vaadin.security.action.ActionPermission;
+import com.svenruppert.vaadin.security.authorization.api.AccessDeniedException;
+import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
+import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.demo.app.security.permissions.DemoPermission;
-import com.svenruppert.vaadin.security.demo.app.security.permissions.PermissionGuard;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -31,14 +35,20 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
+import java.util.Optional;
+
 /**
  * Reusable card that exercises the three demo permissions twice: once with
  * UX adaptation (button only visible when the permission is present) and
  * once with server-side enforcement (button always visible, request fails
  * on click for users without the permission).
  * <p>
- * The card is intentionally educational and is added to every workspace and
- * to every standalone view.
+ * Both patterns route through the
+ * {@link ActionAuthorizationService} SPI — UX hints via
+ * {@link ActionAuthorizationService#isAllowed isAllowed}, server-side
+ * enforcement via
+ * {@link ActionAuthorizationService#requireAllowed requireAllowed} which
+ * additionally emits an {@code ACTION_DENIED} audit event.
  */
 public class PermissionDemoCard extends Composite<VerticalLayout> {
 
@@ -60,8 +70,9 @@ public class PermissionDemoCard extends Composite<VerticalLayout> {
     root.add(new H4("Pattern B — Server-side guard (always visible, checked on click)"));
     root.add(new Paragraph(
         "Buttons are always visible. On click, the click handler calls "
-            + "PermissionGuard.requirePermission(...) before performing the "
-            + "action. This is the actual protection boundary."));
+            + "ActionAuthorizationService.requireAllowed(...) before performing "
+            + "the action. That call is the actual protection boundary; it "
+            + "emits an ACTION_DENIED audit event on failure."));
     root.add(buildEnforcementRow());
   }
 
@@ -87,9 +98,9 @@ public class PermissionDemoCard extends Composite<VerticalLayout> {
   }
 
   private static void addIfAllowed(HorizontalLayout row, DemoPermission permission, String label) {
-    if (PermissionGuard.hasPermission(permission.permissionName())) {
+    if (isAllowed(permission.actionPermission())) {
       Button button = new Button(label + " (" + permission.permissionName().value() + ")",
-          event -> success(permission.permissionName()));
+          event -> success(permission.actionPermission()));
       button.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SMALL);
       row.add(button);
     }
@@ -99,26 +110,41 @@ public class PermissionDemoCard extends Composite<VerticalLayout> {
     Button button = new Button(
         label + " (" + permission.permissionName().value() + ")",
         event -> {
+          MyUser user = currentUser().orElse(null);
           try {
-            PermissionGuard.requirePermission(permission.permissionName());
-            success(permission.permissionName());
-          } catch (com.svenruppert.vaadin.security.authorization.api.AccessDeniedException e) {
-            denied(permission.permissionName());
+            actionAuthorizationService().requireAllowed(user, permission.actionPermission());
+            success(permission.actionPermission());
+          } catch (AccessDeniedException e) {
+            denied(permission.actionPermission());
           }
         });
     button.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
     return button;
   }
 
-  private static void success(PermissionName permission) {
+  private static boolean isAllowed(ActionPermission permission) {
+    return currentUser()
+        .map(user -> actionAuthorizationService().isAllowed(user, permission))
+        .orElse(false);
+  }
+
+  private static ActionAuthorizationService<MyUser> actionAuthorizationService() {
+    return SecurityServiceResolver.actionAuthorizationService();
+  }
+
+  private static Optional<MyUser> currentUser() {
+    return SubjectStores.subjectStore().currentSubject(MyUser.class);
+  }
+
+  private static void success(ActionPermission permission) {
     Notification notification = Notification.show(
-        "OK — '" + permission.value() + "' executed.", 2500, Notification.Position.BOTTOM_END);
+        "OK — '" + permission.name() + "' executed.", 2500, Notification.Position.BOTTOM_END);
     notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
   }
 
-  private static void denied(PermissionName permission) {
+  private static void denied(ActionPermission permission) {
     Notification notification = Notification.show(
-        "Denied — missing '" + permission.value() + "'.", 3000, Notification.Position.BOTTOM_END);
+        "Denied — missing '" + permission.name() + "'.", 3000, Notification.Position.BOTTOM_END);
     notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
   }
 }

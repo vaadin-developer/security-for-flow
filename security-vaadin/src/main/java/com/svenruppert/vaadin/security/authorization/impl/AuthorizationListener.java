@@ -17,8 +17,9 @@
 package com.svenruppert.vaadin.security.authorization.impl;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
-import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
-import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
+import com.svenruppert.vaadin.security.audit.AccessDenied;
+import com.svenruppert.vaadin.security.audit.AccessGranted;
+import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.api.AccessEvaluator;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
@@ -37,6 +38,8 @@ import com.vaadin.flow.shared.Registration;
 import java.io.Serial;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
+import java.time.Clock;
+import java.time.Instant;
 
 import static java.util.Objects.requireNonNull;
 
@@ -115,27 +118,27 @@ public class AuthorizationListener
   }
 
   private void audit(AccessDecision decision, AccessContext context) {
-    SecurityAuditEventType type = decision instanceof AccessDecision.Granted
-        ? SecurityAuditEventType.ACCESS_GRANTED
-        : SecurityAuditEventType.ACCESS_DENIED;
+    String subjectId = context.subject().map(SecuritySubject::subjectId).orElse(null);
+    String route = context.resourceName();
+    Instant now = Instant.now(Clock.systemUTC());
 
-    String decisionLabel = switch (decision) {
-      case AccessDecision.Granted ignored -> "GRANTED";
-      case AccessDecision.Reroute reroute -> "REROUTE_" + reroute.target();
-      case AccessDecision.RerouteToError err -> "ERROR_" + err.type().getSimpleName();
-      case AccessDecision.RerouteWithParameter<?> r -> "REROUTE_PARAM_" + r.target();
-      case AccessDecision.RerouteWithParameters<?> r -> "REROUTE_PARAMS_" + r.target();
-    };
+    AuditEvent event;
+    if (decision instanceof AccessDecision.Granted) {
+      event = new AccessGranted(now, subjectId, route);
+    } else {
+      String reason = switch (decision) {
+        case AccessDecision.Granted ignored -> "Granted";
+        case AccessDecision.Reroute reroute -> "Reroute:" + reroute.target();
+        case AccessDecision.RerouteToError err -> "Error:" + err.type().getSimpleName();
+        case AccessDecision.RerouteWithParameter<?> r -> "ReroutePARAM:" + r.target();
+        case AccessDecision.RerouteWithParameters<?> r -> "ReroutePARAMS:" + r.target();
+      };
+      event = new AccessDenied(now, subjectId, route, reason);
+    }
 
     SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
     try {
-      sink.record(SecurityAuditEvent.builder(type)
-          .route(context.resourceName())
-          .decision(decisionLabel)
-          .subjectId(context.subject().map(SecuritySubject::subjectId).orElse(null))
-          .username(context.subject().map(SecuritySubject::displayName).orElse(null))
-          .attribute("operation", context.operation())
-          .build());
+      sink.publish(event);
     } catch (RuntimeException auditFailure) {
       // never block navigation because the audit sink failed
     }

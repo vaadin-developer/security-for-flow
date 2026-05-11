@@ -16,31 +16,42 @@
  */
 package com.svenruppert.vaadin.security.authorization.vaadin;
 
-import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
-import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
-import com.svenruppert.vaadin.security.authorization.api.LogoutContext;
-import com.svenruppert.vaadin.security.authorization.api.LogoutPolicy;
+import com.svenruppert.vaadin.security.authorization.api.InMemorySubjectSessionRegistry;
+import com.svenruppert.vaadin.security.authorization.api.LogoutListener;
+import com.svenruppert.vaadin.security.authorization.api.LogoutScope;
 import com.svenruppert.vaadin.security.authorization.api.LogoutService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.SubjectClearingLogoutService;
+import com.svenruppert.vaadin.security.authorization.api.SubjectId;
+import com.svenruppert.vaadin.security.authorization.api.SubjectSessionRegistry;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
+import com.svenruppert.vaadin.security.session.SessionContext;
+import com.svenruppert.vaadin.security.session.SessionPolicy;
+import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 
+import java.time.Instant;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
- * Vaadin-aware {@link LogoutService}. Drops the subject from the
- * {@link SubjectStore}, optionally invalidates the underlying servlet
- * session and closes the Vaadin session, and triggers a browser redirect
- * to the configured target route.
+ * Vaadin-aware {@link LogoutService}. Wraps a core
+ * {@link SubjectClearingLogoutService} and adds Vaadin-side cleanup:
+ * browser redirect, HTTP-session invalidation, VaadinSession close.
  * <p>
- * Order of operations:
+ * Order of operations on {@link LogoutScope#CurrentSession}:
  * <ol>
- *   <li>Subject removed from {@link SubjectStore}.</li>
+ *   <li>{@link SessionPolicy#onLogout(SessionContext) SessionPolicy.onLogout}
+ *       notification — emits {@code SESSION_INVALIDATED} audit when the
+ *       configured policy wants it.</li>
+ *   <li>Core {@link SubjectClearingLogoutService#logout(SubjectId, LogoutScope)
+ *       SubjectClearingLogoutService.logout} — drops the cached subject
+ *       from the {@link SubjectStore} and fans out the
+ *       {@link LogoutListener} chain.</li>
  *   <li>Browser redirect scheduled via {@code Page.setLocation(...)} —
  *       the response carries the redirect, so the next request creates a
  *       fresh session even if invalidation happens below.</li>
- *   <li>HTTP session invalidated (when policy demands it).</li>
- *   <li>Vaadin session closed (when policy demands it).</li>
+ *   <li>HTTP session invalidated (when configured).</li>
+ *   <li>Vaadin session closed (when configured).</li>
  * </ol>
  *
  * <p>The Vaadin static APIs are isolated behind {@link VaadinLogoutGateway}
@@ -53,83 +64,133 @@ public final class VaadinLogoutService<U> implements LogoutService {
   private final SubjectStore subjectStore;
   private final Class<U> subjectType;
   private final VaadinLogoutGateway gateway;
-  private final SecurityAuditService auditService;
+  private final SubjectClearingLogoutService<U> coreService;
+  private final String targetRoute;
+  private final boolean closeVaadinSessionOnLogout;
+  private final boolean invalidateHttpSessionOnLogout;
 
+  /**
+   * Convenience: full-invalidate logout (close VaadinSession + invalidate
+   * HttpSession) targeting {@code "/login"}.
+   */
   public VaadinLogoutService(SubjectStore subjectStore, Class<U> subjectType) {
-    this(subjectStore, subjectType, new DefaultVaadinLogoutGateway(), null);
-  }
-
-  public VaadinLogoutService(
-      SubjectStore subjectStore,
-      Class<U> subjectType,
-      VaadinLogoutGateway gateway) {
-    this(subjectStore, subjectType, gateway, null);
+    this(subjectStore, subjectType, new DefaultVaadinLogoutGateway(),
+        "/login", true, true);
   }
 
   /**
-   * @param subjectStore subject store to clear
-   * @param subjectType  subject type token
-   * @param gateway      Vaadin-side gateway for session/redirect calls
-   * @param auditService audit sink, or {@code null} to resolve from
-   *                     {@link SecurityServiceResolver#securityAuditService()}
-   *                     at logout time
+   * Full constructor.
+   *
+   * @param subjectStore                  subject store to clear on
+   *                                      {@link LogoutScope#CurrentSession}
+   * @param subjectType                   subject type token
+   * @param gateway                       Vaadin gateway (redirect /
+   *                                      session-invalidate seam)
+   * @param targetRoute                   route to redirect to after
+   *                                      logout
+   * @param closeVaadinSessionOnLogout    if {@code true},
+   *                                      {@link VaadinLogoutGateway#closeVaadinSession()}
+   *                                      runs after subject removal
+   * @param invalidateHttpSessionOnLogout if {@code true},
+   *                                      {@link VaadinLogoutGateway#invalidateHttpSession()}
+   *                                      runs after subject removal
    */
   public VaadinLogoutService(
       SubjectStore subjectStore,
       Class<U> subjectType,
       VaadinLogoutGateway gateway,
-      SecurityAuditService auditService) {
+      String targetRoute,
+      boolean closeVaadinSessionOnLogout,
+      boolean invalidateHttpSessionOnLogout) {
+    this(subjectStore, subjectType, gateway, targetRoute,
+        closeVaadinSessionOnLogout, invalidateHttpSessionOnLogout,
+        new InMemorySubjectSessionRegistry());
+  }
+
+  /**
+   * Full constructor with explicit {@link SubjectSessionRegistry}.
+   *
+   * @param subjectStore                  subject store to clear on
+   *                                      {@link LogoutScope#CurrentSession}
+   * @param subjectType                   subject type token
+   * @param gateway                       Vaadin gateway
+   * @param targetRoute                   route to redirect to after logout
+   * @param closeVaadinSessionOnLogout    close VaadinSession flag
+   * @param invalidateHttpSessionOnLogout invalidate HttpSession flag
+   * @param registry                      session registry used for
+   *                                      {@link LogoutScope#AllSessionsOfSubject}
+   */
+  public VaadinLogoutService(
+      SubjectStore subjectStore,
+      Class<U> subjectType,
+      VaadinLogoutGateway gateway,
+      String targetRoute,
+      boolean closeVaadinSessionOnLogout,
+      boolean invalidateHttpSessionOnLogout,
+      SubjectSessionRegistry registry) {
     this.subjectStore = Objects.requireNonNull(subjectStore, "subjectStore");
     this.subjectType = Objects.requireNonNull(subjectType, "subjectType");
     this.gateway = Objects.requireNonNull(gateway, "gateway");
-    this.auditService = auditService;
+    this.targetRoute = Objects.requireNonNull(targetRoute, "targetRoute");
+    this.closeVaadinSessionOnLogout = closeVaadinSessionOnLogout;
+    this.invalidateHttpSessionOnLogout = invalidateHttpSessionOnLogout;
+    this.coreService = new SubjectClearingLogoutService<>(
+        subjectStore, subjectType,
+        Objects.requireNonNull(registry, "registry"),
+        null);
   }
 
   @Override
-  public void logout(LogoutContext context) {
-    Objects.requireNonNull(context, "context");
-    LogoutPolicy policy = context.policy();
+  public void logout(SubjectId subjectId, LogoutScope scope) {
+    Objects.requireNonNull(subjectId, "subjectId");
+    Objects.requireNonNull(scope, "scope");
 
-    auditLogout(context, policy);
-
-    subjectStore.deleteCurrentSubject(subjectType);
-    gateway.redirectTo(policy.targetRoute());
-
-    if (policy.clearSubjectOnly()) {
-      return;
+    if (scope == LogoutScope.CurrentSession) {
+      notifySessionPolicyOnLogout();
     }
-    if (policy.invalidateHttpSession()) {
-      gateway.invalidateHttpSession();
-    }
-    if (policy.closeVaadinSession()) {
-      gateway.closeVaadinSession();
-    }
-  }
 
-  private void auditLogout(LogoutContext context, LogoutPolicy policy) {
-    SecurityAuditService sink = auditService != null
-        ? auditService
-        : SecurityServiceResolver.securityAuditService();
-    try {
-      sink.record(SecurityAuditEvent.builder(SecurityAuditEventType.LOGOUT)
-          .route(policy.targetRoute())
-          .decision(policy.clearSubjectOnly() ? "CLEAR_SUBJECT" : "INVALIDATE_SESSION")
-          .attribute("closeVaadinSession", String.valueOf(policy.closeVaadinSession()))
-          .attribute("invalidateHttpSession", String.valueOf(policy.invalidateHttpSession()))
-          .attributes(context.attributes() == null ? null : toStringMap(context.attributes()))
-          .build());
-    } catch (RuntimeException auditFailure) {
-      // never block a logout because the audit sink failed
-    }
-  }
+    coreService.logout(subjectId, scope);
 
-  private static java.util.Map<String, String> toStringMap(java.util.Map<String, Object> in) {
-    java.util.Map<String, String> out = new java.util.LinkedHashMap<>();
-    in.forEach((k, v) -> {
-      if (v != null) {
-        out.put(k, v.toString());
+    if (scope == LogoutScope.CurrentSession) {
+      gateway.redirectTo(targetRoute);
+      if (invalidateHttpSessionOnLogout) {
+        gateway.invalidateHttpSession();
       }
-    });
-    return out;
+      if (closeVaadinSessionOnLogout) {
+        gateway.closeVaadinSession();
+      }
+    }
+  }
+
+  @Override
+  public void addListener(LogoutListener listener) {
+    coreService.addListener(listener);
+  }
+
+  @Override
+  public void removeListener(LogoutListener listener) {
+    coreService.removeListener(listener);
+  }
+
+  /**
+   * Best-effort notification of
+   * {@link SessionPolicy#onLogout(SessionContext)} before the subject
+   * is removed from the {@link SubjectStore}. The hook is purely
+   * additive — it gives the policy a chance to emit a
+   * {@code SESSION_INVALIDATED} audit event next to the core
+   * {@code LOGOUT} audit. Failures are swallowed: a logout must never
+   * be blocked because the policy or audit subsystem failed.
+   */
+  private void notifySessionPolicyOnLogout() {
+    try {
+      Optional<U> currentSubject = subjectStore.currentSubject(subjectType);
+      SessionPolicy<Object> policy = SecurityServiceResolver.sessionPolicy();
+      Instant now = Instant.now();
+      SessionContext<Object> sessionContext = new SessionContext<>(
+          currentSubject.orElse(null), null, now, now, null, Map.of());
+      policy.onLogout(sessionContext);
+    } catch (RuntimeException notifyFailure) {
+      // never block the logout flow
+    }
   }
 }

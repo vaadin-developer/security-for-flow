@@ -17,8 +17,7 @@
 package com.svenruppert.vaadin.security.session.vaadin;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
-import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
-import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
+import com.svenruppert.vaadin.security.audit.SessionExpired;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.LoginListener;
 import com.svenruppert.vaadin.security.authorization.LoginListeners;
@@ -60,10 +59,8 @@ import java.util.Optional;
  * <ol>
  *   <li>Removes the cached subject from the {@link SubjectStore} so
  *       downstream filters see an unauthenticated request.</li>
- *   <li>Emits a
- *       {@link SecurityAuditEventType#SESSION_EXPIRED} audit event with
- *       a {@code IDLE_TIMEOUT} or {@code ABSOLUTE_LIFETIME} decision
- *       label.</li>
+ *   <li>Emits a {@link SessionExpired} audit event with an
+ *       {@code IdleTimeout} or {@code AbsoluteLifetimeExceeded} reason.</li>
  *   <li>Forwards the navigation to the configured
  *       {@link LoginView} (resolved through the registered
  *       {@link LoginListener}).</li>
@@ -147,9 +144,9 @@ public class SessionLifetimeListener
     switch (decision) {
       case SessionPolicyDecision.Active ignored -> session.setAttribute(LAST_ACTIVITY_ATTRIBUTE, now);
       case SessionPolicyDecision.IdleTimeout ignored ->
-          expire(event, store.get(), subjectId, "IDLE_TIMEOUT");
+          expire(event, store.get(), subjectId, "IdleTimeout");
       case SessionPolicyDecision.AbsoluteLifetimeExceeded ignored ->
-          expire(event, store.get(), subjectId, "ABSOLUTE_LIFETIME");
+          expire(event, store.get(), subjectId, "AbsoluteLifetimeExceeded");
     }
   }
 
@@ -222,10 +219,8 @@ public class SessionLifetimeListener
   private static void audit(String subjectId, String reasonLabel) {
     SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
     try {
-      sink.record(SecurityAuditEvent.builder(SecurityAuditEventType.SESSION_EXPIRED)
-          .subjectId(subjectId)
-          .decision(reasonLabel)
-          .build());
+      sink.publish(new SessionExpired(
+          Instant.now(), subjectId == null ? "" : subjectId, null, reasonLabel));
     } catch (RuntimeException auditFailure) {
       // never block navigation because the audit sink failed
     }

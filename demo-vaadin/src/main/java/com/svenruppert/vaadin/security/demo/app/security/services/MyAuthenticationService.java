@@ -17,6 +17,8 @@
 package com.svenruppert.vaadin.security.demo.app.security.services;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
+import com.svenruppert.vaadin.security.audit.LoginSucceeded;
+import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.api.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
@@ -27,6 +29,9 @@ import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectory
 import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectoryProvider;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.vaadin.flow.server.VaadinRequest;
+
+import java.time.Clock;
+import java.time.Instant;
 
 public class MyAuthenticationService
     implements AuthenticationService<Credentials, MyUser>, HasLogger {
@@ -51,10 +56,21 @@ public class MyAuthenticationService
     boolean ok = directory().checkCredentials(credentials);
     if (ok) {
       policy.recordSuccess(attempt);
+      auditLoginSucceeded(credentials.username(), attempt.clientAddress());
     } else {
       policy.recordFailure(attempt);
     }
     return ok;
+  }
+
+  private static void auditLoginSucceeded(String username, String clientAddress) {
+    SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
+    try {
+      sink.publish(new LoginSucceeded(
+          Instant.now(Clock.systemUTC()), username, clientAddress, null));
+    } catch (RuntimeException ignored) {
+      // never block a successful login because the audit sink failed
+    }
   }
 
   @Override

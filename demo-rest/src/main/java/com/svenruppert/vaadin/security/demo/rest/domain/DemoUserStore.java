@@ -54,9 +54,34 @@ public final class DemoUserStore {
 
   public synchronized Optional<DemoUser> authenticate(String username, String password) {
     DemoUser user = users.get(username);
-    if (user == null) return Optional.empty();
-    if (!hasher.verify(password.toCharArray(), user.passwordHash())) return Optional.empty();
-    return Optional.of(user);
+    if (user == null) {
+      return Optional.empty();
+    }
+    char[] raw = password.toCharArray();
+    if (!hasher.verify(raw, user.passwordHash())) {
+      return Optional.empty();
+    }
+    DemoUser current = user;
+    if (hasher.needsRehash(current.passwordHash())) {
+      try {
+        String freshHash = hasher.hash(raw);
+        DemoUser upgraded = new DemoUser(
+            current.username(), current.displayName(), freshHash, current.role());
+        users.put(upgraded.username(), upgraded);
+        current = upgraded;
+      } catch (RuntimeException rehashFailure) {
+        // Login already succeeded against the existing hash; failing to
+        // upgrade the hash on this login attempt is not a security
+        // failure. Fall through with the original user.
+      }
+    }
+    return Optional.of(current);
+  }
+
+  /** Test seam: returns the stored hash for the given username, or empty. */
+  public synchronized Optional<String> storedPasswordHash(String username) {
+    DemoUser user = users.get(username);
+    return user == null ? Optional.empty() : Optional.of(user.passwordHash());
   }
 
   public synchronized void register(DemoUser user) {

@@ -16,6 +16,8 @@
  */
 package com.svenruppert.vaadin.security.demo.restclient.security;
 
+import com.svenruppert.vaadin.security.audit.LoginSucceeded;
+import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.api.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
@@ -26,6 +28,9 @@ import com.svenruppert.vaadin.security.demo.restclient.backend.Credentials;
 import com.svenruppert.vaadin.security.demo.restclient.backend.LoginResult;
 import com.svenruppert.vaadin.security.demo.restclient.backend.RemoteUser;
 import com.vaadin.flow.server.VaadinRequest;
+
+import java.time.Clock;
+import java.time.Instant;
 
 /**
  * SPI-loaded {@link AuthenticationService} that delegates the credential
@@ -63,10 +68,21 @@ public class RestBackedAuthenticationService
     if (result instanceof LoginResult.Authenticated(String token, RemoteUser user)) {
       ClientSecurityContext.setActiveLogin(token, user);
       policy.recordSuccess(attempt);
+      auditLoginSucceeded(user, attempt.clientAddress());
       return true;
     }
     policy.recordFailure(attempt);
     return false;
+  }
+
+  private static void auditLoginSucceeded(RemoteUser user, String clientAddress) {
+    SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
+    try {
+      sink.publish(new LoginSucceeded(
+          Instant.now(Clock.systemUTC()), user.subjectId(), clientAddress, null));
+    } catch (RuntimeException ignored) {
+      // never block a successful login because the audit sink failed
+    }
   }
 
   @Override

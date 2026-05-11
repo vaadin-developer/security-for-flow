@@ -16,12 +16,14 @@
  */
 package com.svenruppert.vaadin.security.authorization.vaadin;
 
-import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
-import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
-import com.svenruppert.vaadin.security.authorization.api.LogoutContext;
-import com.svenruppert.vaadin.security.authorization.api.LogoutPolicy;
+import com.svenruppert.vaadin.security.authorization.api.InMemorySubjectSessionRegistry;
+import com.svenruppert.vaadin.security.authorization.api.LogoutListener;
+import com.svenruppert.vaadin.security.authorization.api.LogoutScope;
+import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.SubjectId;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
+import com.svenruppert.vaadin.security.authorization.api.SubjectSessionRegistry;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -29,32 +31,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisplayName("VaadinLogoutService")
+@DisplayName("VaadinLogoutService — (SubjectId, LogoutScope) API")
 class VaadinLogoutServiceTest {
 
-  @Test
-  @DisplayName("clearSubjectOnly drops subject + redirects but skips session invalidation")
-  void clearSubjectOnly() {
-    RecordingSubjectStore store = new RecordingSubjectStore();
-    RecordingGateway gateway = new RecordingGateway();
-    new VaadinLogoutService<>(store, String.class, gateway)
-        .logout(LogoutContext.of(LogoutPolicy.clearSubjectOnly("/login")));
+  private final SubjectId alice = SubjectId.of("alice");
 
-    assertEquals(String.class, store.deletedFor);
-    assertEquals("/login", gateway.redirectTarget);
-    assertEquals(0, gateway.closedVaadin);
-    assertEquals(0, gateway.invalidatedHttp);
+  @AfterEach
+  void resetResolver() {
+    SecurityServiceResolver.resetAll();
   }
 
   @Test
-  @DisplayName("fullInvalidate drops subject, redirects, then invalidates http and closes vaadin")
-  void fullInvalidate() {
+  @DisplayName("CurrentSession drops subject, redirects, then invalidates http + closes vaadin")
+  void currentSession_fullFlow() {
     RecordingSubjectStore store = new RecordingSubjectStore();
     RecordingGateway gateway = new RecordingGateway();
-    new VaadinLogoutService<>(store, String.class, gateway)
-        .logout(LogoutContext.of(LogoutPolicy.fullInvalidate("/login")));
+
+    new VaadinLogoutService<>(store, String.class, gateway,
+        "/login", true, true)
+        .logout(alice, LogoutScope.CurrentSession);
 
     assertEquals(String.class, store.deletedFor);
     assertEquals("/login", gateway.redirectTarget);
@@ -66,103 +64,122 @@ class VaadinLogoutServiceTest {
   }
 
   @Test
-  @DisplayName("invalidateHttpSession-only policy keeps Vaadin session alive")
-  void invalidateHttpOnly() {
+  @DisplayName("CurrentSession with both invalidate flags false: only redirect + subject drop")
+  void currentSession_clearSubjectOnly() {
     RecordingSubjectStore store = new RecordingSubjectStore();
     RecordingGateway gateway = new RecordingGateway();
-    new VaadinLogoutService<>(store, String.class, gateway)
-        .logout(LogoutContext.of(LogoutPolicy.invalidateHttpSession("/login")));
+
+    new VaadinLogoutService<>(store, String.class, gateway,
+        "/login", false, false)
+        .logout(alice, LogoutScope.CurrentSession);
+
+    assertEquals(String.class, store.deletedFor);
+    assertEquals("/login", gateway.redirectTarget);
+    assertEquals(0, gateway.closedVaadin);
+    assertEquals(0, gateway.invalidatedHttp);
+  }
+
+  @Test
+  @DisplayName("CurrentSession with only invalidateHttpSession: redirect + http invalidate, no vaadin close")
+  void currentSession_invalidateHttpOnly() {
+    RecordingSubjectStore store = new RecordingSubjectStore();
+    RecordingGateway gateway = new RecordingGateway();
+
+    new VaadinLogoutService<>(store, String.class, gateway,
+        "/login", false, true)
+        .logout(alice, LogoutScope.CurrentSession);
 
     assertEquals(1, gateway.invalidatedHttp);
     assertEquals(0, gateway.closedVaadin);
   }
 
   @Test
-  @DisplayName("logout records a LOGOUT audit event with policy attributes")
-  void logout_emitsAuditEvent() {
+  @DisplayName("AllSessionsOfSubject enumerates the registry but skips Vaadin redirect / invalidate")
+  void allSessions_doesNotInvalidateCurrentVaadinSession() {
+    SubjectSessionRegistry registry = new InMemorySubjectSessionRegistry();
+    registry.register(alice, "tok-1");
+    registry.register(alice, "tok-2");
     RecordingSubjectStore store = new RecordingSubjectStore();
     RecordingGateway gateway = new RecordingGateway();
-    RecordingAuditService audit = new RecordingAuditService();
+    RecordingListener listener = new RecordingListener();
 
-    new VaadinLogoutService<>(store, String.class, gateway, audit)
-        .logout(LogoutContext.of(LogoutPolicy.fullInvalidate("/bye")));
+    VaadinLogoutService<String> service = new VaadinLogoutService<>(
+        store, String.class, gateway,
+        "/login", true, true, registry);
+    service.addListener(listener);
 
-    assertEquals(1, audit.events.size());
-    SecurityAuditEvent event = audit.events.get(0);
-    assertSame(SecurityAuditEventType.LOGOUT, event.type());
-    assertEquals("/bye", event.route());
-    assertEquals("INVALIDATE_SESSION", event.decision());
-    assertEquals("true", event.attributes().get("closeVaadinSession"));
-    assertEquals("true", event.attributes().get("invalidateHttpSession"));
+    service.logout(alice, LogoutScope.AllSessionsOfSubject);
+
+    assertEquals(null, store.deletedFor,
+        "AllSessionsOfSubject does not touch the current-thread SubjectStore");
+    assertEquals(null, gateway.redirectTarget,
+        "AllSessionsOfSubject does not redirect the current request");
+    assertEquals(0, gateway.closedVaadin);
+    assertEquals(0, gateway.invalidatedHttp);
+    assertTrue(registry.sessionsOf(alice).isEmpty(),
+        "registry must have been cleared");
+    assertEquals(2, listener.invocations.size(),
+        "listeners fire once per session id");
   }
 
   @Test
-  @DisplayName("clearSubjectOnly logout decision is recorded as CLEAR_SUBJECT")
-  void logout_clearSubjectOnlyDecision() {
-    RecordingSubjectStore store = new RecordingSubjectStore();
-    RecordingGateway gateway = new RecordingGateway();
-    RecordingAuditService audit = new RecordingAuditService();
+  @DisplayName("CurrentSession notifies SessionPolicy.onLogout")
+  void currentSession_notifiesSessionPolicy() {
+    RecordingSessionPolicy<String> policy = new RecordingSessionPolicy<>();
+    SecurityServiceResolver.setSessionPolicy(policy);
 
-    new VaadinLogoutService<>(store, String.class, gateway, audit)
-        .logout(LogoutContext.of(LogoutPolicy.clearSubjectOnly("/login")));
+    new VaadinLogoutService<>(new RecordingSubjectStore(), String.class,
+        new RecordingGateway(), "/login", true, true)
+        .logout(alice, LogoutScope.CurrentSession);
 
-    assertEquals("CLEAR_SUBJECT", audit.events.get(0).decision());
-    assertEquals("false", audit.events.get(0).attributes().get("closeVaadinSession"));
-    assertEquals("false", audit.events.get(0).attributes().get("invalidateHttpSession"));
+    assertEquals(1, policy.onLogoutCalls);
   }
 
   @Test
-  @DisplayName("audit event is fired before subject removal so the subject id is still available downstream")
-  void logout_auditFiresFirst() {
-    RecordingSubjectStore store = new RecordingSubjectStore();
-    RecordingGateway gateway = new RecordingGateway();
-    RecordingAuditService audit = new RecordingAuditService();
-    audit.beforeRecord = () -> assertNull(store.deletedFor,
-        "audit must fire before the subject is dropped");
+  @DisplayName("AllSessionsOfSubject does NOT notify SessionPolicy.onLogout (current-thread concern)")
+  void allSessions_doesNotNotifySessionPolicy() {
+    RecordingSessionPolicy<String> policy = new RecordingSessionPolicy<>();
+    SecurityServiceResolver.setSessionPolicy(policy);
 
-    new VaadinLogoutService<>(store, String.class, gateway, audit)
-        .logout(LogoutContext.of(LogoutPolicy.fullInvalidate("/login")));
+    new VaadinLogoutService<>(new RecordingSubjectStore(), String.class,
+        new RecordingGateway(), "/login", true, true)
+        .logout(alice, LogoutScope.AllSessionsOfSubject);
 
-    assertEquals(String.class, store.deletedFor);
-    assertEquals(1, audit.events.size());
+    assertEquals(0, policy.onLogoutCalls);
   }
 
   @Test
-  @DisplayName("audit-sink failure must not break the logout flow")
-  void logout_auditFailureIsSwallowed() {
-    RecordingSubjectStore store = new RecordingSubjectStore();
-    RecordingGateway gateway = new RecordingGateway();
-    SecurityAuditService throwingAudit = event -> {
-      throw new RuntimeException("audit boom");
-    };
+  @DisplayName("addListener / removeListener delegate to the core service")
+  void listenerDelegation() {
+    RecordingListener listener = new RecordingListener();
+    VaadinLogoutService<String> service = new VaadinLogoutService<>(
+        new RecordingSubjectStore(), String.class,
+        new RecordingGateway(), "/login", false, false);
+    service.addListener(listener);
 
-    new VaadinLogoutService<>(store, String.class, gateway, throwingAudit)
-        .logout(LogoutContext.of(LogoutPolicy.fullInvalidate("/login")));
+    service.logout(alice, LogoutScope.CurrentSession);
+    assertEquals(1, listener.invocations.size());
 
-    assertEquals(String.class, store.deletedFor);
-    assertEquals(1, gateway.closedVaadin);
-    assertEquals(1, gateway.invalidatedHttp);
+    service.removeListener(listener);
+    service.logout(alice, LogoutScope.CurrentSession);
+    assertEquals(1, listener.invocations.size(),
+        "after removeListener no further notifications");
   }
 
-  // ── Test fixtures ─────────────────────────────────────────────
+  // ── Fixtures ──────────────────────────────────────────────────
 
   static final class RecordingSubjectStore implements SubjectStore {
     Class<?> deletedFor;
-    @Override public <T> Optional<T> currentSubject(Class<T> subjectType) { return Optional.empty(); }
-    @Override public <T> void setCurrentSubject(T subject, Class<T> subjectType) { }
-    @Override public <T> void deleteCurrentSubject(Class<T> subjectType) { deletedFor = subjectType; }
-  }
 
-  static final class RecordingAuditService implements SecurityAuditService {
-    final List<SecurityAuditEvent> events = new ArrayList<>();
-    Runnable beforeRecord;
+    @Override public <T> Optional<T> currentSubject(Class<T> subjectType) {
+      return Optional.empty();
+    }
 
-    @Override
-    public void record(SecurityAuditEvent event) {
-      if (beforeRecord != null) {
-        beforeRecord.run();
-      }
-      events.add(event);
+    @Override public <T> void setCurrentSubject(T subject, Class<T> subjectType) {
+    }
+
+    @Override public <T> void deleteCurrentSubject(Class<T> subjectType) {
+      deletedFor = subjectType;
     }
   }
 
@@ -179,13 +196,39 @@ class VaadinLogoutServiceTest {
       redirectTarget = routePath;
       redirectAt = ++counter;
     }
+
     @Override public void closeVaadinSession() {
       closedVaadin++;
       closedVaadinAt = ++counter;
     }
+
     @Override public void invalidateHttpSession() {
       invalidatedHttp++;
       invalidatedHttpAt = ++counter;
+    }
+  }
+
+  static final class RecordingListener implements LogoutListener {
+    final List<String> invocations = new ArrayList<>();
+
+    @Override public void onLogout(SubjectId subjectId, String sessionId, LogoutScope scope) {
+      invocations.add(subjectId.value() + "/" + sessionId + "/" + scope);
+    }
+  }
+
+  static final class RecordingSessionPolicy<U>
+      implements com.svenruppert.vaadin.security.session.SessionPolicy<U> {
+    int onLogoutCalls;
+
+    @Override
+    public com.svenruppert.vaadin.security.session.SessionDecision beforeNavigation(
+        com.svenruppert.vaadin.security.session.SessionContext<U> context) {
+      return com.svenruppert.vaadin.security.session.SessionDecision.Continue.INSTANCE;
+    }
+
+    @Override
+    public void onLogout(com.svenruppert.vaadin.security.session.SessionContext<U> context) {
+      onLogoutCalls++;
     }
   }
 }

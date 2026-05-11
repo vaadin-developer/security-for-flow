@@ -16,8 +16,11 @@
  */
 package com.svenruppert.vaadin.security.session;
 
-import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
-import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
+import com.svenruppert.vaadin.security.audit.AuditEvent;
+import com.svenruppert.vaadin.security.audit.AuditQuery;
+import com.svenruppert.vaadin.security.audit.SessionCreated;
+import com.svenruppert.vaadin.security.audit.SessionExpired;
+import com.svenruppert.vaadin.security.audit.SessionInvalidated;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -105,8 +108,8 @@ class TimeoutSessionPolicyTest {
     SessionDecision.Invalidate inv = (SessionDecision.Invalidate) decision;
     assertEquals("/login", inv.loginRoute());
     assertEquals(1, audit.events.size());
-    assertSame(SecurityAuditEventType.SESSION_EXPIRED, audit.events.get(0).type());
-    assertEquals("IDLE_TIMEOUT", audit.events.get(0).decision());
+    SessionExpired event = (SessionExpired) audit.events.get(0);
+    assertEquals("IdleTimeout", event.reason());
   }
 
   @Test
@@ -125,7 +128,8 @@ class TimeoutSessionPolicyTest {
 
     assertInstanceOf(SessionDecision.Invalidate.class, decision);
     assertEquals(1, audit.events.size());
-    assertEquals("ABSOLUTE_LIFETIME", audit.events.get(0).decision());
+    assertEquals("AbsoluteLifetimeExceeded",
+        ((SessionExpired) audit.events.get(0)).reason());
   }
 
   @Test
@@ -156,8 +160,7 @@ class TimeoutSessionPolicyTest {
 
     assertSame(SessionDecision.Continue.INSTANCE, decision);
     assertEquals(1, audit.events.size());
-    assertSame(SecurityAuditEventType.SESSION_CREATED, audit.events.get(0).type());
-    assertEquals("LOGIN", audit.events.get(0).decision());
+    assertInstanceOf(SessionCreated.class, audit.events.get(0));
   }
 
   @Test
@@ -186,8 +189,8 @@ class TimeoutSessionPolicyTest {
     policy.onLogout(ctx(t0, t0));
 
     assertEquals(1, audit.events.size());
-    assertSame(SecurityAuditEventType.SESSION_INVALIDATED, audit.events.get(0).type());
-    assertEquals("LOGOUT", audit.events.get(0).decision());
+    SessionInvalidated event = (SessionInvalidated) audit.events.get(0);
+    assertEquals("Logout", event.reason());
   }
 
   @Test
@@ -195,8 +198,14 @@ class TimeoutSessionPolicyTest {
   void auditFailureSwallowed() {
     Instant t0 = Instant.parse("2026-05-08T10:00:00Z");
     Instant now = t0.plus(CONFIG.absoluteLifetime()).plusSeconds(1);
-    SecurityAuditService throwingAudit = e -> {
-      throw new RuntimeException("audit boom");
+    SecurityAuditService throwingAudit = new SecurityAuditService() {
+      @Override public void publish(AuditEvent event) {
+        throw new RuntimeException("audit boom");
+      }
+
+      @Override public java.util.List<AuditEvent> query(AuditQuery query) {
+        return java.util.List.of();
+      }
     };
     TimeoutSessionPolicy<String> policy = new TimeoutSessionPolicy<>(
         CONFIG, Clock.fixed(now, ZoneOffset.UTC), throwingAudit);
@@ -320,11 +329,16 @@ class TimeoutSessionPolicyTest {
   // ── Test fixtures ────────────────────────────────────────────
 
   static final class RecordingAudit implements SecurityAuditService {
-    final List<SecurityAuditEvent> events = new ArrayList<>();
+    final List<AuditEvent> events = new ArrayList<>();
 
     @Override
-    public void record(SecurityAuditEvent event) {
+    public void publish(AuditEvent event) {
       events.add(event);
+    }
+
+    @Override
+    public List<AuditEvent> query(AuditQuery query) {
+      return List.of();
     }
   }
 }

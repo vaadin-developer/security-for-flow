@@ -16,6 +16,7 @@
  */
 package com.svenruppert.vaadin.security.demo.app.security.permissions;
 
+import com.svenruppert.vaadin.security.action.ActionPermission;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 
 /**
@@ -24,20 +25,31 @@ import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionN
 public enum DemoPermission {
   DEMO_VIEW("demo:view"),
   DEMO_EDIT("demo:edit"),
-  DEMO_ADMIN("demo:admin");
+  DEMO_ADMIN("demo:admin"),
+  AUDIT_READ("audit:read");
 
   private final PermissionName permissionName;
+  private final ActionPermission actionPermission;
 
   DemoPermission(String value) {
     this.permissionName = new PermissionName(value);
+    this.actionPermission = new ActionPermission(value);
   }
 
   /**
-   * Returns the permission name.
-   *
-   * @return permission name
+   * Returns the permission name used for route- and permission-level checks.
    */
   public PermissionName permissionName() {
     return permissionName;
+  }
+
+  /**
+   * Returns the matching {@link ActionPermission} used for fine-grained
+   * action checks through {@code ActionAuthorizationService}. The same
+   * string value backs both names — see
+   * {@code StaticActionAuthorizationService#isAllowed}.
+   */
+  public ActionPermission actionPermission() {
+    return actionPermission;
   }
 }

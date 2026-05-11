@@ -16,8 +16,10 @@
  */
 package com.svenruppert.vaadin.security.bruteforce;
 
-import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
-import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
+import com.svenruppert.vaadin.security.audit.AuditEvent;
+import com.svenruppert.vaadin.security.audit.AuditQuery;
+import com.svenruppert.vaadin.security.audit.BruteForceLimitReached;
+import com.svenruppert.vaadin.security.audit.LoginFailed;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -151,7 +153,7 @@ class InMemoryLoginAttemptPolicyTest {
     policy.recordFailure(ctx("alice", "1.2.3.4", t0.plusSeconds(1)));
 
     long failures = audit.events.stream()
-        .filter(e -> e.type() == SecurityAuditEventType.LOGIN_FAILURE)
+        .filter(e -> e instanceof LoginFailed)
         .count();
     assertEquals(2L, failures);
   }
@@ -168,7 +170,7 @@ class InMemoryLoginAttemptPolicyTest {
     }
 
     long breaches = audit.events.stream()
-        .filter(e -> e.type() == SecurityAuditEventType.BRUTE_FORCE_LIMIT_REACHED)
+        .filter(e -> e instanceof BruteForceLimitReached)
         .count();
     assertEquals(1L, breaches,
         "the threshold breach must be reported exactly once per lockout");
@@ -256,8 +258,14 @@ class InMemoryLoginAttemptPolicyTest {
   @Test
   @DisplayName("Throwing audit sink does not propagate from recordFailure")
   void auditFailureSwallowed() {
-    SecurityAuditService throwingAudit = e -> {
-      throw new RuntimeException("audit boom");
+    SecurityAuditService throwingAudit = new SecurityAuditService() {
+      @Override public void publish(AuditEvent event) {
+        throw new RuntimeException("audit boom");
+      }
+
+      @Override public List<AuditEvent> query(AuditQuery query) {
+        return List.of();
+      }
     };
     Instant t0 = Instant.parse("2026-05-08T10:00:00Z");
     InMemoryLoginAttemptPolicy policy = new InMemoryLoginAttemptPolicy(
@@ -291,11 +299,16 @@ class InMemoryLoginAttemptPolicyTest {
   // ── Test fixtures ────────────────────────────────────────────
 
   static final class RecordingAudit implements SecurityAuditService {
-    final List<SecurityAuditEvent> events = new ArrayList<>();
+    final List<AuditEvent> events = new ArrayList<>();
 
     @Override
-    public void record(SecurityAuditEvent event) {
+    public void publish(AuditEvent event) {
       events.add(event);
+    }
+
+    @Override
+    public List<AuditEvent> query(AuditQuery query) {
+      return List.of();
     }
   }
 

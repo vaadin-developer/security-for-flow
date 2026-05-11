@@ -16,13 +16,18 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.server;
 
+import com.svenruppert.vaadin.security.authorization.api.SubjectId;
+import com.svenruppert.vaadin.security.authorization.api.SubjectSessionRegistry;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUser;
 
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -45,13 +50,14 @@ import java.util.concurrent.ConcurrentMap;
  * <p>The store doesn't enforce expiry by itself — the framework's
  * {@code SessionPolicy} does. The store only serves the timestamps.
  */
-public final class DemoTokenStore {
+public final class DemoTokenStore implements SubjectSessionRegistry {
 
   /** Per-token user + lifetime metadata. */
   public record Metadata(DemoUser user, Instant createdAt, Instant lastActivityAt) {
   }
 
   private final ConcurrentMap<String, Metadata> tokens = new ConcurrentHashMap<>();
+  private final ConcurrentMap<SubjectId, Set<String>> sessionsByUser = new ConcurrentHashMap<>();
   private final SecureRandom random = new SecureRandom();
   private final Clock clock;
 
@@ -71,6 +77,9 @@ public final class DemoTokenStore {
     String token = HexFormat.of().formatHex(bytes);
     Instant now = Instant.now(clock);
     tokens.put(token, new Metadata(user, now, now));
+    sessionsByUser
+        .computeIfAbsent(SubjectId.of(user.username()), k -> ConcurrentHashMap.newKeySet())
+        .add(token);
     return token;
   }
 
@@ -116,8 +125,44 @@ public final class DemoTokenStore {
   }
 
   public void revoke(String token) {
-    if (token != null) {
-      tokens.remove(token);
+    if (token == null) {
+      return;
     }
+    Metadata removed = tokens.remove(token);
+    if (removed != null) {
+      Set<String> entries = sessionsByUser.get(SubjectId.of(removed.user().username()));
+      if (entries != null) {
+        entries.remove(token);
+      }
+    }
+  }
+
+  // ── SubjectSessionRegistry ────────────────────────────────────
+
+  @Override
+  public void register(SubjectId subjectId, String sessionId) {
+    sessionsByUser
+        .computeIfAbsent(subjectId, k -> ConcurrentHashMap.newKeySet())
+        .add(sessionId);
+  }
+
+  @Override
+  public void unregister(SubjectId subjectId, String sessionId) {
+    Set<String> entries = sessionsByUser.get(subjectId);
+    if (entries != null) {
+      entries.remove(sessionId);
+    }
+  }
+
+  @Override
+  public Collection<String> sessionsOf(SubjectId subjectId) {
+    Set<String> entries = sessionsByUser.get(subjectId);
+    return entries == null ? List.of() : List.copyOf(entries);
+  }
+
+  @Override
+  public Collection<String> clearAll(SubjectId subjectId) {
+    Set<String> entries = sessionsByUser.remove(subjectId);
+    return entries == null ? List.of() : List.copyOf(entries);
   }
 }

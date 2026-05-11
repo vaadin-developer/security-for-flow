@@ -16,6 +16,9 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.server;
 
+import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.SubjectClearingLogoutService;
+import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
 import com.svenruppert.vaadin.security.bootstrap.BootstrapConfiguration;
 import com.svenruppert.vaadin.security.bootstrap.BootstrapMode;
 import com.svenruppert.vaadin.security.bootstrap.BootstrapStartup;
@@ -30,17 +33,18 @@ import com.svenruppert.vaadin.security.bootstrap.InMemoryBootstrapTokenStore;
 import com.svenruppert.vaadin.security.bootstrap.InitialAdminBootstrapService;
 import com.svenruppert.vaadin.security.bootstrap.MinimumLengthPasswordPolicy;
 import com.svenruppert.vaadin.security.bootstrap.PasswordHasher;
-import com.svenruppert.vaadin.security.bootstrap.Pbkdf2PasswordHasher;
 import com.svenruppert.vaadin.security.bruteforce.InMemoryLoginAttemptPolicy;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoDocumentStore;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoRolePermissionMapping;
+import com.svenruppert.vaadin.security.demo.rest.domain.DemoUser;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUserStore;
 import com.svenruppert.vaadin.security.demo.rest.shared.DemoEndpoints;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Optional;
 
 /**
  * Demo REST server using only JDK APIs ({@link HttpServer}).
@@ -95,7 +99,7 @@ public final class DemoRestServer {
                                      LoginAttemptPolicy loginAttemptPolicy,
                                      LoginAttemptPolicy bootstrapAttemptPolicy) throws IOException {
     boolean bootstrapMode = bootstrapConfig.mode() != BootstrapMode.DISABLED;
-    PasswordHasher hasher = new Pbkdf2PasswordHasher();
+    PasswordHasher hasher = SecurityServiceResolver.passwordHashingService();
     DemoUserStore users = new DemoUserStore(hasher, bootstrapMode);
     DemoTokenStore tokens = new DemoTokenStore();
     DemoDocumentStore documents = new DemoDocumentStore();
@@ -104,6 +108,15 @@ public final class DemoRestServer {
     DemoOperationRegistry registry = new DemoOperationRegistry();
     DemoHandlers handlers = new DemoHandlers(
         users, tokens, documents, registry, resolver, loginAttemptPolicy);
+
+    SubjectClearingLogoutService<DemoUser> logoutService = new SubjectClearingLogoutService<>(
+        NoopSubjectStore.INSTANCE, DemoUser.class, tokens, null);
+    logoutService.addListener((subjectId, sessionId, scope) -> {
+      if (sessionId != null) {
+        tokens.revoke(sessionId);
+      }
+    });
+    SecurityServiceResolver.setLogoutService(logoutService);
 
     DemoAdministratorAccountStore adminStore = new DemoAdministratorAccountStore(users);
     BootstrapStateService stateService = new BootstrapStateService(adminStore, bootstrapConfig.mode());
@@ -149,6 +162,24 @@ public final class DemoRestServer {
 
   public void stop() {
     httpServer.stop(0);
+  }
+
+  /**
+   * No-op {@link SubjectStore} for the REST demo. REST handlers don't bind
+   * the current subject to a thread-local; the token store is authoritative.
+   */
+  private enum NoopSubjectStore implements SubjectStore {
+    INSTANCE;
+
+    @Override public <T> Optional<T> currentSubject(Class<T> subjectType) {
+      return Optional.empty();
+    }
+
+    @Override public <T> void setCurrentSubject(T subject, Class<T> subjectType) {
+    }
+
+    @Override public <T> void deleteCurrentSubject(Class<T> subjectType) {
+    }
   }
 
   public static void main(String[] args) throws IOException {

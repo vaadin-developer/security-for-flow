@@ -17,6 +17,11 @@
 package com.svenruppert.vaadin.security.authorization;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
+import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
+import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
+import com.svenruppert.vaadin.security.session.SessionContext;
+import com.svenruppert.vaadin.security.session.SessionPolicy;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
@@ -30,8 +35,14 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.Autocomplete;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.server.VaadinRequest;
+import com.vaadin.flow.server.VaadinSession;
+import com.vaadin.flow.server.WrappedSession;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Optional;
 
 
 /**
@@ -162,12 +173,92 @@ public abstract class LoginView
     boolean isValid = checkCredentials();
     if (isValid) {
       logger().info("Login was accepted .. {}", LocalDateTime.now());
+      notifyOnLogin();
       navigateToApp();
     } else {
       logger().warn("Login was not accepted .. {}", LocalDateTime.now());
       reactOnFailedLogin();
     }
     clearFields();
+  }
+
+  /**
+   * Best-effort notification of {@link SessionPolicy#onLogin(SessionContext)}.
+   * <p>
+   * Fires after a successful {@link #checkCredentials()} so the policy can
+   * emit {@code SESSION_CREATED} audit events and (in a future iteration)
+   * trigger session-id rotation. Failures, missing Vaadin session, or
+   * missing SPI are silently absorbed — the lifecycle hook must never
+   * block the login flow.
+   * <p>
+   * The returned {@link com.svenruppert.vaadin.security.session.SessionDecision SessionDecision}
+   * is currently informational only. Honouring
+   * {@code Invalidate(loginRoute)} for session-fixation rotation is a
+   * separate concern (it changes the navigation target post-login) and
+   * is tracked as future work.
+   */
+  private void notifyOnLogin() {
+    try {
+      SessionPolicy<Object> policy = SecurityServiceResolver.sessionPolicy();
+      buildSessionContext().ifPresent(policy::onLogin);
+    } catch (RuntimeException notifyFailure) {
+      logger().warn("SessionPolicy.onLogin notification failed: {}", notifyFailure.toString());
+    }
+  }
+
+  /**
+   * Builds a {@link SessionContext} from the current Vaadin runtime —
+   * subject (best-effort, looked up via the active
+   * {@link SubjectStore} keyed on the application's subject type),
+   * sessionId + createdAt from the {@link WrappedSession}, lastActivity
+   * = createdAt for a fresh login, clientAddress from the
+   * {@link VaadinRequest}.
+   *
+   * @return populated context, or empty when no Vaadin session is bound
+   */
+  private static Optional<SessionContext<Object>> buildSessionContext() {
+    VaadinSession vaadin = VaadinSession.getCurrent();
+    if (vaadin == null) {
+      return Optional.empty();
+    }
+    WrappedSession wrapped = vaadin.getSession();
+    Instant createdAt = wrapped == null
+        ? Instant.now()
+        : Instant.ofEpochMilli(wrapped.getCreationTime());
+    String sessionId = wrapped == null ? null : wrapped.getId();
+    String clientAddress = currentClientAddress();
+    Object subject = currentSubject().orElse(null);
+    return Optional.of(new SessionContext<>(
+        subject, sessionId, createdAt, createdAt, clientAddress, Map.of()));
+  }
+
+  private static Optional<Object> currentSubject() {
+    try {
+      Class<?> subjectType = SecurityServiceResolver
+          .<Object, Object>authenticationService()
+          .subjectType();
+      if (subjectType == null) {
+        return Optional.empty();
+      }
+      SubjectStore store = SubjectStores.findSubjectStore().orElse(null);
+      if (store == null) {
+        return Optional.empty();
+      }
+      @SuppressWarnings({"rawtypes", "unchecked"})
+      Class raw = subjectType;
+      return store.currentSubject(raw).map(value -> (Object) value);
+    } catch (RuntimeException ignored) {
+      return Optional.empty();
+    }
+  }
+
+  private static String currentClientAddress() {
+    try {
+      VaadinRequest request = VaadinRequest.getCurrent();
+      return request == null ? null : request.getRemoteAddr();
+    } catch (RuntimeException ignored) {
+      return null;
+    }
   }
 
   /**

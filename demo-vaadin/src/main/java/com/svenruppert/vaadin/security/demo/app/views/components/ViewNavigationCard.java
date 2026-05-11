@@ -17,6 +17,7 @@
 package com.svenruppert.vaadin.security.demo.app.views.components;
 
 import com.svenruppert.vaadin.security.demo.app.views.AdminView;
+import com.svenruppert.vaadin.security.demo.app.views.AuditView;
 import com.svenruppert.vaadin.security.demo.app.views.NerdView;
 import com.svenruppert.vaadin.security.demo.app.views.PublicView;
 import com.vaadin.flow.component.Composite;
@@ -51,6 +52,7 @@ public class ViewNavigationCard extends Composite<VerticalLayout> {
     links.setSpacing(true);
     links.add(new RouterLink("/admin (ADMIN)", AdminView.class));
     links.add(new RouterLink("/nerd (ADMIN, NERD)", NerdView.class));
+    links.add(new RouterLink("/audit (audit:read)", AuditView.class));
     links.add(new RouterLink("/public (open)", PublicView.class));
     root.add(links);
   }

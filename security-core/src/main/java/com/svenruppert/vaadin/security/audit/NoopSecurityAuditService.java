@@ -16,9 +16,12 @@
  */
 package com.svenruppert.vaadin.security.audit;
 
+import java.util.List;
+
 /**
- * Default {@link SecurityAuditService} — discards every event. Used when
- * no SPI is registered and no application-level audit sink is configured.
+ * Default {@link SecurityAuditService} — discards every event and never
+ * retains anything. Used when no SPI is registered and no application-level
+ * audit sink is configured.
  */
 public final class NoopSecurityAuditService implements SecurityAuditService {
 
@@ -30,7 +33,12 @@ public final class NoopSecurityAuditService implements SecurityAuditService {
   }
 
   @Override
-  public void record(SecurityAuditEvent event) {
+  public void publish(AuditEvent event) {
     // intentionally empty
+  }
+
+  @Override
+  public List<AuditEvent> query(AuditQuery query) {
+    return List.of();
   }
 }

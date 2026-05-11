@@ -16,8 +16,7 @@
  */
 package com.svenruppert.vaadin.security.rest;
 
-import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
-import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
+import com.svenruppert.vaadin.security.audit.SessionExpired;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
@@ -25,6 +24,8 @@ import com.svenruppert.vaadin.security.session.SessionMetadata;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
 import com.svenruppert.vaadin.security.session.SessionPolicyDecision;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Optional;
 
 /**
@@ -68,18 +69,18 @@ public final class RestAuthenticationFilter {
   private static void auditExpired(SessionMetadata metadata,
                                    SecuritySubject subject,
                                    SessionPolicyDecision decision) {
-    String label = switch (decision) {
-      case SessionPolicyDecision.Active ignored -> "ACTIVE";
-      case SessionPolicyDecision.IdleTimeout ignored -> "IDLE_TIMEOUT";
-      case SessionPolicyDecision.AbsoluteLifetimeExceeded ignored -> "ABSOLUTE_LIFETIME";
+    String reason = switch (decision) {
+      case SessionPolicyDecision.Active ignored -> "Active";
+      case SessionPolicyDecision.IdleTimeout ignored -> "IdleTimeout";
+      case SessionPolicyDecision.AbsoluteLifetimeExceeded ignored -> "AbsoluteLifetimeExceeded";
     };
     SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
     try {
-      sink.record(SecurityAuditEvent.builder(SecurityAuditEventType.SESSION_EXPIRED)
-          .subjectId(metadata.subjectId())
-          .username(subject == null ? null : subject.displayName())
-          .decision(label)
-          .build());
+      sink.publish(new SessionExpired(
+          Instant.now(Clock.systemUTC()),
+          metadata.subjectId() == null ? "" : metadata.subjectId(),
+          null,
+          reason));
     } catch (RuntimeException auditFailure) {
       // never block the filter because the audit sink failed
     }

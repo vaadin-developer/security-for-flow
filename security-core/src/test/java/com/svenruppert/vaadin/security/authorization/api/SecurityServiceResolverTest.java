@@ -19,8 +19,9 @@ package com.svenruppert.vaadin.security.authorization.api;
 import com.svenruppert.vaadin.security.action.ActionAuthorizationService;
 import com.svenruppert.vaadin.security.action.ActionPermission;
 import com.svenruppert.vaadin.security.audit.NoopSecurityAuditService;
-import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
-import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
+import com.svenruppert.vaadin.security.audit.AuditEvent;
+import com.svenruppert.vaadin.security.audit.AuditQuery;
+import com.svenruppert.vaadin.security.audit.LoginSucceeded;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;
@@ -34,6 +35,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -232,10 +234,10 @@ class SecurityServiceResolverTest {
     SecurityServiceResolver.setSecurityAuditService(recorder);
 
     SecurityServiceResolver.securityAuditService()
-        .record(SecurityAuditEvent.of(SecurityAuditEventType.LOGIN_SUCCESS));
+        .publish(new LoginSucceeded(Instant.now(), "alice", null, null));
 
     assertEquals(1, recorder.events.size());
-    assertSame(SecurityAuditEventType.LOGIN_SUCCESS, recorder.events.get(0).type());
+    assertTrue(recorder.events.get(0) instanceof LoginSucceeded);
   }
 
   @Test
@@ -250,11 +252,16 @@ class SecurityServiceResolverTest {
   }
 
   static final class RecordingAuditService implements SecurityAuditService {
-    final List<SecurityAuditEvent> events = new ArrayList<>();
+    final List<AuditEvent> events = new ArrayList<>();
 
     @Override
-    public void record(SecurityAuditEvent event) {
+    public void publish(AuditEvent event) {
       events.add(event);
+    }
+
+    @Override
+    public List<AuditEvent> query(AuditQuery query) {
+      return List.of();
     }
   }
 
@@ -392,6 +399,98 @@ class SecurityServiceResolverTest {
     @Override
     public SessionDecision beforeNavigation(SessionContext<U> context) {
       return new SessionDecision.Invalidate("test", "/login");
+    }
+  }
+
+  // ── PasswordHasher ────────────────────────────────────────────
+
+  @Test
+  @DisplayName("passwordHashingService falls back to Pbkdf2PasswordHasher when no SPI is registered")
+  void passwordHashingService_defaultsToPbkdf2() {
+    com.svenruppert.vaadin.security.bootstrap.PasswordHasher hasher =
+        SecurityServiceResolver.passwordHashingService();
+    assertTrue(hasher instanceof com.svenruppert.vaadin.security.bootstrap.Pbkdf2PasswordHasher,
+        "default fallback must be Pbkdf2PasswordHasher");
+  }
+
+  @Test
+  @DisplayName("findPasswordHashingService returns empty when only the default fallback is cached")
+  void findPasswordHashingService_emptyByDefault() {
+    SecurityServiceResolver.passwordHashingService();
+    assertTrue(SecurityServiceResolver.findPasswordHashingService().isEmpty(),
+        "the default Pbkdf2 fallback must NOT be reported as an SPI registration");
+  }
+
+  @Test
+  @DisplayName("setPasswordHashingService overrides the cached hasher for both accessors")
+  void setPasswordHashingService_overrides() {
+    RecordingHasher custom = new RecordingHasher();
+    SecurityServiceResolver.setPasswordHashingService(custom);
+
+    assertSame(custom, SecurityServiceResolver.passwordHashingService());
+    assertSame(custom, SecurityServiceResolver.findPasswordHashingService().orElseThrow());
+  }
+
+  @Test
+  @DisplayName("resetAll clears the password-hasher cache so the next call returns a fresh fallback")
+  void resetAll_clearsPasswordHasher() {
+    SecurityServiceResolver.setPasswordHashingService(new RecordingHasher());
+
+    SecurityServiceResolver.resetAll();
+
+    com.svenruppert.vaadin.security.bootstrap.PasswordHasher after =
+        SecurityServiceResolver.passwordHashingService();
+    assertTrue(after instanceof com.svenruppert.vaadin.security.bootstrap.Pbkdf2PasswordHasher);
+  }
+
+  static final class RecordingHasher implements com.svenruppert.vaadin.security.bootstrap.PasswordHasher {
+    @Override public String hash(char[] rawPassword) { return "stub"; }
+    @Override public boolean verify(char[] rawPassword, String storedHash) { return false; }
+  }
+
+  // ── LogoutService ─────────────────────────────────────────────
+
+  @Test
+  @DisplayName("logoutService falls back to NoopLogoutService when no SPI is registered")
+  void logoutService_defaultsToNoop() {
+    assertSame(NoopLogoutService.INSTANCE, SecurityServiceResolver.logoutService());
+  }
+
+  @Test
+  @DisplayName("findLogoutService returns empty when only the noop fallback is cached")
+  void findLogoutService_emptyByDefault() {
+    SecurityServiceResolver.logoutService();
+    assertTrue(SecurityServiceResolver.findLogoutService().isEmpty());
+  }
+
+  @Test
+  @DisplayName("setLogoutService overrides the cached service for both accessors")
+  void setLogoutService_overrides() {
+    RecordingLogoutService custom = new RecordingLogoutService();
+    SecurityServiceResolver.setLogoutService(custom);
+
+    assertSame(custom, SecurityServiceResolver.logoutService());
+    assertSame(custom, SecurityServiceResolver.findLogoutService().orElseThrow());
+  }
+
+  @Test
+  @DisplayName("resetAll clears the logout-service cache")
+  void resetAll_clearsLogoutService() {
+    SecurityServiceResolver.setLogoutService(new RecordingLogoutService());
+
+    SecurityServiceResolver.resetAll();
+
+    assertSame(NoopLogoutService.INSTANCE, SecurityServiceResolver.logoutService());
+  }
+
+  static final class RecordingLogoutService implements LogoutService {
+    @Override public void logout(SubjectId subjectId, LogoutScope scope) {
+    }
+
+    @Override public void addListener(LogoutListener listener) {
+    }
+
+    @Override public void removeListener(LogoutListener listener) {
     }
   }
 }

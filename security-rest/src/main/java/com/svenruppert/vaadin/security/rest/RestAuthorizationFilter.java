@@ -16,8 +16,10 @@
  */
 package com.svenruppert.vaadin.security.rest;
 
-import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
-import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
+import com.svenruppert.vaadin.security.audit.AccessDenied;
+import com.svenruppert.vaadin.security.audit.AccessGranted;
+import com.svenruppert.vaadin.security.audit.AuditEvent;
+import com.svenruppert.vaadin.security.audit.SessionExpired;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationEvaluator;
@@ -31,6 +33,8 @@ import com.svenruppert.vaadin.security.session.SessionPolicyDecision;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 
@@ -152,20 +156,20 @@ public final class RestAuthorizationFilter {
   private void auditSessionExpired(SessionMetadata metadata,
                                    SecuritySubject subject,
                                    SessionPolicyDecision decision) {
-    String label = switch (decision) {
-      case SessionPolicyDecision.Active ignored -> "ACTIVE";
-      case SessionPolicyDecision.IdleTimeout ignored -> "IDLE_TIMEOUT";
-      case SessionPolicyDecision.AbsoluteLifetimeExceeded ignored -> "ABSOLUTE_LIFETIME";
+    String reason = switch (decision) {
+      case SessionPolicyDecision.Active ignored -> "Active";
+      case SessionPolicyDecision.IdleTimeout ignored -> "IdleTimeout";
+      case SessionPolicyDecision.AbsoluteLifetimeExceeded ignored -> "AbsoluteLifetimeExceeded";
     };
     SecurityAuditService sink = auditService != null
         ? auditService
         : SecurityServiceResolver.securityAuditService();
     try {
-      sink.record(SecurityAuditEvent.builder(SecurityAuditEventType.SESSION_EXPIRED)
-          .subjectId(metadata.subjectId())
-          .username(subject == null ? null : subject.displayName())
-          .decision(label)
-          .build());
+      sink.publish(new SessionExpired(
+          Instant.now(Clock.systemUTC()),
+          metadata.subjectId() == null ? "" : metadata.subjectId(),
+          null,
+          reason));
     } catch (RuntimeException auditFailure) {
       // never block the filter because the audit sink failed
     }
@@ -178,35 +182,22 @@ public final class RestAuthorizationFilter {
         ? auditService
         : SecurityServiceResolver.securityAuditService();
 
-    SecurityAuditEventType type;
-    String decisionLabel;
-    String reason = null;
-    switch (decision) {
-      case AuthorizationDecision.Granted ignored -> {
-        type = SecurityAuditEventType.ACCESS_GRANTED;
-        decisionLabel = "GRANTED";
-      }
-      case AuthorizationDecision.Unauthenticated unauth -> {
-        type = SecurityAuditEventType.ACCESS_DENIED;
-        decisionLabel = "UNAUTHENTICATED";
-        reason = unauth.reason();
-      }
-      case AuthorizationDecision.Forbidden forbidden -> {
-        type = SecurityAuditEventType.ACCESS_DENIED;
-        decisionLabel = "FORBIDDEN";
-        reason = forbidden.reason();
-      }
-    }
+    String subjectId = subject.map(SecuritySubject::subjectId).orElse(null);
+    String route = context.resourceName();
+    Instant now = Instant.now(Clock.systemUTC());
+
+    AuditEvent event = switch (decision) {
+      case AuthorizationDecision.Granted ignored -> new AccessGranted(now, subjectId, route);
+      case AuthorizationDecision.Unauthenticated unauth ->
+          new AccessDenied(now, subjectId, route,
+              "Unauthenticated:" + (unauth.reason() == null ? "" : unauth.reason()));
+      case AuthorizationDecision.Forbidden forbidden ->
+          new AccessDenied(now, subjectId, route,
+              "Forbidden:" + (forbidden.reason() == null ? "" : forbidden.reason()));
+    };
 
     try {
-      sink.record(SecurityAuditEvent.builder(type)
-          .route(context.resourceName())
-          .decision(decisionLabel)
-          .subjectId(subject.map(SecuritySubject::subjectId).orElse(null))
-          .username(subject.map(SecuritySubject::displayName).orElse(null))
-          .attribute("operation", context.operation())
-          .attribute("reason", reason)
-          .build());
+      sink.publish(event);
     } catch (RuntimeException auditFailure) {
       // never block authorization because the audit sink failed
     }

@@ -44,9 +44,9 @@ public interface ActionAuthorizationService<U> {
 
   /**
    * Throws {@link AccessDeniedException} if the subject is not allowed.
-   * Implementations should additionally emit a
-   * {@link com.svenruppert.vaadin.security.audit.SecurityAuditEventType#ACTION_DENIED}
-   * audit event in this case.
+   * Implementations should additionally publish an
+   * {@link com.svenruppert.vaadin.security.audit.ActionDenied} audit event
+   * in this case.
    */
   default void requireAllowed(U subject, ActionPermission permission) {
     if (!isAllowed(subject, permission)) {

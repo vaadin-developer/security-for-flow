@@ -16,8 +16,9 @@
  */
 package com.svenruppert.vaadin.security.session.vaadin;
 
-import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
-import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
+import com.svenruppert.vaadin.security.audit.AuditEvent;
+import com.svenruppert.vaadin.security.audit.AuditQuery;
+import com.svenruppert.vaadin.security.audit.SessionExpired;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.LoginListener;
 import com.svenruppert.vaadin.security.authorization.LoginListeners;
@@ -135,9 +136,8 @@ class SessionLifetimeListenerTest {
     assertSame(StubLoginView.class, event.forwardTarget,
         "expired sessions must be forwarded to the configured login view");
     assertEquals(1, audit.events.size());
-    SecurityAuditEvent ev = audit.events.get(0);
-    assertSame(SecurityAuditEventType.SESSION_EXPIRED, ev.type());
-    assertEquals("IDLE_TIMEOUT", ev.decision());
+    SessionExpired ev = (SessionExpired) audit.events.get(0);
+    assertEquals("IdleTimeout", ev.reason());
     assertEquals("alice", ev.subjectId());
   }
 
@@ -157,7 +157,8 @@ class SessionLifetimeListenerTest {
     listener.beforeEnter(new RecordingEvent());
 
     assertEquals(1, audit.events.size());
-    assertEquals("ABSOLUTE_LIFETIME", audit.events.get(0).decision());
+    assertEquals("AbsoluteLifetimeExceeded",
+        ((SessionExpired) audit.events.get(0)).reason());
   }
 
   @Test
@@ -266,10 +267,14 @@ class SessionLifetimeListenerTest {
   }
 
   static final class RecordingAuditService implements SecurityAuditService {
-    final List<SecurityAuditEvent> events = new ArrayList<>();
+    final List<AuditEvent> events = new ArrayList<>();
 
-    @Override public void record(SecurityAuditEvent event) {
+    @Override public void publish(AuditEvent event) {
       events.add(event);
+    }
+
+    @Override public List<AuditEvent> query(AuditQuery query) {
+      return List.of();
     }
   }
 

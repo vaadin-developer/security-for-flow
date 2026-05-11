@@ -89,6 +89,32 @@ public interface PasswordHasher {
   }
 
   /**
+   * Convenience: parses {@code storedHash} via {@link #parse(String)}
+   * and delegates to {@link #needsRehash(PasswordHash)}.
+   * <p>
+   * Returns {@code false} for {@code null} input or when the hasher
+   * cannot parse the stored format ({@link UnsupportedOperationException}
+   * from the default {@code parse}, or any
+   * {@link IllegalArgumentException} the implementation may raise on
+   * malformed input). Failure to parse is not an error worth aborting
+   * the login flow over — the caller already has a successfully verified
+   * hash, so the worst case is "we couldn't upgrade it on this login".
+   *
+   * @param storedHash wire-format stored hash, may be {@code null}
+   * @return {@code true} when a re-hash is recommended
+   */
+  default boolean needsRehash(String storedHash) {
+    if (storedHash == null) {
+      return false;
+    }
+    try {
+      return needsRehash(parse(storedHash));
+    } catch (UnsupportedOperationException | IllegalArgumentException ignored) {
+      return false;
+    }
+  }
+
+  /**
    * Parses a wire-format hash into a {@link PasswordHash}. Implementations
    * that override the typed API must override this method too. Default
    * throws — the default implementations of {@link #hashTo(char[])} and

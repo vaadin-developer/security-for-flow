@@ -16,8 +16,14 @@
  */
 package com.svenruppert.vaadin.security.bootstrap;
 
+import com.svenruppert.vaadin.security.audit.BootstrapAdminCreated;
+import com.svenruppert.vaadin.security.audit.BootstrapTokenRejected;
+import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
@@ -89,12 +95,18 @@ public final class InitialAdminBootstrapService {
           return new InitialAdminCreationResult.AlreadyInitialized();
         }
         Optional<BootstrapToken> stored = tokenStore.load();
-        if (stored.isEmpty() || !stored.get().matches(command.bootstrapToken())) {
+        if (stored.isEmpty()) {
+          auditTokenRejected("Unknown");
+          return new InitialAdminCreationResult.InvalidBootstrapToken();
+        }
+        if (!stored.get().matches(command.bootstrapToken())) {
+          auditTokenRejected("Mismatch");
           return new InitialAdminCreationResult.InvalidBootstrapToken();
         }
         if (stored.get().isExpired(clock.instant(), tokenValidity)) {
           // Expired tokens are treated like invalid ones — same outcome,
           // generic message. Persistent mode regenerates on next startup.
+          auditTokenRejected("Expired");
           return new InitialAdminCreationResult.InvalidBootstrapToken();
         }
         if (command.username() == null
@@ -133,14 +145,34 @@ public final class InitialAdminBootstrapService {
                   + "Manual cleanup of the token store is required. "
                   + "(The token value is never logged.)",
               e);
+          auditAdminCreated(command.username());
           return new InitialAdminCreationResult.Created(command.username());
         }
+        auditAdminCreated(command.username());
         return new InitialAdminCreationResult.Created(command.username());
       } finally {
         lock.unlock();
       }
     } finally {
       Arrays.fill(command.password(), '\0');
+    }
+  }
+
+  private void auditAdminCreated(String username) {
+    SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
+    try {
+      sink.publish(new BootstrapAdminCreated(Instant.now(clock), username, null));
+    } catch (RuntimeException ignored) {
+      // never block bootstrap because the audit sink failed
+    }
+  }
+
+  private void auditTokenRejected(String reason) {
+    SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
+    try {
+      sink.publish(new BootstrapTokenRejected(Instant.now(clock), reason, null));
+    } catch (RuntimeException ignored) {
+      // never block bootstrap because the audit sink failed
     }
   }
 }

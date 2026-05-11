@@ -16,8 +16,8 @@
  */
 package com.svenruppert.vaadin.security.bruteforce;
 
-import com.svenruppert.vaadin.security.audit.SecurityAuditEvent;
-import com.svenruppert.vaadin.security.audit.SecurityAuditEventType;
+import com.svenruppert.vaadin.security.audit.BruteForceLimitReached;
+import com.svenruppert.vaadin.security.audit.LoginFailed;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 
@@ -55,10 +55,9 @@ import java.util.concurrent.ConcurrentMap;
  * {@link SecurityAuditService}:
  *
  * <ul>
- *   <li>{@link SecurityAuditEventType#LOGIN_FAILURE LOGIN_FAILURE} on every
+ *   <li>{@link LoginFailed} on every
  *       {@link #recordFailure(LoginAttemptContext) recordFailure}</li>
- *   <li>{@link SecurityAuditEventType#BRUTE_FORCE_LIMIT_REACHED
- *       BRUTE_FORCE_LIMIT_REACHED} the first time a key crosses the
+ *   <li>{@link BruteForceLimitReached} the first time a key crosses the
  *       failure threshold</li>
  * </ul>
  *
@@ -134,22 +133,21 @@ public final class InMemoryLoginAttemptPolicy implements LoginAttemptPolicy {
     Objects.requireNonNull(context, "context");
     Instant now = Instant.now(clock);
 
-    boolean combinedJustLocked = recordOn(byCombinedKey, combinedKey(context), now);
-    boolean userJustLocked = recordOn(byUsername, usernameKey(context), now);
+    State combined = recordOn(byCombinedKey, combinedKey(context), now);
+    State user = recordOn(byUsername, usernameKey(context), now);
 
-    audit(context, SecurityAuditEventType.LOGIN_FAILURE, "Credentials rejected");
-    if (combinedJustLocked || userJustLocked) {
-      audit(context, SecurityAuditEventType.BRUTE_FORCE_LIMIT_REACHED,
-          "Failure threshold reached");
+    auditLoginFailed(context);
+    State justLocked = combined.justLocked() ? combined : user.justLocked() ? user : null;
+    if (justLocked != null) {
+      auditBruteForceLimitReached(context, justLocked, now);
     }
   }
 
-  private boolean recordOn(ConcurrentMap<String, State> map, String key, Instant now) {
-    State updated = map.compute(key, (k, current) -> {
+  private State recordOn(ConcurrentMap<String, State> map, String key, Instant now) {
+    return map.compute(key, (k, current) -> {
       State state = current == null ? State.empty() : current.expireOldFailures(now, config.window());
       return state.addFailure(now, config);
     });
-    return updated.justLocked();
   }
 
   private String combinedKey(LoginAttemptContext context) {
@@ -164,21 +162,44 @@ public final class InMemoryLoginAttemptPolicy implements LoginAttemptPolicy {
     return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
   }
 
-  private void audit(LoginAttemptContext context, SecurityAuditEventType type, String reason) {
-    SecurityAuditService sink = auditService != null
-        ? auditService
-        : SecurityServiceResolver.securityAuditService();
+  private void auditLoginFailed(LoginAttemptContext context) {
+    SecurityAuditService sink = sink();
     try {
-      sink.record(SecurityAuditEvent.builder(type)
-          .username(context.username())
-          .clientAddress(context.clientAddress())
-          .sessionId(context.sessionId())
-          .decision(type == SecurityAuditEventType.BRUTE_FORCE_LIMIT_REACHED ? "BLOCKED" : "DENIED")
-          .attribute("reason", reason)
-          .build());
+      sink.publish(new LoginFailed(
+          Instant.now(clock),
+          context.username() == null ? "" : context.username(),
+          context.clientAddress(),
+          "Credentials rejected"));
     } catch (RuntimeException auditFailure) {
       // never block a security decision because the audit sink failed
     }
+  }
+
+  private void auditBruteForceLimitReached(
+      LoginAttemptContext context, State state, Instant now) {
+    SecurityAuditService sink = sink();
+    Duration lockoutRemaining = state.lockedUntil() == null
+        ? Duration.ZERO
+        : Duration.between(now, state.lockedUntil());
+    if (lockoutRemaining.isNegative()) {
+      lockoutRemaining = Duration.ZERO;
+    }
+    try {
+      sink.publish(new BruteForceLimitReached(
+          Instant.now(clock),
+          context.username() == null ? "" : context.username(),
+          context.clientAddress(),
+          state.totalFailuresObserved(),
+          lockoutRemaining));
+    } catch (RuntimeException auditFailure) {
+      // never block a security decision because the audit sink failed
+    }
+  }
+
+  private SecurityAuditService sink() {
+    return auditService != null
+        ? auditService
+        : SecurityServiceResolver.securityAuditService();
   }
 
   // ── State ─────────────────────────────────────────────────────

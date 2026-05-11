@@ -138,6 +138,72 @@ class LoginViewTest {
     assertEquals("", view.password());
   }
 
+  @Test
+  @DisplayName("validate() success notifies SessionPolicy.onLogin (no-op when no Vaadin session is bound)")
+  void validateSuccessIsAuditSilentWithoutVaadinSession() throws Exception {
+    com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver.resetAll();
+    RecordingSessionPolicy<String> policy = new RecordingSessionPolicy<>();
+    com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver.setSessionPolicy(policy);
+
+    try {
+      TestLoginView view = new TestLoginView();
+      view.acceptCredentials = true;
+      field(view, "username", TextField.class).setValue("u");
+      field(view, "password", PasswordField.class).setValue("p");
+
+      invokeValidate(view);
+
+      // No VaadinSession is bound in unit-test context, so the policy is
+      // not notified. The login still succeeds — the lifecycle hook is
+      // best-effort and silently degrades.
+      assertTrue(view.navigatedToApp);
+      assertEquals(0, policy.onLoginCalls,
+          "without an active VaadinSession the policy must not be invoked");
+    } finally {
+      com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver.resetAll();
+    }
+  }
+
+  @Test
+  @DisplayName("validate() failure does NOT notify SessionPolicy.onLogin")
+  void validateFailureSkipsSessionPolicy() throws Exception {
+    com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver.resetAll();
+    RecordingSessionPolicy<String> policy = new RecordingSessionPolicy<>();
+    com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver.setSessionPolicy(policy);
+
+    try {
+      TestLoginView view = new TestLoginView();
+      view.acceptCredentials = false;
+      field(view, "username", TextField.class).setValue("u");
+      field(view, "password", PasswordField.class).setValue("p");
+
+      invokeValidate(view);
+
+      assertEquals(0, policy.onLoginCalls,
+          "policy.onLogin must only fire on a successful credential check");
+    } finally {
+      com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver.resetAll();
+    }
+  }
+
+  static final class RecordingSessionPolicy<U>
+      implements com.svenruppert.vaadin.security.session.SessionPolicy<U> {
+    int onLoginCalls;
+
+    @Override
+    public com.svenruppert.vaadin.security.session.SessionDecision onLogin(
+        com.svenruppert.vaadin.security.session.SessionContext<U> context) {
+      onLoginCalls++;
+      return com.svenruppert.vaadin.security.session.SessionDecision.Continue.INSTANCE;
+    }
+
+    @Override
+    public com.svenruppert.vaadin.security.session.SessionDecision beforeNavigation(
+        com.svenruppert.vaadin.security.session.SessionContext<U> context) {
+      return com.svenruppert.vaadin.security.session.SessionDecision.Continue.INSTANCE;
+    }
+  }
+
   // ── Field configuration ──────────────────────────────────────
 
   @Test
