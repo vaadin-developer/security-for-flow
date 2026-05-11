@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.authorization.impl;
 
-import com.svenruppert.vaadin.security.authorization.api.AuthenticationService;
+import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 
 /**
  * Test-scope SPI {@link AuthenticationService}. Registered via

@@ -29,7 +29,7 @@ import java.util.stream.Stream;
  * <p>
  * Lives in {@code demo-vaadin} on purpose — it is demo-specific. The
  * project-neutral abstractions are
- * {@link com.svenruppert.vaadin.security.authorization.api.AuthenticationService}
+ * {@link com.svenruppert.vaadin.security.authentication.AuthenticationService}
  * and {@link com.svenruppert.vaadin.security.bootstrap.AdministratorAccountStore}.
  */
 public interface DemoUserDirectory {

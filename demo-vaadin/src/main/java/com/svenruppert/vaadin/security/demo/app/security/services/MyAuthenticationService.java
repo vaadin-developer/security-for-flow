@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.demo.app.security.services;
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.vaadin.security.audit.LoginSucceeded;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
-import com.svenruppert.vaadin.security.authorization.api.AuthenticationService;
+import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;

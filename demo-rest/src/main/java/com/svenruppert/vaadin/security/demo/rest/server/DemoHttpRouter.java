@@ -48,6 +48,7 @@ public final class DemoHttpRouter implements HttpHandler {
   private final Method createDocumentMethod;
   private final Method deleteDocumentMethod;
   private final Method adminStatusMethod;
+  private final Method auditEventsMethod;
 
   public DemoHttpRouter(
       DemoHandlers handlers,
@@ -66,6 +67,7 @@ public final class DemoHttpRouter implements HttpHandler {
       this.createDocumentMethod = DemoHandlers.class.getDeclaredMethod("createDocument", sig);
       this.deleteDocumentMethod = DemoHandlers.class.getDeclaredMethod("deleteDocument", sig);
       this.adminStatusMethod = DemoHandlers.class.getDeclaredMethod("adminStatus", sig);
+      this.auditEventsMethod = DemoHandlers.class.getDeclaredMethod("auditEvents", sig);
     } catch (NoSuchMethodException e) {
       throw new IllegalStateException("Demo handler method missing", e);
     }
@@ -130,6 +132,10 @@ public final class DemoHttpRouter implements HttpHandler {
     }
     if (DemoEndpoints.ADMIN_STATUS.equals(path) && "GET".equals(method)) {
       filter.authorizeAndHandle(request, response, handlers::adminStatus, adminStatusMethod);
+      return;
+    }
+    if (DemoEndpoints.AUDIT.equals(path) && "GET".equals(method)) {
+      filter.authorizeAndHandle(request, response, handlers::auditEvents, auditEventsMethod);
       return;
     }
     response.status(404);

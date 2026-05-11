@@ -17,12 +17,12 @@
 package com.svenruppert.vaadin.security.demo.restclient.views;
 
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresRole;
-import com.svenruppert.vaadin.security.authorization.api.LogoutScope;
-import com.svenruppert.vaadin.security.authorization.api.LogoutService;
-import com.svenruppert.vaadin.security.authorization.api.SubjectId;
+import com.svenruppert.vaadin.security.logout.LogoutScope;
+import com.svenruppert.vaadin.security.logout.LogoutService;
+import com.svenruppert.vaadin.security.logout.SubjectId;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
-import com.svenruppert.vaadin.security.authorization.vaadin.DefaultVaadinLogoutGateway;
-import com.svenruppert.vaadin.security.authorization.vaadin.VaadinLogoutService;
+import com.svenruppert.vaadin.security.logout.vaadin.DefaultVaadinLogoutGateway;
+import com.svenruppert.vaadin.security.logout.vaadin.VaadinLogoutService;
 import com.svenruppert.vaadin.security.demo.restclient.backend.BackendClientProvider;
 import com.svenruppert.vaadin.security.demo.restclient.backend.BackendException;
 import com.svenruppert.vaadin.security.demo.restclient.backend.RemoteUser;

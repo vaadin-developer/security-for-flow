@@ -186,21 +186,21 @@ public class MainView
 
   // ── Logout ─────────────────────────────────────────────────────
 
-  private static final com.svenruppert.vaadin.security.authorization.api.LogoutService LOGOUT_SERVICE =
-      new com.svenruppert.vaadin.security.authorization.vaadin.VaadinLogoutService<>(
+  private static final com.svenruppert.vaadin.security.logout.LogoutService LOGOUT_SERVICE =
+      new com.svenruppert.vaadin.security.logout.vaadin.VaadinLogoutService<>(
           SubjectStores.subjectStore(), MyUser.class,
-          new com.svenruppert.vaadin.security.authorization.vaadin.DefaultVaadinLogoutGateway(),
+          new com.svenruppert.vaadin.security.logout.vaadin.DefaultVaadinLogoutGateway(),
           "/" + MyLoginView.NAV,
           /* closeVaadinSession= */ true,
           /* invalidateHttpSession= */ true);
 
   private void logout() {
-    com.svenruppert.vaadin.security.authorization.api.SubjectId subjectId =
+    com.svenruppert.vaadin.security.logout.SubjectId subjectId =
         SubjectStores.subjectStore().currentSubject(MyUser.class)
-            .map(u -> com.svenruppert.vaadin.security.authorization.api.SubjectId.of(
+            .map(u -> com.svenruppert.vaadin.security.logout.SubjectId.of(
                 String.valueOf(u.id())))
-            .orElse(com.svenruppert.vaadin.security.authorization.api.SubjectId.of("anonymous"));
+            .orElse(com.svenruppert.vaadin.security.logout.SubjectId.of("anonymous"));
     LOGOUT_SERVICE.logout(subjectId,
-        com.svenruppert.vaadin.security.authorization.api.LogoutScope.CurrentSession);
+        com.svenruppert.vaadin.security.logout.LogoutScope.CurrentSession);
   }
 }

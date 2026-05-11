@@ -18,7 +18,7 @@ package com.svenruppert.vaadin.security.demo.restclient.views;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.vaadin.security.authorization.LoginView;
-import com.svenruppert.vaadin.security.authorization.api.AuthenticationService;
+import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.demo.restclient.backend.BackendClientProvider;
 import com.svenruppert.vaadin.security.demo.restclient.backend.Credentials;

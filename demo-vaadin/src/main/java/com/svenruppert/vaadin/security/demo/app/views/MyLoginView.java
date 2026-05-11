@@ -28,7 +28,7 @@ import com.svenruppert.vaadin.security.demo.app.security.model.Credentials;
 import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectoryProvider;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.authorization.LoginView;
-import com.svenruppert.vaadin.security.authorization.api.AuthenticationService;
+import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 

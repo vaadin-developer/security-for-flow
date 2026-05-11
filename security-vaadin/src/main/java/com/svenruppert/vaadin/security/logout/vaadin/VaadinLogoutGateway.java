@@ -14,7 +14,7 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.authorization.vaadin;
+package com.svenruppert.vaadin.security.logout.vaadin;
 
 /**
  * Strategy for the Vaadin-side effects of a logout. Existed primarily so

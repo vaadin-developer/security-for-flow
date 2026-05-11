@@ -14,7 +14,7 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.authorization.api;
+package com.svenruppert.vaadin.security.logout;
 
 /**
  * Bundles the logout flow so callers do not have to manually orchestrate

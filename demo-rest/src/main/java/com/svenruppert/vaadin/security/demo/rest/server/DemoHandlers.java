@@ -16,13 +16,15 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.server;
 
+import com.svenruppert.vaadin.security.audit.AuditEvent;
+import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.LoginSucceeded;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPermission;
-import com.svenruppert.vaadin.security.authorization.api.LogoutScope;
+import com.svenruppert.vaadin.security.logout.LogoutScope;
 import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.authorization.api.SubjectId;
+import com.svenruppert.vaadin.security.logout.SubjectId;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
@@ -41,11 +43,13 @@ import com.svenruppert.vaadin.security.rest.RestResponse;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Demo REST handlers. Permission-protected handlers carry
@@ -234,6 +238,121 @@ public final class DemoHandlers {
   public void adminStatus(RestRequest request, RestResponse response) {
     response.status(200);
     response.body(DemoJson.encode(Map.of("status", "ok", "message", "Admin endpoint executed.")));
+  }
+
+  /**
+   * Returns the recent audit events from the backend's
+   * {@code RingBufferAuditSink}. Optional query parameters:
+   * <ul>
+   *   <li>{@code type} — exact {@code AuditEvent} subtype short name
+   *       (e.g. {@code LoginSucceeded}, {@code AccessDenied})</li>
+   *   <li>{@code subject} — exact subject id / username</li>
+   * </ul>
+   * Newest first. Symmetric to the Vaadin {@code /audit}-route.
+   */
+  @RequiresPermission("audit:read")
+  public void auditEvents(RestRequest request, RestResponse response) {
+    String typeParam = request.queryParameters().get("type");
+    String subjectParam = request.queryParameters().get("subject");
+    if (subjectParam != null && subjectParam.isBlank()) {
+      subjectParam = null;
+    }
+
+    AuditQuery query = new AuditQuery(
+        Set.of(),
+        subjectParam,
+        null, null, 0);
+
+    List<AuditEvent> all = SecurityServiceResolver.securityAuditService().query(query);
+    List<AuditEvent> filtered = typeParam == null || typeParam.isBlank()
+        ? all
+        : all.stream()
+            .filter(e -> e.getClass().getSimpleName().equals(typeParam))
+            .toList();
+
+    // newest first
+    List<Map<String, Object>> events = new ArrayList<>(filtered.size());
+    for (int i = filtered.size() - 1; i >= 0; i--) {
+      events.add(auditEventToJson(filtered.get(i)));
+    }
+
+    response.status(200);
+    response.body(DemoJson.encode(Map.of("events", events)));
+  }
+
+  private static Map<String, Object> auditEventToJson(AuditEvent event) {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("type", event.getClass().getSimpleName());
+    map.put("timestamp", event.timestamp().toString());
+    switch (event) {
+      case LoginSucceeded e -> {
+        map.put("username", e.username());
+        map.put("clientAddress", e.clientAddress());
+        map.put("sessionId", e.sessionId());
+      }
+      case com.svenruppert.vaadin.security.audit.LoginFailed e -> {
+        map.put("username", e.username());
+        map.put("clientAddress", e.clientAddress());
+        map.put("reason", e.reason());
+      }
+      case com.svenruppert.vaadin.security.audit.LogoutPerformed e -> {
+        map.put("subjectId", e.subjectId());
+        map.put("sessionId", e.sessionId());
+        map.put("scope", e.scope().name());
+      }
+      case com.svenruppert.vaadin.security.audit.AccessGranted e -> {
+        map.put("subjectId", e.subjectId());
+        map.put("route", e.route());
+      }
+      case com.svenruppert.vaadin.security.audit.AccessDenied e -> {
+        map.put("subjectId", e.subjectId());
+        map.put("route", e.route());
+        map.put("reason", e.reason());
+      }
+      case com.svenruppert.vaadin.security.audit.ActionDenied e -> {
+        map.put("subjectId", e.subjectId());
+        map.put("action", e.action());
+      }
+      case com.svenruppert.vaadin.security.audit.BruteForceLimitReached e -> {
+        map.put("username", e.username());
+        map.put("clientAddress", e.clientAddress());
+        map.put("failedAttempts", e.failedAttempts());
+        map.put("lockoutSeconds", e.lockoutDuration().toSeconds());
+      }
+      case com.svenruppert.vaadin.security.audit.SessionCreated e -> {
+        map.put("subjectId", e.subjectId());
+        map.put("sessionId", e.sessionId());
+      }
+      case com.svenruppert.vaadin.security.audit.SessionExpired e -> {
+        map.put("subjectId", e.subjectId());
+        map.put("sessionId", e.sessionId());
+        map.put("reason", e.reason());
+      }
+      case com.svenruppert.vaadin.security.audit.SessionInvalidated e -> {
+        map.put("subjectId", e.subjectId());
+        map.put("sessionId", e.sessionId());
+        map.put("reason", e.reason());
+      }
+      case com.svenruppert.vaadin.security.audit.RoleAssigned e -> {
+        map.put("subjectId", e.subjectId());
+        map.put("role", e.role());
+        map.put("assignedBy", e.assignedBy());
+      }
+      case com.svenruppert.vaadin.security.audit.RoleRevoked e -> {
+        map.put("subjectId", e.subjectId());
+        map.put("role", e.role());
+        map.put("revokedBy", e.revokedBy());
+      }
+      case com.svenruppert.vaadin.security.audit.BootstrapAdminCreated e -> {
+        map.put("username", e.username());
+        map.put("clientAddress", e.clientAddress());
+      }
+      case com.svenruppert.vaadin.security.audit.BootstrapTokenRejected e -> {
+        map.put("reason", e.reason());
+        map.put("clientAddress", e.clientAddress());
+      }
+    }
+    return map;
   }
 
   private static Map<String, Object> documentToJson(DemoDocument doc) {

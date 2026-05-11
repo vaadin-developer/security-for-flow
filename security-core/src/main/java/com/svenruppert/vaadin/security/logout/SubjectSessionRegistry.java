@@ -14,7 +14,7 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.authorization.api;
+package com.svenruppert.vaadin.security.logout;
 
 import java.util.Collection;
 

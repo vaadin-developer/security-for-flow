@@ -14,10 +14,12 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.authorization.api;
+package com.svenruppert.vaadin.security.logout;
 
 import com.svenruppert.vaadin.security.audit.LogoutPerformed;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
 
 import java.time.Clock;
 import java.time.Instant;

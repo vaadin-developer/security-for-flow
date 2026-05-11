@@ -154,22 +154,30 @@ ok,        > Stand: 2026-05-11. Zielversion 00.60.00 (Konzept-V00.60.00.md) +
   `findPasswordHashingService()` meldet diesen Default als „kein
   SPI" zurück, damit eine spätere SPI-Registrierung greift. In
   `resetAll()` mit aufgeräumt.
-- [ ] **Folgearbeit:** Demos auf den Resolver umstellen — heute
-  weiter direkt `new Pbkdf2PasswordHasher()` in DemoRestServer +
-  InMemoryDemoUserDirectory. Migration ist trivial, aber eigene
-  Iteration.
+- ✅ Demos nutzen den Resolver: `DemoRestServer` und
+  `InMemoryDemoUserDirectory` rufen
+  `SecurityServiceResolver.passwordHashingService()` statt
+  direktem `new Pbkdf2PasswordHasher()`. Tests behalten
+  bewusst den direkten Konstruktor für deterministische
+  Unit-Tests.
 
 ### Strukturell
 
-#### Konzept-Pakete (Stand 2026-05-10)
+#### Konzept-Pakete (Stand 2026-05-11)
 
-- ✅ `audit/`, `action/`, `bootstrap/`, `bruteforce/`, `session/`
-  als Top-Level-Pakete.
-- ❌ `authentication/`, `logout/` fehlen — Code lebt heute unter
-  `authorization.api.*` / `authorization.vaadin.*`.
-- Nicht zwingend für V00.60: Migration von `LogoutService` &
-  Authentication-Service-Interfaces in eigene Top-Level-Pakete.
-  Empfehlung: erst nach den Brief-Schritten 3 + 4 unten.
+- ✅ `audit/`, `action/`, `authentication/`, `bootstrap/`,
+  `bruteforce/`, `logout/`, `logout/vaadin/`, `session/`,
+  `session/vaadin/` als Top-Level-Pakete.
+- ✅ `AuthenticationService` aus `authorization.api` →
+  `com.svenruppert.vaadin.security.authentication.AuthenticationService`.
+- ✅ Logout-Bausteine aus `authorization.api` (LogoutService,
+  LogoutScope, LogoutListener, NoopLogoutService,
+  SubjectClearingLogoutService, SubjectSessionRegistry,
+  InMemorySubjectSessionRegistry, SubjectId) →
+  `com.svenruppert.vaadin.security.logout`.
+- ✅ Vaadin-Logout-Bausteine (`VaadinLogoutService`,
+  `VaadinLogoutGateway`, `DefaultVaadinLogoutGateway`) →
+  `com.svenruppert.vaadin.security.logout.vaadin`.
 
 #### `SecurityServiceResolver`-Lücken
 
@@ -363,16 +371,22 @@ Reactor-grün vor dem nächsten Schritt.
 
 1. **Karibu / TestBench** als Grundlage für die UI-Adapter-Tests
    aus dem § Strukturell-Block. Ideal als erste Use-Cases: die
-   neue `/audit`-Route und der B3-Rotation-Honour
+   neue Vaadin-`/audit`-Route und der B3-Rotation-Honour
    (`VaadinService.reinitializeSession` wird gegen eine
    gemockte Vaadin-Servlet-Runtime verifiziert).
-2. **Paket-Migration** (optional, post-V00.60): `authentication/`
-   und `logout/` als eigene Top-Level-Pakete extrahieren.
-3. **REST-`/api/audit`-Endpoint** (optional) — backend-seitiges
-   Audit-Log über REST exponieren, parallel zur Vaadin-Route.
-   Wäre konsistent mit dem demo-rest-Stil. Kein Brief-Punkt.
-4. **Optional:** Readiness-Check in `DemoRestServer.start(...)`,
+2. **Optional:** Readiness-Check in `DemoRestServer.start(...)`,
    falls der Bootstrap-Test wirklich flaky bleibt.
+
+### Erledigt nach Step 4
+
+- ✅ Paket-Migration: `AuthenticationService` →
+  `authentication/`; Core- und Vaadin-Logout-Bausteine →
+  `logout/` bzw. `logout/vaadin/`. Importer + SPI-Files
+  durchgängig aktualisiert.
+- ✅ REST-`GET /api/audit`-Endpoint mit
+  `@RequiresPermission("audit:read")` und optionalen
+  `type` / `subject` Query-Parametern. Symmetrie zur Vaadin-
+  `/audit`-Route hergestellt.
 
 ## Offene Vorab-Entscheidungen
 

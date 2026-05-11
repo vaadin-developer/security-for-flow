@@ -14,15 +14,15 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.authorization.vaadin;
+package com.svenruppert.vaadin.security.logout.vaadin;
 
-import com.svenruppert.vaadin.security.authorization.api.InMemorySubjectSessionRegistry;
-import com.svenruppert.vaadin.security.authorization.api.LogoutListener;
-import com.svenruppert.vaadin.security.authorization.api.LogoutScope;
+import com.svenruppert.vaadin.security.logout.InMemorySubjectSessionRegistry;
+import com.svenruppert.vaadin.security.logout.LogoutListener;
+import com.svenruppert.vaadin.security.logout.LogoutScope;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.authorization.api.SubjectId;
+import com.svenruppert.vaadin.security.logout.SubjectId;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
-import com.svenruppert.vaadin.security.authorization.api.SubjectSessionRegistry;
+import com.svenruppert.vaadin.security.logout.SubjectSessionRegistry;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

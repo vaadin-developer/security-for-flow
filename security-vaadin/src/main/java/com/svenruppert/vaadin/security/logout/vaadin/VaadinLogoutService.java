@@ -14,15 +14,15 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.authorization.vaadin;
+package com.svenruppert.vaadin.security.logout.vaadin;
 
-import com.svenruppert.vaadin.security.authorization.api.InMemorySubjectSessionRegistry;
-import com.svenruppert.vaadin.security.authorization.api.LogoutListener;
-import com.svenruppert.vaadin.security.authorization.api.LogoutScope;
-import com.svenruppert.vaadin.security.authorization.api.LogoutService;
-import com.svenruppert.vaadin.security.authorization.api.SubjectClearingLogoutService;
-import com.svenruppert.vaadin.security.authorization.api.SubjectId;
-import com.svenruppert.vaadin.security.authorization.api.SubjectSessionRegistry;
+import com.svenruppert.vaadin.security.logout.InMemorySubjectSessionRegistry;
+import com.svenruppert.vaadin.security.logout.LogoutListener;
+import com.svenruppert.vaadin.security.logout.LogoutScope;
+import com.svenruppert.vaadin.security.logout.LogoutService;
+import com.svenruppert.vaadin.security.logout.SubjectClearingLogoutService;
+import com.svenruppert.vaadin.security.logout.SubjectId;
+import com.svenruppert.vaadin.security.logout.SubjectSessionRegistry;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
 import com.svenruppert.vaadin.security.session.SessionContext;
 import com.svenruppert.vaadin.security.session.SessionPolicy;

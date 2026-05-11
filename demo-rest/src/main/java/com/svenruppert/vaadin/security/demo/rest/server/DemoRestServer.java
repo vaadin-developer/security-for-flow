@@ -17,7 +17,7 @@
 package com.svenruppert.vaadin.security.demo.rest.server;
 
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.authorization.api.SubjectClearingLogoutService;
+import com.svenruppert.vaadin.security.logout.SubjectClearingLogoutService;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
 import com.svenruppert.vaadin.security.bootstrap.BootstrapConfiguration;
 import com.svenruppert.vaadin.security.bootstrap.BootstrapMode;

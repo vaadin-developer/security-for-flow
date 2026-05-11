@@ -354,7 +354,7 @@ public abstract class LoginView
   /**
    * Validates the credentials entered by the user.
    * Implementations should call
-   * {@link com.svenruppert.vaadin.security.authorization.api.AuthenticationService#checkCredentials(Object)}
+   * {@link com.svenruppert.vaadin.security.authentication.AuthenticationService#checkCredentials(Object)}
    * and, on success, store the subject via the configured
    * {@link com.svenruppert.vaadin.security.authorization.api.SubjectStore}.
    *

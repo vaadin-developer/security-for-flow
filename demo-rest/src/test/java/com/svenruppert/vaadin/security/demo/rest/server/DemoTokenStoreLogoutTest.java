@@ -16,9 +16,9 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.server;
 
-import com.svenruppert.vaadin.security.authorization.api.LogoutScope;
-import com.svenruppert.vaadin.security.authorization.api.SubjectClearingLogoutService;
-import com.svenruppert.vaadin.security.authorization.api.SubjectId;
+import com.svenruppert.vaadin.security.logout.LogoutScope;
+import com.svenruppert.vaadin.security.logout.SubjectClearingLogoutService;
+import com.svenruppert.vaadin.security.logout.SubjectId;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
 import com.svenruppert.vaadin.security.bootstrap.Pbkdf2PasswordHasher;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUser;

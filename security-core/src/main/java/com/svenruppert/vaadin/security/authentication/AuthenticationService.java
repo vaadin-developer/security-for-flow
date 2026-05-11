@@ -14,13 +14,13 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.authorization.api;
+package com.svenruppert.vaadin.security.authentication;
 
 /**
  * SPI contract for credential validation and subject loading.
  * <p>
  * Implementations must be registered in
- * {@code META-INF/services/com.svenruppert.vaadin.security.authorization.api.AuthenticationService}.
+ * {@code META-INF/services/com.svenruppert.vaadin.security.authentication.AuthenticationService}.
  *
  * @param <T> the credentials type (e.g. a username/password record)
  * @param <U> the subject (user) type

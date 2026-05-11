@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.audit;
 
-import com.svenruppert.vaadin.security.authorization.api.LogoutScope;
+import com.svenruppert.vaadin.security.logout.LogoutScope;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

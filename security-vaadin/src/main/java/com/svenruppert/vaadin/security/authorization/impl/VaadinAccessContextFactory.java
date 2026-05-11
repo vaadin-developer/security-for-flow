@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.authorization.impl;
 
-import com.svenruppert.vaadin.security.authorization.api.AuthenticationService;
+import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;

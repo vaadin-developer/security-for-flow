@@ -182,6 +182,48 @@ class DemoRestServerTest {
     assertEquals(401, client.me(token).statusCode());
   }
 
+  @Test
+  @DisplayName("GET /api/audit returns 403 for users without audit:read")
+  void auditRequiresPermission() throws IOException, InterruptedException {
+    String editorToken = loginAs("editor", "editor");
+    HttpResponse<String> response = client.call("GET", "/api/audit", editorToken, null);
+    assertEquals(403, response.statusCode());
+  }
+
+  @Test
+  @DisplayName("GET /api/audit returns the buffered events for admin")
+  void auditReturnsEventsForAdmin() throws IOException, InterruptedException {
+    String adminToken = loginAs("admin", "admin");
+    HttpResponse<String> response = client.call("GET", "/api/audit", adminToken, null);
+
+    assertEquals(200, response.statusCode());
+    Map<String, Object> payload = DemoJson.decodeObject(response.body());
+    @SuppressWarnings("unchecked")
+    List<Map<String, Object>> events = (List<Map<String, Object>>) payload.get("events");
+    assertNotNull(events);
+    // The admin login above must show up as a LoginSucceeded event in the
+    // ring buffer (newest first ordering).
+    assertTrue(events.stream()
+            .anyMatch(e -> "LoginSucceeded".equals(e.get("type"))
+                && "admin".equals(e.get("username"))),
+        "expected a LoginSucceeded event for admin in the audit log");
+  }
+
+  @Test
+  @DisplayName("GET /api/audit?type=LoginSucceeded narrows the result set")
+  void auditTypeFilter() throws IOException, InterruptedException {
+    String adminToken = loginAs("admin", "admin");
+    HttpResponse<String> response = client.call(
+        "GET", "/api/audit?type=LoginSucceeded", adminToken, null);
+
+    assertEquals(200, response.statusCode());
+    Map<String, Object> payload = DemoJson.decodeObject(response.body());
+    @SuppressWarnings("unchecked")
+    List<Map<String, Object>> events = (List<Map<String, Object>>) payload.get("events");
+    assertTrue(events.stream().allMatch(e -> "LoginSucceeded".equals(e.get("type"))),
+        "type=LoginSucceeded must filter out every other event type");
+  }
+
   private String loginAs(String username, String password) throws IOException, InterruptedException {
     HttpResponse<String> response = client.login(username, password);
     assertEquals(200, response.statusCode());

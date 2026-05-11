@@ -16,8 +16,8 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.server;
 
-import com.svenruppert.vaadin.security.authorization.api.SubjectId;
-import com.svenruppert.vaadin.security.authorization.api.SubjectSessionRegistry;
+import com.svenruppert.vaadin.security.logout.SubjectId;
+import com.svenruppert.vaadin.security.logout.SubjectSessionRegistry;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUser;
 
 import java.security.SecureRandom;
