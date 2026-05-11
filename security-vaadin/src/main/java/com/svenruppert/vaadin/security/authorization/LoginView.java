@@ -17,10 +17,13 @@
 package com.svenruppert.vaadin.security.authorization;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
+import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.SessionInvalidated;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.session.SessionContext;
+import com.svenruppert.vaadin.security.session.SessionDecision;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Composite;
@@ -36,6 +39,7 @@ import com.vaadin.flow.component.textfield.Autocomplete;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.server.VaadinRequest;
+import com.vaadin.flow.server.VaadinService;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.WrappedSession;
 
@@ -186,24 +190,81 @@ public abstract class LoginView
    * Best-effort notification of {@link SessionPolicy#onLogin(SessionContext)}.
    * <p>
    * Fires after a successful {@link #checkCredentials()} so the policy can
-   * emit {@code SESSION_CREATED} audit events and (in a future iteration)
-   * trigger session-id rotation. Failures, missing Vaadin session, or
-   * missing SPI are silently absorbed — the lifecycle hook must never
-   * block the login flow.
+   * emit a {@code SessionCreated} audit event and, when configured, trigger
+   * session-id rotation. Failures, missing Vaadin session, or missing SPI
+   * are silently absorbed — the lifecycle hook must never block the login
+   * flow.
    * <p>
-   * The returned {@link com.svenruppert.vaadin.security.session.SessionDecision SessionDecision}
-   * is currently informational only. Honouring
-   * {@code Invalidate(loginRoute)} for session-fixation rotation is a
-   * separate concern (it changes the navigation target post-login) and
-   * is tracked as future work.
+   * If the policy returns
+   * {@link SessionDecision.Invalidate Invalidate} the listener
+   * reinitializes the HTTP session via
+   * {@link VaadinService#reinitializeSession(VaadinRequest)} (session-id
+   * rotates, VaadinSession attributes — including the just-bound subject —
+   * survive) and emits a {@code SessionInvalidated} audit event for the
+   * <em>old</em> session id. The {@code loginRoute} field of the decision
+   * is deliberately ignored in the post-login context: the user proceeds
+   * to {@link #navigateToApp()} on the rotated session. Invalidation
+   * <em>from {@code beforeNavigation}</em> (session expired) follows a
+   * different code path and uses {@code loginRoute} as written.
    */
   private void notifyOnLogin() {
     try {
       SessionPolicy<Object> policy = SecurityServiceResolver.sessionPolicy();
-      buildSessionContext().ifPresent(policy::onLogin);
+      Optional<SessionContext<Object>> contextOpt = buildSessionContext();
+      if (contextOpt.isEmpty()) {
+        return;
+      }
+      SessionContext<Object> context = contextOpt.get();
+      SessionDecision decision = policy.onLogin(context);
+      if (decision instanceof SessionDecision.Invalidate invalidate) {
+        rotateSessionAfterLogin(context, invalidate);
+      }
     } catch (RuntimeException notifyFailure) {
       logger().warn("SessionPolicy.onLogin notification failed: {}", notifyFailure.toString());
     }
+  }
+
+  /**
+   * Rotates the underlying HTTP session id while preserving the
+   * {@link VaadinSession} (and therefore the just-bound subject). Standard
+   * session-fixation mitigation: callers that pass credentials over a
+   * pre-existing session id cannot replay the post-login session because
+   * the id changes here.
+   * <p>
+   * Audit emit is best-effort and never propagates exceptions.
+   */
+  private void rotateSessionAfterLogin(SessionContext<Object> context, SessionDecision.Invalidate decision) {
+    VaadinRequest request = VaadinRequest.getCurrent();
+    if (request == null) {
+      return;
+    }
+    String oldSessionId = context.sessionId();
+    try {
+      VaadinService.reinitializeSession(request);
+    } catch (RuntimeException rotationFailure) {
+      logger().warn("VaadinService.reinitializeSession failed: {}",
+          rotationFailure.toString());
+      return;
+    }
+    auditRotation(context, oldSessionId, decision.reason());
+  }
+
+  private void auditRotation(SessionContext<Object> context, String oldSessionId, String reason) {
+    try {
+      SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
+      sink.publish(new SessionInvalidated(
+          Instant.now(),
+          subjectIdOf(context),
+          oldSessionId,
+          reason == null ? "RotationAfterLogin" : reason));
+    } catch (RuntimeException auditFailure) {
+      // never block login because the audit sink failed
+    }
+  }
+
+  private static String subjectIdOf(SessionContext<Object> context) {
+    Object subject = context.subject();
+    return subject == null ? "" : subject.toString();
   }
 
   /**

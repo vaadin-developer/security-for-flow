@@ -101,14 +101,36 @@ ok,        > Stand: 2026-05-11. Zielversion 00.60.00 (Konzept-V00.60.00.md) +
 - ✅ `VaadinLogoutService` ruft `policy.onLogout(...)` zusätzlich
   zum bestehenden `LOGOUT`-Audit. Failures werden geschluckt.
 
-### Folgearbeit — Session-Rotation honour beim Login
+### Folgearbeit — Session-Rotation honour beim Login ✅
 
-- [ ] `SessionDecision.Invalidate(loginRoute)` aus
-  `policy.onLogin(...)` umsetzen: alte VaadinSession schließen,
-  Subject in neuer Session ablegen, redirect auf loginRoute
-  → konkret nur für `TimeoutSessionPolicy.Config.rotateSessionAfterLogin = true`
-  relevant. Dafür muss der Subject-Transfer über die alte
-  Session-Grenze hinweg geregelt werden (Vaadin-spezifisch).
+- ✅ `LoginView.notifyOnLogin(...)` interpretiert `SessionDecision`
+  jetzt: bei `Invalidate` wird via
+  `VaadinService.reinitializeSession(VaadinRequest)` rotiert. Das
+  ist der Standard-Vaadin-Pfad für Session-Fixation-Mitigation —
+  die `VaadinSession` (und damit das frisch hinterlegte Subject im
+  `VaadinSessionSubjectStore`-Attribut) überlebt; nur die HTTP-
+  Session-ID wechselt. Kein Subject-Transfer-Code nötig.
+- ✅ Audit-Event `SessionInvalidated` (Reason aus der Decision,
+  Default „RotationAfterLogin") wird mit der **alten** sessionId
+  vor dem reinitialize emittiert. Schluckt Audit-Failures still.
+- ✅ `loginRoute` aus `Invalidate` wird im `onLogin`-Kontext
+  bewusst ignoriert: nach Rotation geht es regulär zum
+  `navigateToApp()` weiter (`loginRoute` greift nur im
+  `beforeNavigation`-Kontext, wo die Session destroyed wird).
+  In `SessionDecision.Invalidate`-Javadoc + Code-Doc dokumentiert.
+- ✅ `TimeoutSessionPolicy.Config`-Javadoc beschreibt das
+  Rotation-Verhalten; demo-Defaults
+  (`rotateSessionAfterLogin = true`) bleiben unverändert und
+  laufen jetzt tatsächlich durch.
+- ✅ Test: `LoginViewTest.invalidateFromOnLoginIsAbsorbed` —
+  `Invalidate` aus `onLogin` darf den Login-Flow nicht
+  unterbrechen, auch ohne aktive Vaadin-Request-Bindung.
+- [ ] **Folgearbeit (Karibu/TestBench):** Integration-Test
+  gegen eine echte (oder gemockte) Vaadin-Servlet-Runtime, der
+  beweist dass `VaadinService.reinitializeSession(...)` wirklich
+  aufgerufen wird und die `SessionInvalidated`-Audit-Emission
+  mit der alten sessionId stattfindet. Heute nicht abdeckbar
+  ohne UI-Test-Infra; siehe „Vaadin-UI-Test-Infrastruktur".
 
 ### § 1.x — Re-Hash beim Login ✅
 
@@ -339,20 +361,17 @@ Reactor-grün vor dem nächsten Schritt.
 
 ## Empfohlene Reihenfolge der nächsten Iteration
 
-1. **Session-Rotation honour beim Login** (B3, vertagt) —
-   `SessionDecision.Invalidate(loginRoute)` aus `policy.onLogin(...)`
-   umsetzen (alte VaadinSession schließen, Subject transferieren,
-   redirect). Nur relevant wenn `rotateSessionAfterLogin = true`.
-   Erfordert Vaadin-spezifischen Subject-Handover-Mechanismus.
-2. **Karibu / TestBench** als Grundlage für die UI-Adapter-Tests
-   aus dem § Strukturell-Block. Ideal als erster Use-Case: die
-   neue `/audit`-Route.
-3. **Paket-Migration** (optional, post-V00.60): `authentication/`
+1. **Karibu / TestBench** als Grundlage für die UI-Adapter-Tests
+   aus dem § Strukturell-Block. Ideal als erste Use-Cases: die
+   neue `/audit`-Route und der B3-Rotation-Honour
+   (`VaadinService.reinitializeSession` wird gegen eine
+   gemockte Vaadin-Servlet-Runtime verifiziert).
+2. **Paket-Migration** (optional, post-V00.60): `authentication/`
    und `logout/` als eigene Top-Level-Pakete extrahieren.
-4. **REST-`/api/audit`-Endpoint** (optional) — backend-seitiges
+3. **REST-`/api/audit`-Endpoint** (optional) — backend-seitiges
    Audit-Log über REST exponieren, parallel zur Vaadin-Route.
    Wäre konsistent mit dem demo-rest-Stil. Kein Brief-Punkt.
-5. **Optional:** Readiness-Check in `DemoRestServer.start(...)`,
+4. **Optional:** Readiness-Check in `DemoRestServer.start(...)`,
    falls der Bootstrap-Test wirklich flaky bleibt.
 
 ## Offene Vorab-Entscheidungen
@@ -361,6 +380,3 @@ Reactor-grün vor dem nächsten Schritt.
   `Config.defaults()` (30 min idle / 12 h absolute) oder
   aggressive Demo-Werte (z. B. 2 min idle / 30 min absolute), damit
   Reviewer den Effekt bei manuellem Testen sehen?
-- **`SessionPolicy`-Rotation in den Demos:** `rotateSessionAfterLogin`
-  per Default aktiv? Hängt an Punkt 1 oben — solange der Rotation-Honour
-  nicht implementiert ist, bleibt es bei `false`.

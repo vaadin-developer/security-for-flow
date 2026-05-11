@@ -186,6 +186,32 @@ class LoginViewTest {
     }
   }
 
+  @Test
+  @DisplayName("validate() success absorbs an Invalidate decision from onLogin without throwing")
+  void invalidateFromOnLoginIsAbsorbed() throws Exception {
+    com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver.resetAll();
+    InvalidatingSessionPolicy<String> policy = new InvalidatingSessionPolicy<>();
+    com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver.setSessionPolicy(policy);
+
+    try {
+      TestLoginView view = new TestLoginView();
+      view.acceptCredentials = true;
+      field(view, "username", TextField.class).setValue("u");
+      field(view, "password", PasswordField.class).setValue("p");
+
+      // The honour path needs an active VaadinRequest to call
+      // VaadinService.reinitializeSession(...); none is bound here.
+      // The view must still complete the login flow cleanly — the
+      // rotation is a best-effort side effect.
+      invokeValidate(view);
+
+      assertTrue(view.navigatedToApp,
+          "even when onLogin asks for rotation, navigateToApp must run");
+    } finally {
+      com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver.resetAll();
+    }
+  }
+
   static final class RecordingSessionPolicy<U>
       implements com.svenruppert.vaadin.security.session.SessionPolicy<U> {
     int onLoginCalls;
@@ -195,6 +221,23 @@ class LoginViewTest {
         com.svenruppert.vaadin.security.session.SessionContext<U> context) {
       onLoginCalls++;
       return com.svenruppert.vaadin.security.session.SessionDecision.Continue.INSTANCE;
+    }
+
+    @Override
+    public com.svenruppert.vaadin.security.session.SessionDecision beforeNavigation(
+        com.svenruppert.vaadin.security.session.SessionContext<U> context) {
+      return com.svenruppert.vaadin.security.session.SessionDecision.Continue.INSTANCE;
+    }
+  }
+
+  static final class InvalidatingSessionPolicy<U>
+      implements com.svenruppert.vaadin.security.session.SessionPolicy<U> {
+
+    @Override
+    public com.svenruppert.vaadin.security.session.SessionDecision onLogin(
+        com.svenruppert.vaadin.security.session.SessionContext<U> context) {
+      return new com.svenruppert.vaadin.security.session.SessionDecision.Invalidate(
+          "RotationAfterLogin", "/login");
     }
 
     @Override

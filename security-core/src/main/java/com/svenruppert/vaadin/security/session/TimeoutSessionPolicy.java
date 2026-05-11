@@ -56,7 +56,19 @@ import java.util.Objects;
  */
 public final class TimeoutSessionPolicy<U> implements SessionPolicy<U> {
 
-  /** Tunable thresholds. */
+  /**
+   * Tunable thresholds.
+   * <p>
+   * When {@code rotateSessionAfterLogin} is {@code true},
+   * {@link #onLogin(SessionContext)} returns
+   * {@link SessionDecision.Invalidate} so the calling adapter rotates
+   * the underlying session id. The Vaadin {@code LoginView} honours this
+   * by calling {@code VaadinService.reinitializeSession(VaadinRequest)} —
+   * the {@code VaadinSession} (and therefore the just-bound subject)
+   * survives the rotation; only the HTTP session id changes. The
+   * REST adapter has no equivalent — tokens themselves are the session,
+   * and there is no fixation surface to mitigate.
+   */
   public record Config(
       Duration idleTimeout,
       Duration absoluteLifetime,

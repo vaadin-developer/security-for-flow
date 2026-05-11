@@ -54,10 +54,23 @@ public sealed interface SessionDecision
   }
 
   /**
-   * The session must be invalidated entirely.
+   * The session must be invalidated. Interpretation depends on the
+   * lifecycle hook that returned the decision:
+   * <ul>
+   *   <li>From {@link SessionPolicy#beforeNavigation(SessionContext)} —
+   *       the session is expired/destroyed; drop the subject, invalidate
+   *       the session, forward to {@code loginRoute}.</li>
+   *   <li>From {@link SessionPolicy#onLogin(SessionContext)} —
+   *       session-fixation rotation: rotate the session id (e.g. via
+   *       {@code VaadinService.reinitializeSession(...)}), preserve the
+   *       just-bound subject, and continue to the original post-login
+   *       navigation target. {@code loginRoute} is ignored in this
+   *       context.</li>
+   * </ul>
    *
    * @param reason     short, generic reason (safe for logs)
    * @param loginRoute target route to forward to after invalidation
+   *                   (ignored when returned from {@code onLogin})
    */
   record Invalidate(String reason, String loginRoute) implements SessionDecision {
   }
