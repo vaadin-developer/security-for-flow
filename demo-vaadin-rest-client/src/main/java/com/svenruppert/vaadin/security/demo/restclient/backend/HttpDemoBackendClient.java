@@ -247,6 +247,67 @@ public final class HttpDemoBackendClient implements DemoBackendClient {
         stringOf(payload.get("message")));
   }
 
+  @Override
+  public List<RemoteUserEntry> listUsers(String token) {
+    HttpResponse<String> response = send("GET", DemoEndpoints.ADMIN_USERS, token, null);
+    if (response.statusCode() != 200) throw fromStatus(response);
+    Map<String, Object> payload = DemoJson.decodeObject(response.body());
+    Object value = payload.get("users");
+    if (!(value instanceof List<?> list)) return List.of();
+    return list.stream()
+        .filter(Map.class::isInstance)
+        .map(o -> {
+          @SuppressWarnings("unchecked")
+          Map<String, Object> entry = (Map<String, Object>) o;
+          return new RemoteUserEntry(
+              stringOf(entry.get("username")),
+              stringOf(entry.get("displayName")),
+              stringOf(entry.get("role")));
+        })
+        .toList();
+  }
+
+  @Override
+  public RemoteUserEntry setUserRole(String token, String username, String role) {
+    String body = DemoJson.encode(Map.of("role", role));
+    HttpResponse<String> response = send("PUT",
+        DemoEndpoints.ADMIN_USER_BY_NAME + username, token, body);
+    if (response.statusCode() != 200) throw fromStatus(response);
+    Map<String, Object> payload = DemoJson.decodeObject(response.body());
+    return new RemoteUserEntry(
+        stringOf(payload.get("username")),
+        stringOf(payload.get("displayName")),
+        stringOf(payload.get("role")));
+  }
+
+  @Override
+  public RemoteUserEntry createUser(
+      String token, String username, String password, String displayName, String role) {
+    Map<String, Object> bodyPayload = new LinkedHashMap<>();
+    bodyPayload.put("username", username);
+    bodyPayload.put("password", password);
+    if (displayName != null && !displayName.isBlank()) {
+      bodyPayload.put("displayName", displayName);
+    }
+    bodyPayload.put("role", role);
+    String body = DemoJson.encode(bodyPayload);
+    HttpResponse<String> response = send("POST",
+        DemoEndpoints.ADMIN_USERS, token, body);
+    if (response.statusCode() != 201) throw fromStatus(response);
+    Map<String, Object> payload = DemoJson.decodeObject(response.body());
+    return new RemoteUserEntry(
+        stringOf(payload.get("username")),
+        stringOf(payload.get("displayName")),
+        stringOf(payload.get("role")));
+  }
+
+  @Override
+  public void deleteUser(String token, String username) {
+    HttpResponse<String> response = send("DELETE",
+        DemoEndpoints.ADMIN_USER_BY_NAME + username, token, null);
+    if (response.statusCode() != 204) throw fromStatus(response);
+  }
+
   // ── Helpers ──────────────────────────────────────────────────
 
   private HttpResponse<String> send(String method, String path, String token, String body) {

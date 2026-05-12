@@ -49,6 +49,10 @@ public final class DemoHttpRouter implements HttpHandler {
   private final Method deleteDocumentMethod;
   private final Method adminStatusMethod;
   private final Method auditEventsMethod;
+  private final Method listUsersMethod;
+  private final Method setUserRoleMethod;
+  private final Method createUserMethod;
+  private final Method deleteUserMethod;
 
   public DemoHttpRouter(
       DemoHandlers handlers,
@@ -68,6 +72,10 @@ public final class DemoHttpRouter implements HttpHandler {
       this.deleteDocumentMethod = DemoHandlers.class.getDeclaredMethod("deleteDocument", sig);
       this.adminStatusMethod = DemoHandlers.class.getDeclaredMethod("adminStatus", sig);
       this.auditEventsMethod = DemoHandlers.class.getDeclaredMethod("auditEvents", sig);
+      this.listUsersMethod = DemoHandlers.class.getDeclaredMethod("listUsers", sig);
+      this.setUserRoleMethod = DemoHandlers.class.getDeclaredMethod("setUserRole", sig);
+      this.createUserMethod = DemoHandlers.class.getDeclaredMethod("createUser", sig);
+      this.deleteUserMethod = DemoHandlers.class.getDeclaredMethod("deleteUser", sig);
     } catch (NoSuchMethodException e) {
       throw new IllegalStateException("Demo handler method missing", e);
     }
@@ -136,6 +144,22 @@ public final class DemoHttpRouter implements HttpHandler {
     }
     if (DemoEndpoints.AUDIT.equals(path) && "GET".equals(method)) {
       filter.authorizeAndHandle(request, response, handlers::auditEvents, auditEventsMethod);
+      return;
+    }
+    if (DemoEndpoints.ADMIN_USERS.equals(path)) {
+      switch (method) {
+        case "GET" -> filter.authorizeAndHandle(request, response, handlers::listUsers, listUsersMethod);
+        case "POST" -> filter.authorizeAndHandle(request, response, handlers::createUser, createUserMethod);
+        default -> notAllowed(response);
+      }
+      return;
+    }
+    if (path.startsWith(DemoEndpoints.ADMIN_USER_BY_NAME)) {
+      switch (method) {
+        case "PUT" -> filter.authorizeAndHandle(request, response, handlers::setUserRole, setUserRoleMethod);
+        case "DELETE" -> filter.authorizeAndHandle(request, response, handlers::deleteUser, deleteUserMethod);
+        default -> notAllowed(response);
+      }
       return;
     }
     response.status(404);

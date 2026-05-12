@@ -84,6 +84,8 @@ public class MainView
 
     tabs.add(welcomeHomeTab());
     if (isCurrentUserAuthorizedFor(ADMIN)) tabs.add(adminTab());
+    if (isCurrentUserAuthorizedFor(ADMIN, Q_ADMIN)) tabs.add(rolesAdminTab());
+    if (isCurrentUserAuthorizedFor(ADMIN, Q_ADMIN)) tabs.add(auditTab());
     if (isCurrentUserAuthorizedFor(ADMIN, NERD)) tabs.add(nerdTab());
     if (isCurrentUserAuthorizedFor(USER)) tabs.add(userTab());
     tabs.add(publicAllTab());
@@ -98,6 +100,18 @@ public class MainView
   private Tab adminTab() {
     Tab tab = new Tab(VaadinIcon.COG.create(), new Span("Admin"));
     tab2Workspace.put(tab, new AdminWorkspace());
+    return tab;
+  }
+
+  private Tab rolesAdminTab() {
+    Tab tab = new Tab(VaadinIcon.USER_CARD.create(), new Span("User roles"));
+    tab2Workspace.put(tab, new AdminRolesView());
+    return tab;
+  }
+
+  private Tab auditTab() {
+    Tab tab = new Tab(VaadinIcon.CLIPBOARD_TEXT.create(), new Span("Audit log"));
+    tab2Workspace.put(tab, new AuditView());
     return tab;
   }
 

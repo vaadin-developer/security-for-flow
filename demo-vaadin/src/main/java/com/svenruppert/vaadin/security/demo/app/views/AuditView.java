@@ -33,6 +33,8 @@ import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.audit.SessionCreated;
 import com.svenruppert.vaadin.security.audit.SessionExpired;
 import com.svenruppert.vaadin.security.audit.SessionInvalidated;
+import com.svenruppert.vaadin.security.audit.UserCreated;
+import com.svenruppert.vaadin.security.audit.UserDeleted;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPermission;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.vaadin.flow.component.Composite;
@@ -78,6 +80,7 @@ public class AuditView extends Composite<VerticalLayout> {
       BruteForceLimitReached.class,
       SessionCreated.class, SessionExpired.class, SessionInvalidated.class,
       RoleAssigned.class, RoleRevoked.class,
+      UserCreated.class, UserDeleted.class,
       BootstrapAdminCreated.class, BootstrapTokenRejected.class);
 
   private final Grid<AuditEvent> grid = new Grid<>(AuditEvent.class, false);
@@ -88,6 +91,7 @@ public class AuditView extends Composite<VerticalLayout> {
   public AuditView() {
     VerticalLayout root = getContent();
     root.addClassName("audit-view");
+    root.setSizeFull();
     root.setSpacing(false);
     root.getThemeList().add("spacing-s");
 
@@ -100,8 +104,10 @@ public class AuditView extends Composite<VerticalLayout> {
     root.add(buildToolbar());
     root.add(grid);
     root.add(rowCount);
+    root.setFlexGrow(1, grid);
 
     grid.setSizeFull();
+    grid.setPageSize(50);
     grid.addColumn(e -> TIMESTAMP.format(e.timestamp()))
         .setHeader("Timestamp").setWidth("11em").setFlexGrow(0);
     grid.addColumn(e -> e.getClass().getSimpleName())
@@ -169,6 +175,8 @@ public class AuditView extends Composite<VerticalLayout> {
       case BruteForceLimitReached e -> e.username();
       case BootstrapAdminCreated e -> e.username();
       case BootstrapTokenRejected ignored -> "—";
+      case UserCreated e -> e.username();
+      case UserDeleted e -> e.username();
     };
   }
 
@@ -197,6 +205,9 @@ public class AuditView extends Composite<VerticalLayout> {
       case BootstrapAdminCreated e -> "client=" + nullToDash(e.clientAddress());
       case BootstrapTokenRejected e -> "reason=" + e.reason()
           + " client=" + nullToDash(e.clientAddress());
+      case UserCreated e -> "role=" + nullToDash(e.role())
+          + " by=" + nullToDash(e.createdBy());
+      case UserDeleted e -> "by=" + nullToDash(e.deletedBy());
     };
   }
 

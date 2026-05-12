@@ -387,6 +387,49 @@ Reactor-grün vor dem nächsten Schritt.
   `@RequiresPermission("audit:read")` und optionalen
   `type` / `subject` Query-Parametern. Symmetrie zur Vaadin-
   `/audit`-Route hergestellt.
+- ✅ Lockout-UI in beiden Vaadin-Demos:
+  `MyLoginView.reactOnFailedLogin()` fragt nach einem
+  fehlgeschlagenen Credential-Check die `LoginAttemptPolicy`
+  noch einmal ab. Wenn jetzt `LockedOut`, wird ein roter
+  Banner („Account locked — N failed attempts. Try again in
+  …") statt der generischen „Credentials not accepted"-Toast
+  angezeigt. demo-rest sendet weiterhin `429 + Retry-After`.
+- ✅ Role-Admin-UI in demo-vaadin:
+  - `DemoPermission.ADMIN_ROLES = "admin:roles"`, gemappt
+    auf `ADMIN` und `Q_ADMIN`.
+  - Neue `/admin/roles`-Route mit
+    `@RequiresPermission("admin:roles")` — `Grid<MyUser>` +
+    per-Row ComboBox + Assign/Revoke-Buttons.
+  - `DemoUserDirectory.assignRole`/`revokeRole` (Default
+    throws), `InMemoryDemoUserDirectory` implementiert
+    beides — emittiert `RoleAssigned`/`RoleRevoked`-Audit-
+    Events; idempotent gegen Doppel-Assign und
+    unbekannte IDs; Password-Hash übersteht die Mutation.
+  - 6 neue Unit-Tests
+    (`InMemoryDemoUserDirectoryRoleMutationTest`).
+- ✅ Role-Admin-UI in demo-vaadin-rest-client (backend-driven):
+  - demo-rest backend: `DemoPermission.ADMIN_ROLES` →
+    `ROLE_ADMIN`. `DemoUserStore.listAll()` +
+    `setRole(username, DemoRole)` emittieren
+    `RoleRevoked` (alte Rolle) + `RoleAssigned` (neue Rolle).
+  - REST-Endpoints: `GET /api/admin/users` und
+    `PUT /api/admin/users/{username}` mit Body
+    `{"role":"ROLE_…"}` — beide `@RequiresPermission("admin:roles")`,
+    via `RestAuthorizationFilter` (403 für non-admin).
+  - `DemoEndpoints.ADMIN_USERS` + `ADMIN_USER_BY_NAME` in
+    `demo-rest-shared`.
+  - rest-client: `RemoteUserEntry`-Record (`username`,
+    `displayName`, `role`); `DemoBackendClient.listUsers` /
+    `setUserRole`; `HttpDemoBackendClient` mappt
+    Domain ↔ HTTP/JSON.
+  - rest-client `/admin/roles`-Route mit
+    `@RequiresPermission("admin:roles")` — `Grid<RemoteUserEntry>`,
+    per-Row ComboBox („Set role" Semantik, weil das Backend
+    pro User genau eine Rolle führt) + Apply-Button. Refresh +
+    Back-Button. Status-Notifications + Backend-Fehler-Mapping.
+  - 5 neue Integration-Tests in `DemoRestServerTest`
+    (`listUsers` 200/403, `setUserRole` Success-Change /
+    403 / unknown-role 400).
 
 ## Offene Vorab-Entscheidungen
 

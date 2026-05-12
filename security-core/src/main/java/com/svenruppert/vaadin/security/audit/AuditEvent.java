@@ -37,6 +37,7 @@ public sealed interface AuditEvent
             BruteForceLimitReached,
             SessionCreated, SessionExpired, SessionInvalidated,
             RoleAssigned, RoleRevoked,
+            UserCreated, UserDeleted,
             BootstrapAdminCreated, BootstrapTokenRejected {
 
   /** The UTC instant at which this event was created. Never {@code null}. */

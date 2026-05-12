@@ -17,13 +17,18 @@
 package com.svenruppert.vaadin.security.demo.app.views;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.vaadin.security.demo.app.security.bootstrap.BootstrapWiring;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.VaadinRequest;
 import com.svenruppert.vaadin.security.demo.app.security.model.Credentials;
 import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectoryProvider;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
@@ -64,10 +69,65 @@ public class MyLoginView
 
   @Override
   public void reactOnFailedLogin() {
-    logger().info("Ohhh no, Wrong Credentials.. Session close..");
+    logger().info("Ohhh no, Wrong Credentials..");
+    LoginAttemptDecision decision = currentLockoutDecision(username());
+    if (decision instanceof LoginAttemptDecision.LockedOut lockout) {
+      showLockoutBanner(lockout);
+      return;
+    }
     Notification.show("Credentials not accepted..");
-//    VaadinSession.getCurrent().close();
-//    UI.getCurrent().navigate(LoginView.class);
+  }
+
+  /**
+   * Asks the configured {@link LoginAttemptPolicy} whether the username
+   * is currently throttled. The decision returned by the policy reflects
+   * the state <em>after</em> {@code MyAuthenticationService.checkCredentials}
+   * has recorded the failure — so a lockout produced by the just-rejected
+   * attempt surfaces here.
+   */
+  private static LoginAttemptDecision currentLockoutDecision(String username) {
+    if (username == null || username.isBlank()) {
+      return LoginAttemptDecision.allowed();
+    }
+    try {
+      LoginAttemptPolicy policy = SecurityServiceResolver.loginAttemptPolicy();
+      return policy.beforeAttempt(
+          LoginAttemptContext.now(username, currentClientAddress(), null));
+    } catch (RuntimeException ignored) {
+      return LoginAttemptDecision.allowed();
+    }
+  }
+
+  private static String currentClientAddress() {
+    try {
+      VaadinRequest request = VaadinRequest.getCurrent();
+      return request == null ? null : request.getRemoteAddr();
+    } catch (RuntimeException ignored) {
+      return null;
+    }
+  }
+
+  private static void showLockoutBanner(LoginAttemptDecision.LockedOut lockout) {
+    long seconds = Math.max(1L, lockout.remaining().toSeconds());
+    String message = "Account locked — " + lockout.failedAttempts()
+        + " failed attempts. Try again in " + formatDuration(seconds) + ".";
+    Notification notification = Notification.show(
+        message, 6000, Notification.Position.TOP_CENTER);
+    notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+  }
+
+  private static String formatDuration(long seconds) {
+    if (seconds < 60) {
+      return seconds + " s";
+    }
+    long minutes = seconds / 60;
+    long rest = seconds % 60;
+    if (minutes < 60) {
+      return rest == 0 ? minutes + " min" : minutes + " min " + rest + " s";
+    }
+    long hours = minutes / 60;
+    long restMin = minutes % 60;
+    return restMin == 0 ? hours + " h" : hours + " h " + restMin + " min";
   }
 
   @Override

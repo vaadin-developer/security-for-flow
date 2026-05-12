@@ -20,14 +20,19 @@ import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.vaadin.security.authorization.LoginView;
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;
+import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.vaadin.security.demo.restclient.backend.BackendClientProvider;
 import com.svenruppert.vaadin.security.demo.restclient.backend.Credentials;
 import com.svenruppert.vaadin.security.demo.restclient.backend.RemoteUser;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.VaadinRequest;
 
 @Route(MyLoginView.NAV)
 public class MyLoginView extends LoginView implements HasLogger, BeforeEnterObserver {
@@ -63,11 +68,68 @@ public class MyLoginView extends LoginView implements HasLogger, BeforeEnterObse
   @Override
   public void reactOnFailedLogin() {
     logger().info("Login failed for user {}", username());
+    LoginAttemptDecision decision = currentLockoutDecision(username());
+    if (decision instanceof LoginAttemptDecision.LockedOut lockout) {
+      showLockoutBanner(lockout);
+      return;
+    }
     Notification.show("Credentials not accepted.");
   }
 
   @Override
   public void navigateToApp() {
     UI.getCurrent().navigate(MainView.class);
+  }
+
+  /**
+   * Queries the locally configured {@link LoginAttemptPolicy} for the
+   * username. {@code RestBackedAuthenticationService} consults the same
+   * policy <em>before</em> hitting the backend, so a lockout produced
+   * here is the local-side throttle (defeats brute-force loops at the
+   * Vaadin layer regardless of what the backend does).
+   */
+  private static LoginAttemptDecision currentLockoutDecision(String username) {
+    if (username == null || username.isBlank()) {
+      return LoginAttemptDecision.allowed();
+    }
+    try {
+      LoginAttemptPolicy policy = SecurityServiceResolver.loginAttemptPolicy();
+      return policy.beforeAttempt(
+          LoginAttemptContext.now(username, currentClientAddress(), null));
+    } catch (RuntimeException ignored) {
+      return LoginAttemptDecision.allowed();
+    }
+  }
+
+  private static String currentClientAddress() {
+    try {
+      VaadinRequest request = VaadinRequest.getCurrent();
+      return request == null ? null : request.getRemoteAddr();
+    } catch (RuntimeException ignored) {
+      return null;
+    }
+  }
+
+  private static void showLockoutBanner(LoginAttemptDecision.LockedOut lockout) {
+    long seconds = Math.max(1L, lockout.remaining().toSeconds());
+    String message = "Account locked — " + lockout.failedAttempts()
+        + " failed attempts. Try again in " + formatDuration(seconds) + ".";
+    Notification notification = Notification.show(
+        message, 6000, Notification.Position.TOP_CENTER);
+    notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+  }
+
+  private static String formatDuration(long seconds) {
+    if (seconds < 60) {
+      return seconds + " s";
+    }
+    long minutes = seconds / 60;
+    long rest = seconds % 60;
+    if (minutes < 60) {
+      return rest == 0 ? minutes + " min" : minutes + " min " + rest + " s";
+    }
+    long hours = minutes / 60;
+    long restMin = minutes % 60;
+    return restMin == 0 ? hours + " h" : hours + " h " + restMin + " min";
   }
 }

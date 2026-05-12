@@ -210,6 +210,131 @@ class DemoRestServerTest {
   }
 
   @Test
+  @DisplayName("GET /api/admin/users returns 403 for users without admin:roles")
+  void listUsersRequiresPermission() throws IOException, InterruptedException {
+    String editorToken = loginAs("editor", "editor");
+    HttpResponse<String> response = client.call("GET", "/api/admin/users", editorToken, null);
+    assertEquals(403, response.statusCode());
+  }
+
+  @Test
+  @DisplayName("GET /api/admin/users lists every registered user for an admin")
+  void listUsersReturnsAll() throws IOException, InterruptedException {
+    String adminToken = loginAs("admin", "admin");
+    HttpResponse<String> response = client.call("GET", "/api/admin/users", adminToken, null);
+
+    assertEquals(200, response.statusCode());
+    Map<String, Object> payload = DemoJson.decodeObject(response.body());
+    @SuppressWarnings("unchecked")
+    List<Map<String, Object>> users = (List<Map<String, Object>>) payload.get("users");
+    assertNotNull(users);
+    assertTrue(users.size() >= 3, "demo seed contains admin, editor, viewer at minimum");
+    assertTrue(users.stream().anyMatch(u ->
+        "admin".equals(u.get("username")) && "ROLE_ADMIN".equals(u.get("role"))));
+  }
+
+  @Test
+  @DisplayName("PUT /api/admin/users/{username} changes the role and reports changed=true")
+  void setUserRoleChangesAndReports() throws IOException, InterruptedException {
+    String adminToken = loginAs("admin", "admin");
+    HttpResponse<String> response = client.call("PUT",
+        "/api/admin/users/viewer", adminToken, "{\"role\":\"ROLE_EDITOR\"}");
+
+    assertEquals(200, response.statusCode());
+    Map<String, Object> payload = DemoJson.decodeObject(response.body());
+    assertEquals("ROLE_EDITOR", payload.get("role"));
+    assertEquals(Boolean.TRUE, payload.get("changed"));
+
+    // Restore so subsequent tests still see the seeded layout.
+    client.call("PUT", "/api/admin/users/viewer", adminToken, "{\"role\":\"ROLE_VIEWER\"}");
+  }
+
+  @Test
+  @DisplayName("PUT /api/admin/users/{username} returns 403 for non-admins")
+  void setUserRoleRequiresPermission() throws IOException, InterruptedException {
+    String editorToken = loginAs("editor", "editor");
+    HttpResponse<String> response = client.call("PUT",
+        "/api/admin/users/viewer", editorToken, "{\"role\":\"ROLE_EDITOR\"}");
+    assertEquals(403, response.statusCode());
+  }
+
+  @Test
+  @DisplayName("PUT /api/admin/users/{username} returns 400 for an unknown role")
+  void setUserRoleRejectsUnknownRole() throws IOException, InterruptedException {
+    String adminToken = loginAs("admin", "admin");
+    HttpResponse<String> response = client.call("PUT",
+        "/api/admin/users/viewer", adminToken, "{\"role\":\"ROLE_NOBODY\"}");
+    assertEquals(400, response.statusCode());
+  }
+
+  @Test
+  @DisplayName("POST /api/admin/users creates a new user and returns 201")
+  void createUserHappyPath() throws IOException, InterruptedException {
+    String adminToken = loginAs("admin", "admin");
+    HttpResponse<String> response = client.call("POST",
+        "/api/admin/users", adminToken,
+        "{\"username\":\"alice\",\"password\":\"secret123\",\"displayName\":\"Alice Demo\",\"role\":\"ROLE_VIEWER\"}");
+
+    assertEquals(201, response.statusCode());
+    Map<String, Object> payload = DemoJson.decodeObject(response.body());
+    assertEquals("alice", payload.get("username"));
+    assertEquals("Alice Demo", payload.get("displayName"));
+    assertEquals("ROLE_VIEWER", payload.get("role"));
+
+    // Cleanup so the server-wide fixture stays predictable for following tests.
+    client.call("DELETE", "/api/admin/users/alice", adminToken, null);
+  }
+
+  @Test
+  @DisplayName("POST /api/admin/users returns 409 for duplicate username")
+  void createUserDuplicate() throws IOException, InterruptedException {
+    String adminToken = loginAs("admin", "admin");
+    HttpResponse<String> response = client.call("POST",
+        "/api/admin/users", adminToken,
+        "{\"username\":\"editor\",\"password\":\"x\",\"role\":\"ROLE_VIEWER\"}");
+    assertEquals(409, response.statusCode());
+  }
+
+  @Test
+  @DisplayName("POST /api/admin/users returns 400 for unknown role")
+  void createUserBadRole() throws IOException, InterruptedException {
+    String adminToken = loginAs("admin", "admin");
+    HttpResponse<String> response = client.call("POST",
+        "/api/admin/users", adminToken,
+        "{\"username\":\"x\",\"password\":\"x\",\"role\":\"ROLE_NOPE\"}");
+    assertEquals(400, response.statusCode());
+  }
+
+  @Test
+  @DisplayName("DELETE /api/admin/users/{username} removes the user (204) and a second delete returns 404")
+  void deleteUserHappyPath() throws IOException, InterruptedException {
+    String adminToken = loginAs("admin", "admin");
+    client.call("POST", "/api/admin/users", adminToken,
+        "{\"username\":\"temp\",\"password\":\"x\",\"role\":\"ROLE_VIEWER\"}");
+
+    HttpResponse<String> response = client.call("DELETE",
+        "/api/admin/users/temp", adminToken, null);
+    assertEquals(204, response.statusCode());
+
+    HttpResponse<String> second = client.call("DELETE",
+        "/api/admin/users/temp", adminToken, null);
+    assertEquals(404, second.statusCode());
+  }
+
+  @Test
+  @DisplayName("POST/DELETE /api/admin/users require admin:roles (403 for editor)")
+  void createDeleteRequirePermission() throws IOException, InterruptedException {
+    String editorToken = loginAs("editor", "editor");
+    HttpResponse<String> postResponse = client.call("POST",
+        "/api/admin/users", editorToken,
+        "{\"username\":\"x\",\"password\":\"x\",\"role\":\"ROLE_VIEWER\"}");
+    HttpResponse<String> deleteResponse = client.call("DELETE",
+        "/api/admin/users/admin", editorToken, null);
+    assertEquals(403, postResponse.statusCode());
+    assertEquals(403, deleteResponse.statusCode());
+  }
+
+  @Test
   @DisplayName("GET /api/audit?type=LoginSucceeded narrows the result set")
   void auditTypeFilter() throws IOException, InterruptedException {
     String adminToken = loginAs("admin", "admin");

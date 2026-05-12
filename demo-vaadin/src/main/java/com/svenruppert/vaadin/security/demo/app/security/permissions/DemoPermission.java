@@ -26,7 +26,8 @@ public enum DemoPermission {
   DEMO_VIEW("demo:view"),
   DEMO_EDIT("demo:edit"),
   DEMO_ADMIN("demo:admin"),
-  AUDIT_READ("audit:read");
+  AUDIT_READ("audit:read"),
+  ADMIN_ROLES("admin:roles");
 
   private final PermissionName permissionName;
   private final ActionPermission actionPermission;

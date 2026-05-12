@@ -14,27 +14,27 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.demo.rest.domain;
+package com.svenruppert.vaadin.security.audit;
 
-import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
+import java.time.Instant;
+import java.util.Objects;
 
-/** Demo-only permissions used by the REST demo. */
-public enum DemoPermission {
-  DOCUMENT_READ("document:read"),
-  DOCUMENT_CREATE("document:create"),
-  DOCUMENT_UPDATE("document:update"),
-  DOCUMENT_DELETE("document:delete"),
-  ADMIN_ACCESS("admin:access"),
-  AUDIT_READ("audit:read"),
-  ADMIN_ROLES("admin:roles");
+/**
+ * A user account was removed from the directory.
+ *
+ * @param timestamp UTC creation time, never {@code null}
+ * @param username  username of the removed account, never {@code null}
+ * @param deletedBy subject id of the actor that triggered deletion, or
+ *                  {@code null} if anonymous / system
+ */
+public record UserDeleted(
+    Instant timestamp,
+    String username,
+    String deletedBy
+) implements AuditEvent {
 
-  private final PermissionName permissionName;
-
-  DemoPermission(String value) {
-    this.permissionName = new PermissionName(value);
-  }
-
-  public PermissionName permissionName() {
-    return permissionName;
+  public UserDeleted {
+    Objects.requireNonNull(timestamp, "timestamp");
+    Objects.requireNonNull(username, "username");
   }
 }

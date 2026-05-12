@@ -63,4 +63,41 @@ public interface DemoBackendClient {
   // ── Admin ────────────────────────────────────────────────────
 
   RemoteAdminStatus adminStatus(String token);
+
+  /**
+   * Returns every user known to the backend. Requires {@code admin:roles}.
+   *
+   * @throws BackendException with {@link BackendException.Kind#Forbidden}
+   *         if the subject lacks the permission
+   */
+  List<RemoteUserEntry> listUsers(String token);
+
+  /**
+   * Replaces the role of {@code username}. Returns the updated entry as
+   * seen by the backend.
+   *
+   * @throws BackendException with {@link BackendException.Kind#Forbidden}
+   *         if the subject lacks {@code admin:roles}, {@link
+   *         BackendException.Kind#NotFound} if the user is unknown, or
+   *         {@link BackendException.Kind#BadRequest} for an unknown role
+   */
+  RemoteUserEntry setUserRole(String token, String username, String role);
+
+  /**
+   * Creates a new user.
+   *
+   * @throws BackendException with {@link BackendException.Kind#Conflict}
+   *         if the username already exists, {@link
+   *         BackendException.Kind#BadRequest} for malformed input
+   */
+  RemoteUserEntry createUser(
+      String token, String username, String password, String displayName, String role);
+
+  /**
+   * Removes the user identified by {@code username}.
+   *
+   * @throws BackendException with {@link BackendException.Kind#NotFound}
+   *         if the user is unknown
+   */
+  void deleteUser(String token, String username);
 }

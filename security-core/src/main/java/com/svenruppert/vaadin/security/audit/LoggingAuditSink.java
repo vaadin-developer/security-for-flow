@@ -118,6 +118,15 @@ public final class LoggingAuditSink implements AuditSink {
         appendField(sb, "reason", e.reason());
         appendField(sb, "client", e.clientAddress());
       }
+      case UserCreated e -> {
+        appendField(sb, "username", e.username());
+        appendField(sb, "role", e.role());
+        appendField(sb, "by", e.createdBy());
+      }
+      case UserDeleted e -> {
+        appendField(sb, "username", e.username());
+        appendField(sb, "by", e.deletedBy());
+      }
     }
     return sb.toString();
   }

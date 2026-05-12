@@ -17,6 +17,7 @@
 package com.svenruppert.vaadin.security.demo.app.security.model;
 
 import com.svenruppert.vaadin.security.bootstrap.PasswordHasher;
+import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
 
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -79,4 +80,27 @@ public interface DemoUserDirectory {
    * service can produce hashes in the same format the directory expects.
    */
   PasswordHasher passwordHasher();
+
+  /**
+   * Adds {@code role} to the user identified by {@code id}. No-op if the
+   * user already has the role or the id is unknown. Implementations that
+   * persist users immutably must rebuild and re-store the {@link MyUser}.
+   * Implementations that emit audit events should publish a
+   * {@code RoleAssigned} entry.
+   * <p>
+   * Default throws — directories that don't support role mutation should
+   * leave this method untouched and reject the call at the boundary.
+   */
+  default void assignRole(Long id, AuthorizationRole role) {
+    throw new UnsupportedOperationException("role assignment not supported");
+  }
+
+  /**
+   * Removes {@code role} from the user identified by {@code id}. No-op if
+   * the user doesn't have the role or the id is unknown. Implementations
+   * should publish a {@code RoleRevoked} audit entry.
+   */
+  default void revokeRole(Long id, AuthorizationRole role) {
+    throw new UnsupportedOperationException("role revocation not supported");
+  }
 }

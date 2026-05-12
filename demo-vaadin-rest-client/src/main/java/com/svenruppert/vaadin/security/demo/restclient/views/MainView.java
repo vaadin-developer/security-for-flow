@@ -29,6 +29,7 @@ import com.svenruppert.vaadin.security.demo.restclient.backend.RemoteUser;
 import com.svenruppert.vaadin.security.demo.restclient.security.ClientSecurityContext;
 import com.svenruppert.vaadin.security.demo.restclient.views.components.BackendOperationCard;
 import com.svenruppert.vaadin.security.demo.restclient.views.components.PermissionDemoCard;
+import com.svenruppert.vaadin.security.demo.restclient.views.standalone.AdminRolesView;
 import com.svenruppert.vaadin.security.demo.restclient.views.standalone.AdminStatusView;
 import com.svenruppert.vaadin.security.demo.restclient.views.standalone.AuditView;
 import com.svenruppert.vaadin.security.demo.restclient.views.standalone.DocumentsView;
@@ -93,6 +94,7 @@ public class MainView extends AppLayout {
 
     Tab home = new Tab(VaadinIcon.HOME.create(), new Span("Home"));
     tab2Content.put(home, welcomeContent());
+    tabs.add(home);
 
     Tab documents = new Tab(VaadinIcon.FILE.create(), new Span("Documents"));
     tab2Content.put(documents, sectionContent(
@@ -100,6 +102,7 @@ public class MainView extends AppLayout {
         "Lists, creates and deletes documents via the backend. Server-side "
             + "permissions decide the outcome.",
         new BackendOperationCard()));
+    tabs.add(documents);
 
     Tab permissions = new Tab(VaadinIcon.LOCK.create(), new Span("Permission demo"));
     tab2Content.put(permissions, sectionContent(
@@ -107,23 +110,43 @@ public class MainView extends AppLayout {
         "UX adaptation vs. local guard, both against the cached RemoteUser "
             + "snapshot — local-only.",
         new PermissionDemoCard()));
+    tabs.add(permissions);
+
+    if (hasPermission("admin:roles")) {
+      Tab rolesAdmin = new Tab(VaadinIcon.USER_CARD.create(), new Span("User roles"));
+      tab2Content.put(rolesAdmin, new AdminRolesView());
+      tabs.add(rolesAdmin);
+    }
+
+    if (hasPermission("audit:read")) {
+      Tab audit = new Tab(VaadinIcon.CLIPBOARD_TEXT.create(), new Span("Audit log"));
+      tab2Content.put(audit, new AuditView());
+      tabs.add(audit);
+    }
 
     Tab links = new Tab(VaadinIcon.CONNECT.create(), new Span("Standalone routes"));
     tab2Content.put(links, sectionContent(
         "View-level demonstrations",
-        "Three standalone routes, each guarded by a different annotation "
-            + "style. Direct URLs work too — the framework reroutes if a "
-            + "user lacks the required role/permission.",
+        "Standalone routes — each guarded by a different annotation style. "
+            + "Direct URLs work too. The framework reroutes if a user lacks "
+            + "the required role/permission.",
         new VerticalLayout(
             new RouterLink("/documents — @RequiresPermission(\"document:read\")", DocumentsView.class),
             new RouterLink("/admin — @RequiresRole(\"ROLE_ADMIN\")", AdminStatusView.class),
             new RouterLink("/nerd — @VisibleForRoles({ADMIN, EDITOR})", NerdView.class),
-            new RouterLink("/audit — @RequiresPermission(\"audit:read\")", AuditView.class)
+            new RouterLink("/audit — @RequiresPermission(\"audit:read\")", AuditView.class),
+            new RouterLink("/admin/roles — @RequiresPermission(\"admin:roles\")", AdminRolesView.class)
         )));
+    tabs.add(links);
 
-    tabs.add(home, documents, permissions, links);
     tabs.addSelectedChangeListener(event -> setContent(tab2Content.get(event.getSelectedTab())));
     return tabs;
+  }
+
+  private static boolean hasPermission(String permissionValue) {
+    return ClientSecurityContext.user()
+        .map(u -> u.permissions().stream().anyMatch(p -> permissionValue.equals(p.value())))
+        .orElse(false);
   }
 
   private Component welcomeContent() {

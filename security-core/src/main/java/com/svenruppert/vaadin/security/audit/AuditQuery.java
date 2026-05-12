@@ -102,6 +102,8 @@ public record AuditQuery(
       case LoginFailed e -> e.username();
       case BruteForceLimitReached e -> e.username();
       case BootstrapAdminCreated e -> e.username();
+      case UserCreated e -> e.username();
+      case UserDeleted e -> e.username();
       case BootstrapTokenRejected ignored -> null;
     };
   }

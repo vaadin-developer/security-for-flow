@@ -27,6 +27,9 @@ public final class DemoEndpoints {
   public static final String DOCUMENTS = "/api/documents";
   public static final String DOCUMENT_BY_ID = "/api/documents/";
   public static final String ADMIN_STATUS = "/api/admin/status";
+  public static final String ADMIN_USERS = "/api/admin/users";
+  /** Single-user resource: {@code /api/admin/users/{username}}. PUT body {"role":"…"}. */
+  public static final String ADMIN_USER_BY_NAME = "/api/admin/users/";
   public static final String AUDIT = "/api/audit";
   public static final String BOOTSTRAP_STATUS = "/api/bootstrap/status";
   public static final String BOOTSTRAP_ADMIN = "/api/bootstrap/admin";

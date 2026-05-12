@@ -51,12 +51,14 @@ public class MyAuthorizationService
           DEMO_VIEW.permissionName(),
           DEMO_EDIT.permissionName(),
           DEMO_ADMIN.permissionName(),
-          AUDIT_READ.permissionName()))
+          AUDIT_READ.permissionName(),
+          ADMIN_ROLES.permissionName()))
       .put(roleName(AuthorizationRole.Q_ADMIN), Set.of(
           DEMO_VIEW.permissionName(),
           DEMO_EDIT.permissionName(),
           DEMO_ADMIN.permissionName(),
-          AUDIT_READ.permissionName()))
+          AUDIT_READ.permissionName(),
+          ADMIN_ROLES.permissionName()))
       .put(roleName(AuthorizationRole.NERD), Set.of(
           DEMO_VIEW.permissionName(),
           DEMO_EDIT.permissionName()))

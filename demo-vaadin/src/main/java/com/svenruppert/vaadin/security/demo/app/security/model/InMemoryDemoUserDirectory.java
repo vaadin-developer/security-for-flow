@@ -16,11 +16,19 @@
  */
 package com.svenruppert.vaadin.security.demo.app.security.model;
 
+import com.svenruppert.vaadin.security.audit.RoleAssigned;
+import com.svenruppert.vaadin.security.audit.RoleRevoked;
+import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.UserCreated;
+import com.svenruppert.vaadin.security.audit.UserDeleted;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.bootstrap.PasswordHasher;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -83,6 +91,8 @@ public final class InMemoryDemoUserDirectory implements DemoUserDirectory {
     String hash = hasher.hash(plaintextPassword.toCharArray());
     byUsername.put(username, new StoredUser(user, hash));
     byId.put(user.id(), user);
+    audit(new UserCreated(
+        Instant.now(Clock.systemUTC()), username, firstRoleOf(user), null));
   }
 
   @Override
@@ -98,7 +108,16 @@ public final class InMemoryDemoUserDirectory implements DemoUserDirectory {
   public synchronized void deleteUser(Long id) {
     MyUser removed = byId.remove(id);
     if (removed == null) return;
+    String username = byUsername.entrySet().stream()
+        .filter(e -> e.getValue().user.equals(removed))
+        .map(Map.Entry::getKey)
+        .findFirst()
+        .orElse(null);
     byUsername.values().removeIf(stored -> stored.user.equals(removed));
+    if (username != null) {
+      audit(new UserDeleted(
+          Instant.now(Clock.systemUTC()), username, null));
+    }
   }
 
   @Override
@@ -110,6 +129,76 @@ public final class InMemoryDemoUserDirectory implements DemoUserDirectory {
   @Override
   public PasswordHasher passwordHasher() {
     return hasher;
+  }
+
+  @Override
+  public synchronized void assignRole(Long id, AuthorizationRole role) {
+    Objects.requireNonNull(role, "role");
+    if (id == null) return;
+    MyUser current = byId.get(id);
+    if (current == null || current.roles().contains(role)) {
+      return;
+    }
+    EnumSet<AuthorizationRole> next = roleSetOf(current);
+    next.add(role);
+    replace(current, new MyUser(current.id(), current.name(), next));
+    audit(new RoleAssigned(
+        Instant.now(Clock.systemUTC()), current.id().toString(), role.name(), null));
+  }
+
+  @Override
+  public synchronized void revokeRole(Long id, AuthorizationRole role) {
+    Objects.requireNonNull(role, "role");
+    if (id == null) return;
+    MyUser current = byId.get(id);
+    if (current == null || !current.roles().contains(role)) {
+      return;
+    }
+    EnumSet<AuthorizationRole> next = roleSetOf(current);
+    next.remove(role);
+    replace(current, new MyUser(current.id(), current.name(), next));
+    audit(new RoleRevoked(
+        Instant.now(Clock.systemUTC()), current.id().toString(), role.name(), null));
+  }
+
+  private static EnumSet<AuthorizationRole> roleSetOf(MyUser user) {
+    EnumSet<AuthorizationRole> set = EnumSet.noneOf(AuthorizationRole.class);
+    set.addAll(user.roles());
+    return set;
+  }
+
+  /**
+   * Picks a stable label for {@link UserCreated#role()} — the user's
+   * "primary" role for audit purposes. {@code MyUser} carries a set of
+   * roles; this method returns the highest-privilege one (ADMIN > Q_ADMIN
+   * > NERD > USER > NOBODY) or the literal {@code "USER"} if the set is
+   * empty.
+   */
+  private static String firstRoleOf(MyUser user) {
+    if (user.roles().contains(AuthorizationRole.ADMIN)) return AuthorizationRole.ADMIN.name();
+    if (user.roles().contains(AuthorizationRole.Q_ADMIN)) return AuthorizationRole.Q_ADMIN.name();
+    if (user.roles().contains(AuthorizationRole.NERD)) return AuthorizationRole.NERD.name();
+    if (user.roles().contains(AuthorizationRole.USER)) return AuthorizationRole.USER.name();
+    return AuthorizationRole.NOBODY.name();
+  }
+
+  /**
+   * Replaces the stored {@link MyUser} in both indexes. The username and
+   * password-hash bindings stay attached to the new instance.
+   */
+  private void replace(MyUser oldUser, MyUser newUser) {
+    byId.put(newUser.id(), newUser);
+    byUsername.replaceAll((username, stored) ->
+        stored.user.equals(oldUser) ? new StoredUser(newUser, stored.passwordHash) : stored);
+  }
+
+  private static void audit(com.svenruppert.vaadin.security.audit.AuditEvent event) {
+    SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
+    try {
+      sink.publish(event);
+    } catch (RuntimeException ignored) {
+      // never block role admin because the audit sink failed
+    }
   }
 
   // ── Helpers ───────────────────────────────────────────────────

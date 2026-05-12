@@ -31,6 +31,7 @@ import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.vaadin.security.bruteforce.NoopLoginAttemptPolicy;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoDocument;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoDocumentStore;
+import com.svenruppert.vaadin.security.demo.rest.domain.DemoRole;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUser;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUserStore;
 import com.svenruppert.vaadin.security.demo.rest.shared.DemoEndpoints;
@@ -241,6 +242,144 @@ public final class DemoHandlers {
   }
 
   /**
+   * Returns every registered user with {@code username}, {@code displayName}
+   * and current {@code role}. Backs the rest-client Role-Admin view.
+   */
+  @RequiresPermission("admin:roles")
+  public void listUsers(RestRequest request, RestResponse response) {
+    List<Map<String, Object>> users = userStore.listAll().stream()
+        .map(DemoHandlers::userToJson)
+        .toList();
+    response.status(200);
+    response.body(DemoJson.encode(Map.of("users", users)));
+  }
+
+  /**
+   * Replaces the role of {@code /api/admin/users/{username}}. Body shape:
+   * {@code {"role":"ROLE_EDITOR"}}. Returns the updated user; emits
+   * {@code RoleRevoked} (old role) + {@code RoleAssigned} (new role) audit
+   * events when a real change is applied.
+   */
+  @RequiresPermission("admin:roles")
+  public void setUserRole(RestRequest request, RestResponse response) {
+    String path = request.path();
+    String prefix = DemoEndpoints.ADMIN_USER_BY_NAME;
+    if (!path.startsWith(prefix) || path.length() <= prefix.length()) {
+      writeError(response, 404, "Not Found");
+      return;
+    }
+    String username = path.substring(prefix.length());
+
+    Map<String, Object> body;
+    try {
+      body = DemoJson.decodeObject(requireBody(request));
+    } catch (RuntimeException e) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    Object roleValue = body.get("role");
+    if (!(roleValue instanceof String roleName)) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    DemoRole role;
+    try {
+      role = DemoRole.valueOf(roleName);
+    } catch (IllegalArgumentException e) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+
+    boolean changed = userStore.setRole(username, role);
+    Optional<DemoUser> updated = userStore.listAll().stream()
+        .filter(u -> u.username().equals(username))
+        .findFirst();
+    if (updated.isEmpty()) {
+      writeError(response, 404, "Not Found");
+      return;
+    }
+    Map<String, Object> payload = new LinkedHashMap<>(userToJson(updated.get()));
+    payload.put("changed", changed);
+    response.status(200);
+    response.body(DemoJson.encode(payload));
+  }
+
+  private static Map<String, Object> userToJson(DemoUser user) {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("username", user.username());
+    map.put("displayName", user.displayName());
+    map.put("role", user.role().name());
+    return map;
+  }
+
+  /**
+   * Creates a new user. Body shape:
+   * {@code {"username","password","displayName?","role"}}.
+   * Returns {@code 201} + the new user JSON, {@code 409} if the username
+   * already exists, {@code 400} for malformed body or unknown role.
+   * Emits {@link com.svenruppert.vaadin.security.audit.UserCreated}.
+   */
+  @RequiresPermission("admin:roles")
+  public void createUser(RestRequest request, RestResponse response) {
+    Map<String, Object> body;
+    try {
+      body = DemoJson.decodeObject(requireBody(request));
+    } catch (RuntimeException e) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    Object usernameValue = body.get("username");
+    Object passwordValue = body.get("password");
+    Object roleValue = body.get("role");
+    Object displayNameValue = body.get("displayName");
+    if (!(usernameValue instanceof String username) || username.isBlank()
+        || !(passwordValue instanceof String password) || password.isEmpty()
+        || !(roleValue instanceof String roleName)) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    DemoRole role;
+    try {
+      role = DemoRole.valueOf(roleName);
+    } catch (IllegalArgumentException e) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    String displayName = displayNameValue instanceof String s && !s.isBlank() ? s : username;
+    DemoUser created;
+    try {
+      created = userStore.create(username, password, displayName, role);
+    } catch (IllegalStateException duplicate) {
+      writeError(response, 409, "Conflict");
+      return;
+    }
+    response.status(201);
+    response.body(DemoJson.encode(userToJson(created)));
+  }
+
+  /**
+   * Removes the user identified by {@code /api/admin/users/{username}}.
+   * Returns {@code 204} on success, {@code 404} if unknown.
+   * Emits {@link com.svenruppert.vaadin.security.audit.UserDeleted}.
+   */
+  @RequiresPermission("admin:roles")
+  public void deleteUser(RestRequest request, RestResponse response) {
+    String path = request.path();
+    String prefix = DemoEndpoints.ADMIN_USER_BY_NAME;
+    if (!path.startsWith(prefix) || path.length() <= prefix.length()) {
+      writeError(response, 404, "Not Found");
+      return;
+    }
+    String username = path.substring(prefix.length());
+    if (!userStore.deleteUser(username)) {
+      writeError(response, 404, "Not Found");
+      return;
+    }
+    response.status(204);
+    response.body("");
+  }
+
+  /**
    * Returns the recent audit events from the backend's
    * {@code RingBufferAuditSink}. Optional query parameters:
    * <ul>
@@ -350,6 +489,15 @@ public final class DemoHandlers {
       case com.svenruppert.vaadin.security.audit.BootstrapTokenRejected e -> {
         map.put("reason", e.reason());
         map.put("clientAddress", e.clientAddress());
+      }
+      case com.svenruppert.vaadin.security.audit.UserCreated e -> {
+        map.put("username", e.username());
+        map.put("role", e.role());
+        map.put("createdBy", e.createdBy());
+      }
+      case com.svenruppert.vaadin.security.audit.UserDeleted e -> {
+        map.put("username", e.username());
+        map.put("deletedBy", e.deletedBy());
       }
     }
     return map;
