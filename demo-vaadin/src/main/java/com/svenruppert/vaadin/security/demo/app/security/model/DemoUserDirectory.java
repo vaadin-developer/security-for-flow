@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.demo.app.security.model;
 
-import com.svenruppert.vaadin.security.bootstrap.PasswordHasher;
+import com.svenruppert.vaadin.security.authentication.PasswordHasher;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
 
 import java.util.Optional;

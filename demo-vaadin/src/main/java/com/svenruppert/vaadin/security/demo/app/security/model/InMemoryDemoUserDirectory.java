@@ -22,7 +22,7 @@ import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.audit.UserCreated;
 import com.svenruppert.vaadin.security.audit.UserDeleted;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.bootstrap.PasswordHasher;
+import com.svenruppert.vaadin.security.authentication.PasswordHasher;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
 
 import java.time.Clock;

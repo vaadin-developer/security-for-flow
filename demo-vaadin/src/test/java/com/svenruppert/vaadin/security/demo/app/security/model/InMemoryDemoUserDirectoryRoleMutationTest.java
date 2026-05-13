@@ -22,7 +22,7 @@ import com.svenruppert.vaadin.security.audit.RoleAssigned;
 import com.svenruppert.vaadin.security.audit.RoleRevoked;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.bootstrap.Pbkdf2PasswordHasher;
+import com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

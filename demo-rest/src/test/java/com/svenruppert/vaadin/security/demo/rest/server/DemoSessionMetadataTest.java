@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.server;
 
-import com.svenruppert.vaadin.security.bootstrap.Pbkdf2PasswordHasher;
+import com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoRolePermissionMapping;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUser;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUserStore;

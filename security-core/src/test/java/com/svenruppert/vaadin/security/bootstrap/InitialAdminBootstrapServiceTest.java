@@ -16,6 +16,8 @@
  */
 package com.svenruppert.vaadin.security.bootstrap;
 
+import com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

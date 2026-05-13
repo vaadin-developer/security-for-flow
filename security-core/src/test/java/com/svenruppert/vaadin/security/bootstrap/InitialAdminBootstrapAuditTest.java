@@ -16,6 +16,8 @@
  */
 package com.svenruppert.vaadin.security.bootstrap;
 
+import com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher;
+
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.BootstrapAdminCreated;

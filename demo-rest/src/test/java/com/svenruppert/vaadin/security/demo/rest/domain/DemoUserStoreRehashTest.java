@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.domain;
 
-import com.svenruppert.vaadin.security.bootstrap.Pbkdf2PasswordHasher;
+import com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

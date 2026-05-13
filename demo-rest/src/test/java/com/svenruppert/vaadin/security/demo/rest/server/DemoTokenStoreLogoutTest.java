@@ -20,7 +20,7 @@ import com.svenruppert.vaadin.security.logout.LogoutScope;
 import com.svenruppert.vaadin.security.logout.SubjectClearingLogoutService;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
-import com.svenruppert.vaadin.security.bootstrap.Pbkdf2PasswordHasher;
+import com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUser;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUserStore;
 import org.junit.jupiter.api.DisplayName;

@@ -413,9 +413,9 @@ class SecurityServiceResolverTest {
   @Test
   @DisplayName("passwordHashingService falls back to Pbkdf2PasswordHasher when no SPI is registered")
   void passwordHashingService_defaultsToPbkdf2() {
-    com.svenruppert.vaadin.security.bootstrap.PasswordHasher hasher =
+    com.svenruppert.vaadin.security.authentication.PasswordHasher hasher =
         SecurityServiceResolver.passwordHashingService();
-    assertTrue(hasher instanceof com.svenruppert.vaadin.security.bootstrap.Pbkdf2PasswordHasher,
+    assertTrue(hasher instanceof com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher,
         "default fallback must be Pbkdf2PasswordHasher");
   }
 
@@ -444,12 +444,12 @@ class SecurityServiceResolverTest {
 
     SecurityServiceResolver.resetAll();
 
-    com.svenruppert.vaadin.security.bootstrap.PasswordHasher after =
+    com.svenruppert.vaadin.security.authentication.PasswordHasher after =
         SecurityServiceResolver.passwordHashingService();
-    assertTrue(after instanceof com.svenruppert.vaadin.security.bootstrap.Pbkdf2PasswordHasher);
+    assertTrue(after instanceof com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher);
   }
 
-  static final class RecordingHasher implements com.svenruppert.vaadin.security.bootstrap.PasswordHasher {
+  static final class RecordingHasher implements com.svenruppert.vaadin.security.authentication.PasswordHasher {
     @Override public String hash(char[] rawPassword) { return "stub"; }
     @Override public boolean verify(char[] rawPassword, String storedHash) { return false; }
   }

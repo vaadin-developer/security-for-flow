@@ -32,7 +32,7 @@ import com.svenruppert.vaadin.security.bootstrap.FileBootstrapTokenStore;
 import com.svenruppert.vaadin.security.bootstrap.InMemoryBootstrapTokenStore;
 import com.svenruppert.vaadin.security.bootstrap.InitialAdminBootstrapService;
 import com.svenruppert.vaadin.security.bootstrap.MinimumLengthPasswordPolicy;
-import com.svenruppert.vaadin.security.bootstrap.PasswordHasher;
+import com.svenruppert.vaadin.security.authentication.PasswordHasher;
 import com.svenruppert.vaadin.security.bruteforce.InMemoryLoginAttemptPolicy;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoDocumentStore;

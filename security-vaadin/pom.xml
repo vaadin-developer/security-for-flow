@@ -63,13 +63,26 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>5.11.3</version>
+      <version>6.1.0-M1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
       <version>2.21</version>
+      <scope>test</scope>
+    </dependency>
+    <!--
+      Vaadin browserless testing (previously "UI Unit Testing").
+      Free since Vaadin 25.1; we already run on 25.1.1. Pulls JUnit
+      Jupiter 6.x transitively, so it sits alongside the existing
+      Jupiter 5.11.3 dependency above. Tests written against either
+      API surface compile against their own version.
+    -->
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>browserless-test-junit6</artifactId>
+      <version>1.0.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

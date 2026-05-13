@@ -112,7 +112,7 @@ Walkthrough: [`docs/demo-vaadin-rest-client.md`](docs/demo-vaadin-rest-client.md
 ### Tests
 
 ```bash
-# Whole reactor — 170 tests across all modules
+# Whole reactor — ~570 tests across all modules
 mvn test
 
 # Single module
@@ -175,7 +175,7 @@ public class MyAuthenticationService
 }
 ```
 
-Register in `META-INF/services/com.svenruppert.vaadin.security.authorization.api.AuthenticationService`:
+Register in `META-INF/services/com.svenruppert.vaadin.security.authentication.AuthenticationService`:
 ```
 com.example.MyAuthenticationService
 ```
@@ -417,13 +417,20 @@ Project-specific annotations are encouraged for Vaadin views (e.g. `@VisibleFor`
 
 | Type | Module / package | Purpose |
 |---|---|---|
+| `SecurityServiceResolver` | `security-core/.../authorization/api` | Central SPI cache. Strict accessors throw `IllegalStateException` for missing services; `find…()` returns `Optional`; `set…(…)` is a programmatic test seam. Covers Authentication / Authorization / Audit / Action / LoginAttempt / Session / PasswordHasher / Logout. |
 | `PermissionGuard` | `security-core/.../authorization/api` | Stateless `hasPermission` / `requirePermission` (and role variants) on any `HasPermissions`/`HasRoles`. Throws `AccessDeniedException`. |
-| `StaticRolePermissionMapping` | `…/api/permissions` | Immutable role → permissions map with a builder. |
-| `RolePermissionResolver` | `…/api/permissions` | Merges permissions across multiple roles. |
+| `AuthenticationService<T,U>` | `security-core/.../authentication` | SPI: credential validation + subject loading. Adapter-neutral. |
+| `LogoutService` | `security-core/.../logout` | `logout(SubjectId, LogoutScope)` SPI, paired with `SubjectClearingLogoutService` default + `SubjectSessionRegistry` for multi-session logout. Vaadin-side: `VaadinLogoutService` rotates HTTP session and redirects. |
+| `LoginAttemptPolicy` + `InMemoryLoginAttemptPolicy` | `security-core/.../bruteforce` | Pluggable login throttling. Sealed `LoginAttemptDecision = Allowed \| LockedOut(Duration, int)`. Configured via `LoginAttemptConfiguration[Loader]` (sysprop/env/default). |
+| `SessionPolicy<U>` + `TimeoutSessionPolicy` | `security-core/.../session` | Idle/absolute lifetime checks. `evaluate(SessionMetadata)` pure-query path consumed by `SessionLifetimeListener` (Vaadin) and the REST filters. `rotateSessionAfterLogin` honoured via `VaadinService.reinitializeSession(...)`. |
+| `SecurityAuditService`, sealed `AuditEvent` (16 record variants), `RingBufferAuditSink`, `LoggingAuditSink`, `CompositeAuditService`, `DefaultCompositeAuditService` | `security-core/.../audit` | Typed publish/query audit pipeline. `RingBufferAuditSink` backs the Vaadin `/audit`-route and the REST `GET /api/audit` endpoint. |
+| `ActionAuthorizationService<U>`, `ActionPermission`, `StaticActionAuthorizationService` | `security-core/.../action` | Stable SPI for `isAllowed`/`requireAllowed` action checks with `ACTION_DENIED` audit on denial. |
+| `PasswordHasher`, `PasswordHash`, `Pbkdf2PasswordHasher` | `security-core/.../authentication` | Hash + verify + `needsRehash` (drift detection); demos rehash transparently on successful login. |
+| `StaticRolePermissionMapping`, `RolePermissionResolver` | `…/api/permissions` | Immutable role → permissions map with a builder; permission-merge across roles. |
 | `SecuredOperationDescriptor`, `SecuredOperationRegistry`, `OperationVisibilityService` | `…/api/operations` | Generic operation discovery with subject-aware filtering. Adapter metadata (HTTP method, path, view class) goes into the descriptor's `attributes`. |
 | `BootstrapConfigurationLoader`, `BootstrapStatus` | `security-core/.../bootstrap` | Centralised sysprop+env+default loading with TTL parsing; leak-safe status snapshot. |
 | `RestHeaders`, `BearerTokenExtractor` | `security-rest` | Case-insensitive header lookup and Bearer-token parsing. |
-| `RestAuthenticationFilter` | `security-rest` | 401-only filter for authenticated-only endpoints. |
+| `RestAuthenticationFilter`, `RestAuthorizationFilter` | `security-rest` | 401/403 filters; the authorization filter additionally consults `SessionPolicy.evaluate(...)` when subject-resolved metadata is available. |
 | `BodyRestRequest` | `security-rest` | Body-capable `RestRequest`. Avoids concrete-class casts in handlers. |
 | `BootstrapRestStatusMapper` | `security-rest` | `InitialAdminCreationResult` → HTTP status code + stable error code. |
 

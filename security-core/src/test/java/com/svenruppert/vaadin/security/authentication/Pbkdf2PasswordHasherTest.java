@@ -14,7 +14,7 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.bootstrap;
+package com.svenruppert.vaadin.security.authentication;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

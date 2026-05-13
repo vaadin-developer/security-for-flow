@@ -74,10 +74,12 @@
         <module>security-core</module>
         <module>security-vaadin</module>
         <module>security-rest</module>
+        <module>security-standalone</module>
         <module>demo-rest-shared</module>
         <module>demo-vaadin</module>
         <module>demo-rest</module>
         <module>demo-vaadin-rest-client</module>
+        <module>demo-standalone</module>
     </modules>
 
     <properties>

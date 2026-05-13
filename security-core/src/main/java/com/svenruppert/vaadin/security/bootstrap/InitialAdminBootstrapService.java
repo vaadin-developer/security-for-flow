@@ -19,6 +19,7 @@ package com.svenruppert.vaadin.security.bootstrap;
 import com.svenruppert.vaadin.security.audit.BootstrapAdminCreated;
 import com.svenruppert.vaadin.security.audit.BootstrapTokenRejected;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.authentication.PasswordHasher;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 
 import java.time.Clock;

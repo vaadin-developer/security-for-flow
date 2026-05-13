@@ -1,10 +1,10 @@
 # Restarbeiten — security-for-flow
 
-ok,        > Stand: 2026-05-11. Zielversion 00.60.00 (Konzept-V00.60.00.md) +
+ok,        > Stand: 2026-05-12. Zielversion 00.60.00 (Konzept-V00.60.00.md) +
 > Part-5-Brief (production hardening).
 > Quelle: `Konzept-V00.60.00.md` + Part-5 Brief, abgeglichen mit
-> Code-Stand am Ende der Step-4-Iteration (`AuditEvent`-Migration +
-> AuditView).
+> Code-Stand nach den Demo-Erweiterungen (Lockout-UI, Role-Admin-UI,
+> User-CRUD, Menü-Integration).
 
 ## Erledigt seit 00.51.00
 
@@ -190,7 +190,12 @@ ok,        > Stand: 2026-05-11. Zielversion 00.60.00 (Konzept-V00.60.00.md) +
 
 #### Vaadin-UI-Test-Infrastruktur
 
-- [ ] Karibu / TestBench einrichten.
+- ✅ **Vaadin Browserless Testing eingerichtet** (statt Karibu).
+  Ab Vaadin 25.1 free; wir laufen auf 25.1.1. Test-Dependency
+  `com.vaadin:browserless-test-junit6:1.0.0` in `security-vaadin`.
+  POC `BrowserlessSmokeTest` mit Fixture-Route, `navigate(Class)`,
+  `$view(Class).id(...)`, `test(component)` → typed Tester (z. B.
+  `ButtonTester`). Reactor 89 Tests grün (1 neu).
 - [ ] Adapter-Tests: LoginView ruft Policies in korrekter
   Reihenfolge.
 - [ ] Adapter-Tests: Logout-Button nutzt zentralen Service.
@@ -198,6 +203,16 @@ ok,        > Stand: 2026-05-11. Zielversion 00.60.00 (Konzept-V00.60.00.md) +
   nicht-berechtigte Subjects geblendet.
 - [ ] Adapter-Tests: Click-Handler rufen `requireAllowed` vor
   Ausführung.
+- [ ] Adapter-Tests: Lockout-Banner zeigt remaining time + count
+  nach `LockedOut`-Decision.
+- [ ] Adapter-Tests: B3-Rotation-Honour ruft
+  `VaadinService.reinitializeSession(...)` auf
+  `SessionDecision.Invalidate` aus `onLogin` (alte sessionId im
+  emittierten `SessionInvalidated`).
+- [ ] Adapter-Tests: `/audit`-Grid zeigt Events, Filter greift,
+  Refresh aktualisiert.
+- [ ] Adapter-Tests: `AdminRolesView` Assign/Revoke + Create/Delete
+  Dialog-Flows.
 - ✅ Adapter-Tests: SessionPolicy-Decisions werden korrekt
   umgesetzt — `SessionLifetimeListenerTest` (Vaadin) +
   `RestSessionLifetimeTest` (REST). Beide ohne Karibu.
@@ -369,11 +384,12 @@ Reactor-grün vor dem nächsten Schritt.
 
 ## Empfohlene Reihenfolge der nächsten Iteration
 
-1. **Karibu / TestBench** als Grundlage für die UI-Adapter-Tests
-   aus dem § Strukturell-Block. Ideal als erste Use-Cases: die
-   neue Vaadin-`/audit`-Route und der B3-Rotation-Honour
-   (`VaadinService.reinitializeSession` wird gegen eine
-   gemockte Vaadin-Servlet-Runtime verifiziert).
+1. **Browserless-Adapter-Tests ausbauen** — POC ist drin
+   (`BrowserlessSmokeTest`). Nächste Use-Cases: Lockout-Banner
+   in der LoginView, B3-Rotation-Honour gegen
+   `VaadinService.reinitializeSession(...)`, `/audit`-Grid in
+   beiden Vaadin-Demos, `AdminRolesView`-Create/Delete-Dialogs.
+   Jeder einzelne Test ist eine kleine Iteration.
 2. **Optional:** Readiness-Check in `DemoRestServer.start(...)`,
    falls der Bootstrap-Test wirklich flaky bleibt.
 
@@ -430,8 +446,45 @@ Reactor-grün vor dem nächsten Schritt.
   - 5 neue Integration-Tests in `DemoRestServerTest`
     (`listUsers` 200/403, `setUserRole` Success-Change /
     403 / unknown-role 400).
-
-## Offene Vorab-Entscheidungen
+- ✅ Admin-UIs im Drawer-Menü erreichbar (statt nur über die
+  „Standalone routes"-Karte / Direkt-URL):
+  - demo-vaadin `MainView` zeigt für `ADMIN`/`Q_ADMIN` zwei
+    neue Tabs („User roles" → embedded `AdminRolesView`,
+    „Audit log" → embedded `AuditView`).
+  - demo-vaadin-rest-client `MainView` zeigt die gleichen
+    zwei Tabs, gated über einen `hasPermission(String)`-Helper
+    gegen `ClientSecurityContext.user().permissions()`.
+- ✅ Grid-Höhen-Fix in allen vier Admin/Audit-Views: Root-
+  `VerticalLayout` mit `setSizeFull()` + `setFlexGrow(1, grid)`,
+  Grid `setPageSize(50)`. Grids füllen jetzt den AppLayout-Content-
+  Bereich und scrollen sauber.
+- ✅ User-CRUD durchgängig in beiden Vaadin-Demos:
+  - **Core:** zwei neue sealed `AuditEvent`-Permits
+    `UserCreated(timestamp, username, role, createdBy)` und
+    `UserDeleted(timestamp, username, deletedBy)`. `AuditEvent.permits`,
+    `AuditQuery.subjectIdOf`, `LoggingAuditSink.format` und alle
+    `AuditView`-Switches exhaustive auf die neuen Typen.
+  - **demo-rest backend:** `DemoUserStore.create(...)` /
+    `deleteUser(username)` mit `UserCreated`/`UserDeleted`-Audit;
+    `register(DemoUser)` ebenfalls. Neue Endpoints
+    `POST /api/admin/users` (201/409/400) und
+    `DELETE /api/admin/users/{username}` (204/404), beide
+    `@RequiresPermission("admin:roles")`. Router-Dispatch erweitert
+    auf GET/POST bzw. PUT/DELETE.
+  - **demo-vaadin lokal:** `InMemoryDemoUserDirectory.addUser`/
+    `deleteUser` emittieren die neuen Events (username-Lookup
+    über reverse-Map). `AdminRolesView` mit „New user"-Dialog
+    (FormLayout: username + password + displayName + role) und
+    per-Row-Delete-Spalte mit `ConfirmDialog`. `nextId()`-Helper
+    picks `max(id)+1`.
+  - **demo-vaadin-rest-client:** `DemoBackendClient.createUser`/
+    `deleteUser`; `HttpDemoBackendClient` HTTP/JSON-Mapping;
+    `AdminRolesView` (standalone) gleiches UX-Muster, Backend-
+    Fehler-Mapping (Forbidden/NotFound/BadRequest/Unauthenticated).
+  - 5 neue Integration-Tests in `DemoRestServerTest`
+    (POST happy-path, POST 409 duplicate, POST 400 unknown role,
+    DELETE 204+second-404, POST/DELETE 403 für editor) →
+    demo-rest 48 Tests.
 
 - **Idle/Absolute-Demo-Werte:** Konservative Defaults aus
   `Config.defaults()` (30 min idle / 12 h absolute) oder
