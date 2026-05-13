@@ -1,10 +1,11 @@
 # Restarbeiten — security-for-flow
 
-ok,        > Stand: 2026-05-12. Zielversion 00.60.00 (Konzept-V00.60.00.md) +
+> Stand: 2026-05-13. Zielversion 00.60.00 (Konzept-V00.60.00.md) +
 > Part-5-Brief (production hardening).
 > Quelle: `Konzept-V00.60.00.md` + Part-5 Brief, abgeglichen mit
-> Code-Stand nach den Demo-Erweiterungen (Lockout-UI, Role-Admin-UI,
-> User-CRUD, Menü-Integration).
+> Code-Stand nach Standalone-Adapter, Demo-Erweiterungen (Lockout-UI,
+> Role-Admin-UI, User-CRUD, Menü-Integration) und Mutation-Coverage-Push
+> über alle Module.
 
 ## Erledigt seit 00.51.00
 
@@ -196,23 +197,42 @@ ok,        > Stand: 2026-05-12. Zielversion 00.60.00 (Konzept-V00.60.00.md) +
   POC `BrowserlessSmokeTest` mit Fixture-Route, `navigate(Class)`,
   `$view(Class).id(...)`, `test(component)` → typed Tester (z. B.
   `ButtonTester`). Reactor 89 Tests grün (1 neu).
-- [ ] Adapter-Tests: LoginView ruft Policies in korrekter
-  Reihenfolge.
-- [ ] Adapter-Tests: Logout-Button nutzt zentralen Service.
-- [ ] Adapter-Tests: geschützte Buttons werden für
-  nicht-berechtigte Subjects geblendet.
-- [ ] Adapter-Tests: Click-Handler rufen `requireAllowed` vor
-  Ausführung.
-- [ ] Adapter-Tests: Lockout-Banner zeigt remaining time + count
-  nach `LockedOut`-Decision.
-- [ ] Adapter-Tests: B3-Rotation-Honour ruft
-  `VaadinService.reinitializeSession(...)` auf
-  `SessionDecision.Invalidate` aus `onLogin` (alte sessionId im
-  emittierten `SessionInvalidated`).
-- [ ] Adapter-Tests: `/audit`-Grid zeigt Events, Filter greift,
-  Refresh aktualisiert.
-- [ ] Adapter-Tests: `AdminRolesView` Assign/Revoke + Create/Delete
-  Dialog-Flows.
+- ✅ Adapter-Tests: LoginView ruft Policies in korrekter
+  Reihenfolge — `LoginViewPolicyOrderingTest` (success-Pfad
+  `checkCredentials → SessionPolicy.onLogin → navigateToApp`;
+  failure-Pfad `checkCredentials → reactOnFailedLogin`, kein
+  `onLogin`; Invalidate-Decision behält die Reihenfolge und
+  emittiert zusätzlich `SessionInvalidated`).
+- ✅ Adapter-Tests: geschützte Buttons werden für
+  nicht-berechtigte Subjects geblendet, Click-Handler rufen
+  `requireAllowed` vor Ausführung —
+  `ActionGatedUiPatternTest` pinnt beide kanonischen Vaadin-
+  Patterns (Visibility via `isAllowed` und Server-side Guard
+  via `requireAllowed`) gegen die `ActionAuthorizationService`-
+  SPI.
+- ✅ Adapter-Tests: B3-Rotation-Honour echter Integration-Test
+  gegen Browserless `MockHttpSession` —
+  `B3SessionRotationIntegrationTest` capturiert die alte
+  `WrappedSession.getId()`, klickt den Login-Button und beweist
+  in einem Test: (a) `SessionPolicy.onLogin` wird mit dem alten
+  sessionId konsultiert, (b) `VaadinService.reinitializeSession`
+  rotiert die wrapped-session-id wirklich (alte ≠ neue id),
+  (c) `SessionInvalidated`-Audit-Event trägt den **alten**
+  sessionId + die Reason aus `Invalidate`, (d) `navigateToApp`
+  läuft auf der rotierten Session weiter.
+- ✅ Adapter-Tests: Lockout-Banner zeigt remaining time + count —
+  in demo-vaadin (`LockoutBannerBrowserlessTest`,
+  `MyLoginViewExtendedBrowserlessTest`) gedeckt.
+- ✅ Adapter-Tests: `/audit`-Grid zeigt Events, Filter greift —
+  in demo-vaadin (`AuditViewBrowserlessTest`) gedeckt.
+- ✅ Adapter-Tests: `AdminRolesView` Assign/Revoke + Create/Delete
+  Dialog-Flows — in demo-vaadin
+  (`AdminRolesViewBrowserlessTest` + `AdminRolesViewExtendedBrowserlessTest`)
+  gedeckt.
+- [ ] Adapter-Tests: Logout-Button nutzt zentralen Service
+  (für jede Demo-`MainView` einzeln). Heute indirekt durch
+  `MainViewBrowserlessTest` in demo-vaadin gedeckt; offen ist
+  ein generischer Adapter-Smoke-Test in security-vaadin selbst.
 - ✅ Adapter-Tests: SessionPolicy-Decisions werden korrekt
   umgesetzt — `SessionLifetimeListenerTest` (Vaadin) +
   `RestSessionLifetimeTest` (REST). Beide ohne Karibu.
@@ -384,13 +404,17 @@ Reactor-grün vor dem nächsten Schritt.
 
 ## Empfohlene Reihenfolge der nächsten Iteration
 
-1. **Browserless-Adapter-Tests ausbauen** — POC ist drin
-   (`BrowserlessSmokeTest`). Nächste Use-Cases: Lockout-Banner
-   in der LoginView, B3-Rotation-Honour gegen
-   `VaadinService.reinitializeSession(...)`, `/audit`-Grid in
-   beiden Vaadin-Demos, `AdminRolesView`-Create/Delete-Dialogs.
-   Jeder einzelne Test ist eine kleine Iteration.
-2. **Optional:** Readiness-Check in `DemoRestServer.start(...)`,
+1. **Demo-rest / demo-vaadin-rest-client Mutation-Coverage**: liegen
+   bei 49 % bzw. 10 %. demo-rest ist mit weiteren REST-Filter-Audit-
+   Tests am einfachsten zu lupfen; der rest-client braucht
+   Browserless-Tests gegen die `MainView` / `AdminRolesView`-Pendants.
+2. **`security-javafx`-Adapter** (siehe `Konzept-V00.60.00.md` §
+   "JavaFX module"): `LoginScene`, `SecuredAction`/`SecuredMenuItem`,
+   `Task`/`Service` Thread-Propagation für das Subject. Erst bauen,
+   wenn `security-standalone` reale Anwender hat — sonst duplicieren
+   wir das gleiche Boilerplate, das `security-standalone` schon
+   abdeckt.
+3. **Optional:** Readiness-Check in `DemoRestServer.start(...)`,
    falls der Bootstrap-Test wirklich flaky bleibt.
 
 ### Erledigt nach Step 4
@@ -485,6 +509,49 @@ Reactor-grün vor dem nächsten Schritt.
     (POST happy-path, POST 409 duplicate, POST 400 unknown role,
     DELETE 204+second-404, POST/DELETE 403 für editor) →
     demo-rest 48 Tests.
+- ✅ **Standalone-Adapter** (vierter Adapter neben Vaadin/REST):
+  - Neues Modul `security-standalone` mit
+    `ThreadLocalSubjectStore` (SPI-Default, **nicht** vererbend
+    über Thread-Grenzen, by design), `StandaloneLoginFlow<T,U>`
+    (LoginAttemptPolicy → AuthenticationService → SubjectStore,
+    sealed `LoginResult = Success | Rejected | LockedOut`) und
+    `Secured.wrap(Interface, impl)` + `Secured.requireAllowed(
+    Class, methodName)` (JDK-Dynamic-Proxy auf Basis von
+    `SecurityAnnotationScanner`; Reroute → `AccessDeniedException`,
+    Object-Methoden bypassen, `InvocationTargetException` wird
+    unwrapped).
+  - Neues Modul `demo-standalone` als interaktive Library-CLI
+    mit drei seeded Usern (admin/librarian/alice),
+    `@RequiresPermission`/`@RequiresRole` auf einem
+    `LibraryService`-Interface, `Secured.wrap(...)`-Verdrahtung
+    im `DemoApp.main`.
+  - Tests: 29 in `security-standalone`
+    (`ThreadLocalSubjectStoreTest`, `StandaloneLoginFlowTest`,
+    `SecuredTest`) + 26 in `demo-standalone`
+    (`DemoAppCliTest`, `DemoStandaloneSecurityTest` und drei
+    kleine Klassen-Tests).
+  - Mutation-Coverage: `security-standalone` 98 % (44/45),
+    `demo-standalone` 86 % (54/63).
+- ✅ **Mutation-Coverage-Push** über alle bestehenden Module:
+  - `security-rest`: 78 % → 95 % (RestFilterAuditTest: alle
+    AccessGranted / AccessDenied / SessionExpired-Branches in
+    beiden Filtern + Throwing-Sink-Garantie).
+  - `security-vaadin`: 70 % → 80 % (LoginListenersCacheTest,
+    LoginListenerBeforeEnterTest, DefaultVaadinLogoutGatewayWithUITest
+    via Browserless, AuthorizationListenerNavigationTest).
+  - `demo-vaadin`: 18 % → 70 % (Browserless-Tests für Workspaces,
+    MainView, AdminRolesView extended, SetupView, PermissionDemoCard,
+    ViewNavigationCard, MyLoginView extended + Unit-Tests für
+    MyRoleAccessEvaluator, MySessionAccessor,
+    DemoActionAuthorizationService, MyAuthenticationService).
+- ✅ **Browserless-Test-Setup-Pattern dokumentiert** (entdeckt
+  während des Coverage-Pushs): `BrowserlessTest.initVaadinEnvironment()`
+  ist `@BeforeEach` und feuert *vor* Subklassen-`@BeforeEach`. Wenn
+  ein Demo wie `demo-vaadin` einen `BootstrapServiceInitListener`
+  registriert, der über `BootstrapWiring.instance()` den
+  initialen Admin-Check macht, muss das Admin-Seeding ins
+  `@Override protected void initVaadinEnvironment()` rein,
+  nicht ins normale `@BeforeEach`.
 
 - **Idle/Absolute-Demo-Werte:** Konservative Defaults aus
   `Config.defaults()` (30 min idle / 12 h absolute) oder

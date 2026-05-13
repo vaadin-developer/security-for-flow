@@ -1,13 +1,13 @@
 # Security for Flow
 
 Pluggable authentication, authorization, and annotation-driven protection for
-Vaadin Flow and lightweight REST applications. Uses Java SPI (`ServiceLoader`)
-for application-provided services.
+Vaadin Flow, lightweight REST, and plain-Java / desktop / CLI applications.
+Uses Java SPI (`ServiceLoader`) for application-provided services.
 
-The library is split into framework-neutral core, two adapters (Vaadin
-and REST), one transport-level shared module, and three reference
-demos. Concrete roles and permissions live in applications or demo
-modules — never in the library.
+The library is split into a framework-neutral core, three adapters
+(Vaadin, REST, standalone), one transport-level shared module, and four
+reference demos. Concrete roles and permissions live in applications or
+demo modules — never in the library.
 
 ## Module Structure
 
@@ -16,10 +16,12 @@ modules — never in the library.
 | `security-core` | `security-core` | Generic, framework-neutral security concepts and decision logic |
 | `security-vaadin` | `security-vaadin` | Vaadin Flow adapter — view and navigation security |
 | `security-rest` | `security-rest` | Framework-light REST adapter — request and handler security |
+| `security-standalone` | `security-standalone` | Plain-Java / desktop / CLI adapter — ThreadLocal subject + dynamic-proxy method-level enforcement |
 | `demo-rest-shared` | `demo-rest-shared` | Transport-level constants + tiny JSON helper, shared between the REST server and any client |
 | `demo-vaadin` | `demo-vaadin` | Standalone Vaadin demo (WAR) — auth runs in-JVM |
 | `demo-rest` | `demo-rest` | Runnable REST reference: JDK-only HTTP server + CLI client |
 | `demo-vaadin-rest-client` | `demo-vaadin-rest-client` | Vaadin demo where `demo-rest` is the authoritative backend; UI talks to it through one encapsulated Java client |
+| `demo-standalone` | `demo-standalone` | Interactive CLI demo (library-borrowing) showing `Secured.wrap(...)` + `StandaloneLoginFlow` |
 
 ### Dependency Rules
 
@@ -27,15 +29,17 @@ modules — never in the library.
 security-core              -> (no project deps)
 security-vaadin            -> security-core
 security-rest              -> security-core
+security-standalone        -> security-core
 demo-rest-shared           -> (no project deps; transport-only)
 demo-vaadin                -> security-core, security-vaadin
 demo-rest                  -> security-core, security-rest, demo-rest-shared
 demo-vaadin-rest-client    -> security-core, security-vaadin, demo-rest-shared
                               (test scope only: demo-rest)
+demo-standalone            -> security-core, security-standalone
 ```
 
 `security-core` has no Vaadin, Servlet, or REST-framework dependencies.
-`security-vaadin` and `security-rest` never depend on each other.
+The three adapter modules never depend on each other.
 
 ## Quick Start
 
@@ -58,6 +62,7 @@ and `demo-rest-shared` is consumed by both REST-side modules).
 | Vaadin role/permission UI in a single JVM, no backend | [`demo-vaadin`](docs/demo-vaadin.md) |
 | Pure REST security (HTTP server + interactive CLI), no UI | [`demo-rest`](docs/demo-rest.md) |
 | Vaadin UI talking to a separate REST backend (real two-tier setup) | [`demo-vaadin-rest-client`](docs/demo-vaadin-rest-client.md) |
+| Plain-Java / CLI / desktop integration (no HTTP, no Vaadin) | `mvn -pl demo-standalone exec:java -Dexec.mainClass=com.svenruppert.vaadin.security.demo.standalone.DemoApp` |
 
 ### `demo-vaadin` — Standalone Vaadin demo
 
@@ -109,6 +114,21 @@ the backend, no in-JVM auth. Then log in. The UI never speaks HTTP
 directly: only the encapsulated `DemoBackendClient` does.
 Walkthrough: [`docs/demo-vaadin-rest-client.md`](docs/demo-vaadin-rest-client.md).
 
+### `demo-standalone` — Interactive CLI
+
+```bash
+mvn -pl demo-standalone exec:java \
+    -Dexec.mainClass=com.svenruppert.vaadin.security.demo.standalone.DemoApp
+```
+
+Demo users are seeded: `admin/admin`, `librarian/librarian`,
+`alice/alice`. After login, commands cover `list`, `borrow <title>`,
+`return <title>`, `add <title>` (LIBRARIAN+), `remove <title>` (ADMIN
+only). Calls run through a `Secured.wrap(LibraryService.class, ...)`
+proxy that enforces the method-level `@RequiresPermission` /
+`@RequiresRole` annotations; rejections surface as `DENIED — …` lines
+in the terminal.
+
 ### Tests
 
 ```bash
@@ -143,7 +163,17 @@ For a REST handler / servlet application:
 </dependency>
 ```
 
-`security-core` is pulled in transitively by either adapter.
+For a plain-Java / desktop / CLI application:
+
+```xml
+<dependency>
+  <groupId>com.svenruppert</groupId>
+  <artifactId>security-standalone</artifactId>
+  <version>00.51.01-SNAPSHOT</version>
+</dependency>
+```
+
+`security-core` is pulled in transitively by any of the three adapters.
 
 ## Vaadin Integration
 
@@ -384,6 +414,89 @@ operations the current subject is allowed to invoke. Built on
 `security-core` — the same permission model that protects the handlers is
 used to filter the discovery list. Clients never make local authorization
 decisions.
+
+## Standalone Integration
+
+To secure plain-Java code — desktop, CLI, daemon — annotate a service
+interface, wrap implementations once with `Secured.wrap(...)`, and drive
+the login lifecycle with `StandaloneLoginFlow`. There is no listener,
+no filter chain, no navigation phase; every method call on the wrapped
+interface runs through the same `SecurityAnnotationScanner` + evaluator
+machinery as the Vaadin and REST adapters.
+
+A complete runnable reference lives in `demo-standalone`: an
+interactive library-borrowing CLI with three seeded users and a
+role/permission matrix exercising both `@RequiresPermission` and
+`@RequiresRole`.
+
+### 1. Define the service interface
+
+```java
+public interface LibraryService {
+  @RequiresPermission("book:list")
+  List<String> listBooks();
+
+  @RequiresPermission("book:borrow")
+  void borrowBook(String title);
+
+  @RequiresRole("ADMIN")
+  void removeBook(String title);
+}
+```
+
+### 2. Wrap the implementation
+
+```java
+LibraryService secured =
+    Secured.wrap(LibraryService.class, new InMemoryLibraryService());
+
+secured.listBooks();             // runs if the bound subject has book:list
+secured.removeBook("x");         // throws AccessDeniedException for non-ADMIN
+```
+
+`Secured.wrap(...)` returns a JDK dynamic-proxy implementing the
+interface. Every call scans the method (then the declaring class) for a
+`@SecurityAnnotation`-meta-annotated annotation, runs the matching
+evaluator, and either delegates to the real implementation or throws
+`AccessDeniedException`. `Object` methods bypass enforcement.
+
+For callbacks / lambdas where wrapping an interface is awkward, call
+the single-shot helper:
+
+```java
+Secured.requireAllowed(MyOps.class, "delete");
+// throws AccessDeniedException if the calling subject is not allowed
+```
+
+### 3. Drive the login flow
+
+```java
+StandaloneLoginFlow<Credentials, User> flow = new StandaloneLoginFlow<>();
+LoginResult<User> result = flow.login(new Credentials("alice", "alice"), "alice");
+
+switch (result) {
+  case LoginResult.Success<User> s   -> /* proceed */;
+  case LoginResult.Rejected<User> r  -> /* wrong credentials */;
+  case LoginResult.LockedOut<User> l -> /* throttled — retry in l.decision().remaining() */;
+}
+```
+
+The flow consults `LoginAttemptPolicy.beforeAttempt(...)` first, then
+calls the SPI-registered `AuthenticationService.checkCredentials` /
+`loadSubject`, binds the subject through the active `SubjectStore`,
+records success/failure on the policy, and publishes `LoginSucceeded` /
+`LoginFailed` to the `SecurityAuditService`. `flow.logout()` clears the
+SubjectStore for the current thread.
+
+### 4. SubjectStore — ThreadLocal by default
+
+`security-standalone` registers `ThreadLocalSubjectStore` as the SPI
+`SubjectStore`. It is **not** inherited across threads — a value bound
+on the main thread is invisible to a background `Executor`. Propagating
+the subject to worker threads is the application's responsibility:
+capture the user before submitting work, then call
+`SubjectStores.subjectStore().setCurrentSubject(user, User.class)` on
+the worker thread (or use a `Runnable` wrapper that does that).
 
 ## Decision Model
 
