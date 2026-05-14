@@ -19,7 +19,8 @@ package com.svenruppert.vaadin.security.authentication;
 /**
  * Password hashing abstraction. The bootstrap service hashes the raw
  * administrator password before handing it to the application's
- * {@link AdministratorAccountStore}. Plaintext passwords are never stored.
+ * {@link com.svenruppert.vaadin.security.bootstrap.AdministratorAccountStore}.
+ * Plaintext passwords are never stored.
  * <p>
  * Two parallel APIs are exposed:
  * <ul>

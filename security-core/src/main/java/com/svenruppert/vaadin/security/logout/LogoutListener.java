@@ -20,10 +20,11 @@ package com.svenruppert.vaadin.security.logout;
  * Consumer-side callback for {@link LogoutService} events.
  * <p>
  * The Vaadin adapter registers a listener that invalidates the active
- * {@link com.svenruppert.vaadin.security.authorization.vaadin.VaadinSessionSubjectStore VaadinSession};
- * the REST adapter registers a listener that revokes the bearer token.
- * Listeners must not throw — the {@link LogoutService} will swallow any
- * exception so a misbehaving listener cannot block the logout flow.
+ * {@code VaadinSession} (via {@code VaadinSessionSubjectStore} in the
+ * {@code security-vaadin} module); the REST adapter registers a listener
+ * that revokes the bearer token. Listeners must not throw — the
+ * {@link LogoutService} will swallow any exception so a misbehaving
+ * listener cannot block the logout flow.
  */
 @FunctionalInterface
 public interface LogoutListener {

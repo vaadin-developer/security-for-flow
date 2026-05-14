@@ -45,7 +45,8 @@ public interface AuthenticationService<T, U> {
 
   /**
    * Returns the class token for the subject type.
-   * Used by {@link SubjectStore} implementations to store and retrieve the subject.
+   * Used by {@link com.svenruppert.vaadin.security.authorization.api.SubjectStore}
+   * implementations to store and retrieve the subject.
    *
    * @return the subject class
    */

@@ -28,7 +28,12 @@ public final class NoopSessionPolicy<U> implements SessionPolicy<U> {
   @SuppressWarnings("rawtypes")
   private static final NoopSessionPolicy INSTANCE = new NoopSessionPolicy<>();
 
-  /** Returns the singleton, narrowed to the caller's subject type. */
+  /**
+   * Returns the singleton, narrowed to the caller's subject type.
+   *
+   * @param <U> the caller's subject type
+   * @return the shared {@link NoopSessionPolicy} instance
+   */
   @SuppressWarnings("unchecked")
   public static <U> NoopSessionPolicy<U> instance() {
     return (NoopSessionPolicy<U>) INSTANCE;

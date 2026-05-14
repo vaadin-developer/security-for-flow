@@ -21,6 +21,11 @@ import java.util.Objects;
 /**
  * Carrier record handed to {@link AdministratorAccountStore#createAdministrator(NewAdministrator)}.
  * The password is already hashed.
+ *
+ * @param username     stable administrator username
+ * @param displayName  optional human-readable display name, or {@code null}
+ * @param email        optional contact email, or {@code null}
+ * @param passwordHash pre-hashed password (never plain text)
  */
 public record NewAdministrator(
     String username,
@@ -29,6 +34,7 @@ public record NewAdministrator(
     String passwordHash
 ) {
 
+  /** Defensive constructor — rejects null / blank username and passwordHash. */
   public NewAdministrator {
     Objects.requireNonNull(username, "username");
     if (username.isBlank()) throw new IllegalArgumentException("username must not be blank");

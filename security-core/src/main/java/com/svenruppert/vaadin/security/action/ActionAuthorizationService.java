@@ -38,6 +38,8 @@ import com.svenruppert.vaadin.security.authorization.api.AccessDeniedException;
 public interface ActionAuthorizationService<U> {
 
   /**
+   * @param subject    the calling subject (may be {@code null})
+   * @param permission the action permission to evaluate
    * @return {@code true} if {@code subject} may execute {@code permission}
    */
   boolean isAllowed(U subject, ActionPermission permission);
@@ -47,6 +49,9 @@ public interface ActionAuthorizationService<U> {
    * Implementations should additionally publish an
    * {@link com.svenruppert.vaadin.security.audit.ActionDenied} audit event
    * in this case.
+   *
+   * @param subject    the calling subject (may be {@code null})
+   * @param permission the action permission to enforce
    */
   default void requireAllowed(U subject, ActionPermission permission) {
     if (!isAllowed(subject, permission)) {

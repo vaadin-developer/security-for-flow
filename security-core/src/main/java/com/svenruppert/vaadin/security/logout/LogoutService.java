@@ -37,9 +37,10 @@ package com.svenruppert.vaadin.security.logout;
  *
  * <p>The core implementation
  * ({@link SubjectClearingLogoutService}) clears the subject from the
- * {@link SubjectStore}, consults the registry, and fans out the
- * notification to every registered listener. It does not know about
- * Vaadin sessions, HTTP sessions, or any specific transport.
+ * {@link com.svenruppert.vaadin.security.authorization.api.SubjectStore},
+ * consults the registry, and fans out the notification to every
+ * registered listener. It does not know about Vaadin sessions, HTTP
+ * sessions, or any specific transport.
  */
 public interface LogoutService {
 

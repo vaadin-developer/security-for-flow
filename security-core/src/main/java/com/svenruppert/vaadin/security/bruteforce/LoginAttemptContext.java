@@ -47,7 +47,15 @@ public record LoginAttemptContext(
     Objects.requireNonNull(timestamp, "timestamp");
   }
 
-  /** Factory for the common case — the policy supplies the timestamp. */
+  /**
+   * Factory for the common case — the policy supplies the timestamp.
+   *
+   * @param username      attempted username (may be {@code null} for
+   *                      anonymous flows; throttling does not apply)
+   * @param clientAddress remote client address (may be {@code null})
+   * @param sessionId     bound session id, if available (may be {@code null})
+   * @return a context with {@link Instant#now()} as the timestamp
+   */
   public static LoginAttemptContext now(String username, String clientAddress, String sessionId) {
     return new LoginAttemptContext(username, clientAddress, sessionId, Instant.now());
   }

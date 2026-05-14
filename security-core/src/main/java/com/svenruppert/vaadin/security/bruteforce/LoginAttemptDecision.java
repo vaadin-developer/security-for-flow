@@ -64,7 +64,13 @@ public sealed interface LoginAttemptDecision
     return Allowed.INSTANCE;
   }
 
-  /** Convenience for {@link LockedOut}. */
+  /**
+   * Convenience for {@link LockedOut}.
+   *
+   * @param remaining      time until the lockout window expires
+   * @param failedAttempts number of failed attempts that caused the lockout
+   * @return a {@link LockedOut} decision carrying both values
+   */
   static LockedOut lockedOut(Duration remaining, int failedAttempts) {
     return new LockedOut(remaining, failedAttempts);
   }

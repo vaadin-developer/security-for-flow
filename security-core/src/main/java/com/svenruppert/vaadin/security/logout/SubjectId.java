@@ -28,7 +28,7 @@ import java.util.Objects;
  * {@code logout(SubjectId)} call cannot).
  *
  * @param value the subject identifier as exposed by the application's
- *              {@link SecuritySubject#subjectId() SecuritySubject}.
+ *              {@link com.svenruppert.vaadin.security.authorization.api.SecuritySubject#subjectId() SecuritySubject}.
  *              Non-{@code null}, non-blank.
  */
 public record SubjectId(String value) {

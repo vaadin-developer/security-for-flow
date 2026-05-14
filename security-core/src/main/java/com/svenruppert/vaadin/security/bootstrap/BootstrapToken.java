@@ -28,9 +28,14 @@ import java.util.Objects;
  * The token authorizes the creation of the very first administrator while
  * the system is uninitialized. It is not an administrator credential and
  * must not be confused with one.
+ *
+ * @param value     the opaque token value
+ * @param createdAt the instant the token was generated, used to evaluate
+ *                  expiry against a configurable validity window
  */
 public record BootstrapToken(String value, Instant createdAt) {
 
+  /** Defensive constructor — rejects null / blank values. */
   public BootstrapToken {
     Objects.requireNonNull(value, "value must not be null");
     if (value.isBlank()) throw new IllegalArgumentException("value must not be blank");
@@ -40,6 +45,9 @@ public record BootstrapToken(String value, Instant createdAt) {
   /**
    * Constant-time comparison against a candidate string. Safe against
    * timing attacks.
+   *
+   * @param candidate the candidate token value to compare against this token
+   * @return {@code true} if the candidate matches this token's value
    */
   public boolean matches(String candidate) {
     if (candidate == null) return false;
@@ -49,6 +57,8 @@ public record BootstrapToken(String value, Instant createdAt) {
   }
 
   /**
+   * @param now      the reference instant to evaluate expiry against
+   * @param validity the validity duration since {@link #createdAt}
    * @return {@code true} when {@code now} is after {@code createdAt + validity}.
    */
   public boolean isExpired(Instant now, Duration validity) {

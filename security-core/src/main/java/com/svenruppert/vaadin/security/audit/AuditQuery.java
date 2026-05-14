@@ -56,17 +56,30 @@ public record AuditQuery(
     return new AuditQuery(Set.of(), null, null, null, 0);
   }
 
-  /** A query restricted to a single event type. */
+  /**
+   * A query restricted to a single event type.
+   *
+   * @param type the {@link AuditEvent} subtype to filter on
+   * @return query matching only events of {@code type}
+   */
   public static AuditQuery ofType(Class<? extends AuditEvent> type) {
     return new AuditQuery(Set.of(type), null, null, null, 0);
   }
 
-  /** A query restricted to a single subject. */
+  /**
+   * A query restricted to a single subject.
+   *
+   * @param subjectId the subject id to filter on
+   * @return query matching only events carrying {@code subjectId}
+   */
   public static AuditQuery forSubject(String subjectId) {
     return new AuditQuery(Set.of(), subjectId, null, null, 0);
   }
 
-  /** Returns {@code true} if the event matches every active predicate. */
+  /**
+   * @param event the event to test against this query's predicates
+   * @return {@code true} if the event matches every active predicate
+   */
   public boolean matches(AuditEvent event) {
     if (!types.isEmpty() && !types.contains(event.getClass())) {
       return false;

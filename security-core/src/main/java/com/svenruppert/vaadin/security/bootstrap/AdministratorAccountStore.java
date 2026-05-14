@@ -36,6 +36,7 @@ public interface AdministratorAccountStore {
    * must store {@link NewAdministrator#passwordHash()} as-is — no
    * further hashing.
    *
+   * @param newAdministrator the administrator account to persist
    * @throws RuntimeException if the username already exists or the
    *                          underlying store fails
    */

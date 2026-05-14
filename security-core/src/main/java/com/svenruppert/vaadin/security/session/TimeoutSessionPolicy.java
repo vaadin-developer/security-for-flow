@@ -68,6 +68,18 @@ public final class TimeoutSessionPolicy<U> implements SessionPolicy<U> {
    * survives the rotation; only the HTTP session id changes. The
    * REST adapter has no equivalent — tokens themselves are the session,
    * and there is no fixation surface to mitigate.
+   *
+   * @param idleTimeout             maximum allowed time since the last
+   *                                observed activity before the session
+   *                                is treated as idle-timeout
+   * @param absoluteLifetime        maximum allowed time since session
+   *                                creation, regardless of activity
+   * @param rotateSessionAfterLogin if {@code true}, {@code onLogin}
+   *                                returns {@code Invalidate} so the
+   *                                adapter rotates the HTTP session id
+   * @param loginRoute              route used for the {@code Invalidate}
+   *                                decision in the {@code beforeNavigation}
+   *                                context (ignored after login rotation)
    */
   public record Config(
       Duration idleTimeout,

@@ -24,6 +24,13 @@ import java.util.Objects;
  * The {@code password} field uses {@code char[]} so the caller can clear it
  * after use. The bootstrap service hashes it and clears the array before
  * returning.
+ *
+ * @param bootstrapToken single-use token issued during first-run bootstrap
+ * @param username       requested administrator username
+ * @param password       plain-text password as a char array; will be hashed
+ *                       and may be cleared by the service after use
+ * @param displayName    optional human-readable display name, or {@code null}
+ * @param email          optional contact email, or {@code null}
  */
 public record CreateInitialAdminCommand(
     String bootstrapToken,
@@ -33,6 +40,7 @@ public record CreateInitialAdminCommand(
     String email
 ) {
 
+  /** Defensive constructor — rejects null token, username, password. */
   public CreateInitialAdminCommand {
     Objects.requireNonNull(bootstrapToken, "bootstrapToken");
     Objects.requireNonNull(username, "username");

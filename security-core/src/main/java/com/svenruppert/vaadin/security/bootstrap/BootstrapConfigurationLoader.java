@@ -68,7 +68,14 @@ public final class BootstrapConfigurationLoader {
     this(System::getProperty, System::getenv);
   }
 
-  /** Test seam: inject custom sources. */
+  /**
+   * Test seam: inject custom sources.
+   *
+   * @param sysprop function returning system-property values (typically
+   *                {@link System#getProperty})
+   * @param env     function returning environment-variable values
+   *                (typically {@link System#getenv})
+   */
   public BootstrapConfigurationLoader(
       Function<String, String> sysprop,
       Function<String, String> env) {
