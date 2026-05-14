@@ -209,6 +209,7 @@
                         <excludeArtifact>demo-rest</excludeArtifact>
                         <excludeArtifact>demo-vaadin</excludeArtifact>
                         <excludeArtifact>demo-vaadin-rest-client</excludeArtifact>
+                        <excludeArtifact>demo-standalone</excludeArtifact>
                     </excludeArtifacts>
                 </configuration>
             </plugin>
