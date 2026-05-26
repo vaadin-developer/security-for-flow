@@ -24,9 +24,7 @@ import com.svenruppert.vaadin.security.authorization.api.AccessDeniedException;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.authorization.api.permissions.HasPermissions;
-import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.roles.HasRoles;
-import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 import com.svenruppert.vaadin.security.authorization.impl.AnnotationAccessEvaluatorPair;
 import com.svenruppert.vaadin.security.authorization.impl.SecurityAnnotationScanner;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
@@ -34,7 +32,6 @@ import com.svenruppert.vaadin.security.authorization.navigation.AccessDecision;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Proxy;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -205,13 +202,5 @@ public final class Secured {
       throw new IllegalStateException(
           "Could not instantiate evaluator " + evaluatorClass.getName(), e);
     }
-  }
-
-  @SuppressWarnings("unused")
-  private static void importHint() {
-    // Keep imports tidy for readers tracing the SecuritySubject construction.
-    new PermissionName("");
-    new RoleName("");
-    Collections.emptyList();
   }
 }

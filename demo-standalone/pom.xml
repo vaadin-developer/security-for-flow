@@ -17,7 +17,7 @@
   <parent>
     <groupId>com.svenruppert</groupId>
     <artifactId>security-for-flow-parent</artifactId>
-    <version>00.60.00</version>
+    <version>00.60.01-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -44,7 +44,6 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>6.1.0-M1</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

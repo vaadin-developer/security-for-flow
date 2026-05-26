@@ -127,6 +127,12 @@ public final class LoggingAuditSink implements AuditSink {
         appendField(sb, "username", e.username());
         appendField(sb, "by", e.deletedBy());
       }
+      case PolicyEvaluated e -> {
+        appendField(sb, "subject", e.subjectId());
+        appendField(sb, "policy", e.policyName());
+        appendField(sb, "decision", e.decision());
+        appendField(sb, "reason", e.reason());
+      }
     }
     return sb.toString();
   }

@@ -499,6 +499,12 @@ public final class DemoHandlers {
         map.put("username", e.username());
         map.put("deletedBy", e.deletedBy());
       }
+      case com.svenruppert.vaadin.security.audit.PolicyEvaluated e -> {
+        map.put("subjectId", e.subjectId());
+        map.put("policyName", e.policyName());
+        map.put("decision", e.decision());
+        map.put("reason", e.reason());
+      }
     }
     return map;
   }

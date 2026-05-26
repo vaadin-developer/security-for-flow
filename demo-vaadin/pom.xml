@@ -17,7 +17,7 @@
     <parent>
         <groupId>com.svenruppert</groupId>
         <artifactId>security-for-flow-parent</artifactId>
-        <version>00.60.00</version>
+        <version>00.60.01-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -42,6 +42,14 @@
             <artifactId>security-vaadin</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!--
+            Vaadin 25.1.1 mixes Jackson 3 (runtime, tools.jackson.core) and
+            Jackson 2 annotations: vaadin-maven-plugin:prepare-frontend still
+            references com.fasterxml.jackson.annotation.JsonSerializeAs and
+            fails with a NoClassDefFoundError if jackson-annotations:2.x is
+            absent. Keep both coordinate families on the classpath until
+            Vaadin drops the Jackson 2 reference.
+        -->
         <dependency>
             <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
@@ -60,7 +68,6 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>6.1.0-M1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -72,6 +79,7 @@
     </dependencies>
 
     <build>
+        <finalName>ROOT</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -139,14 +147,6 @@
                         <phase>compile</phase>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <configuration>
-                    <failOnMissingWebXml>false</failOnMissingWebXml>
-                    <warName>${warName}</warName>
-                </configuration>
             </plugin>
         </plugins>
     </build>

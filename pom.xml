@@ -20,11 +20,11 @@
     <parent>
         <groupId>com.svenruppert</groupId>
         <artifactId>dependencies</artifactId>
-        <version>06.01.00</version>
+        <version>06.02.00</version>
     </parent>
 
     <artifactId>security-for-flow-parent</artifactId>
-    <version>00.60.00</version>
+    <version>00.60.01-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Security for Vaadin</name>
@@ -85,8 +85,6 @@
     <properties>
         <licenseName>European Union Public Licence 1.2</licenseName>
 
-        <!--        <app.main.class>com.svenruppert.rest.Application</app.main.class>-->
-
         <deploy-repo-url>https://repo.maven.apache.org/maven2/</deploy-repo-url>
         <deploy-repo-snapshots-url>https://repo.maven.apache.org/maven2/</deploy-repo-snapshots-url>
 
@@ -100,7 +98,7 @@
         <maven.compiler.testSource>${jdk.version}</maven.compiler.testSource>
         <maven.compiler.testTarget>${jdk.version}</maven.compiler.testTarget>
 
-        <minimum-maven.version>3.9.9</minimum-maven.version>
+        <minimum-maven.version>4.0.0-rc-5</minimum-maven.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -108,26 +106,17 @@
         <pitest-prod-classes>com.svenruppert.*</pitest-prod-classes>
         <pitest-test-classes>junit.com.svenruppert.*</pitest-test-classes>
 
-        <!--TDD jUnit5-->
         <junit-platform-maven-plugin.timeout>300</junit-platform-maven-plugin.timeout>
 
         <spotbugs.skip>true</spotbugs.skip>
-
-        <!--
-            Workshop toggle. Default false so ${...} interpolation always
-            yields a valid JVM arg. Enable the live smoke test against a
-            locally running Ollama with:
-              mvn test -Dworkshop.live=true
-        -->
-        <workshop.live>false</workshop.live>
 
         <!--        Vaadin Flow Properties-->
         <failOnMissingWebXml>false</failOnMissingWebXml>
         <vaadin.version>25.1.1</vaadin.version>
         <drivers.downloader.phase>pre-integration-test</drivers.downloader.phase>
         <jetty.version>12.1.8</jetty.version>
-        <warName>ROOT</warName>
         <slf4j-api.version>2.0.17</slf4j-api.version>
+        <junit-jupiter.version>6.1.0</junit-jupiter.version>
     </properties>
 
     <repositories>
@@ -191,12 +180,16 @@
                 <scope>import</scope>
                 <version>${vaadin.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit-jupiter.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <build>
         <defaultGoal>jetty:run</defaultGoal>
-        <!--        <finalName>${warName}-${project.version}</finalName>-->
         <plugins>
             <plugin>
                 <groupId>org.sonatype.central</groupId>
@@ -296,18 +289,11 @@
                     <execution>
                         <phase>package</phase>
                         <goals>
-                            <!--<goal>jar</goal> do not define it here again !!-->
+                            <!-- jar goal is bound by the default lifecycle; do not re-declare. -->
                             <goal>test-jar</goal>
                         </goals>
                     </execution>
                 </executions>
-                <!--                <configuration>-->
-                <!--                    <archive>-->
-                <!--                        <manifest>-->
-                <!--                            <mainClass>${app.main.class}</mainClass>-->
-                <!--                        </manifest>-->
-                <!--                    </archive>-->
-                <!--                </configuration>-->
             </plugin>
 
             <plugin>
@@ -350,26 +336,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-            </plugin>
-
-            <!--
-                The grandparent pins junit-platform-maven-plugin (sormuras) as
-                the test executor. It forks a JVM for tests and does NOT
-                forward -D flags from the mvn command line by default.
-                Forward the workshop.live toggle explicitly so the live
-                Ollama smoke test can be enabled with:
-                    mvn test -Dworkshop.live=true
-            -->
-            <plugin>
-                <groupId>de.sormuras.junit</groupId>
-                <artifactId>junit-platform-maven-plugin</artifactId>
-                <configuration>
-                    <javaOptions>
-                        <additionalOptions combine.children="append">
-                            <additionalOption>-Dworkshop.live=${workshop.live}</additionalOption>
-                        </additionalOptions>
-                    </javaOptions>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.cyclonedx</groupId>

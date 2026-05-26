@@ -27,6 +27,8 @@ import com.svenruppert.vaadin.security.authentication.PasswordHasher;
 import com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.vaadin.security.bruteforce.NoopLoginAttemptPolicy;
+import com.svenruppert.vaadin.security.policy.impl.InMemoryPolicyRegistry;
+import com.svenruppert.vaadin.security.policy.spi.PolicyRegistry;
 import com.svenruppert.vaadin.security.session.NoopSessionPolicy;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
 
@@ -73,6 +75,8 @@ public final class SecurityServiceResolver {
   private static final AtomicReference<PasswordHasher> PASSWORD_HASHER_REF =
       new AtomicReference<>();
   private static final AtomicReference<LogoutService> LOGOUT_SERVICE_REF =
+      new AtomicReference<>();
+  private static final AtomicReference<PolicyRegistry> POLICY_REGISTRY_REF =
       new AtomicReference<>();
 
   private SecurityServiceResolver() {
@@ -533,6 +537,69 @@ public final class SecurityServiceResolver {
     LOGOUT_SERVICE_REF.set(service);
   }
 
+  // ── PolicyRegistry ─────────────────────────────────────────────
+
+  /**
+   * Returns the registered {@link PolicyRegistry}, or a fresh
+   * {@link InMemoryPolicyRegistry} when none is configured. Like the
+   * audit / login-attempt / session accessors, this method
+   * <strong>never</strong> throws — the policy registry is optional
+   * infrastructure for applications that use the {@code @RequiresPolicy}
+   * annotation. The fallback registry is cached, so applications can
+   * register policies into it at startup and they are visible on
+   * subsequent lookups.
+   *
+   * @return the resolved registry, never {@code null}
+   */
+  public static PolicyRegistry policyRegistry() {
+    PolicyRegistry cached = POLICY_REGISTRY_REF.get();
+    if (cached != null) {
+      return cached;
+    }
+
+    PolicyRegistry loaded = findSingleService(
+        PolicyRegistry.class,
+        ServiceLoader.load(PolicyRegistry.class))
+        .orElseGet(InMemoryPolicyRegistry::new);
+
+    POLICY_REGISTRY_REF.compareAndSet(null, loaded);
+    return POLICY_REGISTRY_REF.get();
+  }
+
+  /**
+   * Returns the SPI-registered {@link PolicyRegistry}, or empty when
+   * only the default {@link InMemoryPolicyRegistry} fallback is in use.
+   *
+   * @return the SPI-registered registry, or empty
+   */
+  public static Optional<PolicyRegistry> findPolicyRegistry() {
+    PolicyRegistry cached = POLICY_REGISTRY_REF.get();
+    if (cached != null && !(cached instanceof InMemoryPolicyRegistry)) {
+      return Optional.of(cached);
+    }
+    if (cached instanceof InMemoryPolicyRegistry) {
+      // The cached instance is the default fallback. Report "no SPI"
+      // so callers can decide whether to override.
+      return Optional.empty();
+    }
+
+    Optional<PolicyRegistry> loaded = findSingleService(
+        PolicyRegistry.class,
+        ServiceLoader.load(PolicyRegistry.class));
+    loaded.ifPresent(registry -> POLICY_REGISTRY_REF.compareAndSet(null, registry));
+    return loaded;
+  }
+
+  /**
+   * Replaces the cached {@link PolicyRegistry}. Intended for tests and
+   * for applications that prefer programmatic wiring over SPI.
+   *
+   * @param registry the registry, or {@code null} to clear
+   */
+  public static void setPolicyRegistry(PolicyRegistry registry) {
+    POLICY_REGISTRY_REF.set(registry);
+  }
+
   // ── Reset (for testing) ────────────────────────────────────────
 
   /**
@@ -549,6 +616,7 @@ public final class SecurityServiceResolver {
     SESSION_POLICY_REF.set(null);
     PASSWORD_HASHER_REF.set(null);
     LOGOUT_SERVICE_REF.set(null);
+    POLICY_REGISTRY_REF.set(null);
     SubjectStores.reset();
   }
 
