@@ -18,15 +18,14 @@ package com.svenruppert.vaadin.security.authorization.impl;
 
 import com.svenruppert.vaadin.security.audit.AccessDenied;
 import com.svenruppert.vaadin.security.audit.AccessGranted;
-import com.svenruppert.vaadin.security.audit.AuditEvent;
-import com.svenruppert.vaadin.security.audit.AuditQuery;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.annotations.SecurityAnnotation;
 import com.svenruppert.vaadin.security.authorization.api.AccessEvaluator;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessDecision;
+import com.svenruppert.vaadin.security.test.InMemorySubjectStore;
+import com.svenruppert.vaadin.security.test.RecordingAuditSink;
 import com.vaadin.browserless.BrowserlessTest;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.Div;
@@ -39,12 +38,9 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Drives {@link AuthorizationListener#beforeEnter} through real Vaadin
@@ -56,7 +52,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @DisplayName("AuthorizationListener — navigation-driven audit emission")
 class AuthorizationListenerNavigationTest extends BrowserlessTest {
 
-  private final RecordingAudit audit = new RecordingAudit();
+  private final RecordingAuditSink audit = new RecordingAuditSink();
 
   @org.junit.jupiter.api.BeforeEach
   @Override
@@ -79,7 +75,7 @@ class AuthorizationListenerNavigationTest extends BrowserlessTest {
   void granted_publishesAccessGranted() {
     navigate(GrantedFixture.class);
 
-    AccessGranted event = singleEvent(AccessGranted.class);
+    AccessGranted event = audit.single(AccessGranted.class);
     assertEquals("GrantedFixture", event.route(),
         "AccessGranted must carry the navigation target's simple name as the route");
   }
@@ -98,7 +94,7 @@ class AuthorizationListenerNavigationTest extends BrowserlessTest {
       // that the audit was emitted before things blew up.
     }
 
-    AccessDenied event = singleEvent(AccessDenied.class);
+    AccessDenied event = audit.single(AccessDenied.class);
     assertTrue(event.reason().startsWith("Reroute:"),
         "Reroute decision must produce a reason prefixed 'Reroute:'; got: "
             + event.reason());
@@ -109,22 +105,8 @@ class AuthorizationListenerNavigationTest extends BrowserlessTest {
   void unannotatedRoute_noAuditEvent() {
     navigate(PlainFixture.class);
 
-    assertEquals(0, audit.events.size(),
-        "unannotated routes must not produce any audit event; got: " + audit.events);
-  }
-
-  // ── Helpers ────────────────────────────────────────────────────
-
-  @SuppressWarnings("unchecked")
-  private <T extends AuditEvent> T singleEvent(Class<T> type) {
-    List<T> hits = audit.events.stream()
-        .filter(type::isInstance)
-        .map(e -> (T) e)
-        .toList();
-    if (hits.size() != 1) {
-      fail("expected exactly one " + type.getSimpleName() + " event; got: " + audit.events);
-    }
-    return hits.get(0);
+    assertEquals(0, audit.events().size(),
+        "unannotated routes must not produce any audit event; got: " + audit.events());
   }
 
   // ── Fixtures ──────────────────────────────────────────────────
@@ -161,10 +143,4 @@ class AuthorizationListenerNavigationTest extends BrowserlessTest {
 
   @Route("plain")
   public static class PlainFixture extends Composite<Div> { }
-
-  static final class RecordingAudit implements SecurityAuditService {
-    final List<AuditEvent> events = new ArrayList<>();
-    @Override public void publish(AuditEvent event) { events.add(event); }
-    @Override public List<AuditEvent> query(AuditQuery q) { return List.of(); }
-  }
 }

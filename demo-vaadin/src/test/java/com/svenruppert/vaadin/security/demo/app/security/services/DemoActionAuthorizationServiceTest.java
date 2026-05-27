@@ -17,22 +17,18 @@
 package com.svenruppert.vaadin.security.demo.app.security.services;
 
 import com.svenruppert.vaadin.security.action.ActionPermission;
-import com.svenruppert.vaadin.security.audit.AuditEvent;
-import com.svenruppert.vaadin.security.audit.AuditQuery;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.api.AccessDeniedException;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.demo.app.security.permissions.DemoPermission;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
+import com.svenruppert.vaadin.security.test.RecordingAuditSink;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -50,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DemoActionAuthorizationServiceTest {
 
   private final DemoActionAuthorizationService service = new DemoActionAuthorizationService();
-  private final RecordingAudit audit = new RecordingAudit();
+  private final RecordingAuditSink audit = new RecordingAuditSink();
 
   @BeforeEach
   void wire() {
@@ -105,7 +101,7 @@ class DemoActionAuthorizationServiceTest {
 
     service.requireAllowed(admin, DemoPermission.DEMO_ADMIN.actionPermission());
 
-    assertEquals(0, audit.events.size(),
+    assertEquals(0, audit.events().size(),
         "successful requireAllowed must not emit an audit event");
   }
 
@@ -118,19 +114,10 @@ class DemoActionAuthorizationServiceTest {
     assertThrows(AccessDeniedException.class,
         () -> service.requireAllowed(user, permission));
 
-    assertEquals(1, audit.events.size(),
+    assertEquals(1, audit.events().size(),
         "denied requireAllowed must publish exactly one ActionDenied event");
     assertEquals("com.svenruppert.vaadin.security.audit.ActionDenied",
-        audit.events.get(0).getClass().getName());
+        audit.events().get(0).getClass().getName());
   }
 
-  // ── Fixtures ──────────────────────────────────────────────────
-
-  private static final class RecordingAudit implements SecurityAuditService {
-    final List<AuditEvent> events = new ArrayList<>();
-
-    @Override public void publish(AuditEvent event) { events.add(event); }
-
-    @Override public List<AuditEvent> query(AuditQuery query) { return List.of(); }
-  }
 }

@@ -27,6 +27,7 @@ import com.svenruppert.vaadin.security.audit.BruteForceLimitReached;
 import com.svenruppert.vaadin.security.audit.LoginFailed;
 import com.svenruppert.vaadin.security.audit.LoginSucceeded;
 import com.svenruppert.vaadin.security.audit.PolicyEvaluated;
+import com.svenruppert.vaadin.security.audit.StepUpChallenged;
 import com.svenruppert.vaadin.security.audit.LogoutPerformed;
 import com.svenruppert.vaadin.security.audit.RoleAssigned;
 import com.svenruppert.vaadin.security.audit.RoleRevoked;
@@ -186,6 +187,7 @@ public class AuditView extends Composite<VerticalLayout> {
       case UserCreated e -> e.username();
       case UserDeleted e -> e.username();
       case PolicyEvaluated e -> nullToDash(e.subjectId());
+      case StepUpChallenged e -> nullToDash(e.subjectId());
     };
   }
 
@@ -219,6 +221,9 @@ public class AuditView extends Composite<VerticalLayout> {
       case UserDeleted e -> "by=" + nullToDash(e.deletedBy());
       case PolicyEvaluated e -> "policy=" + e.policyName()
           + " decision=" + e.decision()
+          + " reason=" + nullToDash(e.reason());
+      case StepUpChallenged e -> "route=" + nullToDash(e.route())
+          + " method=" + e.method()
           + " reason=" + nullToDash(e.reason());
     };
   }

@@ -142,6 +142,35 @@ class AuthorizationListenerEvaluateAndMapTest {
     assertEquals("denied", err.message());
   }
 
+  @Test
+  @DisplayName("map(StepUpRequired) → AccessDecision.Reroute to the default 'step-up' route")
+  void map_stepUpDefaultRoute() throws Exception {
+    com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver.resetAll();
+    try {
+      Object result = invokeMap(new AuthorizationDecision.StepUpRequired("needs mfa", "MFA"));
+      AccessDecision.Reroute reroute = (AccessDecision.Reroute) result;
+      assertEquals("step-up", reroute.target());
+      assertEquals(false, reroute.asForward());
+    } finally {
+      com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver.resetAll();
+    }
+  }
+
+  @Test
+  @DisplayName("map(StepUpRequired) honours the configured stepUpRouteName")
+  void map_stepUpConfiguredRoute() throws Exception {
+    com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver.resetAll();
+    com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver
+        .setStepUpRouteName("mfa-challenge");
+    try {
+      Object result = invokeMap(new AuthorizationDecision.StepUpRequired("needs mfa", "MFA"));
+      AccessDecision.Reroute reroute = (AccessDecision.Reroute) result;
+      assertEquals("mfa-challenge", reroute.target());
+    } finally {
+      com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver.resetAll();
+    }
+  }
+
   // ── Helpers ───────────────────────────────────────────────────
 
   private Object invokeEvaluate(Object evaluator, AccessContext context, Annotation annotation)

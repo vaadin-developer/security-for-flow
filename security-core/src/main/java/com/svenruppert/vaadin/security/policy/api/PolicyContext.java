@@ -28,10 +28,18 @@ import static java.util.Objects.requireNonNull;
 /**
  * Input to a {@code Policy} evaluation.
  * <p>
- * Wraps the adapter-neutral {@link AccessContext} and adds the resolved
- * {@code policyName} plus any policy-specific {@code resourceAttributes}
- * a caller wants to expose to predicates without polluting the shared
- * {@code AccessContext.attributes} map.
+ * Wraps the adapter-neutral {@link AccessContext} and adds:
+ * <ul>
+ *   <li>the resolved {@code policyName} (the value of the
+ *       {@code @RequiresPolicy} annotation that caused this
+ *       evaluation),</li>
+ *   <li>an optional {@link ResourceRef} pointing at the concrete
+ *       domain resource the request is about — used by
+ *       {@link ResourcePredicates},</li>
+ *   <li>a policy-specific {@code resourceAttributes} map that callers
+ *       can populate with pre-resolved fields without polluting the
+ *       shared {@code AccessContext.attributes} map.</li>
+ * </ul>
  *
  * <p>Wrapping (rather than extending) keeps the existing
  * {@code AuthorizationEvaluator} contract and all adapter pipelines
@@ -41,12 +49,14 @@ import static java.util.Objects.requireNonNull;
  *
  * @param accessContext      underlying adapter-neutral access context
  * @param policyName         name of the policy being evaluated
+ * @param resourceRef        reference to the concrete domain resource, if any
  * @param resourceAttributes policy-specific resource attributes
  */
 @ExperimentalSecurityApi
 public record PolicyContext(
     AccessContext accessContext,
     String policyName,
+    Optional<ResourceRef> resourceRef,
     Map<String, Object> resourceAttributes
 ) {
 
@@ -55,6 +65,7 @@ public record PolicyContext(
    *
    * @param accessContext      underlying adapter-neutral access context
    * @param policyName         name of the policy being evaluated
+   * @param resourceRef        reference to the concrete domain resource, if any
    * @param resourceAttributes policy-specific resource attributes
    */
   public PolicyContext {
@@ -62,18 +73,50 @@ public record PolicyContext(
     if (policyName == null || policyName.isBlank()) {
       throw new IllegalArgumentException("policyName must not be blank");
     }
+    resourceRef = resourceRef == null ? Optional.empty() : resourceRef;
     resourceAttributes = Map.copyOf(
         requireNonNull(resourceAttributes, "resourceAttributes must not be null"));
   }
 
   /**
-   * Convenience constructor using an empty {@code resourceAttributes} map.
+   * Convenience constructor without a {@link ResourceRef}.
+   *
+   * @param accessContext      underlying adapter-neutral access context
+   * @param policyName         name of the policy being evaluated
+   * @param resourceAttributes policy-specific resource attributes
+   */
+  public PolicyContext(
+      AccessContext accessContext,
+      String policyName,
+      Map<String, Object> resourceAttributes) {
+    this(accessContext, policyName, Optional.empty(), resourceAttributes);
+  }
+
+  /**
+   * Convenience constructor using an empty {@code resourceAttributes}
+   * map and no {@link ResourceRef}.
    *
    * @param accessContext underlying adapter-neutral access context
    * @param policyName    name of the policy being evaluated
    */
   public PolicyContext(AccessContext accessContext, String policyName) {
-    this(accessContext, policyName, Map.of());
+    this(accessContext, policyName, Optional.empty(), Map.of());
+  }
+
+  /**
+   * Convenience constructor with a {@link ResourceRef} and an empty
+   * {@code resourceAttributes} map. Pass {@code null} for an absent
+   * reference.
+   *
+   * @param accessContext underlying adapter-neutral access context
+   * @param policyName    name of the policy being evaluated
+   * @param resourceRef   reference to the concrete domain resource, or {@code null}
+   */
+  public PolicyContext(
+      AccessContext accessContext,
+      String policyName,
+      ResourceRef resourceRef) {
+    this(accessContext, policyName, Optional.ofNullable(resourceRef), Map.of());
   }
 
   /**

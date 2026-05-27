@@ -63,4 +63,21 @@ public final class PermissionMatcher {
         .allMatch(requiredPermission -> granted.stream()
             .anyMatch(grantedPermission -> matches(grantedPermission, requiredPermission)));
   }
+
+  /**
+   * Checks whether at least one required permission is covered by the
+   * granted set.
+   *
+   * @param granted  granted permissions
+   * @param required required permissions
+   * @return true if any required permission matches; false on an empty
+   *         {@code required} collection
+   */
+  public static boolean containsAny(
+      Collection<PermissionName> granted,
+      Collection<PermissionName> required) {
+    return required.stream()
+        .anyMatch(requiredPermission -> granted.stream()
+            .anyMatch(grantedPermission -> matches(grantedPermission, requiredPermission)));
+  }
 }

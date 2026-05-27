@@ -20,7 +20,7 @@
     <parent>
         <groupId>com.svenruppert</groupId>
         <artifactId>dependencies</artifactId>
-        <version>06.02.00</version>
+        <version>06.02.01</version>
     </parent>
 
     <artifactId>security-for-flow-parent</artifactId>
@@ -75,6 +75,7 @@
         <module>security-vaadin</module>
         <module>security-rest</module>
         <module>security-standalone</module>
+        <module>security-test</module>
         <module>demo-rest-shared</module>
         <module>demo-vaadin</module>
         <module>demo-rest</module>

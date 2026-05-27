@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright © 2018 Sven Ruppert (sven.ruppert@gmail.com)
+
+    Licensed under the EUPL, Version 1.2 or - as soon they will be
+    approved by the European Commission - subsequent versions of the
+    EUPL (the "Licence"); You may not use this work except in
+    compliance with the Licence. You may obtain a copy of the Licence at:
+
+    https://joinup.ec.europa.eu/software/page/eupl
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <groupId>com.svenruppert</groupId>
+    <artifactId>security-for-flow-parent</artifactId>
+    <version>00.60.01-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>security-test</artifactId>
+  <name>Security Test Fixtures</name>
+  <description>
+    Reusable test fixtures, fakes, recording sinks, and a JUnit 5
+    extension for projects that depend on security-core. Consumers add
+    this artifact as a test-scope dependency.
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>security-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!--
+      JUnit Jupiter API is compile-scope here (not test-scope) because
+      SecurityTestExtension implements JUnit lifecycle interfaces. The
+      aggregator artifact org.junit.jupiter:junit-jupiter pulls
+      jupiter-api only as a runtime dep, so we depend on jupiter-api
+      directly and inherit the version from the parent POM's
+      dependencyManagement.
+    -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>${junit-jupiter.version}</version>
+      <!--
+        Override the grandparent's test-scope pin: this module needs
+        the Jupiter API at compile time for SecurityTestExtension.
+      -->
+      <scope>compile</scope>
+    </dependency>
+    <!--
+      Aggregator artifact pulled in test-scope so the module's own
+      tests still find the full Jupiter surface (Test, BeforeEach, …).
+    -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>first</id>
+            <phase>none</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

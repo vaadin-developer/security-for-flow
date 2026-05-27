@@ -55,27 +55,25 @@ class PolicyDecisionsTest {
   }
 
   @Test
-  @DisplayName("StepUpRequired bridges to Forbidden with structured prefix and method")
-  void stepUpBridgesToForbiddenWithPrefix() {
+  @DisplayName("StepUpRequired bridges to AuthorizationDecision.StepUpRequired with reason + method name")
+  void stepUpBridgesToStepUpRequired() {
     AuthorizationDecision result = PolicyDecisions.toAuthorizationDecision(
         PolicyDecision.stepUpRequired("needs mfa", PolicyDecision.StepUpMethod.MFA));
-    AuthorizationDecision.Forbidden forbidden =
-        assertInstanceOf(AuthorizationDecision.Forbidden.class, result);
-    assertEquals(
-        PolicyDecisions.STEP_UP_REASON_PREFIX + "MFA:needs mfa",
-        forbidden.reason());
+    AuthorizationDecision.StepUpRequired stepUp = assertInstanceOf(
+        AuthorizationDecision.StepUpRequired.class, result);
+    assertEquals("needs mfa", stepUp.reason());
+    assertEquals("MFA", stepUp.method());
   }
 
   @Test
-  @DisplayName("StepUpRequired with empty reason omits the trailing colon-segment")
-  void stepUpEmptyReasonOmitsTrailingSegment() {
+  @DisplayName("StepUpRequired with empty reason preserves the empty reason and method name")
+  void stepUpEmptyReasonPreserved() {
     AuthorizationDecision result = PolicyDecisions.toAuthorizationDecision(
         PolicyDecision.stepUpRequired("", PolicyDecision.StepUpMethod.REAUTH));
-    AuthorizationDecision.Forbidden forbidden =
-        assertInstanceOf(AuthorizationDecision.Forbidden.class, result);
-    assertEquals(
-        PolicyDecisions.STEP_UP_REASON_PREFIX + "REAUTH",
-        forbidden.reason());
+    AuthorizationDecision.StepUpRequired stepUp = assertInstanceOf(
+        AuthorizationDecision.StepUpRequired.class, result);
+    assertEquals("", stepUp.reason());
+    assertEquals("REAUTH", stepUp.method());
   }
 
   @Test
@@ -86,7 +84,8 @@ class PolicyDecisionsTest {
   }
 
   @Test
-  @DisplayName("STEP_UP_REASON_PREFIX is the documented constant")
+  @DisplayName("STEP_UP_REASON_PREFIX is the documented (deprecated) constant")
+  @SuppressWarnings("deprecation")
   void stepUpPrefixConstantIsStable() {
     assertEquals("StepUpRequired:", PolicyDecisions.STEP_UP_REASON_PREFIX);
   }

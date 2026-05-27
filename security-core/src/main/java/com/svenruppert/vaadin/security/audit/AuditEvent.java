@@ -39,7 +39,7 @@ public sealed interface AuditEvent
             RoleAssigned, RoleRevoked,
             UserCreated, UserDeleted,
             BootstrapAdminCreated, BootstrapTokenRejected,
-            PolicyEvaluated {
+            PolicyEvaluated, StepUpChallenged {
 
   /** The UTC instant at which this event was created. Never {@code null}. */
   Instant timestamp();

@@ -27,6 +27,7 @@ import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
+import com.svenruppert.vaadin.security.test.RecordingAuditSink;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,7 +37,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +52,7 @@ class StandaloneLoginFlowTest {
 
   private static final Instant T0 = Instant.parse("2026-05-13T10:00:00Z");
 
-  private final RecordingAudit audit = new RecordingAudit();
+  private final RecordingAuditSink audit = new RecordingAuditSink();
   private final CountingPolicy policy = new CountingPolicy();
   private final StubAuth auth = new StubAuth();
 
@@ -93,7 +93,7 @@ class StandaloneLoginFlowTest {
         "successful login must call policy.recordSuccess(...)");
     assertEquals(0, policy.recordFailureCalls);
 
-    LoginSucceeded ev = singleEvent(LoginSucceeded.class);
+    LoginSucceeded ev = audit.single(LoginSucceeded.class);
     assertEquals("alice", ev.username());
     assertEquals(T0, ev.timestamp(), "audit timestamp must come from the injected clock");
 
@@ -117,7 +117,7 @@ class StandaloneLoginFlowTest {
     assertEquals(1, policy.recordFailureCalls,
         "failed login must call policy.recordFailure(...)");
 
-    LoginFailed ev = singleEvent(LoginFailed.class);
+    LoginFailed ev = audit.single(LoginFailed.class);
     assertEquals("alice", ev.username());
     assertEquals("Credentials rejected", ev.reason(),
         "audit reason must explain the rejection cause");
@@ -138,7 +138,7 @@ class StandaloneLoginFlowTest {
     StandaloneLoginFlow.LoginResult<String> result = flow.login("alice", "alice");
 
     assertInstanceOf(StandaloneLoginFlow.LoginResult.Rejected.class, result);
-    LoginFailed ev = singleEvent(LoginFailed.class);
+    LoginFailed ev = audit.single(LoginFailed.class);
     assertEquals("Subject lookup returned null", ev.reason(),
         "null loadSubject(...) must be reported as a separate failure reason");
     assertEquals(1, policy.recordFailureCalls);
@@ -167,7 +167,7 @@ class StandaloneLoginFlowTest {
     assertEquals(0, policy.recordSuccessCalls);
     assertEquals(0, policy.recordFailureCalls,
         "the policy short-circuit must not record success or failure");
-    assertTrue(audit.events.isEmpty(),
+    assertTrue(audit.events().isEmpty(),
         "no audit event must be emitted on a lockout short-circuit");
     assertFalse(SubjectStores.subjectStore().currentSubject(String.class).isPresent());
   }
@@ -225,16 +225,6 @@ class StandaloneLoginFlowTest {
         () -> new StandaloneLoginFlow<String, String>(auth, null));
   }
 
-  // ── Helpers ────────────────────────────────────────────────────
-
-  @SuppressWarnings("unchecked")
-  private <T extends AuditEvent> T singleEvent(Class<T> type) {
-    List<T> hits = audit.events.stream().filter(type::isInstance).map(e -> (T) e).toList();
-    assertEquals(1, hits.size(),
-        "expected exactly one " + type.getSimpleName() + " event; got: " + audit.events);
-    return hits.get(0);
-  }
-
   // ── Fixtures ──────────────────────────────────────────────────
 
   private static class StubAuth implements AuthenticationService<String, String> {
@@ -258,12 +248,6 @@ class StandaloneLoginFlowTest {
     @Override public LoginAttemptDecision beforeAttempt(LoginAttemptContext ctx) { return next; }
     @Override public void recordSuccess(LoginAttemptContext ctx) { recordSuccessCalls++; }
     @Override public void recordFailure(LoginAttemptContext ctx) { recordFailureCalls++; }
-  }
-
-  private static final class RecordingAudit implements SecurityAuditService {
-    final List<AuditEvent> events = new ArrayList<>();
-    @Override public void publish(AuditEvent event) { events.add(event); }
-    @Override public List<AuditEvent> query(AuditQuery q) { return List.of(); }
   }
 
   /** Tiny in-memory SubjectStore so tests don't rely on SPI resolution. */

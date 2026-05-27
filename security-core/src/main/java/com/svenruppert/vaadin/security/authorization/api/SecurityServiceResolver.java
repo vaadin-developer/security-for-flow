@@ -25,10 +25,14 @@ import com.svenruppert.vaadin.security.logout.NoopLogoutService;
 import com.svenruppert.vaadin.security.logout.SubjectClearingLogoutService;
 import com.svenruppert.vaadin.security.authentication.PasswordHasher;
 import com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher;
+import com.svenruppert.vaadin.security.authorization.api.roles.NoopRoleHierarchy;
+import com.svenruppert.vaadin.security.authorization.api.roles.RoleHierarchy;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.vaadin.security.bruteforce.NoopLoginAttemptPolicy;
 import com.svenruppert.vaadin.security.policy.impl.InMemoryPolicyRegistry;
+import com.svenruppert.vaadin.security.policy.impl.InMemoryResourceResolverRegistry;
 import com.svenruppert.vaadin.security.policy.spi.PolicyRegistry;
+import com.svenruppert.vaadin.security.policy.spi.ResourceResolverRegistry;
 import com.svenruppert.vaadin.security.session.NoopSessionPolicy;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
 
@@ -78,6 +82,15 @@ public final class SecurityServiceResolver {
       new AtomicReference<>();
   private static final AtomicReference<PolicyRegistry> POLICY_REGISTRY_REF =
       new AtomicReference<>();
+  private static final AtomicReference<ResourceResolverRegistry> RESOURCE_RESOLVER_REGISTRY_REF =
+      new AtomicReference<>();
+  private static final AtomicReference<RoleHierarchy> ROLE_HIERARCHY_REF =
+      new AtomicReference<>();
+  private static final AtomicReference<String> STEP_UP_ROUTE_NAME_REF =
+      new AtomicReference<>();
+
+  /** Default route name an adapter reroutes to when a policy demands step-up. */
+  public static final String DEFAULT_STEP_UP_ROUTE_NAME = "step-up";
 
   private SecurityServiceResolver() {
   }
@@ -600,6 +613,168 @@ public final class SecurityServiceResolver {
     POLICY_REGISTRY_REF.set(registry);
   }
 
+  // ── ResourceResolverRegistry ──────────────────────────────────
+
+  /**
+   * Returns the registered {@link ResourceResolverRegistry}, or a
+   * fresh {@link InMemoryResourceResolverRegistry} when none is
+   * configured. Like the audit / policy accessors, this method
+   * <strong>never</strong> throws — resource resolution is optional
+   * infrastructure for applications that use
+   * {@code ResourcePredicates}. The fallback registry is cached so
+   * resolvers registered at startup remain visible.
+   *
+   * @return the resolved registry, never {@code null}
+   */
+  public static ResourceResolverRegistry resourceResolverRegistry() {
+    ResourceResolverRegistry cached = RESOURCE_RESOLVER_REGISTRY_REF.get();
+    if (cached != null) {
+      return cached;
+    }
+
+    ResourceResolverRegistry loaded = findSingleService(
+        ResourceResolverRegistry.class,
+        ServiceLoader.load(ResourceResolverRegistry.class))
+        .orElseGet(InMemoryResourceResolverRegistry::new);
+
+    RESOURCE_RESOLVER_REGISTRY_REF.compareAndSet(null, loaded);
+    return RESOURCE_RESOLVER_REGISTRY_REF.get();
+  }
+
+  /**
+   * Returns the SPI-registered {@link ResourceResolverRegistry}, or
+   * empty when only the default {@link InMemoryResourceResolverRegistry}
+   * fallback is in use.
+   *
+   * @return the SPI-registered registry, or empty
+   */
+  public static Optional<ResourceResolverRegistry> findResourceResolverRegistry() {
+    ResourceResolverRegistry cached = RESOURCE_RESOLVER_REGISTRY_REF.get();
+    if (cached != null && !(cached instanceof InMemoryResourceResolverRegistry)) {
+      return Optional.of(cached);
+    }
+    if (cached instanceof InMemoryResourceResolverRegistry) {
+      return Optional.empty();
+    }
+
+    Optional<ResourceResolverRegistry> loaded = findSingleService(
+        ResourceResolverRegistry.class,
+        ServiceLoader.load(ResourceResolverRegistry.class));
+    loaded.ifPresent(registry -> RESOURCE_RESOLVER_REGISTRY_REF.compareAndSet(null, registry));
+    return loaded;
+  }
+
+  /**
+   * Replaces the cached {@link ResourceResolverRegistry}. Intended
+   * for tests and for applications that prefer programmatic wiring
+   * over SPI.
+   *
+   * @param registry the registry, or {@code null} to clear
+   */
+  public static void setResourceResolverRegistry(ResourceResolverRegistry registry) {
+    RESOURCE_RESOLVER_REGISTRY_REF.set(registry);
+  }
+
+  // ── RoleHierarchy ─────────────────────────────────────────────
+
+  /**
+   * Returns the registered {@link RoleHierarchy}, or
+   * {@link NoopRoleHierarchy#INSTANCE} when none is configured. Like
+   * the audit / policy accessors, this method <strong>never</strong>
+   * throws — role inheritance is optional infrastructure.
+   *
+   * @return the resolved hierarchy, never {@code null}
+   */
+  public static RoleHierarchy roleHierarchy() {
+    RoleHierarchy cached = ROLE_HIERARCHY_REF.get();
+    if (cached != null) {
+      return cached;
+    }
+
+    RoleHierarchy loaded = findSingleService(
+        RoleHierarchy.class,
+        ServiceLoader.load(RoleHierarchy.class))
+        .orElse(NoopRoleHierarchy.INSTANCE);
+
+    ROLE_HIERARCHY_REF.compareAndSet(null, loaded);
+    return ROLE_HIERARCHY_REF.get();
+  }
+
+  /**
+   * Returns the SPI-registered {@link RoleHierarchy}, or empty when
+   * only the {@link NoopRoleHierarchy} fallback is in use.
+   *
+   * @return the SPI-registered hierarchy, or empty
+   */
+  public static Optional<RoleHierarchy> findRoleHierarchy() {
+    RoleHierarchy cached = ROLE_HIERARCHY_REF.get();
+    if (cached != null && cached != NoopRoleHierarchy.INSTANCE) {
+      return Optional.of(cached);
+    }
+    if (cached == NoopRoleHierarchy.INSTANCE) {
+      return Optional.empty();
+    }
+
+    Optional<RoleHierarchy> loaded = findSingleService(
+        RoleHierarchy.class,
+        ServiceLoader.load(RoleHierarchy.class));
+    loaded.ifPresent(hierarchy -> ROLE_HIERARCHY_REF.compareAndSet(null, hierarchy));
+    return loaded;
+  }
+
+  /**
+   * Replaces the cached {@link RoleHierarchy}. Intended for tests and
+   * for applications that prefer programmatic wiring over SPI.
+   *
+   * @param hierarchy the hierarchy, or {@code null} to clear
+   */
+  public static void setRoleHierarchy(RoleHierarchy hierarchy) {
+    ROLE_HIERARCHY_REF.set(hierarchy);
+  }
+
+  // ── Step-up route ─────────────────────────────────────────────
+
+  /**
+   * Returns the route name a Vaadin adapter reroutes to when a
+   * {@link AuthorizationDecision.StepUpRequired} is mapped. Defaults
+   * to {@link #DEFAULT_STEP_UP_ROUTE_NAME}; can be overridden via
+   * {@link #setStepUpRouteName(String)} at application bootstrap.
+   *
+   * @return non-blank route name, never {@code null}
+   */
+  public static String stepUpRouteName() {
+    String configured = STEP_UP_ROUTE_NAME_REF.get();
+    return configured == null ? DEFAULT_STEP_UP_ROUTE_NAME : configured;
+  }
+
+  /**
+   * Returns the explicitly configured step-up route name, or empty
+   * when only the {@link #DEFAULT_STEP_UP_ROUTE_NAME} fallback is in
+   * use. Symmetric to the other {@code findXxx()} accessors so tests
+   * and bootstrap code can distinguish "default" from "configured".
+   *
+   * @return configured route name, or empty
+   */
+  public static Optional<String> findStepUpRouteName() {
+    return Optional.ofNullable(STEP_UP_ROUTE_NAME_REF.get());
+  }
+
+  /**
+   * Overrides the step-up route name. Pass {@code null} to fall back
+   * to {@link #DEFAULT_STEP_UP_ROUTE_NAME}. Adapter-side routing reads
+   * the value on every navigation, so reconfiguration takes effect
+   * immediately.
+   *
+   * @param routeName non-blank route name, or {@code null} to reset
+   * @throws IllegalArgumentException if {@code routeName} is blank
+   */
+  public static void setStepUpRouteName(String routeName) {
+    if (routeName != null && routeName.isBlank()) {
+      throw new IllegalArgumentException("stepUpRouteName must not be blank");
+    }
+    STEP_UP_ROUTE_NAME_REF.set(routeName);
+  }
+
   // ── Reset (for testing) ────────────────────────────────────────
 
   /**
@@ -617,6 +792,9 @@ public final class SecurityServiceResolver {
     PASSWORD_HASHER_REF.set(null);
     LOGOUT_SERVICE_REF.set(null);
     POLICY_REGISTRY_REF.set(null);
+    RESOURCE_RESOLVER_REGISTRY_REF.set(null);
+    ROLE_HIERARCHY_REF.set(null);
+    STEP_UP_ROUTE_NAME_REF.set(null);
     SubjectStores.reset();
   }
 

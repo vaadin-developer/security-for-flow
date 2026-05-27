@@ -16,9 +16,6 @@
  */
 package com.svenruppert.vaadin.security.demo.app.browserless;
 
-import com.svenruppert.vaadin.security.audit.AuditEvent;
-import com.svenruppert.vaadin.security.audit.AuditQuery;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.audit.SessionInvalidated;
 import com.svenruppert.vaadin.security.authorization.LoginView;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
@@ -33,6 +30,7 @@ import com.svenruppert.vaadin.security.demo.app.views.MyLoginView;
 import com.svenruppert.vaadin.security.session.SessionContext;
 import com.svenruppert.vaadin.security.session.SessionDecision;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
+import com.svenruppert.vaadin.security.test.RecordingAuditSink;
 import com.vaadin.browserless.BrowserlessTest;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.textfield.PasswordField;
@@ -42,9 +40,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -69,7 +65,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("MyLoginView — session-id rotation honour (B3)")
 class SessionRotationBrowserlessTest extends BrowserlessTest {
 
-  private final RecordingAudit audit = new RecordingAudit();
+  private final RecordingAuditSink audit = new RecordingAuditSink();
   private final AtomicReference<SessionContext<Object>> capturedOnLoginContext = new AtomicReference<>();
 
   @BeforeEach
@@ -111,12 +107,12 @@ class SessionRotationBrowserlessTest extends BrowserlessTest {
     assertNotNull(capturedOnLoginContext.get(),
         "SessionPolicy.onLogin must be called after credentials succeed");
 
-    SessionInvalidated event = audit.events.stream()
+    SessionInvalidated event = audit.events().stream()
         .filter(SessionInvalidated.class::isInstance)
         .map(SessionInvalidated.class::cast)
         .findFirst()
         .orElseThrow(() -> new AssertionError(
-            "expected one SessionInvalidated event for the rotation; got: " + audit.events));
+            "expected one SessionInvalidated event for the rotation; got: " + audit.events()));
 
     assertEquals("RotationAfterLogin", event.reason(),
         "SessionInvalidated.reason must propagate from the SessionDecision.Invalidate");
@@ -157,11 +153,4 @@ class SessionRotationBrowserlessTest extends BrowserlessTest {
     }
   }
 
-  private static final class RecordingAudit implements SecurityAuditService {
-    final List<AuditEvent> events = new ArrayList<>();
-
-    @Override public void publish(AuditEvent event) { events.add(event); }
-
-    @Override public List<AuditEvent> query(AuditQuery query) { return List.of(); }
-  }
 }

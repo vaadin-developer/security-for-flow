@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DisplayName("AuthorizationDecision")
 class AuthorizationDecisionTest {
@@ -33,5 +34,52 @@ class AuthorizationDecisionTest {
         AuthorizationDecision.unauthenticated("login")).reason());
     assertEquals("missing", ((AuthorizationDecision.Forbidden)
         AuthorizationDecision.forbidden("missing")).reason());
+  }
+
+  @Test
+  @DisplayName("stepUpRequired factory returns StepUpRequired with reason + method")
+  void stepUpFactory() {
+    AuthorizationDecision.StepUpRequired stepUp = assertInstanceOf(
+        AuthorizationDecision.StepUpRequired.class,
+        AuthorizationDecision.stepUpRequired("needs mfa", "MFA"));
+    assertEquals("needs mfa", stepUp.reason());
+    assertEquals("MFA", stepUp.method());
+  }
+
+  @Test
+  @DisplayName("StepUpRequired normalises null reason to empty string")
+  void stepUpNullReasonNormalised() {
+    AuthorizationDecision.StepUpRequired stepUp = new AuthorizationDecision.StepUpRequired(
+        null, "MFA");
+    assertEquals("", stepUp.reason());
+  }
+
+  @Test
+  @DisplayName("StepUpRequired rejects null and blank method")
+  void stepUpRejectsBlankMethod() {
+    assertThrows(IllegalArgumentException.class,
+        () -> new AuthorizationDecision.StepUpRequired("r", null));
+    assertThrows(IllegalArgumentException.class,
+        () -> new AuthorizationDecision.StepUpRequired("r", ""));
+    assertThrows(IllegalArgumentException.class,
+        () -> new AuthorizationDecision.StepUpRequired("r", "   "));
+  }
+
+  @Test
+  @DisplayName("sealed switch covers all four variants exhaustively")
+  void sealedExhaustiveness() {
+    assertEquals("g", describe(AuthorizationDecision.granted()));
+    assertEquals("u", describe(AuthorizationDecision.unauthenticated("x")));
+    assertEquals("f", describe(AuthorizationDecision.forbidden("x")));
+    assertEquals("s", describe(AuthorizationDecision.stepUpRequired("x", "MFA")));
+  }
+
+  private static String describe(AuthorizationDecision decision) {
+    return switch (decision) {
+      case AuthorizationDecision.Granted ignored -> "g";
+      case AuthorizationDecision.Unauthenticated ignored -> "u";
+      case AuthorizationDecision.Forbidden ignored -> "f";
+      case AuthorizationDecision.StepUpRequired ignored -> "s";
+    };
   }
 }

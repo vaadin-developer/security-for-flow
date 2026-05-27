@@ -189,6 +189,10 @@ public final class Secured {
         case AuthorizationDecision.Unauthenticated u -> AccessDecision.reroute("login", false);
         case AuthorizationDecision.Forbidden f -> AccessDecision.deniedWithError(
             SecurityException.class, f.reason());
+        case AuthorizationDecision.StepUpRequired stepUp -> AccessDecision.deniedWithError(
+            SecurityException.class,
+            "StepUpRequired:" + stepUp.method()
+                + (stepUp.reason().isEmpty() ? "" : ":" + stepUp.reason()));
       };
     }
     throw new IllegalStateException(

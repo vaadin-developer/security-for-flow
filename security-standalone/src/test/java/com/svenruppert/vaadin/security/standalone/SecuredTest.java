@@ -238,6 +238,21 @@ class SecuredTest {
         "Reroute decision must mention the target route in the exception message");
   }
 
+  // ── AuthorizationEvaluator StepUp branch ──────────────────────
+
+  @Test
+  @DisplayName("AuthorizationEvaluator returns StepUpRequired → AccessDeniedException with 'StepUpRequired:<method>:<reason>'")
+  void authorizationEvaluatorStepUpThrows() {
+    bindSubject("alice", Set.of(), Set.of());
+    Service secured = Secured.wrap(Service.class, new ServiceImpl());
+
+    AccessDeniedException ex = assertThrows(AccessDeniedException.class,
+        secured::sensitiveAction);
+    assertEquals("StepUpRequired:MFA:needs mfa", ex.getMessage(),
+        "StepUpRequired must surface as AccessDeniedException with the "
+            + "'StepUpRequired:<method>:<reason>' message produced by Secured.run()");
+  }
+
   // ── Checked-exception propagation ─────────────────────────────
 
   @Test
@@ -297,6 +312,9 @@ class SecuredTest {
     @CustomCheck
     void customCheck();
 
+    @DemandsStepUp
+    void sensitiveAction();
+
     String openOperation();
   }
 
@@ -312,6 +330,8 @@ class SecuredTest {
 
     @Override public void customCheck() { /* noop */ }
 
+    @Override public void sensitiveAction() { /* noop */ }
+
     @Override public String openOperation() { return "open"; }
   }
 
@@ -321,7 +341,26 @@ class SecuredTest {
     }
     @Override public void adminAction() { }
     @Override public void customCheck() { }
+    @Override public void sensitiveAction() { }
     @Override public String openOperation() { return ""; }
+  }
+
+  // Custom annotation + AuthorizationEvaluator that always returns
+  // StepUpRequired — exercises the AuthorizationDecision branch of
+  // Secured.run().
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ElementType.METHOD, ElementType.TYPE})
+  @SecurityAnnotation(StepUpDemandingEvaluator.class)
+  public @interface DemandsStepUp { }
+
+  public static class StepUpDemandingEvaluator
+      implements com.svenruppert.vaadin.security.authorization.api.AuthorizationEvaluator<DemandsStepUp> {
+    @Override
+    public com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision evaluate(
+        AccessContext context, DemandsStepUp annotation) {
+      return com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision
+          .stepUpRequired("needs mfa", "MFA");
+    }
   }
 
   @RequiresRole("ADMIN")

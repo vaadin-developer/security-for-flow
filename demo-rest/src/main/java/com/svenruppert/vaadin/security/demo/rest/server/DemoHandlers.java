@@ -505,6 +505,12 @@ public final class DemoHandlers {
         map.put("decision", e.decision());
         map.put("reason", e.reason());
       }
+      case com.svenruppert.vaadin.security.audit.StepUpChallenged e -> {
+        map.put("subjectId", e.subjectId());
+        map.put("route", e.route());
+        map.put("method", e.method());
+        map.put("reason", e.reason());
+      }
     }
     return map;
   }

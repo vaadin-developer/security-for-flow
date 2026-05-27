@@ -16,21 +16,16 @@
  */
 package com.svenruppert.vaadin.security.demo.app.security.model;
 
-import com.svenruppert.vaadin.security.audit.AuditEvent;
-import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.RoleAssigned;
 import com.svenruppert.vaadin.security.audit.RoleRevoked;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
+import com.svenruppert.vaadin.security.test.RecordingAuditSink;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -40,12 +35,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("InMemoryDemoUserDirectory — assignRole / revokeRole")
 class InMemoryDemoUserDirectoryRoleMutationTest {
 
-  private RecordingAudit audit;
+  private RecordingAuditSink audit;
 
   @BeforeEach
   void setUp() {
     SecurityServiceResolver.resetAll();
-    audit = new RecordingAudit();
+    audit = new RecordingAuditSink();
     SecurityServiceResolver.setSecurityAuditService(audit);
   }
 
@@ -58,7 +53,7 @@ class InMemoryDemoUserDirectoryRoleMutationTest {
   @DisplayName("assignRole adds the role to the stored MyUser and emits RoleAssigned")
   void assignRoleAddsAndAudits() {
     InMemoryDemoUserDirectory directory = new InMemoryDemoUserDirectory(new Pbkdf2PasswordHasher());
-    audit.events.clear(); // discard the seeded UserCreated events
+    audit.clear(); // discard the seeded UserCreated events
 
     MyUser before = directory.findById(2L).orElseThrow();
     assertFalse(before.roles().contains(AuthorizationRole.ADMIN));
@@ -67,8 +62,8 @@ class InMemoryDemoUserDirectoryRoleMutationTest {
 
     MyUser after = directory.findById(2L).orElseThrow();
     assertTrue(after.roles().contains(AuthorizationRole.ADMIN));
-    assertEquals(1, audit.events.size());
-    RoleAssigned event = assertInstanceOf(RoleAssigned.class, audit.events.get(0));
+    assertEquals(1, audit.events().size());
+    RoleAssigned event = assertInstanceOf(RoleAssigned.class, audit.events().get(0));
     assertEquals("2", event.subjectId());
     assertEquals("ADMIN", event.role());
   }
@@ -77,11 +72,11 @@ class InMemoryDemoUserDirectoryRoleMutationTest {
   @DisplayName("assignRole for a role the user already has is a no-op (no audit)")
   void assignRoleIdempotent() {
     InMemoryDemoUserDirectory directory = new InMemoryDemoUserDirectory(new Pbkdf2PasswordHasher());
-    audit.events.clear(); // discard the seeded UserCreated events
+    audit.clear(); // discard the seeded UserCreated events
 
     directory.assignRole(2L, AuthorizationRole.USER); // user already has USER
 
-    assertEquals(0, audit.events.size(),
+    assertEquals(0, audit.events().size(),
         "idempotent assignment must not emit a RoleAssigned event");
   }
 
@@ -89,17 +84,17 @@ class InMemoryDemoUserDirectoryRoleMutationTest {
   @DisplayName("revokeRole removes the role and emits RoleRevoked")
   void revokeRoleRemovesAndAudits() {
     InMemoryDemoUserDirectory directory = new InMemoryDemoUserDirectory(new Pbkdf2PasswordHasher());
-    audit.events.clear(); // discard the seeded UserCreated events
+    audit.clear(); // discard the seeded UserCreated events
 
     directory.assignRole(2L, AuthorizationRole.NERD);
-    audit.events.clear();
+    audit.clear();
 
     directory.revokeRole(2L, AuthorizationRole.NERD);
 
     MyUser after = directory.findById(2L).orElseThrow();
     assertFalse(after.roles().contains(AuthorizationRole.NERD));
-    assertEquals(1, audit.events.size());
-    RoleRevoked event = assertInstanceOf(RoleRevoked.class, audit.events.get(0));
+    assertEquals(1, audit.events().size());
+    RoleRevoked event = assertInstanceOf(RoleRevoked.class, audit.events().get(0));
     assertEquals("2", event.subjectId());
     assertEquals("NERD", event.role());
   }
@@ -108,30 +103,30 @@ class InMemoryDemoUserDirectoryRoleMutationTest {
   @DisplayName("revokeRole for a role the user doesn't have is a no-op (no audit)")
   void revokeRoleIdempotent() {
     InMemoryDemoUserDirectory directory = new InMemoryDemoUserDirectory(new Pbkdf2PasswordHasher());
-    audit.events.clear(); // discard the seeded UserCreated events
+    audit.clear(); // discard the seeded UserCreated events
 
     directory.revokeRole(2L, AuthorizationRole.ADMIN); // user only has USER
 
-    assertEquals(0, audit.events.size());
+    assertEquals(0, audit.events().size());
   }
 
   @Test
   @DisplayName("unknown user id is a silent no-op")
   void unknownIdNoOp() {
     InMemoryDemoUserDirectory directory = new InMemoryDemoUserDirectory(new Pbkdf2PasswordHasher());
-    audit.events.clear(); // discard the seeded UserCreated events
+    audit.clear(); // discard the seeded UserCreated events
 
     directory.assignRole(999L, AuthorizationRole.ADMIN);
     directory.revokeRole(999L, AuthorizationRole.USER);
 
-    assertEquals(0, audit.events.size());
+    assertEquals(0, audit.events().size());
   }
 
   @Test
   @DisplayName("After assign + revoke the user reaches its original role set; logins still work")
   void roundTripPreservesLogin() {
     InMemoryDemoUserDirectory directory = new InMemoryDemoUserDirectory(new Pbkdf2PasswordHasher());
-    audit.events.clear(); // discard the seeded UserCreated events
+    audit.clear(); // discard the seeded UserCreated events
 
     directory.assignRole(2L, AuthorizationRole.ADMIN);
     directory.revokeRole(2L, AuthorizationRole.ADMIN);
@@ -141,17 +136,4 @@ class InMemoryDemoUserDirectoryRoleMutationTest {
     assertTrue(directory.checkCredentials(new Credentials("user", "user")));
   }
 
-  // ── Fixtures ──────────────────────────────────────────────────
-
-  private static final class RecordingAudit implements SecurityAuditService {
-    final List<AuditEvent> events = new ArrayList<>();
-
-    @Override public void publish(AuditEvent event) {
-      events.add(event);
-    }
-
-    @Override public List<AuditEvent> query(AuditQuery query) {
-      return List.of();
-    }
-  }
 }

@@ -21,6 +21,7 @@ import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver
 import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 import com.svenruppert.vaadin.security.policy.api.Policy;
+import com.svenruppert.vaadin.security.policy.api.PolicyDecision;
 import com.svenruppert.vaadin.security.policy.api.SubjectPredicates;
 import com.svenruppert.vaadin.security.policy.impl.InMemoryPolicyRegistry;
 import org.junit.jupiter.api.AfterEach;
@@ -29,6 +30,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -56,6 +58,9 @@ class RestPolicyIntegrationTest {
     registry.register(Policy.named("test.policy")
         .allowIf(SubjectPredicates.hasRole("ADMIN"))
         .deny("must be ADMIN")
+        .build());
+    registry.register(Policy.named("test.step-up")
+        .stepUpRequiredIf(c -> true, PolicyDecision.StepUpMethod.MFA, "needs mfa")
         .build());
     SecurityServiceResolver.setPolicyRegistry(registry);
   }
@@ -145,8 +150,33 @@ class RestPolicyIntegrationTest {
     assertFalse(executed.get());
   }
 
+  @Test
+  @DisplayName("StepUpRequired policy yields 401 + RFC-7235 challenge, handler does not run")
+  void stepUpReturns401WithChallenge() throws NoSuchMethodException {
+    RecordingResponse response = new RecordingResponse();
+    AtomicBoolean executed = new AtomicBoolean();
+    RestAuthorizationFilter filter = new RestAuthorizationFilter(
+        request -> Optional.of(subject(Set.of(new RoleName("USER")))));
+
+    filter.authorizeAndHandle(
+        request(),
+        response,
+        (req, res) -> executed.set(true),
+        stepUpSecuredMethod());
+
+    assertEquals(401, response.status);
+    assertEquals("Unauthorized", response.body);
+    assertEquals("StepUp method=\"MFA\"",
+        response.headers.get(RestHeaders.WWW_AUTHENTICATE));
+    assertFalse(executed.get(), "handler must not run when step-up is required");
+  }
+
   private static Method securedMethod() throws NoSuchMethodException {
     return HandlerFixture.class.getDeclaredMethod("delete");
+  }
+
+  private static Method stepUpSecuredMethod() throws NoSuchMethodException {
+    return HandlerFixture.class.getDeclaredMethod("sensitive");
   }
 
   private static RestRequest request() {
@@ -162,11 +192,16 @@ class RestPolicyIntegrationTest {
     @RequiresPolicy("test.policy")
     void delete() {
     }
+
+    @RequiresPolicy("test.step-up")
+    void sensitive() {
+    }
   }
 
   static final class RecordingResponse implements RestResponse {
     int status = 200;
     String body;
+    final Map<String, String> headers = new LinkedHashMap<>();
 
     @Override
     public void status(int statusCode) {
@@ -176,6 +211,11 @@ class RestPolicyIntegrationTest {
     @Override
     public void body(String body) {
       this.body = body;
+    }
+
+    @Override
+    public void header(String name, String value) {
+      headers.put(name, value);
     }
   }
 }

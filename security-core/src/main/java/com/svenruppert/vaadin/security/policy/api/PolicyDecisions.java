@@ -28,21 +28,32 @@ import static java.util.Objects.requireNonNull;
  *
  * <p>Mapping:
  * <ul>
- *   <li>{@code Allowed}        → {@code Granted}</li>
- *   <li>{@code Denied}         → {@code Forbidden(reason)}</li>
- *   <li>{@code StepUpRequired} → {@code Forbidden("StepUpRequired:<method>" + extra)}</li>
+ *   <li>{@code PolicyDecision.Allowed}        → {@code AuthorizationDecision.Granted}</li>
+ *   <li>{@code PolicyDecision.Denied}         → {@code AuthorizationDecision.Forbidden(reason)}</li>
+ *   <li>{@code PolicyDecision.StepUpRequired} → {@code AuthorizationDecision.StepUpRequired(reason, method)}</li>
  * </ul>
  *
- * <p>Until adapters learn to route a step-up challenge, the
- * {@code StepUpRequired} branch is collapsed to {@code Forbidden} with a
- * structured reason prefix. The prefix lets adapter-side mappers (or
- * later step-up adapters) recognise the case without breaking the sealed
- * API.
+ * <p>Before PR-9a the bridge collapsed {@code StepUpRequired} to
+ * {@code Forbidden} with a {@link #STEP_UP_REASON_PREFIX}-prefixed
+ * reason. Adapters that still rely on parsing that prefix can use the
+ * constant; new adapter code should switch on the typed
+ * {@link AuthorizationDecision.StepUpRequired} variant directly.
  */
 @ExperimentalSecurityApi
 public final class PolicyDecisions {
 
-  /** Reason prefix used when a {@code StepUpRequired} is collapsed to {@code Forbidden}. */
+  /**
+   * Legacy reason prefix used when a {@code StepUpRequired} was
+   * collapsed to {@code Forbidden}. No longer produced by the bridge
+   * since PR-9 (the bridge now returns
+   * {@link AuthorizationDecision.StepUpRequired} directly). Retained
+   * for downstream code that still parses the reason string.
+   *
+   * @deprecated since PR-9 — switch on
+   *             {@link AuthorizationDecision.StepUpRequired} instead
+   *             of parsing the {@code Forbidden} reason string.
+   */
+  @Deprecated(since = "00.70.00")
   public static final String STEP_UP_REASON_PREFIX = "StepUpRequired:";
 
   private PolicyDecisions() {
@@ -59,9 +70,8 @@ public final class PolicyDecisions {
     return switch (decision) {
       case PolicyDecision.Allowed ignored -> AuthorizationDecision.granted();
       case PolicyDecision.Denied denied -> AuthorizationDecision.forbidden(denied.reason());
-      case PolicyDecision.StepUpRequired stepUp -> AuthorizationDecision.forbidden(
-          STEP_UP_REASON_PREFIX + stepUp.method().name()
-              + (stepUp.reason().isEmpty() ? "" : ":" + stepUp.reason()));
+      case PolicyDecision.StepUpRequired stepUp ->
+          AuthorizationDecision.stepUpRequired(stepUp.reason(), stepUp.method().name());
     };
   }
 }

@@ -24,6 +24,16 @@ import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
 public final class HttpStatusDecisionMapper {
 
   /**
+   * Auth scheme used in the {@code WWW-Authenticate} header when an
+   * adapter challenges for a step-up. The full header value follows
+   * RFC 7235 syntax: {@code StepUp method="<method>"}. The
+   * {@code method} parameter carries the mechanism token (e.g.
+   * {@code MFA}, {@code REAUTH}) lifted from
+   * {@link AuthorizationDecision.StepUpRequired#method()}.
+   */
+  public static final String STEP_UP_SCHEME = "StepUp";
+
+  /**
    * Applies a decision to the response.
    *
    * @param decision decision
@@ -41,6 +51,17 @@ public final class HttpStatusDecisionMapper {
       case AuthorizationDecision.Forbidden(String ignored) -> {
         response.status(403);
         response.body("Forbidden");
+        yield false;
+      }
+      case AuthorizationDecision.StepUpRequired stepUp -> {
+        // RFC 7235 — return 401 with a syntactically-conformant
+        // challenge so strict HTTP clients (curl --location, Postman,
+        // OWASP tools) accept the response without ad-hoc parsing.
+        response.status(401);
+        response.header(
+            RestHeaders.WWW_AUTHENTICATE,
+            STEP_UP_SCHEME + " method=\"" + stepUp.method() + "\"");
+        response.body("Unauthorized");
         yield false;
       }
     };

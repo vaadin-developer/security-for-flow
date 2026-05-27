@@ -57,13 +57,14 @@ public abstract class RoleBasedAccessEvaluator<T extends Annotation, U>
         }
 
         final AuthorizationService<U> authorizationService = this.authorizationService();
+        final RoleHierarchy hierarchy = SecurityServiceResolver.roleHierarchy();
 
-        boolean hasRole = currentSubject.stream()
+        Set<RoleName> heldRoles = currentSubject.stream()
                 .map(authorizationService::rolesFor)
                 .flatMap(hr -> hr.roleNames().stream())
-                .anyMatch(roleNames::contains);
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
 
-        if (hasRole) {
+        if (RoleMatcher.containsAnyImplied(heldRoles, roleNames, hierarchy)) {
             return AccessDecision.granted();
         }
 

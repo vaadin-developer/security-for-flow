@@ -14,7 +14,7 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package com.svenruppert.vaadin.security.authorization.impl;
+package com.svenruppert.vaadin.security.test;
 
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
 
@@ -22,10 +22,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-/** Test-only thread-unsafe subject store keyed by class. */
+/**
+ * Simple {@link SubjectStore} backed by a per-instance {@link HashMap}.
+ * <p>
+ * Thread-<em>unsafe</em> on purpose: tests run one assertion thread,
+ * and the simpler implementation makes mutations easy to reason about
+ * in stack traces.
+ */
 public final class InMemorySubjectStore implements SubjectStore {
 
   private final Map<Class<?>, Object> store = new HashMap<>();
+
+  /** Creates an empty store. */
+  public InMemorySubjectStore() {
+  }
 
   @Override
   public <T> Optional<T> currentSubject(Class<T> subjectType) {

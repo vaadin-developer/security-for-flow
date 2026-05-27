@@ -17,36 +17,78 @@
 package com.svenruppert.vaadin.security.demo.restclient.security;
 
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.demo.restclient.security.resource.DemoDocumentResolver;
 import com.svenruppert.vaadin.security.policy.api.Policy;
+import com.svenruppert.vaadin.security.policy.api.PolicyDecision;
+import com.svenruppert.vaadin.security.policy.api.ResourcePredicates;
 import com.svenruppert.vaadin.security.policy.api.SubjectPredicates;
 import com.svenruppert.vaadin.security.policy.spi.PolicyRegistry;
+import com.svenruppert.vaadin.security.policy.spi.ResourceResolverRegistry;
 import com.vaadin.flow.server.ServiceInitEvent;
 import com.vaadin.flow.server.VaadinServiceInitListener;
 
 /**
- * Registers the demo-side policies into the
- * {@link PolicyRegistry} resolved through
- * {@link SecurityServiceResolver}. Discovered via
+ * Registers the demo-side policies and resource resolvers into the
+ * {@link PolicyRegistry} and {@link ResourceResolverRegistry}
+ * resolved through {@link SecurityServiceResolver}. Discovered via
  * {@code META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener}.
  *
- * <p>The single demo policy {@code documents.editor-or-admin}
- * demonstrates how the new {@code @RequiresPolicy} annotation can
- * combine role- and permission-based admission in a single rule —
- * something {@code @RequiresRole} / {@code @RequiresPermission}
- * cannot express on their own.
+ * <p>Two demo policies ship with this listener:
+ * <ul>
+ *   <li>{@link #POLICY_EDITOR_OR_ADMIN} — combines role- and
+ *       permission-based admission in a single rule.</li>
+ *   <li>{@link #POLICY_DOCUMENT_OWNER_OR_ADMIN} — combines role-based
+ *       admission with per-resource ownership lookup via
+ *       {@link ResourcePredicates#ownerMatchesSubject(String, String)}.</li>
+ * </ul>
  */
 public final class DemoPolicyInitListener implements VaadinServiceInitListener {
 
-  /** Name of the demo policy referenced by {@code @RequiresPolicy}. */
+  /** Name of the role-or-permission demo policy. */
   public static final String POLICY_EDITOR_OR_ADMIN = "documents.editor-or-admin";
+
+  /** Name of the resource-based demo policy. */
+  public static final String POLICY_DOCUMENT_OWNER_OR_ADMIN = "document.owner-or-admin";
+
+  /**
+   * Demo policy that unconditionally returns
+   * {@link PolicyDecision.StepUpMethod#MFA StepUpRequired(MFA)} —
+   * lets the Vaadin adapter reroute to the registered step-up route
+   * without needing a real MFA backend.
+   */
+  public static final String POLICY_SENSITIVE_REQUIRES_MFA = "sensitive.requires-mfa";
 
   @Override
   public void serviceInit(ServiceInitEvent event) {
+    registerResourceResolvers();
+    registerPolicies();
+  }
+
+  private static void registerResourceResolvers() {
+    ResourceResolverRegistry registry = SecurityServiceResolver.resourceResolverRegistry();
+    registry.register(new DemoDocumentResolver());
+  }
+
+  private static void registerPolicies() {
     PolicyRegistry registry = SecurityServiceResolver.policyRegistry();
+
     registry.register(Policy.named(POLICY_EDITOR_OR_ADMIN)
         .allowIf(SubjectPredicates.hasAnyRole("ROLE_ADMIN", "ROLE_EDITOR"))
         .orIf(SubjectPredicates.hasPermission("document:write"))
         .deny("must be ADMIN/EDITOR or hold document:write")
+        .build());
+
+    registry.register(Policy.named(POLICY_DOCUMENT_OWNER_OR_ADMIN)
+        .allowIf(SubjectPredicates.hasRole("ROLE_ADMIN"))
+        .orIf(ResourcePredicates.ownerMatchesSubject(
+            DemoDocumentResolver.RESOURCE_TYPE,
+            DemoDocumentResolver.OWNER_ATTRIBUTE))
+        .deny("must be ADMIN or document owner")
+        .build());
+
+    registry.register(Policy.named(POLICY_SENSITIVE_REQUIRES_MFA)
+        .stepUpRequiredIf(ctx -> true, PolicyDecision.StepUpMethod.MFA,
+            "MFA challenge required for sensitive operations")
         .build());
   }
 }

@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.authorization;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresRole;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
-import com.svenruppert.vaadin.security.authorization.impl.InMemorySubjectStore;
+import com.svenruppert.vaadin.security.test.InMemorySubjectStore;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.internal.CurrentInstance;

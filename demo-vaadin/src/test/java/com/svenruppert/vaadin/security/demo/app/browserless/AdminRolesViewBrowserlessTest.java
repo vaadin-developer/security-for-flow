@@ -16,10 +16,7 @@
  */
 package com.svenruppert.vaadin.security.demo.app.browserless;
 
-import com.svenruppert.vaadin.security.audit.AuditEvent;
-import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.RoleAssigned;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.demo.app.security.bootstrap.BootstrapWiring;
@@ -28,6 +25,7 @@ import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
 import com.svenruppert.vaadin.security.demo.app.views.AdminRolesView;
 import com.svenruppert.vaadin.security.demo.app.views.MyLoginView;
+import com.svenruppert.vaadin.security.test.RecordingAuditSink;
 import com.vaadin.browserless.BrowserlessTest;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
@@ -41,9 +39,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -62,7 +58,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("AdminRolesView — Grid + Assign action")
 class AdminRolesViewBrowserlessTest extends BrowserlessTest {
 
-  private final RecordingAudit audit = new RecordingAudit();
+  private final RecordingAuditSink audit = new RecordingAuditSink();
 
   @BeforeEach
   void setUp() throws Exception {
@@ -127,12 +123,12 @@ class AdminRolesViewBrowserlessTest extends BrowserlessTest {
     assertTrue(after.roles().contains(AuthorizationRole.NERD),
         "Assign must grant NERD to the user");
 
-    RoleAssigned event = audit.events.stream()
+    RoleAssigned event = audit.events().stream()
         .filter(RoleAssigned.class::isInstance)
         .map(RoleAssigned.class::cast)
         .findFirst()
         .orElseThrow(() -> new AssertionError(
-            "expected one RoleAssigned event after Assign; got: " + audit.events));
+            "expected one RoleAssigned event after Assign; got: " + audit.events()));
     assertEquals("2", event.subjectId(),
         "RoleAssigned must carry the mutated user's id");
     assertEquals(AuthorizationRole.NERD.name(), event.role(),
@@ -171,11 +167,4 @@ class AdminRolesViewBrowserlessTest extends BrowserlessTest {
     field.set(null, null);
   }
 
-  private static final class RecordingAudit implements SecurityAuditService {
-    final List<AuditEvent> events = new ArrayList<>();
-
-    @Override public void publish(AuditEvent event) { events.add(event); }
-
-    @Override public List<AuditEvent> query(AuditQuery query) { return List.of(); }
-  }
 }

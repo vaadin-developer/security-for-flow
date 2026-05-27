@@ -133,6 +133,12 @@ public final class LoggingAuditSink implements AuditSink {
         appendField(sb, "decision", e.decision());
         appendField(sb, "reason", e.reason());
       }
+      case StepUpChallenged e -> {
+        appendField(sb, "subject", e.subjectId());
+        appendField(sb, "route", e.route());
+        appendField(sb, "method", e.method());
+        appendField(sb, "reason", e.reason());
+      }
     }
     return sb.toString();
   }

@@ -22,6 +22,7 @@ import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
+import com.svenruppert.vaadin.security.test.InMemorySubjectStore;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.router.BeforeEnterEvent;

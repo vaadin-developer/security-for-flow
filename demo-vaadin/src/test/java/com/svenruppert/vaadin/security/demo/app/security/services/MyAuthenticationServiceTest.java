@@ -28,13 +28,13 @@ import com.svenruppert.vaadin.security.demo.app.security.model.Credentials;
 import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectoryProvider;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
+import com.svenruppert.vaadin.security.test.RecordingAuditSink;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -50,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class MyAuthenticationServiceTest {
 
   private final MyAuthenticationService service = new MyAuthenticationService();
-  private final RecordingAudit audit = new RecordingAudit();
+  private final RecordingAuditSink audit = new RecordingAuditSink();
   private final CountingPolicy policy = new CountingPolicy();
 
   @BeforeEach
@@ -63,7 +63,7 @@ class MyAuthenticationServiceTest {
         new MyUser(1L, "Admin",
             EnumSet.of(AuthorizationRole.ADMIN, AuthorizationRole.USER)));
     // Clear UserCreated events emitted by addUser + the seeded user/demo
-    audit.events.clear();
+    audit.clear();
   }
 
   @AfterEach
@@ -77,7 +77,7 @@ class MyAuthenticationServiceTest {
   void nullCredentialsRejected() {
     assertFalse(service.checkCredentials(null));
     assertEquals(0, policy.beforeAttemptCalls);
-    assertEquals(0, audit.events.size());
+    assertEquals(0, audit.events().size());
   }
 
   @Test
@@ -92,7 +92,7 @@ class MyAuthenticationServiceTest {
         "recordSuccess must not fire when the gate denies the attempt");
     assertEquals(0, policy.recordFailureCalls,
         "recordFailure must not fire when the policy itself shorted the attempt");
-    assertTrue(audit.events.stream().noneMatch(LoginSucceeded.class::isInstance),
+    assertTrue(audit.events().stream().noneMatch(LoginSucceeded.class::isInstance),
         "no LoginSucceeded event for a lockout");
   }
 
@@ -105,7 +105,7 @@ class MyAuthenticationServiceTest {
 
     assertEquals(1, policy.recordSuccessCalls);
     assertEquals(0, policy.recordFailureCalls);
-    LoginSucceeded event = audit.events.stream()
+    LoginSucceeded event = audit.events().stream()
         .filter(LoginSucceeded.class::isInstance)
         .map(LoginSucceeded.class::cast)
         .findFirst()
@@ -122,7 +122,7 @@ class MyAuthenticationServiceTest {
 
     assertEquals(0, policy.recordSuccessCalls);
     assertEquals(1, policy.recordFailureCalls);
-    assertTrue(audit.events.stream().noneMatch(LoginSucceeded.class::isInstance),
+    assertTrue(audit.events().stream().noneMatch(LoginSucceeded.class::isInstance),
         "failed logins must not emit LoginSucceeded");
   }
 
@@ -176,14 +176,6 @@ class MyAuthenticationServiceTest {
   }
 
   // ── Fixtures ──────────────────────────────────────────────────
-
-  private static final class RecordingAudit implements SecurityAuditService {
-    final List<AuditEvent> events = new ArrayList<>();
-
-    @Override public void publish(AuditEvent event) { events.add(event); }
-
-    @Override public List<AuditEvent> query(AuditQuery q) { return List.of(); }
-  }
 
   private static final class CountingPolicy implements LoginAttemptPolicy {
     LoginAttemptDecision next = new LoginAttemptDecision.Allowed();

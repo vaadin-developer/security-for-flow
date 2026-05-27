@@ -22,6 +22,9 @@ import java.util.Optional;
 /** Helpers for working with {@link RestRequest} headers. */
 public final class RestHeaders {
 
+  /** Standard {@code WWW-Authenticate} response header name (RFC 7235). */
+  public static final String WWW_AUTHENTICATE = "WWW-Authenticate";
+
   private RestHeaders() {
   }
 

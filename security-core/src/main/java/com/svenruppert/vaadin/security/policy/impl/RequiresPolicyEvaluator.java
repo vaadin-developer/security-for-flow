@@ -28,11 +28,13 @@ import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 import com.svenruppert.vaadin.security.policy.api.PolicyContext;
 import com.svenruppert.vaadin.security.policy.api.PolicyDecision;
 import com.svenruppert.vaadin.security.policy.api.PolicyDecisions;
+import com.svenruppert.vaadin.security.policy.api.ResourceRef;
 import com.svenruppert.vaadin.security.policy.spi.PolicyRegistry;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Bridges {@link RequiresPolicy} into the existing
@@ -71,7 +73,9 @@ public final class RequiresPolicyEvaluator
   @Override
   public AuthorizationDecision evaluate(AccessContext context, RequiresPolicy annotation) {
     String policyName = annotation.value();
-    PolicyContext policyContext = new PolicyContext(context, policyName, Map.of());
+    Optional<ResourceRef> resourceRef = extractResourceRef(context);
+    PolicyContext policyContext = new PolicyContext(
+        context, policyName, resourceRef, Map.of());
 
     PolicyRegistry registry = SecurityServiceResolver.policyRegistry();
     PolicyDecision policyDecision = registry.evaluate(policyName, policyContext);
@@ -79,6 +83,22 @@ public final class RequiresPolicyEvaluator
     publish(policyDecision, policyContext);
 
     return PolicyDecisions.toAuthorizationDecision(policyDecision);
+  }
+
+  /**
+   * Extracts a {@link ResourceRef} from
+   * {@link AccessContext#attributes()} under the canonical
+   * {@link ResourceRef#ATTRIBUTE_KEY} key. Non-{@code ResourceRef}
+   * values are ignored — adapters that put something else under the
+   * key get a graceful {@code Optional.empty()} rather than a cast
+   * failure.
+   */
+  private static Optional<ResourceRef> extractResourceRef(AccessContext context) {
+    Object value = context.attributes().get(ResourceRef.ATTRIBUTE_KEY);
+    if (value instanceof ResourceRef ref) {
+      return Optional.of(ref);
+    }
+    return Optional.empty();
   }
 
   private static void publish(PolicyDecision decision, PolicyContext context) {

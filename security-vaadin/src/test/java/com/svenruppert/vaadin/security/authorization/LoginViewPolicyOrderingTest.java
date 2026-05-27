@@ -16,9 +16,6 @@
  */
 package com.svenruppert.vaadin.security.authorization;
 
-import com.svenruppert.vaadin.security.audit.AuditEvent;
-import com.svenruppert.vaadin.security.audit.AuditQuery;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.audit.SessionInvalidated;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.session.SessionContext;
@@ -26,6 +23,7 @@ import com.svenruppert.vaadin.security.session.SessionDecision;
 import com.svenruppert.vaadin.security.session.SessionMetadata;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
 import com.svenruppert.vaadin.security.session.SessionPolicyDecision;
+import com.svenruppert.vaadin.security.test.RecordingAuditSink;
 import com.vaadin.browserless.BrowserlessTest;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.textfield.PasswordField;
@@ -63,7 +61,7 @@ class LoginViewPolicyOrderingTest extends BrowserlessTest {
 
   private final List<String> calls = new ArrayList<>();
   private final RecordingSessionPolicy sessionPolicy = new RecordingSessionPolicy(calls);
-  private final RecordingAudit audit = new RecordingAudit();
+  private final RecordingAuditSink audit = new RecordingAuditSink();
 
   @BeforeEach
   void wire() {
@@ -141,8 +139,8 @@ class LoginViewPolicyOrderingTest extends BrowserlessTest {
     assertTrue(onLoginIndex >= 0 && navIndex > onLoginIndex,
         "SessionPolicy.onLogin must fire before navigateToApp; got: " + calls);
 
-    assertTrue(audit.events.stream().anyMatch(SessionInvalidated.class::isInstance),
-        "an Invalidate decision must publish a SessionInvalidated audit event; got: " + audit.events);
+    assertTrue(audit.events().stream().anyMatch(SessionInvalidated.class::isInstance),
+        "an Invalidate decision must publish a SessionInvalidated audit event; got: " + audit.events());
   }
 
   // ── Fixtures ──────────────────────────────────────────────────
@@ -192,9 +190,4 @@ class LoginViewPolicyOrderingTest extends BrowserlessTest {
     }
   }
 
-  static final class RecordingAudit implements SecurityAuditService {
-    final List<AuditEvent> events = new ArrayList<>();
-    @Override public void publish(AuditEvent event) { events.add(event); }
-    @Override public List<AuditEvent> query(AuditQuery q) { return List.of(); }
-  }
 }

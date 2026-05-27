@@ -76,7 +76,7 @@ class PolicyContextTest {
   @DisplayName("constructor rejects null resourceAttributes")
   void rejectsNullAttributes() {
     assertThrows(NullPointerException.class,
-        () -> new PolicyContext(accessContext(), "policy.x", null));
+        () -> new PolicyContext(accessContext(), "policy.x", (Map<String, Object>) null));
   }
 
   @Test
@@ -110,5 +110,47 @@ class PolicyContextTest {
   void subjectAbsent() {
     PolicyContext ctx = new PolicyContext(accessContext(), "policy.x");
     assertTrue(ctx.subject().isEmpty());
+  }
+
+  @Test
+  @DisplayName("two-arg + three-arg ctors default resourceRef to empty Optional")
+  void twoAndThreeArgCtorsHaveEmptyResourceRef() {
+    PolicyContext two = new PolicyContext(accessContext(), "policy.x");
+    PolicyContext three = new PolicyContext(accessContext(), "policy.x", Map.of("k", "v"));
+    assertTrue(two.resourceRef().isEmpty());
+    assertTrue(three.resourceRef().isEmpty());
+  }
+
+  @Test
+  @DisplayName("three-arg ResourceRef ctor exposes the reference and empty attributes")
+  void threeArgResourceRefCtor() {
+    ResourceRef ref = new ResourceRef("document", "42");
+    PolicyContext ctx = new PolicyContext(accessContext(), "policy.x", ref);
+    assertTrue(ctx.resourceRef().isPresent());
+    assertSame(ref, ctx.resourceRef().orElseThrow());
+    assertTrue(ctx.resourceAttributes().isEmpty());
+  }
+
+  @Test
+  @DisplayName("three-arg ResourceRef ctor accepts null and maps to empty Optional")
+  void threeArgResourceRefCtorAcceptsNull() {
+    PolicyContext ctx = new PolicyContext(accessContext(), "policy.x", (ResourceRef) null);
+    assertTrue(ctx.resourceRef().isEmpty());
+  }
+
+  @Test
+  @DisplayName("canonical ctor normalises null resourceRef to empty Optional")
+  void canonicalCtorNullResourceRefNormalised() {
+    PolicyContext ctx = new PolicyContext(accessContext(), "policy.x", null, Map.of());
+    assertTrue(ctx.resourceRef().isEmpty());
+  }
+
+  @Test
+  @DisplayName("canonical ctor preserves a present resourceRef")
+  void canonicalCtorKeepsPresentResourceRef() {
+    ResourceRef ref = new ResourceRef("document", "42");
+    PolicyContext ctx = new PolicyContext(
+        accessContext(), "policy.x", Optional.of(ref), Map.of());
+    assertSame(ref, ctx.resourceRef().orElseThrow());
   }
 }

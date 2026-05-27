@@ -32,6 +32,7 @@ import com.svenruppert.vaadin.security.session.SessionDecision;
 import com.svenruppert.vaadin.security.session.SessionMetadata;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
 import com.svenruppert.vaadin.security.session.SessionPolicyDecision;
+import com.svenruppert.vaadin.security.test.RecordingAuditSink;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -65,7 +66,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("REST filters — audit emission")
 class RestFilterAuditTest {
 
-  private final RecordingAudit audit = new RecordingAudit();
+  private final RecordingAuditSink audit = new RecordingAuditSink();
 
   @AfterEach
   void resetResolver() {
@@ -102,6 +103,40 @@ class RestFilterAuditTest {
         "AccessDenied must carry the subject id");
     assertTrue(event.reason().startsWith("Forbidden:"),
         "Forbidden decision must produce a reason prefixed with 'Forbidden:'; got: " + event.reason());
+  }
+
+  @Test
+  @DisplayName("StepUpRequired publishes an AccessDenied with 'StepUpRequired:<method>:<reason>'")
+  void stepUp_publishesAccessDeniedStepUp() throws Exception {
+    RestAuthorizationFilter filter = filterFor(
+        request -> Optional.of(subject("u1", Set.of(new PermissionName("any")))));
+
+    filter.authorizeAndHandle(
+        request(), new RecordingResponse(), noopHandler(),
+        SecuredHandler.class.getDeclaredMethod("sensitive"));
+
+    AccessDenied event = single(AccessDenied.class);
+    assertEquals("u1", event.subjectId(), "AccessDenied must carry the subject id");
+    assertEquals("StepUpRequired:MFA:needs mfa", event.reason(),
+        "StepUp decision must produce a reason 'StepUpRequired:<method>:<reason>'");
+  }
+
+  @Test
+  @DisplayName("StepUpRequired publishes a structured StepUpChallenged event alongside AccessDenied")
+  void stepUp_publishesStepUpChallenged() throws Exception {
+    RestAuthorizationFilter filter = filterFor(
+        request -> Optional.of(subject("u1", Set.of(new PermissionName("any")))));
+
+    filter.authorizeAndHandle(
+        request(), new RecordingResponse(), noopHandler(),
+        SecuredHandler.class.getDeclaredMethod("sensitive"));
+
+    com.svenruppert.vaadin.security.audit.StepUpChallenged event =
+        single(com.svenruppert.vaadin.security.audit.StepUpChallenged.class);
+    assertEquals("u1", event.subjectId());
+    assertEquals("/api/documents/42", event.route());
+    assertEquals("MFA", event.method());
+    assertEquals("needs mfa", event.reason());
   }
 
   @Test
@@ -268,17 +303,17 @@ class RestFilterAuditTest {
 
   @SuppressWarnings("unchecked")
   private <T extends AuditEvent> T single(Class<T> type) {
-    List<T> hits = audit.events.stream()
+    List<T> hits = audit.events().stream()
         .filter(type::isInstance)
         .map(e -> (T) e)
         .toList();
     assertEquals(1, hits.size(),
-        "expected exactly one " + type.getSimpleName() + " event; got: " + audit.events);
+        "expected exactly one " + type.getSimpleName() + " event; got: " + audit.events());
     return assertInstanceOf(type, hits.get(0));
   }
 
   private long count(Class<? extends AuditEvent> type) {
-    return audit.events.stream().filter(type::isInstance).count();
+    return audit.events().stream().filter(type::isInstance).count();
   }
 
   // ── Fixtures ──────────────────────────────────────────────────
@@ -286,6 +321,27 @@ class RestFilterAuditTest {
   static final class SecuredHandler {
     @RequiresPermission("document:delete")
     void delete() {
+    }
+
+    @DemandsStepUp
+    void sensitive() {
+    }
+  }
+
+  @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+  @java.lang.annotation.Target(java.lang.annotation.ElementType.METHOD)
+  @com.svenruppert.vaadin.security.authorization.annotations.SecurityAnnotation(
+      StepUpDemandingEvaluator.class)
+  public @interface DemandsStepUp { }
+
+  public static final class StepUpDemandingEvaluator
+      implements com.svenruppert.vaadin.security.authorization.api.AuthorizationEvaluator<DemandsStepUp> {
+    @Override
+    public com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision evaluate(
+        com.svenruppert.vaadin.security.authorization.navigation.AccessContext context,
+        DemandsStepUp annotation) {
+      return com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision
+          .stepUpRequired("needs mfa", "MFA");
     }
   }
 
@@ -328,12 +384,6 @@ class RestFilterAuditTest {
     @Override public SessionPolicyDecision evaluate(SessionMetadata metadata) {
       return decision;
     }
-  }
-
-  static final class RecordingAudit implements SecurityAuditService {
-    final List<AuditEvent> events = new ArrayList<>();
-    @Override public void publish(AuditEvent event) { events.add(event); }
-    @Override public List<AuditEvent> query(AuditQuery q) { return List.of(); }
   }
 
   record SimpleRestRequest(

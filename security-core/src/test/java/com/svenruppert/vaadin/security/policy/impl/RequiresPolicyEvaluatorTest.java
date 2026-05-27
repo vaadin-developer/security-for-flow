@@ -172,8 +172,8 @@ class RequiresPolicyEvaluatorTest {
   }
 
   @Test
-  @DisplayName("StepUpRequired is bridged to Forbidden with the documented prefix")
-  void stepUpBridgedToForbiddenWithPrefix() {
+  @DisplayName("StepUpRequired is bridged to AuthorizationDecision.StepUpRequired with method + reason")
+  void stepUpBridgedToTypedStepUp() {
     registry.register(Policy.named("p")
         .stepUpRequiredIf(c -> true, PolicyDecision.StepUpMethod.MFA, "needs mfa")
         .build());
@@ -183,14 +183,71 @@ class RequiresPolicyEvaluatorTest {
     AuthorizationDecision decision = new RequiresPolicyEvaluator()
         .evaluate(ctxWithSubject(user), annotationFor("p"));
 
-    AuthorizationDecision.Forbidden forbidden =
-        assertInstanceOf(AuthorizationDecision.Forbidden.class, decision);
-    assertTrue(forbidden.reason()
-        .startsWith(PolicyDecisions.STEP_UP_REASON_PREFIX + "MFA"));
+    AuthorizationDecision.StepUpRequired stepUp = assertInstanceOf(
+        AuthorizationDecision.StepUpRequired.class, decision);
+    assertEquals("needs mfa", stepUp.reason());
+    assertEquals("MFA", stepUp.method());
 
     PolicyEvaluated audit = auditSink.singlePolicyEvent();
     assertEquals("StepUpRequired", audit.decision());
     assertTrue(audit.reason().startsWith("MFA"));
+  }
+
+  @Test
+  @DisplayName("ResourceRef from AccessContext.attributes is promoted into PolicyContext")
+  void resourceRefIsPromoted() {
+    com.svenruppert.vaadin.security.policy.api.ResourceRef expectedRef =
+        new com.svenruppert.vaadin.security.policy.api.ResourceRef("document", "42");
+    AccessContext ctx = new AccessContext(
+        Optional.of(new SecuritySubject("u-1", "u-1", Set.of(), Set.of())),
+        "rest-endpoint",
+        "/documents/42",
+        "read",
+        Map.of(
+            com.svenruppert.vaadin.security.policy.api.ResourceRef.ATTRIBUTE_KEY,
+            expectedRef));
+
+    java.util.concurrent.atomic.AtomicReference<
+        com.svenruppert.vaadin.security.policy.api.PolicyContext> captured =
+        new java.util.concurrent.atomic.AtomicReference<>();
+    registry.register(com.svenruppert.vaadin.security.policy.api.Policy.named("p")
+        .allowIf(policyCtx -> {
+          captured.set(policyCtx);
+          return true;
+        })
+        .build());
+
+    new RequiresPolicyEvaluator().evaluate(ctx, annotationFor("p"));
+
+    com.svenruppert.vaadin.security.policy.api.PolicyContext seen = captured.get();
+    assertEquals(expectedRef, seen.resourceRef().orElseThrow());
+  }
+
+  @Test
+  @DisplayName("non-ResourceRef attribute value is ignored, resourceRef stays empty")
+  void nonResourceRefAttributeIgnored() {
+    AccessContext ctx = new AccessContext(
+        Optional.empty(),
+        "rest-endpoint",
+        "/x",
+        "read",
+        Map.of(
+            com.svenruppert.vaadin.security.policy.api.ResourceRef.ATTRIBUTE_KEY,
+            "not-a-ref"));
+
+    java.util.concurrent.atomic.AtomicReference<
+        com.svenruppert.vaadin.security.policy.api.PolicyContext> captured =
+        new java.util.concurrent.atomic.AtomicReference<>();
+    registry.register(com.svenruppert.vaadin.security.policy.api.Policy.named("p")
+        .allowIf(policyCtx -> {
+          captured.set(policyCtx);
+          return true;
+        })
+        .build());
+
+    new RequiresPolicyEvaluator().evaluate(ctx, annotationFor("p"));
+
+    assertTrue(captured.get().resourceRef().isEmpty());
   }
 
   @Test

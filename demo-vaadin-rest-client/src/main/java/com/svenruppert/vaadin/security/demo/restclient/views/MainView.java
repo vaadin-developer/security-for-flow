@@ -35,6 +35,8 @@ import com.svenruppert.vaadin.security.demo.restclient.views.standalone.AuditVie
 import com.svenruppert.vaadin.security.demo.restclient.views.standalone.DocumentsView;
 import com.svenruppert.vaadin.security.demo.restclient.views.standalone.NerdView;
 import com.svenruppert.vaadin.security.demo.restclient.views.standalone.PolicyDemoView;
+import com.svenruppert.vaadin.security.demo.restclient.views.standalone.ResourcePolicyDemoView;
+import com.svenruppert.vaadin.security.demo.restclient.views.standalone.StepUpDemoView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
@@ -137,7 +139,9 @@ public class MainView extends AppLayout {
             new RouterLink("/nerd — @VisibleForRoles({ADMIN, EDITOR})", NerdView.class),
             new RouterLink("/audit — @RequiresPermission(\"audit:read\")", AuditView.class),
             new RouterLink("/admin/roles — @RequiresPermission(\"admin:roles\")", AdminRolesView.class),
-            new RouterLink("/policy-demo — @RequiresPolicy(\"documents.editor-or-admin\")", PolicyDemoView.class)
+            new RouterLink("/policy-demo — @RequiresPolicy(\"documents.editor-or-admin\")", PolicyDemoView.class),
+            new RouterLink("/resource-policy-demo — Policy + ResourcePredicates per click", ResourcePolicyDemoView.class),
+            new RouterLink("/step-up-demo — @RequiresPolicy emits StepUpRequired → /step-up reroute", StepUpDemoView.class)
         )));
     tabs.add(links);
 

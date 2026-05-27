@@ -16,9 +16,6 @@
  */
 package com.svenruppert.vaadin.security.authorization;
 
-import com.svenruppert.vaadin.security.audit.AuditEvent;
-import com.svenruppert.vaadin.security.audit.AuditQuery;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.audit.SessionInvalidated;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.session.SessionContext;
@@ -26,6 +23,7 @@ import com.svenruppert.vaadin.security.session.SessionDecision;
 import com.svenruppert.vaadin.security.session.SessionMetadata;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
 import com.svenruppert.vaadin.security.session.SessionPolicyDecision;
+import com.svenruppert.vaadin.security.test.RecordingAuditSink;
 import com.vaadin.browserless.BrowserlessTest;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.textfield.PasswordField;
@@ -74,7 +72,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("B3 — Session-Rotation-Honour integration test")
 class B3SessionRotationIntegrationTest extends BrowserlessTest {
 
-  private final RecordingAudit audit = new RecordingAudit();
+  private final RecordingAuditSink audit = new RecordingAuditSink();
   private final AtomicReference<SessionContext<Object>> capturedContext = new AtomicReference<>();
 
   @BeforeEach
@@ -112,12 +110,12 @@ class B3SessionRotationIntegrationTest extends BrowserlessTest {
         "the SessionContext given to onLogin must carry the original wrapped-session id");
 
     // ── 2. SessionInvalidated audit emitted with the OLD session id. ──
-    SessionInvalidated event = audit.events.stream()
+    SessionInvalidated event = audit.events().stream()
         .filter(SessionInvalidated.class::isInstance)
         .map(SessionInvalidated.class::cast)
         .findFirst()
         .orElseThrow(() -> new AssertionError(
-            "expected one SessionInvalidated audit event; got: " + audit.events));
+            "expected one SessionInvalidated audit event; got: " + audit.events()));
     assertEquals(oldSessionId, event.sessionId(),
         "SessionInvalidated must carry the OLD wrapped-session id (correlation hook for monitoring)");
     assertEquals("B3-Test-Rotation", event.reason(),
@@ -179,9 +177,4 @@ class B3SessionRotationIntegrationTest extends BrowserlessTest {
     }
   }
 
-  static final class RecordingAudit implements SecurityAuditService {
-    final List<AuditEvent> events = new ArrayList<>();
-    @Override public void publish(AuditEvent event) { events.add(event); }
-    @Override public List<AuditEvent> query(AuditQuery q) { return List.of(); }
-  }
 }

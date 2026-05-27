@@ -119,6 +119,7 @@ public record AuditQuery(
       case UserDeleted e -> e.username();
       case BootstrapTokenRejected ignored -> null;
       case PolicyEvaluated e -> e.subjectId();
+      case StepUpChallenged e -> e.subjectId();
     };
   }
 }

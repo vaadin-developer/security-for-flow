@@ -16,16 +16,14 @@
  */
 package com.svenruppert.vaadin.security.session.vaadin;
 
-import com.svenruppert.vaadin.security.audit.AuditEvent;
-import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.SessionExpired;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.LoginListener;
 import com.svenruppert.vaadin.security.authorization.LoginListeners;
 import com.svenruppert.vaadin.security.authorization.LoginView;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
-import com.svenruppert.vaadin.security.authorization.impl.InMemorySubjectStore;
+import com.svenruppert.vaadin.security.test.InMemorySubjectStore;
+import com.svenruppert.vaadin.security.test.RecordingAuditSink;
 import com.svenruppert.vaadin.security.session.SessionContext;
 import com.svenruppert.vaadin.security.session.SessionDecision;
 import com.svenruppert.vaadin.security.session.SessionMetadata;
@@ -65,7 +63,7 @@ class SessionLifetimeListenerTest {
 
   private static final Instant T0 = Instant.parse("2026-05-10T10:00:00Z");
 
-  private final RecordingAuditService audit = new RecordingAuditService();
+  private final RecordingAuditSink audit = new RecordingAuditSink();
 
   @BeforeEach
   void resetState() {
@@ -92,7 +90,7 @@ class SessionLifetimeListenerTest {
     listener.beforeEnter(event);
 
     assertNull(event.forwardTarget);
-    assertTrue(audit.events.isEmpty());
+    assertTrue(audit.events().isEmpty());
   }
 
   @Test
@@ -112,7 +110,7 @@ class SessionLifetimeListenerTest {
 
     assertEquals(later, session.getAttribute(SessionLifetimeListener.LAST_ACTIVITY_ATTRIBUTE));
     assertNull(event.forwardTarget);
-    assertTrue(audit.events.isEmpty(), "active sessions must not emit SESSION_EXPIRED");
+    assertTrue(audit.events().isEmpty(), "active sessions must not emit SESSION_EXPIRED");
   }
 
   @Test
@@ -135,8 +133,8 @@ class SessionLifetimeListenerTest {
         "subject must be removed on expiry");
     assertSame(StubLoginView.class, event.forwardTarget,
         "expired sessions must be forwarded to the configured login view");
-    assertEquals(1, audit.events.size());
-    SessionExpired ev = (SessionExpired) audit.events.get(0);
+    assertEquals(1, audit.events().size());
+    SessionExpired ev = (SessionExpired) audit.events().get(0);
     assertEquals("IdleTimeout", ev.reason());
     assertEquals("alice", ev.subjectId());
   }
@@ -156,9 +154,9 @@ class SessionLifetimeListenerTest {
 
     listener.beforeEnter(new RecordingEvent());
 
-    assertEquals(1, audit.events.size());
+    assertEquals(1, audit.events().size());
     assertEquals("AbsoluteLifetimeExceeded",
-        ((SessionExpired) audit.events.get(0)).reason());
+        ((SessionExpired) audit.events().get(0)).reason());
   }
 
   @Test
@@ -175,7 +173,7 @@ class SessionLifetimeListenerTest {
     listener.beforeEnter(event);
 
     assertNull(event.forwardTarget);
-    assertTrue(audit.events.isEmpty());
+    assertTrue(audit.events().isEmpty());
   }
 
   // ── Helpers ───────────────────────────────────────────────────
@@ -263,18 +261,6 @@ class SessionLifetimeListenerTest {
 
     @Override public SessionPolicyDecision evaluate(SessionMetadata metadata) {
       return decision;
-    }
-  }
-
-  static final class RecordingAuditService implements SecurityAuditService {
-    final List<AuditEvent> events = new ArrayList<>();
-
-    @Override public void publish(AuditEvent event) {
-      events.add(event);
-    }
-
-    @Override public List<AuditEvent> query(AuditQuery query) {
-      return List.of();
     }
   }
 

@@ -21,6 +21,7 @@ import com.svenruppert.vaadin.security.audit.AccessGranted;
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.SessionExpired;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.StepUpChallenged;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationEvaluator;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
@@ -194,12 +195,28 @@ public final class RestAuthorizationFilter {
       case AuthorizationDecision.Forbidden forbidden ->
           new AccessDenied(now, subjectId, route,
               "Forbidden:" + (forbidden.reason() == null ? "" : forbidden.reason()));
+      case AuthorizationDecision.StepUpRequired stepUp ->
+          new AccessDenied(now, subjectId, route,
+              "StepUpRequired:" + stepUp.method()
+                  + (stepUp.reason().isEmpty() ? "" : ":" + stepUp.reason()));
     };
 
     try {
       sink.publish(event);
     } catch (RuntimeException auditFailure) {
       // never block authorization because the audit sink failed
+    }
+
+    // Emit a structured StepUpChallenged event alongside the coarse
+    // AccessDenied so audit consumers can pivot on method/reason
+    // without parsing the AccessDenied.reason string.
+    if (decision instanceof AuthorizationDecision.StepUpRequired stepUp) {
+      try {
+        sink.publish(new StepUpChallenged(
+            now, subjectId, route, stepUp.method(), stepUp.reason()));
+      } catch (RuntimeException auditFailure) {
+        // never block authorization because the audit sink failed
+      }
     }
   }
 

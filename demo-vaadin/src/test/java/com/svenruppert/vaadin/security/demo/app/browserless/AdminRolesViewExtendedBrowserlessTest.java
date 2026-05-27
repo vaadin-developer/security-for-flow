@@ -16,12 +16,10 @@
  */
 package com.svenruppert.vaadin.security.demo.app.browserless;
 
-import com.svenruppert.vaadin.security.audit.AuditEvent;
-import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.RoleRevoked;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.audit.UserCreated;
 import com.svenruppert.vaadin.security.audit.UserDeleted;
+import com.svenruppert.vaadin.security.test.RecordingAuditSink;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.demo.app.security.bootstrap.BootstrapWiring;
@@ -50,9 +48,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -71,7 +67,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("AdminRolesView — extended flows (revoke, delete, create, warn/success)")
 class AdminRolesViewExtendedBrowserlessTest extends BrowserlessTest {
 
-  private final RecordingAudit audit = new RecordingAudit();
+  private final RecordingAuditSink audit = new RecordingAuditSink();
 
   @BeforeEach
   void setUp() throws Exception {
@@ -84,7 +80,7 @@ class AdminRolesViewExtendedBrowserlessTest extends BrowserlessTest {
         new MyUser(1L, "Admin",
             EnumSet.of(AuthorizationRole.ADMIN, AuthorizationRole.USER)));
     SecurityServiceResolver.setSecurityAuditService(audit);
-    audit.events.clear();
+    audit.clear();
   }
 
   @AfterEach
@@ -99,7 +95,7 @@ class AdminRolesViewExtendedBrowserlessTest extends BrowserlessTest {
   @DisplayName("Revoke removes the role + emits RoleRevoked")
   void revokeMutatesAndAudits() {
     DemoUserDirectoryProvider.directory().assignRole(2L, AuthorizationRole.NERD);
-    audit.events.clear();
+    audit.clear();
 
     navigateAsAdmin();
     GridTester<Grid<MyUser>, MyUser> grid = grid();
@@ -115,12 +111,12 @@ class AdminRolesViewExtendedBrowserlessTest extends BrowserlessTest {
     assertFalse(after.roles().contains(AuthorizationRole.NERD),
         "Revoke must remove the role from the directory");
 
-    RoleRevoked event = audit.events.stream()
+    RoleRevoked event = audit.events().stream()
         .filter(RoleRevoked.class::isInstance)
         .map(RoleRevoked.class::cast)
         .findFirst()
         .orElseThrow(() -> new AssertionError(
-            "expected a RoleRevoked event; got: " + audit.events));
+            "expected a RoleRevoked event; got: " + audit.events()));
     assertEquals("2", event.subjectId());
     assertEquals(AuthorizationRole.NERD.name(), event.role());
   }
@@ -193,12 +189,12 @@ class AdminRolesViewExtendedBrowserlessTest extends BrowserlessTest {
     assertTrue(dialogTester.getText().contains("'Herr User'"),
         "dialog must reference the user; got: " + dialogTester.getText());
 
-    audit.events.clear();
+    audit.clear();
     dialogTester.confirm();
 
     assertFalse(DemoUserDirectoryProvider.directory().findById(2L).isPresent(),
         "after confirm the directory must no longer contain id=2");
-    assertTrue(audit.events.stream().anyMatch(UserDeleted.class::isInstance),
+    assertTrue(audit.events().stream().anyMatch(UserDeleted.class::isInstance),
         "delete must publish a UserDeleted audit event");
 
     assertSuccess("Deleted user Herr User.");
@@ -213,12 +209,12 @@ class AdminRolesViewExtendedBrowserlessTest extends BrowserlessTest {
     test((Button) grid.getCellComponent(row, 4)).click();
 
     ConfirmDialog dialog = $(ConfirmDialog.class).first();
-    audit.events.clear();
+    audit.clear();
     test(dialog).cancel();
 
     assertTrue(DemoUserDirectoryProvider.directory().findById(2L).isPresent(),
         "Cancel must not delete the user");
-    assertFalse(audit.events.stream().anyMatch(UserDeleted.class::isInstance),
+    assertFalse(audit.events().stream().anyMatch(UserDeleted.class::isInstance),
         "no UserDeleted event must be emitted on cancel");
   }
 
@@ -308,8 +304,8 @@ class AdminRolesViewExtendedBrowserlessTest extends BrowserlessTest {
     assertTrue(created.roles().contains(AuthorizationRole.USER),
         "created user must carry the selected role (USER default)");
 
-    assertTrue(audit.events.stream().anyMatch(UserCreated.class::isInstance),
-        "Create must publish a UserCreated audit event; got: " + audit.events);
+    assertTrue(audit.events().stream().anyMatch(UserCreated.class::isInstance),
+        "Create must publish a UserCreated audit event; got: " + audit.events());
     assertSuccess("Created user charlie.");
 
     assertFalse(dialog.isOpened(), "successful create must close the dialog");
@@ -348,7 +344,7 @@ class AdminRolesViewExtendedBrowserlessTest extends BrowserlessTest {
     test(findButton("New user")).click();
 
     long beforeCount = DemoUserDirectoryProvider.directory().all().count();
-    audit.events.clear();
+    audit.clear();
 
     Dialog dialog = $(Dialog.class).first(); // capture before close
     test(findButton("Cancel")).click();
@@ -357,7 +353,7 @@ class AdminRolesViewExtendedBrowserlessTest extends BrowserlessTest {
     assertEquals(beforeCount,
         DemoUserDirectoryProvider.directory().all().count(),
         "Cancel must not touch the directory");
-    assertFalse(audit.events.stream().anyMatch(UserCreated.class::isInstance),
+    assertFalse(audit.events().stream().anyMatch(UserCreated.class::isInstance),
         "Cancel must not emit UserCreated");
   }
 
@@ -449,11 +445,4 @@ class AdminRolesViewExtendedBrowserlessTest extends BrowserlessTest {
     field.set(null, null);
   }
 
-  private static final class RecordingAudit implements SecurityAuditService {
-    final List<AuditEvent> events = new ArrayList<>();
-
-    @Override public void publish(AuditEvent event) { events.add(event); }
-
-    @Override public List<AuditEvent> query(AuditQuery q) { return List.of(); }
-  }
 }
