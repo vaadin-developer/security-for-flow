@@ -1,13 +1,23 @@
 # Prompt — proxybuilder annotations module (Tier 1/2/3)
 
+> **Status 2026-05-28: DELIVERED in `com.svenruppert:proxybuilder:00.11.00`**
+> (lokal published; Maven-Central-Upload steht aus). Das
+> `proxybuilder-annotations` Modul ist vorhanden mit allen
+> Tier-1/2/3-Annotationen, `@GeneratedByProxyBuilder` ist auf
+> `RetentionPolicy.RUNTIME` umgestellt und trägt die fünf erweiterten
+> Members. `SecuredAnnotationProcessor` strippt den Marker nicht mehr;
+> die generierte Klasse zeigt sowohl `@GeneratedByProxyBuilder` als
+> auch `@DelegatesTo` pro Methode. Dieses Dokument bleibt als
+> historische Referenz erhalten.
+>
 > Selbst-kontaminierter Prompt für einen Claude-Agenten, der im
 > `proxybuilder`-Repo ein eigenstaendiges `proxybuilder-annotations`-
 > Modul anlegt und die hier beschriebenen Annotationen umsetzt.
 > Reicht ohne Vorwissen aus einer fremden Session.
 >
-> Paaren mit `Prompt-proxybuilder-writer-fix.md` — beide gehen in
-> denselben Release `00.11.00` (Minor-Bump wegen neuem Modul +
-> neuer API).
+> Paaren mit `Prompt-proxybuilder-writer-fix.md` — beide gingen in
+> denselben Release-Zyklus (writer-fix als 00.10.01, annotations als
+> 00.11.00).
 
 ---
 

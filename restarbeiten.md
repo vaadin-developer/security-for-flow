@@ -41,7 +41,9 @@
     `requirePolicy` + Generic `enforce(Method, Class)`)
   - 5c Neues Modul **security-processor** mit
     `SecuredAnnotationProcessor` auf
-    `com.svenruppert:proxybuilder:00.10.00`. 11 compile-testing-Tests.
+    `com.svenruppert:proxybuilder:00.11.00` (+ `proxybuilder-annotations`).
+    11 compile-testing-Tests. Generierte Wrapper tragen RUNTIME-
+    reflectable `@GeneratedByProxyBuilder` + `@DelegatesTo` pro Methode.
   - 5d `demo-standalone` zeigt beide Pfade nebeneinander
     (`LibraryService` via `SecuredProxy.wrap`, `MemberDirectory` via
     processor-generierter `MemberDirectorySecured`). 8 neue Tests.

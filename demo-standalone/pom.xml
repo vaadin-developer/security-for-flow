@@ -41,6 +41,19 @@
       <artifactId>security-standalone</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!--
+      Annotations module shipped by security-processor's underlying
+      proxybuilder. The processor emits @GeneratedByProxyBuilder into
+      every wrapper class; consumers of the processor need the
+      annotation type on their compile classpath even though
+      RetentionPolicy.RUNTIME makes it stay around at runtime too
+      (and reflectable: tooling can detect generated wrappers).
+    -->
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>proxybuilder-annotations</artifactId>
+      <version>00.11.00</version>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>

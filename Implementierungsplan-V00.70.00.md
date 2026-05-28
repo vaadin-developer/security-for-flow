@@ -14,7 +14,7 @@ Pull Request.
 | 4 — Store-backed Services + SecurityVersion | offen |
 | 5a — Policy API | ✓ abgeschlossen (Working Tree) |
 | 5b — SecurityEnforcer extrahieren | ✓ abgeschlossen — Klasse `com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer` mit Generic + Explicit API; `SecuredProxy` (umbenannt von `Secured`) delegiert darauf |
-| 5c — `security-processor`-Modul + `SecuredAnnotationProcessor` | ✓ abgeschlossen — Modul angelegt, Processor implementiert, 11 compile-testing-Tests grün, proxybuilder 00.10.00 als Maven-Central-Dependency eingebunden |
+| 5c — `security-processor`-Modul + `SecuredAnnotationProcessor` | ✓ abgeschlossen — Modul angelegt, Processor implementiert, 11 compile-testing-Tests grün, proxybuilder **00.11.00** (mit separatem `proxybuilder-annotations`-Modul) als Dependency. Generierte Wrapper tragen `@GeneratedByProxyBuilder(processor, sourceClass, proxyBuilderVersion, ...)` RUNTIME-reflectable + `@DelegatesTo("Foo#bar(java.lang.String)")` pro Methode. |
 | 5d — Demo-Integration in `demo-standalone` | ✓ abgeschlossen — `MemberDirectory` (konkrete Klasse mit `@Secured`) ergänzt; `DemoApp` zeigt beide Pfade nebeneinander; 8 neue Tests grün |
 | 6 — Autorisierungs-Ergonomie | ✓ abgeschlossen — `RoleHierarchy`/`NoopRoleHierarchy`/`StaticRoleHierarchy` SPIs vorhanden, `@RequiresAnyPermission`/`@RequiresAllPermissions` + Evaluatoren vorhanden, `RolePermissionResolver.permissionsForRoles(roles, mapping, hierarchy)` als hierarchy-aware Overload (PIT-Coverage 93 % auf `permissions/`-Paket) |
 | 7 — Account Lifecycle + Tokens + Rate-Limiting | offen |
@@ -54,19 +54,38 @@ als Basis genutzt. Das Projekt liefert das benoetigte Delegate-Pattern,
 Konstruktor-Forwarding, Methoden-Vererbung und JavaPoet-Integration
 bereits produktionsreif.
 
-`com.svenruppert:proxybuilder:00.10.00` ist seit 2026-05-27 auf Maven
-Central verfuegbar (signierte Sources- und Javadoc-JARs). Das Artefakt
-wird als Maven-Dependency in `security-processor` eingebunden, und ein
-eigener `SecuredAnnotationProcessor` als Subklasse geschrieben.
-`Anforderungen-proxybuilder-modernisierung.md` dokumentiert die
-ehemaligen Anforderungen P0–P3 und dient als Audit-Checkliste, um vor
-Beginn von Phase 5 zu verifizieren, welche davon im 00.10.00-Release
-tatsaechlich umgesetzt sind.
+`com.svenruppert:proxybuilder` wird in `security-processor` als
+Maven-Dependency eingebunden, und ein eigener
+`SecuredAnnotationProcessor` als Subklasse geschrieben. Aktueller
+Stand zum 2026-05-28:
+
+- `00.10.00` auf Maven Central seit 2026-05-27 — initiales Release.
+- `00.10.01` auf Maven Central — schliesst den Writer-Close-Defekt
+  in `BasicAnnotationProcessor.writeDefinedClass` (siehe
+  `Prompt-proxybuilder-writer-fix.md`).
+- `00.11.00` lokal published (Maven-Central-Upload steht aus) —
+  Split in zwei Artefakte: `proxybuilder-annotations` (dependency-
+  frei, Tier-1/2/3-Marker) und `proxybuilder` (Processor). Der
+  Marker `@GeneratedByProxyBuilder` ist auf `RetentionPolicy.RUNTIME`
+  umgestellt und traegt fuenf Members (`processor`, `sourceClass`,
+  `proxyBuilderVersion`, `date`, `comments`); jede generierte
+  Methode bekommt zusaetzlich `@DelegatesTo("Owner#method(params)")`.
+  `security-processor` nutzt diese Version und braucht keinen
+  Writer-Close- oder Annotation-Strip-Workaround mehr.
+
+`_archive_prompts/Anforderungen-proxybuilder-modernisierung.md`
+dokumentiert die ehemaligen Anforderungen P0–P3 und das Audit-
+Resultat gegen `00.10.00` (alle P1-Sicherheits-Punkte erledigt).
 
 ### Reihenfolge der Versionen
 
-- **proxybuilder `00.10.00`** auf Maven Central → erledigt
-  (Release 2026-05-27).
+- **proxybuilder `00.10.00`** auf Maven Central — erledigt
+  (2026-05-27).
+- **proxybuilder `00.10.01`** auf Maven Central — erledigt
+  (writer-close fix).
+- **proxybuilder `00.11.00`** lokal published — erledigt
+  (annotations module + RUNTIME marker); Maven-Central-Upload
+  optional.
 - **security-for-flow `00.70.00`** baut darauf auf.
 
 ## Phasenuebersicht

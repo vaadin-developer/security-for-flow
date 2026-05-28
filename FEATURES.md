@@ -23,7 +23,7 @@ unter `META-INF/services/`.
 | `security-rest` | `security-rest` | Framework-light REST-Adapter (Filter, BearerToken, HTTP-Status-Mapping, Step-Up `WWW-Authenticate`) |
 | `security-standalone` | `security-standalone` | Plain-Java / Desktop / CLI Adapter (ThreadLocal-Subject, `SecuredProxy` Dynamic-Proxy) |
 | `security-test` | `security-test` | Wiederverwendbare Test-Fixtures: `FakeAuthenticationService`, `FakeAuthorizationService`, `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5-`SecurityTestExtension`. Test-Scope-Dependency. |
-| `security-processor` | `security-processor` | Compile-Time-Annotation-Processor: erzeugt `<Type>Secured`-Subklassen für `@Secured`-annotierte konkrete Klassen. Wird als `<annotationProcessorPath>` eingebunden, nicht als reguläre Dependency. Basiert auf `com.svenruppert:proxybuilder:00.10.00`. |
+| `security-processor` | `security-processor` | Compile-Time-Annotation-Processor: erzeugt `<Type>Secured`-Subklassen für `@Secured`-annotierte konkrete Klassen. Wird als `<annotationProcessorPath>` eingebunden, nicht als reguläre Dependency. Basiert auf `com.svenruppert:proxybuilder:00.11.00` mit separatem `proxybuilder-annotations`-Modul (RUNTIME-reflectable `@GeneratedByProxyBuilder`, `@DelegatesTo` etc.). |
 | `demo-rest-shared` | `demo-rest-shared` | Transport-Konstanten + JSON-Helper für REST-Demos |
 | `demo-vaadin` | `demo-vaadin` | Vollständige Vaadin-Demo mit lokaler User-Verwaltung |
 | `demo-rest` | `demo-rest` | JDK-`HttpServer` + interaktive CLI |
@@ -305,7 +305,7 @@ Alle implementieren `AuditEvent` (sealed interface) und sind über
 | Klasse / Datei | Zweck |
 |---|---|
 | `@Secured` (in security-core, `…/authorization/annotations`) | Compile-Time-Trigger — markiert eine **konkrete Klasse** für die Wrapper-Erzeugung. `RetentionPolicy.SOURCE`, Target `TYPE`. |
-| `SecuredAnnotationProcessor` | `BasicStaticProxyAnnotationProcessor<Secured>` aus `com.svenruppert:proxybuilder:00.10.00`. Generiert `<Type>Secured extends <Type>` und ersetzt jede annotierte Methode durch `SecurityEnforcer.require…(…)` + `super.<method>(…)`. |
+| `SecuredAnnotationProcessor` | `BasicStaticProxyAnnotationProcessor<Secured>` aus `com.svenruppert:proxybuilder:00.11.00`. Generiert `<Type>Secured extends <Type>` und ersetzt jede annotierte Methode durch `SecurityEnforcer.require…(…)` + `super.<method>(…)`. Marker am Wrapper: `@GeneratedByProxyBuilder(processor, sourceClass, proxyBuilderVersion="00.11.00", date, comments)` (RUNTIME-reflectable via `proxybuilder-annotations`) + `@DelegatesTo("Owner#method(params)")` pro generierter Methode. |
 | `META-INF/services/javax.annotation.processing.Processor` | Registriert den Processor für `javac` / Maven-Compiler. |
 | `SecurityEnforcer` (in security-core) | Zentrale Enforcement-API, geteilt mit `SecuredProxy`. Methoden: `requirePermission`, `requireAllPermissions`, `requireAnyPermission`, `requireRole`, `requireAnyRole`, `requirePolicy`; plus die Generic-`enforce(Method, Class)` für den Dynamic-Proxy-Pfad. Wirft `AccessDeniedException` on deny. |
 

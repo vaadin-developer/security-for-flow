@@ -1,5 +1,10 @@
 # Prompt — proxybuilder writer-lifecycle fix
 
+> **Status 2026-05-28: DELIVERED in `com.svenruppert:proxybuilder:00.10.01`**
+> (Maven Central). Der Writer-Close-Workaround im
+> `SecuredAnnotationProcessor.writeDefinedClass` wurde entsprechend
+> entfernt. Dieses Dokument bleibt als historische Referenz erhalten.
+>
 > Selbst-kontaminierter Prompt für einen Claude-Agenten, der im
 > `proxybuilder`-Repo den in `Anforderungen-proxybuilder-modernisierung.md`
 > als `[!]` markierten Defekt behebt (Writer wird in `writeDefinedClass`

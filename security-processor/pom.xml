@@ -36,7 +36,7 @@
   </description>
 
   <properties>
-    <proxybuilder.version>00.10.00</proxybuilder.version>
+    <proxybuilder.version>00.11.00</proxybuilder.version>
     <compile-testing.version>0.21.0</compile-testing.version>
   </properties>
 
@@ -49,6 +49,19 @@
     <dependency>
       <groupId>com.svenruppert</groupId>
       <artifactId>proxybuilder</artifactId>
+      <version>${proxybuilder.version}</version>
+    </dependency>
+    <!--
+      The annotation module ships the @GeneratedByProxyBuilder marker
+      that proxybuilder emits into every generated wrapper class.
+      Consumers of security-processor (via <annotationProcessorPaths>)
+      pull this dependency through their own compile-classpath; the
+      processor needs it at processing time so JavaPoet can resolve
+      the annotation type.
+    -->
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>proxybuilder-annotations</artifactId>
       <version>${proxybuilder.version}</version>
     </dependency>
 

@@ -33,7 +33,7 @@ security-vaadin            -> security-core
 security-rest              -> security-core
 security-standalone        -> security-core
 security-test              -> security-core (compile; the test extension implements JUnit lifecycle types)
-security-processor         -> security-core, com.svenruppert:proxybuilder:00.10.00
+security-processor         -> security-core, com.svenruppert:proxybuilder:00.11.00, com.svenruppert:proxybuilder-annotations:00.11.00
 demo-rest-shared           -> (no project deps; transport-only)
 demo-vaadin                -> security-core, security-vaadin
 demo-rest                  -> security-core, security-rest, demo-rest-shared
@@ -589,7 +589,7 @@ classes) the framework offers two paths, both routed through the same
 | Path | Target | Wiring | When to choose |
 |---|---|---|---|
 | Runtime / JDK Dynamic Proxy | Java **interface** | `SecuredProxy.wrap(MyService.class, impl)` (in `security-standalone`) | The service has a clean interface; you're happy paying a per-call reflection check. Works for callbacks / lambdas via `SecuredProxy.requireAllowed(Class, methodName)`. |
-| Compile-time / Annotation Processor | **Concrete class** annotated with `@Secured` | `<annotationProcessorPath>` for `security-processor`; instantiate the generated `<Type>Secured` subclass | The class has no interface, or you want a stable stacktrace / no per-call reflection. Method-security annotations on `final`, `private` or `static` methods raise compile errors. Underlying generator: `com.svenruppert:proxybuilder:00.10.00`. |
+| Compile-time / Annotation Processor | **Concrete class** annotated with `@Secured` | `<annotationProcessorPath>` for `security-processor`; instantiate the generated `<Type>Secured` subclass | The class has no interface, or you want a stable stacktrace / no per-call reflection. Method-security annotations on `final`, `private` or `static` methods raise compile errors. Underlying generator: `com.svenruppert:proxybuilder:00.11.00` + `proxybuilder-annotations:00.11.00`. |
 
 Both paths land in the same `SecurityEnforcer.require…(…)` helpers,
 so a permission rule applies identically regardless of which path
@@ -604,7 +604,7 @@ expressed it. `demo-standalone` exercises both side by side
 | `SecurityServiceResolver` | `security-core/.../authorization/api` | Central SPI cache. Strict accessors throw `IllegalStateException` for missing services; `find…()` returns `Optional`; `set…(…)` is a programmatic test seam. Covers Authentication / Authorization / Audit / Action / LoginAttempt / Session / PasswordHasher / Logout / RoleHierarchy / ResourceResolver / Step-Up route. |
 | `SecurityEnforcer` | `security-core/.../authorization/api` | Central enforcement entry point. Generic `enforce(Method, Class)` for the runtime/dynamic-proxy path; explicit `requirePermission` / `requireAllPermissions` / `requireAnyPermission` / `requireRole` / `requireAnyRole` / `requirePolicy` for the compile-time/annotation-processor path. Throws `AccessDeniedException` on deny. |
 | `SecuredProxy` | `security-standalone` | `SecuredProxy.wrap(Interface, impl)` returns a JDK dynamic proxy that routes every call through `SecurityEnforcer.enforce(method, declaringClass)`. `requireAllowed(Class, methodName)` is the single-shot variant for callbacks / lambdas. |
-| `SecuredAnnotationProcessor` | `security-processor` | Compile-time annotation processor (loaded via `META-INF/services`). For each `@Secured` concrete class it emits `<Type>Secured extends <Type>` and rewrites every method with a security annotation as `SecurityEnforcer.require…(…)` + `super.<method>(…)`. Built on `com.svenruppert:proxybuilder:00.10.00`. |
+| `SecuredAnnotationProcessor` | `security-processor` | Compile-time annotation processor (loaded via `META-INF/services`). For each `@Secured` concrete class it emits `<Type>Secured extends <Type>` and rewrites every method with a security annotation as `SecurityEnforcer.require…(…)` + `super.<method>(…)`. Built on `com.svenruppert:proxybuilder:00.11.00`; the generated wrapper carries `@GeneratedByProxyBuilder(...)` (RUNTIME-reflectable, with `sourceClass` + `proxyBuilderVersion`) and `@DelegatesTo("Owner#method(...)")` per method from `proxybuilder-annotations:00.11.00`. |
 | `PermissionGuard` | `security-core/.../authorization/api` | Stateless `hasPermission` / `requirePermission` (and role variants) on any `HasPermissions`/`HasRoles`. Throws `AccessDeniedException`. |
 | `AuthenticationService<T,U>` | `security-core/.../authentication` | SPI: credential validation + subject loading. Adapter-neutral. |
 | `LogoutService` | `security-core/.../logout` | `logout(SubjectId, LogoutScope)` SPI, paired with `SubjectClearingLogoutService` default + `SubjectSessionRegistry` for multi-session logout. Vaadin-side: `VaadinLogoutService` rotates HTTP session and redirects. |

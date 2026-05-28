@@ -18,8 +18,6 @@ package com.svenruppert.vaadin.security.processor;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.TypeSpec;
 import com.svenruppert.proxybuilder.proxy.generated.BasicStaticProxyAnnotationProcessor;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresAllPermissions;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresAnyPermission;
@@ -34,10 +32,6 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.tools.JavaFileObject;
-import java.io.IOException;
-import java.io.Writer;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -72,9 +66,15 @@ import java.util.stream.Collectors;
  *
  * <p>All {@code final}/{@code private}/{@code static} diagnostics for
  * methods or classes carrying security annotations are emitted by the
- * proxybuilder base processor (see audit notes in
- * {@code Anforderungen-proxybuilder-modernisierung.md}, P1/9–13). This
- * processor only contributes the body translation.
+ * underlying {@code com.svenruppert:proxybuilder:00.11.00} base
+ * processor — this processor only contributes the body translation.
+ *
+ * <p>The generated class carries
+ * {@code @GeneratedByProxyBuilder(...)} and
+ * {@code @DelegatesTo(...)} from the {@code proxybuilder-annotations}
+ * module; consumers of {@code security-processor} pull that module as
+ * a regular compile dependency so the markers resolve in their own
+ * compile classpath.
  */
 public final class SecuredAnnotationProcessor
     extends BasicStaticProxyAnnotationProcessor<Secured> {
@@ -169,47 +169,6 @@ public final class SecuredAnnotationProcessor
     }
 
     return false;
-  }
-
-  /**
-   * Overrides the proxybuilder writer to (a) {@code close()} the
-   * {@link Writer} after the JavaPoet output is flushed and
-   * (b) strip the {@code @GeneratedByProxyBuilder} marker annotation
-   * from the generated class.
-   *
-   * <p>(a) is needed because the base
-   * implementation only calls {@code flush()} which leaves
-   * {@code com.google.testing.compile}'s in-memory file manager
-   * unable to read the generated content. Real javac filers tolerate
-   * the missing {@code close()} because the file object is finalized
-   * after the round; the in-memory manager is stricter.
-   *
-   * <p>(b) is needed so consumers of {@code security-processor} do
-   * not have to put {@code proxybuilder} on their compile classpath
-   * just to satisfy a source-retention marker. The annotation has no
-   * runtime effect (it is {@link java.lang.annotation.RetentionPolicy#SOURCE}),
-   * so dropping it leaves the generated class semantically unchanged.
-   */
-  @Override
-  protected Optional<TypeSpec> writeDefinedClass(String pkgName,
-                                                 TypeSpec.Builder typeSpecBuilder) {
-    typeSpecBuilder.annotations.removeIf(spec ->
-        "com.svenruppert.proxybuilder.GeneratedByProxyBuilder".equals(spec.type.toString()));
-    TypeSpec typeSpec = typeSpecBuilder.build();
-    JavaFile javaFile = JavaFile.builder(pkgName, typeSpec)
-        .skipJavaLangImports(true)
-        .build();
-    String fqn = pkgName.isEmpty() ? typeSpec.name : pkgName + "." + typeSpec.name;
-    try {
-      JavaFileObject jfo = filer.createSourceFile(fqn);
-      try (Writer writer = jfo.openWriter()) {
-        javaFile.writeTo(writer);
-      }
-    } catch (IOException e) {
-      messager.printMessage(javax.tools.Diagnostic.Kind.ERROR,
-          "Could not write " + fqn + ": " + e.getMessage());
-    }
-    return Optional.of(typeSpec);
   }
 
   private static void emitVarargsCall(CodeBlock.Builder body,
