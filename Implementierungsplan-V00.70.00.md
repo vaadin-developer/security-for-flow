@@ -9,7 +9,7 @@ Pull Request.
 | Phase | Status |
 |---|---|
 | 1 — Foundation: Tenant & Resource | ✓ abgeschlossen — `TenantId(value)` mit `DEFAULT`, `ResourceRef(resourceType, resourceId, tenant)` (Zwei-arg-Overload nutzt `TenantId.DEFAULT`, source-backward-compat), `ResourceAccessContext(accessContext, resourceRef)` als Composite. Tenant-Aware-Keys/Records aus Phase 2/4/7 folgen in ihrer jeweiligen Phase. |
-| 2 — Persistence API | teilweise (2a+2b ✓: AuditEventStore + AuditEnvelope, SessionStore + SessionRecord/SessionId/SessionStatus/SecurityVersion, LoginAttemptStore + LoginAttemptKey, RoleAssignmentStore + RoleAssignmentKey, BootstrapStateStore + BootstrapState. 2c+2d offen: RememberMeTokenStore, PasswordResetTokenStore, EmailVerificationTokenStore, ApiKeyStore, RefreshTokenStore, RateLimitStore.) |
+| 2 — Persistence API | teilweise (2a+2b+2c ✓; 2d offen). 2a+2b: AuditEventStore + AuditEnvelope, SessionStore + SessionRecord/SessionId/SessionStatus/SecurityVersion, LoginAttemptStore + LoginAttemptKey, RoleAssignmentStore + RoleAssignmentKey, BootstrapStateStore + BootstrapState. 2c: RememberMeTokenStore + Record (in `authentication/`), PasswordResetTokenStore + Record und EmailVerificationTokenStore + Record (in `accountlifecycle/`). 2d offen: ApiKeyStore, RefreshTokenStore, RateLimitStore. |
 | 3 — Contract Testkit + Eclipse Store | offen |
 | 4 — Store-backed Services + SecurityVersion | offen |
 | 5a — Policy API | ✓ abgeschlossen (Working Tree) |
