@@ -16,10 +16,13 @@
  */
 package com.svenruppert.vaadin.security.policy.api;
 
+import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ResourceRefTest {
@@ -68,5 +71,47 @@ class ResourceRefTest {
   @DisplayName("ATTRIBUTE_KEY is the documented constant")
   void attributeKeyIsStable() {
     assertEquals("resourceRef", ResourceRef.ATTRIBUTE_KEY);
+  }
+
+  // ── tenant component ─────────────────────────────────────────────
+
+  @Test
+  @DisplayName("two-arg constructor implicitly uses TenantId.DEFAULT")
+  void twoArgConstructorUsesDefaultTenant() {
+    ResourceRef ref = new ResourceRef("document", "42");
+    assertSame(TenantId.DEFAULT, ref.tenant());
+  }
+
+  @Test
+  @DisplayName("three-arg constructor keeps the supplied tenant")
+  void threeArgConstructorKeepsTenant() {
+    TenantId acme = new TenantId("acme");
+    ResourceRef ref = new ResourceRef("document", "42", acme);
+    assertEquals(acme, ref.tenant());
+  }
+
+  @Test
+  @DisplayName("null tenant in the three-arg constructor is normalised to DEFAULT")
+  void nullTenantNormalisedToDefault() {
+    ResourceRef ref = new ResourceRef("document", "42", null);
+    assertSame(TenantId.DEFAULT, ref.tenant());
+  }
+
+  @Test
+  @DisplayName("equals considers the tenant component")
+  void equalsConsidersTenant() {
+    ResourceRef defaultScope = new ResourceRef("document", "42");
+    ResourceRef acmeScope = new ResourceRef("document", "42", new TenantId("acme"));
+    assertNotEquals(defaultScope, acmeScope,
+        "same type+id in different tenants must not collide");
+  }
+
+  @Test
+  @DisplayName("equals matches when two-arg and three-arg point at the default tenant")
+  void twoArgEqualsThreeArgWithDefault() {
+    ResourceRef shortForm = new ResourceRef("document", "42");
+    ResourceRef explicitDefault =
+        new ResourceRef("document", "42", TenantId.DEFAULT);
+    assertEquals(shortForm, explicitDefault);
   }
 }

@@ -17,6 +17,7 @@
 package com.svenruppert.vaadin.security.policy.api;
 
 import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 
 /**
  * Stable reference to a concrete protected resource — the domain
@@ -33,11 +34,19 @@ import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi
  * into the {@code PolicyContext} so {@code ResourcePredicates} can
  * read it.
  *
+ * <p>A {@link TenantId} component carries the tenant scope of the
+ * resource. Single-tenant applications never need to pass it: the
+ * two-argument convenience constructor implicitly uses
+ * {@link TenantId#DEFAULT}, so {@code new ResourceRef("document", "42")}
+ * keeps working without changes.
+ *
  * @param resourceType non-blank resource type (e.g. {@code "document"})
  * @param resourceId   non-blank resource identifier (e.g. {@code "42"})
+ * @param tenant       tenant scope of the resource; {@code null} is
+ *                     normalised to {@link TenantId#DEFAULT}
  */
 @ExperimentalSecurityApi
-public record ResourceRef(String resourceType, String resourceId) {
+public record ResourceRef(String resourceType, String resourceId, TenantId tenant) {
 
   /**
    * Key under which adapters / callers stash a {@code ResourceRef}
@@ -48,10 +57,12 @@ public record ResourceRef(String resourceType, String resourceId) {
   public static final String ATTRIBUTE_KEY = "resourceRef";
 
   /**
-   * Validates the record components.
+   * Validates the record components and substitutes
+   * {@link TenantId#DEFAULT} for a {@code null} tenant.
    *
    * @param resourceType non-blank resource type
    * @param resourceId   non-blank resource identifier
+   * @param tenant       tenant scope; {@code null} becomes {@link TenantId#DEFAULT}
    */
   public ResourceRef {
     if (resourceType == null || resourceType.isBlank()) {
@@ -60,5 +71,17 @@ public record ResourceRef(String resourceType, String resourceId) {
     if (resourceId == null || resourceId.isBlank()) {
       throw new IllegalArgumentException("resourceId must not be blank");
     }
+    tenant = tenant == null ? TenantId.DEFAULT : tenant;
+  }
+
+  /**
+   * Convenience constructor for single-tenant call sites: implicitly
+   * targets {@link TenantId#DEFAULT}.
+   *
+   * @param resourceType non-blank resource type
+   * @param resourceId   non-blank resource identifier
+   */
+  public ResourceRef(String resourceType, String resourceId) {
+    this(resourceType, resourceId, TenantId.DEFAULT);
   }
 }

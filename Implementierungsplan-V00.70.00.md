@@ -8,7 +8,7 @@ Pull Request.
 
 | Phase | Status |
 |---|---|
-| 1 — Foundation: Tenant & Resource | teilweise (Resource ✓, Tenant offen) |
+| 1 — Foundation: Tenant & Resource | ✓ abgeschlossen — `TenantId(value)` mit `DEFAULT`, `ResourceRef(resourceType, resourceId, tenant)` (Zwei-arg-Overload nutzt `TenantId.DEFAULT`, source-backward-compat), `ResourceAccessContext(accessContext, resourceRef)` als Composite. Tenant-Aware-Keys/Records aus Phase 2/4/7 folgen in ihrer jeweiligen Phase. |
 | 2 — Persistence API | offen |
 | 3 — Contract Testkit + Eclipse Store | offen |
 | 4 — Store-backed Services + SecurityVersion | offen |
