@@ -33,6 +33,11 @@ import static com.svenruppert.vaadin.security.demo.standalone.Permission.BOOK_BO
 import static com.svenruppert.vaadin.security.demo.standalone.Permission.BOOK_LIST;
 import static com.svenruppert.vaadin.security.demo.standalone.Permission.BOOK_REMOVE;
 import static com.svenruppert.vaadin.security.demo.standalone.Permission.BOOK_RETURN;
+import static com.svenruppert.vaadin.security.demo.standalone.Permission.MEMBER_ADD;
+import static com.svenruppert.vaadin.security.demo.standalone.Permission.MEMBER_AUDIT_LOG;
+import static com.svenruppert.vaadin.security.demo.standalone.Permission.MEMBER_INVITE;
+import static com.svenruppert.vaadin.security.demo.standalone.Permission.MEMBER_LIST;
+import static com.svenruppert.vaadin.security.demo.standalone.Permission.MEMBER_REMOVE;
 
 public final class DemoAuthorizationService implements AuthorizationService<User> {
 
@@ -43,16 +48,24 @@ public final class DemoAuthorizationService implements AuthorizationService<User
               BOOK_BORROW.permissionName(),
               BOOK_RETURN.permissionName(),
               BOOK_ADD.permissionName(),
-              BOOK_REMOVE.permissionName()))
+              BOOK_REMOVE.permissionName(),
+              MEMBER_LIST.permissionName(),
+              MEMBER_ADD.permissionName(),
+              MEMBER_INVITE.permissionName(),
+              MEMBER_REMOVE.permissionName(),
+              MEMBER_AUDIT_LOG.permissionName()))
           .put(Role.LIBRARIAN.roleName(), Set.of(
               BOOK_LIST.permissionName(),
               BOOK_BORROW.permissionName(),
               BOOK_RETURN.permissionName(),
-              BOOK_ADD.permissionName()))
+              BOOK_ADD.permissionName(),
+              MEMBER_LIST.permissionName(),
+              MEMBER_INVITE.permissionName()))
           .put(Role.MEMBER.roleName(), Set.of(
               BOOK_LIST.permissionName(),
               BOOK_BORROW.permissionName(),
-              BOOK_RETURN.permissionName()))
+              BOOK_RETURN.permissionName(),
+              MEMBER_LIST.permissionName()))
           .build();
 
   @Override

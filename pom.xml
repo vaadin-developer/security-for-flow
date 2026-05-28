@@ -76,6 +76,7 @@
         <module>security-rest</module>
         <module>security-standalone</module>
         <module>security-test</module>
+        <module>security-processor</module>
         <module>demo-rest-shared</module>
         <module>demo-vaadin</module>
         <module>demo-rest</module>

@@ -17,7 +17,7 @@
 package com.svenruppert.vaadin.security.demo.standalone;
 
 import com.svenruppert.vaadin.security.authorization.api.AccessDeniedException;
-import com.svenruppert.vaadin.security.standalone.Secured;
+import com.svenruppert.vaadin.security.standalone.SecuredProxy;
 import com.svenruppert.vaadin.security.standalone.StandaloneLoginFlow;
 
 import java.io.BufferedReader;
@@ -25,20 +25,31 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Minimal interactive CLI demonstrating the standalone security adapter.
- * <p>
- * Flow:
+ * Minimal interactive CLI demonstrating the standalone security
+ * adapter. Showcases both enforcement paths side by side:
+ *
+ * <ul>
+ *   <li><b>Runtime / dynamic proxy</b>: {@link LibraryService} is an
+ *       interface; {@code SecuredProxy.wrap(LibraryService.class,
+ *       impl)} produces a proxy that consults the framework
+ *       evaluators on every call.</li>
+ *   <li><b>Compile-time / annotation processor</b>:
+ *       {@link MemberDirectory} is a concrete class annotated with
+ *       {@code @Secured}; the {@code security-processor} module
+ *       emits a {@code MemberDirectorySecured} subclass during
+ *       compilation, the demo instantiates that subclass, and every
+ *       guarded method calls into {@code SecurityEnforcer} before
+ *       delegating to {@code super}.</li>
+ * </ul>
+ *
+ * <p>Flow:
  * <ol>
  *   <li>Prompt for username + password.</li>
  *   <li>Authenticate via the SPI-resolved
  *       {@code AuthenticationService}; on success the
  *       {@code StandaloneLoginFlow} binds the subject into the
  *       thread-local {@code SubjectStore}.</li>
- *   <li>Wrap {@code InMemoryLibraryService} with
- *       {@code Secured.wrap(...)} so every method call enforces its
- *       {@code @RequiresPermission} / {@code @RequiresRole} annotation
- *       through the framework's evaluators.</li>
- *   <li>Read CLI commands. The reflection proxy throws
+ *   <li>Read CLI commands. Both wrappers throw
  *       {@link AccessDeniedException} when an action is not allowed —
  *       the loop catches it and prints a denial message.</li>
  * </ol>
@@ -52,12 +63,18 @@ public final class DemoApp {
   private final java.io.PrintStream out;
   private final StandaloneLoginFlow<Credentials, User> loginFlow;
   private final LibraryService library;
+  private final MemberDirectory members;
 
   public DemoApp(BufferedReader in, java.io.PrintStream out) {
     this.in = in;
     this.out = out;
     this.loginFlow = new StandaloneLoginFlow<>();
-    this.library = Secured.wrap(LibraryService.class, new InMemoryLibraryService());
+    // Runtime path: dynamic-proxy enforcement on an interface.
+    this.library = SecuredProxy.wrap(LibraryService.class, new InMemoryLibraryService());
+    // Compile-time path: annotation-processor-generated subclass on a
+    // concrete class. Instantiating MemberDirectorySecured wires every
+    // guarded method through SecurityEnforcer.
+    this.members = new MemberDirectorySecured();
   }
 
   public static void main(String[] args) throws Exception {
@@ -104,13 +121,17 @@ public final class DemoApp {
   private void printHelp() {
     out.println("""
         Commands:
-          list                 -- list books
-          borrow <title>       -- borrow a book
-          return <title>       -- return a book
-          add <title>          -- add a book to the catalog (LIBRARIAN+)
-          remove <title>       -- remove a book from the catalog (ADMIN)
-          help                 -- this help
-          quit                 -- exit
+          list                       -- list books
+          borrow <title>             -- borrow a book
+          return <title>             -- return a book
+          add <title>                -- add a book to the catalog (LIBRARIAN+)
+          remove <title>             -- remove a book from the catalog (ADMIN)
+          members                    -- list registered members
+          invite <name> <email>      -- register/invite a member (LIBRARIAN+)
+          remove-member <name>       -- remove a member (ADMIN, audited)
+          reset-members              -- drop every member (ADMIN)
+          help                       -- this help
+          quit                       -- exit
         """);
   }
 
@@ -153,6 +174,24 @@ public final class DemoApp {
       case "remove" -> {
         library.removeBook(arg);
         out.println("OK — removed " + arg);
+      }
+      case "members" -> members.listMembers().forEach(m -> out.println("  - " + m));
+      case "invite" -> {
+        String[] parts = arg.split("\\s+", 2);
+        if (parts.length < 2 || parts[0].isEmpty() || parts[1].isEmpty()) {
+          out.println("usage: invite <name> <email>");
+          return;
+        }
+        members.addMember(parts[0], parts[1]);
+        out.println("OK — invited " + parts[0] + " <" + parts[1] + ">");
+      }
+      case "remove-member" -> {
+        members.removeMember(arg);
+        out.println("OK — removed member " + arg);
+      }
+      case "reset-members" -> {
+        members.resetAll();
+        out.println("OK — member directory reset");
       }
       case "help" -> printHelp();
       default -> out.println("Unknown command. Try 'help'.");

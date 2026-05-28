@@ -23,7 +23,7 @@ import java.util.List;
 
 /**
  * Demo service interface guarded by the framework's annotations. Wrap
- * implementations with {@code Secured.wrap(LibraryService.class, ...)};
+ * implementations with {@code SecuredProxy.wrap(LibraryService.class, ...)};
  * every call then runs the annotation's evaluator before delegating to
  * the implementation.
  */

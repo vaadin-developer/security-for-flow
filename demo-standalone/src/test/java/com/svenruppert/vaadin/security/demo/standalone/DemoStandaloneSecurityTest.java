@@ -18,7 +18,7 @@ package com.svenruppert.vaadin.security.demo.standalone;
 
 import com.svenruppert.vaadin.security.authorization.api.AccessDeniedException;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
-import com.svenruppert.vaadin.security.standalone.Secured;
+import com.svenruppert.vaadin.security.standalone.SecuredProxy;
 import com.svenruppert.vaadin.security.standalone.StandaloneLoginFlow;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DemoStandaloneSecurityTest {
 
   private final StandaloneLoginFlow<Credentials, User> flow = new StandaloneLoginFlow<>();
-  private final LibraryService library = Secured.wrap(
+  private final LibraryService library = SecuredProxy.wrap(
       LibraryService.class, new InMemoryLibraryService());
 
   @AfterEach

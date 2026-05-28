@@ -24,7 +24,12 @@ public enum Permission {
   BOOK_BORROW("book:borrow"),
   BOOK_RETURN("book:return"),
   BOOK_ADD("book:add"),
-  BOOK_REMOVE("book:remove");
+  BOOK_REMOVE("book:remove"),
+  MEMBER_LIST("member:list"),
+  MEMBER_ADD("member:add"),
+  MEMBER_INVITE("member:invite"),
+  MEMBER_REMOVE("member:remove"),
+  MEMBER_AUDIT_LOG("member:audit-log");
 
   private final PermissionName permissionName;
 

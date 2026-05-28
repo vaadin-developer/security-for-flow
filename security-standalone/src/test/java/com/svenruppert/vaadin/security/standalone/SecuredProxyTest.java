@@ -54,7 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisplayName("Secured — dynamic-proxy enforcement")
+@DisplayName("SecuredProxy — dynamic-proxy enforcement")
 class SecuredTest {
 
   @BeforeEach
@@ -94,7 +94,7 @@ class SecuredTest {
   @DisplayName("wrap() rejects a non-interface class")
   void wrapRejectsClass() {
     assertThrows(IllegalArgumentException.class,
-        () -> Secured.wrap(String.class, "x"));
+        () -> SecuredProxy.wrap(String.class, "x"));
   }
 
   // ── Object methods bypass enforcement ─────────────────────────
@@ -103,7 +103,7 @@ class SecuredTest {
   @DisplayName("Object methods (equals/hashCode/toString) bypass enforcement entirely")
   void objectMethodsBypass() {
     Service delegate = new ServiceImpl();
-    Service secured = Secured.wrap(Service.class, delegate);
+    Service secured = SecuredProxy.wrap(Service.class, delegate);
 
     assertNotNull(secured.toString());
     assertEquals(secured.hashCode(), secured.hashCode());
@@ -116,7 +116,7 @@ class SecuredTest {
   @Test
   @DisplayName("Unannotated method calls bypass enforcement and reach the delegate")
   void unannotatedPassesThrough() {
-    Service secured = Secured.wrap(Service.class, new ServiceImpl());
+    Service secured = SecuredProxy.wrap(Service.class, new ServiceImpl());
     assertEquals("open", secured.openOperation(),
         "an unannotated method must run on the delegate without enforcement");
   }
@@ -126,7 +126,7 @@ class SecuredTest {
   @Test
   @DisplayName("Annotated method without a bound subject throws AccessDeniedException")
   void annotatedWithoutSubjectIsDenied() {
-    Service secured = Secured.wrap(Service.class, new ServiceImpl());
+    Service secured = SecuredProxy.wrap(Service.class, new ServiceImpl());
     assertThrows(AccessDeniedException.class, secured::listItems,
         "@RequiresPermission must be enforced — anonymous call must throw");
   }
@@ -138,7 +138,7 @@ class SecuredTest {
   void permissionGrantedReachesDelegate() {
     bindSubject("alice", Set.of(), Set.of(new PermissionName("test:list")));
     ServiceImpl impl = new ServiceImpl();
-    Service secured = Secured.wrap(Service.class, impl);
+    Service secured = SecuredProxy.wrap(Service.class, impl);
 
     List<String> items = secured.listItems();
 
@@ -153,7 +153,7 @@ class SecuredTest {
   @DisplayName("@RequiresPermission denies a subject without the permission (Forbidden branch)")
   void permissionForbidden() {
     bindSubject("alice", Set.of(), Set.of());
-    Service secured = Secured.wrap(Service.class, new ServiceImpl());
+    Service secured = SecuredProxy.wrap(Service.class, new ServiceImpl());
 
     AccessDeniedException ex = assertThrows(AccessDeniedException.class,
         secured::listItems);
@@ -168,7 +168,7 @@ class SecuredTest {
   @DisplayName("@RequiresRole allows a subject that holds the role")
   void roleGranted() {
     bindSubject("admin", Set.of(new RoleName("ADMIN")), Set.of());
-    Service secured = Secured.wrap(Service.class, new ServiceImpl());
+    Service secured = SecuredProxy.wrap(Service.class, new ServiceImpl());
 
     secured.adminAction();
   }
@@ -177,7 +177,7 @@ class SecuredTest {
   @DisplayName("@RequiresRole denies a subject without the role")
   void roleForbidden() {
     bindSubject("alice", Set.of(new RoleName("USER")), Set.of());
-    Service secured = Secured.wrap(Service.class, new ServiceImpl());
+    Service secured = SecuredProxy.wrap(Service.class, new ServiceImpl());
 
     assertThrows(AccessDeniedException.class, secured::adminAction);
   }
@@ -187,7 +187,7 @@ class SecuredTest {
   @Test
   @DisplayName("Class-level annotation guards every method (even unannotated ones)")
   void classLevelAnnotation() {
-    GuardedService secured = Secured.wrap(GuardedService.class, new GuardedServiceImpl());
+    GuardedService secured = SecuredProxy.wrap(GuardedService.class, new GuardedServiceImpl());
 
     // Without a subject → denied
     assertThrows(AccessDeniedException.class, secured::ping);
@@ -205,7 +205,7 @@ class SecuredTest {
   void customAccessEvaluatorGrants() {
     SettableEvaluator.next = AccessDecision.granted();
     bindSubject("alice", Set.of(), Set.of());
-    Service secured = Secured.wrap(Service.class, new ServiceImpl());
+    Service secured = SecuredProxy.wrap(Service.class, new ServiceImpl());
 
     secured.customCheck();
     assertEquals(1, SettableEvaluator.invocations,
@@ -218,7 +218,7 @@ class SecuredTest {
     SettableEvaluator.next = AccessDecision.rerouteToError(
         SecurityException.class, "nope");
     bindSubject("alice", Set.of(), Set.of());
-    Service secured = Secured.wrap(Service.class, new ServiceImpl());
+    Service secured = SecuredProxy.wrap(Service.class, new ServiceImpl());
 
     AccessDeniedException ex = assertThrows(AccessDeniedException.class,
         secured::customCheck);
@@ -230,7 +230,7 @@ class SecuredTest {
   void customAccessEvaluatorReroute() {
     SettableEvaluator.next = AccessDecision.reroute("home", false);
     bindSubject("alice", Set.of(), Set.of());
-    Service secured = Secured.wrap(Service.class, new ServiceImpl());
+    Service secured = SecuredProxy.wrap(Service.class, new ServiceImpl());
 
     AccessDeniedException ex = assertThrows(AccessDeniedException.class,
         secured::customCheck);
@@ -241,16 +241,16 @@ class SecuredTest {
   // ── AuthorizationEvaluator StepUp branch ──────────────────────
 
   @Test
-  @DisplayName("AuthorizationEvaluator returns StepUpRequired → AccessDeniedException with 'StepUpRequired:<method>:<reason>'")
+  @DisplayName("AuthorizationEvaluator returns StepUpRequired → AccessDeniedException naming method + reason")
   void authorizationEvaluatorStepUpThrows() {
     bindSubject("alice", Set.of(), Set.of());
-    Service secured = Secured.wrap(Service.class, new ServiceImpl());
+    Service secured = SecuredProxy.wrap(Service.class, new ServiceImpl());
 
     AccessDeniedException ex = assertThrows(AccessDeniedException.class,
         secured::sensitiveAction);
-    assertEquals("StepUpRequired:MFA:needs mfa", ex.getMessage(),
-        "StepUpRequired must surface as AccessDeniedException with the "
-            + "'StepUpRequired:<method>:<reason>' message produced by Secured.run()");
+    assertEquals("Step-up required: method=MFA, reason=needs mfa", ex.getMessage(),
+        "StepUpRequired must surface as AccessDeniedException whose message "
+            + "names both the requested step-up method and the reason from the decision");
   }
 
   // ── Checked-exception propagation ─────────────────────────────
@@ -259,7 +259,7 @@ class SecuredTest {
   @DisplayName("Delegate exceptions propagate verbatim (no InvocationTargetException)")
   void delegateExceptionsPropagate() {
     bindSubject("alice", Set.of(), Set.of(new PermissionName("test:list")));
-    Service secured = Secured.wrap(Service.class, new ThrowingService());
+    Service secured = SecuredProxy.wrap(Service.class, new ThrowingService());
 
     IllegalStateException ex = assertThrows(IllegalStateException.class,
         secured::listItems);
@@ -273,7 +273,7 @@ class SecuredTest {
   @DisplayName("requireAllowed throws for an unknown method name")
   void requireAllowedUnknownMethod() {
     assertThrows(IllegalArgumentException.class,
-        () -> Secured.requireAllowed(Service.class, "doesNotExist"));
+        () -> SecuredProxy.requireAllowed(Service.class, "doesNotExist"));
   }
 
   @Test
@@ -282,14 +282,14 @@ class SecuredTest {
     // No subject bound → @RequiresPermission on the interface method
     // → Unauthenticated → AccessDeniedException
     assertThrows(AccessDeniedException.class,
-        () -> Secured.requireAllowed(Service.class, "listItems"));
+        () -> SecuredProxy.requireAllowed(Service.class, "listItems"));
   }
 
   @Test
   @DisplayName("requireAllowed is a no-op when neither method nor declaring class is annotated")
   void requireAllowedNoAnnotation() {
     // openOperation is unannotated — no enforcement, no exception
-    Secured.requireAllowed(Service.class, "openOperation");
+    SecuredProxy.requireAllowed(Service.class, "openOperation");
   }
 
   // ── Helpers ────────────────────────────────────────────────────
@@ -347,7 +347,7 @@ class SecuredTest {
 
   // Custom annotation + AuthorizationEvaluator that always returns
   // StepUpRequired — exercises the AuthorizationDecision branch of
-  // Secured.run().
+  // SecuredProxy.run().
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.METHOD, ElementType.TYPE})
   @SecurityAnnotation(StepUpDemandingEvaluator.class)

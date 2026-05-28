@@ -21,13 +21,23 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>demo-standalone</artifactId>
-  <name>Security for Vaadin - Standalone Demo</name>
-  <description>Demo CLI application showing how a plain Java program consumes the standalone security adapter.</description>
+  <artifactId>security-processor</artifactId>
+  <name>Security Annotation Processor</name>
+  <description>
+    Compile-time annotation processor that generates a Secured wrapper
+    subclass for each @Secured-annotated concrete class. The generated
+    wrapper routes every public, non-final, non-static method through
+    SecurityEnforcer when the method (or class) carries a method-security
+    annotation (@RequiresRole, @RequiresPermission, @RequiresAnyPermission,
+    @RequiresAllPermissions, @RequiresPolicy).
+
+    Runtime sibling: SecuredProxy in security-standalone for the
+    JDK-dynamic-proxy path on interfaces.
+  </description>
 
   <properties>
-    <maven.deploy.skip>true</maven.deploy.skip>
-    <gpg.skip>true</gpg.skip>
+    <proxybuilder.version>00.10.00</proxybuilder.version>
+    <compile-testing.version>0.21.0</compile-testing.version>
   </properties>
 
   <dependencies>
@@ -38,40 +48,34 @@
     </dependency>
     <dependency>
       <groupId>com.svenruppert</groupId>
-      <artifactId>security-standalone</artifactId>
-      <version>${project.version}</version>
+      <artifactId>proxybuilder</artifactId>
+      <version>${proxybuilder.version}</version>
     </dependency>
+
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>security-test</artifactId>
-      <version>${project.version}</version>
+      <groupId>com.google.testing.compile</groupId>
+      <artifactId>compile-testing</artifactId>
+      <version>${compile-testing.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
 
   <build>
     <plugins>
+      <!--
+        We are building an annotation processor. Don't let javac trigger
+        annotation processing against this module's own sources (would
+        try to run the processor that we are still compiling).
+      -->
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <!--
-            Wire security-processor as a compile-time annotation
-            processor. The processor expands @Secured-annotated classes
-            into a <Type>Secured subclass that routes every guarded
-            method through SecurityEnforcer before the super-call.
-          -->
-          <annotationProcessorPaths>
-            <path>
-              <groupId>com.svenruppert</groupId>
-              <artifactId>security-processor</artifactId>
-              <version>${project.version}</version>
-            </path>
-          </annotationProcessorPaths>
+          <proc>none</proc>
         </configuration>
       </plugin>
       <plugin>
