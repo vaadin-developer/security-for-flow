@@ -16,7 +16,7 @@ Pull Request.
 | 5b — SecurityEnforcer extrahieren | ✓ abgeschlossen — Klasse `com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer` mit Generic + Explicit API; `SecuredProxy` (umbenannt von `Secured`) delegiert darauf |
 | 5c — `security-processor`-Modul + `SecuredAnnotationProcessor` | ✓ abgeschlossen — Modul angelegt, Processor implementiert, 11 compile-testing-Tests grün, proxybuilder 00.10.00 als Maven-Central-Dependency eingebunden |
 | 5d — Demo-Integration in `demo-standalone` | ✓ abgeschlossen — `MemberDirectory` (konkrete Klasse mit `@Secured`) ergänzt; `DemoApp` zeigt beide Pfade nebeneinander; 8 neue Tests grün |
-| 6 — Autorisierungs-Ergonomie | teilweise (Role-Hierarchy + Any/All-Permissions im Working Tree, `RolePermissionResolver` aus Hierarchie noch offen) |
+| 6 — Autorisierungs-Ergonomie | ✓ abgeschlossen — `RoleHierarchy`/`NoopRoleHierarchy`/`StaticRoleHierarchy` SPIs vorhanden, `@RequiresAnyPermission`/`@RequiresAllPermissions` + Evaluatoren vorhanden, `RolePermissionResolver.permissionsForRoles(roles, mapping, hierarchy)` als hierarchy-aware Overload (PIT-Coverage 93 % auf `permissions/`-Paket) |
 | 7 — Account Lifecycle + Tokens + Rate-Limiting | offen |
 | 8 — Vaadin-UI + Test-Fixtures + OpenAPI | teilweise — Test-Fixtures als `security-test`-Modul vorgezogen und abgeschlossen; Session-Management-UI, SecuredButton, OpenAPI noch offen |
 
