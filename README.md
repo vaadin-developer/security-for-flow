@@ -17,11 +17,13 @@ demo modules — never in the library.
 | `security-vaadin` | `security-vaadin` | Vaadin Flow adapter — view and navigation security |
 | `security-rest` | `security-rest` | Framework-light REST adapter — request and handler security |
 | `security-standalone` | `security-standalone` | Plain-Java / desktop / CLI adapter — ThreadLocal subject + dynamic-proxy method-level enforcement |
+| `security-test` | `security-test` | Reusable test fixtures: `FakeAuthenticationService`, `FakeAuthorizationService`, `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5 `SecurityTestExtension`. Pull in as `<scope>test</scope>` |
+| `security-processor` | `security-processor` | Compile-time annotation processor: generates `<Type>Secured` subclasses for `@Secured`-annotated concrete classes. Wire as `<annotationProcessorPath>`, not as a regular dependency |
 | `demo-rest-shared` | `demo-rest-shared` | Transport-level constants + tiny JSON helper, shared between the REST server and any client |
 | `demo-vaadin` | `demo-vaadin` | Standalone Vaadin demo (WAR) — auth runs in-JVM |
 | `demo-rest` | `demo-rest` | Runnable REST reference: JDK-only HTTP server + CLI client |
 | `demo-vaadin-rest-client` | `demo-vaadin-rest-client` | Vaadin demo where `demo-rest` is the authoritative backend; UI talks to it through one encapsulated Java client |
-| `demo-standalone` | `demo-standalone` | Interactive CLI demo (library-borrowing) showing `Secured.wrap(...)` + `StandaloneLoginFlow` |
+| `demo-standalone` | `demo-standalone` | Interactive CLI demo (library + member directory) showing both `SecuredProxy.wrap(...)` (dynamic-proxy) **and** the annotation-processor-generated `<Type>Secured` wrapper |
 
 ### Dependency Rules
 
@@ -30,16 +32,20 @@ security-core              -> (no project deps)
 security-vaadin            -> security-core
 security-rest              -> security-core
 security-standalone        -> security-core
+security-test              -> security-core (compile; the test extension implements JUnit lifecycle types)
+security-processor         -> security-core, com.svenruppert:proxybuilder:00.10.00
 demo-rest-shared           -> (no project deps; transport-only)
 demo-vaadin                -> security-core, security-vaadin
 demo-rest                  -> security-core, security-rest, demo-rest-shared
 demo-vaadin-rest-client    -> security-core, security-vaadin, demo-rest-shared
                               (test scope only: demo-rest)
 demo-standalone            -> security-core, security-standalone
+                              (annotationProcessorPath: security-processor)
 ```
 
 `security-core` has no Vaadin, Servlet, or REST-framework dependencies.
-The three adapter modules never depend on each other.
+The four adapter modules (`security-vaadin`, `security-rest`,
+`security-standalone`, `security-processor`) never depend on each other.
 
 ## Quick Start
 
@@ -122,12 +128,24 @@ mvn -pl demo-standalone exec:java \
 ```
 
 Demo users are seeded: `admin/admin`, `librarian/librarian`,
-`alice/alice`. After login, commands cover `list`, `borrow <title>`,
-`return <title>`, `add <title>` (LIBRARIAN+), `remove <title>` (ADMIN
-only). Calls run through a `Secured.wrap(LibraryService.class, ...)`
-proxy that enforces the method-level `@RequiresPermission` /
-`@RequiresRole` annotations; rejections surface as `DENIED — …` lines
-in the terminal.
+`alice/alice`. The CLI exposes **both** enforcement paths side by
+side:
+
+- **Runtime / dynamic-proxy** — book commands (`list`, `borrow`,
+  `return`, `add`, `remove`) run through
+  `SecuredProxy.wrap(LibraryService.class, …)`. `LibraryService` is
+  an interface; the JDK proxy calls into `SecurityEnforcer` on every
+  invocation.
+- **Compile-time / annotation processor** — member commands
+  (`members`, `invite`, `remove-member`, `reset-members`) operate on
+  `MemberDirectory`, a concrete class annotated with `@Secured`. The
+  `security-processor` annotation processor generates
+  `MemberDirectorySecured` at compile time; each guarded method
+  inserts a `SecurityEnforcer.require…(…)` call ahead of
+  `super.<method>(…)`.
+
+Both paths share the same `SecurityEnforcer`, so the rules are
+identical. Rejections surface as `DENIED — …` lines in the terminal.
 
 ### Tests
 
@@ -417,17 +435,23 @@ decisions.
 
 ## Standalone Integration
 
-To secure plain-Java code — desktop, CLI, daemon — annotate a service
-interface, wrap implementations once with `Secured.wrap(...)`, and drive
-the login lifecycle with `StandaloneLoginFlow`. There is no listener,
-no filter chain, no navigation phase; every method call on the wrapped
-interface runs through the same `SecurityAnnotationScanner` + evaluator
-machinery as the Vaadin and REST adapters.
+To secure plain-Java code — desktop, CLI, daemon — pick whichever of
+the two paths fits your service shape and drive the login lifecycle
+with `StandaloneLoginFlow`. There is no listener, no filter chain, no
+navigation phase; both paths land in the same `SecurityEnforcer` as
+the Vaadin and REST adapters.
+
+- **Interface available** → wrap once with
+  `SecuredProxy.wrap(MyService.class, impl)` (runtime / JDK proxy).
+- **Concrete class, no interface** → annotate with `@Secured`, add
+  `security-processor` to the `<annotationProcessorPaths>`, and
+  instantiate the generated `<Type>Secured` subclass (compile-time).
 
 A complete runnable reference lives in `demo-standalone`: an
-interactive library-borrowing CLI with three seeded users and a
-role/permission matrix exercising both `@RequiresPermission` and
-`@RequiresRole`.
+interactive library-borrowing CLI with three seeded users that
+exercises **both** paths — `LibraryService` (interface) via
+`SecuredProxy`, `MemberDirectory` (concrete class) via the
+processor-generated `MemberDirectorySecured`.
 
 ### 1. Define the service interface
 
@@ -448,13 +472,13 @@ public interface LibraryService {
 
 ```java
 LibraryService secured =
-    Secured.wrap(LibraryService.class, new InMemoryLibraryService());
+    SecuredProxy.wrap(LibraryService.class, new InMemoryLibraryService());
 
 secured.listBooks();             // runs if the bound subject has book:list
 secured.removeBook("x");         // throws AccessDeniedException for non-ADMIN
 ```
 
-`Secured.wrap(...)` returns a JDK dynamic-proxy implementing the
+`SecuredProxy.wrap(...)` returns a JDK dynamic-proxy implementing the
 interface. Every call scans the method (then the declaring class) for a
 `@SecurityAnnotation`-meta-annotated annotation, runs the matching
 evaluator, and either delegates to the real implementation or throws
@@ -464,9 +488,35 @@ For callbacks / lambdas where wrapping an interface is awkward, call
 the single-shot helper:
 
 ```java
-Secured.requireAllowed(MyOps.class, "delete");
+SecuredProxy.requireAllowed(MyOps.class, "delete");
 // throws AccessDeniedException if the calling subject is not allowed
 ```
+
+#### Compile-time path (concrete class)
+
+For concrete classes (no interface) the annotation processor in
+`security-processor` generates a sealed `<Type>Secured` subclass at
+build time:
+
+```java
+@Secured
+public class MemberDirectory {
+    @RequiresPermission("member:list")
+    public List<String> listMembers() { /* … */ }
+
+    @RequiresAnyPermission({"member:add", "member:invite"})
+    public void addMember(String name, String email) { /* … */ }
+}
+
+// Compile produces MemberDirectorySecured automatically.
+MemberDirectory members = new MemberDirectorySecured();
+members.listMembers();           // SecurityEnforcer.requirePermission("member:list") first
+```
+
+Wire the processor as an `<annotationProcessorPath>` in the consuming
+module's `maven-compiler-plugin` configuration — never as a regular
+compile dependency. The generated class extends the original (so the
+original must not be `final`).
 
 ### 3. Drive the login flow
 
@@ -520,17 +570,41 @@ adapters use the same scanner.
 
 Generic annotations (in `security-core`):
 
-- `@RequiresRole({"ROLE_ADMIN"})` → `RequiresRoleEvaluator`
-- `@RequiresPermission("document:delete")` → `RequiresPermissionEvaluator`
+- `@RequiresRole({"ROLE_ADMIN"})` → `RequiresRoleEvaluator` (any-of semantics; honours `RoleHierarchy`)
+- `@RequiresPermission({"document:delete"})` → `RequiresPermissionEvaluator` (all-of semantics)
+- `@RequiresAllPermissions({"a", "b"})` → `RequiresAllPermissionsEvaluator` (explicit AND)
+- `@RequiresAnyPermission({"a", "b"})` → `RequiresAnyPermissionEvaluator` (OR)
+- `@RequiresPolicy("doc.owner-or-admin")` → `RequiresPolicyEvaluator`
 - `@ProtectedBy(...)` → `ProtectedByEvaluator`
+- `@Secured` (class-level, source-retention) → not an evaluator; **trigger for the compile-time annotation processor** in `security-processor`
 
 Project-specific annotations are encouraged for Vaadin views (e.g. `@VisibleFor`).
+
+## Method Security — runtime vs. compile-time
+
+For non-navigation enforcement (CLI services, REST handlers, plain-Java
+classes) the framework offers two paths, both routed through the same
+`SecurityEnforcer` in `security-core`:
+
+| Path | Target | Wiring | When to choose |
+|---|---|---|---|
+| Runtime / JDK Dynamic Proxy | Java **interface** | `SecuredProxy.wrap(MyService.class, impl)` (in `security-standalone`) | The service has a clean interface; you're happy paying a per-call reflection check. Works for callbacks / lambdas via `SecuredProxy.requireAllowed(Class, methodName)`. |
+| Compile-time / Annotation Processor | **Concrete class** annotated with `@Secured` | `<annotationProcessorPath>` for `security-processor`; instantiate the generated `<Type>Secured` subclass | The class has no interface, or you want a stable stacktrace / no per-call reflection. Method-security annotations on `final`, `private` or `static` methods raise compile errors. Underlying generator: `com.svenruppert:proxybuilder:00.10.00`. |
+
+Both paths land in the same `SecurityEnforcer.require…(…)` helpers,
+so a permission rule applies identically regardless of which path
+expressed it. `demo-standalone` exercises both side by side
+(`LibraryService` via `SecuredProxy.wrap`, `MemberDirectory` via
+`MemberDirectorySecured`).
 
 ## Reusable security building blocks
 
 | Type | Module / package | Purpose |
 |---|---|---|
-| `SecurityServiceResolver` | `security-core/.../authorization/api` | Central SPI cache. Strict accessors throw `IllegalStateException` for missing services; `find…()` returns `Optional`; `set…(…)` is a programmatic test seam. Covers Authentication / Authorization / Audit / Action / LoginAttempt / Session / PasswordHasher / Logout. |
+| `SecurityServiceResolver` | `security-core/.../authorization/api` | Central SPI cache. Strict accessors throw `IllegalStateException` for missing services; `find…()` returns `Optional`; `set…(…)` is a programmatic test seam. Covers Authentication / Authorization / Audit / Action / LoginAttempt / Session / PasswordHasher / Logout / RoleHierarchy / ResourceResolver / Step-Up route. |
+| `SecurityEnforcer` | `security-core/.../authorization/api` | Central enforcement entry point. Generic `enforce(Method, Class)` for the runtime/dynamic-proxy path; explicit `requirePermission` / `requireAllPermissions` / `requireAnyPermission` / `requireRole` / `requireAnyRole` / `requirePolicy` for the compile-time/annotation-processor path. Throws `AccessDeniedException` on deny. |
+| `SecuredProxy` | `security-standalone` | `SecuredProxy.wrap(Interface, impl)` returns a JDK dynamic proxy that routes every call through `SecurityEnforcer.enforce(method, declaringClass)`. `requireAllowed(Class, methodName)` is the single-shot variant for callbacks / lambdas. |
+| `SecuredAnnotationProcessor` | `security-processor` | Compile-time annotation processor (loaded via `META-INF/services`). For each `@Secured` concrete class it emits `<Type>Secured extends <Type>` and rewrites every method with a security annotation as `SecurityEnforcer.require…(…)` + `super.<method>(…)`. Built on `com.svenruppert:proxybuilder:00.10.00`. |
 | `PermissionGuard` | `security-core/.../authorization/api` | Stateless `hasPermission` / `requirePermission` (and role variants) on any `HasPermissions`/`HasRoles`. Throws `AccessDeniedException`. |
 | `AuthenticationService<T,U>` | `security-core/.../authentication` | SPI: credential validation + subject loading. Adapter-neutral. |
 | `LogoutService` | `security-core/.../logout` | `logout(SubjectId, LogoutScope)` SPI, paired with `SubjectClearingLogoutService` default + `SubjectSessionRegistry` for multi-session logout. Vaadin-side: `VaadinLogoutService` rotates HTTP session and redirects. |

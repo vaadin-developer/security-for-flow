@@ -1,11 +1,52 @@
 # Restarbeiten — security-for-flow
 
-> Stand: 2026-05-13. Zielversion 00.60.00 (Konzept-V00.60.00.md) +
-> Part-5-Brief (production hardening).
+> Stand: 2026-05-28. Zielversion **00.60.01-SNAPSHOT** mit
+> Foundation-Arbeit fuer 00.70.00 (Konzept-V00.70.00.md +
+> Implementierungsplan-V00.70.00.md).
 > Quelle: `Konzept-V00.60.00.md` + Part-5 Brief, abgeglichen mit
-> Code-Stand nach Standalone-Adapter, Demo-Erweiterungen (Lockout-UI,
-> Role-Admin-UI, User-CRUD, Menü-Integration) und Mutation-Coverage-Push
-> über alle Module.
+> Code-Stand nach Standalone-Adapter, Demo-Erweiterungen
+> (Lockout-UI, Role-Admin-UI, User-CRUD, Menü-Integration),
+> Mutation-Coverage-Push, V00.70-Foundation (Step-Up, Resource Policies,
+> Role-Hierarchy, security-test) und **Phase 5 a–d (Method Security
+> via Annotation Processor + Demo-Integration)** vollstaendig
+> abgeschlossen.
+
+## Erledigt im Working Tree seit 00.60.00
+
+- ✅ **security-test** als eigenes 5. Reactor-Modul (Phase-8-Vorzug):
+  `FakeAuthenticationService`, `FakeAuthorizationService`,
+  `InMemorySubjectStore` (umgezogen aus security-vaadin/test),
+  `RecordingAuditSink`, `AccessContexts`, `SecuritySubjects`,
+  `SyntheticAnnotations`, `SecurityTestExtension` — jeweils mit
+  begleitenden Tests.
+- ✅ **Step-Up Authentication**: `AuthorizationDecision.StepUpRequired`,
+  `StepUpChallenged`-Audit-Event, REST 401 + `WWW-Authenticate: StepUp`,
+  Vaadin-Reroute auf `SecurityServiceResolver.stepUpRouteName()`,
+  Standalone-`AccessDeniedException`. Demo-Views in
+  `demo-vaadin-rest-client`.
+- ✅ **Resource Policies**: `ResourceRef`, `ResourcePredicates`,
+  `ResourceResolver`-SPI + `InMemoryResourceResolverRegistry`,
+  `PolicyContext` mit `resourceRef` + `resourceAttributes`.
+- ✅ **Role-Hierarchy**: `RoleHierarchy`-SPI, `NoopRoleHierarchy`,
+  `StaticRoleHierarchy`, `RoleMatcher.containsAnyImplied(...)`,
+  `RequiresRoleEvaluator` honoriert die Hierarchie ueber
+  `SecurityServiceResolver.roleHierarchy()`.
+- ✅ **Any/All-Permission-Annotationen**: `@RequiresAnyPermission`,
+  `@RequiresAllPermissions` + Evaluatoren + Tests.
+- ✅ **Phase 5 (Method Security via Annotation Processor)** vollstaendig:
+  - 5a Policy-API (Working Tree)
+  - 5b `SecurityEnforcer` als zentrale Enforcement-Komponente
+    (`requirePermission` / `requireAllPermissions` /
+    `requireAnyPermission` / `requireRole` / `requireAnyRole` /
+    `requirePolicy` + Generic `enforce(Method, Class)`)
+  - 5c Neues Modul **security-processor** mit
+    `SecuredAnnotationProcessor` auf
+    `com.svenruppert:proxybuilder:00.10.00`. 11 compile-testing-Tests.
+  - 5d `demo-standalone` zeigt beide Pfade nebeneinander
+    (`LibraryService` via `SecuredProxy.wrap`, `MemberDirectory` via
+    processor-generierter `MemberDirectorySecured`). 8 neue Tests.
+- ✅ **`Secured` → `SecuredProxy`** umbenannt (via `git mv`), Logik in
+  `SecurityEnforcer` extrahiert.
 
 ## Erledigt seit 00.51.00
 
