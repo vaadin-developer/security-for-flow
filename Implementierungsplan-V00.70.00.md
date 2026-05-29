@@ -10,7 +10,7 @@ Pull Request.
 |---|---|
 | 1 — Foundation: Tenant & Resource | ✓ abgeschlossen — `TenantId(value)` mit `DEFAULT`, `ResourceRef(resourceType, resourceId, tenant)` (Zwei-arg-Overload nutzt `TenantId.DEFAULT`, source-backward-compat), `ResourceAccessContext(accessContext, resourceRef)` als Composite. Tenant-Aware-Keys/Records aus Phase 2/4/7 folgen in ihrer jeweiligen Phase. |
 | 2 — Persistence API | ✓ abgeschlossen — alle 11 Store-Interfaces + Records + In-Memory-Defaults + Smoke-Tests. 2a: AuditEventStore + AuditEnvelope, SessionStore + SessionRecord/SessionId/SessionStatus/SecurityVersion, LoginAttemptStore + LoginAttemptKey. 2b: RoleAssignmentStore + RoleAssignmentKey, BootstrapStateStore + BootstrapState. 2c: RememberMeTokenStore + Record (`authentication/`), PasswordResetTokenStore + Record und EmailVerificationTokenStore + Record (`accountlifecycle/`). 2d: ApiKeyStore + ApiKeyRecord, RefreshTokenStore + RefreshTokenRecord (`authentication/`), RateLimitStore + RateLimitKey (`ratelimiting/`). |
-| 3 — Contract Testkit + Eclipse Store | teilweise (3a ✓; 3b offen). 3a: Modul `security-persistence-testkit` mit allen 11 Contract-Interfaces (AuditEventStore, SessionStore, LoginAttemptStore, RoleAssignmentStore, BootstrapStateStore, RememberMeTokenStore, PasswordResetTokenStore, EmailVerificationTokenStore, ApiKeyStore, RefreshTokenStore, RateLimitStore) via JUnit-5-`@Test default`-Methoden. 95 Adapter-Tests gegen die InMemory-Defaults grün. 3b offen: Eclipse-Store-Modul `security-persistence-eclipsestore` auf `org.eclipse.store:storage-embedded:4.1.0` mit `EclipseStoreSecurityRoot` (package-private) + StorageManager-Lifecycle + 11 EclipseStore-Impls + @TempDir-Setup-Helper im Testkit. |
+| 3 — Contract Testkit + Eclipse Store | ✓ abgeschlossen. 3a: `security-persistence-testkit` mit 11 Contract-Interfaces via `@Test default`-Methoden (95 InMemory-Adapter-Tests grün). 3b: `security-persistence-eclipsestore` auf `org.eclipse.store:storage-embedded:4.1.0` mit package-private `EclipseStoreSecurityRoot`, `EclipseStoreSecurityStorage`-AutoCloseable-Lifecycle (`openAt(Path)`/`close()`), 11 `EclipseStore*Store`-Impls (ReentrantReadWriteLock + Manager.store()) und `EclipseStoreContractTestBase` mit `@TempDir`-Lifecycle. **Beide Default-Impls bestehen die identische 95-Test-Suite** (Exit-Kriterium). Kein öffentlicher Typ heisst `SecurityRoot`. |
 | 4 — Store-backed Services + SecurityVersion | offen |
 | 5a — Policy API | ✓ abgeschlossen (Working Tree) |
 | 5b — SecurityEnforcer extrahieren | ✓ abgeschlossen — Klasse `com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer` mit Generic + Explicit API; `SecuredProxy` (umbenannt von `Secured`) delegiert darauf |
@@ -20,10 +20,12 @@ Pull Request.
 | 7 — Account Lifecycle + Tokens + Rate-Limiting | offen |
 | 8 — Vaadin-UI + Test-Fixtures + OpenAPI | teilweise — Test-Fixtures als `security-test`-Modul vorgezogen und abgeschlossen; Session-Management-UI, SecuredButton, OpenAPI noch offen |
 
-Aktueller Reactor: 12 Module (`security-core`, `security-vaadin`,
+Aktueller Reactor: 13 Module (`security-core`, `security-vaadin`,
 `security-rest`, `security-standalone`, `security-test`,
-`security-processor`, `demo-rest-shared`, `demo-vaadin`, `demo-rest`,
-`demo-vaadin-rest-client`, `demo-standalone`, plus Parent-POM).
+`security-processor`, `security-persistence-testkit`,
+`security-persistence-eclipsestore`, `demo-rest-shared`,
+`demo-vaadin`, `demo-rest`, `demo-vaadin-rest-client`,
+`demo-standalone`, plus Parent-POM).
 
 ## Architektur-Entscheidungen vorab
 

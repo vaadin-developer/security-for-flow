@@ -78,6 +78,7 @@
         <module>security-test</module>
         <module>security-processor</module>
         <module>security-persistence-testkit</module>
+        <module>security-persistence-eclipsestore</module>
         <module>demo-rest-shared</module>
         <module>demo-vaadin</module>
         <module>demo-rest</module>
