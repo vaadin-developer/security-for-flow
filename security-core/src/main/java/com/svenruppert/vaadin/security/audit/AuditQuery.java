@@ -121,6 +121,14 @@ public record AuditQuery(
       case PolicyEvaluated e -> e.subjectId();
       case StepUpChallenged e -> e.subjectId();
       case SessionStale e -> e.subjectId();
+      case PasswordResetRequested e -> e.subjectId();
+      case PasswordResetCompleted e -> e.subjectId();
+      case EmailVerificationRequested e -> e.subjectId();
+      case EmailVerified e -> e.subjectId();
+      case ApiKeyUsed e -> e.subjectId();
+      case ApiKeyDenied e -> e.subjectId();
+      case TokenRotated e -> e.subjectId();
+      case RateLimitExceeded e -> e.subjectId();
     };
   }
 }

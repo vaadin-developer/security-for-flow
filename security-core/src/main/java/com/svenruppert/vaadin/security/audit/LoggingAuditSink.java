@@ -146,6 +146,46 @@ public final class LoggingAuditSink implements AuditSink {
         appendField(sb, "snapshot", String.valueOf(e.snapshotVersion()));
         appendField(sb, "current", String.valueOf(e.currentVersion()));
       }
+      case PasswordResetRequested e -> {
+        appendField(sb, "subject", e.subjectId());
+        appendField(sb, "tokenHash", e.tokenHash());
+      }
+      case PasswordResetCompleted e -> {
+        appendField(sb, "subject", e.subjectId());
+        appendField(sb, "tokenHash", e.tokenHash());
+      }
+      case EmailVerificationRequested e -> {
+        appendField(sb, "subject", e.subjectId());
+        appendField(sb, "email", e.email());
+        appendField(sb, "tokenHash", e.tokenHash());
+      }
+      case EmailVerified e -> {
+        appendField(sb, "subject", e.subjectId());
+        appendField(sb, "email", e.email());
+        appendField(sb, "tokenHash", e.tokenHash());
+      }
+      case ApiKeyUsed e -> {
+        appendField(sb, "subject", e.subjectId());
+        appendField(sb, "keyName", e.keyName());
+        appendField(sb, "keyHash", e.keyHash());
+      }
+      case ApiKeyDenied e -> {
+        appendField(sb, "subject", e.subjectId());
+        appendField(sb, "keyHash", e.keyHash());
+        appendField(sb, "reason", e.reason());
+      }
+      case TokenRotated e -> {
+        appendField(sb, "subject", e.subjectId());
+        appendField(sb, "oldHash", e.oldHash());
+        appendField(sb, "newHash", e.newHash());
+      }
+      case RateLimitExceeded e -> {
+        appendField(sb, "scope", e.scope());
+        appendField(sb, "subject", e.subjectId());
+        appendField(sb, "limit", String.valueOf(e.limit()));
+        appendField(sb, "windowSeconds", String.valueOf(e.window().toSeconds()));
+        appendField(sb, "eventsInWindow", String.valueOf(e.eventsInWindow()));
+      }
     }
     return sb.toString();
   }

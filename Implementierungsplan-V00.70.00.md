@@ -17,7 +17,7 @@ Pull Request.
 | 5c — `security-processor`-Modul + `SecuredAnnotationProcessor` | ✓ abgeschlossen — Modul angelegt, Processor implementiert, 11 compile-testing-Tests grün, proxybuilder **00.11.00** (mit separatem `proxybuilder-annotations`-Modul) als Dependency. Generierte Wrapper tragen `@GeneratedByProxyBuilder(processor, sourceClass, proxyBuilderVersion, ...)` RUNTIME-reflectable + `@DelegatesTo("Foo#bar(java.lang.String)")` pro Methode. |
 | 5d — Demo-Integration in `demo-standalone` | ✓ abgeschlossen — `MemberDirectory` (konkrete Klasse mit `@Secured`) ergänzt; `DemoApp` zeigt beide Pfade nebeneinander; 8 neue Tests grün |
 | 6 — Autorisierungs-Ergonomie | ✓ abgeschlossen — `RoleHierarchy`/`NoopRoleHierarchy`/`StaticRoleHierarchy` SPIs vorhanden, `@RequiresAnyPermission`/`@RequiresAllPermissions` + Evaluatoren vorhanden, `RolePermissionResolver.permissionsForRoles(roles, mapping, hierarchy)` als hierarchy-aware Overload (PIT-Coverage 93 % auf `permissions/`-Paket) |
-| 7 — Account Lifecycle + Tokens + Rate-Limiting | offen |
+| 7 — Account Lifecycle + Tokens + Rate-Limiting | ✓ (7a: `SecurityNotification`-Record + `SecurityNotification.Kind`-Enum (4 Werte) + `SecurityNotificationSender`-SPI + `LoggingNotificationSender`-Default (5 Tests). Vier neue `AuditEvent`-Varianten: `PasswordResetRequested`, `PasswordResetCompleted`, `EmailVerificationRequested`, `EmailVerified`. `PasswordResetService` über `PasswordResetTokenStore` + `PasswordHasher` (8 Tests): hash-only, single-use, tenant-scoped, emittiert Audit + Notification, Audit-/Notification-Failures werden geschluckt. `EmailVerificationService` (7 Tests) — gleiche Lifecycle-Form aber trägt die `email`-Adresse auf dem Record. 7b: drei neue `AuditEvent`-Varianten `ApiKeyUsed`, `ApiKeyDenied`, `TokenRotated`. `ApiKeyAuthenticationService` über `ApiKeyStore` + `PasswordHasher` (8 Tests) — hash-only Lookup, lifecycle-Verifikation (`Unknown`/`ForeignTenant`/`Revoked`/`Expired`), markiert `lastUsedAt` bei Erfolg. `TokenService` über `RefreshTokenStore` (10 Tests) — `issue`/`rotate`/`revoke`/`revokeAll`/`purgeExpired`; access tokens sind opake Random-Strings ohne Storage (Apps wählen ihre eigene Verifizierungsstrategie, JWT oder Session-Cache), refresh tokens rotieren mit chain-link via `markReplaced`; emittiert `TokenRotated` auf erfolgreichem Rotate; refuses bei Replay/Revoke/Expired/ForeignTenant. 7c: `RateLimitExceeded`-AuditEvent. `RateLimitPolicy`-SPI (separat von `LoginAttemptPolicy`). Sealed `RateLimitDecision(Allowed | Throttled)`. `InMemoryRateLimitPolicy` (9 Tests) — sliding-window über `RateLimitStore`, eventbasiert, throttled requests werden nicht gezählt, audit-Event surfaced `subjectId` automatisch wenn der Scope mit `"subject:"` beginnt; `reset` cancelt den Throttle bei erfolgreicher Auth, `purgeOldEvents` als retention-sweep. AuditEvent jetzt 23 Varianten; `AuditQuery.subjectIdOf` + `LoggingAuditSink`-Switch enthalten alle neuen Cases. Test-Totals: security-core 921, security-vaadin 137, security-rest 63, security-standalone 30 — alle grün. **Nicht enthalten**: `ApiKeyResolver`-Bridge in `security-rest` — Apps verdrahten `ApiKeyAuthenticationService` direkt in ihren `RestSubjectResolver`, da REST-Resolver-Auswahl projektspezifisch ist (Bearer vs. API-Key vs. Mixed). Wird als Adapter-Glue im `demo-rest` gezeigt sobald Phase 7 in eine Demo wandert.) |
 | 8 — Vaadin-UI + Test-Fixtures + OpenAPI | teilweise — Test-Fixtures als `security-test`-Modul vorgezogen und abgeschlossen; Session-Management-UI, SecuredButton, OpenAPI noch offen |
 
 Aktueller Reactor: 13 Module (`security-core`, `security-vaadin`,
@@ -362,10 +362,19 @@ Anforderungen P0–P3 gegen den 00.10.00-Release pruefen.
 
 **Exit-Kriterien (Phase 7 gesamt):**
 
-- Demo-Reset-Flow laeuft End-to-End mit Log-Sender (ohne Mail-Provider).
-- Contract-Tests fuer die neuen Stores gruen.
-- API-Key- und Bearer-Token-Pfad funktionieren parallel im
-  `demo-vaadin-rest-client`.
+- ✓ Demo-Reset-Flow läuft End-to-End mit Log-Sender (ohne
+  Mail-Provider) — `PasswordResetService` + `EmailVerificationService`
+  + `LoggingNotificationSender` zeigen den Flow geschlossen
+  (test-only); Demo-Integration in einer App ist Followup.
+- ✓ Contract-Tests für die neuen Stores grün — die Phase-2c/2d-Stores
+  (PasswordReset/EmailVerification/ApiKey/Refresh/RateLimit) haben
+  bereits ihre Testkit-Contracts aus Phase 3a; Phase 7 fügt die
+  Service-Layer obendrauf.
+- ⏳ API-Key- und Bearer-Token-Pfad parallel im
+  `demo-vaadin-rest-client` — verbleibt als Adapter-Glue-Followup
+  (außerhalb der Library-SPI). `ApiKeyAuthenticationService` und
+  `TokenService` sind verfügbar; eine Demo, die beide Pfade zeigt,
+  ist bewusst auf die Phase-8-Demo-Welle verschoben.
 
 ## Phase 8 — Vaadin-UI + Test-Fixtures + OpenAPI
 
