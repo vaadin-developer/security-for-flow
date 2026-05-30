@@ -34,6 +34,7 @@ import com.svenruppert.vaadin.security.policy.impl.InMemoryResourceResolverRegis
 import com.svenruppert.vaadin.security.policy.spi.PolicyRegistry;
 import com.svenruppert.vaadin.security.policy.spi.ResourceResolverRegistry;
 import com.svenruppert.vaadin.security.session.NoopSessionPolicy;
+import com.svenruppert.vaadin.security.session.SecurityVersionStore;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
 
 import java.util.Optional;
@@ -85,6 +86,10 @@ public final class SecurityServiceResolver {
   private static final AtomicReference<ResourceResolverRegistry> RESOURCE_RESOLVER_REGISTRY_REF =
       new AtomicReference<>();
   private static final AtomicReference<RoleHierarchy> ROLE_HIERARCHY_REF =
+      new AtomicReference<>();
+  private static final AtomicReference<SecurityVersionStore> SECURITY_VERSION_STORE_REF =
+      new AtomicReference<>();
+  private static final AtomicReference<SubjectIdResolver<?>> SUBJECT_ID_RESOLVER_REF =
       new AtomicReference<>();
   private static final AtomicReference<String> STEP_UP_ROUTE_NAME_REF =
       new AtomicReference<>();
@@ -732,6 +737,74 @@ public final class SecurityServiceResolver {
     ROLE_HIERARCHY_REF.set(hierarchy);
   }
 
+  // ── SecurityVersionStore ──────────────────────────────────────
+
+  /**
+   * Returns the SPI-registered {@link SecurityVersionStore}, or
+   * empty when no implementation is configured. Phase 4c
+   * snapshot-capture in the Vaadin login flow only fires when this
+   * resolver returns a value <em>and</em> a {@link SubjectIdResolver}
+   * is configured.
+   *
+   * @return the registered store, or empty
+   */
+  public static Optional<SecurityVersionStore> findSecurityVersionStore() {
+    SecurityVersionStore cached = SECURITY_VERSION_STORE_REF.get();
+    if (cached != null) {
+      return Optional.of(cached);
+    }
+    Optional<SecurityVersionStore> loaded = findSingleService(
+        SecurityVersionStore.class,
+        ServiceLoader.load(SecurityVersionStore.class));
+    loaded.ifPresent(store -> SECURITY_VERSION_STORE_REF.compareAndSet(null, store));
+    return loaded;
+  }
+
+  /**
+   * Replaces the cached {@link SecurityVersionStore}. Intended for
+   * tests and for applications that prefer programmatic wiring
+   * over SPI.
+   *
+   * @param store the store, or {@code null} to clear
+   */
+  public static void setSecurityVersionStore(SecurityVersionStore store) {
+    SECURITY_VERSION_STORE_REF.set(store);
+  }
+
+  // ── SubjectIdResolver ─────────────────────────────────────────
+
+  /**
+   * Returns the SPI-registered {@link SubjectIdResolver}, or
+   * empty when no implementation is configured.
+   *
+   * @param <U> application user type
+   * @return the registered resolver, or empty
+   */
+  @SuppressWarnings("unchecked")
+  public static <U> Optional<SubjectIdResolver<U>> findSubjectIdResolver() {
+    SubjectIdResolver<?> cached = SUBJECT_ID_RESOLVER_REF.get();
+    if (cached != null) {
+      return Optional.of((SubjectIdResolver<U>) cached);
+    }
+    Optional<SubjectIdResolver> loaded = findSingleService(
+        SubjectIdResolver.class,
+        ServiceLoader.load(SubjectIdResolver.class));
+    loaded.ifPresent(resolver -> SUBJECT_ID_RESOLVER_REF.compareAndSet(null, resolver));
+    return Optional.ofNullable((SubjectIdResolver<U>) SUBJECT_ID_RESOLVER_REF.get());
+  }
+
+  /**
+   * Replaces the cached {@link SubjectIdResolver}. Intended for
+   * tests and for applications that prefer programmatic wiring
+   * over SPI.
+   *
+   * @param resolver the resolver, or {@code null} to clear
+   * @param <U>      application user type
+   */
+  public static <U> void setSubjectIdResolver(SubjectIdResolver<U> resolver) {
+    SUBJECT_ID_RESOLVER_REF.set(resolver);
+  }
+
   // ── Step-up route ─────────────────────────────────────────────
 
   /**
@@ -794,6 +867,8 @@ public final class SecurityServiceResolver {
     POLICY_REGISTRY_REF.set(null);
     RESOURCE_RESOLVER_REGISTRY_REF.set(null);
     ROLE_HIERARCHY_REF.set(null);
+    SECURITY_VERSION_STORE_REF.set(null);
+    SUBJECT_ID_RESOLVER_REF.set(null);
     STEP_UP_ROUTE_NAME_REF.set(null);
     SubjectStores.reset();
   }

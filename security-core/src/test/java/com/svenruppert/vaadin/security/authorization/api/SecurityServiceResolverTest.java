@@ -33,7 +33,10 @@ import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.vaadin.security.bruteforce.NoopLoginAttemptPolicy;
+import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
+import com.svenruppert.vaadin.security.session.InMemorySecurityVersionStore;
 import com.svenruppert.vaadin.security.session.NoopSessionPolicy;
+import com.svenruppert.vaadin.security.session.SecurityVersionStore;
 import com.svenruppert.vaadin.security.session.SessionContext;
 import com.svenruppert.vaadin.security.session.SessionDecision;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
@@ -44,6 +47,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -498,5 +502,58 @@ class SecurityServiceResolverTest {
 
     @Override public void removeListener(LogoutListener listener) {
     }
+  }
+
+  // ── SecurityVersionStore / SubjectIdResolver (Phase 4c-Followup) ──
+
+  @Test
+  @DisplayName("findSecurityVersionStore returns empty when no SPI is registered")
+  void findSecurityVersionStore_emptyByDefault() {
+    assertTrue(SecurityServiceResolver.findSecurityVersionStore().isEmpty());
+  }
+
+  @Test
+  @DisplayName("setSecurityVersionStore overrides the cached store; resetAll clears it")
+  void setSecurityVersionStore_overrides() {
+    InMemorySecurityVersionStore store = new InMemorySecurityVersionStore();
+    SecurityServiceResolver.setSecurityVersionStore(store);
+
+    Optional<SecurityVersionStore> resolved = SecurityServiceResolver.findSecurityVersionStore();
+    assertSame(store, resolved.orElseThrow());
+
+    SecurityServiceResolver.resetAll();
+    assertTrue(SecurityServiceResolver.findSecurityVersionStore().isEmpty());
+  }
+
+  @Test
+  @DisplayName("findSubjectIdResolver returns empty when no SPI is registered")
+  void findSubjectIdResolver_emptyByDefault() {
+    assertTrue(SecurityServiceResolver.<String>findSubjectIdResolver().isEmpty());
+  }
+
+  @Test
+  @DisplayName("setSubjectIdResolver overrides the cached resolver and survives lookups; resetAll clears it")
+  void setSubjectIdResolver_overrides() {
+    SubjectIdResolver<String> resolver = new SubjectIdResolver<String>() {
+      @Override public SubjectId resolve(String s) { return new SubjectId(s); }
+      @Override public TenantId tenantFor(String s) { return new TenantId("acme"); }
+    };
+    SecurityServiceResolver.setSubjectIdResolver(resolver);
+
+    SubjectIdResolver<String> read = SecurityServiceResolver.<String>findSubjectIdResolver()
+        .orElseThrow();
+    assertSame(resolver, read);
+    assertEquals(new SubjectId("alice"), read.resolve("alice"));
+    assertEquals(new TenantId("acme"), read.tenantFor("alice"));
+
+    SecurityServiceResolver.resetAll();
+    assertTrue(SecurityServiceResolver.<String>findSubjectIdResolver().isEmpty());
+  }
+
+  @Test
+  @DisplayName("SubjectIdResolver default tenantFor returns TenantId.DEFAULT")
+  void subjectIdResolver_defaultTenant() {
+    SubjectIdResolver<String> resolver = s -> new SubjectId(s);
+    assertSame(TenantId.DEFAULT, resolver.tenantFor("alice"));
   }
 }
