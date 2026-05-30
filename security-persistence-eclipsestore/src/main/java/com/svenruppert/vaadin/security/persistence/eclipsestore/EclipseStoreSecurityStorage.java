@@ -27,6 +27,7 @@ import com.svenruppert.vaadin.security.authorization.api.roles.RoleAssignmentSto
 import com.svenruppert.vaadin.security.bootstrap.BootstrapStateStore;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptStore;
 import com.svenruppert.vaadin.security.ratelimiting.RateLimitStore;
+import com.svenruppert.vaadin.security.session.SecurityVersionStore;
 import com.svenruppert.vaadin.security.session.SessionStore;
 import org.eclipse.store.storage.embedded.types.EmbeddedStorage;
 import org.eclipse.store.storage.embedded.types.EmbeddedStorageManager;
@@ -219,5 +220,14 @@ public final class EclipseStoreSecurityStorage implements AutoCloseable {
    */
   public RateLimitStore rateLimitStore() {
     return new EclipseStoreRateLimitStore(this);
+  }
+
+  /**
+   * Returns the Eclipse-Store-backed {@link SecurityVersionStore}.
+   *
+   * @return security version store
+   */
+  public SecurityVersionStore securityVersionStore() {
+    return new EclipseStoreSecurityVersionStore(this);
   }
 }

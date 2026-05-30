@@ -28,6 +28,8 @@ import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.bootstrap.BootstrapState;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptKey;
 import com.svenruppert.vaadin.security.ratelimiting.RateLimitKey;
+import com.svenruppert.vaadin.security.session.SecurityVersion;
+import com.svenruppert.vaadin.security.session.SecurityVersionKey;
 import com.svenruppert.vaadin.security.session.SessionId;
 import com.svenruppert.vaadin.security.session.SessionRecord;
 
@@ -92,6 +94,9 @@ final class EclipseStoreSecurityRoot {
 
   /** rate-limit key → ordered list of event instants. */
   final Map<RateLimitKey, LinkedHashSet<Instant>> rateLimitEvents = new LinkedHashMap<>();
+
+  /** (tenant, subject) → current security version. */
+  final Map<SecurityVersionKey, SecurityVersion> securityVersions = new LinkedHashMap<>();
 
   EclipseStoreSecurityRoot() {
   }
