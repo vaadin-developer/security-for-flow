@@ -78,4 +78,19 @@ public interface SessionStore {
    *         {@code false} when no such session existed
    */
   boolean delete(SessionId sessionId);
+
+  /**
+   * Returns every record currently persisted, in insertion order.
+   * Used by admin tooling — e.g. the Phase-8a
+   * {@code SessionManagementView} — that needs the full session
+   * inventory across all subjects.
+   * <p>
+   * Default returns an empty list so pre-existing implementations
+   * keep compiling; concrete stores override.
+   *
+   * @return immutable list of records, possibly empty; never {@code null}
+   */
+  default List<SessionRecord> findAll() {
+    return List.of();
+  }
 }

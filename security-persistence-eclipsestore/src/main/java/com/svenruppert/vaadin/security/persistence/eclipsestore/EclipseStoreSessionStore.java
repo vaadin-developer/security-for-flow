@@ -92,4 +92,14 @@ final class EclipseStoreSessionStore implements SessionStore {
       storage.lock().writeLock().unlock();
     }
   }
+
+  @Override
+  public List<SessionRecord> findAll() {
+    storage.lock().readLock().lock();
+    try {
+      return List.copyOf(storage.root().sessions.values());
+    } finally {
+      storage.lock().readLock().unlock();
+    }
+  }
 }

@@ -97,4 +97,14 @@ public final class InMemorySessionStore implements SessionStore {
       lock.writeLock().unlock();
     }
   }
+
+  @Override
+  public List<SessionRecord> findAll() {
+    lock.readLock().lock();
+    try {
+      return List.copyOf(sessions.values());
+    } finally {
+      lock.readLock().unlock();
+    }
+  }
 }
