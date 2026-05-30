@@ -120,6 +120,7 @@ public record AuditQuery(
       case BootstrapTokenRejected ignored -> null;
       case PolicyEvaluated e -> e.subjectId();
       case StepUpChallenged e -> e.subjectId();
+      case SessionStale e -> e.subjectId();
     };
   }
 }

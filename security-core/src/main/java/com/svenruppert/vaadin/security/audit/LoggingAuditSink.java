@@ -139,6 +139,13 @@ public final class LoggingAuditSink implements AuditSink {
         appendField(sb, "method", e.method());
         appendField(sb, "reason", e.reason());
       }
+      case SessionStale e -> {
+        appendField(sb, "subject", e.subjectId());
+        appendField(sb, "session", e.sessionId());
+        appendField(sb, "route", e.route());
+        appendField(sb, "snapshot", String.valueOf(e.snapshotVersion()));
+        appendField(sb, "current", String.valueOf(e.currentVersion()));
+      }
     }
     return sb.toString();
   }

@@ -17,7 +17,10 @@
 package com.svenruppert.vaadin.security.logout;
 
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
+import com.svenruppert.vaadin.security.session.InMemorySecurityVersionStore;
 import com.svenruppert.vaadin.security.session.InMemorySessionStore;
+import com.svenruppert.vaadin.security.session.SecurityVersion;
+import com.svenruppert.vaadin.security.session.SecurityVersionKey;
 import com.svenruppert.vaadin.security.session.SessionId;
 import com.svenruppert.vaadin.security.session.SessionStatus;
 import org.junit.jupiter.api.DisplayName;
@@ -146,6 +149,46 @@ class StoreBackedSubjectSessionRegistryTest {
     assertTrue(defaultReg.sessionsOf(ALICE).contains("sid-default"));
     assertEquals(1, acmeReg.sessionsOf(ALICE).size());
     assertTrue(acmeReg.sessionsOf(ALICE).contains("sid-acme"));
+  }
+
+  @Test
+  @DisplayName("with a SecurityVersionStore wired, register captures the subject's current version on a fresh session")
+  void registerCapturesCurrentSecurityVersion() {
+    InMemorySessionStore sessionStore = new InMemorySessionStore();
+    InMemorySecurityVersionStore versionStore = new InMemorySecurityVersionStore();
+    versionStore.increment(new SecurityVersionKey(TenantId.DEFAULT, ALICE)); // current → 1
+    versionStore.increment(new SecurityVersionKey(TenantId.DEFAULT, ALICE)); // current → 2
+
+    StoreBackedSubjectSessionRegistry registry =
+        new StoreBackedSubjectSessionRegistry(sessionStore, TenantId.DEFAULT, fixed(T0), versionStore);
+
+    registry.register(ALICE, "sid-1");
+
+    SessionId sid = new SessionId("sid-1");
+    SecurityVersion snapshot = sessionStore.findById(sid)
+        .orElseThrow().securityVersionAtLogin();
+    assertEquals(new SecurityVersion(2L), snapshot,
+        "the registry must capture the subject's current security version at register-time");
+
+    // A later increment must NOT mutate the snapshot — it's frozen on the SessionRecord.
+    versionStore.increment(new SecurityVersionKey(TenantId.DEFAULT, ALICE)); // current → 3
+    SecurityVersion snapshotAfter = sessionStore.findById(sid)
+        .orElseThrow().securityVersionAtLogin();
+    assertEquals(new SecurityVersion(2L), snapshotAfter);
+  }
+
+  @Test
+  @DisplayName("without a SecurityVersionStore, register falls back to INITIAL")
+  void registerFallsBackToInitialWithoutVersionStore() {
+    InMemorySessionStore sessionStore = new InMemorySessionStore();
+    StoreBackedSubjectSessionRegistry registry =
+        new StoreBackedSubjectSessionRegistry(sessionStore, TenantId.DEFAULT, fixed(T0));
+
+    registry.register(ALICE, "sid-1");
+
+    SecurityVersion snapshot = sessionStore.findById(new SessionId("sid-1"))
+        .orElseThrow().securityVersionAtLogin();
+    assertEquals(SecurityVersion.INITIAL, snapshot);
   }
 
   @Test

@@ -52,4 +52,23 @@ public interface RestSubjectResolver {
   default Optional<SessionMetadata> resolveSessionMetadata(RestRequest request) {
     return Optional.empty();
   }
+
+  /**
+   * Resolves the session's security-version snapshot for
+   * {@link RestSecurityVersionFilter}.
+   * <p>
+   * The default returns {@link Optional#empty()} so existing
+   * implementations keep working — the filter becomes a no-op for
+   * them. Override this when your token / session store records
+   * the {@link com.svenruppert.vaadin.security.session.SecurityVersion}
+   * captured at login time and you want drifted sessions refused
+   * with {@code 401 + WWW-Authenticate: SessionStale}.
+   *
+   * @param request request
+   * @return security-version context, or empty when the resolver
+   *         doesn't track per-session versions
+   */
+  default Optional<RestSecurityVersionContext> resolveSecurityVersionContext(RestRequest request) {
+    return Optional.empty();
+  }
 }

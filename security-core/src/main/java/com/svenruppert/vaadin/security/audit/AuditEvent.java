@@ -35,7 +35,7 @@ public sealed interface AuditEvent
     permits LoginSucceeded, LoginFailed, LogoutPerformed,
             AccessGranted, AccessDenied, ActionDenied,
             BruteForceLimitReached,
-            SessionCreated, SessionExpired, SessionInvalidated,
+            SessionCreated, SessionExpired, SessionInvalidated, SessionStale,
             RoleAssigned, RoleRevoked,
             UserCreated, UserDeleted,
             BootstrapAdminCreated, BootstrapTokenRejected,
