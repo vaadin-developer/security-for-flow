@@ -180,7 +180,7 @@ For a Vaadin Flow application:
 <dependency>
   <groupId>com.svenruppert</groupId>
   <artifactId>security-vaadin</artifactId>
-  <version>00.60.01-SNAPSHOT</version>
+  <version>00.70.00</version>
 </dependency>
 ```
 
@@ -190,7 +190,7 @@ For a REST handler / servlet application:
 <dependency>
   <groupId>com.svenruppert</groupId>
   <artifactId>security-rest</artifactId>
-  <version>00.60.01-SNAPSHOT</version>
+  <version>00.70.00</version>
 </dependency>
 ```
 
@@ -200,7 +200,7 @@ For a plain-Java / desktop / CLI application:
 <dependency>
   <groupId>com.svenruppert</groupId>
   <artifactId>security-standalone</artifactId>
-  <version>00.60.01-SNAPSHOT</version>
+  <version>00.70.00</version>
 </dependency>
 ```
 
