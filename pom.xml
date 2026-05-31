@@ -108,7 +108,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <pitest-prod-classes>com.svenruppert.*</pitest-prod-classes>
-        <pitest-test-classes>junit.com.svenruppert.*</pitest-test-classes>
+        <pitest-test-classes>com.svenruppert.*</pitest-test-classes>
 
         <junit-platform-maven-plugin.timeout>300</junit-platform-maven-plugin.timeout>
 

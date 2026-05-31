@@ -23,7 +23,7 @@ SPI-Datei unter `META-INF/services/`.
 
 | Modul | Artefakt | Zweck |
 |---|---|---|
-| `security-core` | `security-core` | Framework-neutrale Kern-Typen, alle SPIs, alle 11 Persistence-Store-Interfaces (Phase 2), `SecurityVersion`-Stack (Phase 4), Audit-Pipeline (23 Variants), Bootstrap, `SecurityEnforcer`, Account-Lifecycle- / Token- / RateLimit-Services (Phase 7) |
+| `security-core` | `security-core` | Framework-neutrale Kern-Typen, alle SPIs, alle 11 Persistence-Store-Interfaces (Phase 2), `SecurityVersion`-Stack (Phase 4), Audit-Pipeline (27 Variants), Bootstrap, `SecurityEnforcer`, Account-Lifecycle- / Token- / RateLimit-Services (Phase 7) |
 | `security-vaadin` | `security-vaadin` | Vaadin-Flow-Adapter: Navigation, Login, Session, Logout — plus Phase-8 `SecuredButton` / `SecuredRouterLink` / `SecuredMenuItem` / `SessionManagementView` und Phase-4c `SecurityVersionEnforcerListener` |
 | `security-rest` | `security-rest` | Framework-light REST-Adapter (Filter, BearerToken, HTTP-Status-Mapping, Step-Up `WWW-Authenticate`) — plus Phase-4c `RestSecurityVersionFilter` und Phase-8d `OpenApiSecurityMetadataGenerator` |
 | `security-standalone` | `security-standalone` | Plain-Java / Desktop / CLI Adapter (ThreadLocal-Subject, `SecuredProxy` Dynamic-Proxy) |
@@ -297,7 +297,7 @@ Projekt-eigene Annotationen (Beispiele aus den Demos): `@VisibleFor`
 
 ---
 
-## 6. Audit Events (23 sealed Records)
+## 6. Audit Events (27 sealed Records)
 
 Alle implementieren `AuditEvent` (sealed interface) und sind über
 `AuditQuery.matches(AuditEvent)` pattern-match-fähig.
@@ -341,7 +341,7 @@ Alle implementieren `AuditEvent` (sealed interface) und sind über
 
 `AuditQuery(types, subjectId, from, to, limit)` mit Factories
 `all()`, `ofType(...)`, `forSubject(...)`. `AuditQuery.subjectIdOf`
-und `LoggingAuditSink` decken alle 23 Varianten ab.
+und `LoggingAuditSink` decken alle 27 Varianten ab.
 
 ---
 
@@ -585,27 +585,37 @@ Beide Pfade landen im selben `SecurityEnforcer`.
 | JUnit Jupiter 6.1.0-M1 | alle | Test-Framework |
 | PIT 1.x | alle | Mutation Testing |
 
-### Mutation Coverage (Stand 2026-05-13, vor V00.70-Phase 4/7/8)
+### Mutation Coverage (Stand 2026-05-31, V00.70 Refresh)
 
-Die V00.70-Phasen sind funktional grün (alle Tests bestehen), aber
-PIT-Mutation-Reports wurden für die neu hinzugekommenen Stacks
-(Phase 4b/4c, Phase 7, Phase 8) noch nicht gerechnet. Werte für die
-älteren Module sind unverändert.
+PIT-Re-Runs für die V00.70-Stacks. Die Library-Module liegen alle
+bei ≥ 79 %, drei davon ≥ 95 %. Die nicht voll erreichte
+security-vaadin-Marke kommt überwiegend von `VoidMethodCallMutator`-
+Mutationen auf Vaadin-Component-Settern in den Phase-8-UI-Klassen
+(`SessionManagementView`, `SecuredButton`-Konstruktor-Setup etc.) —
+das Entfernen eines `setSizeFull()` / `addClassName(…)` / `add(…)`-
+Aufrufs hat keinen testbar-beobachtbaren Effekt im JUnit-Harness.
+Das Mutations-Surface ohne UI-Konstruktion liegt deutlich höher.
 
-| Modul | Coverage |
-|---|---:|
-| security-core | 79 % (vor V00.70-Erweiterungen; Re-Run für Phase 4/7/8 offen) |
-| security-vaadin | **90 %** (vor Phase 4c + Phase 8) |
-| security-rest | 95 % (vor Phase 4c + Phase 8d) |
-| security-standalone | 98 % |
-| security-test | (kein PIT-Run; Tests prüfen ihre Fakes direkt) |
-| security-processor | (PIT-Run noch offen — Phase 5c-Followup) |
-| security-persistence-testkit | (kein PIT-Run; Contracts werden über consumers verifiziert) |
-| security-persistence-eclipsestore | (PIT-Run für die 95+ Contract-Tests offen) |
-| demo-vaadin | 70 % |
-| demo-rest | 49 % |
-| demo-vaadin-rest-client | 10 % |
-| demo-standalone | 86 % |
+| Modul | Coverage | Kommentar |
+|---|---:|---|
+| security-core | **86 %** (1191/1381) | Up from 79 % historisch / 82 % erste V00.70-Messung. `LoggingAuditSinkAllVariantsTest`, `CompositeAuditServiceTest`, `DefaultCompositeAuditServiceTest` ergänzt — Audit-Paket von 39 % auf solid. |
+| security-vaadin | **79 %** (242/305) | UI-Konstruktion-Mutationen (`VoidMethodCallMutator` auf Vaadin-Settern in `SessionManagementView` etc.) dominieren die Lücke; Phase-4c `session.vaadin`-Paket bei 91 %, `authorization.impl` bei 91 %. |
+| security-rest | **95 %** (86/91) | Unverändert hoch. Phase-4c-Filter + Phase-8d-OpenAPI-Generator vollständig gecovert. |
+| security-standalone | **97 %** (33/34) | Unverändert. |
+| security-test | (kein PIT-Run; Tests prüfen ihre Fakes direkt) | |
+| security-processor | (PIT-Run noch offen — Phase 5c-Followup) | |
+| security-persistence-testkit | (kein PIT-Run; Contracts werden über Consumer verifiziert) | |
+| security-persistence-eclipsestore | (PIT-Re-Run nach Phase 4a noch offen) | |
+| demo-vaadin | 70 % | (alte Messung, vor V00.70-Demo-Glue) |
+| demo-rest | 49 % | |
+| demo-vaadin-rest-client | 10 % | |
+| demo-standalone | 86 % | |
+
+PIT-Property-Fix: Der historische Parent-POM-Typo
+`pitest-test-classes=junit.com.svenruppert.*` ließ PIT 0 Tests
+finden (sämtliche Mutationen "no coverage"). Bei V00.70 auf
+`com.svenruppert.*` korrigiert, sonst zeigt der Re-Run irrführende
+0 %-Werte.
 
 ### Test-Totals (Stand 2026-05-30, nach Phase-8-Commit)
 

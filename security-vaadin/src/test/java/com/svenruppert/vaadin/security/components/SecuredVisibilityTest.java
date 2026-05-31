@@ -91,27 +91,34 @@ class SecuredVisibilityTest {
   }
 
   @Test
-  @DisplayName("apply: HIDE on denial sets visible=false, enabled stays true")
+  @DisplayName("apply: HIDE on denial sets visible=false; enabled is actively set to true (kills the 'removed setEnabled' mutation)")
   void hideOnDenial() {
     RecordingTarget t = new RecordingTarget();
+    // Pre-flip both flags away from the expected end state so that
+    // each setter call has an observable effect — removing either
+    // call leaves the wrong flag value and fails the assertion.
+    t.visible = true;
+    t.enabled = false;
     SecuredVisibility.apply(t,
         SecuredVisibility.Requirement.role(ADMIN),
         SecuredVisibilityMode.HIDE,
         () -> Optional.of(view(Set.of(EDITOR), Set.of())));
-    assertFalse(t.visible);
-    assertTrue(t.enabled);
+    assertFalse(t.visible, "HIDE on denial must call setVisible(false)");
+    assertTrue(t.enabled, "HIDE on denial must call setEnabled(true)");
   }
 
   @Test
-  @DisplayName("apply: DISABLE on denial sets enabled=false, visible stays true")
+  @DisplayName("apply: DISABLE on denial sets enabled=false; visible is actively set to true (kills the 'removed setVisible' mutation)")
   void disableOnDenial() {
     RecordingTarget t = new RecordingTarget();
+    t.visible = false;
+    t.enabled = true;
     SecuredVisibility.apply(t,
         SecuredVisibility.Requirement.role(ADMIN),
         SecuredVisibilityMode.DISABLE,
         () -> Optional.of(view(Set.of(EDITOR), Set.of())));
-    assertTrue(t.visible);
-    assertFalse(t.enabled);
+    assertTrue(t.visible, "DISABLE on denial must call setVisible(true)");
+    assertFalse(t.enabled, "DISABLE on denial must call setEnabled(false)");
   }
 
   @Test
