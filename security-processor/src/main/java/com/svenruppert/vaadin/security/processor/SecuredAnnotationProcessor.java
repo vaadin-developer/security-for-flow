@@ -38,26 +38,27 @@ import java.util.stream.Collectors;
  * Generates a {@code <Type>Secured} wrapper subclass for each
  * {@link Secured @Secured}-annotated concrete class. The wrapper
  * inherits from the original, overrides every public, non-final,
- * non-static method, and inserts a {@link SecurityEnforcer}
+ * non-static method, and inserts a
+ * {@link com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer SecurityEnforcer}
  * pre-check ahead of the {@code super.<method>(...)} delegate when the
  * method (or the class) carries one of the method-security annotations.
  *
  * <p>Annotation mapping:
  * <ul>
  *   <li>{@link RequiresPermission} (1 value)  →
- *       {@link SecurityEnforcer#requirePermission(String)}</li>
+ *       {@link com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer#requirePermission(String)}</li>
  *   <li>{@link RequiresPermission} (n values) →
- *       {@link SecurityEnforcer#requireAllPermissions(String...)}</li>
+ *       {@link com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer#requireAllPermissions(String...)}</li>
  *   <li>{@link RequiresAllPermissions} →
- *       {@link SecurityEnforcer#requireAllPermissions(String...)}</li>
+ *       {@link com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer#requireAllPermissions(String...)}</li>
  *   <li>{@link RequiresAnyPermission} →
- *       {@link SecurityEnforcer#requireAnyPermission(String...)}</li>
+ *       {@link com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer#requireAnyPermission(String...)}</li>
  *   <li>{@link RequiresRole} (1 value)  →
- *       {@link SecurityEnforcer#requireRole(String)}</li>
+ *       {@link com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer#requireRole(String)}</li>
  *   <li>{@link RequiresRole} (n values) →
- *       {@link SecurityEnforcer#requireAnyRole(String...)}</li>
+ *       {@link com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer#requireAnyRole(String...)}</li>
  *   <li>{@link RequiresPolicy} →
- *       {@link SecurityEnforcer#requirePolicy(String)}</li>
+ *       {@link com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer#requirePolicy(String)}</li>
  * </ul>
  *
  * <p>Method-level annotations take precedence over class-level
