@@ -511,6 +511,53 @@ public final class DemoHandlers {
         map.put("method", e.method());
         map.put("reason", e.reason());
       }
+      case com.svenruppert.vaadin.security.audit.SessionStale e -> {
+        map.put("subjectId", e.subjectId());
+        map.put("sessionId", e.sessionId());
+        map.put("route", e.route());
+        map.put("snapshotVersion", e.snapshotVersion());
+        map.put("currentVersion", e.currentVersion());
+      }
+      case com.svenruppert.vaadin.security.audit.PasswordResetRequested e -> {
+        map.put("subjectId", e.subjectId());
+        map.put("tokenHash", e.tokenHash());
+      }
+      case com.svenruppert.vaadin.security.audit.PasswordResetCompleted e -> {
+        map.put("subjectId", e.subjectId());
+        map.put("tokenHash", e.tokenHash());
+      }
+      case com.svenruppert.vaadin.security.audit.EmailVerificationRequested e -> {
+        map.put("subjectId", e.subjectId());
+        map.put("email", e.email());
+        map.put("tokenHash", e.tokenHash());
+      }
+      case com.svenruppert.vaadin.security.audit.EmailVerified e -> {
+        map.put("subjectId", e.subjectId());
+        map.put("email", e.email());
+        map.put("tokenHash", e.tokenHash());
+      }
+      case com.svenruppert.vaadin.security.audit.ApiKeyUsed e -> {
+        map.put("subjectId", e.subjectId());
+        map.put("keyName", e.keyName());
+        map.put("keyHash", e.keyHash());
+      }
+      case com.svenruppert.vaadin.security.audit.ApiKeyDenied e -> {
+        map.put("subjectId", e.subjectId());
+        map.put("keyHash", e.keyHash());
+        map.put("reason", e.reason());
+      }
+      case com.svenruppert.vaadin.security.audit.TokenRotated e -> {
+        map.put("subjectId", e.subjectId());
+        map.put("oldHash", e.oldHash());
+        map.put("newHash", e.newHash());
+      }
+      case com.svenruppert.vaadin.security.audit.RateLimitExceeded e -> {
+        map.put("scope", e.scope());
+        map.put("subjectId", e.subjectId());
+        map.put("limit", e.limit());
+        map.put("windowSeconds", e.window().toSeconds());
+        map.put("eventsInWindow", e.eventsInWindow());
+      }
     }
     return map;
   }

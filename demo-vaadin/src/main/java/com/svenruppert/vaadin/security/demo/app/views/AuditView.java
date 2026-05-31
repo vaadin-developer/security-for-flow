@@ -19,14 +19,21 @@ package com.svenruppert.vaadin.security.demo.app.views;
 import com.svenruppert.vaadin.security.audit.AccessDenied;
 import com.svenruppert.vaadin.security.audit.AccessGranted;
 import com.svenruppert.vaadin.security.audit.ActionDenied;
+import com.svenruppert.vaadin.security.audit.ApiKeyDenied;
+import com.svenruppert.vaadin.security.audit.ApiKeyUsed;
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.BootstrapAdminCreated;
 import com.svenruppert.vaadin.security.audit.BootstrapTokenRejected;
 import com.svenruppert.vaadin.security.audit.BruteForceLimitReached;
+import com.svenruppert.vaadin.security.audit.EmailVerificationRequested;
+import com.svenruppert.vaadin.security.audit.EmailVerified;
 import com.svenruppert.vaadin.security.audit.LoginFailed;
 import com.svenruppert.vaadin.security.audit.LoginSucceeded;
+import com.svenruppert.vaadin.security.audit.PasswordResetCompleted;
+import com.svenruppert.vaadin.security.audit.PasswordResetRequested;
 import com.svenruppert.vaadin.security.audit.PolicyEvaluated;
+import com.svenruppert.vaadin.security.audit.RateLimitExceeded;
 import com.svenruppert.vaadin.security.audit.StepUpChallenged;
 import com.svenruppert.vaadin.security.audit.LogoutPerformed;
 import com.svenruppert.vaadin.security.audit.RoleAssigned;
@@ -35,6 +42,8 @@ import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.audit.SessionCreated;
 import com.svenruppert.vaadin.security.audit.SessionExpired;
 import com.svenruppert.vaadin.security.audit.SessionInvalidated;
+import com.svenruppert.vaadin.security.audit.SessionStale;
+import com.svenruppert.vaadin.security.audit.TokenRotated;
 import com.svenruppert.vaadin.security.audit.UserCreated;
 import com.svenruppert.vaadin.security.audit.UserDeleted;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPermission;
@@ -170,6 +179,7 @@ public class AuditView extends Composite<VerticalLayout> {
       case SessionCreated e -> e.subjectId();
       case SessionExpired e -> e.subjectId();
       case SessionInvalidated e -> e.subjectId();
+      case SessionStale e -> e.subjectId();
       case RoleAssigned e -> e.subjectId();
       case RoleRevoked e -> e.subjectId();
       case LoginSucceeded e -> e.username();
@@ -181,6 +191,14 @@ public class AuditView extends Composite<VerticalLayout> {
       case UserDeleted e -> e.username();
       case PolicyEvaluated e -> nullToDash(e.subjectId());
       case StepUpChallenged e -> nullToDash(e.subjectId());
+      case PasswordResetRequested e -> e.subjectId();
+      case PasswordResetCompleted e -> e.subjectId();
+      case EmailVerificationRequested e -> e.subjectId();
+      case EmailVerified e -> e.subjectId();
+      case ApiKeyUsed e -> e.subjectId();
+      case ApiKeyDenied e -> nullToDash(e.subjectId());
+      case TokenRotated e -> e.subjectId();
+      case RateLimitExceeded e -> nullToDash(e.subjectId());
     };
   }
 
@@ -218,6 +236,26 @@ public class AuditView extends Composite<VerticalLayout> {
       case StepUpChallenged e -> "route=" + nullToDash(e.route())
           + " method=" + e.method()
           + " reason=" + nullToDash(e.reason());
+      case SessionStale e -> "session=" + nullToDash(e.sessionId())
+          + " route=" + nullToDash(e.route())
+          + " snapshot=" + e.snapshotVersion()
+          + " current=" + e.currentVersion();
+      case PasswordResetRequested e -> "tokenHash=" + e.tokenHash();
+      case PasswordResetCompleted e -> "tokenHash=" + e.tokenHash();
+      case EmailVerificationRequested e -> "email=" + e.email()
+          + " tokenHash=" + e.tokenHash();
+      case EmailVerified e -> "email=" + e.email()
+          + " tokenHash=" + e.tokenHash();
+      case ApiKeyUsed e -> "key=" + e.keyName()
+          + " keyHash=" + e.keyHash();
+      case ApiKeyDenied e -> "keyHash=" + e.keyHash()
+          + " reason=" + e.reason();
+      case TokenRotated e -> "oldHash=" + e.oldHash()
+          + " newHash=" + e.newHash();
+      case RateLimitExceeded e -> "scope=" + e.scope()
+          + " limit=" + e.limit()
+          + " windowSeconds=" + e.window().toSeconds()
+          + " events=" + e.eventsInWindow();
     };
   }
 
