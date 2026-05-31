@@ -277,27 +277,65 @@ both side by side (`LibraryService` via `SecuredProxy.wrap(...)`,
 
 ## Mutation coverage
 
-| Module | Coverage | Tests |
-|---|---:|---:|
-| `security-core` | **86 %** (1191/1381) | 956 |
-| `security-vaadin` | **79 %** (242/305) | 172 |
-| `security-rest` | **95 %** (86/91) | 71 |
-| `security-standalone` | **97 %** (33/34) | 30 |
-| `security-persistence-eclipsestore` | PIT re-run pending | 104 |
-| `security-persistence-testkit` | (contracts verified through consumers) | — |
-| `security-processor` | PIT re-run pending | 11 |
-| `security-test` | (test fixtures; PIT not applicable) | 44 |
+Per-module progression across the last three releases. `00.70.00` is
+the absolute kill rate at release (`<module>/target/pit-reports/`);
+the parent POM's `pitest-test-classes` is now `com.svenruppert.*`
+(was the silent-zero `junit.com.svenruppert.*` typo).
 
-`security-core` went up from 79 % (historical) / 82 % (initial
-V00.70 baseline) to 86 % after the new audit tests
-(`LoggingAuditSinkAllVariantsTest`, `CompositeAuditServiceTest`,
+| Module | 00.51.00 | 00.60.00 | 00.70.00 | Tests (V00.70) |
+|---|---:|---:|---:|---:|
+| `security-core` | 86 % | 79 % * | **86 %** (1191/1381) | 956 |
+| `security-vaadin` | 79 % | 90 % | **79 %** (242/305) ** | 172 |
+| `security-rest` | 97 % | 95 % | **95 %** (86/91) | 71 |
+| `security-standalone` | — | 98 % | **97 %** (33/34) | 30 |
+| `security-processor` | — | — | **82 %** (23/28) *** | 11 |
+| `security-persistence-eclipsestore` | — | — | **70 %** (231/328) **** | 104 |
+| `security-test` | — | — | n/a (test fixtures) | 44 |
+| `security-persistence-testkit` | — | — | n/a (contracts verified through consumers) | 104 |
+
+\* The 00.51 → 00.60 drop in `security-core` is a scope expansion,
+   not a regression: V00.60 added the audit pipeline,
+   `LoginAttemptPolicy`, `SessionPolicy`,
+   `ActionAuthorizationService`, and the refactored `LogoutService`
+   under PIT. Absolute mutant count went up; the percentage on the
+   wider surface is the relevant number from 00.60 onwards.
+
+\** `security-vaadin` 90 % (00.60) → 79 % (00.70) reflects the
+   Phase-4c `SecurityVersionEnforcerListener` and the Phase-8
+   `SecuredButton` / `SecuredRouterLink` / `SecuredMenuItem` /
+   `SessionManagementView` landing. The gap is dominated by
+   `VoidMethodCallMutator` survivors on component-construction
+   setters (`setSizeFull()`, `addClassName(…)`, `add(…)`) which have
+   no testable side effect in the JUnit harness. Absolute kill count
+   went up from 16 (V00.51) → ~91 (V00.60) → 242 (V00.70).
+
+\*** `security-processor` 82 % with **100 % line coverage** on the
+    mutated classes. All five survivors come from
+    `BooleanFalseReturnValsMutator` — `return true` → `return false`
+    mutations on guard returns inside the annotation-detection paths
+    (the compile-testing tests verify the generated source, not the
+    boolean polarity of internal helpers). The 11 tests reach every
+    line of the 52-line mutated surface.
+
+\**** `security-persistence-eclipsestore` 70 % with 92 % line
+     coverage on the mutated classes. The 6 NO_COVERAGE mutants and
+     remaining survivors cluster in the `findAll()` / `findBySubject(…)`
+     read-lock branches and the `remove(...) != null` truthy returns
+     across the nine Eclipse-Store stores. `NegateConditionalsMutator`
+     at 75 % (60/80) and `BooleanFalseReturnValsMutator` at 72 %
+     (18/25) are the dominant mutators — typical storage-layer
+     profile, equivalent to the in-memory defaults inside
+     `security-core` for these same code shapes.
+
+`security-core` went up within this release from 82 % (initial
+V00.70 baseline, run mid-stream) to **86 %** after the new audit
+tests (`LoggingAuditSinkAllVariantsTest`, `CompositeAuditServiceTest`,
 `DefaultCompositeAuditServiceTest`) — the audit package alone went
-from 39 % to solid. `security-vaadin` is at 79 %; the gap is
-dominated by `VoidMethodCallMutator` survivors on Vaadin
-component-construction setters in `SessionManagementView`,
-`SecuredButton` init, etc. — removing `setSizeFull()` /
-`addClassName(…)` / `add(…)` has no testable side effect in the
-JUnit harness.
+from 39 % to solid.
+
+Demo modules from 00.60 (`demo-rest` 49 %, `demo-vaadin` 70 %,
+`demo-vaadin-rest-client` 10 %, `demo-standalone` 86 %) have not
+been re-PIT'd for 00.70 — focus this cycle was on library coverage.
 
 Reactor totals: **1655+ tests across 14 modules, all green** under
 `./mvnw verify` (full reactor including all five demos).

@@ -61,14 +61,17 @@ storage dependency.
 ### Build
 
 ```bash
-# Full build (requires Maven 3.9.9+, Java 26+)
-mvn clean install
+# Full build (Maven 4 via the wrapper, Java 26+)
+./mvnw clean install
 ```
 
-`mvn install` is required at least once because the demos depend on
-each other through the local `~/.m2` repository (see § *Module
-Structure* — `demo-vaadin-rest-client` depends on `demo-rest` for tests,
-and `demo-rest-shared` is consumed by both REST-side modules).
+The project is pinned to Maven 4 (`minimum-maven.version=4.0.0-rc-5`)
+through `./mvnw`; the wrapper downloads the right distribution on first
+use. `install` (rather than `package`) is required at least once
+because the demos depend on each other through the local `~/.m2`
+repository (see § *Module Structure* — `demo-vaadin-rest-client`
+depends on `demo-rest` for tests, and `demo-rest-shared` is consumed
+by both REST-side modules).
 
 ### Pick the right demo
 
@@ -159,18 +162,46 @@ identical. Rejections surface as `DENIED — …` lines in the terminal.
 ### Tests
 
 ```bash
-# Whole reactor — well over 1300 tests across all modules
-mvn test
+# Whole reactor — over 1600 tests across all modules
+./mvnw test
 
 # Single module
-mvn -pl :security-core -am test
-mvn -pl :demo-rest -am test
-mvn -pl :demo-vaadin-rest-client -am test
+./mvnw -pl :security-core -am test
+./mvnw -pl :demo-rest -am test
+./mvnw -pl :demo-vaadin-rest-client -am test
 ```
 
-Library test totals as of V00.70: `security-core` 921, `security-vaadin`
-172, `security-rest` 71, `security-standalone` 30,
-`security-persistence-eclipsestore` 104 — all green.
+Library test totals as of V00.70.00:
+`security-core` 956, `security-vaadin` 172, `security-rest` 71,
+`security-standalone` 30, `security-test` 44, `security-processor` 11,
+`security-persistence-testkit` 104, `security-persistence-eclipsestore`
+104 — all green. Demo tests: `demo-vaadin` 103, `demo-rest` 48,
+`demo-vaadin-rest-client` 13, `demo-standalone` 34.
+
+### Mutation coverage
+
+```bash
+./mvnw -pl :security-core org.pitest:pitest-maven:mutationCoverage
+```
+
+The parent POM pins `pitest-test-classes=com.svenruppert.*`. Reports
+land under `<module>/target/pit-reports/index.html`. Current state per
+library module (V00.70.00):
+
+| Module | Coverage | Tests |
+|---|---:|---:|
+| `security-core` | **86 %** (1191/1381) | 956 |
+| `security-vaadin` | **79 %** (242/305) | 172 |
+| `security-rest` | **95 %** (86/91) | 71 |
+| `security-standalone` | **97 %** (33/34) | 30 |
+| `security-processor` | **82 %** (23/28) | 11 |
+| `security-persistence-eclipsestore` | **70 %** (231/328) | 104 |
+| `security-test` | n/a (test fixtures) | 44 |
+| `security-persistence-testkit` | n/a (contracts verified through consumers) | 104 |
+
+For the per-module progression across `00.51.00 → 00.60.00 → 00.70.00`
+see the *Mutation coverage* section of each
+[release-notes file](RELEASE-NOTES-00.70.00.md).
 
 ### Add the dependency
 
@@ -760,8 +791,10 @@ operator workflow.
 
 ## Roadmap
 
-**V00.70 is feature-complete** (all eight phases of
-`Konzept-V00.70.00.md` are merged on `develop`):
+**V00.70.00 is feature-complete** — all eight phases of
+`Konzept-V00.70.00.md` are merged. See
+[`RELEASE-NOTES-00.70.00.md`](RELEASE-NOTES-00.70.00.md) for the
+full inventory + migration notes; the phase summary:
 
 1. Tenant + resource model (`TenantId`, `ResourceRef`, `ResourceAccessContext`).
 2. Persistence-store SPIs — 11 hash-only / single-use stores in `security-core`.
@@ -773,8 +806,12 @@ operator workflow.
 8. `SecuredButton` / `SecuredRouterLink` / `SecuredMenuItem`, `SessionManagementView`, `OpenApiSecurityMetadataGenerator`.
 
 `Konzept-V00.75.00.md` and `Konzept-V00.80.00.md` outline the next
-layers. Demo modules and PIT-coverage for `security-processor` round
-out the V00.70 release work.
+layers. Demo glue for the new V00.70 building blocks (V00.70-style
+session management, API-key parallel-to-Bearer in
+`demo-vaadin-rest-client`, the reset-flow demo via
+`LoggingNotificationSender`) plus PIT re-runs for
+`security-processor` and `security-persistence-eclipsestore` are
+the planned 00.71 follow-ups.
 
 ## License
 

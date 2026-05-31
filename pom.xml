@@ -89,8 +89,10 @@
     <properties>
         <licenseName>European Union Public Licence 1.2</licenseName>
 
-        <deploy-repo-url>https://repo.maven.apache.org/maven2/</deploy-repo-url>
-        <deploy-repo-snapshots-url>https://repo.maven.apache.org/maven2/</deploy-repo-snapshots-url>
+        <!-- deploy-repo-url + deploy-repo-snapshots-url are inherited from
+             com.svenruppert:dependencies:06.02.01 and point at the Sonatype
+             OSSRH staging endpoint. Do NOT override them with the
+             repo.maven.apache.org read mirror — that URL rejects uploads. -->
 
         <jdk.version>26</jdk.version>
 
