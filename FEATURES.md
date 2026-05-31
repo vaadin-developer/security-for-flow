@@ -1,29 +1,36 @@
 # security-for-flow — Feature Catalogue
 
 Vollständige Auflistung aller Funktionen und Erweiterungspunkte
-in security-for-flow 00.60.01-SNAPSHOT (Stand 2026-05-28, mit
-V00.70-Foundation-Arbeit: Step-Up, Resource Policies, Role
-Hierarchy, security-test, security-processor / Method Security via
-Annotation Processor — Phase 5 abgeschlossen). Geordnet nach
-Reaktor-Modul und Funktionsbereich. Jeder Eintrag nennt das Modul,
-den vollqualifizierten Java-Namen und — wo sinnvoll — die SPI-Datei
-unter `META-INF/services/`.
+in security-for-flow 00.70.00 (Stand 2026-05-31, **V00.70.00
+feature-complete** — alle acht Phasen aus `Konzept-V00.70.00.md` sind
+gemerged: Tenant/Resource-Modell, 11 Persistence-Store-SPIs, Contract-
+Testkit + Eclipse-Store-Referenz-Impl, `SecurityVersion`-Drift-
+Detection inkl. automatischem Capture im `LoginView`, Policy-API +
+`security-processor`, RoleHierarchy + Any/All-Permission-Annotationen,
+Account-Lifecycle / API-Keys / RefreshTokens / Rate-Limit, Phase-8
+Secured-Komponenten + `SessionManagementView` + OpenAPI-Metadaten).
+Geordnet nach Reaktor-Modul und Funktionsbereich. Jeder Eintrag nennt
+das Modul, den vollqualifizierten Java-Namen und — wo sinnvoll — die
+SPI-Datei unter `META-INF/services/`.
 
-> Konventionen: ✅ = ausgeliefert, voll abgedeckt; ⚠️ = experimentell;
-> ❌ = bewusst nicht im Scope (siehe § "Was nicht im Scope ist" am Ende).
+> Konventionen: ✅ = ausgeliefert, voll abgedeckt; ⚠️ = experimentell
+> (`@ExperimentalSecurityApi`); ❌ = bewusst nicht im Scope (siehe
+> § "Was nicht im Scope ist" am Ende).
 
 ---
 
-## 1. Module (12)
+## 1. Module (13)
 
 | Modul | Artefakt | Zweck |
 |---|---|---|
-| `security-core` | `security-core` | Framework-neutrale Kern-Typen, SPIs, Decisions, Audit-Pipeline, Bootstrap, `SecurityEnforcer` |
-| `security-vaadin` | `security-vaadin` | Vaadin-Flow-Adapter: Navigation, Login, Session, Logout |
-| `security-rest` | `security-rest` | Framework-light REST-Adapter (Filter, BearerToken, HTTP-Status-Mapping, Step-Up `WWW-Authenticate`) |
+| `security-core` | `security-core` | Framework-neutrale Kern-Typen, alle SPIs, alle 11 Persistence-Store-Interfaces (Phase 2), `SecurityVersion`-Stack (Phase 4), Audit-Pipeline (23 Variants), Bootstrap, `SecurityEnforcer`, Account-Lifecycle- / Token- / RateLimit-Services (Phase 7) |
+| `security-vaadin` | `security-vaadin` | Vaadin-Flow-Adapter: Navigation, Login, Session, Logout — plus Phase-8 `SecuredButton` / `SecuredRouterLink` / `SecuredMenuItem` / `SessionManagementView` und Phase-4c `SecurityVersionEnforcerListener` |
+| `security-rest` | `security-rest` | Framework-light REST-Adapter (Filter, BearerToken, HTTP-Status-Mapping, Step-Up `WWW-Authenticate`) — plus Phase-4c `RestSecurityVersionFilter` und Phase-8d `OpenApiSecurityMetadataGenerator` |
 | `security-standalone` | `security-standalone` | Plain-Java / Desktop / CLI Adapter (ThreadLocal-Subject, `SecuredProxy` Dynamic-Proxy) |
 | `security-test` | `security-test` | Wiederverwendbare Test-Fixtures: `FakeAuthenticationService`, `FakeAuthorizationService`, `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5-`SecurityTestExtension`. Test-Scope-Dependency. |
-| `security-processor` | `security-processor` | Compile-Time-Annotation-Processor: erzeugt `<Type>Secured`-Subklassen für `@Secured`-annotierte konkrete Klassen. Wird als `<annotationProcessorPath>` eingebunden, nicht als reguläre Dependency. Basiert auf `com.svenruppert:proxybuilder:00.11.00` mit separatem `proxybuilder-annotations`-Modul (RUNTIME-reflectable `@GeneratedByProxyBuilder`, `@DelegatesTo` etc.). |
+| `security-processor` | `security-processor` | Compile-Time-Annotation-Processor: erzeugt `<Type>Secured`-Subklassen für `@Secured`-annotierte konkrete Klassen. Wird als `<annotationProcessorPath>` eingebunden. Basiert auf `com.svenruppert:proxybuilder:00.11.00` + `proxybuilder-annotations:00.11.00`. |
+| `security-persistence-testkit` | `security-persistence-testkit` | ⚠️ Contract-Test-Suites für jede Persistence-Store-SPI: `@Test default`-Methoden-Interfaces, die ein eigener Store-Adapter implementiert, um automatisch gegen den Library-Persistence-Kontrakt verifiziert zu werden. Persistence-Tech-agnostisch. |
+| `security-persistence-eclipsestore` | `security-persistence-eclipsestore` | ⚠️ Eclipse-Store (`org.eclipse.store:storage-embedded:4.1.0`) Referenz-Impl jeder Persistence-Store-SPI; besteht dieselbe 95+ Contract-Suite wie die In-Memory-Defaults. Drop-in für durable Persistence. |
 | `demo-rest-shared` | `demo-rest-shared` | Transport-Konstanten + JSON-Helper für REST-Demos |
 | `demo-vaadin` | `demo-vaadin` | Vollständige Vaadin-Demo mit lokaler User-Verwaltung |
 | `demo-rest` | `demo-rest` | JDK-`HttpServer` + interaktive CLI |
@@ -89,12 +96,79 @@ aufgelöst (cached AtomicReference + lazy ServiceLoader-Resolution).
 |---|---|---|---|
 | `RolePermissionMapping` | core | `StaticRolePermissionMapping` | Role → Permissions-Mapping |
 | `PermissionCatalog` ⚠️ | core | — | Permission-Inventory für Discovery-UIs |
+| `RoleHierarchy` | core | `NoopRoleHierarchy` / `StaticRoleHierarchy` | Role-Inheritance; honoured von `RequiresRoleEvaluator` + `RolePermissionResolver` |
+| `SubjectIdResolver<U>` ⚠️ | core | — (anwendungsdefiniert) | Phase 4c-Followup: Typed-User → `SubjectId` (+ optional `TenantId`) — Vaadin-Auto-Capture aktiviert sich erst mit registrierter Impl |
 
 ### REST-Adapter
 
 | SPI | Modul | Zweck |
 |---|---|---|
-| `RestSubjectResolver` | rest | Request → `Optional<SecuritySubject>` + `SessionMetadata` |
+| `RestSubjectResolver` | rest | Request → `Optional<SecuritySubject>` + `SessionMetadata` + (Phase 4c) optionaler `RestSecurityVersionContext` |
+
+### Persistence-Stores (Phase 2 — alle 11 ⚠️ `@ExperimentalSecurityApi`)
+
+Jeder Store hat ein `InMemory*Store`-Default in `security-core` und
+eine Eclipse-Store-Referenz-Impl in `security-persistence-eclipsestore`,
+beide verifiziert über `security-persistence-testkit`-Contract-Tests.
+
+| Store | Modul / Package | Record / Key | Zweck |
+|---|---|---|---|
+| `AuditEventStore` | core/audit | `AuditEnvelope` | Persistente Audit-Events; Query-API |
+| `SessionStore` | core/session | `SessionRecord` keyed on `SessionId` | Persistente Sessions + `findAll()` für Admin-Views |
+| `LoginAttemptStore` | core/bruteforce | `LoginAttemptKey(username, clientAddress)` | Brute-Force-Versuche, store-backed flacher Lockout |
+| `RoleAssignmentStore` | core/authorization/api/roles | `RoleAssignmentKey(tenant, subjectId)` → `Set<RoleName>` | Persistente Rollen-Zuordnungen |
+| `BootstrapStateStore` | core/bootstrap | `BootstrapState` per Tenant | "Ist das System bootstrapped?" — idempotent |
+| `RememberMeTokenStore` | core/authentication | `RememberMeTokenRecord` (hash-only) | Persistent-Login-Tokens |
+| `PasswordResetTokenStore` | core/accountlifecycle | `PasswordResetTokenRecord` (hash-only, single-use) | Passwort-Reset-Flow |
+| `EmailVerificationTokenStore` | core/accountlifecycle | `EmailVerificationTokenRecord` (hash-only, single-use) | Email-Verifikations-Flow |
+| `ApiKeyStore` | core/authentication | `ApiKeyRecord` (hash-only, mit Scopes) | Long-Lived API-Keys |
+| `RefreshTokenStore` | core/authentication | `RefreshTokenRecord` (hash-only, rotating mit `markReplaced`) | Rotating Refresh-Tokens mit Replay-Defense |
+| `RateLimitStore` | core/ratelimiting | Events unter `RateLimitKey(tenant, scope)` | Event-basierter Sliding-Window-Counter |
+
+### SecurityVersion / Drift Detection (Phase 4 — ⚠️)
+
+| SPI / Klasse | Modul | Default | Zweck |
+|---|---|---|---|
+| `SecurityVersionStore` | core/session | `InMemorySecurityVersionStore` + Eclipse-Store-Impl | Monotonic counter pro `(TenantId, SubjectId)`; `current` / `increment` / `reset` |
+| `SecurityVersionCheck` | core/session | — (pure helper) | Vergleicht Session-Snapshot vs. Store-Current → `SecurityVersionStatus(Current \| Drifted)` |
+| `SecurityVersionEnforcer` | core/session | — (pure helper) | Adapter-neutral; emittiert `SessionStale`-Audit; `EnforcementOutcome(Continue \| SessionStale)` |
+
+### Account Lifecycle / Notifications (Phase 7 — ⚠️)
+
+| SPI / Klasse | Modul | Default | Zweck |
+|---|---|---|---|
+| `SecurityNotificationSender` | core/accountlifecycle | `LoggingNotificationSender` | Dispatcher für Reset/Verify-Benachrichtigungen; Apps verdrahten Mail/SMS-Transports |
+| `SecurityNotification` (record) + `Kind` (enum, 4 Werte) | core/accountlifecycle | — | `PASSWORD_RESET_REQUESTED` / `PASSWORD_RESET_COMPLETED` / `EMAIL_VERIFICATION_REQUESTED` / `EMAIL_VERIFIED` |
+| `PasswordResetService` | core/accountlifecycle | — | `request(SubjectId, ttl)` / `validate(plain)` / `consume(plain)` (single-use, hash-only) |
+| `EmailVerificationService` | core/accountlifecycle | — | Wie PasswordReset, plus Email-Adresse am Record |
+
+### API-Keys / Tokens (Phase 7b — ⚠️)
+
+| Klasse | Modul | Zweck |
+|---|---|---|
+| `ApiKeyAuthenticationService` | core/authentication | Hash-only Lookup, Lifecycle-Verdict (`Unknown` / `ForeignTenant` / `Revoked` / `Expired`); markiert `lastUsedAt`; emittiert `ApiKeyUsed`/`ApiKeyDenied` |
+| `TokenService` | core/authentication | `issue(subject)` / `rotate(refresh)` / `revoke(refresh)` über `RefreshTokenStore`; chain-link via `markReplaced` mit Replay-Defense; emittiert `TokenRotated` auf erfolgreicher Rotation |
+
+### Rate-Limiting (Phase 7c — ⚠️)
+
+| SPI / Klasse | Modul | Default | Zweck |
+|---|---|---|---|
+| `RateLimitPolicy` | core/ratelimiting | `InMemoryRateLimitPolicy` (Sliding-Window) | Per-Scope Rate-Limit (getrennt von `LoginAttemptPolicy`); `tryAcquire(RateLimitKey)` → `RateLimitDecision(Allowed \| Throttled)` |
+
+### Store-backed Services (Phase 4b — ⚠️)
+
+Alle nutzen die Phase-2 Stores als Backing-Store, sind tenant-scoped
+und schlucken Persistence-Fehler im Audit/Notification-Pfad, damit
+sie die Security-Flow-Auswertung nie blockieren.
+
+| Service | Modul | Backing-Store |
+|---|---|---|
+| `StoreBackedSecurityAuditService` | core/audit | `AuditEventStore` |
+| `StoreBackedLoginAttemptPolicy` | core/bruteforce | `LoginAttemptStore` (flacher Lockout) |
+| `StoreBackedSubjectSessionRegistry` | core/logout | `SessionStore` + optionaler `SecurityVersionStore` (Phase-4c-Snapshot beim Register) |
+| `StoreBackedRoleAuthorizationService<U>` | core/authorization/api/roles | `RoleAssignmentStore` (generic über Subject-Type) |
+| `StoreBackedRememberMeService` | core/authentication | `RememberMeTokenStore` + `PasswordHasher` |
+| `StoreBackedBootstrapStateService` | core/bootstrap | `BootstrapStateStore` (idempotentes `markCompleted`) |
 
 ---
 
@@ -138,6 +212,7 @@ Projekt-eigene Annotationen (Beispiele aus den Demos): `@VisibleFor`
 | `Granted` | — | Zugriff erlaubt |
 | `Unauthenticated` | `reason` | Kein Subject gesetzt |
 | `Forbidden` | `reason` | Subject hat keine ausreichenden Rechte |
+| `StepUpRequired` | `reason`, `method` | Step-Up-Auth erforderlich; Vaadin reroutet zur Step-Up-Route, REST antwortet `401 + WWW-Authenticate: StepUp method="…"` |
 
 ### `AccessDecision` (Vaadin-orientiert, legacy)
 
@@ -199,12 +274,35 @@ Projekt-eigene Annotationen (Beispiele aus den Demos): `@VisibleFor`
 | `InvalidUsername` | `reason` |
 | `InternalError` | `reason` |
 
+### `SecurityVersionStatus` (Phase 4c)
+
+| Variant | Felder | Bedeutung |
+|---|---|---|
+| `Current` | `at` | Session-Snapshot == Store-Current |
+| `Drifted` | `snapshot`, `current` | Snapshot != Current; Session muss re-validiert werden |
+
+### `SecurityVersionEnforcer.EnforcementOutcome` (Phase 4c)
+
+| Variant | Felder | Bedeutung |
+|---|---|---|
+| `Continue` | — | Request darf weiterlaufen |
+| `SessionStale` | `status (Drifted)` | Request muss abgelehnt werden — Audit ist bereits emittiert |
+
+### `RateLimitDecision` (Phase 7c)
+
+| Variant | Felder | Bedeutung |
+|---|---|---|
+| `Allowed` | `eventsInWindow`, `limit`, `window` | Event wurde gezählt, Request läuft weiter |
+| `Throttled` | `eventsInWindow`, `limit`, `window`, `retryAfter` | Limit erreicht; `retryAfter` liefert die Lower-Bound für den `Retry-After`-Header |
+
 ---
 
-## 6. Audit Events (16 sealed Records)
+## 6. Audit Events (23 sealed Records)
 
 Alle implementieren `AuditEvent` (sealed interface) und sind über
 `AuditQuery.matches(AuditEvent)` pattern-match-fähig.
+
+### Klassisch (V00.60 + früher)
 
 | Event | Wichtige Felder | Wird emittiert von |
 |---|---|---|
@@ -224,9 +322,26 @@ Alle implementieren `AuditEvent` (sealed interface) und sind über
 | `UserDeleted` | `username`, `deletedBy` | dito |
 | `BootstrapAdminCreated` | `username` | `InitialAdminBootstrapService` auf `Created`-Returns |
 | `BootstrapTokenRejected` | `reason` (Unknown / Mismatch / Expired) | dito |
+| `PolicyEvaluated` | `subjectId`, `policyName`, `decision`, `reason` | `PolicyRegistry`-Path |
+| `StepUpChallenged` | `subjectId`, `route`, `method`, `reason` | `AuthorizationListener` / `RestAuthorizationFilter` bei `StepUpRequired`-Decision |
+
+### V00.70 (Phase 4c / Phase 7 / Phase 8)
+
+| Event | Wichtige Felder | Wird emittiert von |
+|---|---|---|
+| `SessionStale` | `subjectId`, `sessionId`, `route`, `snapshotVersion`, `currentVersion` | `SecurityVersionEnforcer` bei Drift (Phase 4c) |
+| `PasswordResetRequested` | `subjectId`, `tokenHash` | `PasswordResetService.request` (Phase 7a) |
+| `PasswordResetCompleted` | `subjectId`, `tokenHash` | `PasswordResetService.consume` |
+| `EmailVerificationRequested` | `subjectId`, `email`, `tokenHash` | `EmailVerificationService.request` |
+| `EmailVerified` | `subjectId`, `email`, `tokenHash` | `EmailVerificationService.consume` |
+| `ApiKeyUsed` | `subjectId`, `keyName`, `keyHash` | `ApiKeyAuthenticationService.authenticate` (Phase 7b) |
+| `ApiKeyDenied` | `subjectId`, `keyHash`, `reason` (Unknown/ForeignTenant/Revoked/Expired) | dito |
+| `TokenRotated` | `subjectId`, `oldHash`, `newHash` | `TokenService.rotate` |
+| `RateLimitExceeded` | `scope`, `subjectId`, `limit`, `window`, `eventsInWindow` | `InMemoryRateLimitPolicy.tryAcquire` bei Throttle (Phase 7c) |
 
 `AuditQuery(types, subjectId, from, to, limit)` mit Factories
-`all()`, `ofType(...)`, `forSubject(...)`.
+`all()`, `ofType(...)`, `forSubject(...)`. `AuditQuery.subjectIdOf`
+und `LoggingAuditSink` decken alle 23 Varianten ab.
 
 ---
 
@@ -269,6 +384,24 @@ Alle implementieren `AuditEvent` (sealed interface) und sind über
 - Custom-Element-Slot via `setCustomElements(Component)` / `clearCustomElements()`
 - LUMO-Theme-Variants vorverdrahtet
 - `notifyOnLogin()` konsultiert `SessionPolicy.onLogin` und führt B3-Rotation auf `Invalidate` aus
+- `captureSecurityVersionSnapshot()` (Phase 4c-Followup): wenn sowohl `SecurityVersionStore` als auch `SubjectIdResolver` als SPI registriert sind, liest die View beim erfolgreichen Login die aktuelle `SecurityVersion` und schreibt sie in den `VaadinSecurityVersionContext`. Strict-no-op + exception-swallowing, blockiert den Login-Flow nie.
+
+### Phase-4c SecurityVersion-Enforcement (⚠️)
+
+| Klasse | Zweck |
+|---|---|
+| `VaadinSecurityVersionContext` (Package `session/vaadin`) | Per-VaadinSession Snapshot-Carrier (`record(subjectId, tenant, snapshot, sessionId)` / `current()` / `clear()`). Survives Session-Rotation. |
+| `SecurityVersionEnforcerListener` (`@ListenerPriority(Integer.MAX_VALUE)`) | BeforeEnter-Listener vor `AuthorizationListener`. On Drift: clear snapshot + reroute zur konfigurierten LoginView-Klasse. |
+
+### Phase-8a/b Components (`security-vaadin/components/` — ⚠️)
+
+| Klasse | Zweck |
+|---|---|
+| `SecuredVisibility` + `SecuredVisibilityMode` (HIDE / DISABLE) | Zentraler Decision-Point. `Requirement(requiredRoles, requiredPermissions)` (AND-composed), `Target`-Interface, `apply()` + `isAllowed()`. SPI-backed `currentSecurityView()` resolved via `AuthenticationService.subjectType()` + `SubjectStore` + `AuthorizationService`. Missing SPI → denial. |
+| `SecuredButton` (Default DISABLE) | Vaadin-Button-Subklasse. Checkt auf Konstruktor und onAttach; `refresh()` für manuelle Re-Checks. |
+| `SecuredRouterLink` (Default HIDE) | Vaadin-RouterLink-Subklasse. Router-explicit Konstruktor für headless tests. |
+| `SecuredMenuItem.bind(MenuItem, Requirement, …)` | Binding-Helper, da MenuItem vom Parent-MenuBar erzeugt wird (kein Subclass-Pattern möglich). |
+| `SessionManagementView` | Reusable Composite. Grid über `SessionStore.findAll()` (Tenant/Subject/SessionId/Status/Created/LastActivity/Version/Action). Per-Row Revoke via `Consumer<SessionRecord>`. Apps subclassen mit `@Route` + `@RequiresPermission`. |
 
 ---
 
@@ -285,6 +418,15 @@ Alle implementieren `AuditEvent` (sealed interface) und sind über
 | `HttpStatusDecisionMapper` | `AuthorizationDecision` → HTTP-Status |
 | `BootstrapRestStatusMapper` | Bootstrap-spezifisches Status-Mapping |
 | `RestHeaders` | Helper für Header-Lookup |
+| `RestSecurityVersionContext` + `RestSecurityVersionFilter` (Phase 4c, ⚠️) | Drift-Filter; `RestSubjectResolver.resolveSecurityVersionContext` als opt-in Default-Methode. Bei Drift: `401 + WWW-Authenticate: SessionStale` (RFC 7235-Style) und Audit-Event. |
+
+### Phase-8d OpenAPI-Metadaten (`security-rest/openapi/` — ⚠️)
+
+| Klasse | Zweck |
+|---|---|
+| `OpenApiSecurityMetadataGenerator.generate(Class<?>)` | Extrahiert die fünf framework-supplied `@Requires…`-Annotationen aus Handler-Klassen. Produziert eine JSON-freie `HandlerSecurityMetadata`-Struktur, die Apps in ihren eigenen OpenAPI-Build mergen. Custom `@SecurityAnnotation`-Annotationen werden bewusst nicht exportiert (App-spezifische Semantik). |
+| `SecurityRequirement` (Record + sealed `Scheme(PERMISSION \| ROLE \| POLICY)` + `Operator(ALL \| ANY)`) | Ein einzelnes Security-Requirement |
+| `HandlerSecurityMetadata` (Record) | Class-level + per-method `SecurityRequirement`-Listen |
 
 ---
 
@@ -443,20 +585,39 @@ Beide Pfade landen im selben `SecurityEnforcer`.
 | JUnit Jupiter 6.1.0-M1 | alle | Test-Framework |
 | PIT 1.x | alle | Mutation Testing |
 
-### Mutation Coverage (Stand 2026-05-13)
+### Mutation Coverage (Stand 2026-05-13, vor V00.70-Phase 4/7/8)
+
+Die V00.70-Phasen sind funktional grün (alle Tests bestehen), aber
+PIT-Mutation-Reports wurden für die neu hinzugekommenen Stacks
+(Phase 4b/4c, Phase 7, Phase 8) noch nicht gerechnet. Werte für die
+älteren Module sind unverändert.
 
 | Modul | Coverage |
 |---|---:|
-| security-core | 79 % |
-| security-vaadin | **90 %** |
-| security-rest | 95 % |
+| security-core | 79 % (vor V00.70-Erweiterungen; Re-Run für Phase 4/7/8 offen) |
+| security-vaadin | **90 %** (vor Phase 4c + Phase 8) |
+| security-rest | 95 % (vor Phase 4c + Phase 8d) |
 | security-standalone | 98 % |
 | security-test | (kein PIT-Run; Tests prüfen ihre Fakes direkt) |
 | security-processor | (PIT-Run noch offen — Phase 5c-Followup) |
+| security-persistence-testkit | (kein PIT-Run; Contracts werden über consumers verifiziert) |
+| security-persistence-eclipsestore | (PIT-Run für die 95+ Contract-Tests offen) |
 | demo-vaadin | 70 % |
 | demo-rest | 49 % |
 | demo-vaadin-rest-client | 10 % |
 | demo-standalone | 86 % |
+
+### Test-Totals (Stand 2026-05-30, nach Phase-8-Commit)
+
+| Modul | Tests |
+|---|---:|
+| security-core | 921 |
+| security-vaadin | 172 |
+| security-rest | 71 |
+| security-standalone | 30 |
+| security-persistence-eclipsestore | 104 |
+
+Alle Module grün.
 
 ---
 
@@ -495,6 +656,10 @@ Beide Pfade landen im selben `SecurityEnforcer`.
 - **Java 26** (Sealed Types, Records, Pattern Matching durchgängig)
 - **Vaadin 25.1.1** (vaadin-core, kein Hilla)
 - **Jetty 12.1.8 EE11** als Dev-Server für die Vaadin-Demos
-- **Maven 3.9.9+**
+- **Maven 4** (pinned via `./mvnw`; Minimum `4.0.0-rc-5`)
+- **Eclipse Store 4.1.0** (`org.eclipse.store:storage-embedded`) für
+  die durable Persistence-Referenz in `security-persistence-eclipsestore`
+- **proxybuilder 00.11.00** (`com.svenruppert:proxybuilder` +
+  `proxybuilder-annotations`) für den Compile-Time-Processor
 - **Lizenz:** EUPL v1.2
-- **Aktuelle Version:** `00.60.00`
+- **Aktuelle Version:** `00.70.00` (feature-complete, vor Release-Tag)
