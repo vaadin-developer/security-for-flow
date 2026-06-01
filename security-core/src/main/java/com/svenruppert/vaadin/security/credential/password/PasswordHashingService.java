@@ -62,4 +62,13 @@ public interface PasswordHashingService {
    * active policy.
    */
   RehashDecision needsRehash(String encodedHash);
+
+  /**
+   * Convenience entry point for callers that already know there is no
+   * stored envelope to verify against (typically &quot;unknown user&quot;
+   * paths). The implementation still performs a comparable KDF call so
+   * the response is not distinguishable from a real verification
+   * (CWE-203, CWE-208).
+   */
+  CredentialVerificationResult verifyAgainstNothing(char[] password);
 }

@@ -25,9 +25,11 @@ package com.svenruppert.vaadin.security.credential.password;
 import com.svenruppert.vaadin.security.credential.CredentialType;
 import com.svenruppert.vaadin.security.credential.InternalAuditEventType;
 import com.svenruppert.vaadin.security.credential.PublicFailureType;
+import com.svenruppert.vaadin.security.credential.password.dummy.DefaultDummyVerificationService;
 import com.svenruppert.vaadin.security.credential.password.envelope.PasswordHashCodec;
 import com.svenruppert.vaadin.security.credential.password.envelope.PasswordHashEnvelope;
 import com.svenruppert.vaadin.security.credential.password.envelope.PasswordHashFormatVersion;
+import com.svenruppert.vaadin.security.credential.password.limiter.NoLimitKdfExecutionLimiter;
 import com.svenruppert.vaadin.security.credential.password.pbkdf2.Pbkdf2Defaults;
 import com.svenruppert.vaadin.security.credential.password.pbkdf2.Pbkdf2ParameterNames;
 import com.svenruppert.vaadin.security.credential.password.pbkdf2.Pbkdf2ParameterValidator;
@@ -77,16 +79,19 @@ class DefaultPasswordHashingServiceTest {
   }
 
   private DefaultPasswordHashingService buildService(PasswordHashPolicy policy) {
+    PasswordHashProviderRegistry registry = new PasswordHashProviderRegistry(
+        List.of(new Pbkdf2PasswordHashProvider()));
     return new DefaultPasswordHashingService(
         PasswordHashCodec.DEFAULT,
         new DefaultPasswordHashValidator(
             new PasswordHashParameterValidatorRegistry(List.of(
                 new Pbkdf2ParameterValidator()))),
-        new PasswordHashProviderRegistry(List.of(
-            new Pbkdf2PasswordHashProvider())),
+        registry,
         NoOpPepperService.INSTANCE,
         policy,
-        new RehashDecisionEngine());
+        new RehashDecisionEngine(),
+        NoLimitKdfExecutionLimiter.INSTANCE,
+        new DefaultDummyVerificationService(registry, policy, PasswordHashCodec.DEFAULT));
   }
 
   @Test
@@ -286,16 +291,22 @@ class DefaultPasswordHashingServiceTest {
   @DisplayName("Construction fails fast when the preferred provider is not registered")
   void preferredProviderMustBeRegistered() {
     PasswordHashPolicy policy = fastTestPolicy();
+    PasswordHashProviderRegistry emptyRegistry =
+        new PasswordHashProviderRegistry(java.util.List.of());
+    PasswordHashProviderRegistry validRegistry =
+        new PasswordHashProviderRegistry(List.of(new Pbkdf2PasswordHashProvider()));
     assertThrows(IllegalStateException.class, () ->
         new DefaultPasswordHashingService(
             PasswordHashCodec.DEFAULT,
             new DefaultPasswordHashValidator(
                 new PasswordHashParameterValidatorRegistry(List.of(
                     new Pbkdf2ParameterValidator()))),
-            new PasswordHashProviderRegistry(java.util.List.of()),
+            emptyRegistry,
             NoOpPepperService.INSTANCE,
             policy,
-            new RehashDecisionEngine()));
+            new RehashDecisionEngine(),
+            NoLimitKdfExecutionLimiter.INSTANCE,
+            new DefaultDummyVerificationService(validRegistry, policy, PasswordHashCodec.DEFAULT)));
   }
 
   @Test

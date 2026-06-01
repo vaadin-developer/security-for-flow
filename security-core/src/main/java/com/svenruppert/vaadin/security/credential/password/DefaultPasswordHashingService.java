@@ -24,10 +24,13 @@ package com.svenruppert.vaadin.security.credential.password;
 
 import com.svenruppert.vaadin.security.credential.InternalAuditEventType;
 import com.svenruppert.vaadin.security.credential.PublicFailureType;
+import com.svenruppert.vaadin.security.credential.password.dummy.DummyVerificationContext;
+import com.svenruppert.vaadin.security.credential.password.dummy.DummyVerificationService;
 import com.svenruppert.vaadin.security.credential.password.envelope.PasswordHashCodec;
 import com.svenruppert.vaadin.security.credential.password.envelope.PasswordHashEnvelope;
 import com.svenruppert.vaadin.security.credential.password.envelope.PasswordHashFormatException;
 import com.svenruppert.vaadin.security.credential.password.envelope.PasswordHashRecord;
+import com.svenruppert.vaadin.security.credential.password.limiter.KdfExecutionLimiter;
 import com.svenruppert.vaadin.security.credential.password.pepper.PepperService;
 import com.svenruppert.vaadin.security.credential.password.policy.PasswordHashPolicy;
 import com.svenruppert.vaadin.security.credential.password.policy.PasswordHashValidationException;
@@ -46,6 +49,9 @@ import java.util.Optional;
  * order:</p>
  *
  * <ol>
+ *   <li><strong>acquire limiter permit</strong> &mdash; one
+ *       {@link KdfExecutionLimiter} permit covers the whole call,
+ *       including any dummy KDF taken on failure;</li>
  *   <li><strong>parse</strong> &mdash; decode the envelope through
  *       {@link PasswordHashCodec};</li>
  *   <li><strong>validate</strong> &mdash; gate the envelope through
@@ -64,10 +70,14 @@ import java.util.Optional;
  *       whether the envelope should be transparently upgraded.</li>
  * </ol>
  *
- * <p>Every public failure collapses onto
- * {@link PublicFailureType#INVALID_CREDENTIALS}; the differentiated
- * {@link InternalAuditEventType} is preserved for audit sinks
- * (CWE-203, CWE-209).</p>
+ * <p>Every failure path executes a comparable
+ * {@link DummyVerificationService} call before returning so that
+ * &quot;user does not exist&quot;, &quot;envelope is malformed&quot;
+ * and &quot;provider is missing&quot; collapse onto the same
+ * observable timing profile (CWE-203, CWE-208). Every public failure
+ * collapses onto {@link PublicFailureType#INVALID_CREDENTIALS}; the
+ * differentiated {@link InternalAuditEventType} is preserved for audit
+ * sinks.</p>
  */
 public final class DefaultPasswordHashingService implements PasswordHashingService {
 
@@ -77,6 +87,8 @@ public final class DefaultPasswordHashingService implements PasswordHashingServi
   private final PepperService pepperService;
   private final PasswordHashPolicy policy;
   private final RehashDecisionEngine rehashEngine;
+  private final KdfExecutionLimiter limiter;
+  private final DummyVerificationService dummyService;
 
   public DefaultPasswordHashingService(
       PasswordHashCodec codec,
@@ -84,7 +96,9 @@ public final class DefaultPasswordHashingService implements PasswordHashingServi
       PasswordHashProviderRegistry providerRegistry,
       PepperService pepperService,
       PasswordHashPolicy policy,
-      RehashDecisionEngine rehashEngine) {
+      RehashDecisionEngine rehashEngine,
+      KdfExecutionLimiter limiter,
+      DummyVerificationService dummyService) {
     this.codec = Objects.requireNonNull(codec, "codec");
     this.validator = Objects.requireNonNull(validator, "validator");
     this.providerRegistry = Objects.requireNonNull(
@@ -92,6 +106,8 @@ public final class DefaultPasswordHashingService implements PasswordHashingServi
     this.pepperService = Objects.requireNonNull(pepperService, "pepperService");
     this.policy = Objects.requireNonNull(policy, "policy");
     this.rehashEngine = Objects.requireNonNull(rehashEngine, "rehashEngine");
+    this.limiter = Objects.requireNonNull(limiter, "limiter");
+    this.dummyService = Objects.requireNonNull(dummyService, "dummyService");
 
     PasswordHashProvider preferred = providerRegistry.resolve(
         policy.preferredProviderId(), policy.preferredAlgorithm())
@@ -111,14 +127,59 @@ public final class DefaultPasswordHashingService implements PasswordHashingServi
         .resolve(policy.preferredProviderId(), policy.preferredAlgorithm())
         .orElseThrow(() -> new IllegalStateException(
             "preferred provider disappeared after construction"));
-    return provider.hash(password, policy, Optional.empty());
+    Optional<KdfExecutionLimiter.Lease> lease = limiter.acquire();
+    if (lease.isEmpty()) {
+      throw new KdfLimitExceededException();
+    }
+    try (KdfExecutionLimiter.Lease l = lease.get()) {
+      return provider.hash(password, policy, Optional.empty());
+    }
   }
 
   @Override
   public CredentialVerificationResult verify(
       char[] password, String encodedHash) {
     Objects.requireNonNull(password, "password");
+    Optional<KdfExecutionLimiter.Lease> lease = limiter.acquire();
+    if (lease.isEmpty()) {
+      return failed(InternalAuditEventType.VERIFICATION_REJECTED_KDF_LIMIT);
+    }
+    try (KdfExecutionLimiter.Lease l = lease.get()) {
+      return verifyUnderLease(password, encodedHash);
+    }
+  }
+
+  @Override
+  public CredentialVerificationResult verifyAgainstNothing(char[] password) {
+    Objects.requireNonNull(password, "password");
+    Optional<KdfExecutionLimiter.Lease> lease = limiter.acquire();
+    if (lease.isEmpty()) {
+      return failed(InternalAuditEventType.VERIFICATION_REJECTED_KDF_LIMIT);
+    }
+    try (KdfExecutionLimiter.Lease l = lease.get()) {
+      dummyService.runDummyKdf(password, DummyVerificationContext.UNKNOWN_USER);
+      return failed(InternalAuditEventType.VERIFICATION_DUMMY_PATH);
+    }
+  }
+
+  @Override
+  public RehashDecision needsRehash(String encodedHash) {
     if (encodedHash == null) {
+      return RehashDecision.NotRequired.INSTANCE;
+    }
+    try {
+      PasswordHashRecord record = codec.decode(encodedHash);
+      return rehashEngine.decide(record.envelope(), policy);
+    } catch (PasswordHashFormatException e) {
+      return RehashDecision.NotRequired.INSTANCE;
+    }
+  }
+
+  private CredentialVerificationResult verifyUnderLease(
+      char[] password, String encodedHash) {
+    if (encodedHash == null) {
+      dummyService.runDummyKdf(password,
+          DummyVerificationContext.ENVELOPE_DECODE_ERROR);
       return failed(InternalAuditEventType.VERIFICATION_FAILED_DECODE_ERROR);
     }
 
@@ -126,6 +187,8 @@ public final class DefaultPasswordHashingService implements PasswordHashingServi
     try {
       record = codec.decode(encodedHash);
     } catch (PasswordHashFormatException e) {
+      dummyService.runDummyKdf(password,
+          DummyVerificationContext.ENVELOPE_DECODE_ERROR);
       return failed(InternalAuditEventType.VERIFICATION_FAILED_DECODE_ERROR);
     }
 
@@ -134,12 +197,16 @@ public final class DefaultPasswordHashingService implements PasswordHashingServi
     try {
       validator.validate(envelope, policy);
     } catch (PasswordHashValidationException e) {
+      dummyService.runDummyKdf(password,
+          DummyVerificationContext.ENVELOPE_VALIDATION_ERROR);
       return failed(InternalAuditEventType.VERIFICATION_FAILED_INVALID_PARAMETERS);
     }
 
     Optional<PasswordHashProvider> resolvedProvider = providerRegistry
         .resolve(envelope.providerId(), envelope.algorithm());
     if (resolvedProvider.isEmpty()) {
+      dummyService.runDummyKdf(password,
+          DummyVerificationContext.PROVIDER_MISSING);
       return failed(InternalAuditEventType.VERIFICATION_FAILED_UNKNOWN_PROVIDER);
     }
 
@@ -147,7 +214,10 @@ public final class DefaultPasswordHashingService implements PasswordHashingServi
     if (envelope.pepperKeyId().isPresent()) {
       pepperSecret = pepperService.resolve(envelope.pepperKeyId().get());
       if (pepperSecret.isEmpty()) {
-        return failed(InternalAuditEventType.VERIFICATION_FAILED_UNKNOWN_PEPPER_KEY);
+        dummyService.runDummyKdf(password,
+            DummyVerificationContext.PEPPER_KEY_UNKNOWN);
+        return failed(
+            InternalAuditEventType.VERIFICATION_FAILED_UNKNOWN_PEPPER_KEY);
       }
     } else {
       pepperSecret = Optional.empty();
@@ -173,22 +243,20 @@ public final class DefaultPasswordHashingService implements PasswordHashingServi
     };
   }
 
-  @Override
-  public RehashDecision needsRehash(String encodedHash) {
-    if (encodedHash == null) {
-      return RehashDecision.NotRequired.INSTANCE;
-    }
-    try {
-      PasswordHashRecord record = codec.decode(encodedHash);
-      return rehashEngine.decide(record.envelope(), policy);
-    } catch (PasswordHashFormatException e) {
-      return RehashDecision.NotRequired.INSTANCE;
-    }
-  }
-
   private static CredentialVerificationResult.Failed failed(
       InternalAuditEventType internal) {
     return new CredentialVerificationResult.Failed(
         PublicFailureType.INVALID_CREDENTIALS, internal);
+  }
+
+  /**
+   * Thrown by {@link #hash(char[])} when the limiter is saturated.
+   * Verification paths translate this into a generic credential failure
+   * instead of throwing.
+   */
+  public static final class KdfLimitExceededException extends RuntimeException {
+    public KdfLimitExceededException() {
+      super("KDF execution limiter rejected the request");
+    }
   }
 }
