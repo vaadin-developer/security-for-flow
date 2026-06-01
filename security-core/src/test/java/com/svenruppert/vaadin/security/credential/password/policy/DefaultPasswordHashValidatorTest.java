@@ -159,8 +159,8 @@ class DefaultPasswordHashValidatorTest {
   }
 
   @Test
-  @DisplayName("Unknown provider is rejected")
-  void unknownProviderRejected() {
+  @DisplayName("Provider acceptability is left to the rehash engine, not the validator")
+  void unknownProviderIsNotAValidatorConcern() {
     PasswordHashEnvelope env = new PasswordHashEnvelope(
         PasswordHashFormatVersion.V1,
         CredentialType.PASSWORD,
@@ -171,8 +171,9 @@ class DefaultPasswordHashValidatorTest {
         validParams(),
         "ZGVyaXZlZA=="
     );
-    assertThrows(PasswordHashValidationException.class,
-        () -> validator.validate(env, policy));
+    // Validator accepts; the pipeline then asks the registry to resolve
+    // the provider id and decides UNKNOWN_PROVIDER vs. PROVIDER_DEPRECATED.
+    assertNotNull(validator.validate(env, policy));
   }
 
   @Test

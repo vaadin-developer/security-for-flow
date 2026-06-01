@@ -68,10 +68,11 @@ public final class DefaultPasswordHashValidator implements PasswordHashValidator
       throw new PasswordHashValidationException(
           "algorithm is not acceptable under the active policy");
     }
-    if (!policy.isProviderAcceptable(envelope.providerId())) {
-      throw new PasswordHashValidationException(
-          "provider is not acceptable under the active policy");
-    }
+    // Provider acceptability is NOT a verification gate: an old envelope
+    // pinned to a provider that is still registered must remain
+    // verifiable so the user can log in and the pipeline can rehash to
+    // the active policy's preferred provider. Whether the provider is
+    // still preferred is decided by the rehash engine, not here.
     if (envelope.policyVersion() > policy.policyVersion()) {
       throw new PasswordHashValidationException(
           "envelope policy version is newer than the active policy");

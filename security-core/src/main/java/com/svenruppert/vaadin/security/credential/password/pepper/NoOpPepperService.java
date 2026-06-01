@@ -1,0 +1,54 @@
+/*-
+ * #%L
+ * Security Core
+ * %%
+ * Copyright (C) 2018 - 2026 Sven Ruppert
+ * %%
+ * Licensed under the EUPL, Version 1.1 or - as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence");
+ *
+ * You may not use this work except in compliance with the Licence.
+ * You may obtain a copy of the Licence at:
+ *
+ * http://ec.europa.eu/idabc/eupl5
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the Licence is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
+ * #L%
+ */
+package com.svenruppert.vaadin.security.credential.password.pepper;
+
+import java.util.Optional;
+
+/**
+ * Phase-1a placeholder for {@link PepperService}.
+ *
+ * <p>This implementation deliberately performs no pepper protection. It
+ * publishes no active key id, and a lookup of any non-empty
+ * {@code keyId} resolves to {@link Optional#empty()}. The verification
+ * pipeline interprets that as
+ * {@code VERIFICATION_FAILED_UNKNOWN_PEPPER_KEY} so an envelope that
+ * was peppered cannot be silently downgraded.</p>
+ *
+ * <p>The class name is the explicit warning: production deployments
+ * must replace this implementation when Phase 2 ships a real pepper
+ * service.</p>
+ */
+public final class NoOpPepperService implements PepperService {
+
+  public static final NoOpPepperService INSTANCE = new NoOpPepperService();
+
+  @Override
+  public Optional<String> activeKeyId() {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<byte[]> resolve(String keyId) {
+    return Optional.empty();
+  }
+}
