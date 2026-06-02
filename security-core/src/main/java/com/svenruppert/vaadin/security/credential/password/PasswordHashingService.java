@@ -22,6 +22,10 @@
  */
 package com.svenruppert.vaadin.security.credential.password;
 
+import com.svenruppert.vaadin.security.credential.secret.SecretValue;
+
+import java.util.Arrays;
+
 /**
  * Front-door facade for the Phase-1a password hashing and verification
  * pipeline.
@@ -71,4 +75,43 @@ public interface PasswordHashingService {
    * (CWE-203, CWE-208).
    */
   CredentialVerificationResult verifyAgainstNothing(char[] password);
+
+  /**
+   * SecretValue overload for {@link #hash(char[])}. The borrowed
+   * {@code char[]} copy returned by {@link SecretValue#asChars()} is
+   * zeroed in a {@code finally} block (CWE-226).
+   */
+  default PasswordHashResult hash(SecretValue password) {
+    char[] chars = password.asChars();
+    try {
+      return hash(chars);
+    } finally {
+      Arrays.fill(chars, '\0');
+    }
+  }
+
+  /**
+   * SecretValue overload for {@link #verify(char[], String)}.
+   */
+  default CredentialVerificationResult verify(
+      SecretValue password, String encodedHash) {
+    char[] chars = password.asChars();
+    try {
+      return verify(chars, encodedHash);
+    } finally {
+      Arrays.fill(chars, '\0');
+    }
+  }
+
+  /**
+   * SecretValue overload for {@link #verifyAgainstNothing(char[])}.
+   */
+  default CredentialVerificationResult verifyAgainstNothing(SecretValue password) {
+    char[] chars = password.asChars();
+    try {
+      return verifyAgainstNothing(chars);
+    } finally {
+      Arrays.fill(chars, '\0');
+    }
+  }
 }
