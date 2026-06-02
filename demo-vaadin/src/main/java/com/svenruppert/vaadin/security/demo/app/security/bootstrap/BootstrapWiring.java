@@ -100,7 +100,8 @@ public final class BootstrapWiring {
     BootstrapStartup.initializeIfRequired(
         state, tokenStore, new BootstrapTokenGenerator(), output, config);
     InitialAdminBootstrapService service = new InitialAdminBootstrapService(
-        state, tokenStore, adminStore, directory.passwordHasher(),
+        state, tokenStore, adminStore,
+        com.svenruppert.vaadin.security.credential.password.PasswordHashingServices.defaults(),
         new MinimumLengthPasswordPolicy(8),
         config.tokenValidity(), java.time.Clock.systemUTC());
     return new BootstrapWiring(state, service);

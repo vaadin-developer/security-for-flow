@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.bootstrap;
 
-import com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher;
+import com.svenruppert.vaadin.security.credential.password.PasswordHashingServices;
 
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
@@ -72,7 +72,7 @@ class InitialAdminBootstrapAuditTest {
         BootstrapConfiguration.transientConsole());
 
     InitialAdminBootstrapService service = new InitialAdminBootstrapService(
-        state, tokens, admins, new Pbkdf2PasswordHasher(),
+        state, tokens, admins, PasswordHashingServices.defaults(),
         new MinimumLengthPasswordPolicy(8));
 
     InitialAdminCreationResult result = service.createInitialAdmin(
@@ -97,7 +97,7 @@ class InitialAdminBootstrapAuditTest {
         BootstrapConfiguration.transientConsole());
 
     InitialAdminBootstrapService service = new InitialAdminBootstrapService(
-        state, tokens, admins, new Pbkdf2PasswordHasher(),
+        state, tokens, admins, PasswordHashingServices.defaults(),
         new MinimumLengthPasswordPolicy(8));
 
     InitialAdminCreationResult result = service.createInitialAdmin(
@@ -122,7 +122,7 @@ class InitialAdminBootstrapAuditTest {
 
     Duration shortValidity = Duration.ofMinutes(5);
     InitialAdminBootstrapService service = new InitialAdminBootstrapService(
-        state, tokens, admins, new Pbkdf2PasswordHasher(),
+        state, tokens, admins, PasswordHashingServices.defaults(),
         new MinimumLengthPasswordPolicy(8),
         shortValidity,
         Clock.fixed(requestAt, ZoneOffset.UTC));
@@ -144,7 +144,7 @@ class InitialAdminBootstrapAuditTest {
     // intentionally NO BootstrapStartup.initializeIfRequired — store stays empty
 
     InitialAdminBootstrapService service = new InitialAdminBootstrapService(
-        state, tokens, admins, new Pbkdf2PasswordHasher(),
+        state, tokens, admins, PasswordHashingServices.defaults(),
         new MinimumLengthPasswordPolicy(8));
 
     InitialAdminCreationResult result = service.createInitialAdmin(

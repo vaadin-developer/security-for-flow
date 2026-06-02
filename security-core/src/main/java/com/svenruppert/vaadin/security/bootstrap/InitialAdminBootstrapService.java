@@ -19,8 +19,9 @@ package com.svenruppert.vaadin.security.bootstrap;
 import com.svenruppert.vaadin.security.audit.BootstrapAdminCreated;
 import com.svenruppert.vaadin.security.audit.BootstrapTokenRejected;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
-import com.svenruppert.vaadin.security.authentication.PasswordHasher;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.credential.password.PasswordHashResult;
+import com.svenruppert.vaadin.security.credential.password.PasswordHashingService;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -51,7 +52,7 @@ public final class InitialAdminBootstrapService {
   private final BootstrapStateService stateService;
   private final BootstrapTokenStore tokenStore;
   private final AdministratorAccountStore administratorStore;
-  private final PasswordHasher passwordHasher;
+  private final PasswordHashingService passwordHashingService;
   private final PasswordPolicy passwordPolicy;
   private final Duration tokenValidity;
   private final Clock clock;
@@ -61,9 +62,9 @@ public final class InitialAdminBootstrapService {
       BootstrapStateService stateService,
       BootstrapTokenStore tokenStore,
       AdministratorAccountStore administratorStore,
-      PasswordHasher passwordHasher,
+      PasswordHashingService passwordHashingService,
       PasswordPolicy passwordPolicy) {
-    this(stateService, tokenStore, administratorStore, passwordHasher, passwordPolicy,
+    this(stateService, tokenStore, administratorStore, passwordHashingService, passwordPolicy,
         BootstrapConfiguration.DEFAULT_VALIDITY, Clock.systemUTC());
   }
 
@@ -71,14 +72,14 @@ public final class InitialAdminBootstrapService {
       BootstrapStateService stateService,
       BootstrapTokenStore tokenStore,
       AdministratorAccountStore administratorStore,
-      PasswordHasher passwordHasher,
+      PasswordHashingService passwordHashingService,
       PasswordPolicy passwordPolicy,
       Duration tokenValidity,
       Clock clock) {
     this.stateService = Objects.requireNonNull(stateService);
     this.tokenStore = Objects.requireNonNull(tokenStore);
     this.administratorStore = Objects.requireNonNull(administratorStore);
-    this.passwordHasher = Objects.requireNonNull(passwordHasher);
+    this.passwordHashingService = Objects.requireNonNull(passwordHashingService);
     this.passwordPolicy = Objects.requireNonNull(passwordPolicy);
     this.tokenValidity = Objects.requireNonNull(tokenValidity);
     this.clock = Objects.requireNonNull(clock);
@@ -121,7 +122,8 @@ public final class InitialAdminBootstrapService {
         }
         String passwordHash;
         try {
-          passwordHash = passwordHasher.hash(command.password());
+          PasswordHashResult result = passwordHashingService.hash(command.password());
+          passwordHash = result.encodedHash();
         } catch (RuntimeException e) {
           return new InitialAdminCreationResult.InternalError("could not hash password");
         }

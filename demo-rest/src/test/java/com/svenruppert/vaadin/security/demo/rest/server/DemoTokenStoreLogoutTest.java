@@ -20,7 +20,7 @@ import com.svenruppert.vaadin.security.logout.LogoutScope;
 import com.svenruppert.vaadin.security.logout.SubjectClearingLogoutService;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
-import com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher;
+import com.svenruppert.vaadin.security.credential.password.PasswordHashingServices;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUser;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUserStore;
 import org.junit.jupiter.api.DisplayName;
@@ -107,7 +107,7 @@ class DemoTokenStoreLogoutTest {
   // ── Fixtures ───────────────────────────────────────────────────
 
   private static DemoUser aUser() {
-    DemoUserStore store = new DemoUserStore(new Pbkdf2PasswordHasher(), false);
+    DemoUserStore store = new DemoUserStore(PasswordHashingServices.defaults(), false);
     return store.authenticate("admin", "admin").orElseThrow();
   }
 

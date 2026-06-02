@@ -16,11 +16,16 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.domain;
 
-import com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher;
+import com.svenruppert.vaadin.security.credential.password.PasswordHashingService;
+import com.svenruppert.vaadin.security.credential.password.PasswordHashingServices;
+import com.svenruppert.vaadin.security.credential.password.pbkdf2.Pbkdf2ParameterNames;
+import com.svenruppert.vaadin.security.credential.password.policy.DefaultPasswordHashPolicy;
+import com.svenruppert.vaadin.security.credential.password.policy.PasswordHashPolicy;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.security.SecureRandom;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -30,14 +35,35 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("DemoUserStore — rehash on successful login")
 class DemoUserStoreRehashTest {
 
+  private static PasswordHashPolicy fastPolicy(int iterations) {
+    Map<String, String> defaults = new LinkedHashMap<>();
+    defaults.put(Pbkdf2ParameterNames.ITERATIONS, Integer.toString(iterations));
+    defaults.put(Pbkdf2ParameterNames.KEY_LENGTH, "32");
+    Map<String, String> min = new LinkedHashMap<>();
+    min.put(Pbkdf2ParameterNames.ITERATIONS, "500");
+    min.put(Pbkdf2ParameterNames.KEY_LENGTH, "32");
+    min.put(Pbkdf2ParameterNames.SALT_LENGTH, "16");
+    Map<String, String> max = new LinkedHashMap<>();
+    max.put(Pbkdf2ParameterNames.ITERATIONS, "10000");
+    max.put(Pbkdf2ParameterNames.KEY_LENGTH, "64");
+    max.put(Pbkdf2ParameterNames.SALT_LENGTH, "64");
+    return DefaultPasswordHashPolicy.builder()
+        .policyVersion(1)
+        .preferredAlgorithm(Pbkdf2ParameterNames.ALGORITHM)
+        .preferredProviderId(Pbkdf2ParameterNames.PROVIDER_ID)
+        .defaultParameters(Pbkdf2ParameterNames.ALGORITHM, defaults)
+        .minimumParameters(Pbkdf2ParameterNames.ALGORITHM, min)
+        .maximumParameters(Pbkdf2ParameterNames.ALGORITHM, max)
+        .build();
+  }
+
   @Test
-  @DisplayName("authenticate with same hasher → no drift → stored hash unchanged")
+  @DisplayName("authenticate with same policy → no drift → stored hash unchanged")
   void noDrift_noRehash() {
-    Pbkdf2PasswordHasher hasher = new Pbkdf2PasswordHasher(1_000, new SecureRandom());
-    DemoUserStore store = new DemoUserStore(hasher, false);
+    PasswordHashingService service = PasswordHashingServices.defaults(fastPolicy(1000));
+    DemoUserStore store = new DemoUserStore(service, false);
 
     String hashBefore = store.storedPasswordHash("admin").orElseThrow();
-
     Optional<DemoUser> user = store.authenticate("admin", "admin");
 
     assertTrue(user.isPresent(), "credentials must verify");
@@ -46,41 +72,39 @@ class DemoUserStoreRehashTest {
   }
 
   @Test
-  @DisplayName("authenticate with hasher whose iteration count drifted → stored hash gets upgraded")
+  @DisplayName("authenticate when stored hash has fewer iterations than the policy default → rehash")
   void driftDetected_rehash() {
-    // Bootstrap the store with a low-iteration hasher
-    Pbkdf2PasswordHasher older = new Pbkdf2PasswordHasher(1_000, new SecureRandom());
-    DemoUserStore store = new DemoUserStore(older, false);
-    String hashBefore = store.storedPasswordHash("admin").orElseThrow();
+    // Seed the store at the lower iteration count
+    DemoUserStore seedStore = new DemoUserStore(
+        PasswordHashingServices.defaults(fastPolicy(1000)), false);
+    String hashBefore = seedStore.storedPasswordHash("admin").orElseThrow();
+    assertTrue(hashBefore.contains("$p=i=1000,"),
+        "seed hash must record 1000 iterations: " + hashBefore);
 
-    // Now swap in a hasher with higher iteration count and rerun authenticate
-    // by reflectively replacing the hasher in the store. Easier: build a new
-    // store with the older hasher, then call authenticate with a *different*
-    // hasher via package-private overload — not present.
-    // Instead, simulate the drift by registering a user with a different
-    // iteration count manually.
-    Pbkdf2PasswordHasher newer = new Pbkdf2PasswordHasher(2_000, new SecureRandom());
-    DemoUserStore upgradeStore = new DemoUserStore(newer, false);
-    // re-register admin with the older hash so the upgradeStore now sees drift
+    // Build a new store under a higher-iteration policy and import the
+    // older hash so authenticate sees parameter drift.
+    DemoUserStore upgradeStore = new DemoUserStore(
+        PasswordHashingServices.defaults(fastPolicy(2000)), false);
     upgradeStore.register(new DemoUser(
         "drift-user", "Drift User", hashBefore, DemoRole.ROLE_ADMIN));
 
-    String hashBeforeUpgrade = upgradeStore.storedPasswordHash("drift-user").orElseThrow();
+    String hashBeforeUpgrade =
+        upgradeStore.storedPasswordHash("drift-user").orElseThrow();
     Optional<DemoUser> result = upgradeStore.authenticate("drift-user", "admin");
 
     assertTrue(result.isPresent(), "verify must still succeed against the older hash");
     String hashAfter = upgradeStore.storedPasswordHash("drift-user").orElseThrow();
     assertNotEquals(hashBeforeUpgrade, hashAfter,
         "drift must trigger a re-hash; stored hash must change");
-    assertTrue(hashAfter.contains("$2000$"),
+    assertTrue(hashAfter.contains("$p=i=2000,"),
         "fresh hash must reflect the newer iteration count: " + hashAfter);
   }
 
   @Test
   @DisplayName("authenticate with wrong password → no rehash, no change")
   void wrongPassword_noRehash() {
-    Pbkdf2PasswordHasher hasher = new Pbkdf2PasswordHasher(1_000, new SecureRandom());
-    DemoUserStore store = new DemoUserStore(hasher, false);
+    DemoUserStore store = new DemoUserStore(
+        PasswordHashingServices.defaults(fastPolicy(1000)), false);
     String hashBefore = store.storedPasswordHash("admin").orElseThrow();
 
     Optional<DemoUser> user = store.authenticate("admin", "wrong");
@@ -92,8 +116,8 @@ class DemoUserStoreRehashTest {
   @Test
   @DisplayName("authenticate against unknown user → returns empty without touching the store")
   void unknownUser_noChange() {
-    Pbkdf2PasswordHasher hasher = new Pbkdf2PasswordHasher(1_000, new SecureRandom());
-    DemoUserStore store = new DemoUserStore(hasher, false);
+    DemoUserStore store = new DemoUserStore(
+        PasswordHashingServices.defaults(fastPolicy(1000)), false);
 
     Optional<DemoUser> result = store.authenticate("nobody", "anything");
 

@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.bootstrap;
 
-import com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher;
+import com.svenruppert.vaadin.security.credential.password.PasswordHashingServices;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -61,7 +61,7 @@ class InitialAdminBootstrapServiceTest {
         new ConsoleBootstrapTokenOutput(new PrintStream(new ByteArrayOutputStream()), ""),
         BootstrapConfiguration.transientConsole());
     return new InitialAdminBootstrapService(
-        state, tokens, admins, new Pbkdf2PasswordHasher(),
+        state, tokens, admins, PasswordHashingServices.defaults(),
         new MinimumLengthPasswordPolicy(8));
   }
 
@@ -143,7 +143,7 @@ class InitialAdminBootstrapServiceTest {
     String token = tokens.load().orElseThrow().value();
 
     InitialAdminBootstrapService service = new InitialAdminBootstrapService(
-        state, tokens, admins, new Pbkdf2PasswordHasher(),
+        state, tokens, admins, PasswordHashingServices.defaults(),
         new MinimumLengthPasswordPolicy(8));
     InitialAdminCreationResult result = service.createInitialAdmin(
         new CreateInitialAdminCommand(token, "root", OK_PASSWORD.toCharArray(), "Root", null));
@@ -193,7 +193,7 @@ class InitialAdminBootstrapServiceTest {
     String token = tokenIn(tokens);
 
     InitialAdminBootstrapService service = new InitialAdminBootstrapService(
-        state, tokens, admins, new Pbkdf2PasswordHasher(),
+        state, tokens, admins, PasswordHashingServices.defaults(),
         new MinimumLengthPasswordPolicy(8));
 
     var first = service.createInitialAdmin(
@@ -228,7 +228,7 @@ class InitialAdminBootstrapServiceTest {
         new ConsoleBootstrapTokenOutput(new PrintStream(new ByteArrayOutputStream()), ""),
         BootstrapConfiguration.transientConsole());
     InitialAdminBootstrapService service = new InitialAdminBootstrapService(
-        state, tokens, admins, new Pbkdf2PasswordHasher(),
+        state, tokens, admins, PasswordHashingServices.defaults(),
         new MinimumLengthPasswordPolicy(8));
     var result = service.createInitialAdmin(
         new CreateInitialAdminCommand(tokenIn(tokens), "root", "short".toCharArray(), "Root", null));
@@ -250,7 +250,7 @@ class InitialAdminBootstrapServiceTest {
 
     Clock future = Clock.fixed(Instant.now().plus(Duration.ofMinutes(10)), ZoneOffset.UTC);
     InitialAdminBootstrapService service = new InitialAdminBootstrapService(
-        state, tokens, admins, new Pbkdf2PasswordHasher(),
+        state, tokens, admins, PasswordHashingServices.defaults(),
         new MinimumLengthPasswordPolicy(8),
         Duration.ofMinutes(5), future);
 
@@ -297,7 +297,7 @@ class InitialAdminBootstrapServiceTest {
     String token = tokens.load().orElseThrow().value();
 
     InitialAdminBootstrapService service = new InitialAdminBootstrapService(
-        state, tokens, admins, new Pbkdf2PasswordHasher(),
+        state, tokens, admins, PasswordHashingServices.defaults(),
         new MinimumLengthPasswordPolicy(8));
 
     Logger serviceLogger = Logger.getLogger(InitialAdminBootstrapService.class.getName());
@@ -359,7 +359,7 @@ class InitialAdminBootstrapServiceTest {
         BootstrapConfiguration.transientConsole());
     String token = tokenIn(tokens);
     InitialAdminBootstrapService service = new InitialAdminBootstrapService(
-        state, tokens, admins, new Pbkdf2PasswordHasher(),
+        state, tokens, admins, PasswordHashingServices.defaults(),
         new MinimumLengthPasswordPolicy(8));
 
     int parallel = 16;

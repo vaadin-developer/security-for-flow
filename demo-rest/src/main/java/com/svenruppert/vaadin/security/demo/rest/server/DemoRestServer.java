@@ -32,7 +32,6 @@ import com.svenruppert.vaadin.security.bootstrap.FileBootstrapTokenStore;
 import com.svenruppert.vaadin.security.bootstrap.InMemoryBootstrapTokenStore;
 import com.svenruppert.vaadin.security.bootstrap.InitialAdminBootstrapService;
 import com.svenruppert.vaadin.security.bootstrap.MinimumLengthPasswordPolicy;
-import com.svenruppert.vaadin.security.authentication.PasswordHasher;
 import com.svenruppert.vaadin.security.bruteforce.InMemoryLoginAttemptPolicy;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoDocumentStore;
@@ -99,8 +98,9 @@ public final class DemoRestServer {
                                      LoginAttemptPolicy loginAttemptPolicy,
                                      LoginAttemptPolicy bootstrapAttemptPolicy) throws IOException {
     boolean bootstrapMode = bootstrapConfig.mode() != BootstrapMode.DISABLED;
-    PasswordHasher hasher = SecurityServiceResolver.passwordHashingService();
-    DemoUserStore users = new DemoUserStore(hasher, bootstrapMode);
+    com.svenruppert.vaadin.security.credential.password.PasswordHashingService hashingService =
+        com.svenruppert.vaadin.security.credential.password.PasswordHashingServices.defaults();
+    DemoUserStore users = new DemoUserStore(hashingService, bootstrapMode);
     DemoTokenStore tokens = new DemoTokenStore();
     DemoDocumentStore documents = new DemoDocumentStore();
     DemoRolePermissionMapping mapping = new DemoRolePermissionMapping();
@@ -123,7 +123,7 @@ public final class DemoRestServer {
     BootstrapTokenStore tokenStore = bootstrapTokenStore(bootstrapConfig);
     BootstrapTokenOutput tokenOutput = bootstrapTokenOutput(bootstrapConfig, port);
     InitialAdminBootstrapService bootstrapService = new InitialAdminBootstrapService(
-        stateService, tokenStore, adminStore, hasher, new MinimumLengthPasswordPolicy(8),
+        stateService, tokenStore, adminStore, hashingService, new MinimumLengthPasswordPolicy(8),
         bootstrapConfig.tokenValidity(), java.time.Clock.systemUTC());
     DemoBootstrapHandlers bootstrapHandlers = new DemoBootstrapHandlers(
         stateService, bootstrapService, bootstrapAttemptPolicy);

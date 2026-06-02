@@ -23,7 +23,9 @@ import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.audit.UserCreated;
 import com.svenruppert.vaadin.security.audit.UserDeleted;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.authentication.PasswordHasher;
+import com.svenruppert.vaadin.security.credential.password.CredentialVerificationResult;
+import com.svenruppert.vaadin.security.credential.password.PasswordHashingService;
+import com.svenruppert.vaadin.security.credential.password.RehashDecision;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -43,14 +45,14 @@ import java.util.Optional;
 public final class DemoUserStore {
 
   private final Map<String, DemoUser> users = new LinkedHashMap<>();
-  private final PasswordHasher hasher;
+  private final PasswordHashingService hashingService;
 
-  public DemoUserStore(PasswordHasher hasher) {
-    this(hasher, false);
+  public DemoUserStore(PasswordHashingService hashingService) {
+    this(hashingService, false);
   }
 
-  public DemoUserStore(PasswordHasher hasher, boolean bootstrapMode) {
-    this.hasher = hasher;
+  public DemoUserStore(PasswordHashingService hashingService, boolean bootstrapMode) {
+    this.hashingService = Objects.requireNonNull(hashingService, "hashingService");
     if (!bootstrapMode) {
       register("admin", "admin", "Admin User", DemoRole.ROLE_ADMIN);
     }
@@ -59,23 +61,29 @@ public final class DemoUserStore {
   }
 
   private void register(String username, String plaintextPassword, String displayName, DemoRole role) {
-    String hash = hasher.hash(plaintextPassword.toCharArray());
+    String hash = hashingService.hash(plaintextPassword.toCharArray()).encodedHash();
     users.put(username, new DemoUser(username, displayName, hash, role));
   }
 
   public synchronized Optional<DemoUser> authenticate(String username, String password) {
+    char[] raw = password.toCharArray();
     DemoUser user = users.get(username);
     if (user == null) {
+      // unknown user — still run a comparable dummy KDF so the response
+      // is not distinguishable from a wrong password (CWE-203, CWE-208)
+      hashingService.verifyAgainstNothing(raw);
       return Optional.empty();
     }
-    char[] raw = password.toCharArray();
-    if (!hasher.verify(raw, user.passwordHash())) {
+    CredentialVerificationResult result =
+        hashingService.verify(raw, user.passwordHash());
+    if (!(result instanceof CredentialVerificationResult.Verified)) {
       return Optional.empty();
     }
     DemoUser current = user;
-    if (hasher.needsRehash(current.passwordHash())) {
+    RehashDecision rehash = hashingService.needsRehash(current.passwordHash());
+    if (rehash instanceof RehashDecision.Required) {
       try {
-        String freshHash = hasher.hash(raw);
+        String freshHash = hashingService.hash(raw).encodedHash();
         DemoUser upgraded = new DemoUser(
             current.username(), current.displayName(), freshHash, current.role());
         users.put(upgraded.username(), upgraded);
@@ -118,7 +126,7 @@ public final class DemoUserStore {
     if (users.containsKey(username)) {
       throw new IllegalStateException("user already exists: " + username);
     }
-    String hash = hasher.hash(plaintextPassword.toCharArray());
+    String hash = hashingService.hash(plaintextPassword.toCharArray()).encodedHash();
     DemoUser user = new DemoUser(
         username, displayName == null ? username : displayName, hash, role);
     users.put(username, user);

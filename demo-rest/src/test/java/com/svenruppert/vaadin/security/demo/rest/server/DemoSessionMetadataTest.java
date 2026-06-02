@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.server;
 
-import com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher;
+import com.svenruppert.vaadin.security.credential.password.PasswordHashingServices;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoRolePermissionMapping;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUser;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUserStore;
@@ -136,8 +136,7 @@ class DemoSessionMetadataTest {
   // ── Helpers ───────────────────────────────────────────────────
 
   private static DemoUser aUser() {
-    Pbkdf2PasswordHasher hasher = new Pbkdf2PasswordHasher();
-    DemoUserStore users = new DemoUserStore(hasher, false);
+    DemoUserStore users = new DemoUserStore(PasswordHashingServices.defaults(), false);
     return users.authenticate("admin", "admin").orElseThrow();
   }
 
