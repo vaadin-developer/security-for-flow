@@ -83,6 +83,13 @@ public final class PasswordHashingServices {
       PasswordHashPolicy policy, KdfExecutionLimiter limiter) {
     PasswordHashProviderRegistry providerRegistry =
         new PasswordHashProviderRegistry(List.of(new Pbkdf2PasswordHashProvider()));
+    if (providerRegistry.resolve(
+        policy.preferredProviderId(), policy.preferredAlgorithm()).isEmpty()) {
+      throw new IllegalStateException(
+          "policy's preferred provider is not registered: "
+              + policy.preferredProviderId() + " / "
+              + policy.preferredAlgorithm());
+    }
     return new DefaultPasswordHashingService(
         PasswordHashCodec.DEFAULT,
         new DefaultPasswordHashValidator(

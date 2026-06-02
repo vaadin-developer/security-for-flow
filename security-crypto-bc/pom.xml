@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright © 2018 Sven Ruppert (sven.ruppert@gmail.com)
+
+    Licensed under the EUPL, Version 1.2 or - as soon they will be
+    approved by the European Commission - subsequent versions of the
+    EUPL (the "Licence"); You may not use this work except in
+    compliance with the Licence. You may obtain a copy of the Licence at:
+
+    https://joinup.ec.europa.eu/software/page/eupl
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <groupId>com.svenruppert</groupId>
+    <artifactId>security-for-flow-parent</artifactId>
+    <version>00.70.00</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>security-crypto-bc</artifactId>
+  <name>Security Crypto — BouncyCastle</name>
+  <description>
+    Optional Phase-1b extension that adds memory-hard and bcrypt-style
+    password hashing providers backed by BouncyCastle (Argon2id,
+    bcrypt, scrypt) on top of the V00.71 PasswordHashProvider SPI from
+    security-core. Strictly opt-in: applications that do not depend on
+    this module never pull in bcprov. Loading the module also does not
+    touch the global JCA provider order — every algorithm is invoked
+    through the BouncyCastle low-level Bouncy Castle Crypto APIs.
+  </description>
+
+  <properties>
+    <bouncycastle.version>1.78.1</bouncycastle.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>security-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk18on</artifactId>
+      <version>${bouncycastle.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>
