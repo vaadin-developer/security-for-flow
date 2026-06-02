@@ -116,4 +116,29 @@ public interface PasswordHashPolicy {
    *                                          to this policy
    */
   Map<String, String> maximumParameters(String algorithm);
+
+  /**
+   * Envelope format versions the operator has explicitly rejected.
+   * Envelopes whose {@code formatVersion} appears here fail validation
+   * outright; older versions that are <em>not</em> in this set remain
+   * verifiable and are flagged for rehash by the rehash engine.
+   *
+   * <p>Default: empty (no formats explicitly rejected).</p>
+   */
+  default Set<Integer> rejectedFormatVersions() {
+    return Set.of();
+  }
+
+  /**
+   * Policy versions the operator has explicitly rejected.
+   * Envelopes whose {@code policyVersion} appears here fail validation
+   * outright; older versions that are not in this set remain verifiable
+   * (and are flagged for rehash if they are below the active policy
+   * version).
+   *
+   * <p>Default: empty (no policy versions explicitly rejected).</p>
+   */
+  default Set<Integer> rejectedPolicyVersions() {
+    return Set.of();
+  }
 }

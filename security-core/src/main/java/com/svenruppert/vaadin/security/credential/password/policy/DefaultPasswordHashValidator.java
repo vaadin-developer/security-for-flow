@@ -63,6 +63,15 @@ public final class DefaultPasswordHashValidator implements PasswordHashValidator
       throw new PasswordHashValidationException(
           "envelope format version is newer than the active policy supports");
     }
+    if (policy.rejectedFormatVersions()
+        .contains(envelope.formatVersion().wireValue())) {
+      throw new PasswordHashValidationException(
+          "envelope format version is explicitly rejected by the active policy");
+    }
+    if (policy.rejectedPolicyVersions().contains(envelope.policyVersion())) {
+      throw new PasswordHashValidationException(
+          "envelope policy version is explicitly rejected by the active policy");
+    }
 
     if (!policy.isAlgorithmAcceptable(envelope.algorithm())) {
       throw new PasswordHashValidationException(

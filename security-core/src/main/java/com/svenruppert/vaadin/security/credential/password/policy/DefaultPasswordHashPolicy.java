@@ -50,6 +50,8 @@ public final class DefaultPasswordHashPolicy implements PasswordHashPolicy {
   private final Map<String, Map<String, String>> defaultsByAlgorithm;
   private final Map<String, Map<String, String>> minByAlgorithm;
   private final Map<String, Map<String, String>> maxByAlgorithm;
+  private final Set<Integer> rejectedFormatVersions;
+  private final Set<Integer> rejectedPolicyVersions;
 
   private DefaultPasswordHashPolicy(Builder b) {
     this.policyVersion = b.policyVersion;
@@ -66,6 +68,8 @@ public final class DefaultPasswordHashPolicy implements PasswordHashPolicy {
     this.defaultsByAlgorithm = freeze(b.defaultsByAlgorithm);
     this.minByAlgorithm = freeze(b.minByAlgorithm);
     this.maxByAlgorithm = freeze(b.maxByAlgorithm);
+    this.rejectedFormatVersions = Set.copyOf(b.rejectedFormatVersions);
+    this.rejectedPolicyVersions = Set.copyOf(b.rejectedPolicyVersions);
 
     if (policyVersion < 1) {
       throw new IllegalArgumentException("policyVersion must be >= 1");
@@ -159,6 +163,16 @@ public final class DefaultPasswordHashPolicy implements PasswordHashPolicy {
   }
 
   @Override
+  public Set<Integer> rejectedFormatVersions() {
+    return rejectedFormatVersions;
+  }
+
+  @Override
+  public Set<Integer> rejectedPolicyVersions() {
+    return rejectedPolicyVersions;
+  }
+
+  @Override
   public Map<String, String> maximumParameters(String algorithm) {
     Map<String, String> m = maxByAlgorithm.get(algorithm);
     if (m == null) {
@@ -189,6 +203,8 @@ public final class DefaultPasswordHashPolicy implements PasswordHashPolicy {
         new LinkedHashMap<>();
     private final Map<String, Map<String, String>> maxByAlgorithm =
         new LinkedHashMap<>();
+    private final Set<Integer> rejectedFormatVersions = new LinkedHashSet<>();
+    private final Set<Integer> rejectedPolicyVersions = new LinkedHashSet<>();
 
     private Builder() { }
 
@@ -236,6 +252,26 @@ public final class DefaultPasswordHashPolicy implements PasswordHashPolicy {
 
     public Builder maximumParameters(String algorithm, Map<String, String> params) {
       this.maxByAlgorithm.put(algorithm, new LinkedHashMap<>(params));
+      return this;
+    }
+
+    /**
+     * Marks an envelope format wire value as explicitly rejected.
+     * Stored envelopes whose {@code formatVersion} appears here fail
+     * validation outright (CWE-693).
+     */
+    public Builder rejectFormatVersion(int wireValue) {
+      this.rejectedFormatVersions.add(wireValue);
+      return this;
+    }
+
+    /**
+     * Marks an envelope policy version as explicitly rejected. Stored
+     * envelopes whose {@code policyVersion} appears here fail
+     * validation outright.
+     */
+    public Builder rejectPolicyVersion(int policyVersion) {
+      this.rejectedPolicyVersions.add(policyVersion);
       return this;
     }
 
