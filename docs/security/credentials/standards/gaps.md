@@ -1,0 +1,79 @@
+# Gaps and Deferred Items
+
+Status: draft — V00.71.00
+
+This document is the **honest counterpart** of the ASVS / NIST
+mappings. Every requirement that the framework does not satisfy
+in V00.71.00 has a row here so reviewers can see the boundary
+between "implemented" and "not yet" without reading every other
+document.
+
+## Glossary
+
+- **Out of scope**: The requirement does not belong inside a
+  credential framework. Examples: TLS configuration, UX flows,
+  organisational policy.
+- **Deferred**: Planned but not in V00.71.00. Tracked against a
+  future minor version.
+- **Operator-only**: The framework provides no automation; the
+  requirement is satisfied by the consuming application or the
+  operator's runbook.
+
+## Gaps with planned remediation
+
+| Source | Requirement                                                              | Status   | Target version |
+|--------|--------------------------------------------------------------------------|----------|----------------|
+| ASVS 2.7 | Out-of-band verifier (SMS / email OTP, hardware token)                  | Deferred | V00.75 (TBD)   |
+| ASVS 2.8 | One-time verifier (TOTP / HOTP)                                          | Deferred | V00.75 (TBD)   |
+| ASVS 2.9 | Cryptographic verifier (WebAuthn / FIDO2)                                | Deferred | V00.80 (TBD)   |
+| NIST 8.1.5 | Verifier impersonation resistance                                       | Deferred | V00.80 (TBD)   |
+| Konzept V00.71 §10 | Optional foreign hash import for brownfield migration            | Deferred | V00.72 (Prompt 036) |
+| Konzept V00.71 §3 | Password strength estimator implementation (zxcvbn-style)         | Deferred | V00.72         |
+
+## Operator-only items
+
+These items are listed in ASVS / NIST but cannot be satisfied
+by the framework alone — the consuming application or the
+operator is responsible.
+
+| Source | Requirement                                                  |
+|--------|--------------------------------------------------------------|
+| ASVS 2.2.4 | Phishing resistance (depends on MFA + UX choice)         |
+| ASVS 2.2.7 | Intent confirmation for sensitive operations             |
+| ASVS 2.5.5 | Recovery uses out-of-band channel (delivery is operator's) |
+| ASVS 2.3.2 | Time-limited initial credential (TTL is operator's)      |
+| NIST 6.1.2.3 | Enrolment binds credential to verified subject         |
+| NIST 8.1.1 | TLS / transport eavesdropping                            |
+| NIST 8.1.6 | Phishing / pharming resistance                           |
+| ASVS 2.1.10 | No periodic forced rotation (framework does not impose; operator may) |
+
+## Out of scope
+
+These items will not be implemented inside `security-for-flow`
+regardless of release. The framework is not the right place.
+
+- Audit log retention enforcement (the audit sink decides).
+- CAPTCHA selection and integration (UX concern).
+- Email / SMS delivery for OTP and reset notifications.
+- Identity proofing (NIST SP 800-63A).
+- Threat-intel feed integration beyond HIBP-style k-anonymity.
+
+## Documented limitations
+
+Even within scope, V00.71.00 has known limitations:
+
+| Area       | Limitation                                                                 | Mitigation |
+|------------|----------------------------------------------------------------------------|------------|
+| Pepper     | `InMemoryPepperService` holds keys in heap                                  | HSM-backed implementation via PKCS#11 — see `pkcs11-hsm-pepper-key.md`. |
+| Compromise check | `LocalBlocklist` requires operator-maintained list                    | Pair with `security-credentials-hibp` for breach-corpus check. |
+| Rate limiting | `InMemoryAbuseDetectionService` does not survive a JVM restart         | Persist counters via a custom `AbuseDetectionService` impl. |
+| Password history | History compares re-derived hashes per attempt; bounded cost via `retainLast` | Tune `retainLast`; disable for low-assurance services. |
+| HIBP module | Optional; requires outbound HTTPS                                        | Air-gapped deployments use local blocklist only.   |
+
+## Tracking
+
+Each gap row that has a target version is mirrored as an entry
+in `Konzept-V00.75.00.md` / `Konzept-V00.80.00.md`. When a row
+lands in an implementation plan, the corresponding entry here
+flips from "Deferred" to "✅" and the row moves into
+`traceability-matrix.md`.
