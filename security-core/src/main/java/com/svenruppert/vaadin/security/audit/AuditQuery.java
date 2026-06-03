@@ -132,6 +132,7 @@ public record AuditQuery(
       case CredentialVerificationSucceeded e -> e.username();
       case CredentialVerificationFailed e -> e.username();
       case CredentialRehashed e -> e.username();
+      case CredentialStatusChanged e -> e.username();
     };
   }
 }

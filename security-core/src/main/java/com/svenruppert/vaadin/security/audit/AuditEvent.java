@@ -46,7 +46,8 @@ public sealed interface AuditEvent
             RateLimitExceeded,
             CredentialVerificationSucceeded,
             CredentialVerificationFailed,
-            CredentialRehashed {
+            CredentialRehashed,
+            CredentialStatusChanged {
 
   /** The UTC instant at which this event was created. Never {@code null}. */
   Instant timestamp();

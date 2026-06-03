@@ -208,6 +208,12 @@ public final class LoggingAuditSink implements AuditSink {
         appendField(sb, "targetPolicyVersion",
             String.valueOf(e.targetPolicyVersion()));
       }
+      case CredentialStatusChanged e -> {
+        appendField(sb, "user", e.username());
+        appendField(sb, "from", e.fromStatus().name());
+        appendField(sb, "to", e.toStatus().name());
+        appendField(sb, "reason", e.reason());
+      }
     }
     return sb.toString();
   }
