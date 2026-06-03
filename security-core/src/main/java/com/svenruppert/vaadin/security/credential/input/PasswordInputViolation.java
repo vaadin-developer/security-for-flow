@@ -32,5 +32,13 @@ package com.svenruppert.vaadin.security.credential.input;
 public enum PasswordInputViolation {
   TOO_SHORT,
   TOO_LONG,
-  CONTAINS_CONTROL_CHARACTER
+  CONTAINS_CONTROL_CHARACTER,
+  /** Password contains the user's username (case-insensitive). */
+  CONTAINS_USERNAME,
+  /** Password contains the local part of the user's email address. */
+  CONTAINS_EMAIL_LOCAL_PART,
+  /** Password contains the domain part of the user's email address. */
+  CONTAINS_EMAIL_DOMAIN,
+  /** Password contains an operator-supplied forbidden term. */
+  CONTAINS_FORBIDDEN_TERM
 }
