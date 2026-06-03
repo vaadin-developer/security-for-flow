@@ -21,6 +21,21 @@ import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.LoginSucceeded;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPermission;
+import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
+import com.svenruppert.vaadin.security.credential.abuse.AbuseAttemptContext;
+import com.svenruppert.vaadin.security.credential.abuse.AbuseAttemptType;
+import com.svenruppert.vaadin.security.credential.abuse.AbuseDecision;
+import com.svenruppert.vaadin.security.credential.abuse.AbuseDetectionService;
+import com.svenruppert.vaadin.security.credential.abuse.AbuseLimitsPolicy;
+import com.svenruppert.vaadin.security.credential.abuse.AttemptOutcome;
+import com.svenruppert.vaadin.security.credential.abuse.InMemoryAbuseDetectionService;
+import com.svenruppert.vaadin.security.credential.compromised.CheckFailurePolicy;
+import com.svenruppert.vaadin.security.credential.compromised.CompromisedPasswordChecker;
+import com.svenruppert.vaadin.security.credential.compromised.CompromisedPasswordPolicy;
+import com.svenruppert.vaadin.security.credential.compromised.CompromisedPasswordResult;
+import com.svenruppert.vaadin.security.credential.compromised.LocalBlocklistCompromisedPasswordChecker;
+import com.svenruppert.vaadin.security.credential.compromised.NoOpCompromisedPasswordChecker;
+import com.svenruppert.vaadin.security.credential.secret.SecretValue;
 import com.svenruppert.vaadin.security.logout.LogoutScope;
 import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
@@ -68,6 +83,9 @@ public final class DemoHandlers {
   private final DemoOperationRegistry registry;
   private final DemoSubjectResolver subjectResolver;
   private final LoginAttemptPolicy loginAttemptPolicy;
+  private final AbuseDetectionService abuseDetection;
+  private final CompromisedPasswordChecker compromisedChecker;
+  private final CompromisedPasswordPolicy compromisedPolicy;
 
   public DemoHandlers(
       DemoUserStore userStore,
@@ -86,12 +104,61 @@ public final class DemoHandlers {
       DemoOperationRegistry registry,
       DemoSubjectResolver subjectResolver,
       LoginAttemptPolicy loginAttemptPolicy) {
+    this(userStore, tokenStore, documents, registry, subjectResolver,
+        loginAttemptPolicy,
+        defaultAbuseDetection(),
+        defaultCompromisedChecker(),
+        CompromisedPasswordPolicy.defaults());
+  }
+
+  public DemoHandlers(
+      DemoUserStore userStore,
+      DemoTokenStore tokenStore,
+      DemoDocumentStore documents,
+      DemoOperationRegistry registry,
+      DemoSubjectResolver subjectResolver,
+      LoginAttemptPolicy loginAttemptPolicy,
+      AbuseDetectionService abuseDetection,
+      CompromisedPasswordChecker compromisedChecker,
+      CompromisedPasswordPolicy compromisedPolicy) {
     this.userStore = userStore;
     this.tokenStore = tokenStore;
     this.documents = documents;
     this.registry = registry;
     this.subjectResolver = subjectResolver;
     this.loginAttemptPolicy = Objects.requireNonNull(loginAttemptPolicy, "loginAttemptPolicy");
+    this.abuseDetection = Objects.requireNonNull(abuseDetection, "abuseDetection");
+    this.compromisedChecker = Objects.requireNonNull(compromisedChecker, "compromisedChecker");
+    this.compromisedPolicy = Objects.requireNonNull(compromisedPolicy, "compromisedPolicy");
+  }
+
+  /**
+   * Demo-grade abuse detector. Defaults to the V00.71 in-memory
+   * sliding-window service, sharing audit through the resolved
+   * {@link SecurityAuditService}.
+   */
+  private static AbuseDetectionService defaultAbuseDetection() {
+    SecurityAuditService audit = SecurityServiceResolver.securityAuditService();
+    return new InMemoryAbuseDetectionService(
+        AbuseLimitsPolicy.defaults(), audit);
+  }
+
+  /**
+   * Demo-grade compromised-password checker. Ships with a short
+   * blocklist of obviously-bad entries that the user-create flow
+   * rejects up-front. Operators upgrading to {@code security-credentials-hibp}
+   * swap this for a {@code HaveIBeenPwnedCompromisedPasswordChecker}.
+   */
+  private static CompromisedPasswordChecker defaultCompromisedChecker() {
+    return new LocalBlocklistCompromisedPasswordChecker(
+        List.of(
+            "password", "password1", "password123",
+            "qwerty", "qwerty123", "letmein",
+            "admin", "admin123", "administrator",
+            "welcome", "welcome1",
+            "12345678", "123456789", "abc12345",
+            "iloveyou", "monkey", "dragon",
+            "hunter2", "trustno1"));
   }
 
   public void login(RestRequest request, RestResponse response) {
@@ -111,6 +178,20 @@ public final class DemoHandlers {
 
     String clientAddress = RestHeaders.first(request, REMOTE_ADDR_HEADER).orElse(null);
     LoginAttemptContext attempt = LoginAttemptContext.now(username, clientAddress, null);
+    AbuseAttemptContext abuseContext = new AbuseAttemptContext(
+        AbuseAttemptType.LOGIN,
+        Optional.of(username),
+        Optional.ofNullable(clientAddress),
+        TenantId.DEFAULT,
+        Instant.now(Clock.systemUTC()));
+
+    AbuseDecision abuseDecision = abuseDetection.evaluate(abuseContext);
+    if (abuseDecision instanceof AbuseDecision.Block block) {
+      response.header("Retry-After",
+          Long.toString(Math.max(1L, block.retryAfter().toSeconds())));
+      writeError(response, 429, "Too Many Requests");
+      return;
+    }
 
     LoginAttemptDecision decision = loginAttemptPolicy.beforeAttempt(attempt);
     if (decision instanceof LoginAttemptDecision.LockedOut lockout) {
@@ -123,10 +204,12 @@ public final class DemoHandlers {
     Optional<DemoUser> user = userStore.authenticate(username, password);
     if (user.isEmpty()) {
       loginAttemptPolicy.recordFailure(attempt);
+      abuseDetection.recordOutcome(abuseContext, AttemptOutcome.FAILURE);
       writeError(response, 401, "Unauthorized");
       return;
     }
     loginAttemptPolicy.recordSuccess(attempt);
+    abuseDetection.recordOutcome(abuseContext, AttemptOutcome.SUCCESS);
     DemoUser u = user.get();
     String token = tokenStore.issue(u);
     auditLoginSucceeded(u.username(), clientAddress, token);
@@ -346,6 +429,24 @@ public final class DemoHandlers {
       return;
     }
     String displayName = displayNameValue instanceof String s && !s.isBlank() ? s : username;
+
+    if (compromisedPolicy.checkOnSetOrChange()
+        && !(compromisedChecker instanceof NoOpCompromisedPasswordChecker)) {
+      CompromisedPasswordResult check = compromisedChecker.check(
+          SecretValue.ofString(password));
+      if (check instanceof CompromisedPasswordResult.Pwned) {
+        // Generic perimeter message — CWE-209: do not echo which
+        // dictionary or count matched.
+        writeError(response, 400, "Bad Request");
+        return;
+      }
+      if (check instanceof CompromisedPasswordResult.CheckFailed
+          && compromisedPolicy.onFailure() == CheckFailurePolicy.BLOCK) {
+        writeError(response, 503, "Service Unavailable");
+        return;
+      }
+    }
+
     DemoUser created;
     try {
       created = userStore.create(username, password, displayName, role);

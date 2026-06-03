@@ -349,6 +349,22 @@ class DemoRestServerTest {
         "type=LoginSucceeded must filter out every other event type");
   }
 
+  @Test
+  @DisplayName("POST /api/admin/users with a blocklisted password returns 400 — V00.71 compromised check")
+  void createUserCompromisedPasswordRejected() throws IOException, InterruptedException {
+    String adminToken = loginAs("admin", "admin");
+    HttpResponse<String> response = client.call("POST",
+        "/api/admin/users", adminToken,
+        "{\"username\":\"weakling\",\"password\":\"password123\",\"role\":\"ROLE_VIEWER\"}");
+    // Generic 400 — CWE-209: server does not disclose which dictionary matched.
+    assertEquals(400, response.statusCode());
+    // Confirm the user was NOT created.
+    HttpResponse<String> users = client.call(
+        "GET", "/api/admin/users", adminToken, null);
+    assertFalse(users.body().contains("\"weakling\""),
+        "blocked username must not appear in /api/admin/users");
+  }
+
   private String loginAs(String username, String password) throws IOException, InterruptedException {
     HttpResponse<String> response = client.login(username, password);
     assertEquals(200, response.statusCode());
