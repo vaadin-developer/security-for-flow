@@ -25,6 +25,7 @@ package com.svenruppert.vaadin.security.credential.password.provider;
 import com.svenruppert.vaadin.security.credential.password.PasswordHashResult;
 import com.svenruppert.vaadin.security.credential.password.ProviderVerificationResult;
 import com.svenruppert.vaadin.security.credential.password.envelope.PasswordHashEnvelope;
+import com.svenruppert.vaadin.security.credential.password.pepper.PepperReference;
 import com.svenruppert.vaadin.security.credential.password.policy.PasswordHashPolicy;
 
 import java.util.Map;
@@ -83,16 +84,20 @@ public interface PasswordHashProvider {
    * Derives a fresh hash for the supplied password under the active
    * policy.
    *
-   * @param password      caller-owned character array; the provider
-   *                      must <em>not</em> zero or modify it
-   * @param policy        active policy from which to read parameters
-   * @param pepperSecret  pepper material to mix in post-KDF; Phase 1a
-   *                      supplies {@link Optional#empty()}
+   * @param password   caller-owned character array; the provider
+   *                   must <em>not</em> zero or modify it
+   * @param policy     active policy from which to read parameters
+   * @param pepper     resolved active pepper key, or
+   *                   {@link Optional#empty()} when peppering is off;
+   *                   the provider applies the pepper as
+   *                   {@code HMAC-SHA-256(pepper.key, KDF(password,salt))}
+   *                   and writes the {@code pepper.keyId} into the
+   *                   envelope
    */
   PasswordHashResult hash(
       char[] password,
       PasswordHashPolicy policy,
-      Optional<byte[]> pepperSecret);
+      Optional<PepperReference> pepper);
 
   /**
    * Verifies the supplied password against the parsed envelope.
@@ -102,11 +107,16 @@ public interface PasswordHashProvider {
    * JCA service, unsupported parameter combination) collapse onto
    * {@link ProviderVerificationResult.ProviderError} so the pipeline can
    * keep public messaging generic.</p>
+   *
+   * @param pepper resolved pepper key matching
+   *               {@code envelope.pepperKeyId()}, or
+   *               {@link Optional#empty()} when the envelope has no
+   *               pepper field
    */
   ProviderVerificationResult verify(
       char[] password,
       PasswordHashEnvelope envelope,
-      Optional<byte[]> pepperSecret);
+      Optional<PepperReference> pepper);
 
   /**
    * Optional resource estimate for the supplied parameter map. Default:

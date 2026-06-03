@@ -28,6 +28,8 @@ import com.svenruppert.vaadin.security.credential.password.PasswordHashResult;
 import com.svenruppert.vaadin.security.credential.password.ProviderVerificationResult;
 import com.svenruppert.vaadin.security.credential.password.envelope.PasswordHashCodec;
 import com.svenruppert.vaadin.security.credential.password.envelope.PasswordHashEnvelope;
+import com.svenruppert.vaadin.security.credential.password.pepper.PepperApplicator;
+import com.svenruppert.vaadin.security.credential.password.pepper.PepperReference;
 import com.svenruppert.vaadin.security.credential.password.policy.PasswordHashPolicy;
 import com.svenruppert.vaadin.security.credential.password.provider.PasswordHashProvider;
 import com.svenruppert.vaadin.security.credential.password.provider.ResourceEstimate;
@@ -86,10 +88,10 @@ public final class Argon2idPasswordHashProvider implements PasswordHashProvider 
   public PasswordHashResult hash(
       char[] password,
       PasswordHashPolicy policy,
-      Optional<byte[]> pepperSecret) {
+      Optional<PepperReference> pepper) {
     Objects.requireNonNull(password, "password");
     Objects.requireNonNull(policy, "policy");
-    Objects.requireNonNull(pepperSecret, "pepperSecret");
+    Objects.requireNonNull(pepper, "pepper");
 
     Map<String, String> defaults = policy.defaultParameters(algorithm());
     int iterations = intOrDefault(defaults, Argon2idParameterNames.ITERATIONS,
@@ -104,9 +106,11 @@ public final class Argon2idPasswordHashProvider implements PasswordHashProvider 
     byte[] salt = new byte[Argon2idDefaults.DEFAULT_SALT_LENGTH];
     random.nextBytes(salt);
     byte[] derived = null;
+    byte[] peppered = null;
     try {
       derived = deriveKey(password, salt, iterations, memoryKib,
           parallelism, hashLength);
+      peppered = PepperApplicator.apply(derived, pepper);
 
       Map<String, String> params = new LinkedHashMap<>();
       params.put(Argon2idParameterNames.ITERATIONS, Integer.toString(iterations));
@@ -115,6 +119,7 @@ public final class Argon2idPasswordHashProvider implements PasswordHashProvider 
       params.put(Argon2idParameterNames.HASH_LENGTH, Integer.toString(hashLength));
       params.put(Argon2idParameterNames.SALT,
           Base64.getEncoder().encodeToString(salt));
+      Optional<String> pepperKeyId = pepper.map(PepperReference::keyId);
 
       PasswordHashEnvelope envelope = new PasswordHashEnvelope(
           policy.preferredFormatVersion(),
@@ -122,9 +127,9 @@ public final class Argon2idPasswordHashProvider implements PasswordHashProvider 
           algorithm(),
           providerId(),
           policy.policyVersion(),
-          Optional.empty(),
+          pepperKeyId,
           params,
-          Base64.getEncoder().encodeToString(derived)
+          Base64.getEncoder().encodeToString(peppered)
       );
       String encoded = codec.encode(envelope);
 
@@ -135,13 +140,16 @@ public final class Argon2idPasswordHashProvider implements PasswordHashProvider 
           algorithm(),
           providerId(),
           policy.policyVersion(),
-          Optional.empty(),
+          pepperKeyId,
           params
       );
     } finally {
       Arrays.fill(salt, (byte) 0);
       if (derived != null) {
         Arrays.fill(derived, (byte) 0);
+      }
+      if (peppered != null) {
+        Arrays.fill(peppered, (byte) 0);
       }
     }
   }
@@ -150,10 +158,10 @@ public final class Argon2idPasswordHashProvider implements PasswordHashProvider 
   public ProviderVerificationResult verify(
       char[] password,
       PasswordHashEnvelope envelope,
-      Optional<byte[]> pepperSecret) {
+      Optional<PepperReference> pepper) {
     Objects.requireNonNull(password, "password");
     Objects.requireNonNull(envelope, "envelope");
-    Objects.requireNonNull(pepperSecret, "pepperSecret");
+    Objects.requireNonNull(pepper, "pepper");
 
     Map<String, String> params = envelope.parameters();
     int iterations;
@@ -181,12 +189,18 @@ public final class Argon2idPasswordHashProvider implements PasswordHashProvider 
     }
 
     byte[] candidate = null;
+    byte[] peppered = null;
     try {
       candidate = deriveKey(password, salt, iterations, memoryKib,
           parallelism, hashLength);
-      return MessageDigest.isEqual(candidate, expectedDerived)
+      peppered = PepperApplicator.apply(candidate, pepper);
+      return MessageDigest.isEqual(peppered, expectedDerived)
           ? ProviderVerificationResult.Matched.INSTANCE
           : ProviderVerificationResult.NotMatched.INSTANCE;
+    } catch (PepperApplicator.PepperApplicationException e) {
+      return new ProviderVerificationResult.ProviderError(
+          InternalAuditEventType.VERIFICATION_FAILED_PROVIDER_ERROR,
+          e.getMessage());
     } catch (RuntimeException e) {
       return new ProviderVerificationResult.ProviderError(
           InternalAuditEventType.VERIFICATION_FAILED_PROVIDER_ERROR,
@@ -196,6 +210,9 @@ public final class Argon2idPasswordHashProvider implements PasswordHashProvider 
       Arrays.fill(expectedDerived, (byte) 0);
       if (candidate != null) {
         Arrays.fill(candidate, (byte) 0);
+      }
+      if (peppered != null) {
+        Arrays.fill(peppered, (byte) 0);
       }
     }
   }

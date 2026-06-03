@@ -31,6 +31,7 @@ import com.svenruppert.vaadin.security.credential.password.pbkdf2.Pbkdf2Defaults
 import com.svenruppert.vaadin.security.credential.password.pbkdf2.Pbkdf2ParameterValidator;
 import com.svenruppert.vaadin.security.credential.password.pbkdf2.Pbkdf2PasswordHashProvider;
 import com.svenruppert.vaadin.security.credential.password.pepper.NoOpPepperService;
+import com.svenruppert.vaadin.security.credential.password.pepper.PepperService;
 import com.svenruppert.vaadin.security.credential.password.policy.DefaultPasswordHashValidator;
 import com.svenruppert.vaadin.security.credential.password.policy.PasswordHashParameterValidatorRegistry;
 import com.svenruppert.vaadin.security.credential.password.policy.PasswordHashPolicy;
@@ -81,6 +82,22 @@ public final class PasswordHashingServices {
    */
   public static PasswordHashingService defaults(
       PasswordHashPolicy policy, KdfExecutionLimiter limiter) {
+    return defaults(policy, limiter, NoOpPepperService.INSTANCE);
+  }
+
+  /**
+   * Builds a fully wired Phase-1a {@link PasswordHashingService} with a
+   * caller-supplied policy, KDF limiter and {@link PepperService}.
+   *
+   * <p>Pass an {@link com.svenruppert.vaadin.security.credential.password.pepper.InMemoryPepperService}
+   * (or any production-grade implementation) to enable post-KDF HMAC
+   * peppering. {@link NoOpPepperService#INSTANCE} disables peppering
+   * altogether — equivalent to the older two-argument overload.</p>
+   */
+  public static PasswordHashingService defaults(
+      PasswordHashPolicy policy,
+      KdfExecutionLimiter limiter,
+      PepperService pepperService) {
     PasswordHashProviderRegistry providerRegistry =
         new PasswordHashProviderRegistry(List.of(new Pbkdf2PasswordHashProvider()));
     if (providerRegistry.resolve(
@@ -96,7 +113,7 @@ public final class PasswordHashingServices {
             new PasswordHashParameterValidatorRegistry(List.of(
                 new Pbkdf2ParameterValidator()))),
         providerRegistry,
-        NoOpPepperService.INSTANCE,
+        pepperService,
         policy,
         new RehashDecisionEngine(),
         limiter,

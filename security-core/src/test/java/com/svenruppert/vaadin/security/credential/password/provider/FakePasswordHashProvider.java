@@ -28,6 +28,7 @@ import com.svenruppert.vaadin.security.credential.password.PasswordHashResult;
 import com.svenruppert.vaadin.security.credential.password.ProviderVerificationResult;
 import com.svenruppert.vaadin.security.credential.password.envelope.PasswordHashEnvelope;
 import com.svenruppert.vaadin.security.credential.password.envelope.PasswordHashFormatVersion;
+import com.svenruppert.vaadin.security.credential.password.pepper.PepperReference;
 import com.svenruppert.vaadin.security.credential.password.policy.PasswordHashPolicy;
 
 import java.util.LinkedHashMap;
@@ -62,7 +63,7 @@ public final class FakePasswordHashProvider implements PasswordHashProvider {
   public PasswordHashResult hash(
       char[] password,
       PasswordHashPolicy policy,
-      Optional<byte[]> pepperSecret) {
+      Optional<PepperReference> pepper) {
     Map<String, String> params = new LinkedHashMap<>();
     params.put("len", Integer.toString(password.length));
     String inner = new String(password);
@@ -82,7 +83,7 @@ public final class FakePasswordHashProvider implements PasswordHashProvider {
   public ProviderVerificationResult verify(
       char[] password,
       PasswordHashEnvelope envelope,
-      Optional<byte[]> pepperSecret) {
+      Optional<PepperReference> pepper) {
     String stored = envelope.innerHash();
     String candidate = new String(password);
     return stored.equals(candidate)

@@ -71,7 +71,7 @@ class PasswordHashProviderRegistryTest {
     public PasswordHashResult hash(
         char[] password,
         PasswordHashPolicy policy,
-        Optional<byte[]> pepperSecret) {
+        Optional<com.svenruppert.vaadin.security.credential.password.pepper.PepperReference> pepper) {
       return new PasswordHashResult(
           "x",
           CredentialType.PASSWORD,
@@ -87,7 +87,7 @@ class PasswordHashProviderRegistryTest {
     public ProviderVerificationResult verify(
         char[] password,
         PasswordHashEnvelope envelope,
-        Optional<byte[]> pepperSecret) {
+        Optional<com.svenruppert.vaadin.security.credential.password.pepper.PepperReference> pepper) {
       return FakePasswordHashProvider.providerError("always fails");
     }
   }

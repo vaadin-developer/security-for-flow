@@ -28,6 +28,8 @@ import com.svenruppert.vaadin.security.credential.password.PasswordHashResult;
 import com.svenruppert.vaadin.security.credential.password.ProviderVerificationResult;
 import com.svenruppert.vaadin.security.credential.password.envelope.PasswordHashCodec;
 import com.svenruppert.vaadin.security.credential.password.envelope.PasswordHashEnvelope;
+import com.svenruppert.vaadin.security.credential.password.pepper.PepperApplicator;
+import com.svenruppert.vaadin.security.credential.password.pepper.PepperReference;
 import com.svenruppert.vaadin.security.credential.password.policy.PasswordHashPolicy;
 import com.svenruppert.vaadin.security.credential.password.provider.PasswordHashProvider;
 
@@ -123,10 +125,10 @@ public final class Pbkdf2PasswordHashProvider implements PasswordHashProvider {
   public PasswordHashResult hash(
       char[] password,
       PasswordHashPolicy policy,
-      Optional<byte[]> pepperSecret) {
+      Optional<PepperReference> pepper) {
     Objects.requireNonNull(password, "password");
     Objects.requireNonNull(policy, "policy");
-    Objects.requireNonNull(pepperSecret, "pepperSecret");
+    Objects.requireNonNull(pepper, "pepper");
 
     Map<String, String> defaults = policy.defaultParameters(algorithm());
     int iterations = intOrDefault(defaults, Pbkdf2ParameterNames.ITERATIONS,
@@ -138,14 +140,17 @@ public final class Pbkdf2PasswordHashProvider implements PasswordHashProvider {
     byte[] salt = new byte[saltLengthBytes];
     random.nextBytes(salt);
     byte[] derived = null;
+    byte[] peppered = null;
     try {
       derived = deriveKey(password, salt, iterations, keyLengthBytes);
+      peppered = PepperApplicator.apply(derived, pepper);
       Map<String, String> params = new LinkedHashMap<>();
       params.put(Pbkdf2ParameterNames.ITERATIONS, Integer.toString(iterations));
       params.put(Pbkdf2ParameterNames.KEY_LENGTH,
           Integer.toString(keyLengthBytes));
       params.put(Pbkdf2ParameterNames.SALT,
           Base64.getEncoder().encodeToString(salt));
+      Optional<String> pepperKeyId = pepper.map(PepperReference::keyId);
 
       PasswordHashEnvelope envelope = new PasswordHashEnvelope(
           policy.preferredFormatVersion(),
@@ -153,9 +158,9 @@ public final class Pbkdf2PasswordHashProvider implements PasswordHashProvider {
           algorithm(),
           providerId(),
           policy.policyVersion(),
-          Optional.empty(),
+          pepperKeyId,
           params,
-          Base64.getEncoder().encodeToString(derived)
+          Base64.getEncoder().encodeToString(peppered)
       );
       String encoded = codec.encode(envelope);
 
@@ -166,13 +171,20 @@ public final class Pbkdf2PasswordHashProvider implements PasswordHashProvider {
           algorithm(),
           providerId(),
           policy.policyVersion(),
-          Optional.empty(),
+          pepperKeyId,
           params
       );
+    } catch (PepperApplicator.PepperApplicationException e) {
+      throw new Pbkdf2ProviderException(
+          InternalAuditEventType.VERIFICATION_FAILED_PROVIDER_ERROR,
+          e.getMessage());
     } finally {
       Arrays.fill(salt, (byte) 0);
       if (derived != null) {
         Arrays.fill(derived, (byte) 0);
+      }
+      if (peppered != null) {
+        Arrays.fill(peppered, (byte) 0);
       }
     }
   }
@@ -181,10 +193,10 @@ public final class Pbkdf2PasswordHashProvider implements PasswordHashProvider {
   public ProviderVerificationResult verify(
       char[] password,
       PasswordHashEnvelope envelope,
-      Optional<byte[]> pepperSecret) {
+      Optional<PepperReference> pepper) {
     Objects.requireNonNull(password, "password");
     Objects.requireNonNull(envelope, "envelope");
-    Objects.requireNonNull(pepperSecret, "pepperSecret");
+    Objects.requireNonNull(pepper, "pepper");
 
     Map<String, String> params = envelope.parameters();
     int iterations;
@@ -206,19 +218,28 @@ public final class Pbkdf2PasswordHashProvider implements PasswordHashProvider {
     }
 
     byte[] candidate = null;
+    byte[] peppered = null;
     try {
       candidate = deriveKey(password, salt, iterations, keyLengthBytes);
-      return MessageDigest.isEqual(candidate, expectedDerived)
+      peppered = PepperApplicator.apply(candidate, pepper);
+      return MessageDigest.isEqual(peppered, expectedDerived)
           ? ProviderVerificationResult.Matched.INSTANCE
           : ProviderVerificationResult.NotMatched.INSTANCE;
     } catch (Pbkdf2ProviderException e) {
       return new ProviderVerificationResult.ProviderError(
           e.auditEventType(), e.getMessage());
+    } catch (PepperApplicator.PepperApplicationException e) {
+      return new ProviderVerificationResult.ProviderError(
+          InternalAuditEventType.VERIFICATION_FAILED_PROVIDER_ERROR,
+          e.getMessage());
     } finally {
       Arrays.fill(salt, (byte) 0);
       Arrays.fill(expectedDerived, (byte) 0);
       if (candidate != null) {
         Arrays.fill(candidate, (byte) 0);
+      }
+      if (peppered != null) {
+        Arrays.fill(peppered, (byte) 0);
       }
     }
   }

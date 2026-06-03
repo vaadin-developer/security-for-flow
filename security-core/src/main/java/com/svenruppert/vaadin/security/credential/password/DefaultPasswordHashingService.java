@@ -31,6 +31,7 @@ import com.svenruppert.vaadin.security.credential.password.envelope.PasswordHash
 import com.svenruppert.vaadin.security.credential.password.envelope.PasswordHashFormatException;
 import com.svenruppert.vaadin.security.credential.password.envelope.PasswordHashRecord;
 import com.svenruppert.vaadin.security.credential.password.limiter.KdfExecutionLimiter;
+import com.svenruppert.vaadin.security.credential.password.pepper.PepperReference;
 import com.svenruppert.vaadin.security.credential.password.pepper.PepperService;
 import com.svenruppert.vaadin.security.credential.password.policy.PasswordHashPolicy;
 import com.svenruppert.vaadin.security.credential.password.policy.PasswordHashValidationException;
@@ -127,12 +128,13 @@ public final class DefaultPasswordHashingService implements PasswordHashingServi
         .resolve(policy.preferredProviderId(), policy.preferredAlgorithm())
         .orElseThrow(() -> new IllegalStateException(
             "preferred provider disappeared after construction"));
+    Optional<PepperReference> pepper = resolveActivePepper();
     Optional<KdfExecutionLimiter.Lease> lease = limiter.acquire();
     if (lease.isEmpty()) {
       throw new KdfLimitExceededException();
     }
     try (KdfExecutionLimiter.Lease l = lease.get()) {
-      return provider.hash(password, policy, Optional.empty());
+      return provider.hash(password, policy, pepper);
     }
   }
 
@@ -210,21 +212,32 @@ public final class DefaultPasswordHashingService implements PasswordHashingServi
       return failed(InternalAuditEventType.VERIFICATION_FAILED_UNKNOWN_PROVIDER);
     }
 
-    Optional<byte[]> pepperSecret;
+    Optional<PepperReference> pepperReference;
     if (envelope.pepperKeyId().isPresent()) {
-      pepperSecret = pepperService.resolve(envelope.pepperKeyId().get());
-      if (pepperSecret.isEmpty()) {
+      String keyId = envelope.pepperKeyId().get();
+      Optional<byte[]> resolved = pepperService.resolve(keyId);
+      if (resolved.isEmpty()) {
         dummyService.runDummyKdf(password,
             DummyVerificationContext.PEPPER_KEY_UNKNOWN);
         return failed(
             InternalAuditEventType.VERIFICATION_FAILED_UNKNOWN_PEPPER_KEY);
       }
+      try {
+        pepperReference = Optional.of(new PepperReference(keyId, resolved.get()));
+      } catch (IllegalArgumentException e) {
+        dummyService.runDummyKdf(password,
+            DummyVerificationContext.PEPPER_KEY_UNKNOWN);
+        return failed(
+            InternalAuditEventType.VERIFICATION_FAILED_UNKNOWN_PEPPER_KEY);
+      } finally {
+        java.util.Arrays.fill(resolved.get(), (byte) 0);
+      }
     } else {
-      pepperSecret = Optional.empty();
+      pepperReference = Optional.empty();
     }
 
     ProviderVerificationResult providerResult = resolvedProvider.get()
-        .verify(password, envelope, pepperSecret);
+        .verify(password, envelope, pepperReference);
 
     return switch (providerResult) {
       case ProviderVerificationResult.Matched ignored ->
@@ -247,6 +260,24 @@ public final class DefaultPasswordHashingService implements PasswordHashingServi
       InternalAuditEventType internal) {
     return new CredentialVerificationResult.Failed(
         PublicFailureType.INVALID_CREDENTIALS, internal);
+  }
+
+  private Optional<PepperReference> resolveActivePepper() {
+    Optional<String> activeKey = pepperService.activeKeyId();
+    if (activeKey.isEmpty()) {
+      return Optional.empty();
+    }
+    Optional<byte[]> resolved = pepperService.resolve(activeKey.get());
+    if (resolved.isEmpty()) {
+      throw new IllegalStateException(
+          "active pepper key id does not resolve in the pepper service");
+    }
+    byte[] keyBytes = resolved.get();
+    try {
+      return Optional.of(new PepperReference(activeKey.get(), keyBytes));
+    } finally {
+      java.util.Arrays.fill(keyBytes, (byte) 0);
+    }
   }
 
   /**

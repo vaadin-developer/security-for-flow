@@ -28,6 +28,8 @@ import com.svenruppert.vaadin.security.credential.password.PasswordHashResult;
 import com.svenruppert.vaadin.security.credential.password.ProviderVerificationResult;
 import com.svenruppert.vaadin.security.credential.password.envelope.PasswordHashCodec;
 import com.svenruppert.vaadin.security.credential.password.envelope.PasswordHashEnvelope;
+import com.svenruppert.vaadin.security.credential.password.pepper.PepperApplicator;
+import com.svenruppert.vaadin.security.credential.password.pepper.PepperReference;
 import com.svenruppert.vaadin.security.credential.password.policy.PasswordHashPolicy;
 import com.svenruppert.vaadin.security.credential.password.provider.PasswordHashProvider;
 import org.bouncycastle.crypto.generators.BCrypt;
@@ -93,10 +95,10 @@ public final class BcryptPasswordHashProvider implements PasswordHashProvider {
   public PasswordHashResult hash(
       char[] password,
       PasswordHashPolicy policy,
-      Optional<byte[]> pepperSecret) {
+      Optional<PepperReference> pepper) {
     Objects.requireNonNull(password, "password");
     Objects.requireNonNull(policy, "policy");
-    Objects.requireNonNull(pepperSecret, "pepperSecret");
+    Objects.requireNonNull(pepper, "pepper");
 
     byte[] pwBytes = toUtf8(password);
     try {
@@ -108,12 +110,15 @@ public final class BcryptPasswordHashProvider implements PasswordHashProvider {
       byte[] salt = new byte[BcryptParameterNames.SALT_BYTES];
       random.nextBytes(salt);
       byte[] derived = null;
+      byte[] peppered = null;
       try {
         derived = BCrypt.generate(pwBytes, salt, cost);
+        peppered = PepperApplicator.apply(derived, pepper);
         Map<String, String> params = new LinkedHashMap<>();
         params.put(BcryptParameterNames.COST, Integer.toString(cost));
         params.put(BcryptParameterNames.SALT,
             Base64.getEncoder().encodeToString(salt));
+        Optional<String> pepperKeyId = pepper.map(PepperReference::keyId);
 
         PasswordHashEnvelope envelope = new PasswordHashEnvelope(
             policy.preferredFormatVersion(),
@@ -121,9 +126,9 @@ public final class BcryptPasswordHashProvider implements PasswordHashProvider {
             algorithm(),
             providerId(),
             policy.policyVersion(),
-            Optional.empty(),
+            pepperKeyId,
             params,
-            Base64.getEncoder().encodeToString(derived));
+            Base64.getEncoder().encodeToString(peppered));
         String encoded = codec.encode(envelope);
 
         return new PasswordHashResult(
@@ -133,12 +138,15 @@ public final class BcryptPasswordHashProvider implements PasswordHashProvider {
             algorithm(),
             providerId(),
             policy.policyVersion(),
-            Optional.empty(),
+            pepperKeyId,
             params);
       } finally {
         Arrays.fill(salt, (byte) 0);
         if (derived != null) {
           Arrays.fill(derived, (byte) 0);
+        }
+        if (peppered != null) {
+          Arrays.fill(peppered, (byte) 0);
         }
       }
     } finally {
@@ -150,10 +158,10 @@ public final class BcryptPasswordHashProvider implements PasswordHashProvider {
   public ProviderVerificationResult verify(
       char[] password,
       PasswordHashEnvelope envelope,
-      Optional<byte[]> pepperSecret) {
+      Optional<PepperReference> pepper) {
     Objects.requireNonNull(password, "password");
     Objects.requireNonNull(envelope, "envelope");
-    Objects.requireNonNull(pepperSecret, "pepperSecret");
+    Objects.requireNonNull(pepper, "pepper");
 
     Map<String, String> params = envelope.parameters();
     int cost;
@@ -179,6 +187,7 @@ public final class BcryptPasswordHashProvider implements PasswordHashProvider {
 
     byte[] pwBytes = toUtf8(password);
     byte[] candidate = null;
+    byte[] peppered = null;
     try {
       if (pwBytes.length > BcryptParameterNames.MAX_PASSWORD_BYTES) {
         return new ProviderVerificationResult.ProviderError(
@@ -192,7 +201,14 @@ public final class BcryptPasswordHashProvider implements PasswordHashProvider {
             InternalAuditEventType.VERIFICATION_FAILED_PROVIDER_ERROR,
             "bcrypt generator rejected the parameters");
       }
-      return MessageDigest.isEqual(candidate, expectedDerived)
+      try {
+        peppered = PepperApplicator.apply(candidate, pepper);
+      } catch (PepperApplicator.PepperApplicationException e) {
+        return new ProviderVerificationResult.ProviderError(
+            InternalAuditEventType.VERIFICATION_FAILED_PROVIDER_ERROR,
+            e.getMessage());
+      }
+      return MessageDigest.isEqual(peppered, expectedDerived)
           ? ProviderVerificationResult.Matched.INSTANCE
           : ProviderVerificationResult.NotMatched.INSTANCE;
     } finally {
@@ -201,6 +217,9 @@ public final class BcryptPasswordHashProvider implements PasswordHashProvider {
       Arrays.fill(expectedDerived, (byte) 0);
       if (candidate != null) {
         Arrays.fill(candidate, (byte) 0);
+      }
+      if (peppered != null) {
+        Arrays.fill(peppered, (byte) 0);
       }
     }
   }
