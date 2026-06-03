@@ -29,6 +29,7 @@ import com.svenruppert.vaadin.security.credential.password.policy.PasswordHashPo
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Computes whether a successfully verified envelope must be
@@ -45,13 +46,32 @@ public final class RehashDecisionEngine {
   }
 
   /**
-   * @param envelope parsed envelope that the provider just verified
-   * @param policy   active policy
+   * Legacy two-argument overload that ignores pepper rotation.
+   * Equivalent to calling {@link #decide(PasswordHashEnvelope,
+   * PasswordHashPolicy, Optional)} with {@link Optional#empty()}.
    */
   public RehashDecision decide(
       PasswordHashEnvelope envelope, PasswordHashPolicy policy) {
+    return decide(envelope, policy, Optional.empty());
+  }
+
+  /**
+   * @param envelope            parsed envelope that the provider just
+   *                            verified
+   * @param policy              active policy
+   * @param activePepperKeyId   currently active pepper key id, or
+   *                            {@link Optional#empty()} when peppering
+   *                            is disabled. A mismatch with the
+   *                            envelope's pepper key id triggers
+   *                            {@link RehashReason#PEPPER_KEY_ROTATED}.
+   */
+  public RehashDecision decide(
+      PasswordHashEnvelope envelope,
+      PasswordHashPolicy policy,
+      Optional<String> activePepperKeyId) {
     Objects.requireNonNull(envelope, "envelope");
     Objects.requireNonNull(policy, "policy");
+    Objects.requireNonNull(activePepperKeyId, "activePepperKeyId");
 
     if (!envelope.algorithm().equals(policy.preferredAlgorithm())) {
       return new RehashDecision.Required(
@@ -73,6 +93,10 @@ public final class RehashDecisionEngine {
     if (parametersBelowDefaults(envelope, policy)) {
       return new RehashDecision.Required(
           RehashReason.PARAMETERS_OUTDATED, policy.policyVersion());
+    }
+    if (!envelope.pepperKeyId().equals(activePepperKeyId)) {
+      return new RehashDecision.Required(
+          RehashReason.PEPPER_KEY_ROTATED, policy.policyVersion());
     }
     return RehashDecision.NotRequired.INSTANCE;
   }

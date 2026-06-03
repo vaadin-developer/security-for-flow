@@ -171,7 +171,8 @@ public final class DefaultPasswordHashingService implements PasswordHashingServi
     }
     try {
       PasswordHashRecord record = codec.decode(encodedHash);
-      return rehashEngine.decide(record.envelope(), policy);
+      return rehashEngine.decide(
+          record.envelope(), policy, pepperService.activeKeyId());
     } catch (PasswordHashFormatException e) {
       return RehashDecision.NotRequired.INSTANCE;
     }
