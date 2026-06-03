@@ -206,6 +206,10 @@ public class AuditView extends Composite<VerticalLayout> {
       case ApiKeyDenied e -> nullToDash(e.subjectId());
       case TokenRotated e -> e.subjectId();
       case RateLimitExceeded e -> nullToDash(e.subjectId());
+      case com.svenruppert.vaadin.security.audit.CredentialVerificationSucceeded e -> e.username();
+      case com.svenruppert.vaadin.security.audit.CredentialVerificationFailed e -> e.username();
+      case com.svenruppert.vaadin.security.audit.CredentialRehashed e -> e.username();
+      case com.svenruppert.vaadin.security.audit.CredentialStatusChanged e -> e.username();
     };
   }
 
@@ -263,6 +267,24 @@ public class AuditView extends Composite<VerticalLayout> {
           + " limit=" + e.limit()
           + " windowSeconds=" + e.window().toSeconds()
           + " events=" + e.eventsInWindow();
+      case com.svenruppert.vaadin.security.audit.CredentialVerificationSucceeded e ->
+          "alg=" + e.algorithm()
+              + " prov=" + e.providerId()
+              + " pol=" + e.policyVersion()
+              + " peppered=" + e.pepperKeyIdPresent()
+              + " rehash=" + e.rehashRequired();
+      case com.svenruppert.vaadin.security.audit.CredentialVerificationFailed e ->
+          "internal=" + e.internalAuditEventType().name()
+              + " client=" + nullToDash(e.clientAddress());
+      case com.svenruppert.vaadin.security.audit.CredentialRehashed e ->
+          "from=" + e.fromAlgorithm()
+              + " to=" + e.toAlgorithm()
+              + " reason=" + e.reason().name()
+              + " pol=" + e.targetPolicyVersion();
+      case com.svenruppert.vaadin.security.audit.CredentialStatusChanged e ->
+          "from=" + e.fromStatus().name()
+              + " to=" + e.toStatus().name()
+              + " reason=" + nullToDash(e.reason());
     };
   }
 

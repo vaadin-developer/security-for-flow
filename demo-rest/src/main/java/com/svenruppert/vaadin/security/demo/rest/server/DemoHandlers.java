@@ -558,6 +558,33 @@ public final class DemoHandlers {
         map.put("windowSeconds", e.window().toSeconds());
         map.put("eventsInWindow", e.eventsInWindow());
       }
+      case com.svenruppert.vaadin.security.audit.CredentialVerificationSucceeded e -> {
+        map.put("username", e.username());
+        map.put("clientAddress", e.clientAddress());
+        map.put("algorithm", e.algorithm());
+        map.put("providerId", e.providerId());
+        map.put("policyVersion", e.policyVersion());
+        map.put("pepperKeyIdPresent", e.pepperKeyIdPresent());
+        map.put("rehashRequired", e.rehashRequired());
+      }
+      case com.svenruppert.vaadin.security.audit.CredentialVerificationFailed e -> {
+        map.put("username", e.username());
+        map.put("clientAddress", e.clientAddress());
+        map.put("internalAuditEventType", e.internalAuditEventType().name());
+      }
+      case com.svenruppert.vaadin.security.audit.CredentialRehashed e -> {
+        map.put("username", e.username());
+        map.put("fromAlgorithm", e.fromAlgorithm());
+        map.put("toAlgorithm", e.toAlgorithm());
+        map.put("reason", e.reason().name());
+        map.put("targetPolicyVersion", e.targetPolicyVersion());
+      }
+      case com.svenruppert.vaadin.security.audit.CredentialStatusChanged e -> {
+        map.put("username", e.username());
+        map.put("fromStatus", e.fromStatus().name());
+        map.put("toStatus", e.toStatus().name());
+        map.put("reason", e.reason());
+      }
     }
     return map;
   }
