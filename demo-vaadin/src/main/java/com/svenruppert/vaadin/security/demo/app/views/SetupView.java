@@ -16,8 +16,17 @@
  */
 package com.svenruppert.vaadin.security.demo.app.views;
 
+import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.bootstrap.CreateInitialAdminCommand;
 import com.svenruppert.vaadin.security.bootstrap.InitialAdminCreationResult;
+import com.svenruppert.vaadin.security.credential.compromised.CompromisedPasswordChecker;
+import com.svenruppert.vaadin.security.credential.compromised.CompromisedPasswordResult;
+import com.svenruppert.vaadin.security.credential.compromised.LocalBlocklistCompromisedPasswordChecker;
+import com.svenruppert.vaadin.security.credential.input.ContextAwarePasswordValidator;
+import com.svenruppert.vaadin.security.credential.input.PasswordContext;
+import com.svenruppert.vaadin.security.credential.input.PasswordInputPolicy;
+import com.svenruppert.vaadin.security.credential.input.PasswordInputValidationResult;
+import com.svenruppert.vaadin.security.credential.secret.SecretValue;
 import com.svenruppert.vaadin.security.demo.app.security.bootstrap.BootstrapWiring;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.UI;
@@ -35,6 +44,9 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 
+import java.util.List;
+import java.util.Set;
+
 /**
  * Initial administrator setup view.
  * <p>
@@ -46,6 +58,20 @@ import com.vaadin.flow.router.Route;
 public class SetupView extends Composite<Div> implements BeforeEnterObserver {
 
   public static final String NAV = "setup";
+
+  private static final ContextAwarePasswordValidator INPUT_VALIDATOR =
+      new ContextAwarePasswordValidator();
+  private static final PasswordInputPolicy INPUT_POLICY =
+      PasswordInputPolicy.defaults();
+  private static final CompromisedPasswordChecker COMPROMISED_CHECKER =
+      new LocalBlocklistCompromisedPasswordChecker(List.of(
+          "password", "password1", "password123",
+          "qwerty", "qwerty123", "letmein",
+          "admin", "admin123", "administrator",
+          "welcome", "welcome1",
+          "12345678", "123456789", "abc12345",
+          "iloveyou", "monkey", "dragon",
+          "hunter2", "trustno1"));
 
   private final PasswordField tokenField = new PasswordField("Bootstrap token");
   private final TextField usernameField = new TextField("Admin username");
@@ -105,6 +131,28 @@ public class SetupView extends Composite<Div> implements BeforeEnterObserver {
       error("Passwords do not match.");
       return;
     }
+
+    // V00.71 pre-flight: structural + context-aware input validation,
+    // followed by a local compromised-password blocklist check. The
+    // framework's bootstrap policy still runs after this — the demo
+    // simply gives the operator faster, more specific feedback before
+    // the bootstrap token is consumed.
+    PasswordContext context = PasswordContext.fromEmail(
+        username, emailField.getValue(), TenantId.DEFAULT, Set.of());
+    PasswordInputValidationResult inputResult = INPUT_VALIDATOR.validate(
+        SecretValue.ofString(password), INPUT_POLICY, context);
+    if (inputResult instanceof PasswordInputValidationResult.Rejected rejected) {
+      error("Password rejected: " + humanise(rejected.violation().name()));
+      return;
+    }
+    CompromisedPasswordResult cpResult = COMPROMISED_CHECKER.check(
+        SecretValue.ofString(password));
+    if (cpResult instanceof CompromisedPasswordResult.Pwned) {
+      // Generic message — CWE-209 — never name the dictionary.
+      error("Password rejected: this password is on a known-bad list. Choose another.");
+      return;
+    }
+
     char[] pwd = password.toCharArray();
     InitialAdminCreationResult result = BootstrapWiring.instance().bootstrapService()
         .createInitialAdmin(new CreateInitialAdminCommand(
@@ -137,6 +185,10 @@ public class SetupView extends Composite<Div> implements BeforeEnterObserver {
 
   private static String blankToNull(String value) {
     return value == null || value.isBlank() ? null : value;
+  }
+
+  private static String humanise(String violation) {
+    return violation.toLowerCase().replace('_', ' ');
   }
 
   private static void success(String message) {
