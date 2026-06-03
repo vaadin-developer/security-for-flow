@@ -43,7 +43,10 @@ public sealed interface AuditEvent
             PasswordResetRequested, PasswordResetCompleted,
             EmailVerificationRequested, EmailVerified,
             ApiKeyUsed, ApiKeyDenied, TokenRotated,
-            RateLimitExceeded {
+            RateLimitExceeded,
+            CredentialVerificationSucceeded,
+            CredentialVerificationFailed,
+            CredentialRehashed {
 
   /** The UTC instant at which this event was created. Never {@code null}. */
   Instant timestamp();

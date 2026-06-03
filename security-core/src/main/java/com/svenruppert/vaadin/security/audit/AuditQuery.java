@@ -129,6 +129,9 @@ public record AuditQuery(
       case ApiKeyDenied e -> e.subjectId();
       case TokenRotated e -> e.subjectId();
       case RateLimitExceeded e -> e.subjectId();
+      case CredentialVerificationSucceeded e -> e.username();
+      case CredentialVerificationFailed e -> e.username();
+      case CredentialRehashed e -> e.username();
     };
   }
 }

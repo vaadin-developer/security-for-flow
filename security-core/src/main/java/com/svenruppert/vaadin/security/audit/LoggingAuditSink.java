@@ -186,6 +186,28 @@ public final class LoggingAuditSink implements AuditSink {
         appendField(sb, "windowSeconds", String.valueOf(e.window().toSeconds()));
         appendField(sb, "eventsInWindow", String.valueOf(e.eventsInWindow()));
       }
+      case CredentialVerificationSucceeded e -> {
+        appendField(sb, "user", e.username());
+        appendField(sb, "client", e.clientAddress());
+        appendField(sb, "algorithm", e.algorithm());
+        appendField(sb, "provider", e.providerId());
+        appendField(sb, "policyVersion", String.valueOf(e.policyVersion()));
+        appendField(sb, "pepper", String.valueOf(e.pepperKeyIdPresent()));
+        appendField(sb, "rehashRequired", String.valueOf(e.rehashRequired()));
+      }
+      case CredentialVerificationFailed e -> {
+        appendField(sb, "user", e.username());
+        appendField(sb, "client", e.clientAddress());
+        appendField(sb, "internalReason", e.internalAuditEventType().name());
+      }
+      case CredentialRehashed e -> {
+        appendField(sb, "user", e.username());
+        appendField(sb, "from", e.fromAlgorithm());
+        appendField(sb, "to", e.toAlgorithm());
+        appendField(sb, "reason", e.reason().name());
+        appendField(sb, "targetPolicyVersion",
+            String.valueOf(e.targetPolicyVersion()));
+      }
     }
     return sb.toString();
   }
