@@ -4,20 +4,25 @@
 > Security-Bausteinen auf einen High-Security- und Betriebsfokus.
 > Schwerpunkt sind stärkere Authentifizierung, Identity Provider
 > Integration, manipulationsresistenteres Audit, Monitoring und
-> Incident-fähige Security Events.
+> Incident-faehige Integrationen auf Basis des Security Event Bus aus
+> `v00.75.00`.
 
 ## Leitmotiv
 
 `v00.70.00` macht Policies, Persistenz und aktive Sessions
-produktionsfähig. `v00.80.00` baut darauf auf und adressiert Systeme mit
-höherem Schutzbedarf: starke Authentifizierung, externe Identitäten,
-Forensik, Betriebsintegration und klare Hardening-Modi.
+produktionsfaehig. `v00.75.00` ergaenzt den Security Event Bus mit
+signierten Envelopes, Replay-Schutz, Sequencing pro Tenant und Producer,
+Producer Policy, persistenten Stores und REST/SSE Bridge. `v00.80.00`
+baut darauf auf und adressiert Systeme mit hoeherem Schutzbedarf: starke
+Authentifizierung, externe Identitaeten, Forensik, Betriebsintegration
+und klare Hardening-Modi.
 
 `FEATURES.md` beschreibt OAuth2/OIDC/SAML/LDAP/Kerberos und
 Cluster-Mode für `00.60.00` bewusst als nicht im Scope. `v00.80.00`
 nimmt diese Negativliste nicht komplett zurück, sondern wählt daraus
 gezielt High-Security- und Betriebsbausteine: OIDC/OAuth2 Bridge,
-Monitoring, Event Bus, Web-Hardening und auditierbare Integrationen.
+Monitoring, EventBus-Integrationen, Web-Hardening und auditierbare
+Integrationen.
 
 Auch in dieser Version bleibt das Framework pluggable. High-Security
 Features werden als optionale Module und SPIs ergänzt, nicht als
@@ -37,7 +42,8 @@ Ziele:
 - `StepUpChallenge`
 - `StepUpDecision`
 - Integration in Policy DSL über `StepUpRequired`
-- Audit-Events für MFA-Erfolg, MFA-Fehler und Step-Up-Anforderung
+- Security Events fuer MFA-Erfolg, MFA-Fehler und Step-Up-Anforderung
+- Audit-faehige EventBus-Integration fuer kritische MFA-Entscheidungen
 
 Beispiel:
 
@@ -52,6 +58,18 @@ Policy.named("admin.user-delete")
 Der erste Scope kann TOTP und Recovery Codes vorsehen. WebAuthn/Passkeys
 können als separates Modul folgen oder direkt als experimenteller
 Adapter starten.
+
+Relevante EventBus-Events:
+
+```text
+MfaChallengeCreatedEvent
+MfaChallengeSucceededEvent
+MfaChallengeFailedEvent
+StepUpRequiredEvent
+StepUpSucceededEvent
+StepUpFailedEvent
+RecoveryCodeUsedEvent
+```
 
 ### 2. WebAuthn / Passkeys
 
@@ -72,7 +90,7 @@ Wichtige Anforderungen:
 
 - Credentials nie als Klartext-Secret behandeln.
 - Challenge-Lifetime strikt begrenzen.
-- Device-/Credential-Metadaten auditieren.
+- Device-/Credential-Metadaten als Security Events publizieren.
 - Recovery- und Deaktivierungsprozesse definieren.
 
 ### 3. OIDC/OAuth2 Bridge
@@ -102,6 +120,17 @@ ClaimsToTenantMapper
 IdentityProviderSessionLink
 ```
 
+Relevante EventBus-Events:
+
+```text
+ExternalIdentityLinkedEvent
+ExternalIdentityLoginSucceededEvent
+ExternalIdentityLoginFailedEvent
+ExternalClaimsMappedEvent
+ExternalIdentitySessionLinkedEvent
+ExternalIdentitySessionRevokedEvent
+```
+
 Nicht-Ziel:
 
 - Kein vollständiger Ersatz für etablierte OIDC-Clients.
@@ -121,6 +150,8 @@ Ziele:
 - Geräte tenant-aware und subject-aware verwalten.
 - Verdächtige Geräte gezielt invalidieren.
 - Step-Up erzwingen, wenn ein neues oder riskantes Gerät verwendet wird.
+- Device- und Token-Statusaenderungen ueber den Security Event Bus an
+  aktive Adapter verteilen.
 
 Geplante Services:
 
@@ -129,6 +160,18 @@ DeviceRegistry
 RememberMeService
 RememberMeTokenHasher
 DeviceRiskEvaluator
+```
+
+Relevante EventBus-Events:
+
+```text
+DeviceTrustedEvent
+DeviceRevokedEvent
+RememberMeTokenIssuedEvent
+RememberMeTokenUsedEvent
+RememberMeTokenRevokedEvent
+RefreshTokenRotatedEvent
+RefreshTokenReuseDetectedEvent
 ```
 
 ### 5. Risk-Based Authentication
@@ -158,6 +201,32 @@ Lockout
 Der Fokus liegt auf klarer Nachvollziehbarkeit. Jede Risk-Entscheidung
 muss auditierbar und erklärbar sein.
 
+Risk-Based Authentication nutzt den Security Event Bus sowohl als Quelle
+als auch als Senke. Der Risk-Service konsumiert Login-, Device-,
+Session-, Token- und Rate-Limit-Events und publiziert nachvollziehbare
+Risk-Entscheidungen.
+
+Konsumierte Events:
+
+```text
+LoginFailedEvent
+LoginSucceededEvent
+DeviceTrustedEvent
+DeviceRevokedEvent
+RateLimitExceededEvent
+SuspiciousLoginDetectedEvent
+SessionSecurityVersionOutdatedEvent
+```
+
+Publizierte Events:
+
+```text
+RiskScoreChangedEvent
+RiskDecisionMadeEvent
+StepUpRequiredEvent
+AccountTemporarilyLockedEvent
+```
+
 ### 6. Password Hardening
 
 Das Passwort-Subsystem wird weiter gehärtet.
@@ -169,7 +238,7 @@ Ziele:
 - Hash-Policy-Versionierung.
 - automatische Rehash-Migration.
 - Passwort-Blocklisten.
-- Audit-Events für Policy-Verletzungen ohne Secret Leakage.
+- Security Events fuer Policy-Verletzungen ohne Secret Leakage.
 
 Wichtig:
 
@@ -200,39 +269,54 @@ AuditExportService
 Dieses Feature ergänzt persistentes Audit aus `v00.70.00`, ersetzt es
 aber nicht.
 
-### 8. Security Event Bus
+Der Security Event Bus aus `v00.75.00` liefert Integritaet,
+Authentizitaet und Replay-Schutz fuer transportierte Events. Das ersetzt
+nicht die Audit-Hash-Chain. Die Aufgaben bleiben getrennt:
 
-Neben Audit wird ein Event Bus für Live-Reaktionen eingeführt.
+```text
+EventBus-Signatur: Authentizitaet und Integritaet des Events beim Transport.
+Audit-Hash-Chain: manipulationsresistente historische Ablage.
+```
+
+V00.80.00 sollte einen `AuditIntegrityListener` ergaenzen, der
+audit-relevante Security Events konsumiert und daraus hash-verkettete
+Audit-Eintraege oder signierte Audit-Batches erzeugt.
+
+### 8. Security Event Integrations
+
+Der Security Event Bus wird in `v00.75.00` eingefuehrt. `v00.80.00`
+nutzt diese Infrastruktur fuer produktive Betriebs-, Monitoring-,
+Alerting- und Integrationsszenarien.
 
 Ziel:
 
 - Security Events an Monitoring, SIEM, Alerting, Webhooks oder
   Incident-Prozesse senden.
 - Audit bleibt historischer Nachweis.
-- Event Bus ermöglicht operative Reaktion.
+- Der Event Bus ermoeglicht operative Reaktion.
+- Signierte Envelopes aus `v00.75.00` bleiben die gemeinsame
+  Integrationsbasis.
 
-Event-Kategorien:
-
-```text
-Login
-Logout
-AccessDenied
-Lockout
-MFA
-Token
-Session
-RoleChanged
-DeviceChanged
-PolicyDenied
-```
-
-Mögliche Adapter:
+Relevante Integrationen:
 
 ```text
 LoggingEventPublisher
 WebhookEventPublisher
 OpenTelemetryEventPublisher
+SiemEventExporter
+SecurityAlertPublisher
 EventStreamPublisher
+```
+
+EventBus-Fehler werden selbst beobachtbar:
+
+```text
+SecurityEventEnvelopeRejectedEvent
+SecurityEventReplayDetectedEvent
+SecurityEventSignatureInvalidEvent
+SecurityEventSequenceViolationEvent
+SecurityEventListenerFailedEvent
+SecurityEventDeadLetteredEvent
 ```
 
 ### 9. Betrieb und Monitoring
@@ -254,6 +338,29 @@ Metriken:
 - widerrufene Sessions
 - Audit-Store-Lag
 - Event-Bus-Fehler
+- publizierte Security Events
+- abgelehnte Envelopes
+- Replay-Erkennungen
+- Sequenzverletzungen
+- ungueltige Signaturen
+- Dead-Letter-Eintraege
+- Listener-Fehler
+- aktive SSE-Verbindungen
+- SSE-Reconnects
+
+Konkrete Metriknamen:
+
+```text
+security.eventbus.published.total
+security.eventbus.rejected.total
+security.eventbus.replay.detected.total
+security.eventbus.sequence.violation.total
+security.eventbus.signature.invalid.total
+security.eventbus.deadletter.total
+security.eventbus.listener.failure.total
+security.eventbus.sse.connections.active
+security.eventbus.sse.reconnects.total
+```
 
 SPIs:
 
@@ -278,6 +385,13 @@ Strict Mode Verhalten:
 - Evaluator-Fehler führt zu Deny
 - Audit-Fehler kann je nach Konfiguration blockieren oder alarmieren
 - unklassifizierte Route kann blockiert werden
+- ungueltige Event-Signatur fuehrt zu Reject
+- unbekannter Signing Key fuehrt zu Reject
+- erkannter Replay fuehrt zu Reject und kritischem Security Event
+- Sequenzverletzung fuehrt zu Reject oder Dead Letter
+- nicht erlaubter Producer fuehrt zu Reject
+- fehlende `TenantId` fuehrt zu Reject
+- fehlender kritischer Listener kann Fail-Closed ausloesen
 
 Wichtig:
 
@@ -379,11 +493,19 @@ security-standalone
 
 security-persistence-eclipsestore
 
+security-events
+security-events-rest
+security-events-testkit
+security-events-persistence-eclipsestore
+
 security-mfa-api
 security-mfa-totp
 security-webauthn
 security-identity-oidc
 security-monitoring
+security-events-opentelemetry
+security-events-webhook
+security-events-siem
 security-audit-integrity
 security-privacy
 security-web-hardening
@@ -401,7 +523,13 @@ optionalen externen Abhängigkeiten einführen.
 - Risk-Based Authentication ist auditierbar.
 - Argon2id ist als PasswordHasher verfügbar.
 - Tamper-Evident Audit kann Event-Ketten verifizieren.
-- Security Event Bus kann mindestens Logging und Webhook bedienen.
+- Der Security Event Bus aus `v00.75.00` wird fuer Monitoring, Risk,
+  MFA, Device Management, Identity und Audit-Integrity genutzt.
+- OpenTelemetry-, Webhook- und SIEM-Exporter verarbeiten signierte
+  Security Event Envelopes.
+- EventBus-Fehler, Replay-Erkennungen, Signaturfehler,
+  Sequenzverletzungen und Dead Letters sind als Metriken sichtbar.
+- Kritische EventBus-Verifikationsfehler erzeugen Alerts.
 - Monitoring-Exportpunkte liefern nutzbare Betriebsdaten.
 - Strict Mode ist dokumentiert und testbar.
 - Supply-Chain-Prüfungen sind Teil der Release-Dokumentation.
@@ -428,8 +556,9 @@ Nach `v00.80.00` ist das Framework für Anwendungen mit höherem
 Schutzbedarf deutlich besser geeignet. Externe Identitäten können
 angebunden werden, kritische Aktionen können Step-Up verlangen,
 Audit-Daten können stärker abgesichert werden, und Betriebs-/Monitoring-
-Systeme erhalten klare Integrationspunkte. Zusätzlich sind Web-Hardening
-und Privacy-/Retention-Anforderungen als optionale SPIs vorbereitet.
+Systeme erhalten klare Integrationspunkte auf Basis des in `v00.75.00`
+eingefuehrten Security Event Bus. Zusaetzlich sind Web-Hardening und
+Privacy-/Retention-Anforderungen als optionale SPIs vorbereitet.
 
 `v00.80.00` ist damit der Schritt von produktionsfähiger Security zu
 High-Security Readiness.

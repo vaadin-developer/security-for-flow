@@ -23,6 +23,8 @@ the library.
 | `security-processor` | `security-processor` | Compile-time annotation processor: generates `<Type>Secured` subclasses for `@Secured`-annotated concrete classes. Wire as `<annotationProcessorPath>`, not as a regular dependency |
 | `security-persistence-testkit` | `security-persistence-testkit` | Contract test suites for every persistence-store SPI in `security-core` — `@Test default`-method interfaces a custom store adapter implements to be vetted against the library's persistence contract. Persistence-tech-agnostic |
 | `security-persistence-eclipsestore` | `security-persistence-eclipsestore` | Eclipse-Store (`org.eclipse.store:storage-embedded`) reference impl of every persistence-store SPI; passes the same 95+ contract suite as the in-memory defaults. Drop-in for apps that want durable persistence |
+| `security-crypto-bc` | `security-crypto-bc` | V00.71 optional opt-in module: Argon2id, bcrypt and scrypt password hash providers via BouncyCastle (`bcprov-jdk18on:1.78.1`). `BouncyCastleHashingServices.modern()` wires the modern profile. The core stays JDK-only when this module is absent |
+| `security-credentials-hibp` | `security-credentials-hibp` | V00.71 optional opt-in module: HaveIBeenPwned k-anonymity compromised-password checker. Uses JDK `HttpClient` only — no extra runtime dependencies. Plaintext never leaves the JVM (only the SHA-1 first-5-hex prefix is transmitted) |
 | `demo-rest-shared` | `demo-rest-shared` | Transport-level constants + tiny JSON helper, shared between the REST server and any client |
 | `demo-vaadin` | `demo-vaadin` | Standalone Vaadin demo (WAR) — auth runs in-JVM |
 | `demo-rest` | `demo-rest` | Runnable REST reference: JDK-only HTTP server + CLI client |
@@ -41,6 +43,10 @@ security-processor                  -> security-core, com.svenruppert:proxybuild
 security-persistence-testkit        -> security-core (compile; suites use ServiceLoader-free wiring)
 security-persistence-eclipsestore   -> security-core, org.eclipse.store:storage-embedded:4.1.0
                                        (test scope: security-persistence-testkit)
+security-crypto-bc                  -> security-core, org.bouncycastle:bcprov-jdk18on:1.78.1
+                                       (V00.71 optional opt-in)
+security-credentials-hibp           -> security-core (JDK HttpClient only;
+                                       V00.71 optional opt-in)
 demo-rest-shared                    -> (no project deps; transport-only)
 demo-vaadin                         -> security-core, security-vaadin
 demo-rest                           -> security-core, security-rest, demo-rest-shared
@@ -54,7 +60,8 @@ demo-standalone                     -> security-core, security-standalone
 The four adapter modules (`security-vaadin`, `security-rest`,
 `security-standalone`, `security-processor`) never depend on each other.
 `security-persistence-eclipsestore` is the only module with a third-party
-storage dependency.
+storage dependency. `security-crypto-bc` is the only module that pulls in
+BouncyCastle — it stays opt-in so the core remains JDK-only.
 
 ## Quick Start
 
@@ -77,9 +84,9 @@ by both REST-side modules).
 
 | You want to see … | Run |
 |---|---|
-| Vaadin role/permission UI in a single JVM, no backend | [`demo-vaadin`](docs/demo-vaadin.md) |
-| Pure REST security (HTTP server + interactive CLI), no UI | [`demo-rest`](docs/demo-rest.md) |
-| Vaadin UI talking to a separate REST backend (real two-tier setup) | [`demo-vaadin-rest-client`](docs/demo-vaadin-rest-client.md) |
+| Vaadin role/permission UI in a single JVM, no backend | [`demo-vaadin`](docs/v00.50.00/demo-vaadin.md) |
+| Pure REST security (HTTP server + interactive CLI), no UI | [`demo-rest`](docs/v00.50.00/demo-rest.md) |
+| Vaadin UI talking to a separate REST backend (real two-tier setup) | [`demo-vaadin-rest-client`](docs/v00.50.00/demo-vaadin-rest-client.md) |
 | Plain-Java / CLI / desktop integration (no HTTP, no Vaadin) | `mvn -pl demo-standalone exec:java -Dexec.mainClass=com.svenruppert.vaadin.security.demo.standalone.DemoApp` |
 
 ### `demo-vaadin` — Standalone Vaadin demo
@@ -92,7 +99,7 @@ cd demo-vaadin && mvn jetty:run
 First run shows the bootstrap setup (the demo prints a token to the
 console). After setup, log in as the chosen admin. Demo users
 `user/user` and `demo/demo` are pre-populated; `admin` is created via
-the bootstrap flow. Walkthrough: [`docs/demo-vaadin.md`](docs/demo-vaadin.md).
+the bootstrap flow. Walkthrough: [`docs/demo-vaadin.md`](docs/v00.50.00/demo-vaadin.md).
 
 ### `demo-rest` — REST server + CLI
 
@@ -111,7 +118,7 @@ mvn -pl :demo-rest exec:java \
 Demo users: `editor/editor`, `viewer/viewer`. `admin` is created via
 the bootstrap flow; with `-Dsecurity.bootstrap.mode=DISABLED` the
 default `admin/admin` is pre-populated instead. Walkthrough:
-[`docs/demo-rest.md`](docs/demo-rest.md).
+[`docs/demo-rest.md`](docs/v00.50.00/demo-rest.md).
 
 ### `demo-vaadin-rest-client` — Vaadin UI + REST backend
 
@@ -130,7 +137,7 @@ the token from the backend console, choose a username and password,
 submit — the **Vaadin UI calls** `POST /api/bootstrap/admin` against
 the backend, no in-JVM auth. Then log in. The UI never speaks HTTP
 directly: only the encapsulated `DemoBackendClient` does.
-Walkthrough: [`docs/demo-vaadin-rest-client.md`](docs/demo-vaadin-rest-client.md).
+Walkthrough: [`docs/demo-vaadin-rest-client.md`](docs/v00.50.00/demo-vaadin-rest-client.md).
 
 ### `demo-standalone` — Interactive CLI
 
@@ -371,7 +378,7 @@ A complete runnable reference lives in `demo-rest`: a JDK-only HTTP server
 (`com.sun.net.httpserver.HttpServer`) and an interactive CLI
 (`java.net.http.HttpClient`) demonstrating login, server-side operation
 filtering, and the `200 / 401 / 403` decision flow. See
-[`docs/demo-rest.md`](docs/demo-rest.md) for run instructions and example
+[`docs/demo-rest.md`](docs/v00.50.00/demo-rest.md) for run instructions and example
 sessions.
 
 ### 1. Define project permissions and role mapping
@@ -765,7 +772,7 @@ Library modules contain no concrete business permissions. Examples like
 `document:read` belong in `demo-rest`. Real applications define their own
 catalog (e.g. `shortlink:create`, `audit:read`) inside the consuming project.
 
-See [`docs/security-modules.md`](docs/security-modules.md) for the full
+See [`docs/security-modules.md`](docs/v00.50.00/security-modules.md) for the full
 extension model.
 
 ## First-run bootstrap
@@ -786,7 +793,7 @@ both read centrally by `BootstrapConfigurationLoader`:
 | `security.bootstrap.token.file` | `SECURITY_BOOTSTRAP_TOKEN_FILE` | `./data/bootstrap.token` |
 | `security.bootstrap.token.ttl` | `SECURITY_BOOTSTRAP_TOKEN_TTL` | `PT24H` |
 
-See [`docs/bootstrap.md`](docs/bootstrap.md) for modes, endpoints, and the
+See [`docs/bootstrap.md`](docs/v00.50.00/bootstrap.md) for modes, endpoints, and the
 operator workflow.
 
 ## Roadmap
@@ -812,6 +819,55 @@ session management, API-key parallel-to-Bearer in
 `LoggingNotificationSender`) plus PIT re-runs for
 `security-processor` and `security-persistence-eclipsestore` are
 the planned 00.71 follow-ups.
+
+### V00.71.00 – Phase 1a–3 on `develop`
+
+`Konzept-V00.71.00.md` introduces a fully new credential-security
+stack under `com.svenruppert.vaadin.security.credential.password.*`.
+Prompts 001–025 are landed on `develop`; see
+`Implementierungsplan-V00.71.00.md` §20 for the per-prompt status
+table and `docs/v00.71.00/prompts/README.md` for the prompt
+inventory.
+
+Headlines:
+
+- **Phase 1a** – JDK-only PBKDF2-HMAC-SHA-256 core with a self-describing
+  `$pwh$v=1$…` envelope, sealed `CredentialVerificationResult` /
+  `RehashDecision` / `ProviderVerificationResult` types, generic
+  perimeter failures backed by differentiated audit classifications,
+  dummy verification + concurrency-bounded `KdfExecutionLimiter`,
+  bootstrap and demo-rest wired through the new
+  `PasswordHashingService`.
+- **Phase 1b** – Optional `security-crypto-bc` module adds Argon2id,
+  bcrypt and scrypt providers (BouncyCastle 1.78.1, no JCA mutation,
+  per-algorithm parameter validators). The modern profile is opt-in
+  and fails fast when requested without the module on the classpath.
+- **Phase 2** – `SecretValue` (`AutoCloseable`), `PasswordInputPolicy`
+  with Unicode normalisation, post-KDF HMAC-SHA-256 pepper with
+  rotation (`PepperReference`, `PEPPER_KEY_ROTATED` rehash reason),
+  policy-version / format-version rejection lists, operator-driven
+  `Pbkdf2ParameterCalibrator` with reproducible persisted profiles,
+  four new `AuditEvent` variants flowing through a sink-failure-tolerant
+  `CredentialAuditPublisher`.
+- **Phase 3** – Persistence-neutral `CredentialStore` with
+  compare-and-swap updates, eight-state `CredentialLifecycleService`
+  with deterministic transitions, atomic `PasswordChangeService` with
+  explicit re-authentication, selector/verifier `TokenDigestService`
+  and single-use dual-CAS `PasswordResetService`.
+
+The optional foreign-hash import (Epic T) stays deferred; the
+experimental `PasswordHasher` / `Pbkdf2PasswordHasher` / `PasswordHash`
+types remain in the tree only so the V00.70 callers
+(`StoreBackedRememberMeService`, legacy `accountlifecycle` reset and
+email-verification services) keep compiling. No compatibility shim
+translates between the old `pbkdf2$…` and the new `$pwh$v=1$…`
+envelope — that carve-out matches Konzept-V00.71.00 §1 and §7.
+
+Phase 4 (abuse detection, context-aware policy, optional history,
+operational metrics) and Phase 5 (HIBP opt-in, FIPS / supply-chain
+docs, emergency playbooks, tenant policies, compliance traceability)
+are still pending — prompts 026–035 in
+`docs/v00.71.00/prompts/`.
 
 ## License
 
