@@ -220,4 +220,68 @@ class TokenDigestServiceTest {
     assertThrows(NullPointerException.class,
         () -> new TokenDigestService(null));
   }
+
+  /**
+   * Captures every byte[] passed to nextBytes so the test can prove the
+   * generate() finally-block actually zeroed the random buffers. Removing
+   * the {@code Arrays.fill} call would leave the random bytes in place,
+   * which this assertion detects.
+   */
+  static final class CapturingSecureRandom extends SecureRandom {
+    final java.util.List<byte[]> buffers = new java.util.ArrayList<>();
+    @Override public synchronized void nextBytes(byte[] bytes) {
+      for (int i = 0; i < bytes.length; i++) {
+        bytes[i] = (byte) (i + 1);
+      }
+      buffers.add(bytes);
+    }
+  }
+
+  @Test
+  @DisplayName("generate() zeroes the random selector + verifier buffers in its finally block")
+  void generateWipesRandomBuffers() {
+    CapturingSecureRandom rng = new CapturingSecureRandom();
+    new TokenDigestService(rng).generate();
+    assertEquals(2, rng.buffers.size(),
+        "generate fills two buffers: selector + verifier");
+    for (byte[] buf : rng.buffers) {
+      for (byte b : buf) {
+        assertEquals(0, b,
+            "every byte must be zeroed after generate() returns — "
+                + "removing Arrays.fill would leak random bytes (CWE-226)");
+      }
+    }
+  }
+
+  // ── parse() boundary cases ──────────────────────────────────────
+
+  @Test
+  @DisplayName("parse rejects an input where the dot is the last char")
+  void parseRejectsTrailingDot() {
+    Optional<SelectorVerifierToken> r = service.parse("abc.");
+    assertEquals(Optional.empty(), r);
+  }
+
+  @Test
+  @DisplayName("parse rejects an input where the dot is the first char")
+  void parseRejectsLeadingDot() {
+    Optional<SelectorVerifierToken> r = service.parse(".xyz");
+    assertEquals(Optional.empty(), r);
+  }
+
+  @Test
+  @DisplayName("parse accepts the minimal valid 1-char selector + 1-char verifier")
+  void parseAcceptsMinimal() {
+    Optional<SelectorVerifierToken> r = service.parse("a.b");
+    assertTrue(r.isPresent());
+    assertEquals("a", r.get().selector());
+    assertEquals(1, r.get().verifier().length());
+  }
+
+  @Test
+  @DisplayName("parse rejects whitespace-only selector or verifier")
+  void parseRejectsWhitespaceParts() {
+    assertEquals(Optional.empty(), service.parse(" .x"));
+    assertEquals(Optional.empty(), service.parse("x. "));
+  }
 }

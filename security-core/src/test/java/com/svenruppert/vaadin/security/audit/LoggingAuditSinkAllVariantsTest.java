@@ -16,6 +16,9 @@
  */
 package com.svenruppert.vaadin.security.audit;
 
+import com.svenruppert.vaadin.security.credential.InternalAuditEventType;
+import com.svenruppert.vaadin.security.credential.password.RehashReason;
+import com.svenruppert.vaadin.security.credential.store.CredentialStatus;
 import com.svenruppert.vaadin.security.logout.LogoutScope;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -274,6 +277,78 @@ class LoggingAuditSinkAllVariantsTest {
   void logoutPerformedCurrentSession() {
     String line = log(new LogoutPerformed(T0, "alice", "sid", LogoutScope.CurrentSession));
     assertTrue(line.contains("scope=CurrentSession"));
+  }
+
+  // ── V00.71 credential events ────────────────────────────────────
+
+  @Test
+  @DisplayName("CredentialVerificationSucceeded line carries every field")
+  void credentialVerificationSucceeded() {
+    String line = log(new CredentialVerificationSucceeded(
+        T0, "alice", "127.0.0.1",
+        "PBKDF2WithHmacSHA256", "pbkdf2-jdk", 1,
+        true, false));
+    assertTrue(line.contains("type=CredentialVerificationSucceeded"));
+    assertTrue(line.contains("user=alice"));
+    assertTrue(line.contains("client=127.0.0.1"));
+    assertTrue(line.contains("algorithm=PBKDF2WithHmacSHA256"));
+    assertTrue(line.contains("provider=pbkdf2-jdk"));
+    assertTrue(line.contains("policyVersion=1"));
+    assertTrue(line.contains("pepper=true"));
+    assertTrue(line.contains("rehashRequired=false"));
+  }
+
+  @Test
+  @DisplayName("CredentialVerificationSucceeded — different bool combinations preserved")
+  void credentialVerificationSucceededFlagFlipped() {
+    String line = log(new CredentialVerificationSucceeded(
+        T0, "alice", "10.0.0.1",
+        "Argon2id", "argon2id-bc", 2,
+        false, true));
+    assertTrue(line.contains("pepper=false"));
+    assertTrue(line.contains("rehashRequired=true"));
+    assertTrue(line.contains("policyVersion=2"));
+  }
+
+  @Test
+  @DisplayName("CredentialVerificationFailed line carries user + client + internalReason")
+  void credentialVerificationFailed() {
+    String line = log(new CredentialVerificationFailed(
+        T0, "alice", "127.0.0.1",
+        InternalAuditEventType.VERIFICATION_FAILED_MISMATCH));
+    assertTrue(line.contains("type=CredentialVerificationFailed"));
+    assertTrue(line.contains("user=alice"));
+    assertTrue(line.contains("client=127.0.0.1"));
+    assertTrue(line.contains("internalReason=VERIFICATION_FAILED_MISMATCH"));
+  }
+
+  @Test
+  @DisplayName("CredentialRehashed line carries user + from/to + reason + policyVersion")
+  void credentialRehashed() {
+    String line = log(new CredentialRehashed(
+        T0, "alice",
+        "PBKDF2WithHmacSHA256", "Argon2id",
+        RehashReason.ALGORITHM_DEPRECATED, 2));
+    assertTrue(line.contains("type=CredentialRehashed"));
+    assertTrue(line.contains("user=alice"));
+    assertTrue(line.contains("from=PBKDF2WithHmacSHA256"));
+    assertTrue(line.contains("to=Argon2id"));
+    assertTrue(line.contains("reason=ALGORITHM_DEPRECATED"));
+    assertTrue(line.contains("targetPolicyVersion=2"));
+  }
+
+  @Test
+  @DisplayName("CredentialStatusChanged line carries user + from/to status + reason")
+  void credentialStatusChanged() {
+    String line = log(new CredentialStatusChanged(
+        T0, "alice",
+        CredentialStatus.ACTIVE, CredentialStatus.MUST_CHANGE,
+        "INC-2026-06-pepper/PEPPER_COMPROMISE"));
+    assertTrue(line.contains("type=CredentialStatusChanged"));
+    assertTrue(line.contains("user=alice"));
+    assertTrue(line.contains("from=ACTIVE"));
+    assertTrue(line.contains("to=MUST_CHANGE"));
+    assertTrue(line.contains("reason=INC-2026-06-pepper/PEPPER_COMPROMISE"));
   }
 
   /** Drive one event through an isolated logger and return its single line. */

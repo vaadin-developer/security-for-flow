@@ -232,6 +232,118 @@ class InMemoryAbuseDetectionServiceTest {
   }
 
   @Test
+  @DisplayName("stepUpAt threshold below blockAt produces RequireAdditionalCheck")
+  void stepUpTriggersBeforeBlock() {
+    AbuseLimitsPolicy policy = AbuseLimitsPolicy.builder()
+        .with(AbuseAttemptType.LOGIN, AbuseDimension.USERNAME,
+            new AbuseLimitsPolicy.Limit(
+                Duration.ofMinutes(15), 0, 3, 10,
+                Duration.ofSeconds(1), Duration.ofMinutes(15)))
+        .build();
+    InMemoryAbuseDetectionService svc = new InMemoryAbuseDetectionService(
+        policy, new RecordingAudit());
+    AbuseAttemptContext ctx = loginAttempt("alice", null, T0);
+    for (int i = 0; i < 3; i++) {
+      svc.recordOutcome(ctx, AttemptOutcome.FAILURE);
+    }
+    AbuseDecision decision = svc.evaluate(ctx);
+    AbuseDecision.RequireAdditionalCheck check = assertInstanceOf(
+        AbuseDecision.RequireAdditionalCheck.class, decision);
+    assertEquals(AbuseDimension.USERNAME, check.dimension());
+  }
+
+  @Test
+  @DisplayName("Block out-ranks RequireAdditionalCheck when both fire simultaneously")
+  void blockOutranksRequireCheck() {
+    AbuseLimitsPolicy policy = AbuseLimitsPolicy.builder()
+        .with(AbuseAttemptType.LOGIN, AbuseDimension.USERNAME,
+            new AbuseLimitsPolicy.Limit(
+                Duration.ofMinutes(15), 0, 1, 0,
+                Duration.ofSeconds(1), Duration.ofMinutes(15)))
+        .with(AbuseAttemptType.LOGIN, AbuseDimension.CLIENT_ADDRESS,
+            new AbuseLimitsPolicy.Limit(
+                Duration.ofMinutes(15), 0, 0, 1,
+                Duration.ofSeconds(1), Duration.ofMinutes(15)))
+        .build();
+    InMemoryAbuseDetectionService svc = new InMemoryAbuseDetectionService(
+        policy, new RecordingAudit());
+    AbuseAttemptContext ctx = loginAttempt("alice", "10.0.0.1", T0);
+    svc.recordOutcome(ctx, AttemptOutcome.FAILURE);
+    // username = 1 → RequireAdditionalCheck; client = 1 → Block.
+    // Block (rank 3) must win over RequireAdditionalCheck (rank 2).
+    AbuseDecision decision = svc.evaluate(ctx);
+    assertInstanceOf(AbuseDecision.Block.class, decision);
+    assertEquals(AbuseDimension.CLIENT_ADDRESS,
+        ((AbuseDecision.Block) decision).dimension());
+  }
+
+  @Test
+  @DisplayName("RequireAdditionalCheck out-ranks Delay")
+  void requireCheckOutranksDelay() {
+    AbuseLimitsPolicy policy = AbuseLimitsPolicy.builder()
+        .with(AbuseAttemptType.LOGIN, AbuseDimension.USERNAME,
+            new AbuseLimitsPolicy.Limit(
+                Duration.ofMinutes(15), 1, 0, 0,
+                Duration.ofSeconds(1), Duration.ofMinutes(15)))
+        .with(AbuseAttemptType.LOGIN, AbuseDimension.CLIENT_ADDRESS,
+            new AbuseLimitsPolicy.Limit(
+                Duration.ofMinutes(15), 0, 1, 0,
+                Duration.ofSeconds(1), Duration.ofMinutes(15)))
+        .build();
+    InMemoryAbuseDetectionService svc = new InMemoryAbuseDetectionService(
+        policy, new RecordingAudit());
+    AbuseAttemptContext ctx = loginAttempt("alice", "10.0.0.1", T0);
+    svc.recordOutcome(ctx, AttemptOutcome.FAILURE);
+    AbuseDecision decision = svc.evaluate(ctx);
+    assertInstanceOf(AbuseDecision.RequireAdditionalCheck.class, decision);
+  }
+
+  @Test
+  @DisplayName("Tenant-dimensional limit fires on aggregated tenant traffic")
+  void tenantDimensionalLimit() {
+    AbuseLimitsPolicy policy = AbuseLimitsPolicy.builder()
+        .with(AbuseAttemptType.LOGIN, AbuseDimension.TENANT,
+            new AbuseLimitsPolicy.Limit(
+                Duration.ofMinutes(15), 0, 0, 3,
+                Duration.ofSeconds(1), Duration.ofMinutes(15)))
+        .build();
+    InMemoryAbuseDetectionService svc = new InMemoryAbuseDetectionService(
+        policy, new RecordingAudit());
+    // Three different usernames in the same tenant
+    for (int i = 0; i < 3; i++) {
+      svc.recordOutcome(loginAttempt("user-" + i, null, T0),
+          AttemptOutcome.FAILURE);
+    }
+    AbuseDecision decision = svc.evaluate(
+        loginAttempt("user-X", null, T0));
+    AbuseDecision.Block block = assertInstanceOf(
+        AbuseDecision.Block.class, decision);
+    assertEquals(AbuseDimension.TENANT, block.dimension());
+  }
+
+  @Test
+  @DisplayName("Global-dimensional limit counts every attempt regardless of subject")
+  void globalDimensionalLimit() {
+    AbuseLimitsPolicy policy = AbuseLimitsPolicy.builder()
+        .with(AbuseAttemptType.LOGIN, AbuseDimension.GLOBAL,
+            new AbuseLimitsPolicy.Limit(
+                Duration.ofMinutes(15), 0, 0, 2,
+                Duration.ofSeconds(1), Duration.ofMinutes(15)))
+        .build();
+    InMemoryAbuseDetectionService svc = new InMemoryAbuseDetectionService(
+        policy, new RecordingAudit());
+    svc.recordOutcome(loginAttempt("alice", null, T0),
+        AttemptOutcome.FAILURE);
+    svc.recordOutcome(loginAttempt("bob", null, T0),
+        AttemptOutcome.FAILURE);
+    AbuseDecision decision = svc.evaluate(
+        loginAttempt("carol", null, T0));
+    AbuseDecision.Block block = assertInstanceOf(
+        AbuseDecision.Block.class, decision);
+    assertEquals(AbuseDimension.GLOBAL, block.dimension());
+  }
+
+  @Test
   @DisplayName("Anonymous reset requests (no username, no IP) fall through to Allow")
   void anonymousAttemptAllowed() {
     InMemoryAbuseDetectionService svc = new InMemoryAbuseDetectionService(

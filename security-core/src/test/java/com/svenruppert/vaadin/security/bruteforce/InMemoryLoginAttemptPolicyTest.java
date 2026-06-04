@@ -296,6 +296,46 @@ class InMemoryLoginAttemptPolicyTest {
     assertSame(NoopLoginAttemptPolicy.INSTANCE, NoopLoginAttemptPolicy.INSTANCE);
   }
 
+  @Test
+  @DisplayName("Progressive backoff: each lockout level doubles the duration until maxLockout caps")
+  void progressiveBackoffDoubles() {
+    // initial=2s, max=64s → expect 2s, 4s, 8s, 16s, 32s, 64s (cap).
+    LoginAttemptConfiguration cfg = new LoginAttemptConfiguration(
+        2,
+        Duration.ofMinutes(5),
+        Duration.ofSeconds(2),
+        Duration.ofSeconds(64));
+    Instant t0 = Instant.parse("2026-06-01T12:00:00Z");
+    MutableClock clock = new MutableClock(t0);
+    InMemoryLoginAttemptPolicy policy =
+        new InMemoryLoginAttemptPolicy(cfg, clock, new RecordingAudit());
+
+    long[] expectedMillis = {2_000L, 4_000L, 8_000L, 16_000L, 32_000L, 64_000L};
+    for (long expected : expectedMillis) {
+      // Drive {threshold} failures to trigger the next lockout level
+      // — no clock advance between them so `remaining` reads cleanly.
+      for (int i = 0; i < cfg.failureThreshold(); i++) {
+        policy.recordFailure(ctx("alice", "1.2.3.4", clock.instant()));
+      }
+      LoginAttemptDecision.LockedOut lockout =
+          (LoginAttemptDecision.LockedOut) policy.beforeAttempt(
+              ctx("alice", "1.2.3.4", clock.instant()));
+      assertEquals(expected, lockout.remaining().toMillis(),
+          "lockout level should double until maxLockout caps");
+      // Advance past the lockout to free the next level.
+      clock.advance(lockout.remaining().plus(Duration.ofMillis(10)));
+    }
+    // Beyond cap: still 64s
+    for (int i = 0; i < cfg.failureThreshold(); i++) {
+      policy.recordFailure(ctx("alice", "1.2.3.4", clock.instant()));
+    }
+    LoginAttemptDecision.LockedOut beyond =
+        (LoginAttemptDecision.LockedOut) policy.beforeAttempt(
+            ctx("alice", "1.2.3.4", clock.instant()));
+    assertEquals(64_000L, beyond.remaining().toMillis(),
+        "duration must be capped at maxLockout — kills the >= 0 boundary mutation");
+  }
+
   // ── Test fixtures ────────────────────────────────────────────
 
   static final class RecordingAudit implements SecurityAuditService {

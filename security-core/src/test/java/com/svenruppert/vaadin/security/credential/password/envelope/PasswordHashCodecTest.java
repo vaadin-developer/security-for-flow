@@ -315,4 +315,150 @@ class PasswordHashCodecTest {
     assertEquals(PasswordHashFormatVersion.CURRENT.wireValue(),
         PasswordHashFormatVersion.MAX_KNOWN_WIRE_VALUE);
   }
+
+  // ── separator-injection rejection extended ────────────────────
+
+  private static PasswordHashEnvelope withPepper(String pepperId) {
+    Map<String, String> params = new LinkedHashMap<>();
+    params.put("i", "1000");
+    return new PasswordHashEnvelope(
+        PasswordHashFormatVersion.V1, CredentialType.PASSWORD,
+        "Alg", "prov", 1, Optional.of(pepperId), params, "h");
+  }
+
+  @Test
+  @DisplayName("encode rejects pepperKeyId containing the field separator")
+  void encodeRejectsPepperFieldSeparator() {
+    assertThrows(PasswordHashFormatException.class,
+        () -> codec.encode(withPepper("pepper$injected")));
+  }
+
+  @Test
+  @DisplayName("encode rejects pepperKeyId containing the param separator")
+  void encodeRejectsPepperParamSeparator() {
+    assertThrows(PasswordHashFormatException.class,
+        () -> codec.encode(withPepper("pepper,injected")));
+  }
+
+  @Test
+  @DisplayName("encode rejects innerHash containing the field separator")
+  void encodeRejectsInnerHashFieldSeparator() {
+    Map<String, String> params = new LinkedHashMap<>();
+    params.put("i", "1000");
+    PasswordHashEnvelope bad = new PasswordHashEnvelope(
+        PasswordHashFormatVersion.V1, CredentialType.PASSWORD,
+        "Alg", "prov", 1, Optional.empty(), params,
+        "innerHash$injected");
+    assertThrows(PasswordHashFormatException.class,
+        () -> codec.encode(bad));
+  }
+
+  @Test
+  @DisplayName("encode rejects parameter KEY containing '=', '$' or ','")
+  void encodeRejectsParameterKeySeparators() {
+    Map<String, String> badEquals = new LinkedHashMap<>();
+    badEquals.put("i=evil", "1000");
+    PasswordHashEnvelope withEqualsInKey = new PasswordHashEnvelope(
+        PasswordHashFormatVersion.V1, CredentialType.PASSWORD,
+        "Alg", "prov", 1, Optional.empty(), badEquals, "h");
+    assertThrows(PasswordHashFormatException.class,
+        () -> codec.encode(withEqualsInKey));
+
+    Map<String, String> badDollar = new LinkedHashMap<>();
+    badDollar.put("i$evil", "1000");
+    PasswordHashEnvelope withDollarInKey = new PasswordHashEnvelope(
+        PasswordHashFormatVersion.V1, CredentialType.PASSWORD,
+        "Alg", "prov", 1, Optional.empty(), badDollar, "h");
+    assertThrows(PasswordHashFormatException.class,
+        () -> codec.encode(withDollarInKey));
+
+    Map<String, String> badComma = new LinkedHashMap<>();
+    badComma.put("i,evil", "1000");
+    PasswordHashEnvelope withCommaInKey = new PasswordHashEnvelope(
+        PasswordHashFormatVersion.V1, CredentialType.PASSWORD,
+        "Alg", "prov", 1, Optional.empty(), badComma, "h");
+    assertThrows(PasswordHashFormatException.class,
+        () -> codec.encode(withCommaInKey));
+  }
+
+  @Test
+  @DisplayName("encode rejects parameter KEY that STARTS with a separator (position 0)")
+  void encodeRejectsParameterKeyStartingWithSeparator() {
+    // Catches the >= 0 vs > 0 boundary mutation in rejectParameterKey.
+    for (String key : new String[]{"$evil", ",evil", "=evil"}) {
+      Map<String, String> params = new LinkedHashMap<>();
+      params.put(key, "1000");
+      PasswordHashEnvelope bad = new PasswordHashEnvelope(
+          PasswordHashFormatVersion.V1, CredentialType.PASSWORD,
+          "Alg", "prov", 1, Optional.empty(), params, "h");
+      assertThrows(PasswordHashFormatException.class,
+          () -> codec.encode(bad),
+          "must reject parameter key starting with '" + key.charAt(0) + "'");
+    }
+  }
+
+  @Test
+  @DisplayName("encode rejects parameter VALUE that STARTS with a separator (position 0)")
+  void encodeRejectsParameterValueStartingWithSeparator() {
+    for (String val : new String[]{"$evil", ",evil"}) {
+      Map<String, String> params = new LinkedHashMap<>();
+      params.put("i", val);
+      PasswordHashEnvelope bad = new PasswordHashEnvelope(
+          PasswordHashFormatVersion.V1, CredentialType.PASSWORD,
+          "Alg", "prov", 1, Optional.empty(), params, "h");
+      assertThrows(PasswordHashFormatException.class,
+          () -> codec.encode(bad),
+          "must reject parameter value starting with '" + val.charAt(0) + "'");
+    }
+  }
+
+  @Test
+  @DisplayName("encode rejects algorithm STARTING with separator (rejectSeparators boundary)")
+  void encodeRejectsAlgorithmStartingWithSeparator() {
+    Map<String, String> params = new LinkedHashMap<>();
+    params.put("i", "1000");
+    for (String alg : new String[]{"$Bad", ",Bad"}) {
+      PasswordHashEnvelope bad = new PasswordHashEnvelope(
+          PasswordHashFormatVersion.V1, CredentialType.PASSWORD,
+          alg, "prov", 1, Optional.empty(), params, "h");
+      assertThrows(PasswordHashFormatException.class,
+          () -> codec.encode(bad),
+          "must reject algorithm starting with '" + alg.charAt(0) + "'");
+    }
+  }
+
+  @Test
+  @DisplayName("encode rejects innerHash STARTING with separator")
+  void encodeRejectsInnerHashStartingWithSeparator() {
+    Map<String, String> params = new LinkedHashMap<>();
+    params.put("i", "1000");
+    PasswordHashEnvelope bad = new PasswordHashEnvelope(
+        PasswordHashFormatVersion.V1, CredentialType.PASSWORD,
+        "Alg", "prov", 1, Optional.empty(), params, "$evilHash");
+    assertThrows(PasswordHashFormatException.class,
+        () -> codec.encode(bad));
+  }
+
+  @Test
+  @DisplayName("decode rejects a parameter entry with empty key (eq = 0)")
+  void decodeRejectsEmptyKeyParameter() {
+    // A wire string with a parameter entry that has '=' at index 0
+    // exercises the eq <= 0 vs eq < 0 boundary mutation.
+    String malformed =
+        "$pwh$v=1$ct=PASSWORD$alg=Alg$prov=prov$pol=1$p==value$h=h";
+    assertThrows(PasswordHashFormatException.class,
+        () -> codec.decode(malformed));
+  }
+
+  @Test
+  @DisplayName("encode rejects parameter VALUE containing the comma separator")
+  void encodeRejectsParameterValueComma() {
+    Map<String, String> params = new LinkedHashMap<>();
+    params.put("i", "1000,evil");
+    PasswordHashEnvelope bad = new PasswordHashEnvelope(
+        PasswordHashFormatVersion.V1, CredentialType.PASSWORD,
+        "Alg", "prov", 1, Optional.empty(), params, "h");
+    assertThrows(PasswordHashFormatException.class,
+        () -> codec.encode(bad));
+  }
 }

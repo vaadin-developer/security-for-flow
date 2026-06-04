@@ -146,6 +146,20 @@ public final class SecurityServiceResolver {
     return Optional.ofNullable((AuthenticationService<T, U>) AUTHENTICATION_SERVICE_REF.get());
   }
 
+  /**
+   * Overrides the cached {@link AuthenticationService}. Primarily used by
+   * tests and by deployments that compose the authentication service from
+   * application code rather than via {@link ServiceLoader}. Pass {@code null}
+   * to clear the cache and force the next call to consult the SPI again.
+   *
+   * @param service the service to cache, or {@code null} to clear
+   * @param <T>     credentials type
+   * @param <U>     subject type
+   */
+  public static <T, U> void setAuthenticationService(AuthenticationService<T, U> service) {
+    AUTHENTICATION_SERVICE_REF.set(service);
+  }
+
   // ── AuthorizationService ───────────────────────────────────────
 
   /**
@@ -177,6 +191,19 @@ public final class SecurityServiceResolver {
    * @param <U> the subject type
    * @return the service, or empty
    */
+  /**
+   * Overrides the cached {@link AuthorizationService}. Primarily used by
+   * tests and by deployments that compose the authorization service from
+   * application code rather than via {@link ServiceLoader}. Pass {@code null}
+   * to clear the cache and force the next call to consult the SPI again.
+   *
+   * @param service the service to cache, or {@code null} to clear
+   * @param <U>     subject type
+   */
+  public static <U> void setAuthorizationService(AuthorizationService<U> service) {
+    AUTHORIZATION_SERVICE_REF.set(service);
+  }
+
   public static <U> Optional<AuthorizationService<U>> findAuthorizationService() {
     AuthorizationService<?> cached = AUTHORIZATION_SERVICE_REF.get();
     if (cached != null) {
