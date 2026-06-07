@@ -21,6 +21,7 @@ import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectory
 import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectoryProvider;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
+import com.svenruppert.vaadin.security.demo.app.security.services.DemoSecurityVersionBumper;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -127,6 +128,7 @@ public class AdminRolesView extends Composite<VerticalLayout> {
     dialog.setConfirmButtonTheme("error primary");
     dialog.addConfirmListener(e -> {
       DemoUserDirectoryProvider.directory().deleteUser(user.id());
+      DemoSecurityVersionBumper.bump(user);
       success("Deleted user " + user.name() + ".");
       refresh();
     });
@@ -223,7 +225,9 @@ public class AdminRolesView extends Composite<VerticalLayout> {
         return;
       }
       DemoUserDirectoryProvider.directory().assignRole(user.id(), role);
-      success("Granted " + role.name() + " to " + user.name() + ".");
+      DemoSecurityVersionBumper.bump(user);
+      success("Granted " + role.name() + " to " + user.name()
+          + " — their session will be re-authenticated on next navigation.");
       refresh();
     });
     assign.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SMALL);
@@ -239,7 +243,9 @@ public class AdminRolesView extends Composite<VerticalLayout> {
         return;
       }
       DemoUserDirectoryProvider.directory().revokeRole(user.id(), role);
-      success("Revoked " + role.name() + " from " + user.name() + ".");
+      DemoSecurityVersionBumper.bump(user);
+      success("Revoked " + role.name() + " from " + user.name()
+          + " — their session will be re-authenticated on next navigation.");
       refresh();
     });
     revoke.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);

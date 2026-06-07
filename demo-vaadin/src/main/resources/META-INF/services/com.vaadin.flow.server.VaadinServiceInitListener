@@ -1,1 +1,2 @@
 com.svenruppert.vaadin.security.demo.app.security.bootstrap.BootstrapServiceInitListener
+com.svenruppert.vaadin.security.demo.app.security.bootstrap.SecurityVersionInitListener
