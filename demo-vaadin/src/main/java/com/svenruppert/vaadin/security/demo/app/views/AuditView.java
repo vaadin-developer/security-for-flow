@@ -108,9 +108,11 @@ public class AuditView extends Composite<VerticalLayout> {
 
     root.add(new H1("Security audit log"));
     root.add(new Paragraph(
-        "In-memory snapshot of the framework's RingBufferAuditSink "
-            + "(default capacity 256, oldest events drop first). Visible to "
-            + "subjects with the audit:read permission."));
+        "In-memory snapshot from the V00.70 AuditEventStore SPI (this "
+            + "demo wires StoreBackedSecurityAuditService over an "
+            + "InMemoryAuditEventStore — production deployments swap in "
+            + "a persistent store with retention). Visible to subjects "
+            + "with the audit:read permission."));
 
     root.add(buildToolbar());
     root.add(grid);
