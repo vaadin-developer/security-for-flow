@@ -27,6 +27,7 @@ public enum DemoPermission {
   DEMO_EDIT("demo:edit"),
   DEMO_ADMIN("demo:admin"),
   AUDIT_READ("audit:read"),
+  AUDIT_PURGE("audit:purge"),
   ADMIN_ROLES("admin:roles"),
   ADMIN_SESSIONS("admin:sessions");
 

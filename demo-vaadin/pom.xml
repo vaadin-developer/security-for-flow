@@ -17,7 +17,7 @@
     <parent>
         <groupId>com.svenruppert</groupId>
         <artifactId>security-for-flow-parent</artifactId>
-        <version>00.70.00</version>
+        <version>00.71.00-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -65,6 +65,19 @@
             <artifactId>jackson-annotations</artifactId>
             <version>2.21</version>
         </dependency>
+        <!--
+          Annotations module shipped by security-processor's underlying
+          proxybuilder. The processor emits @GeneratedByProxyBuilder and
+          @DelegatesTo into every generated wrapper class; consumers of
+          the processor need the annotation types on their compile
+          classpath even though RetentionPolicy.RUNTIME makes them stay
+          around at runtime too.
+        -->
+        <dependency>
+            <groupId>com.svenruppert</groupId>
+            <artifactId>proxybuilder-annotations</artifactId>
+            <version>00.11.00</version>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -87,6 +100,25 @@
     <build>
         <finalName>ROOT</finalName>
         <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <!--
+                      Wire security-processor as a compile-time annotation
+                      processor. The processor expands @Secured-annotated
+                      classes into a <Type>Secured subclass that routes
+                      every guarded method through SecurityEnforcer before
+                      the super-call.
+                    -->
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>com.svenruppert</groupId>
+                            <artifactId>security-processor</artifactId>
+                            <version>${project.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>

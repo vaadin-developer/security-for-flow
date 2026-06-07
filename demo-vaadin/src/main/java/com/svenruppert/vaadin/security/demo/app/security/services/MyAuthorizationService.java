@@ -52,6 +52,7 @@ public class MyAuthorizationService
           DEMO_EDIT.permissionName(),
           DEMO_ADMIN.permissionName(),
           AUDIT_READ.permissionName(),
+          AUDIT_PURGE.permissionName(),
           ADMIN_ROLES.permissionName(),
           ADMIN_SESSIONS.permissionName()))
       .put(roleName(AuthorizationRole.Q_ADMIN), Set.of(
