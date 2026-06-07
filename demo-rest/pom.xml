@@ -17,7 +17,7 @@
   <parent>
     <groupId>com.svenruppert</groupId>
     <artifactId>security-for-flow-parent</artifactId>
-    <version>00.70.00</version>
+    <version>00.71.00-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -51,6 +51,16 @@
       <groupId>com.svenruppert</groupId>
       <artifactId>demo-rest-shared</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <!--
+      com.svenruppert:core supplies HasLogger and HttpStatus — used by
+      DemoHandlers (and the demo tests) to wire status-code constants
+      and structured logging without rolling our own enum. Version is
+      managed by the dependencies parent.
+    -->
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>

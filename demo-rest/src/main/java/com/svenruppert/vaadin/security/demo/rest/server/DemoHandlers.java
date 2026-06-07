@@ -70,6 +70,7 @@ import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionN
 import com.svenruppert.vaadin.security.ratelimiting.RateLimitDecision;
 import com.svenruppert.vaadin.security.ratelimiting.RateLimitKey;
 import com.svenruppert.vaadin.security.ratelimiting.RateLimitPolicy;
+import com.svenruppert.dependencies.core.net.HttpStatus;
 import com.svenruppert.vaadin.security.session.InMemorySecurityVersionStore;
 import com.svenruppert.vaadin.security.session.SecurityVersion;
 import com.svenruppert.vaadin.security.session.SecurityVersionKey;
@@ -382,13 +383,13 @@ public final class DemoHandlers {
   @RequiresPolicy(DemoPolicies.DOCUMENT_OWNER_OR_ADMIN)
   public void inspectOwnedDocument(RestRequest request, RestResponse response) {
     if (ownedDocumentStore == null) {
-      writeError(response, 503, "Service Unavailable");
+      writeError(response, HttpStatus.SERVICE_UNAVAILABLE);
       return;
     }
     String path = request.path();
     String prefix = com.svenruppert.vaadin.security.demo.rest.shared.DemoEndpoints.OWNED_DOCUMENT_BY_ID;
     if (!path.startsWith(prefix) || path.length() <= prefix.length()) {
-      writeError(response, 404, "Not Found");
+      writeError(response, HttpStatus.NOT_FOUND);
       return;
     }
     String id = path.substring(prefix.length());
@@ -396,18 +397,18 @@ public final class DemoHandlers {
     try {
       doc = ownedDocumentStore.findById(Long.parseLong(id));
     } catch (NumberFormatException e) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     if (doc.isEmpty()) {
-      writeError(response, 404, "Not Found");
+      writeError(response, HttpStatus.NOT_FOUND);
       return;
     }
     Map<String, Object> payload = new LinkedHashMap<>();
     payload.put("id", doc.get().id());
     payload.put("title", doc.get().title());
     payload.put("ownerId", doc.get().ownerId());
-    response.status(200);
+    response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(payload));
   }
 
@@ -468,7 +469,7 @@ public final class DemoHandlers {
       if (decision instanceof RateLimitDecision.Throttled throttled) {
         response.header("Retry-After",
             Long.toString(Math.max(1L, throttled.retryAfter().toSeconds())));
-        writeError(response, 429, "Too Many Requests");
+        writeError(response, HttpStatus.TOO_MANY_REQUESTS);
         return;
       }
     }
@@ -578,14 +579,14 @@ public final class DemoHandlers {
   @RequiresPermission("admin:roles")
   public void createApiKey(RestRequest request, RestResponse response) {
     if (apiKeyStore == null || apiKeyHasher == null) {
-      writeError(response, 503, "Service Unavailable");
+      writeError(response, HttpStatus.SERVICE_UNAVAILABLE);
       return;
     }
     Map<String, Object> body;
     try {
       body = DemoJson.decodeObject(requireBody(request));
     } catch (RuntimeException e) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     Object nameValue = body.get("name");
@@ -594,13 +595,13 @@ public final class DemoHandlers {
     if (!(nameValue instanceof String name) || name.isBlank()
         || !(subjectValue instanceof String subjectId) || subjectId.isBlank()
         || !(scopesValue instanceof List<?> rawScopes) || rawScopes.isEmpty()) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     Set<PermissionName> scopes = new LinkedHashSet<>();
     for (Object scope : rawScopes) {
       if (!(scope instanceof String s) || s.isBlank()) {
-        writeError(response, 400, "Bad Request");
+        writeError(response, HttpStatus.BAD_REQUEST);
         return;
       }
       scopes.add(new PermissionName(s));
@@ -622,7 +623,7 @@ public final class DemoHandlers {
     payload.put("subjectId", subjectId);
     payload.put("scopes", scopes.stream().map(PermissionName::value).sorted().toList());
     payload.put("createdAt", now.toString());
-    response.status(201);
+    response.status(HttpStatus.CREATED.code());
     response.body(DemoJson.encode(payload));
   }
 
@@ -635,27 +636,27 @@ public final class DemoHandlers {
   @RequiresPermission("admin:roles")
   public void revokeApiKey(RestRequest request, RestResponse response) {
     if (apiKeyStore == null) {
-      writeError(response, 503, "Service Unavailable");
+      writeError(response, HttpStatus.SERVICE_UNAVAILABLE);
       return;
     }
     Map<String, Object> body;
     try {
       body = DemoJson.decodeObject(requireBody(request));
     } catch (RuntimeException e) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     Object hashValue = body.get("keyHash");
     if (!(hashValue instanceof String keyHash) || keyHash.isBlank()) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     if (apiKeyStore.findByHash(keyHash).isEmpty()) {
-      writeError(response, 404, "Not Found");
+      writeError(response, HttpStatus.NOT_FOUND);
       return;
     }
     apiKeyStore.revoke(keyHash, Instant.now(Clock.systemUTC()));
-    response.status(200);
+    response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(Map.of("keyHash", keyHash, "revoked", true)));
   }
 
@@ -667,23 +668,23 @@ public final class DemoHandlers {
    */
   public void issueTokenPair(RestRequest request, RestResponse response) {
     if (tokenService == null) {
-      writeError(response, 503, "Service Unavailable");
+      writeError(response, HttpStatus.SERVICE_UNAVAILABLE);
       return;
     }
     Map<String, Object> body;
     try {
       body = DemoJson.decodeObject(requireBody(request));
     } catch (RuntimeException e) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     Object subjectValue = body.get("subjectId");
     if (!(subjectValue instanceof String subjectId) || subjectId.isBlank()) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     TokenService.TokenPair pair = tokenService.issue(SubjectId.of(subjectId));
-    response.status(200);
+    response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(tokenPairToJson(pair)));
   }
 
@@ -695,28 +696,28 @@ public final class DemoHandlers {
    */
   public void rotateTokenPair(RestRequest request, RestResponse response) {
     if (tokenService == null) {
-      writeError(response, 503, "Service Unavailable");
+      writeError(response, HttpStatus.SERVICE_UNAVAILABLE);
       return;
     }
     Map<String, Object> body;
     try {
       body = DemoJson.decodeObject(requireBody(request));
     } catch (RuntimeException e) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     Object refreshValue = body.get("refreshToken");
     if (!(refreshValue instanceof String refreshToken) || refreshToken.isBlank()) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     Optional<TokenService.TokenPair> rotated = tokenService.rotate(refreshToken);
     if (rotated.isEmpty()) {
       response.header("WWW-Authenticate", "TokenRotated");
-      writeError(response, 401, "Unauthorized");
+      writeError(response, HttpStatus.UNAUTHORIZED);
       return;
     }
-    response.status(200);
+    response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(tokenPairToJson(rotated.get())));
   }
 
@@ -727,23 +728,23 @@ public final class DemoHandlers {
    */
   public void revokeTokenPair(RestRequest request, RestResponse response) {
     if (tokenService == null) {
-      writeError(response, 503, "Service Unavailable");
+      writeError(response, HttpStatus.SERVICE_UNAVAILABLE);
       return;
     }
     Map<String, Object> body;
     try {
       body = DemoJson.decodeObject(requireBody(request));
     } catch (RuntimeException e) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     Object refreshValue = body.get("refreshToken");
     if (!(refreshValue instanceof String refreshToken) || refreshToken.isBlank()) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     boolean revoked = tokenService.revoke(refreshToken);
-    response.status(200);
+    response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(Map.of("revoked", revoked)));
   }
 
@@ -785,19 +786,19 @@ public final class DemoHandlers {
    */
   public void requestPasswordReset(RestRequest request, RestResponse response) {
     if (passwordResetService == null) {
-      writeError(response, 503, "Service Unavailable");
+      writeError(response, HttpStatus.SERVICE_UNAVAILABLE);
       return;
     }
     Map<String, Object> body;
     try {
       body = DemoJson.decodeObject(requireBody(request));
     } catch (RuntimeException e) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     Object subjectValue = body.get("subjectId");
     if (!(subjectValue instanceof String subjectId) || subjectId.isBlank()) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     PasswordResetService.IssuedToken issued = passwordResetService.request(
@@ -806,7 +807,7 @@ public final class DemoHandlers {
     payload.put("subjectId", subjectId);
     payload.put("token", issued.plainToken());
     payload.put("expiresAt", issued.record().expiresAt().toString());
-    response.status(200);
+    response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(payload));
   }
 
@@ -818,19 +819,19 @@ public final class DemoHandlers {
    */
   public void consumePasswordReset(RestRequest request, RestResponse response) {
     if (passwordResetService == null) {
-      writeError(response, 503, "Service Unavailable");
+      writeError(response, HttpStatus.SERVICE_UNAVAILABLE);
       return;
     }
     Map<String, Object> body;
     try {
       body = DemoJson.decodeObject(requireBody(request));
     } catch (RuntimeException e) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     Object tokenValue = body.get("token");
     if (!(tokenValue instanceof String token) || token.isBlank()) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     // First check validity — distinguishes "unknown" from "already
@@ -842,13 +843,13 @@ public final class DemoHandlers {
       // we still differentiate consume-twice via the consume call.
       Optional<PasswordResetTokenRecord> consumed = passwordResetService.consume(token);
       if (consumed.isEmpty()) {
-        writeError(response, 404, "Not Found");
+        writeError(response, HttpStatus.NOT_FOUND);
         return;
       }
       // Race — became valid then consumed between validate + consume.
       Map<String, Object> payload = new LinkedHashMap<>();
       payload.put("subjectId", consumed.get().subjectId().value());
-      response.status(200);
+      response.status(HttpStatus.OK.code());
       response.body(DemoJson.encode(payload));
       return;
     }
@@ -856,12 +857,12 @@ public final class DemoHandlers {
     if (consumed.isEmpty()) {
       // Already consumed between our validate() and our consume() —
       // surface 410 Gone so the caller can distinguish from "unknown".
-      writeError(response, 410, "Gone");
+      writeError(response, HttpStatus.GONE);
       return;
     }
     Map<String, Object> payload = new LinkedHashMap<>();
     payload.put("subjectId", consumed.get().subjectId().value());
-    response.status(200);
+    response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(payload));
   }
 
@@ -875,7 +876,7 @@ public final class DemoHandlers {
    */
   @RequiresAnyPermission({"document:read", "document:create"})
   public void inspectDocuments(RestRequest request, RestResponse response) {
-    response.status(200);
+    response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(Map.of(
         "documentCount", documents.list().size(),
         "permissions", List.of("document:read", "document:create"),
@@ -1340,6 +1341,17 @@ public final class DemoHandlers {
   private static void writeError(RestResponse response, int status, String message) {
     response.status(status);
     response.body(message);
+  }
+
+  /**
+   * Typed convenience overload — body defaults to the
+   * {@link HttpStatus#reason() RFC reason phrase}, status to
+   * {@link HttpStatus#code() the numeric code}. Preferred for new
+   * code per the {@code HttpStatus} discipline.
+   */
+  private static void writeError(RestResponse response, HttpStatus status) {
+    response.status(status.code());
+    response.body(status.reason());
   }
 
   private static String requireBody(RestRequest request) {
