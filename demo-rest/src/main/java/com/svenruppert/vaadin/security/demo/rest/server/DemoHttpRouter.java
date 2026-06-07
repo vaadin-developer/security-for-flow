@@ -127,6 +127,14 @@ public final class DemoHttpRouter implements HttpHandler {
       handlers.login(request, response);
       return;
     }
+    if (DemoEndpoints.PASSWORD_RESET_REQUEST.equals(path) && "POST".equals(method)) {
+      handlers.requestPasswordReset(request, response);
+      return;
+    }
+    if (DemoEndpoints.PASSWORD_RESET_CONSUME.equals(path) && "POST".equals(method)) {
+      handlers.consumePasswordReset(request, response);
+      return;
+    }
 
     // Phase 4c — refuse drifted sessions ahead of authentication / authorization.
     // No filter (transient demo configurations) or unbound token → pass-through.

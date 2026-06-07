@@ -16,7 +16,15 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.server;
 
+import com.svenruppert.vaadin.security.accountlifecycle.InMemoryPasswordResetTokenStore;
+import com.svenruppert.vaadin.security.accountlifecycle.LoggingNotificationSender;
+import com.svenruppert.vaadin.security.accountlifecycle.PasswordResetService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.ratelimiting.InMemoryRateLimitPolicy;
+import com.svenruppert.vaadin.security.ratelimiting.InMemoryRateLimitStore;
+import com.svenruppert.vaadin.security.ratelimiting.RateLimitPolicy;
+
+import java.time.Duration;
 import com.svenruppert.vaadin.security.logout.SubjectClearingLogoutService;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
 import com.svenruppert.vaadin.security.bootstrap.BootstrapConfiguration;
@@ -111,8 +119,32 @@ public final class DemoRestServer {
     DemoSubjectResolver resolver = new DemoSubjectResolver(tokens, mapping);
     DemoOperationRegistry registry = new DemoOperationRegistry();
     SecurityVersionStore versionStore = new InMemorySecurityVersionStore();
+    // PasswordResetService requires a *deterministic* hasher so the
+    // token-hash → record lookup actually matches. The SPI-resolved
+    // PasswordHasher (PBKDF2 / Argon2id) is salted by design and would
+    // produce a different hash every call — wrong tool for this job.
+    PasswordResetService passwordResetService = new PasswordResetService(
+        new InMemoryPasswordResetTokenStore(),
+        new Sha256TokenHasher(),
+        SecurityServiceResolver.securityAuditService(),
+        new LoggingNotificationSender());
+    // V00.70 Phase-7c per-IP login rate limiting — 200 attempts per minute.
+    // Sits ahead of the per-username brute-force window so distributed
+    // credential stuffing surfaces as 429 + Retry-After before the
+    // per-username lockout even sees the request. The threshold is
+    // deliberately high enough that the integration-test fixture (which
+    // logs in as multiple demo users from the same loopback IP within a
+    // minute) does not trip the limit; tests that need to exercise the
+    // 429 path construct a dedicated InMemoryRateLimitPolicy with a
+    // smaller limit (see DemoLoginRateLimitTest).
+    RateLimitPolicy loginRateLimit = new InMemoryRateLimitPolicy(
+        new InMemoryRateLimitStore(),
+        SecurityServiceResolver.securityAuditService(),
+        200,
+        Duration.ofMinutes(1));
     DemoHandlers handlers = new DemoHandlers(
-        users, tokens, documents, registry, resolver, loginAttemptPolicy, versionStore);
+        users, tokens, documents, registry, resolver, loginAttemptPolicy,
+        versionStore, passwordResetService, loginRateLimit);
     SecurityVersionEnforcer versionEnforcer = new SecurityVersionEnforcer(
         versionStore, SecurityServiceResolver.securityAuditService());
     RestSecurityVersionFilter versionFilter = new RestSecurityVersionFilter(

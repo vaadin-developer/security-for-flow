@@ -40,6 +40,17 @@ public final class DemoEndpoints {
   public static final String AUDIT = "/api/audit";
   public static final String BOOTSTRAP_STATUS = "/api/bootstrap/status";
   public static final String BOOTSTRAP_ADMIN = "/api/bootstrap/admin";
+  /**
+   * Password-reset request endpoint — POST {"subjectId":"…"}, returns 200
+   * with the issued plain token (demo-only; production never echoes the
+   * token, the {@code SecurityNotificationSender} delivers it instead).
+   */
+  public static final String PASSWORD_RESET_REQUEST = "/api/password-reset/request";
+  /**
+   * Password-reset consume endpoint — POST {"token":"…"}, returns 200 on
+   * success / 404 on unknown / 410 on already-consumed or expired.
+   */
+  public static final String PASSWORD_RESET_CONSUME = "/api/password-reset/consume";
 
   private DemoEndpoints() {
   }

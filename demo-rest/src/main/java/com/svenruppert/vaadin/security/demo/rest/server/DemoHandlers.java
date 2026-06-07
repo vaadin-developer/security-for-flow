@@ -57,10 +57,17 @@ import com.svenruppert.vaadin.security.rest.BodyRestRequest;
 import com.svenruppert.vaadin.security.rest.RestHeaders;
 import com.svenruppert.vaadin.security.rest.RestRequest;
 import com.svenruppert.vaadin.security.rest.RestResponse;
+import com.svenruppert.vaadin.security.accountlifecycle.PasswordResetService;
+import com.svenruppert.vaadin.security.accountlifecycle.PasswordResetTokenRecord;
+import com.svenruppert.vaadin.security.ratelimiting.RateLimitDecision;
+import com.svenruppert.vaadin.security.ratelimiting.RateLimitKey;
+import com.svenruppert.vaadin.security.ratelimiting.RateLimitPolicy;
 import com.svenruppert.vaadin.security.session.InMemorySecurityVersionStore;
 import com.svenruppert.vaadin.security.session.SecurityVersion;
 import com.svenruppert.vaadin.security.session.SecurityVersionKey;
 import com.svenruppert.vaadin.security.session.SecurityVersionStore;
+
+import java.time.Duration;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -92,6 +99,8 @@ public final class DemoHandlers {
   private final CompromisedPasswordChecker compromisedChecker;
   private final CompromisedPasswordPolicy compromisedPolicy;
   private final SecurityVersionStore securityVersionStore;
+  private final PasswordResetService passwordResetService;
+  private final RateLimitPolicy loginRateLimit;
 
   public DemoHandlers(
       DemoUserStore userStore,
@@ -133,11 +142,59 @@ public final class DemoHandlers {
       LoginAttemptPolicy loginAttemptPolicy,
       SecurityVersionStore securityVersionStore) {
     this(userStore, tokenStore, documents, registry, subjectResolver,
+        loginAttemptPolicy, securityVersionStore, null);
+  }
+
+  /**
+   * Wires {@code DemoHandlers} with both the shared
+   * {@link SecurityVersionStore} <em>and</em> the Phase-7a
+   * {@link PasswordResetService}. Pass {@code null} for
+   * {@code passwordResetService} to leave the password-reset
+   * endpoints disabled (they will return 503).
+   */
+  public DemoHandlers(
+      DemoUserStore userStore,
+      DemoTokenStore tokenStore,
+      DemoDocumentStore documents,
+      DemoOperationRegistry registry,
+      DemoSubjectResolver subjectResolver,
+      LoginAttemptPolicy loginAttemptPolicy,
+      SecurityVersionStore securityVersionStore,
+      PasswordResetService passwordResetService) {
+    this(userStore, tokenStore, documents, registry, subjectResolver,
         loginAttemptPolicy,
         defaultAbuseDetection(),
         defaultCompromisedChecker(),
         CompromisedPasswordPolicy.defaults(),
-        securityVersionStore);
+        securityVersionStore,
+        passwordResetService,
+        null);
+  }
+
+  /**
+   * Full constructor including the V00.70 Phase-7c per-IP login
+   * {@link RateLimitPolicy}. Pass {@code null} to leave the
+   * additional rate-limit layer off (the per-username
+   * {@link LoginAttemptPolicy} still applies).
+   */
+  public DemoHandlers(
+      DemoUserStore userStore,
+      DemoTokenStore tokenStore,
+      DemoDocumentStore documents,
+      DemoOperationRegistry registry,
+      DemoSubjectResolver subjectResolver,
+      LoginAttemptPolicy loginAttemptPolicy,
+      SecurityVersionStore securityVersionStore,
+      PasswordResetService passwordResetService,
+      RateLimitPolicy loginRateLimit) {
+    this(userStore, tokenStore, documents, registry, subjectResolver,
+        loginAttemptPolicy,
+        defaultAbuseDetection(),
+        defaultCompromisedChecker(),
+        CompromisedPasswordPolicy.defaults(),
+        securityVersionStore,
+        passwordResetService,
+        loginRateLimit);
   }
 
   public DemoHandlers(
@@ -166,6 +223,41 @@ public final class DemoHandlers {
       CompromisedPasswordChecker compromisedChecker,
       CompromisedPasswordPolicy compromisedPolicy,
       SecurityVersionStore securityVersionStore) {
+    this(userStore, tokenStore, documents, registry, subjectResolver,
+        loginAttemptPolicy, abuseDetection, compromisedChecker,
+        compromisedPolicy, securityVersionStore, null);
+  }
+
+  public DemoHandlers(
+      DemoUserStore userStore,
+      DemoTokenStore tokenStore,
+      DemoDocumentStore documents,
+      DemoOperationRegistry registry,
+      DemoSubjectResolver subjectResolver,
+      LoginAttemptPolicy loginAttemptPolicy,
+      AbuseDetectionService abuseDetection,
+      CompromisedPasswordChecker compromisedChecker,
+      CompromisedPasswordPolicy compromisedPolicy,
+      SecurityVersionStore securityVersionStore,
+      PasswordResetService passwordResetService) {
+    this(userStore, tokenStore, documents, registry, subjectResolver,
+        loginAttemptPolicy, abuseDetection, compromisedChecker,
+        compromisedPolicy, securityVersionStore, passwordResetService, null);
+  }
+
+  public DemoHandlers(
+      DemoUserStore userStore,
+      DemoTokenStore tokenStore,
+      DemoDocumentStore documents,
+      DemoOperationRegistry registry,
+      DemoSubjectResolver subjectResolver,
+      LoginAttemptPolicy loginAttemptPolicy,
+      AbuseDetectionService abuseDetection,
+      CompromisedPasswordChecker compromisedChecker,
+      CompromisedPasswordPolicy compromisedPolicy,
+      SecurityVersionStore securityVersionStore,
+      PasswordResetService passwordResetService,
+      RateLimitPolicy loginRateLimit) {
     this.userStore = userStore;
     this.tokenStore = tokenStore;
     this.documents = documents;
@@ -177,6 +269,8 @@ public final class DemoHandlers {
     this.compromisedPolicy = Objects.requireNonNull(compromisedPolicy, "compromisedPolicy");
     this.securityVersionStore = Objects.requireNonNull(securityVersionStore,
         "securityVersionStore");
+    this.passwordResetService = passwordResetService;
+    this.loginRateLimit = loginRateLimit;
   }
 
   /** Test seam — exposes the wired store so integration tests can bump. */
@@ -229,6 +323,23 @@ public final class DemoHandlers {
     }
 
     String clientAddress = RestHeaders.first(request, REMOTE_ADDR_HEADER).orElse(null);
+
+    // V00.70 Phase-7c per-IP rate limit — refuses with 429 + Retry-After
+    // before the per-username brute-force policy. Configured for an order
+    // of magnitude more attempts than the brute-force window: it catches
+    // distributed credential stuffing rather than single-user lockouts.
+    if (loginRateLimit != null) {
+      RateLimitKey key = new RateLimitKey(TenantId.DEFAULT,
+          "login:ip:" + (clientAddress == null ? "unknown" : clientAddress));
+      RateLimitDecision decision = loginRateLimit.tryAcquire(key);
+      if (decision instanceof RateLimitDecision.Throttled throttled) {
+        response.header("Retry-After",
+            Long.toString(Math.max(1L, throttled.retryAfter().toSeconds())));
+        writeError(response, 429, "Too Many Requests");
+        return;
+      }
+    }
+
     LoginAttemptContext attempt = LoginAttemptContext.now(username, clientAddress, null);
     AbuseAttemptContext abuseContext = new AbuseAttemptContext(
         AbuseAttemptType.LOGIN,
@@ -319,6 +430,101 @@ public final class DemoHandlers {
         .logout(SubjectId.of(u.username()), LogoutScope.CurrentSession));
     response.status(200);
     response.body(DemoJson.encode(Map.of("status", "logged-out")));
+  }
+
+  /**
+   * V00.70 Phase-7a account-lifecycle — request a single-use
+   * password-reset token for a known subject. Demo-only: returns
+   * the token in the JSON response so integration tests can pick
+   * it up; production wiring would never echo the token and rely
+   * on {@link com.svenruppert.vaadin.security.accountlifecycle.SecurityNotificationSender}
+   * to deliver it out-of-band.
+   * <p>
+   * Unauthenticated endpoint (anyone can request a reset for any
+   * subject id), but the underlying {@link PasswordResetService}
+   * publishes a {@code PasswordResetRequested} audit event so
+   * operators can detect enumeration / abuse.
+   */
+  public void requestPasswordReset(RestRequest request, RestResponse response) {
+    if (passwordResetService == null) {
+      writeError(response, 503, "Service Unavailable");
+      return;
+    }
+    Map<String, Object> body;
+    try {
+      body = DemoJson.decodeObject(requireBody(request));
+    } catch (RuntimeException e) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    Object subjectValue = body.get("subjectId");
+    if (!(subjectValue instanceof String subjectId) || subjectId.isBlank()) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    PasswordResetService.IssuedToken issued = passwordResetService.request(
+        SubjectId.of(subjectId), Duration.ofMinutes(15));
+    Map<String, Object> payload = new LinkedHashMap<>();
+    payload.put("subjectId", subjectId);
+    payload.put("token", issued.plainToken());
+    payload.put("expiresAt", issued.record().expiresAt().toString());
+    response.status(200);
+    response.body(DemoJson.encode(payload));
+  }
+
+  /**
+   * V00.70 Phase-7a account-lifecycle — consume a previously
+   * issued password-reset token. Returns 200 with the resolved
+   * subjectId on success, 404 when the token is unknown / expired
+   * / wrong tenant, 410 when the token has already been consumed.
+   */
+  public void consumePasswordReset(RestRequest request, RestResponse response) {
+    if (passwordResetService == null) {
+      writeError(response, 503, "Service Unavailable");
+      return;
+    }
+    Map<String, Object> body;
+    try {
+      body = DemoJson.decodeObject(requireBody(request));
+    } catch (RuntimeException e) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    Object tokenValue = body.get("token");
+    if (!(tokenValue instanceof String token) || token.isBlank()) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    // First check validity — distinguishes "unknown" from "already
+    // consumed" since consume() is idempotent on the unknown branch.
+    Optional<PasswordResetTokenRecord> live = passwordResetService.validate(token);
+    if (live.isEmpty()) {
+      // Could be unknown, expired, or already consumed. The store
+      // intentionally hides which to deny an enumeration oracle —
+      // we still differentiate consume-twice via the consume call.
+      Optional<PasswordResetTokenRecord> consumed = passwordResetService.consume(token);
+      if (consumed.isEmpty()) {
+        writeError(response, 404, "Not Found");
+        return;
+      }
+      // Race — became valid then consumed between validate + consume.
+      Map<String, Object> payload = new LinkedHashMap<>();
+      payload.put("subjectId", consumed.get().subjectId().value());
+      response.status(200);
+      response.body(DemoJson.encode(payload));
+      return;
+    }
+    Optional<PasswordResetTokenRecord> consumed = passwordResetService.consume(token);
+    if (consumed.isEmpty()) {
+      // Already consumed between our validate() and our consume() —
+      // surface 410 Gone so the caller can distinguish from "unknown".
+      writeError(response, 410, "Gone");
+      return;
+    }
+    Map<String, Object> payload = new LinkedHashMap<>();
+    payload.put("subjectId", consumed.get().subjectId().value());
+    response.status(200);
+    response.body(DemoJson.encode(payload));
   }
 
   /**
