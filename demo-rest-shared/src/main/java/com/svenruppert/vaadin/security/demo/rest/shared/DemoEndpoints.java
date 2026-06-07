@@ -26,6 +26,13 @@ public final class DemoEndpoints {
   public static final String OPERATIONS = "/api/operations";
   public static final String DOCUMENTS = "/api/documents";
   public static final String DOCUMENT_BY_ID = "/api/documents/";
+  /**
+   * Documents inspector — accessible by any subject with either
+   * {@code document:read} <em>or</em> {@code document:create}.
+   * Demonstrates the {@code @RequiresAnyPermission} OR-semantics
+   * evaluator.
+   */
+  public static final String DOCUMENTS_INSPECT = "/api/documents/inspect";
   public static final String ADMIN_STATUS = "/api/admin/status";
   public static final String ADMIN_USERS = "/api/admin/users";
   /** Single-user resource: {@code /api/admin/users/{username}}. PUT body {"role":"…"}. */
