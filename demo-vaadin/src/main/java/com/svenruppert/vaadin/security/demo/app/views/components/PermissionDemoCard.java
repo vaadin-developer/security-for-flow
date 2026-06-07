@@ -21,6 +21,9 @@ import com.svenruppert.vaadin.security.action.ActionPermission;
 import com.svenruppert.vaadin.security.authorization.api.AccessDeniedException;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
+import com.svenruppert.vaadin.security.components.SecuredButton;
+import com.svenruppert.vaadin.security.components.SecuredVisibility.Requirement;
+import com.svenruppert.vaadin.security.components.SecuredVisibilityMode;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.demo.app.security.permissions.DemoPermission;
 import com.vaadin.flow.component.Composite;
@@ -74,6 +77,16 @@ public class PermissionDemoCard extends Composite<VerticalLayout> {
             + "the action. That call is the actual protection boundary; it "
             + "emits an ACTION_DENIED audit event on failure."));
     root.add(buildEnforcementRow());
+
+    root.add(new H4("Pattern C — Phase-8a SecuredButton (declarative)"));
+    root.add(new Paragraph(
+        "Same UX adaptation as Pattern A, but expressed declaratively via "
+            + "SecuredButton + SecuredVisibility.Requirement. The framework "
+            + "looks up the current subject's permissions through "
+            + "SecurityServiceResolver — no manual isAllowed plumbing per "
+            + "button. DISABLE mode keeps the affordance visible (greyed "
+            + "out) to teach the user about the missing permission."));
+    root.add(buildSecuredButtonRow());
   }
 
   private HorizontalLayout buildVisibilityRow() {
@@ -95,6 +108,25 @@ public class PermissionDemoCard extends Composite<VerticalLayout> {
     row.add(buildGuardedButton(DemoPermission.DEMO_EDIT, "Edit something"));
     row.add(buildGuardedButton(DemoPermission.DEMO_ADMIN, "Admin operation"));
     return row;
+  }
+
+  private HorizontalLayout buildSecuredButtonRow() {
+    HorizontalLayout row = new HorizontalLayout();
+    row.setSpacing(true);
+    row.add(buildSecuredButton(DemoPermission.DEMO_VIEW, "View something"));
+    row.add(buildSecuredButton(DemoPermission.DEMO_EDIT, "Edit something"));
+    row.add(buildSecuredButton(DemoPermission.DEMO_ADMIN, "Admin operation"));
+    return row;
+  }
+
+  private static SecuredButton buildSecuredButton(DemoPermission permission, String label) {
+    SecuredButton button = new SecuredButton(
+        label + " (" + permission.permissionName().value() + ")",
+        Requirement.permission(permission.permissionName()),
+        SecuredVisibilityMode.DISABLE);
+    button.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SMALL);
+    button.addClickListener(event -> success(permission.actionPermission()));
+    return button;
   }
 
   private static void addIfAllowed(HorizontalLayout row, DemoPermission permission, String label) {

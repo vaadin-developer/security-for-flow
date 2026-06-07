@@ -27,7 +27,8 @@ public enum DemoPermission {
   DEMO_EDIT("demo:edit"),
   DEMO_ADMIN("demo:admin"),
   AUDIT_READ("audit:read"),
-  ADMIN_ROLES("admin:roles");
+  ADMIN_ROLES("admin:roles"),
+  ADMIN_SESSIONS("admin:sessions");
 
   private final PermissionName permissionName;
   private final ActionPermission actionPermission;

@@ -17,11 +17,13 @@
 package com.svenruppert.vaadin.security.demo.app.browserless;
 
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.demo.app.security.bootstrap.BootstrapWiring;
 import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectoryProvider;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
 import com.svenruppert.vaadin.security.demo.app.views.AdminRolesView;
+import com.svenruppert.vaadin.security.demo.app.views.AdminSessionsView;
 import com.svenruppert.vaadin.security.demo.app.views.AdminView;
 import com.svenruppert.vaadin.security.demo.app.views.AuditView;
 import com.svenruppert.vaadin.security.demo.app.views.NerdView;
@@ -47,15 +49,26 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisplayName("ViewNavigationCard — five RouterLinks + layout")
+@DisplayName("ViewNavigationCard — RouterLinks + Phase-8a SecuredRouterLinks + layout")
 class ViewNavigationCardBrowserlessTest extends BrowserlessTest {
 
-  private static final Map<String, Class<?>> EXPECTED_LINKS = Map.of(
+  /** Plain {@link RouterLink}s rendered by the first row of the card. */
+  private static final Map<String, Class<?>> EXPECTED_PLAIN_LINKS = Map.of(
       "/admin (ADMIN)", AdminView.class,
       "/admin/roles (admin:roles)", AdminRolesView.class,
       "/nerd (ADMIN, NERD)", NerdView.class,
       "/audit (audit:read)", AuditView.class,
       "/public (open)", PublicView.class);
+
+  /**
+   * SecuredRouterLinks rendered by the Phase-8a row of the card. They
+   * are subclasses of {@link RouterLink} and therefore counted in any
+   * generic {@code $view(RouterLink.class).all()} query.
+   */
+  private static final Map<String, Class<?>> EXPECTED_SECURED_LINKS = Map.of(
+      "/admin/roles (HIDE)", AdminRolesView.class,
+      "/admin/sessions (HIDE)", AdminSessionsView.class,
+      "/audit (DISABLE)", AuditView.class);
 
   /**
    * BrowserlessTest's superclass annotates {@code initVaadinEnvironment()}
@@ -112,41 +125,81 @@ class ViewNavigationCardBrowserlessTest extends BrowserlessTest {
   }
 
   @Test
-  @DisplayName("The five RouterLinks point to the expected standalone views")
+  @DisplayName("RouterLinks point to the expected plain + Phase-8a targets")
   void linksMatchExpectedTargets() {
+    // Bind the admin subject before navigation so every SecuredRouterLink
+    // resolves to "allowed" — HIDE mode keeps the link in the layout,
+    // DISABLE mode leaves it enabled. Without a subject, the two HIDE
+    // links disappear from the DOM. See the dedicated guard test below.
+    SubjectStores.subjectStore().setCurrentSubject(adminUser(), MyUser.class);
+
     navigate(ViewNavigationCardFixture.class);
 
+    int expectedTotal = EXPECTED_PLAIN_LINKS.size() + EXPECTED_SECURED_LINKS.size();
     List<RouterLink> links = $view(RouterLink.class).all();
-    assertEquals(EXPECTED_LINKS.size(), links.size(),
-        "card must render exactly " + EXPECTED_LINKS.size() + " RouterLinks; got: " + links.size());
+    assertEquals(expectedTotal, links.size(),
+        "card must render " + expectedTotal + " RouterLinks (5 plain + 3 Phase-8a); got: " + links.size());
 
-    for (RouterLink link : links) {
-      Class<?> expected = EXPECTED_LINKS.get(link.getText());
-      assertTrue(expected != null,
-          "unexpected RouterLink text: '" + link.getText() + "'");
-    }
-    // every expected label is present
     List<String> texts = links.stream().map(RouterLink::getText).toList();
-    for (String expectedLabel : EXPECTED_LINKS.keySet()) {
+    for (String expectedLabel : EXPECTED_PLAIN_LINKS.keySet()) {
       assertTrue(texts.contains(expectedLabel),
-          "missing RouterLink labelled '" + expectedLabel + "'; got: " + texts);
+          "missing plain RouterLink labelled '" + expectedLabel + "'; got: " + texts);
+    }
+    for (String expectedLabel : EXPECTED_SECURED_LINKS.keySet()) {
+      assertTrue(texts.contains(expectedLabel),
+          "missing SecuredRouterLink labelled '" + expectedLabel + "'; got: " + texts);
     }
   }
 
   @Test
-  @DisplayName("RouterLinks live inside a HorizontalLayout that calls setSpacing(true)")
+  @DisplayName("Without a current subject the HIDE-mode SecuredRouterLinks disappear")
+  void hideModeRemovesLinksForAnonymous() {
+    // No setCurrentSubject(...) — anonymous viewer.
+    navigate(ViewNavigationCardFixture.class);
+
+    List<RouterLink> links = $view(RouterLink.class).all();
+    List<String> texts = links.stream().map(RouterLink::getText).toList();
+
+    // Plain RouterLinks always render — view-level guard is server-side.
+    for (String expectedLabel : EXPECTED_PLAIN_LINKS.keySet()) {
+      assertTrue(texts.contains(expectedLabel),
+          "plain RouterLink '" + expectedLabel + "' must render regardless of subject");
+    }
+    // HIDE-mode SecuredRouterLinks must be gone.
+    assertFalse(texts.contains("/admin/roles (HIDE)"),
+        "HIDE-mode SecuredRouterLink must disappear when subject lacks permission");
+    assertFalse(texts.contains("/admin/sessions (HIDE)"),
+        "HIDE-mode SecuredRouterLink must disappear when subject lacks permission");
+    // DISABLE-mode SecuredRouterLink stays in the layout (just disabled).
+    assertTrue(texts.contains("/audit (DISABLE)"),
+        "DISABLE-mode SecuredRouterLink must stay rendered even without permission");
+  }
+
+  private static MyUser adminUser() {
+    return new MyUser(1L, "Admin",
+        EnumSet.of(AuthorizationRole.ADMIN, AuthorizationRole.USER));
+  }
+
+  @Test
+  @DisplayName("Plain RouterLinks live inside the first spaced HorizontalLayout")
   void linksRowIsSpaced() {
     navigate(ViewNavigationCardFixture.class);
 
+    // Filter on the *exact* RouterLink class so the SecuredRouterLink
+    // row (which extends RouterLink) is excluded.
     HorizontalLayout row = $view(HorizontalLayout.class).all().stream()
-        .filter(l -> l.getChildren().anyMatch(RouterLink.class::isInstance))
+        .filter(l -> l.getChildren()
+            .anyMatch(c -> c.getClass() == RouterLink.class))
         .findFirst()
-        .orElseThrow(() -> new AssertionError("no HorizontalLayout carrying RouterLinks"));
+        .orElseThrow(() -> new AssertionError(
+            "no HorizontalLayout carrying plain RouterLinks"));
     assertTrue(row.isSpacing(),
-        "the RouterLink row must call setSpacing(true)");
-    long linkCount = row.getChildren().filter(RouterLink.class::isInstance).count();
-    assertEquals(EXPECTED_LINKS.size(), linkCount,
-        "all RouterLinks must be added to the same HorizontalLayout");
+        "the plain-RouterLink row must call setSpacing(true)");
+    long linkCount = row.getChildren()
+        .filter(c -> c.getClass() == RouterLink.class)
+        .count();
+    assertEquals(EXPECTED_PLAIN_LINKS.size(), linkCount,
+        "all plain RouterLinks must be added to the same HorizontalLayout");
   }
 
   private static void resetBootstrapWiringSingleton() throws Exception {

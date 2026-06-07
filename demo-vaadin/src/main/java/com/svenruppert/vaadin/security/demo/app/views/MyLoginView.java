@@ -17,10 +17,17 @@
 package com.svenruppert.vaadin.security.demo.app.views;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
+import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.vaadin.security.demo.app.security.bootstrap.BootstrapWiring;
+import com.svenruppert.vaadin.security.demo.app.security.services.DemoSessionStoreProvider;
+import com.svenruppert.vaadin.security.logout.SubjectId;
+import com.svenruppert.vaadin.security.session.SecurityVersion;
+import com.svenruppert.vaadin.security.session.SessionId;
+import com.svenruppert.vaadin.security.session.SessionRecord;
+import com.svenruppert.vaadin.security.session.SessionStatus;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
@@ -29,6 +36,8 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinRequest;
+import com.vaadin.flow.server.VaadinSession;
+import com.vaadin.flow.server.WrappedSession;
 import com.svenruppert.vaadin.security.demo.app.security.model.Credentials;
 import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectoryProvider;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
@@ -36,6 +45,9 @@ import com.svenruppert.vaadin.security.authorization.LoginView;
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
+
+import java.time.Clock;
+import java.time.Instant;
 
 import static com.svenruppert.vaadin.security.demo.app.views.MyLoginView.NAV;
 
@@ -153,8 +165,44 @@ public class MyLoginView
     final boolean permitted = authenticationService.checkCredentials(credentials);
     if (permitted) {
       DemoUserDirectoryProvider.directory().findByCredentials(credentials)
-          .ifPresent(user -> SubjectStores.subjectStore().setCurrentSubject(user, MyUser.class));
+          .ifPresent(user -> {
+            SubjectStores.subjectStore().setCurrentSubject(user, MyUser.class);
+            recordSession(user);
+          });
     }
     return permitted;
+  }
+
+  /**
+   * Persists a {@link SessionRecord} for {@code user} into the demo's
+   * {@link DemoSessionStoreProvider#sessionStore() SessionStore} so the
+   * Phase-8a {@code SessionManagementView} renders a real inventory
+   * row. Best-effort: missing Vaadin session, missing session id, or
+   * any other failure is swallowed — recording sessions for the
+   * admin UI must never block the login flow.
+   */
+  private static void recordSession(MyUser user) {
+    try {
+      VaadinSession vaadin = VaadinSession.getCurrent();
+      if (vaadin == null) {
+        return;
+      }
+      WrappedSession wrapped = vaadin.getSession();
+      String sessionId = wrapped == null ? null : wrapped.getId();
+      if (sessionId == null) {
+        return;
+      }
+      Instant now = Instant.now(Clock.systemUTC());
+      DemoSessionStoreProvider.sessionStore().save(new SessionRecord(
+          SessionId.of(sessionId),
+          SubjectId.of(user.id().toString()),
+          TenantId.DEFAULT,
+          now,
+          now,
+          SecurityVersion.INITIAL,
+          SessionStatus.ACTIVE));
+    } catch (RuntimeException ignored) {
+      // session bookkeeping must not block login
+    }
   }
 }

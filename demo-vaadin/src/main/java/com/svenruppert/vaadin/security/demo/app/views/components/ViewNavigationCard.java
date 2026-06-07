@@ -16,13 +16,19 @@
  */
 package com.svenruppert.vaadin.security.demo.app.views.components;
 
+import com.svenruppert.vaadin.security.components.SecuredRouterLink;
+import com.svenruppert.vaadin.security.components.SecuredVisibility.Requirement;
+import com.svenruppert.vaadin.security.components.SecuredVisibilityMode;
+import com.svenruppert.vaadin.security.demo.app.security.permissions.DemoPermission;
 import com.svenruppert.vaadin.security.demo.app.views.AdminRolesView;
+import com.svenruppert.vaadin.security.demo.app.views.AdminSessionsView;
 import com.svenruppert.vaadin.security.demo.app.views.AdminView;
 import com.svenruppert.vaadin.security.demo.app.views.AuditView;
 import com.svenruppert.vaadin.security.demo.app.views.NerdView;
 import com.svenruppert.vaadin.security.demo.app.views.PublicView;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -57,5 +63,26 @@ public class ViewNavigationCard extends Composite<VerticalLayout> {
     links.add(new RouterLink("/audit (audit:read)", AuditView.class));
     links.add(new RouterLink("/public (open)", PublicView.class));
     root.add(links);
+
+    root.add(new H4("Phase-8a — SecuredRouterLink (UX adaptation)"));
+    root.add(new Paragraph(
+        "Same destinations rendered through SecuredRouterLink. Links that "
+            + "the current subject cannot reach are HIDE-d completely (gone "
+            + "from the layout) or DISABLE-d (rendered greyed out). The "
+            + "framework still enforces the view-level guard server-side — "
+            + "this is purely a UX layer on top."));
+    HorizontalLayout securedLinks = new HorizontalLayout();
+    securedLinks.setSpacing(true);
+    securedLinks.add(new SecuredRouterLink(
+        "/admin/roles (HIDE)", AdminRolesView.class,
+        Requirement.permission(DemoPermission.ADMIN_ROLES.permissionName())));
+    securedLinks.add(new SecuredRouterLink(
+        "/admin/sessions (HIDE)", AdminSessionsView.class,
+        Requirement.permission(DemoPermission.ADMIN_SESSIONS.permissionName())));
+    securedLinks.add(new SecuredRouterLink(
+        "/audit (DISABLE)", AuditView.class,
+        Requirement.permission(DemoPermission.AUDIT_READ.permissionName()),
+        SecuredVisibilityMode.DISABLE));
+    root.add(securedLinks);
   }
 }
