@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.util.Map;
 
+import static com.svenruppert.dependencies.core.net.HttpStatus.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -66,7 +67,7 @@ class DemoInspectDocumentsTest {
     String token = login("viewer", "viewer");
     HttpResponse<String> response = client.call(
         "GET", DemoEndpoints.DOCUMENTS_INSPECT, token, null);
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
     Map<String, Object> payload = DemoJson.decodeObject(response.body());
     assertEquals("ANY", payload.get("semantics"),
         "inspector must report its evaluator semantics");
@@ -79,7 +80,7 @@ class DemoInspectDocumentsTest {
     String token = login("editor", "editor");
     HttpResponse<String> response = client.call(
         "GET", DemoEndpoints.DOCUMENTS_INSPECT, token, null);
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
   }
 
   @Test
@@ -87,14 +88,14 @@ class DemoInspectDocumentsTest {
   void unauthenticatedRefused() throws IOException, InterruptedException {
     HttpResponse<String> response = client.call(
         "GET", DemoEndpoints.DOCUMENTS_INSPECT, null, null);
-    assertEquals(401, response.statusCode());
+    assertEquals(UNAUTHORIZED.code(), response.statusCode());
     assertEquals("Unauthorized", response.body());
   }
 
   private String login(String username, String password)
       throws IOException, InterruptedException {
     HttpResponse<String> response = client.login(username, password);
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
     return String.valueOf(DemoJson.decodeObject(response.body()).get("token"));
   }
 }

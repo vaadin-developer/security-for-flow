@@ -37,6 +37,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Map;
 
+import static com.svenruppert.dependencies.core.net.HttpStatus.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -81,13 +82,13 @@ class DemoBruteForceTest {
 
     for (int i = 0; i < FAILURE_THRESHOLD; i++) {
       HttpResponse<String> response = postLogin(base, "admin", "wrong");
-      assertEquals(401, response.statusCode(),
+      assertEquals(UNAUTHORIZED.code(), response.statusCode(),
           "every wrong-password attempt before lockout must return 401");
     }
 
     // Even with the correct password, the next attempt is throttled
     HttpResponse<String> locked = postLogin(base, "admin", "admin");
-    assertEquals(429, locked.statusCode(),
+    assertEquals(TOO_MANY_REQUESTS.code(), locked.statusCode(),
         "after the threshold the next attempt must be locked out");
     assertEquals("Too Many Requests", locked.body());
   }
@@ -99,15 +100,15 @@ class DemoBruteForceTest {
 
     // 1 fewer failure than threshold so the lockout is not yet reached
     for (int i = 0; i < FAILURE_THRESHOLD - 1; i++) {
-      assertEquals(401, postLogin(base, "admin", "wrong").statusCode());
+      assertEquals(UNAUTHORIZED.code(), postLogin(base, "admin", "wrong").statusCode());
     }
     // valid login → resets
     HttpResponse<String> ok = postLogin(base, "admin", "admin");
-    assertEquals(200, ok.statusCode());
+    assertEquals(OK.code(), ok.statusCode());
 
     // After reset we get the full quota of failures back
     for (int i = 0; i < FAILURE_THRESHOLD - 1; i++) {
-      assertEquals(401, postLogin(base, "admin", "wrong").statusCode(),
+      assertEquals(UNAUTHORIZED.code(), postLogin(base, "admin", "wrong").statusCode(),
           "counter must have reset after the successful login");
     }
   }
@@ -118,7 +119,7 @@ class DemoBruteForceTest {
     // Plain integration smoke — login still succeeds against the real server
     String base = "http://localhost:" + server.port();
     HttpResponse<String> ok = postLogin(base, "viewer", "viewer");
-    assertEquals(200, ok.statusCode());
+    assertEquals(OK.code(), ok.statusCode());
     assertNotNull(DemoJson.decodeObject(ok.body()).get("token"));
   }
 

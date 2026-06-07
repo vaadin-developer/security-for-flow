@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.util.Map;
 
+import static com.svenruppert.dependencies.core.net.HttpStatus.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -72,7 +73,7 @@ class DemoPolicyDocumentOwnerOrAdminTest {
 
     HttpResponse<String> response = client.call(
         "GET", DemoEndpoints.OWNED_DOCUMENT_BY_ID + "1", adminToken, null);
-    assertEquals(200, response.statusCode(),
+    assertEquals(OK.code(), response.statusCode(),
         "admin must reach the editor-owned document");
     Map<String, Object> payload = DemoJson.decodeObject(response.body());
     assertEquals("editor", payload.get("ownerId"));
@@ -85,7 +86,7 @@ class DemoPolicyDocumentOwnerOrAdminTest {
 
     HttpResponse<String> response = client.call(
         "GET", DemoEndpoints.OWNED_DOCUMENT_BY_ID + "1", editorToken, null);
-    assertEquals(200, response.statusCode(),
+    assertEquals(OK.code(), response.statusCode(),
         "editor must reach their own document (id=1, ownerId=editor)");
     Map<String, Object> payload = DemoJson.decodeObject(response.body());
     assertEquals("editor", payload.get("ownerId"));
@@ -98,7 +99,7 @@ class DemoPolicyDocumentOwnerOrAdminTest {
 
     HttpResponse<String> response = client.call(
         "GET", DemoEndpoints.OWNED_DOCUMENT_BY_ID + "2", editorToken, null);
-    assertEquals(403, response.statusCode(),
+    assertEquals(FORBIDDEN.code(), response.statusCode(),
         "editor must NOT reach the viewer-owned document (id=2, ownerId=viewer)");
   }
 
@@ -109,7 +110,7 @@ class DemoPolicyDocumentOwnerOrAdminTest {
 
     HttpResponse<String> response = client.call(
         "GET", DemoEndpoints.OWNED_DOCUMENT_BY_ID + "2", viewerToken, null);
-    assertEquals(200, response.statusCode(),
+    assertEquals(OK.code(), response.statusCode(),
         "viewer must reach their own document (id=2, ownerId=viewer)");
   }
 
@@ -120,7 +121,7 @@ class DemoPolicyDocumentOwnerOrAdminTest {
 
     HttpResponse<String> response = client.call(
         "GET", DemoEndpoints.OWNED_DOCUMENT_BY_ID + "3", viewerToken, null);
-    assertEquals(403, response.statusCode(),
+    assertEquals(FORBIDDEN.code(), response.statusCode(),
         "viewer must NOT reach the admin-owned document (id=3)");
   }
 
@@ -134,13 +135,13 @@ class DemoPolicyDocumentOwnerOrAdminTest {
     // Unauthenticated, so the perimeter response is 403.
     HttpResponse<String> response = client.call(
         "GET", DemoEndpoints.OWNED_DOCUMENT_BY_ID + "1", null, null);
-    assertEquals(403, response.statusCode());
+    assertEquals(FORBIDDEN.code(), response.statusCode());
   }
 
   private String login(String username, String password)
       throws IOException, InterruptedException {
     HttpResponse<String> response = client.login(username, password);
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
     return String.valueOf(DemoJson.decodeObject(response.body()).get("token"));
   }
 }

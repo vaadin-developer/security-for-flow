@@ -30,6 +30,7 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Map;
 
+import static com.svenruppert.dependencies.core.net.HttpStatus.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -56,7 +57,7 @@ class DemoRestServerTest {
   @DisplayName("login with valid credentials returns a token")
   void loginValid() throws IOException, InterruptedException {
     HttpResponse<String> response = client.login("admin", "admin");
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
     Map<String, Object> payload = DemoJson.decodeObject(response.body());
     assertNotNull(payload.get("token"));
     assertEquals("Admin User", payload.get("displayName"));
@@ -66,7 +67,7 @@ class DemoRestServerTest {
   @DisplayName("login with invalid credentials fails with 401")
   void loginInvalid() throws IOException, InterruptedException {
     HttpResponse<String> response = client.login("admin", "wrong");
-    assertEquals(401, response.statusCode());
+    assertEquals(UNAUTHORIZED.code(), response.statusCode());
     assertFalse(response.body().contains("at "));
   }
 
@@ -74,7 +75,7 @@ class DemoRestServerTest {
   @DisplayName("operations without token returns 401")
   void operationsWithoutToken() throws IOException, InterruptedException {
     HttpResponse<String> response = client.operations(null);
-    assertEquals(401, response.statusCode());
+    assertEquals(UNAUTHORIZED.code(), response.statusCode());
   }
 
   @Test
@@ -82,7 +83,7 @@ class DemoRestServerTest {
   void operationsViewer() throws IOException, InterruptedException {
     String token = loginAs("viewer", "viewer");
     HttpResponse<String> response = client.operations(token);
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
     List<String> ids = operationIds(response.body());
     assertEquals(List.of("list-documents"), ids);
   }
@@ -92,7 +93,7 @@ class DemoRestServerTest {
   void operationsEditor() throws IOException, InterruptedException {
     String token = loginAs("editor", "editor");
     HttpResponse<String> response = client.operations(token);
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
     List<String> ids = operationIds(response.body());
     assertTrue(ids.contains("list-documents"));
     assertTrue(ids.contains("create-document"));
@@ -105,7 +106,7 @@ class DemoRestServerTest {
   void operationsAdmin() throws IOException, InterruptedException {
     String token = loginAs("admin", "admin");
     HttpResponse<String> response = client.operations(token);
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
     List<String> ids = operationIds(response.body());
     assertTrue(ids.containsAll(
         List.of("list-documents", "create-document", "delete-document", "admin-status")));
@@ -116,7 +117,7 @@ class DemoRestServerTest {
   void viewerCanList() throws IOException, InterruptedException {
     String token = loginAs("viewer", "viewer");
     HttpResponse<String> response = client.call("GET", "/api/documents", token, null);
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
     assertTrue(response.body().contains("documents"));
   }
 
@@ -125,7 +126,7 @@ class DemoRestServerTest {
   void viewerCannotDelete() throws IOException, InterruptedException {
     String token = loginAs("viewer", "viewer");
     HttpResponse<String> response = client.call("DELETE", "/api/documents/1", token, null);
-    assertEquals(403, response.statusCode());
+    assertEquals(FORBIDDEN.code(), response.statusCode());
     assertEquals("Forbidden", response.body());
   }
 
@@ -135,7 +136,7 @@ class DemoRestServerTest {
     String token = loginAs("editor", "editor");
     String body = DemoJson.encode(Map.of("title", "Editor doc"));
     HttpResponse<String> response = client.call("POST", "/api/documents", token, body);
-    assertEquals(201, response.statusCode());
+    assertEquals(CREATED.code(), response.statusCode());
     assertTrue(response.body().contains("Editor doc"));
   }
 
@@ -144,7 +145,7 @@ class DemoRestServerTest {
   void editorCannotAccessAdmin() throws IOException, InterruptedException {
     String token = loginAs("editor", "editor");
     HttpResponse<String> response = client.call("GET", "/api/admin/status", token, null);
-    assertEquals(403, response.statusCode());
+    assertEquals(FORBIDDEN.code(), response.statusCode());
     assertEquals("Forbidden", response.body());
   }
 
@@ -153,14 +154,14 @@ class DemoRestServerTest {
   void adminCanCallAll() throws IOException, InterruptedException {
     String token = loginAs("admin", "admin");
 
-    assertEquals(200, client.call("GET", "/api/documents", token, null).statusCode());
+    assertEquals(OK.code(), client.call("GET", "/api/documents", token, null).statusCode());
 
     HttpResponse<String> created = client.call(
         "POST", "/api/documents", token, DemoJson.encode(Map.of("title", "Admin doc")));
-    assertEquals(201, created.statusCode());
+    assertEquals(CREATED.code(), created.statusCode());
 
     HttpResponse<String> admin = client.call("GET", "/api/admin/status", token, null);
-    assertEquals(200, admin.statusCode());
+    assertEquals(OK.code(), admin.statusCode());
     assertTrue(admin.body().contains("ok"));
   }
 
@@ -168,7 +169,7 @@ class DemoRestServerTest {
   @DisplayName("requests without authentication receive 401 with no internals leaked")
   void unauthenticatedHas401() throws IOException, InterruptedException {
     HttpResponse<String> response = client.call("GET", "/api/documents", null, null);
-    assertEquals(401, response.statusCode());
+    assertEquals(UNAUTHORIZED.code(), response.statusCode());
     assertEquals("Unauthorized", response.body());
     assertFalse(response.body().contains("Exception"));
     assertFalse(response.body().contains("com.svenruppert"));
@@ -178,8 +179,8 @@ class DemoRestServerTest {
   @DisplayName("logout invalidates the token")
   void logoutInvalidatesToken() throws IOException, InterruptedException {
     String token = loginAs("admin", "admin");
-    assertEquals(200, client.logout(token).statusCode());
-    assertEquals(401, client.me(token).statusCode());
+    assertEquals(OK.code(), client.logout(token).statusCode());
+    assertEquals(UNAUTHORIZED.code(), client.me(token).statusCode());
   }
 
   @Test
@@ -187,7 +188,7 @@ class DemoRestServerTest {
   void auditRequiresPermission() throws IOException, InterruptedException {
     String editorToken = loginAs("editor", "editor");
     HttpResponse<String> response = client.call("GET", "/api/audit", editorToken, null);
-    assertEquals(403, response.statusCode());
+    assertEquals(FORBIDDEN.code(), response.statusCode());
   }
 
   @Test
@@ -196,7 +197,7 @@ class DemoRestServerTest {
     String adminToken = loginAs("admin", "admin");
     HttpResponse<String> response = client.call("GET", "/api/audit", adminToken, null);
 
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
     Map<String, Object> payload = DemoJson.decodeObject(response.body());
     @SuppressWarnings("unchecked")
     List<Map<String, Object>> events = (List<Map<String, Object>>) payload.get("events");
@@ -214,7 +215,7 @@ class DemoRestServerTest {
   void listUsersRequiresPermission() throws IOException, InterruptedException {
     String editorToken = loginAs("editor", "editor");
     HttpResponse<String> response = client.call("GET", "/api/admin/users", editorToken, null);
-    assertEquals(403, response.statusCode());
+    assertEquals(FORBIDDEN.code(), response.statusCode());
   }
 
   @Test
@@ -223,7 +224,7 @@ class DemoRestServerTest {
     String adminToken = loginAs("admin", "admin");
     HttpResponse<String> response = client.call("GET", "/api/admin/users", adminToken, null);
 
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
     Map<String, Object> payload = DemoJson.decodeObject(response.body());
     @SuppressWarnings("unchecked")
     List<Map<String, Object>> users = (List<Map<String, Object>>) payload.get("users");
@@ -240,7 +241,7 @@ class DemoRestServerTest {
     HttpResponse<String> response = client.call("PUT",
         "/api/admin/users/viewer", adminToken, "{\"role\":\"ROLE_EDITOR\"}");
 
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
     Map<String, Object> payload = DemoJson.decodeObject(response.body());
     assertEquals("ROLE_EDITOR", payload.get("role"));
     assertEquals(Boolean.TRUE, payload.get("changed"));
@@ -255,7 +256,7 @@ class DemoRestServerTest {
     String editorToken = loginAs("editor", "editor");
     HttpResponse<String> response = client.call("PUT",
         "/api/admin/users/viewer", editorToken, "{\"role\":\"ROLE_EDITOR\"}");
-    assertEquals(403, response.statusCode());
+    assertEquals(FORBIDDEN.code(), response.statusCode());
   }
 
   @Test
@@ -264,7 +265,7 @@ class DemoRestServerTest {
     String adminToken = loginAs("admin", "admin");
     HttpResponse<String> response = client.call("PUT",
         "/api/admin/users/viewer", adminToken, "{\"role\":\"ROLE_NOBODY\"}");
-    assertEquals(400, response.statusCode());
+    assertEquals(BAD_REQUEST.code(), response.statusCode());
   }
 
   @Test
@@ -275,7 +276,7 @@ class DemoRestServerTest {
         "/api/admin/users", adminToken,
         "{\"username\":\"alice\",\"password\":\"secret123\",\"displayName\":\"Alice Demo\",\"role\":\"ROLE_VIEWER\"}");
 
-    assertEquals(201, response.statusCode());
+    assertEquals(CREATED.code(), response.statusCode());
     Map<String, Object> payload = DemoJson.decodeObject(response.body());
     assertEquals("alice", payload.get("username"));
     assertEquals("Alice Demo", payload.get("displayName"));
@@ -292,7 +293,7 @@ class DemoRestServerTest {
     HttpResponse<String> response = client.call("POST",
         "/api/admin/users", adminToken,
         "{\"username\":\"editor\",\"password\":\"x\",\"role\":\"ROLE_VIEWER\"}");
-    assertEquals(409, response.statusCode());
+    assertEquals(CONFLICT.code(), response.statusCode());
   }
 
   @Test
@@ -302,7 +303,7 @@ class DemoRestServerTest {
     HttpResponse<String> response = client.call("POST",
         "/api/admin/users", adminToken,
         "{\"username\":\"x\",\"password\":\"x\",\"role\":\"ROLE_NOPE\"}");
-    assertEquals(400, response.statusCode());
+    assertEquals(BAD_REQUEST.code(), response.statusCode());
   }
 
   @Test
@@ -314,11 +315,11 @@ class DemoRestServerTest {
 
     HttpResponse<String> response = client.call("DELETE",
         "/api/admin/users/temp", adminToken, null);
-    assertEquals(204, response.statusCode());
+    assertEquals(NO_CONTENT.code(), response.statusCode());
 
     HttpResponse<String> second = client.call("DELETE",
         "/api/admin/users/temp", adminToken, null);
-    assertEquals(404, second.statusCode());
+    assertEquals(NOT_FOUND.code(), second.statusCode());
   }
 
   @Test
@@ -330,8 +331,8 @@ class DemoRestServerTest {
         "{\"username\":\"x\",\"password\":\"x\",\"role\":\"ROLE_VIEWER\"}");
     HttpResponse<String> deleteResponse = client.call("DELETE",
         "/api/admin/users/admin", editorToken, null);
-    assertEquals(403, postResponse.statusCode());
-    assertEquals(403, deleteResponse.statusCode());
+    assertEquals(FORBIDDEN.code(), postResponse.statusCode());
+    assertEquals(FORBIDDEN.code(), deleteResponse.statusCode());
   }
 
   @Test
@@ -341,7 +342,7 @@ class DemoRestServerTest {
     HttpResponse<String> response = client.call(
         "GET", "/api/audit?type=LoginSucceeded", adminToken, null);
 
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
     Map<String, Object> payload = DemoJson.decodeObject(response.body());
     @SuppressWarnings("unchecked")
     List<Map<String, Object>> events = (List<Map<String, Object>>) payload.get("events");
@@ -357,7 +358,7 @@ class DemoRestServerTest {
         "/api/admin/users", adminToken,
         "{\"username\":\"weakling\",\"password\":\"password123\",\"role\":\"ROLE_VIEWER\"}");
     // Generic 400 — CWE-209: server does not disclose which dictionary matched.
-    assertEquals(400, response.statusCode());
+    assertEquals(BAD_REQUEST.code(), response.statusCode());
     // Confirm the user was NOT created.
     HttpResponse<String> users = client.call(
         "GET", "/api/admin/users", adminToken, null);
@@ -367,7 +368,7 @@ class DemoRestServerTest {
 
   private String loginAs(String username, String password) throws IOException, InterruptedException {
     HttpResponse<String> response = client.login(username, password);
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
     return String.valueOf(DemoJson.decodeObject(response.body()).get("token"));
   }
 

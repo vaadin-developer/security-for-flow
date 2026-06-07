@@ -446,13 +446,13 @@ public final class DemoHandlers {
     try {
       body = DemoJson.decodeObject(requireBody(request));
     } catch (RuntimeException e) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     Object usernameValue = body.get("username");
     Object passwordValue = body.get("password");
     if (!(usernameValue instanceof String username) || !(passwordValue instanceof String password)) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
 
@@ -486,7 +486,7 @@ public final class DemoHandlers {
     if (abuseDecision instanceof AbuseDecision.Block block) {
       response.header("Retry-After",
           Long.toString(Math.max(1L, block.retryAfter().toSeconds())));
-      writeError(response, 429, "Too Many Requests");
+      writeError(response, HttpStatus.TOO_MANY_REQUESTS);
       return;
     }
 
@@ -494,7 +494,7 @@ public final class DemoHandlers {
     if (decision instanceof LoginAttemptDecision.LockedOut lockout) {
       response.header("Retry-After",
           Long.toString(Math.max(1L, lockout.remaining().toSeconds())));
-      writeError(response, 429, "Too Many Requests");
+      writeError(response, HttpStatus.TOO_MANY_REQUESTS);
       return;
     }
 
@@ -502,7 +502,7 @@ public final class DemoHandlers {
     if (user.isEmpty()) {
       loginAttemptPolicy.recordFailure(attempt);
       abuseDetection.recordOutcome(abuseContext, AttemptOutcome.FAILURE);
-      writeError(response, 401, "Unauthorized");
+      writeError(response, HttpStatus.UNAUTHORIZED);
       return;
     }
     loginAttemptPolicy.recordSuccess(attempt);
@@ -521,7 +521,7 @@ public final class DemoHandlers {
     payload.put("roles", subject.roles().stream().map(r -> r.value()).sorted().toList());
     payload.put("permissions",
         subject.permissions().stream().map(p -> p.value()).sorted().toList());
-    response.status(200);
+    response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(payload));
   }
 
@@ -543,7 +543,7 @@ public final class DemoHandlers {
     payload.put("roles", subject.roles().stream().map(r -> r.value()).sorted().toList());
     payload.put("permissions",
         subject.permissions().stream().map(p -> p.value()).sorted().toList());
-    response.status(200);
+    response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(payload));
   }
 
@@ -552,7 +552,7 @@ public final class DemoHandlers {
     List<Map<String, Object>> ops = registry.visibleFor(subject).stream()
         .map(DemoHandlers::descriptorToJson)
         .toList();
-    response.status(200);
+    response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(Map.of("operations", ops)));
   }
 
@@ -562,7 +562,7 @@ public final class DemoHandlers {
     token.ifPresent(tokenStore::revoke);
     user.ifPresent(u -> SecurityServiceResolver.logoutService()
         .logout(SubjectId.of(u.username()), LogoutScope.CurrentSession));
-    response.status(200);
+    response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(Map.of("status", "logged-out")));
   }
 
@@ -888,7 +888,7 @@ public final class DemoHandlers {
     List<Map<String, Object>> docs = documents.list().stream()
         .map(DemoHandlers::documentToJson)
         .toList();
-    response.status(200);
+    response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(Map.of("documents", docs)));
   }
 
@@ -898,16 +898,16 @@ public final class DemoHandlers {
     try {
       body = DemoJson.decodeObject(requireBody(request));
     } catch (RuntimeException e) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     Object titleValue = body.get("title");
     if (!(titleValue instanceof String title) || title.isBlank()) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     DemoDocument created = documents.create(title);
-    response.status(201);
+    response.status(HttpStatus.CREATED.code());
     response.body(DemoJson.encode(documentToJson(created)));
   }
 
@@ -916,27 +916,27 @@ public final class DemoHandlers {
     String path = request.path();
     String prefix = DemoEndpoints.DOCUMENT_BY_ID;
     if (!path.startsWith(prefix)) {
-      writeError(response, 404, "Not Found");
+      writeError(response, HttpStatus.NOT_FOUND);
       return;
     }
     long id;
     try {
       id = Long.parseLong(path.substring(prefix.length()));
     } catch (NumberFormatException e) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     if (!documents.delete(id)) {
-      writeError(response, 404, "Not Found");
+      writeError(response, HttpStatus.NOT_FOUND);
       return;
     }
-    response.status(204);
+    response.status(HttpStatus.NO_CONTENT.code());
     response.body("");
   }
 
   @RequiresPermission("admin:access")
   public void adminStatus(RestRequest request, RestResponse response) {
-    response.status(200);
+    response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(Map.of("status", "ok", "message", "Admin endpoint executed.")));
   }
 
@@ -949,7 +949,7 @@ public final class DemoHandlers {
     List<Map<String, Object>> users = userStore.listAll().stream()
         .map(DemoHandlers::userToJson)
         .toList();
-    response.status(200);
+    response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(Map.of("users", users)));
   }
 
@@ -964,7 +964,7 @@ public final class DemoHandlers {
     String path = request.path();
     String prefix = DemoEndpoints.ADMIN_USER_BY_NAME;
     if (!path.startsWith(prefix) || path.length() <= prefix.length()) {
-      writeError(response, 404, "Not Found");
+      writeError(response, HttpStatus.NOT_FOUND);
       return;
     }
     String username = path.substring(prefix.length());
@@ -973,19 +973,19 @@ public final class DemoHandlers {
     try {
       body = DemoJson.decodeObject(requireBody(request));
     } catch (RuntimeException e) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     Object roleValue = body.get("role");
     if (!(roleValue instanceof String roleName)) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     DemoRole role;
     try {
       role = DemoRole.valueOf(roleName);
     } catch (IllegalArgumentException e) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
 
@@ -994,7 +994,7 @@ public final class DemoHandlers {
         .filter(u -> u.username().equals(username))
         .findFirst();
     if (updated.isEmpty()) {
-      writeError(response, 404, "Not Found");
+      writeError(response, HttpStatus.NOT_FOUND);
       return;
     }
     if (changed) {
@@ -1002,7 +1002,7 @@ public final class DemoHandlers {
     }
     Map<String, Object> payload = new LinkedHashMap<>(userToJson(updated.get()));
     payload.put("changed", changed);
-    response.status(200);
+    response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(payload));
   }
 
@@ -1038,7 +1038,7 @@ public final class DemoHandlers {
     try {
       body = DemoJson.decodeObject(requireBody(request));
     } catch (RuntimeException e) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     Object usernameValue = body.get("username");
@@ -1048,14 +1048,14 @@ public final class DemoHandlers {
     if (!(usernameValue instanceof String username) || username.isBlank()
         || !(passwordValue instanceof String password) || password.isEmpty()
         || !(roleValue instanceof String roleName)) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     DemoRole role;
     try {
       role = DemoRole.valueOf(roleName);
     } catch (IllegalArgumentException e) {
-      writeError(response, 400, "Bad Request");
+      writeError(response, HttpStatus.BAD_REQUEST);
       return;
     }
     String displayName = displayNameValue instanceof String s && !s.isBlank() ? s : username;
@@ -1067,12 +1067,12 @@ public final class DemoHandlers {
       if (check instanceof CompromisedPasswordResult.Pwned) {
         // Generic perimeter message — CWE-209: do not echo which
         // dictionary or count matched.
-        writeError(response, 400, "Bad Request");
+        writeError(response, HttpStatus.BAD_REQUEST);
         return;
       }
       if (check instanceof CompromisedPasswordResult.CheckFailed
           && compromisedPolicy.onFailure() == CheckFailurePolicy.BLOCK) {
-        writeError(response, 503, "Service Unavailable");
+        writeError(response, HttpStatus.SERVICE_UNAVAILABLE);
         return;
       }
     }
@@ -1081,10 +1081,10 @@ public final class DemoHandlers {
     try {
       created = userStore.create(username, password, displayName, role);
     } catch (IllegalStateException duplicate) {
-      writeError(response, 409, "Conflict");
+      writeError(response, HttpStatus.CONFLICT);
       return;
     }
-    response.status(201);
+    response.status(HttpStatus.CREATED.code());
     response.body(DemoJson.encode(userToJson(created)));
   }
 
@@ -1098,16 +1098,16 @@ public final class DemoHandlers {
     String path = request.path();
     String prefix = DemoEndpoints.ADMIN_USER_BY_NAME;
     if (!path.startsWith(prefix) || path.length() <= prefix.length()) {
-      writeError(response, 404, "Not Found");
+      writeError(response, HttpStatus.NOT_FOUND);
       return;
     }
     String username = path.substring(prefix.length());
     if (!userStore.deleteUser(username)) {
-      writeError(response, 404, "Not Found");
+      writeError(response, HttpStatus.NOT_FOUND);
       return;
     }
     bumpSecurityVersion(username);
-    response.status(204);
+    response.status(HttpStatus.NO_CONTENT.code());
     response.body("");
   }
 
@@ -1147,7 +1147,7 @@ public final class DemoHandlers {
       events.add(auditEventToJson(filtered.get(i)));
     }
 
-    response.status(200);
+    response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(Map.of("events", events)));
   }
 

@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.util.Map;
 
+import static com.svenruppert.dependencies.core.net.HttpStatus.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -86,7 +87,7 @@ class DemoTokenServiceTest {
     HttpResponse<String> response = client.call(
         "POST", DemoEndpoints.AUTH_TOKEN_REFRESH, null,
         "{\"refreshToken\":\"" + originalRefresh + "\"}");
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
 
     Map<String, Object> rotated = DemoJson.decodeObject(response.body());
     assertNotNull(rotated.get("accessToken"));
@@ -103,7 +104,7 @@ class DemoTokenServiceTest {
     String refresh = (String) first.get("refreshToken");
 
     // First rotation succeeds.
-    assertEquals(200, client.call(
+    assertEquals(OK.code(), client.call(
         "POST", DemoEndpoints.AUTH_TOKEN_REFRESH, null,
         "{\"refreshToken\":\"" + refresh + "\"}").statusCode());
 
@@ -111,7 +112,7 @@ class DemoTokenServiceTest {
     HttpResponse<String> replay = client.call(
         "POST", DemoEndpoints.AUTH_TOKEN_REFRESH, null,
         "{\"refreshToken\":\"" + refresh + "\"}");
-    assertEquals(401, replay.statusCode());
+    assertEquals(UNAUTHORIZED.code(), replay.statusCode());
     assertEquals("TokenRotated",
         replay.headers().firstValue("WWW-Authenticate").orElse(null));
   }
@@ -125,12 +126,12 @@ class DemoTokenServiceTest {
     HttpResponse<String> revoke = client.call(
         "POST", DemoEndpoints.AUTH_TOKEN_REVOKE, null,
         "{\"refreshToken\":\"" + refresh + "\"}");
-    assertEquals(200, revoke.statusCode());
+    assertEquals(OK.code(), revoke.statusCode());
 
     HttpResponse<String> rotateAfter = client.call(
         "POST", DemoEndpoints.AUTH_TOKEN_REFRESH, null,
         "{\"refreshToken\":\"" + refresh + "\"}");
-    assertEquals(401, rotateAfter.statusCode(),
+    assertEquals(UNAUTHORIZED.code(), rotateAfter.statusCode(),
         "revoked refresh must fail rotation");
   }
 
@@ -140,7 +141,7 @@ class DemoTokenServiceTest {
     HttpResponse<String> response = client.call(
         "POST", DemoEndpoints.AUTH_TOKEN_ISSUE, null,
         "{\"subjectId\":\"\"}");
-    assertEquals(400, response.statusCode());
+    assertEquals(BAD_REQUEST.code(), response.statusCode());
   }
 
   @Test
@@ -149,7 +150,7 @@ class DemoTokenServiceTest {
     HttpResponse<String> response = client.call(
         "POST", DemoEndpoints.AUTH_TOKEN_REFRESH, null,
         "{\"refreshToken\":\"there-is-no-such-token-anywhere\"}");
-    assertEquals(401, response.statusCode());
+    assertEquals(UNAUTHORIZED.code(), response.statusCode());
   }
 
   private Map<String, Object> issue(String subjectId)
@@ -157,7 +158,7 @@ class DemoTokenServiceTest {
     HttpResponse<String> response = client.call(
         "POST", DemoEndpoints.AUTH_TOKEN_ISSUE, null,
         "{\"subjectId\":\"" + subjectId + "\"}");
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
     return DemoJson.decodeObject(response.body());
   }
 }

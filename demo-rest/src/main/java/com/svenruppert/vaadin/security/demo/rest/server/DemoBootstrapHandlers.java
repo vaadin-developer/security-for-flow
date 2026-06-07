@@ -27,6 +27,7 @@ import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.vaadin.security.bruteforce.NoopLoginAttemptPolicy;
 import com.svenruppert.vaadin.security.demo.rest.shared.DemoJson;
 import com.svenruppert.vaadin.security.rest.BodyRestRequest;
+import com.svenruppert.dependencies.core.net.HttpStatus;
 import com.svenruppert.vaadin.security.rest.BootstrapRestStatusMapper;
 import com.svenruppert.vaadin.security.rest.RestHeaders;
 import com.svenruppert.vaadin.security.rest.RestRequest;
@@ -83,7 +84,7 @@ public final class DemoBootstrapHandlers {
     Map<String, Object> payload = new LinkedHashMap<>();
     payload.put("bootstrapRequired", snapshot.bootstrapRequired());
     payload.put("mode", snapshot.mode().name());
-    response.status(200);
+    response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(payload));
   }
 
@@ -96,19 +97,19 @@ public final class DemoBootstrapHandlers {
     if (throttleDecision instanceof LoginAttemptDecision.LockedOut lockout) {
       response.header("Retry-After",
           Long.toString(Math.max(1L, lockout.remaining().toSeconds())));
-      writeJson(response, 429, Map.of("error", "too_many_requests"));
+      writeJson(response, HttpStatus.TOO_MANY_REQUESTS.code(), Map.of("error", "too_many_requests"));
       return;
     }
 
     if (!(request instanceof BodyRestRequest bodyRequest)) {
-      writeJson(response, 400, Map.of("error", "bad_request"));
+      writeJson(response, HttpStatus.BAD_REQUEST.code(), Map.of("error", "bad_request"));
       return;
     }
     Map<String, Object> body;
     try {
       body = DemoJson.decodeObject(bodyRequest.bodyAsUtf8());
     } catch (RuntimeException e) {
-      writeJson(response, 400, Map.of("error", "bad_request"));
+      writeJson(response, HttpStatus.BAD_REQUEST.code(), Map.of("error", "bad_request"));
       return;
     }
     String token = string(body, "bootstrapToken");
@@ -117,7 +118,7 @@ public final class DemoBootstrapHandlers {
     String displayName = string(body, "displayName");
     String email = string(body, "email");
     if (token == null || username == null || password == null) {
-      writeJson(response, 400, Map.of("error", "bad_request"));
+      writeJson(response, HttpStatus.BAD_REQUEST.code(), Map.of("error", "bad_request"));
       return;
     }
     char[] pwd = password.toCharArray();

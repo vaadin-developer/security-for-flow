@@ -37,6 +37,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.util.Map;
 
+import static com.svenruppert.dependencies.core.net.HttpStatus.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -87,14 +88,14 @@ class DemoBootstrapBruteForceTest {
     for (int i = 0; i < FAILURE_THRESHOLD; i++) {
       HttpResponse<String> wrong = postBootstrap(
           base, "WRONG-TOKEN-VALUE-FORMATTED-OK", "root", "verystrong-1");
-      assertEquals(403, wrong.statusCode(),
+      assertEquals(FORBIDDEN.code(), wrong.statusCode(),
           "wrong-token attempt before lockout must surface as 403 invalid_bootstrap_token");
       assertTrue(wrong.body().contains("invalid_bootstrap_token"));
     }
 
     HttpResponse<String> locked = postBootstrap(
         base, "ANY-TOKEN-VALUE-NOW-IGNORED", "root", "verystrong-1");
-    assertEquals(429, locked.statusCode(),
+    assertEquals(TOO_MANY_REQUESTS.code(), locked.statusCode(),
         "after the threshold, /api/bootstrap/admin must lock out further attempts");
     String retryAfter = locked.headers().firstValue("Retry-After").orElse(null);
     assertNotNull(retryAfter, "Retry-After header must be present on 429");
@@ -116,12 +117,12 @@ class DemoBootstrapBruteForceTest {
     // succeeding even though we exceeded `FAILURE_THRESHOLD = 2`).
     for (int i = 0; i < 5; i++) {
       HttpResponse<String> r = postBootstrap(base, validToken, "root", "x");
-      assertEquals(400, r.statusCode());
+      assertEquals(BAD_REQUEST.code(), r.statusCode());
       assertTrue(r.body().contains("password_policy_violation"));
     }
 
     HttpResponse<String> ok = postBootstrap(base, validToken, "root", "verystrong-1");
-    assertEquals(201, ok.statusCode(),
+    assertEquals(CREATED.code(), ok.statusCode(),
         "policy violations must not have blocked the legitimate bootstrap call");
   }
 

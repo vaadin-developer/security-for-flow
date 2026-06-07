@@ -37,6 +37,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 import java.util.Map;
 
+import static com.svenruppert.dependencies.core.net.HttpStatus.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -84,12 +85,12 @@ class DemoLoginRateLimitTest {
   void thresholdEnforcedAtLimitPlusOne() {
     for (int i = 0; i < LIMIT; i++) {
       DemoHttpResponse response = runLogin("admin", "wrong-password");
-      assertEquals(401, response.status(),
+      assertEquals(UNAUTHORIZED.code(), response.status(),
           "attempt #" + (i + 1) + " must reach the credential check (401 for wrong password)");
     }
 
     DemoHttpResponse throttled = runLogin("admin", "wrong-password");
-    assertEquals(429, throttled.status(),
+    assertEquals(TOO_MANY_REQUESTS.code(), throttled.status(),
         "attempt LIMIT+1 must be refused with 429 Too Many Requests");
     assertTrue(throttled.getHeaders().containsKey("Retry-After"),
         "throttled response must advertise Retry-After");

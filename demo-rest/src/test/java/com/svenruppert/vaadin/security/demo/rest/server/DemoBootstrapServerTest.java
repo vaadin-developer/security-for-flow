@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.svenruppert.dependencies.core.net.HttpStatus.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Demo REST server bootstrap")
@@ -65,7 +66,7 @@ class DemoBootstrapServerTest {
 
     // status: bootstrap required
     HttpResponse<String> status = get(base + DemoEndpoints.BOOTSTRAP_STATUS);
-    assertEquals(200, status.statusCode());
+    assertEquals(OK.code(), status.statusCode());
     Map<String, Object> statusBody = DemoJson.decodeObject(status.body());
     assertEquals(Boolean.TRUE, statusBody.get("bootstrapRequired"));
     assertEquals("PERSISTENT_FILE", statusBody.get("mode"));
@@ -79,7 +80,7 @@ class DemoBootstrapServerTest {
         "bootstrapToken", "WRONG-TOKEN-VALUE-FORMATTED-OK",
         "username", "root",
         "password", "verystrong-1"));
-    assertEquals(403, wrong.statusCode());
+    assertEquals(FORBIDDEN.code(), wrong.statusCode());
     assertTrue(wrong.body().contains("invalid_bootstrap_token"));
     assertFalse(wrong.body().contains(token));
 
@@ -89,7 +90,7 @@ class DemoBootstrapServerTest {
         "username", "root",
         "password", "verystrong-1",
         "displayName", "Root Admin"));
-    assertEquals(201, ok.statusCode());
+    assertEquals(CREATED.code(), ok.statusCode());
     assertTrue(ok.body().contains("created"));
 
     // token file deleted
@@ -105,14 +106,14 @@ class DemoBootstrapServerTest {
         "bootstrapToken", token,
         "username", "root2",
         "password", "verystrong-2"));
-    assertEquals(409, conflict.statusCode());
+    assertEquals(CONFLICT.code(), conflict.statusCode());
     assertTrue(conflict.body().contains("system_already_initialized"));
 
     // newly created admin can log in with the chosen password
     HttpResponse<String> login = postJson(base + DemoEndpoints.LOGIN, Map.of(
         "username", "root",
         "password", "verystrong-1"));
-    assertEquals(200, login.statusCode());
+    assertEquals(OK.code(), login.statusCode());
   }
 
   @Test
@@ -141,7 +142,7 @@ class DemoBootstrapServerTest {
         "http://localhost:" + server.port() + DemoEndpoints.BOOTSTRAP_ADMIN,
         Map.of("bootstrapToken", token, "username", "root", "password", "short"));
 
-    assertEquals(400, response.statusCode());
+    assertEquals(BAD_REQUEST.code(), response.statusCode());
     assertTrue(response.body().contains("password_policy_violation"));
   }
 
@@ -170,7 +171,7 @@ class DemoBootstrapServerTest {
     HttpResponse<String> ok = postJson(
         "http://localhost:" + server.port() + DemoEndpoints.BOOTSTRAP_ADMIN,
         Map.of("bootstrapToken", token, "username", "root", "password", "verystrong-1"));
-    assertEquals(201, ok.statusCode());
+    assertEquals(CREATED.code(), ok.statusCode());
   }
 
   // ── Helpers ────────────────────────────────────────────────────

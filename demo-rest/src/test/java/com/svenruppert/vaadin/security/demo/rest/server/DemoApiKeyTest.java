@@ -34,6 +34,7 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Map;
 
+import static com.svenruppert.dependencies.core.net.HttpStatus.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -90,26 +91,26 @@ class DemoApiKeyTest {
 
     // 2) use it against /api/documents — scope grants access
     HttpResponse<String> documents = sendWithApiKey("GET", "/api/documents", plainKey);
-    assertEquals(200, documents.statusCode(),
+    assertEquals(OK.code(), documents.statusCode(),
         "X-Api-Key with document:read scope must reach the documents endpoint");
 
     // 3) the same key must NOT be able to delete (no document:delete scope)
     HttpResponse<String> deleteAttempt = sendWithApiKey(
         "DELETE", "/api/documents/1", plainKey);
-    assertEquals(403, deleteAttempt.statusCode(),
+    assertEquals(FORBIDDEN.code(), deleteAttempt.statusCode(),
         "key without document:delete scope must be refused");
 
     // 4) revoke it
     HttpResponse<String> revoke = sendJsonAuthed(
         "POST", DemoEndpoints.ADMIN_API_KEYS_REVOKE, adminToken,
         "{\"keyHash\":\"" + keyHash + "\"}");
-    assertEquals(200, revoke.statusCode());
+    assertEquals(OK.code(), revoke.statusCode());
 
     // 5) the same plain key now fails — ApiKeyAuthenticationService
     //    returns empty for a revoked record, so the resolver falls
     //    through to the bearer path (no token → no subject → 401).
     HttpResponse<String> afterRevoke = sendWithApiKey("GET", "/api/documents", plainKey);
-    assertEquals(401, afterRevoke.statusCode());
+    assertEquals(UNAUTHORIZED.code(), afterRevoke.statusCode());
   }
 
   @Test
@@ -119,7 +120,7 @@ class DemoApiKeyTest {
     HttpResponse<String> response = sendJsonAuthed(
         "POST", DemoEndpoints.ADMIN_API_KEYS, editorToken,
         "{\"name\":\"x\",\"subjectId\":\"y\",\"scopes\":[\"document:read\"]}");
-    assertEquals(403, response.statusCode());
+    assertEquals(FORBIDDEN.code(), response.statusCode());
   }
 
   @Test
@@ -129,7 +130,7 @@ class DemoApiKeyTest {
     HttpResponse<String> response = sendJsonAuthed(
         "POST", DemoEndpoints.ADMIN_API_KEYS, adminToken,
         "{\"name\":\"x\",\"subjectId\":\"y\",\"scopes\":[]}");
-    assertEquals(400, response.statusCode());
+    assertEquals(BAD_REQUEST.code(), response.statusCode());
   }
 
   @Test
@@ -139,7 +140,7 @@ class DemoApiKeyTest {
     HttpResponse<String> response = sendJsonAuthed(
         "POST", DemoEndpoints.ADMIN_API_KEYS_REVOKE, adminToken,
         "{\"keyHash\":\"deadbeef\"}");
-    assertEquals(404, response.statusCode());
+    assertEquals(NOT_FOUND.code(), response.statusCode());
   }
 
   @Test
@@ -160,7 +161,7 @@ class DemoApiKeyTest {
         .build();
     HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
 
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
     Map<String, Object> payload = DemoJson.decodeObject(response.body());
     assertEquals("synthetic-bot", payload.get("subjectId"),
         "API-key path must be picked first; the bearer-token admin must not be returned");
@@ -181,7 +182,7 @@ class DemoApiKeyTest {
         + "\"scopes\":[" + scopesJson + "]}";
     HttpResponse<String> response = sendJsonAuthed(
         "POST", DemoEndpoints.ADMIN_API_KEYS, adminToken, body);
-    assertEquals(201, response.statusCode(),
+    assertEquals(CREATED.code(), response.statusCode(),
         "admin must be able to mint a key");
     return DemoJson.decodeObject(response.body());
   }
@@ -209,7 +210,7 @@ class DemoApiKeyTest {
   private String login(String username, String password)
       throws IOException, InterruptedException {
     HttpResponse<String> response = client.login(username, password);
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
     return String.valueOf(DemoJson.decodeObject(response.body()).get("token"));
   }
 }

@@ -16,6 +16,7 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.server;
 
+import com.svenruppert.dependencies.core.net.HttpStatus;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.demo.rest.shared.DemoEndpoints;
 import com.svenruppert.vaadin.security.policy.api.ResourceRef;
@@ -111,8 +112,8 @@ public final class DemoHttpRouter implements HttpHandler {
       writeResponse(exchange, response);
     } catch (RuntimeException e) {
       DemoHttpResponse fallback = new DemoHttpResponse();
-      fallback.status(500);
-      fallback.body("Internal Server Error");
+      fallback.status(HttpStatus.INTERNAL_SERVER_ERROR.code());
+      fallback.body(HttpStatus.INTERNAL_SERVER_ERROR.reason());
       writeResponse(exchange, fallback);
     } finally {
       exchange.close();
@@ -246,13 +247,13 @@ public final class DemoHttpRouter implements HttpHandler {
           handlers::createApiKey, createApiKeyMethod);
       return;
     }
-    response.status(404);
-    response.body("Not Found");
+    response.status(HttpStatus.NOT_FOUND.code());
+    response.body(HttpStatus.NOT_FOUND.reason());
   }
 
   private static void notAllowed(DemoHttpResponse response) {
-    response.status(405);
-    response.body("Method Not Allowed");
+    response.status(HttpStatus.METHOD_NOT_ALLOWED.code());
+    response.body(HttpStatus.METHOD_NOT_ALLOWED.reason());
   }
 
   private static DemoHttpRequest readRequest(HttpExchange exchange) throws IOException {

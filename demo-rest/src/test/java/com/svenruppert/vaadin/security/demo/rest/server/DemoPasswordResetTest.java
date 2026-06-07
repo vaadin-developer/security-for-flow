@@ -31,6 +31,7 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Map;
 
+import static com.svenruppert.dependencies.core.net.HttpStatus.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -69,7 +70,7 @@ class DemoPasswordResetTest {
     HttpResponse<String> response = client.call(
         "POST", DemoEndpoints.PASSWORD_RESET_REQUEST, null,
         "{\"subjectId\":\"viewer\"}");
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
 
     Map<String, Object> payload = DemoJson.decodeObject(response.body());
     assertEquals("viewer", payload.get("subjectId"));
@@ -87,14 +88,14 @@ class DemoPasswordResetTest {
     HttpResponse<String> first = client.call(
         "POST", DemoEndpoints.PASSWORD_RESET_CONSUME, null,
         "{\"token\":\"" + token + "\"}");
-    assertEquals(200, first.statusCode());
+    assertEquals(OK.code(), first.statusCode());
     Map<String, Object> payload = DemoJson.decodeObject(first.body());
     assertEquals("editor", payload.get("subjectId"));
 
     HttpResponse<String> second = client.call(
         "POST", DemoEndpoints.PASSWORD_RESET_CONSUME, null,
         "{\"token\":\"" + token + "\"}");
-    assertEquals(404, second.statusCode(),
+    assertEquals(NOT_FOUND.code(), second.statusCode(),
         "already-consumed token resolves to the store's not-found branch");
   }
 
@@ -104,7 +105,7 @@ class DemoPasswordResetTest {
     HttpResponse<String> response = client.call(
         "POST", DemoEndpoints.PASSWORD_RESET_CONSUME, null,
         "{\"token\":\"this-token-was-never-issued-and-cannot-exist\"}");
-    assertEquals(404, response.statusCode());
+    assertEquals(NOT_FOUND.code(), response.statusCode());
   }
 
   @Test
@@ -113,7 +114,7 @@ class DemoPasswordResetTest {
     HttpResponse<String> response = client.call(
         "POST", DemoEndpoints.PASSWORD_RESET_REQUEST, null,
         "{\"subjectId\":\"\"}");
-    assertEquals(400, response.statusCode());
+    assertEquals(BAD_REQUEST.code(), response.statusCode());
   }
 
   @Test
@@ -124,7 +125,7 @@ class DemoPasswordResetTest {
     String adminToken = login("admin", "admin");
     HttpResponse<String> audit = client.call(
         "GET", "/api/audit?type=PasswordResetRequested", adminToken, null);
-    assertEquals(200, audit.statusCode());
+    assertEquals(OK.code(), audit.statusCode());
     Map<String, Object> payload = DemoJson.decodeObject(audit.body());
     @SuppressWarnings("unchecked")
     List<Map<String, Object>> events = (List<Map<String, Object>>) payload.get("events");
@@ -137,14 +138,14 @@ class DemoPasswordResetTest {
     HttpResponse<String> response = client.call(
         "POST", DemoEndpoints.PASSWORD_RESET_REQUEST, null,
         "{\"subjectId\":\"" + subjectId + "\"}");
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
     return String.valueOf(DemoJson.decodeObject(response.body()).get("token"));
   }
 
   private String login(String username, String password)
       throws IOException, InterruptedException {
     HttpResponse<String> response = client.login(username, password);
-    assertEquals(200, response.statusCode());
+    assertEquals(OK.code(), response.statusCode());
     return String.valueOf(DemoJson.decodeObject(response.body()).get("token"));
   }
 }

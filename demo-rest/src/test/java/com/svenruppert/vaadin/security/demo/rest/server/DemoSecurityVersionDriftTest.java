@@ -31,6 +31,7 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Map;
 
+import static com.svenruppert.dependencies.core.net.HttpStatus.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -76,7 +77,7 @@ class DemoSecurityVersionDriftTest {
 
     // Token is fresh — /api/me works.
     HttpResponse<String> beforeDrift = client.me(viewerToken);
-    assertEquals(200, beforeDrift.statusCode(),
+    assertEquals(OK.code(), beforeDrift.statusCode(),
         "fresh token must work before any role change");
 
     // Admin promotes viewer to editor — this bumps the SecurityVersion.
@@ -84,12 +85,12 @@ class DemoSecurityVersionDriftTest {
     HttpResponse<String> roleChange = client.call(
         "PUT", "/api/admin/users/viewer", adminToken,
         "{\"role\":\"ROLE_EDITOR\"}");
-    assertEquals(200, roleChange.statusCode(), "role change must succeed");
+    assertEquals(OK.code(), roleChange.statusCode(), "role change must succeed");
 
     try {
       // The existing viewer token is now stale.
       HttpResponse<String> afterDrift = client.me(viewerToken);
-      assertEquals(401, afterDrift.statusCode(),
+      assertEquals(UNAUTHORIZED.code(), afterDrift.statusCode(),
           "stale token must be refused with 401");
       assertEquals(RestSecurityVersionFilter.SESSION_STALE_CHALLENGE,
           afterDrift.headers().firstValue("WWW-Authenticate").orElse(null),
@@ -99,7 +100,7 @@ class DemoSecurityVersionDriftTest {
 
       // Fresh login captures the new version → the new token passes.
       String refreshedToken = login("viewer", "viewer");
-      assertEquals(200, client.me(refreshedToken).statusCode(),
+      assertEquals(OK.code(), client.me(refreshedToken).statusCode(),
           "fresh login after drift must yield a working token");
     } finally {
       // Restore the seed so subsequent tests see ROLE_VIEWER.
@@ -117,15 +118,15 @@ class DemoSecurityVersionDriftTest {
     HttpResponse<String> roleChange = client.call(
         "PUT", "/api/admin/users/viewer", adminToken,
         "{\"role\":\"ROLE_EDITOR\"}");
-    assertEquals(200, roleChange.statusCode());
+    assertEquals(OK.code(), roleChange.statusCode());
 
     try {
       // Trigger the filter once — that's the call site that publishes the audit event.
-      assertEquals(401, client.me(viewerToken).statusCode());
+      assertEquals(UNAUTHORIZED.code(), client.me(viewerToken).statusCode());
 
       HttpResponse<String> auditResponse = client.call(
           "GET", "/api/audit?type=SessionStale", adminToken, null);
-      assertEquals(200, auditResponse.statusCode());
+      assertEquals(OK.code(), auditResponse.statusCode());
       Map<String, Object> payload = DemoJson.decodeObject(auditResponse.body());
       @SuppressWarnings("unchecked")
       List<Map<String, Object>> events = (List<Map<String, Object>>) payload.get("events");
@@ -145,7 +146,7 @@ class DemoSecurityVersionDriftTest {
     // No version context → filter returns true → request continues into the
     // authentication filter, which produces the regular 401 Unauthorized.
     HttpResponse<String> response = client.me(null);
-    assertEquals(401, response.statusCode());
+    assertEquals(UNAUTHORIZED.code(), response.statusCode());
     assertEquals("Unauthorized", response.body());
     // The SessionStale challenge must NOT be advertised when there's no token —
     // that header is reserved for the drift outcome.
@@ -157,7 +158,7 @@ class DemoSecurityVersionDriftTest {
   private String login(String username, String password)
       throws IOException, InterruptedException {
     HttpResponse<String> response = client.login(username, password);
-    assertEquals(200, response.statusCode(),
+    assertEquals(OK.code(), response.statusCode(),
         "login(" + username + ") must succeed");
     return String.valueOf(DemoJson.decodeObject(response.body()).get("token"));
   }
