@@ -19,10 +19,13 @@ package com.svenruppert.vaadin.security.demo.rest.server;
 import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
+import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoRolePermissionMapping;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUser;
+import com.svenruppert.vaadin.security.logout.SubjectId;
 import com.svenruppert.vaadin.security.rest.BearerTokenExtractor;
 import com.svenruppert.vaadin.security.rest.RestRequest;
+import com.svenruppert.vaadin.security.rest.RestSecurityVersionContext;
 import com.svenruppert.vaadin.security.rest.RestSubjectResolver;
 import com.svenruppert.vaadin.security.session.SessionMetadata;
 
@@ -57,6 +60,20 @@ public final class DemoSubjectResolver implements RestSubjectResolver {
   @Override
   public Optional<SecuritySubject> resolveSubject(RestRequest request) {
     return extractToken(request).flatMap(tokens::resolve).map(this::toSubject);
+  }
+
+  @Override
+  public Optional<RestSecurityVersionContext> resolveSecurityVersionContext(RestRequest request) {
+    Optional<String> token = extractToken(request);
+    if (token.isEmpty()) {
+      return Optional.empty();
+    }
+    return tokens.resolveMetadata(token.get())
+        .map(metadata -> new RestSecurityVersionContext(
+            SubjectId.of(metadata.user().username()),
+            TenantId.DEFAULT,
+            metadata.snapshot(),
+            token.get()));
   }
 
   @Override

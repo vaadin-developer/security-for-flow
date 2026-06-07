@@ -20,6 +20,7 @@ import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.LoginSucceeded;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.authorization.annotations.RequiresAnyPermission;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPermission;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.credential.abuse.AbuseAttemptContext;
@@ -56,6 +57,10 @@ import com.svenruppert.vaadin.security.rest.BodyRestRequest;
 import com.svenruppert.vaadin.security.rest.RestHeaders;
 import com.svenruppert.vaadin.security.rest.RestRequest;
 import com.svenruppert.vaadin.security.rest.RestResponse;
+import com.svenruppert.vaadin.security.session.InMemorySecurityVersionStore;
+import com.svenruppert.vaadin.security.session.SecurityVersion;
+import com.svenruppert.vaadin.security.session.SecurityVersionKey;
+import com.svenruppert.vaadin.security.session.SecurityVersionStore;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -86,6 +91,7 @@ public final class DemoHandlers {
   private final AbuseDetectionService abuseDetection;
   private final CompromisedPasswordChecker compromisedChecker;
   private final CompromisedPasswordPolicy compromisedPolicy;
+  private final SecurityVersionStore securityVersionStore;
 
   public DemoHandlers(
       DemoUserStore userStore,
@@ -111,6 +117,29 @@ public final class DemoHandlers {
         CompromisedPasswordPolicy.defaults());
   }
 
+  /**
+   * Wires {@code DemoHandlers} with a shared
+   * {@link SecurityVersionStore} so role mutations bump versions
+   * against the same instance that the
+   * {@link com.svenruppert.vaadin.security.rest.RestSecurityVersionFilter}
+   * checks against.
+   */
+  public DemoHandlers(
+      DemoUserStore userStore,
+      DemoTokenStore tokenStore,
+      DemoDocumentStore documents,
+      DemoOperationRegistry registry,
+      DemoSubjectResolver subjectResolver,
+      LoginAttemptPolicy loginAttemptPolicy,
+      SecurityVersionStore securityVersionStore) {
+    this(userStore, tokenStore, documents, registry, subjectResolver,
+        loginAttemptPolicy,
+        defaultAbuseDetection(),
+        defaultCompromisedChecker(),
+        CompromisedPasswordPolicy.defaults(),
+        securityVersionStore);
+  }
+
   public DemoHandlers(
       DemoUserStore userStore,
       DemoTokenStore tokenStore,
@@ -121,6 +150,22 @@ public final class DemoHandlers {
       AbuseDetectionService abuseDetection,
       CompromisedPasswordChecker compromisedChecker,
       CompromisedPasswordPolicy compromisedPolicy) {
+    this(userStore, tokenStore, documents, registry, subjectResolver,
+        loginAttemptPolicy, abuseDetection, compromisedChecker, compromisedPolicy,
+        new InMemorySecurityVersionStore());
+  }
+
+  public DemoHandlers(
+      DemoUserStore userStore,
+      DemoTokenStore tokenStore,
+      DemoDocumentStore documents,
+      DemoOperationRegistry registry,
+      DemoSubjectResolver subjectResolver,
+      LoginAttemptPolicy loginAttemptPolicy,
+      AbuseDetectionService abuseDetection,
+      CompromisedPasswordChecker compromisedChecker,
+      CompromisedPasswordPolicy compromisedPolicy,
+      SecurityVersionStore securityVersionStore) {
     this.userStore = userStore;
     this.tokenStore = tokenStore;
     this.documents = documents;
@@ -130,6 +175,13 @@ public final class DemoHandlers {
     this.abuseDetection = Objects.requireNonNull(abuseDetection, "abuseDetection");
     this.compromisedChecker = Objects.requireNonNull(compromisedChecker, "compromisedChecker");
     this.compromisedPolicy = Objects.requireNonNull(compromisedPolicy, "compromisedPolicy");
+    this.securityVersionStore = Objects.requireNonNull(securityVersionStore,
+        "securityVersionStore");
+  }
+
+  /** Test seam — exposes the wired store so integration tests can bump. */
+  public SecurityVersionStore securityVersionStore() {
+    return securityVersionStore;
   }
 
   /**
@@ -211,7 +263,9 @@ public final class DemoHandlers {
     loginAttemptPolicy.recordSuccess(attempt);
     abuseDetection.recordOutcome(abuseContext, AttemptOutcome.SUCCESS);
     DemoUser u = user.get();
-    String token = tokenStore.issue(u);
+    SecurityVersion snapshot = securityVersionStore.current(
+        new SecurityVersionKey(TenantId.DEFAULT, SubjectId.of(u.username())));
+    String token = tokenStore.issue(u, snapshot);
     auditLoginSucceeded(u.username(), clientAddress, token);
     SecuritySubject subject = subjectResolver
         .resolveSubject(withAuth(request, token))
@@ -265,6 +319,23 @@ public final class DemoHandlers {
         .logout(SubjectId.of(u.username()), LogoutScope.CurrentSession));
     response.status(200);
     response.body(DemoJson.encode(Map.of("status", "logged-out")));
+  }
+
+  /**
+   * Combined documents inspector — exposes a JSON summary to any
+   * subject with <em>either</em> {@code document:read} or
+   * {@code document:create}. Demonstrates the V00.70 OR-semantics
+   * {@code @RequiresAnyPermission} evaluator (vs the all-of
+   * {@code @RequiresAllPermissions} / single-permission
+   * {@code @RequiresPermission}).
+   */
+  @RequiresAnyPermission({"document:read", "document:create"})
+  public void inspectDocuments(RestRequest request, RestResponse response) {
+    response.status(200);
+    response.body(DemoJson.encode(Map.of(
+        "documentCount", documents.list().size(),
+        "permissions", List.of("document:read", "document:create"),
+        "semantics", "ANY")));
   }
 
   @RequiresPermission("document:read")
@@ -381,10 +452,24 @@ public final class DemoHandlers {
       writeError(response, 404, "Not Found");
       return;
     }
+    if (changed) {
+      bumpSecurityVersion(username);
+    }
     Map<String, Object> payload = new LinkedHashMap<>(userToJson(updated.get()));
     payload.put("changed", changed);
     response.status(200);
     response.body(DemoJson.encode(payload));
+  }
+
+  /**
+   * Bumps {@code username}'s {@link SecurityVersion} so any
+   * already-issued tokens drift on the next request and
+   * {@link com.svenruppert.vaadin.security.rest.RestSecurityVersionFilter}
+   * refuses them with {@code 401 + WWW-Authenticate: SessionStale}.
+   */
+  private void bumpSecurityVersion(String username) {
+    securityVersionStore.increment(new SecurityVersionKey(
+        TenantId.DEFAULT, SubjectId.of(username)));
   }
 
   private static Map<String, Object> userToJson(DemoUser user) {
@@ -476,6 +561,7 @@ public final class DemoHandlers {
       writeError(response, 404, "Not Found");
       return;
     }
+    bumpSecurityVersion(username);
     response.status(204);
     response.body("");
   }

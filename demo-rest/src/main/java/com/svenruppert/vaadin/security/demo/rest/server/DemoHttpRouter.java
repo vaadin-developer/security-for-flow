@@ -19,6 +19,7 @@ package com.svenruppert.vaadin.security.demo.rest.server;
 import com.svenruppert.vaadin.security.demo.rest.shared.DemoEndpoints;
 import com.svenruppert.vaadin.security.rest.RestAuthenticationFilter;
 import com.svenruppert.vaadin.security.rest.RestAuthorizationFilter;
+import com.svenruppert.vaadin.security.rest.RestSecurityVersionFilter;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -43,10 +44,12 @@ public final class DemoHttpRouter implements HttpHandler {
   private final DemoBootstrapHandlers bootstrapHandlers;
   private final RestAuthorizationFilter filter;
   private final RestAuthenticationFilter authenticationFilter;
+  private final RestSecurityVersionFilter versionFilter;
 
   private final Method listDocumentsMethod;
   private final Method createDocumentMethod;
   private final Method deleteDocumentMethod;
+  private final Method inspectDocumentsMethod;
   private final Method adminStatusMethod;
   private final Method auditEventsMethod;
   private final Method listUsersMethod;
@@ -58,10 +61,19 @@ public final class DemoHttpRouter implements HttpHandler {
       DemoHandlers handlers,
       DemoBootstrapHandlers bootstrapHandlers,
       DemoSubjectResolver subjectResolver) {
+    this(handlers, bootstrapHandlers, subjectResolver, null);
+  }
+
+  public DemoHttpRouter(
+      DemoHandlers handlers,
+      DemoBootstrapHandlers bootstrapHandlers,
+      DemoSubjectResolver subjectResolver,
+      RestSecurityVersionFilter versionFilter) {
     this.handlers = handlers;
     this.bootstrapHandlers = bootstrapHandlers;
     this.filter = new RestAuthorizationFilter(subjectResolver);
     this.authenticationFilter = new RestAuthenticationFilter(subjectResolver);
+    this.versionFilter = versionFilter;
     try {
       Class<?>[] sig = {
           com.svenruppert.vaadin.security.rest.RestRequest.class,
@@ -70,6 +82,7 @@ public final class DemoHttpRouter implements HttpHandler {
       this.listDocumentsMethod = DemoHandlers.class.getDeclaredMethod("listDocuments", sig);
       this.createDocumentMethod = DemoHandlers.class.getDeclaredMethod("createDocument", sig);
       this.deleteDocumentMethod = DemoHandlers.class.getDeclaredMethod("deleteDocument", sig);
+      this.inspectDocumentsMethod = DemoHandlers.class.getDeclaredMethod("inspectDocuments", sig);
       this.adminStatusMethod = DemoHandlers.class.getDeclaredMethod("adminStatus", sig);
       this.auditEventsMethod = DemoHandlers.class.getDeclaredMethod("auditEvents", sig);
       this.listUsersMethod = DemoHandlers.class.getDeclaredMethod("listUsers", sig);
@@ -114,6 +127,13 @@ public final class DemoHttpRouter implements HttpHandler {
       handlers.login(request, response);
       return;
     }
+
+    // Phase 4c — refuse drifted sessions ahead of authentication / authorization.
+    // No filter (transient demo configurations) or unbound token → pass-through.
+    if (versionFilter != null && !versionFilter.allow(request, response, path)) {
+      return;
+    }
+
     if (DemoEndpoints.ME.equals(path) && "GET".equals(method)) {
       authenticationFilter.requireAuthenticated(request, response, handlers::me);
       return;
@@ -124,6 +144,14 @@ public final class DemoHttpRouter implements HttpHandler {
     }
     if (DemoEndpoints.LOGOUT.equals(path) && "POST".equals(method)) {
       authenticationFilter.requireAuthenticated(request, response, handlers::logout);
+      return;
+    }
+    // The "/api/documents/inspect" endpoint must be matched ahead of the
+    // generic "/api/documents/" prefix so the inspector handler is the one
+    // that fires.
+    if (DemoEndpoints.DOCUMENTS_INSPECT.equals(path) && "GET".equals(method)) {
+      filter.authorizeAndHandle(request, response,
+          handlers::inspectDocuments, inspectDocumentsMethod);
       return;
     }
     if (DemoEndpoints.DOCUMENTS.equals(path)) {

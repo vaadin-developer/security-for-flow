@@ -39,6 +39,10 @@ import com.svenruppert.vaadin.security.demo.rest.domain.DemoRolePermissionMappin
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUser;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUserStore;
 import com.svenruppert.vaadin.security.demo.rest.shared.DemoEndpoints;
+import com.svenruppert.vaadin.security.rest.RestSecurityVersionFilter;
+import com.svenruppert.vaadin.security.session.InMemorySecurityVersionStore;
+import com.svenruppert.vaadin.security.session.SecurityVersionEnforcer;
+import com.svenruppert.vaadin.security.session.SecurityVersionStore;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
@@ -106,8 +110,13 @@ public final class DemoRestServer {
     DemoRolePermissionMapping mapping = new DemoRolePermissionMapping();
     DemoSubjectResolver resolver = new DemoSubjectResolver(tokens, mapping);
     DemoOperationRegistry registry = new DemoOperationRegistry();
+    SecurityVersionStore versionStore = new InMemorySecurityVersionStore();
     DemoHandlers handlers = new DemoHandlers(
-        users, tokens, documents, registry, resolver, loginAttemptPolicy);
+        users, tokens, documents, registry, resolver, loginAttemptPolicy, versionStore);
+    SecurityVersionEnforcer versionEnforcer = new SecurityVersionEnforcer(
+        versionStore, SecurityServiceResolver.securityAuditService());
+    RestSecurityVersionFilter versionFilter = new RestSecurityVersionFilter(
+        resolver, versionEnforcer);
 
     SubjectClearingLogoutService<DemoUser> logoutService = new SubjectClearingLogoutService<>(
         NoopSubjectStore.INSTANCE, DemoUser.class, tokens, null);
@@ -131,7 +140,8 @@ public final class DemoRestServer {
     BootstrapStartup.initializeIfRequired(
         stateService, tokenStore, new BootstrapTokenGenerator(), tokenOutput, bootstrapConfig);
 
-    DemoHttpRouter router = new DemoHttpRouter(handlers, bootstrapHandlers, resolver);
+    DemoHttpRouter router = new DemoHttpRouter(
+        handlers, bootstrapHandlers, resolver, versionFilter);
     HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
     server.createContext(DemoEndpoints.API_PREFIX, router);
     server.start();
