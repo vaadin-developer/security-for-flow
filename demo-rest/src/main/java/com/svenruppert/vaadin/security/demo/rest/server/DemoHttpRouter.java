@@ -50,6 +50,8 @@ public final class DemoHttpRouter implements HttpHandler {
   private final Method createDocumentMethod;
   private final Method deleteDocumentMethod;
   private final Method inspectDocumentsMethod;
+  private final Method createApiKeyMethod;
+  private final Method revokeApiKeyMethod;
   private final Method adminStatusMethod;
   private final Method auditEventsMethod;
   private final Method listUsersMethod;
@@ -83,6 +85,8 @@ public final class DemoHttpRouter implements HttpHandler {
       this.createDocumentMethod = DemoHandlers.class.getDeclaredMethod("createDocument", sig);
       this.deleteDocumentMethod = DemoHandlers.class.getDeclaredMethod("deleteDocument", sig);
       this.inspectDocumentsMethod = DemoHandlers.class.getDeclaredMethod("inspectDocuments", sig);
+      this.createApiKeyMethod = DemoHandlers.class.getDeclaredMethod("createApiKey", sig);
+      this.revokeApiKeyMethod = DemoHandlers.class.getDeclaredMethod("revokeApiKey", sig);
       this.adminStatusMethod = DemoHandlers.class.getDeclaredMethod("adminStatus", sig);
       this.auditEventsMethod = DemoHandlers.class.getDeclaredMethod("auditEvents", sig);
       this.listUsersMethod = DemoHandlers.class.getDeclaredMethod("listUsers", sig);
@@ -133,6 +137,18 @@ public final class DemoHttpRouter implements HttpHandler {
     }
     if (DemoEndpoints.PASSWORD_RESET_CONSUME.equals(path) && "POST".equals(method)) {
       handlers.consumePasswordReset(request, response);
+      return;
+    }
+    if (DemoEndpoints.AUTH_TOKEN_ISSUE.equals(path) && "POST".equals(method)) {
+      handlers.issueTokenPair(request, response);
+      return;
+    }
+    if (DemoEndpoints.AUTH_TOKEN_REFRESH.equals(path) && "POST".equals(method)) {
+      handlers.rotateTokenPair(request, response);
+      return;
+    }
+    if (DemoEndpoints.AUTH_TOKEN_REVOKE.equals(path) && "POST".equals(method)) {
+      handlers.revokeTokenPair(request, response);
       return;
     }
 
@@ -196,6 +212,18 @@ public final class DemoHttpRouter implements HttpHandler {
         case "DELETE" -> filter.authorizeAndHandle(request, response, handlers::deleteUser, deleteUserMethod);
         default -> notAllowed(response);
       }
+      return;
+    }
+    // Phase-7b API-key admin endpoints. Match the more-specific
+    // /revoke path before the bare /api-keys collection.
+    if (DemoEndpoints.ADMIN_API_KEYS_REVOKE.equals(path) && "POST".equals(method)) {
+      filter.authorizeAndHandle(request, response,
+          handlers::revokeApiKey, revokeApiKeyMethod);
+      return;
+    }
+    if (DemoEndpoints.ADMIN_API_KEYS.equals(path) && "POST".equals(method)) {
+      filter.authorizeAndHandle(request, response,
+          handlers::createApiKey, createApiKeyMethod);
       return;
     }
     response.status(404);

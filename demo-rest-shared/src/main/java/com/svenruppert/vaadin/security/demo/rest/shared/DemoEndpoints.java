@@ -51,6 +51,41 @@ public final class DemoEndpoints {
    * success / 404 on unknown / 410 on already-consumed or expired.
    */
   public static final String PASSWORD_RESET_CONSUME = "/api/password-reset/consume";
+  /**
+   * Admin endpoint to mint a long-lived API key — POST
+   * {"name":"…","subjectId":"…","scopes":["document:read", …]} returns
+   * {"plainKey":"…","keyHash":"…"} once. Requires {@code admin:roles}.
+   * Plain key is shown only here; clients pass it via the
+   * {@code X-Api-Key} header on subsequent requests.
+   */
+  public static final String ADMIN_API_KEYS = "/api/admin/api-keys";
+  /**
+   * Admin endpoint to revoke an API key — POST {"keyHash":"…"}. Requires
+   * {@code admin:roles}. Idempotent: revoking an already-revoked key
+   * returns the same 200 response.
+   */
+  public static final String ADMIN_API_KEYS_REVOKE = "/api/admin/api-keys/revoke";
+  /**
+   * Rotating refresh-token issue endpoint — POST {"subjectId":"…"}
+   * returns {@code {"accessToken":"…","accessExpiresAt":"…",
+   * "refreshToken":"…","refreshExpiresAt":"…"}}. Demo-only:
+   * unauthenticated; production deployments would couple this to a
+   * username/password or API-key authentication step first.
+   */
+  public static final String AUTH_TOKEN_ISSUE = "/api/auth/token/issue";
+  /**
+   * Refresh-token rotation endpoint — POST {"refreshToken":"…"}
+   * consumes the supplied refresh token and returns a fresh
+   * {@code TokenPair}. Replaying a consumed refresh token returns
+   * 401 with {@code WWW-Authenticate: TokenRotated}.
+   */
+  public static final String AUTH_TOKEN_REFRESH = "/api/auth/token/refresh";
+  /**
+   * Refresh-token revoke endpoint — POST {"refreshToken":"…"}.
+   * Idempotent: revoking an unknown/already-revoked token still
+   * returns 200.
+   */
+  public static final String AUTH_TOKEN_REVOKE = "/api/auth/token/revoke";
 
   private DemoEndpoints() {
   }

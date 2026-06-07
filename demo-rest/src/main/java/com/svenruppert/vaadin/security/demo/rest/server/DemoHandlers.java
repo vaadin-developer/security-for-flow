@@ -59,6 +59,11 @@ import com.svenruppert.vaadin.security.rest.RestRequest;
 import com.svenruppert.vaadin.security.rest.RestResponse;
 import com.svenruppert.vaadin.security.accountlifecycle.PasswordResetService;
 import com.svenruppert.vaadin.security.accountlifecycle.PasswordResetTokenRecord;
+import com.svenruppert.vaadin.security.authentication.ApiKeyRecord;
+import com.svenruppert.vaadin.security.authentication.ApiKeyStore;
+import com.svenruppert.vaadin.security.authentication.PasswordHasher;
+import com.svenruppert.vaadin.security.authentication.TokenService;
+import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.ratelimiting.RateLimitDecision;
 import com.svenruppert.vaadin.security.ratelimiting.RateLimitKey;
 import com.svenruppert.vaadin.security.ratelimiting.RateLimitPolicy;
@@ -73,6 +78,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -101,6 +107,9 @@ public final class DemoHandlers {
   private final SecurityVersionStore securityVersionStore;
   private final PasswordResetService passwordResetService;
   private final RateLimitPolicy loginRateLimit;
+  private final ApiKeyStore apiKeyStore;
+  private final PasswordHasher apiKeyHasher;
+  private final TokenService tokenService;
 
   public DemoHandlers(
       DemoUserStore userStore,
@@ -167,8 +176,7 @@ public final class DemoHandlers {
         defaultCompromisedChecker(),
         CompromisedPasswordPolicy.defaults(),
         securityVersionStore,
-        passwordResetService,
-        null);
+        passwordResetService);
   }
 
   /**
@@ -194,7 +202,63 @@ public final class DemoHandlers {
         CompromisedPasswordPolicy.defaults(),
         securityVersionStore,
         passwordResetService,
-        loginRateLimit);
+        loginRateLimit,
+        null,
+        null,
+        null);
+  }
+
+  /**
+   * Full constructor including the V00.70 Phase-7b API-key admin
+   * endpoints. Pass {@code null} for {@code apiKeyStore} /
+   * {@code apiKeyHasher} to leave the admin endpoints disabled
+   * (they will return 503).
+   */
+  public DemoHandlers(
+      DemoUserStore userStore,
+      DemoTokenStore tokenStore,
+      DemoDocumentStore documents,
+      DemoOperationRegistry registry,
+      DemoSubjectResolver subjectResolver,
+      LoginAttemptPolicy loginAttemptPolicy,
+      SecurityVersionStore securityVersionStore,
+      PasswordResetService passwordResetService,
+      RateLimitPolicy loginRateLimit,
+      ApiKeyStore apiKeyStore,
+      PasswordHasher apiKeyHasher) {
+    this(userStore, tokenStore, documents, registry, subjectResolver,
+        loginAttemptPolicy, securityVersionStore, passwordResetService,
+        loginRateLimit, apiKeyStore, apiKeyHasher, null);
+  }
+
+  /**
+   * Full constructor including the V00.70 Phase-7b
+   * {@link TokenService} for rotating refresh tokens.
+   */
+  public DemoHandlers(
+      DemoUserStore userStore,
+      DemoTokenStore tokenStore,
+      DemoDocumentStore documents,
+      DemoOperationRegistry registry,
+      DemoSubjectResolver subjectResolver,
+      LoginAttemptPolicy loginAttemptPolicy,
+      SecurityVersionStore securityVersionStore,
+      PasswordResetService passwordResetService,
+      RateLimitPolicy loginRateLimit,
+      ApiKeyStore apiKeyStore,
+      PasswordHasher apiKeyHasher,
+      TokenService tokenService) {
+    this(userStore, tokenStore, documents, registry, subjectResolver,
+        loginAttemptPolicy,
+        defaultAbuseDetection(),
+        defaultCompromisedChecker(),
+        CompromisedPasswordPolicy.defaults(),
+        securityVersionStore,
+        passwordResetService,
+        loginRateLimit,
+        apiKeyStore,
+        apiKeyHasher,
+        tokenService);
   }
 
   public DemoHandlers(
@@ -242,7 +306,8 @@ public final class DemoHandlers {
       PasswordResetService passwordResetService) {
     this(userStore, tokenStore, documents, registry, subjectResolver,
         loginAttemptPolicy, abuseDetection, compromisedChecker,
-        compromisedPolicy, securityVersionStore, passwordResetService, null);
+        compromisedPolicy, securityVersionStore, passwordResetService, null,
+        null, null, null);
   }
 
   public DemoHandlers(
@@ -257,7 +322,10 @@ public final class DemoHandlers {
       CompromisedPasswordPolicy compromisedPolicy,
       SecurityVersionStore securityVersionStore,
       PasswordResetService passwordResetService,
-      RateLimitPolicy loginRateLimit) {
+      RateLimitPolicy loginRateLimit,
+      ApiKeyStore apiKeyStore,
+      PasswordHasher apiKeyHasher,
+      TokenService tokenService) {
     this.userStore = userStore;
     this.tokenStore = tokenStore;
     this.documents = documents;
@@ -271,6 +339,9 @@ public final class DemoHandlers {
         "securityVersionStore");
     this.passwordResetService = passwordResetService;
     this.loginRateLimit = loginRateLimit;
+    this.apiKeyStore = apiKeyStore;
+    this.apiKeyHasher = apiKeyHasher;
+    this.tokenService = tokenService;
   }
 
   /** Test seam — exposes the wired store so integration tests can bump. */
@@ -430,6 +501,211 @@ public final class DemoHandlers {
         .logout(SubjectId.of(u.username()), LogoutScope.CurrentSession));
     response.status(200);
     response.body(DemoJson.encode(Map.of("status", "logged-out")));
+  }
+
+  /**
+   * V00.70 Phase-7b — mints a long-lived API key.
+   * <p>
+   * Body: {@code {"name":"…", "subjectId":"…", "scopes":[…]}}.
+   * Returns {@code {"plainKey":"…","keyHash":"…","name":"…",
+   * "subjectId":"…","scopes":[…],"createdAt":"…"}} — the plain key
+   * is shown exactly once; only its hash is persisted. Clients pass
+   * the plain value via {@code X-Api-Key} on subsequent requests.
+   * Requires {@code admin:roles}.
+   */
+  @RequiresPermission("admin:roles")
+  public void createApiKey(RestRequest request, RestResponse response) {
+    if (apiKeyStore == null || apiKeyHasher == null) {
+      writeError(response, 503, "Service Unavailable");
+      return;
+    }
+    Map<String, Object> body;
+    try {
+      body = DemoJson.decodeObject(requireBody(request));
+    } catch (RuntimeException e) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    Object nameValue = body.get("name");
+    Object subjectValue = body.get("subjectId");
+    Object scopesValue = body.get("scopes");
+    if (!(nameValue instanceof String name) || name.isBlank()
+        || !(subjectValue instanceof String subjectId) || subjectId.isBlank()
+        || !(scopesValue instanceof List<?> rawScopes) || rawScopes.isEmpty()) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    Set<PermissionName> scopes = new LinkedHashSet<>();
+    for (Object scope : rawScopes) {
+      if (!(scope instanceof String s) || s.isBlank()) {
+        writeError(response, 400, "Bad Request");
+        return;
+      }
+      scopes.add(new PermissionName(s));
+    }
+
+    String plainKey = generateApiKey();
+    String keyHash = apiKeyHasher.hash(plainKey.toCharArray());
+    Instant now = Instant.now(Clock.systemUTC());
+    ApiKeyRecord record = new ApiKeyRecord(
+        keyHash, TenantId.DEFAULT, SubjectId.of(subjectId), name,
+        Set.copyOf(scopes), now,
+        Optional.empty(), Optional.empty(), Optional.empty());
+    apiKeyStore.save(record);
+
+    Map<String, Object> payload = new LinkedHashMap<>();
+    payload.put("plainKey", plainKey);
+    payload.put("keyHash", keyHash);
+    payload.put("name", name);
+    payload.put("subjectId", subjectId);
+    payload.put("scopes", scopes.stream().map(PermissionName::value).sorted().toList());
+    payload.put("createdAt", now.toString());
+    response.status(201);
+    response.body(DemoJson.encode(payload));
+  }
+
+  /**
+   * V00.70 Phase-7b — revokes an API key. Body
+   * {@code {"keyHash":"…"}}. Idempotent: revoking an
+   * already-revoked key still returns 200. Requires
+   * {@code admin:roles}.
+   */
+  @RequiresPermission("admin:roles")
+  public void revokeApiKey(RestRequest request, RestResponse response) {
+    if (apiKeyStore == null) {
+      writeError(response, 503, "Service Unavailable");
+      return;
+    }
+    Map<String, Object> body;
+    try {
+      body = DemoJson.decodeObject(requireBody(request));
+    } catch (RuntimeException e) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    Object hashValue = body.get("keyHash");
+    if (!(hashValue instanceof String keyHash) || keyHash.isBlank()) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    if (apiKeyStore.findByHash(keyHash).isEmpty()) {
+      writeError(response, 404, "Not Found");
+      return;
+    }
+    apiKeyStore.revoke(keyHash, Instant.now(Clock.systemUTC()));
+    response.status(200);
+    response.body(DemoJson.encode(Map.of("keyHash", keyHash, "revoked", true)));
+  }
+
+  /**
+   * V00.70 Phase-7b — issues a fresh
+   * {@link TokenService.TokenPair} for the supplied subject id.
+   * Body: {@code {"subjectId":"…"}}. Demo-only: unauthenticated;
+   * production would couple this to a credential challenge.
+   */
+  public void issueTokenPair(RestRequest request, RestResponse response) {
+    if (tokenService == null) {
+      writeError(response, 503, "Service Unavailable");
+      return;
+    }
+    Map<String, Object> body;
+    try {
+      body = DemoJson.decodeObject(requireBody(request));
+    } catch (RuntimeException e) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    Object subjectValue = body.get("subjectId");
+    if (!(subjectValue instanceof String subjectId) || subjectId.isBlank()) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    TokenService.TokenPair pair = tokenService.issue(SubjectId.of(subjectId));
+    response.status(200);
+    response.body(DemoJson.encode(tokenPairToJson(pair)));
+  }
+
+  /**
+   * V00.70 Phase-7b — rotates a refresh token. Body
+   * {@code {"refreshToken":"…"}}. On success returns a fresh pair
+   * + 200; on every failure mode (unknown, replayed, revoked,
+   * expired) returns 401 + {@code WWW-Authenticate: TokenRotated}.
+   */
+  public void rotateTokenPair(RestRequest request, RestResponse response) {
+    if (tokenService == null) {
+      writeError(response, 503, "Service Unavailable");
+      return;
+    }
+    Map<String, Object> body;
+    try {
+      body = DemoJson.decodeObject(requireBody(request));
+    } catch (RuntimeException e) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    Object refreshValue = body.get("refreshToken");
+    if (!(refreshValue instanceof String refreshToken) || refreshToken.isBlank()) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    Optional<TokenService.TokenPair> rotated = tokenService.rotate(refreshToken);
+    if (rotated.isEmpty()) {
+      response.header("WWW-Authenticate", "TokenRotated");
+      writeError(response, 401, "Unauthorized");
+      return;
+    }
+    response.status(200);
+    response.body(DemoJson.encode(tokenPairToJson(rotated.get())));
+  }
+
+  /**
+   * V00.70 Phase-7b — revokes a still-active refresh token.
+   * Idempotent: revoking an unknown / already-revoked / replaced
+   * token returns 200 with {@code revoked:false}.
+   */
+  public void revokeTokenPair(RestRequest request, RestResponse response) {
+    if (tokenService == null) {
+      writeError(response, 503, "Service Unavailable");
+      return;
+    }
+    Map<String, Object> body;
+    try {
+      body = DemoJson.decodeObject(requireBody(request));
+    } catch (RuntimeException e) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    Object refreshValue = body.get("refreshToken");
+    if (!(refreshValue instanceof String refreshToken) || refreshToken.isBlank()) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    boolean revoked = tokenService.revoke(refreshToken);
+    response.status(200);
+    response.body(DemoJson.encode(Map.of("revoked", revoked)));
+  }
+
+  private static Map<String, Object> tokenPairToJson(TokenService.TokenPair pair) {
+    Map<String, Object> payload = new LinkedHashMap<>();
+    payload.put("subjectId", pair.subjectId().value());
+    payload.put("accessToken", pair.accessToken());
+    payload.put("accessExpiresAt", pair.accessExpiresAt().toString());
+    payload.put("refreshToken", pair.refreshToken());
+    payload.put("refreshExpiresAt", pair.refreshExpiresAt().toString());
+    return payload;
+  }
+
+  /**
+   * Generates a fresh 32-byte plain API key, hex-encoded
+   * ({@code 64 chars}). Demo-only — production deployments would
+   * sample from {@code SecureRandom} into a more compact alphabet
+   * (URL-safe base64 etc) and might prefix a key-version segment
+   * for rotation.
+   */
+  private static String generateApiKey() {
+    byte[] bytes = new byte[32];
+    new java.security.SecureRandom().nextBytes(bytes);
+    return java.util.HexFormat.of().formatHex(bytes);
   }
 
   /**

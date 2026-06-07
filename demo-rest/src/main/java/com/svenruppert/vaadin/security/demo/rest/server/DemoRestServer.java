@@ -19,6 +19,11 @@ package com.svenruppert.vaadin.security.demo.rest.server;
 import com.svenruppert.vaadin.security.accountlifecycle.InMemoryPasswordResetTokenStore;
 import com.svenruppert.vaadin.security.accountlifecycle.LoggingNotificationSender;
 import com.svenruppert.vaadin.security.accountlifecycle.PasswordResetService;
+import com.svenruppert.vaadin.security.authentication.ApiKeyAuthenticationService;
+import com.svenruppert.vaadin.security.authentication.ApiKeyStore;
+import com.svenruppert.vaadin.security.authentication.InMemoryApiKeyStore;
+import com.svenruppert.vaadin.security.authentication.InMemoryRefreshTokenStore;
+import com.svenruppert.vaadin.security.authentication.TokenService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.ratelimiting.InMemoryRateLimitPolicy;
 import com.svenruppert.vaadin.security.ratelimiting.InMemoryRateLimitStore;
@@ -116,7 +121,15 @@ public final class DemoRestServer {
     DemoTokenStore tokens = new DemoTokenStore();
     DemoDocumentStore documents = new DemoDocumentStore();
     DemoRolePermissionMapping mapping = new DemoRolePermissionMapping();
-    DemoSubjectResolver resolver = new DemoSubjectResolver(tokens, mapping);
+    // V00.70 Phase-7b API keys — the resolver checks X-Api-Key
+    // ahead of the Bearer token (scopes win over session perms).
+    ApiKeyStore apiKeyStore = new InMemoryApiKeyStore();
+    Sha256TokenHasher apiKeyHasher = new Sha256TokenHasher();
+    ApiKeyAuthenticationService apiKeyAuth = new ApiKeyAuthenticationService(
+        apiKeyStore, apiKeyHasher,
+        SecurityServiceResolver.securityAuditService());
+    DemoSubjectResolver resolver = new DemoSubjectResolver(
+        tokens, mapping, apiKeyAuth);
     DemoOperationRegistry registry = new DemoOperationRegistry();
     SecurityVersionStore versionStore = new InMemorySecurityVersionStore();
     // PasswordResetService requires a *deterministic* hasher so the
@@ -142,9 +155,17 @@ public final class DemoRestServer {
         SecurityServiceResolver.securityAuditService(),
         200,
         Duration.ofMinutes(1));
+    // V00.70 Phase-7b — rotating refresh tokens. Uses the same
+    // Sha256TokenHasher as API keys (deterministic lookup) and a
+    // dedicated InMemoryRefreshTokenStore.
+    TokenService tokenService = new TokenService(
+        new InMemoryRefreshTokenStore(),
+        apiKeyHasher,
+        SecurityServiceResolver.securityAuditService());
     DemoHandlers handlers = new DemoHandlers(
         users, tokens, documents, registry, resolver, loginAttemptPolicy,
-        versionStore, passwordResetService, loginRateLimit);
+        versionStore, passwordResetService, loginRateLimit,
+        apiKeyStore, apiKeyHasher, tokenService);
     SecurityVersionEnforcer versionEnforcer = new SecurityVersionEnforcer(
         versionStore, SecurityServiceResolver.securityAuditService());
     RestSecurityVersionFilter versionFilter = new RestSecurityVersionFilter(

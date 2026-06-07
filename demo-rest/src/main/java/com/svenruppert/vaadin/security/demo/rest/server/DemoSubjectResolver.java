@@ -16,6 +16,8 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.server;
 
+import com.svenruppert.vaadin.security.authentication.ApiKeyAuthenticationService;
+import com.svenruppert.vaadin.security.authentication.ApiKeyRecord;
 import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
@@ -24,6 +26,7 @@ import com.svenruppert.vaadin.security.demo.rest.domain.DemoRolePermissionMappin
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUser;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 import com.svenruppert.vaadin.security.rest.BearerTokenExtractor;
+import com.svenruppert.vaadin.security.rest.RestHeaders;
 import com.svenruppert.vaadin.security.rest.RestRequest;
 import com.svenruppert.vaadin.security.rest.RestSecurityVersionContext;
 import com.svenruppert.vaadin.security.rest.RestSubjectResolver;
@@ -47,19 +50,58 @@ import java.util.Set;
  */
 public final class DemoSubjectResolver implements RestSubjectResolver {
 
+  /** Header carrying the long-lived API key (plain value). */
+  public static final String API_KEY_HEADER = "X-Api-Key";
+
   private static final BearerTokenExtractor BEARER = new BearerTokenExtractor();
 
   private final DemoTokenStore tokens;
   private final DemoRolePermissionMapping mapping;
+  private final ApiKeyAuthenticationService apiKeyAuth;
 
   public DemoSubjectResolver(DemoTokenStore tokens, DemoRolePermissionMapping mapping) {
+    this(tokens, mapping, null);
+  }
+
+  public DemoSubjectResolver(DemoTokenStore tokens,
+                             DemoRolePermissionMapping mapping,
+                             ApiKeyAuthenticationService apiKeyAuth) {
     this.tokens = tokens;
     this.mapping = mapping;
+    this.apiKeyAuth = apiKeyAuth;
   }
 
   @Override
   public Optional<SecuritySubject> resolveSubject(RestRequest request) {
+    // V00.70 Phase-7b API-key path takes precedence — a request that
+    // ships an X-Api-Key uses the scopes recorded on the key as its
+    // entire authorization surface (no role inheritance from any
+    // session token).
+    Optional<SecuritySubject> apiKeySubject = resolveApiKeySubject(request);
+    if (apiKeySubject.isPresent()) {
+      return apiKeySubject;
+    }
     return extractToken(request).flatMap(tokens::resolve).map(this::toSubject);
+  }
+
+  private Optional<SecuritySubject> resolveApiKeySubject(RestRequest request) {
+    if (apiKeyAuth == null) {
+      return Optional.empty();
+    }
+    Optional<String> headerValue = RestHeaders.first(request, API_KEY_HEADER);
+    if (headerValue.isEmpty()) {
+      return Optional.empty();
+    }
+    return apiKeyAuth.authenticate(headerValue.get())
+        .map(DemoSubjectResolver::toApiKeySubject);
+  }
+
+  private static SecuritySubject toApiKeySubject(ApiKeyRecord record) {
+    return new SecuritySubject(
+        record.subjectId().value(),
+        record.name(),
+        Set.of(),
+        Set.copyOf(record.scopes()));
   }
 
   @Override
