@@ -16,7 +16,9 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.server;
 
+import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.demo.rest.shared.DemoEndpoints;
+import com.svenruppert.vaadin.security.policy.api.ResourceRef;
 import com.svenruppert.vaadin.security.rest.RestAuthenticationFilter;
 import com.svenruppert.vaadin.security.rest.RestAuthorizationFilter;
 import com.svenruppert.vaadin.security.rest.RestSecurityVersionFilter;
@@ -52,6 +54,7 @@ public final class DemoHttpRouter implements HttpHandler {
   private final Method inspectDocumentsMethod;
   private final Method createApiKeyMethod;
   private final Method revokeApiKeyMethod;
+  private final Method inspectOwnedDocumentMethod;
   private final Method adminStatusMethod;
   private final Method auditEventsMethod;
   private final Method listUsersMethod;
@@ -87,6 +90,7 @@ public final class DemoHttpRouter implements HttpHandler {
       this.inspectDocumentsMethod = DemoHandlers.class.getDeclaredMethod("inspectDocuments", sig);
       this.createApiKeyMethod = DemoHandlers.class.getDeclaredMethod("createApiKey", sig);
       this.revokeApiKeyMethod = DemoHandlers.class.getDeclaredMethod("revokeApiKey", sig);
+      this.inspectOwnedDocumentMethod = DemoHandlers.class.getDeclaredMethod("inspectOwnedDocument", sig);
       this.adminStatusMethod = DemoHandlers.class.getDeclaredMethod("adminStatus", sig);
       this.auditEventsMethod = DemoHandlers.class.getDeclaredMethod("auditEvents", sig);
       this.listUsersMethod = DemoHandlers.class.getDeclaredMethod("listUsers", sig);
@@ -188,6 +192,22 @@ public final class DemoHttpRouter implements HttpHandler {
     }
     if (path.startsWith(DemoEndpoints.DOCUMENT_BY_ID) && "DELETE".equals(method)) {
       filter.authorizeAndHandle(request, response, handlers::deleteDocument, deleteDocumentMethod);
+      return;
+    }
+    // V00.70 Policy-DSL — the /api/owned-documents/{id} path carries
+    // the ResourceRef into AccessContext.attributes so the
+    // @RequiresPolicy("document.owner-or-admin") evaluator can
+    // resolve owner attributes via the registered ResourceResolver.
+    if (path.startsWith(DemoEndpoints.OWNED_DOCUMENT_BY_ID) && "GET".equals(method)) {
+      String id = path.substring(DemoEndpoints.OWNED_DOCUMENT_BY_ID.length());
+      Map<String, Object> attributes = id.isBlank()
+          ? Map.of()
+          : Map.of(ResourceRef.ATTRIBUTE_KEY,
+              new ResourceRef(DemoOwnedDocumentResolver.RESOURCE_TYPE,
+                  id, TenantId.DEFAULT));
+      filter.authorizeAndHandle(request, response,
+          handlers::inspectOwnedDocument, inspectOwnedDocumentMethod,
+          "get", attributes);
       return;
     }
     if (DemoEndpoints.ADMIN_STATUS.equals(path) && "GET".equals(method)) {

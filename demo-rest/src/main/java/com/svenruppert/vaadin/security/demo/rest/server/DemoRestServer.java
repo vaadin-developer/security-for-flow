@@ -48,10 +48,15 @@ import com.svenruppert.vaadin.security.bootstrap.MinimumLengthPasswordPolicy;
 import com.svenruppert.vaadin.security.bruteforce.InMemoryLoginAttemptPolicy;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoDocumentStore;
+import com.svenruppert.vaadin.security.demo.rest.domain.DemoOwnedDocumentStore;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoRolePermissionMapping;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUser;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUserStore;
 import com.svenruppert.vaadin.security.demo.rest.shared.DemoEndpoints;
+import com.svenruppert.vaadin.security.policy.impl.InMemoryPolicyRegistry;
+import com.svenruppert.vaadin.security.policy.impl.InMemoryResourceResolverRegistry;
+import com.svenruppert.vaadin.security.policy.spi.PolicyRegistry;
+import com.svenruppert.vaadin.security.policy.spi.ResourceResolverRegistry;
 import com.svenruppert.vaadin.security.rest.RestSecurityVersionFilter;
 import com.svenruppert.vaadin.security.session.InMemorySecurityVersionStore;
 import com.svenruppert.vaadin.security.session.SecurityVersionEnforcer;
@@ -166,6 +171,19 @@ public final class DemoRestServer {
         users, tokens, documents, registry, resolver, loginAttemptPolicy,
         versionStore, passwordResetService, loginRateLimit,
         apiKeyStore, apiKeyHasher, tokenService);
+
+    // V00.70 Policy-DSL example — register the document.owner-or-admin
+    // policy and the matching ResourceResolver, then inject the
+    // owned-documents store into the handlers so the inspect handler
+    // can serve the JSON body after the policy has cleared.
+    DemoOwnedDocumentStore ownedDocumentStore = new DemoOwnedDocumentStore();
+    handlers.setOwnedDocumentStore(ownedDocumentStore);
+    PolicyRegistry policyRegistry = new InMemoryPolicyRegistry();
+    policyRegistry.register(DemoPolicies.documentOwnerOrAdmin());
+    SecurityServiceResolver.setPolicyRegistry(policyRegistry);
+    ResourceResolverRegistry resourceRegistry = new InMemoryResourceResolverRegistry();
+    resourceRegistry.register(new DemoOwnedDocumentResolver(ownedDocumentStore));
+    SecurityServiceResolver.setResourceResolverRegistry(resourceRegistry);
     SecurityVersionEnforcer versionEnforcer = new SecurityVersionEnforcer(
         versionStore, SecurityServiceResolver.securityAuditService());
     RestSecurityVersionFilter versionFilter = new RestSecurityVersionFilter(

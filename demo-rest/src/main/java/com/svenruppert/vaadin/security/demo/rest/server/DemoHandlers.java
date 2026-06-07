@@ -22,6 +22,9 @@ import com.svenruppert.vaadin.security.audit.LoginSucceeded;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresAnyPermission;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPermission;
+import com.svenruppert.vaadin.security.authorization.annotations.RequiresPolicy;
+import com.svenruppert.vaadin.security.demo.rest.domain.DemoOwnedDocument;
+import com.svenruppert.vaadin.security.demo.rest.domain.DemoOwnedDocumentStore;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.credential.abuse.AbuseAttemptContext;
 import com.svenruppert.vaadin.security.credential.abuse.AbuseAttemptType;
@@ -110,6 +113,13 @@ public final class DemoHandlers {
   private final ApiKeyStore apiKeyStore;
   private final PasswordHasher apiKeyHasher;
   private final TokenService tokenService;
+  /**
+   * Pure data accessor for the Policy-DSL example — the policy
+   * machinery does the authorization, this field only feeds the
+   * inspect-handler with the response body. Stays nullable so the
+   * eight-argument constructor (used by tests) still compiles.
+   */
+  private DemoOwnedDocumentStore ownedDocumentStore;
 
   public DemoHandlers(
       DemoUserStore userStore,
@@ -347,6 +357,58 @@ public final class DemoHandlers {
   /** Test seam — exposes the wired store so integration tests can bump. */
   public SecurityVersionStore securityVersionStore() {
     return securityVersionStore;
+  }
+
+  /**
+   * Server-side setter for the {@link DemoOwnedDocumentStore} that
+   * backs the {@code /api/owned-documents/{id}} endpoint. Used by
+   * {@link DemoRestServer} to inject the singleton store after
+   * constructor wiring without growing yet another overload.
+   */
+  public void setOwnedDocumentStore(DemoOwnedDocumentStore store) {
+    this.ownedDocumentStore = store;
+  }
+
+  /**
+   * V00.70 Policy-DSL example —
+   * {@code GET /api/owned-documents/{id}}. The handler itself only
+   * resolves the document and returns it; authorization is owned by
+   * {@code @RequiresPolicy("document.owner-or-admin")} on the
+   * declared element. {@link DemoHttpRouter} threads the
+   * {@code ResourceRef} into the {@code AccessContext.attributes()}
+   * map so the {@code RequiresPolicyEvaluator} can resolve owner /
+   * admin paths through {@link DemoOwnedDocumentResolver}.
+   */
+  @RequiresPolicy(DemoPolicies.DOCUMENT_OWNER_OR_ADMIN)
+  public void inspectOwnedDocument(RestRequest request, RestResponse response) {
+    if (ownedDocumentStore == null) {
+      writeError(response, 503, "Service Unavailable");
+      return;
+    }
+    String path = request.path();
+    String prefix = com.svenruppert.vaadin.security.demo.rest.shared.DemoEndpoints.OWNED_DOCUMENT_BY_ID;
+    if (!path.startsWith(prefix) || path.length() <= prefix.length()) {
+      writeError(response, 404, "Not Found");
+      return;
+    }
+    String id = path.substring(prefix.length());
+    Optional<DemoOwnedDocument> doc;
+    try {
+      doc = ownedDocumentStore.findById(Long.parseLong(id));
+    } catch (NumberFormatException e) {
+      writeError(response, 400, "Bad Request");
+      return;
+    }
+    if (doc.isEmpty()) {
+      writeError(response, 404, "Not Found");
+      return;
+    }
+    Map<String, Object> payload = new LinkedHashMap<>();
+    payload.put("id", doc.get().id());
+    payload.put("title", doc.get().title());
+    payload.put("ownerId", doc.get().ownerId());
+    response.status(200);
+    response.body(DemoJson.encode(payload));
   }
 
   /**

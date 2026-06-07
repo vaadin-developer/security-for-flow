@@ -33,6 +33,14 @@ public final class DemoEndpoints {
    * evaluator.
    */
   public static final String DOCUMENTS_INSPECT = "/api/documents/inspect";
+  /**
+   * Owned-document inspector — GET
+   * {@code /api/owned-documents/{id}} returns the document if the
+   * subject is admin OR the document's owner; 403 otherwise.
+   * Protected by the V00.70 Policy-DSL example
+   * {@code @RequiresPolicy("document.owner-or-admin")}.
+   */
+  public static final String OWNED_DOCUMENT_BY_ID = "/api/owned-documents/";
   public static final String ADMIN_STATUS = "/api/admin/status";
   public static final String ADMIN_USERS = "/api/admin/users";
   /** Single-user resource: {@code /api/admin/users/{username}}. PUT body {"role":"…"}. */
