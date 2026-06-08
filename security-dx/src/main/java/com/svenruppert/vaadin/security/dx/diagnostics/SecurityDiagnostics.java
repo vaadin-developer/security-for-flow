@@ -135,6 +135,13 @@ public final class SecurityDiagnostics {
       }
     }
 
+    // 4. proxybuilder wrapper index — V00.72 Prompts 020-022
+    builder.processorReport = WrapperIndexReader.read(cl);
+    for (ProcessorWarning pw : builder.processorReport.warnings()) {
+      builder.addWarning(new ServiceWarning(
+          pw.code(), pw.message(), pw.suggestedFix()));
+    }
+
     return builder.build();
   }
 
@@ -187,10 +194,12 @@ public final class SecurityDiagnostics {
       return this;
     }
 
+    SecurityProcessorReport processorReport;
+
     SecurityServiceReport build() {
       return new SecurityServiceReport(
           discovered, missing, duplicates, warnings,
-          SecurityProcessorReport.empty());
+          processorReport == null ? SecurityProcessorReport.empty() : processorReport);
     }
   }
 }
