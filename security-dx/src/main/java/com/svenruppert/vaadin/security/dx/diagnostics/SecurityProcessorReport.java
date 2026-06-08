@@ -1,0 +1,39 @@
+/**
+ * Copyright © 2018 Sven Ruppert (sven.ruppert@gmail.com)
+ *
+ * Licensed under the EUPL, Version 1.2 or - as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence"); You may not use this work except in
+ * compliance with the Licence. You may obtain a copy of the Licence at:
+ *
+ * https://joinup.ec.europa.eu/software/page/eupl
+ */
+package com.svenruppert.vaadin.security.dx.diagnostics;
+
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * Sub-report covering proxybuilder-generated wrappers. Populated by
+ * Prompts 020-022; empty placeholder until then.
+ *
+ * @since 00.72.00
+ */
+@ExperimentalSecurityApi
+public record SecurityProcessorReport(
+    List<GeneratedSecurityWrapper> wrappers,
+    List<ProcessorWarning> warnings) {
+
+  public SecurityProcessorReport {
+    Objects.requireNonNull(wrappers, "wrappers");
+    Objects.requireNonNull(warnings, "warnings");
+    wrappers = List.copyOf(wrappers);
+    warnings = List.copyOf(warnings);
+  }
+
+  public static SecurityProcessorReport empty() {
+    return new SecurityProcessorReport(List.of(), List.of());
+  }
+}
