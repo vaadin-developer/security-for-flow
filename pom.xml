@@ -87,6 +87,7 @@
         <module>security-dx-standalone</module>
         <module>security-autoservice-annotations</module>
         <module>security-autoservice-processor</module>
+        <module>security-vaadin-starter</module>
         <module>demo-rest-shared</module>
         <module>demo-vaadin</module>
         <module>demo-rest</module>
