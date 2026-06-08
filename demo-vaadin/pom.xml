@@ -48,6 +48,26 @@
             <version>${project.version}</version>
         </dependency>
         <!--
+            V00.72 fluent bootstrap. BootstrapServiceInitListener now calls
+            VaadinSecurity.bootstrap() with .use(developmentDefaults()) at
+            Vaadin service init and prints the SecurityRuntime.log() banner.
+        -->
+        <dependency>
+            <groupId>com.svenruppert</groupId>
+            <artifactId>security-dx</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.svenruppert</groupId>
+            <artifactId>security-dx-vaadin</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.svenruppert</groupId>
+            <artifactId>security-vaadin-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!--
             Vaadin 25.1.1 mixes Jackson 3 (runtime, tools.jackson.core) and
             Jackson 2 annotations: vaadin-maven-plugin:prepare-frontend still
             references com.fasterxml.jackson.annotation.JsonSerializeAs and
