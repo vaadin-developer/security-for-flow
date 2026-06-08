@@ -99,6 +99,21 @@ adapter facades and the AutoService toolchain are opt-in.
 
 ## Mutation coverage (V00.72)
 
+### V00.71 modules — no regression
+
+Re-ran PIT against the five core V00.71 modules. Mutation coverage is
+identical to the V00.71 baseline; V00.72 introduces no regression.
+
+| Module | V00.71 baseline | V00.72 verified | Δ |
+|---|---|---|---|
+| `security-core`         | 87% (1901/2196) | 87% (1901/2196) | 0 |
+| `security-vaadin`       | 79% (242/305)   | 79% (242/305)   | 0 |
+| `security-rest`         | 95% (86/91)     | 95% (86/91)     | 0 |
+| `security-standalone`   | 97% (33/34)     | 97% (33/34)     | 0 |
+| `security-processor`    | 82% (23/28)     | 82% (23/28)     | 0 |
+
+### New DX modules — first PIT pass
+
 First PIT pass over the new DX modules. No coverage threshold is
 enforced; the goal is to record the starting point.
 
