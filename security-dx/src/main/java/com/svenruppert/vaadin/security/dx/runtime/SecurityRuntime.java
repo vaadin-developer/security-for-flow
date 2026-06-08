@@ -37,4 +37,39 @@ public record SecurityRuntime(
     services = List.copyOf(services);
     warnings = List.copyOf(warnings);
   }
+
+  /**
+   * Renders this runtime as a multiline human-readable string suitable
+   * for logging at application startup. Contains only metadata
+   * (SPI/impl class names, warning codes); never includes credentials,
+   * tokens, pepper key material or anything user-supplied beyond the
+   * stable {@code source} strings.
+   *
+   * @return non-null multiline string ending with a final newline
+   */
+  public String log() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("Security bootstrap diagnostics:\n");
+    sb.append(" - mode = ").append(mode).append('\n');
+    if (services.isEmpty()) {
+      sb.append(" - services: (none)\n");
+    } else {
+      sb.append(" - services:\n");
+      for (RegisteredSecurityService s : services) {
+        sb.append("    * ").append(s.spi().getSimpleName())
+            .append(": ").append(s.impl().getName())
+            .append(" (").append(s.source());
+        if (s.defaulted()) {
+          sb.append(", default");
+        }
+        sb.append(")\n");
+      }
+    }
+    sb.append(" - Warnings: ").append(warnings.size()).append('\n');
+    for (SecurityBootstrapWarning w : warnings) {
+      sb.append("    * [").append(w.severity()).append("] ")
+          .append(w.code()).append(": ").append(w.message()).append('\n');
+    }
+    return sb.toString();
+  }
 }
