@@ -18,7 +18,6 @@ package com.svenruppert.vaadin.security.demo.restclient.security;
 
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.demo.restclient.security.resource.DemoDocumentResolver;
 import com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime;
 import com.svenruppert.vaadin.security.dx.vaadin.bootstrap.VaadinSecurity;
@@ -34,7 +33,7 @@ import java.util.ServiceLoader;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * <strong>V00.72 reference: the simplest possible Vaadin-side bootstrap.</strong>
+ * <strong>V00.73 reference: the simplest possible Vaadin-side bootstrap.</strong>
  * <p>
  * This file is the entire security-init surface of {@code demo-vaadin-rest-client}.
  * Everything else is wired through {@code @SecurityAutoService}:
@@ -46,12 +45,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * </ul>
  * No hand-written {@code META-INF/services/*} files for those SPIs.
  * <p>
- * The {@link #serviceInit(ServiceInitEvent)} body shows the V00.72 way:
+ * The {@link #serviceInit(ServiceInitEvent)} body shows the V00.73 way:
  * one fluent call to {@link VaadinSecurity#bootstrap()}, the
  * {@code VaadinSecurityStarter.developmentDefaults()} profile, and a
  * {@code .policies(...)} lambda that registers the three demo policies
- * (V00.71 PolicyRegistry calls — V00.73 will fold these into the
- * fluent surface so this file shrinks further).
+ * and the document resource resolver — all inline through the fluent
+ * surface, no direct {@code SecurityServiceResolver} calls.
  */
 public final class DemoPolicyInitListener implements VaadinServiceInitListener {
 
@@ -91,41 +90,26 @@ public final class DemoPolicyInitListener implements VaadinServiceInitListener {
         .authorization(authz)
         .loginRoute("login")
         .stepUpRoute("step-up")
-        .policies(p -> registerDemoPolicies())
+        .policies(p -> p
+            .resourceResolver(new DemoDocumentResolver())
+            .register(Policy.named(POLICY_EDITOR_OR_ADMIN)
+                .allowIf(SubjectPredicates.hasAnyRole("ROLE_ADMIN", "ROLE_EDITOR"))
+                .orIf(SubjectPredicates.hasPermission("document:write"))
+                .deny("must be ADMIN/EDITOR or hold document:write")
+                .build())
+            .register(Policy.named(POLICY_DOCUMENT_OWNER_OR_ADMIN)
+                .allowIf(SubjectPredicates.hasRole("ROLE_ADMIN"))
+                .orIf(ResourcePredicates.ownerMatchesSubject(
+                    DemoDocumentResolver.RESOURCE_TYPE,
+                    DemoDocumentResolver.OWNER_ATTRIBUTE))
+                .deny("must be ADMIN or document owner")
+                .build())
+            .register(Policy.named(POLICY_SENSITIVE_REQUIRES_MFA)
+                .stepUpRequiredIf(ctx -> true, PolicyDecision.StepUpMethod.MFA,
+                    "MFA challenge required for sensitive operations")
+                .build()))
         .install();
 
     System.out.println(runtime.log());
-  }
-
-  /**
-   * Registers the three demo policies plus the document resource
-   * resolver. V00.72 hosts these through the PolicyRegistry /
-   * ResourceResolverRegistry SPIs directly; the fluent
-   * {@code .policies(...)} sub-builder is a recorded-only placeholder
-   * in V00.72 (see its JavaDoc) and folds into actual wiring in V00.73.
-   */
-  private static void registerDemoPolicies() {
-    SecurityServiceResolver.resourceResolverRegistry().register(new DemoDocumentResolver());
-
-    var registry = SecurityServiceResolver.policyRegistry();
-
-    registry.register(Policy.named(POLICY_EDITOR_OR_ADMIN)
-        .allowIf(SubjectPredicates.hasAnyRole("ROLE_ADMIN", "ROLE_EDITOR"))
-        .orIf(SubjectPredicates.hasPermission("document:write"))
-        .deny("must be ADMIN/EDITOR or hold document:write")
-        .build());
-
-    registry.register(Policy.named(POLICY_DOCUMENT_OWNER_OR_ADMIN)
-        .allowIf(SubjectPredicates.hasRole("ROLE_ADMIN"))
-        .orIf(ResourcePredicates.ownerMatchesSubject(
-            DemoDocumentResolver.RESOURCE_TYPE,
-            DemoDocumentResolver.OWNER_ATTRIBUTE))
-        .deny("must be ADMIN or document owner")
-        .build());
-
-    registry.register(Policy.named(POLICY_SENSITIVE_REQUIRES_MFA)
-        .stepUpRequiredIf(ctx -> true, PolicyDecision.StepUpMethod.MFA,
-            "MFA challenge required for sensitive operations")
-        .build());
   }
 }
