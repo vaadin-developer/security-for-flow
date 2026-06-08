@@ -26,8 +26,6 @@ import com.svenruppert.vaadin.security.policy.api.Policy;
 import com.svenruppert.vaadin.security.policy.api.PolicyDecision;
 import com.svenruppert.vaadin.security.policy.api.ResourcePredicates;
 import com.svenruppert.vaadin.security.policy.api.SubjectPredicates;
-import com.svenruppert.vaadin.security.policy.spi.PolicyRegistry;
-import com.svenruppert.vaadin.security.policy.spi.ResourceResolverRegistry;
 import com.svenruppert.vaadin.security.starter.profile.VaadinSecurityStarter;
 import com.vaadin.flow.server.ServiceInitEvent;
 import com.vaadin.flow.server.VaadinServiceInitListener;
@@ -36,19 +34,24 @@ import java.util.ServiceLoader;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Registers the demo-side policies and resource resolvers into the
- * {@link PolicyRegistry} and {@link ResourceResolverRegistry}
- * resolved through {@link SecurityServiceResolver}. Discovered via
- * {@code META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener}.
- *
- * <p>Two demo policies ship with this listener:
+ * <strong>V00.72 reference: the simplest possible Vaadin-side bootstrap.</strong>
+ * <p>
+ * This file is the entire security-init surface of {@code demo-vaadin-rest-client}.
+ * Everything else is wired through {@code @SecurityAutoService}:
  * <ul>
- *   <li>{@link #POLICY_EDITOR_OR_ADMIN} — combines role- and
- *       permission-based admission in a single rule.</li>
- *   <li>{@link #POLICY_DOCUMENT_OWNER_OR_ADMIN} — combines role-based
- *       admission with per-resource ownership lookup via
- *       {@link ResourcePredicates#ownerMatchesSubject(String, String)}.</li>
+ *   <li>{@code RestBackedAuthenticationService}  — {@code @SecurityAutoService(AuthenticationService.class)}</li>
+ *   <li>{@code RestBackedAuthorizationService}   — {@code @SecurityAutoService(AuthorizationService.class)}</li>
+ *   <li>{@code BackedLoginListener}              — {@code @SecurityAutoService(LoginListener.class)}</li>
+ *   <li>{@code ProjectRoleAccessEvaluator}       — {@code @SecurityAutoService(AuthorizationEvaluator.class)}</li>
  * </ul>
+ * No hand-written {@code META-INF/services/*} files for those SPIs.
+ * <p>
+ * The {@link #serviceInit(ServiceInitEvent)} body shows the V00.72 way:
+ * one fluent call to {@link VaadinSecurity#bootstrap()}, the
+ * {@code VaadinSecurityStarter.developmentDefaults()} profile, and a
+ * {@code .policies(...)} lambda that registers the three demo policies
+ * (V00.71 PolicyRegistry calls — V00.73 will fold these into the
+ * fluent surface so this file shrinks further).
  */
 public final class DemoPolicyInitListener implements VaadinServiceInitListener {
 
@@ -66,45 +69,45 @@ public final class DemoPolicyInitListener implements VaadinServiceInitListener {
    */
   public static final String POLICY_SENSITIVE_REQUIRES_MFA = "sensitive.requires-mfa";
 
-  private static final AtomicBoolean DX_BOOTSTRAP_DONE = new AtomicBoolean();
+  private static final AtomicBoolean DONE = new AtomicBoolean();
 
   @Override
   public void serviceInit(ServiceInitEvent event) {
-    registerResourceResolvers();
-    registerPolicies();
-    if (DX_BOOTSTRAP_DONE.compareAndSet(false, true)) {
-      runDxBootstrap();
-    }
-  }
-
-  // V00.72: the Vaadin-side fluent bootstrap. Authenticates against the
-  // demo-rest backend via the @SecurityAutoService-registered
-  // RestBackedAuthenticationService / RestBackedAuthorizationService.
-  private static void runDxBootstrap() {
-    AuthenticationService<?, ?> authn = ServiceLoader.load(AuthenticationService.class)
-        .findFirst().orElse(null);
-    AuthorizationService<?> authz = ServiceLoader.load(AuthorizationService.class)
-        .findFirst().orElse(null);
-    if (authn == null || authz == null) {
+    if (!DONE.compareAndSet(false, true)) {
       return;
     }
+    AuthenticationService<?, ?> authn = ServiceLoader.load(AuthenticationService.class)
+        .findFirst().orElseThrow(() -> new IllegalStateException(
+            "No AuthenticationService registered. "
+                + "Expected RestBackedAuthenticationService via @SecurityAutoService."));
+    AuthorizationService<?> authz = ServiceLoader.load(AuthorizationService.class)
+        .findFirst().orElseThrow(() -> new IllegalStateException(
+            "No AuthorizationService registered. "
+                + "Expected RestBackedAuthorizationService via @SecurityAutoService."));
+
     SecurityRuntime runtime = VaadinSecurity.bootstrap()
         .use(VaadinSecurityStarter.developmentDefaults())
         .authentication(authn)
         .authorization(authz)
         .loginRoute("login")
         .stepUpRoute("step-up")
+        .policies(p -> registerDemoPolicies())
         .install();
+
     System.out.println(runtime.log());
   }
 
-  private static void registerResourceResolvers() {
-    ResourceResolverRegistry registry = SecurityServiceResolver.resourceResolverRegistry();
-    registry.register(new DemoDocumentResolver());
-  }
+  /**
+   * Registers the three demo policies plus the document resource
+   * resolver. V00.72 hosts these through the PolicyRegistry /
+   * ResourceResolverRegistry SPIs directly; the fluent
+   * {@code .policies(...)} sub-builder is a recorded-only placeholder
+   * in V00.72 (see its JavaDoc) and folds into actual wiring in V00.73.
+   */
+  private static void registerDemoPolicies() {
+    SecurityServiceResolver.resourceResolverRegistry().register(new DemoDocumentResolver());
 
-  private static void registerPolicies() {
-    PolicyRegistry registry = SecurityServiceResolver.policyRegistry();
+    var registry = SecurityServiceResolver.policyRegistry();
 
     registry.register(Policy.named(POLICY_EDITOR_OR_ADMIN)
         .allowIf(SubjectPredicates.hasAnyRole("ROLE_ADMIN", "ROLE_EDITOR"))

@@ -18,6 +18,7 @@ package com.svenruppert.vaadin.security.demo.restclient.security;
 
 import com.svenruppert.vaadin.security.authorization.LoginListener;
 import com.svenruppert.vaadin.security.authorization.LoginView;
+import com.svenruppert.vaadin.security.autoservice.api.SecurityAutoService;
 import com.svenruppert.vaadin.security.demo.restclient.backend.RemoteUser;
 import com.svenruppert.vaadin.security.demo.restclient.views.MainView;
 import com.svenruppert.vaadin.security.demo.restclient.views.MyLoginView;
@@ -26,6 +27,7 @@ import com.vaadin.flow.component.Component;
 /**
  * SPI-loaded {@link LoginListener} for the {@link RemoteUser} subject type.
  */
+@SecurityAutoService(LoginListener.class)
 public class BackedLoginListener extends LoginListener<RemoteUser> {
 
   @Override
