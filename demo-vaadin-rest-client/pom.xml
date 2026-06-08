@@ -17,7 +17,7 @@
   <parent>
     <groupId>com.svenruppert</groupId>
     <artifactId>security-for-flow-parent</artifactId>
-    <version>00.70.00</version>
+    <version>00.71.00-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -40,6 +40,11 @@
     <dependency>
       <groupId>com.svenruppert</groupId>
       <artifactId>security-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>security-autoservice-annotations</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -100,6 +105,23 @@
   <build>
     <finalName>ROOT</finalName>
     <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>com.svenruppert</groupId>
+              <artifactId>security-autoservice-processor</artifactId>
+              <version>${project.version}</version>
+            </path>
+            <path>
+              <groupId>com.svenruppert</groupId>
+              <artifactId>security-autoservice-annotations</artifactId>
+              <version>${project.version}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-deploy-plugin</artifactId>

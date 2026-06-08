@@ -39,6 +39,11 @@
         </dependency>
         <dependency>
             <groupId>com.svenruppert</groupId>
+            <artifactId>security-autoservice-annotations</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.svenruppert</groupId>
             <artifactId>security-vaadin</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -114,6 +119,16 @@
                         <path>
                             <groupId>com.svenruppert</groupId>
                             <artifactId>security-processor</artifactId>
+                            <version>${project.version}</version>
+                        </path>
+                        <path>
+                            <groupId>com.svenruppert</groupId>
+                            <artifactId>security-autoservice-processor</artifactId>
+                            <version>${project.version}</version>
+                        </path>
+                        <path>
+                            <groupId>com.svenruppert</groupId>
+                            <artifactId>security-autoservice-annotations</artifactId>
                             <version>${project.version}</version>
                         </path>
                     </annotationProcessorPaths>

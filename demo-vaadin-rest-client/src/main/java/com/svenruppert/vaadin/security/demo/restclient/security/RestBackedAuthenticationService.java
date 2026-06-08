@@ -19,6 +19,7 @@ package com.svenruppert.vaadin.security.demo.restclient.security;
 import com.svenruppert.vaadin.security.audit.LoginSucceeded;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
+import com.svenruppert.vaadin.security.autoservice.api.SecurityAutoService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;
@@ -46,6 +47,7 @@ import java.time.Instant;
  * {@link SecurityServiceResolver}, so a brute-force attempt stops at the
  * Vaadin layer before issuing yet another HTTP call against the backend.
  */
+@SecurityAutoService(AuthenticationService.class)
 public class RestBackedAuthenticationService
     implements AuthenticationService<Credentials, RemoteUser> {
 

@@ -17,6 +17,7 @@
 package com.svenruppert.vaadin.security.demo.restclient.security;
 
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
+import com.svenruppert.vaadin.security.autoservice.api.SecurityAutoService;
 import com.svenruppert.vaadin.security.authorization.api.permissions.HasPermissions;
 import com.svenruppert.vaadin.security.authorization.api.roles.HasRoles;
 import com.svenruppert.vaadin.security.demo.restclient.backend.RemoteUser;
@@ -28,6 +29,7 @@ import java.util.Objects;
  * on the {@link RemoteUser} snapshot. This service simply returns the
  * snapshot — no further round-trips per UI decision.
  */
+@SecurityAutoService(AuthorizationService.class)
 public class RestBackedAuthorizationService implements AuthorizationService<RemoteUser> {
 
   @Override
