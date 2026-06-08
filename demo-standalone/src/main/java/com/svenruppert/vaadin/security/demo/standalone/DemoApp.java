@@ -106,12 +106,23 @@ public final class DemoApp {
 
     // Inspect the broader diagnostics surface (DiagnosticContributor SPI).
     var report = SecurityDiagnostics.inspect();
+    var processorReport = report.processorReport();
+    boolean hasProcessorEntries = !processorReport.wrappers().isEmpty()
+        || !processorReport.warnings().isEmpty();
     if (!report.missing().isEmpty() || !report.duplicates().isEmpty()
-        || !report.warnings().isEmpty()) {
+        || !report.warnings().isEmpty() || hasProcessorEntries) {
       System.out.println("--- SecurityDiagnostics ---");
       report.missing().forEach(m -> System.out.println("  missing: " + m.spi().getSimpleName() + " — " + m.reason()));
       report.duplicates().forEach(d -> System.out.println("  duplicate: " + d.spi().getSimpleName()));
       report.warnings().forEach(w -> System.out.println("  " + w.code() + ": " + w.message()));
+      // V00.73: wrapper-index reader now sees the entries the
+      // security-processor wrote at compile time.
+      processorReport.wrappers().forEach(w -> System.out.println(
+          "  wrapper: " + w.sourceType().getName()
+              + "\n           -> " + w.generatedType().getName()
+              + "\n           methods=" + w.delegatedMethods()));
+      processorReport.warnings().forEach(w -> System.out.println(
+          "  processor-warning: " + w.code() + ": " + w.message()));
     }
 
     BufferedReader reader = new BufferedReader(

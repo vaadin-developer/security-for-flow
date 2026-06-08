@@ -47,7 +47,7 @@ import java.util.Set;
  */
 final class WrapperIndexReader {
 
-  static final String RESOURCE_PATH = "META-INF/security-for-flow/generated-wrappers.idx";
+  static final String RESOURCE_PATH = WrapperIndexFormat.RESOURCE_PATH;
 
   private WrapperIndexReader() {
   }
@@ -67,7 +67,7 @@ final class WrapperIndexReader {
 
     Enumeration<URL> indexResources;
     try {
-      indexResources = cl.getResources(RESOURCE_PATH);
+      indexResources = cl.getResources(WrapperIndexFormat.RESOURCE_PATH);
     } catch (IOException io) {
       warnings.add(new ProcessorWarning(
           "processor/index-malformed",
@@ -104,7 +104,7 @@ final class WrapperIndexReader {
                                 ClassLoader cl,
                                 String sourceUrl) {
     // sourceFqn:generatedFqn:processor:proxyBuilderVersion:method1,method2,...
-    String[] parts = line.split(":", 5);
+    String[] parts = line.split(WrapperIndexFormat.FIELD_SEPARATOR, 5);
     if (parts.length < 5) {
       warnings.add(new ProcessorWarning(
           "processor/index-malformed",
@@ -118,7 +118,7 @@ final class WrapperIndexReader {
     String version = parts[3].trim();
     List<String> methods = parts[4].isBlank()
         ? Collections.emptyList()
-        : new ArrayList<>(Arrays.asList(parts[4].split(",")));
+        : new ArrayList<>(Arrays.asList(parts[4].split(WrapperIndexFormat.METHOD_SEPARATOR)));
     methods.replaceAll(String::trim);
 
     String key = sourceFqn + "|" + generatedFqn;
