@@ -10,22 +10,77 @@
  */
 package com.svenruppert.vaadin.security.dx.bootstrap;
 
+import com.svenruppert.vaadin.security.authentication.PasswordHasher;
 import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.credential.change.PasswordChangeService;
+import com.svenruppert.vaadin.security.credential.password.PasswordHashingService;
+import com.svenruppert.vaadin.security.credential.password.pepper.PepperService;
+import com.svenruppert.vaadin.security.credential.store.CredentialStore;
 
 /**
- * Credential sub-builder of the V00.72 fluent bootstrap.
- * <p>
- * <strong>V00.72 status:</strong> the call is <em>recorded only</em>;
- * no {@code PasswordHashingService} / {@code CredentialStore} wiring
- * is applied through this surface. Real credential wiring is staged
- * for V00.73; V00.71 callers continue to use the existing
- * {@code SecurityServiceResolver.setPasswordHashingService(...)} and
- * the {@code CredentialStore} SPI directly.
+ * Credential sub-builder of the fluent bootstrap.
+ *
+ * <p><strong>V00.73 status:</strong> typed surface — the two
+ * credential worlds are kept rigorously separate (Konzept §10):
+ * <ul>
+ *   <li>{@link #passwordHasher(PasswordHasher)} is the legacy V00.70
+ *       resolver path — wired through
+ *       {@code SecurityServiceResolver.setPasswordHashingService(...)}.</li>
+ *   <li>{@link #hashing(PasswordHashingService)} is the V00.71
+ *       credential-pipeline path — stored in DX state and reported
+ *       in {@code SecurityRuntime}; <strong>never</strong> stuffed
+ *       into the legacy setter.</li>
+ *   <li>{@link #pbkdf2Defaults()} sets BOTH worlds; {@link #modern()}
+ *       sets only the V00.71 pipeline and requires
+ *       {@code security-crypto-bc} on the classpath.</li>
+ * </ul>
+ *
+ * <p>{@link #passwordReset(com.svenruppert.vaadin.security.credential.reset.PasswordResetService)}
+ * references the V00.71 {@code credential.reset.PasswordResetService},
+ * NOT the V00.70 {@code accountlifecycle.PasswordResetService}
+ * (same simple name; different package). Pick the
+ * V00.71 type when importing.
  *
  * @since 00.72.00
  */
 @ExperimentalSecurityApi
 public interface CredentialBootstrap {
 
+  CredentialBootstrap passwordHasher(PasswordHasher hasher);
+
+  CredentialBootstrap hashing(PasswordHashingService service);
+
+  /**
+   * Convenience: sets both the legacy {@code Pbkdf2PasswordHasher}
+   * AND the V00.71 {@code PasswordHashingServices.defaults()}.
+   * {@code SecurityRuntime} reports them as two separate entries —
+   * legacy under {@link PasswordHasher}, pipeline under
+   * {@link PasswordHashingService}.
+   */
   CredentialBootstrap pbkdf2Defaults();
+
+  /**
+   * Configures the V00.71 modern (BouncyCastle) password-hashing
+   * pipeline. Requires {@code security-crypto-bc} on the classpath;
+   * throws {@code SecurityBootstrapException} with code
+   * {@code credentials/modern-without-bc} when the module is missing.
+   * Never silently falls back to PBKDF2.
+   */
+  CredentialBootstrap modern();
+
+  CredentialBootstrap pepper(PepperService service);
+
+  CredentialBootstrap credentialStore(CredentialStore store);
+
+  CredentialBootstrap passwordChange(PasswordChangeService service);
+
+  /**
+   * @param service the V00.71
+   *                {@code com.svenruppert.vaadin.security.credential.reset.PasswordResetService}
+   *                (NOT the V00.70
+   *                {@code com.svenruppert.vaadin.security.accountlifecycle.PasswordResetService}
+   *                — same simple name, different package)
+   */
+  CredentialBootstrap passwordReset(
+      com.svenruppert.vaadin.security.credential.reset.PasswordResetService service);
 }

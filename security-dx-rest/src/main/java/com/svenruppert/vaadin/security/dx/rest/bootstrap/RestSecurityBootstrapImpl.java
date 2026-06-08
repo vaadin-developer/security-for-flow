@@ -138,6 +138,10 @@ final class RestSecurityBootstrapImpl
     // V00.73: apply sessions sub-builder state. REST consumes Policy/Version/Resolver;
     // .storeBacked(...) emits rest/session-store-unused (INFO).
     applySessionConfiguration(AdapterKind.REST, services, warnings);
+    // V00.73: apply roles sub-builder state.
+    applyRoleConfiguration(services, warnings);
+    // V00.73: apply credentials sub-builder state.
+    applyCredentialConfiguration(services, warnings);
 
     SecurityBootstrapMode mode = state.mode();
     if (mode == SecurityBootstrapMode.STRICT && warningsContainError(warnings)) {

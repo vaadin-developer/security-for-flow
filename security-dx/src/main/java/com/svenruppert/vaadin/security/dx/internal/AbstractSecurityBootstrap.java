@@ -17,10 +17,18 @@ import com.svenruppert.vaadin.security.audit.RingBufferAuditSink;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
 import com.svenruppert.vaadin.security.audit.StoreBackedSecurityAuditService;
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
+import com.svenruppert.vaadin.security.authentication.PasswordHasher;
+import com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectIdResolver;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleHierarchy;
+import com.svenruppert.vaadin.security.credential.change.PasswordChangeService;
+import com.svenruppert.vaadin.security.credential.password.PasswordHashingService;
+import com.svenruppert.vaadin.security.credential.password.PasswordHashingServices;
+import com.svenruppert.vaadin.security.credential.password.pepper.PepperService;
+import com.svenruppert.vaadin.security.credential.reset.PasswordResetService;
+import com.svenruppert.vaadin.security.credential.store.CredentialStore;
 import com.svenruppert.vaadin.security.session.SecurityVersionStore;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
 import com.svenruppert.vaadin.security.session.SessionStore;
@@ -104,14 +112,15 @@ public abstract class AbstractSecurityBootstrap<B extends CommonSecurityBootstra
 
   @Override
   public B roles(Consumer<RoleBootstrap> config) {
-    Objects.requireNonNull(config, "config").accept(new RecordingRoleBootstrap());
+    Objects.requireNonNull(config, "config").accept(new RoleBootstrapImpl(state.roleState()));
     state.markRolesConfigured();
     return self();
   }
 
   @Override
   public B credentials(Consumer<CredentialBootstrap> config) {
-    Objects.requireNonNull(config, "config").accept(new RecordingCredentialBootstrap());
+    Objects.requireNonNull(config, "config")
+        .accept(new CredentialBootstrapImpl(state.credentialState()));
     state.markCredentialsConfigured();
     return self();
   }
@@ -446,6 +455,157 @@ public abstract class AbstractSecurityBootstrap<B extends CommonSecurityBootstra
 
   // ---- sub-builder recorders ---------------------------------------------
 
+  /**
+   * Consumes the {@link RoleState} accumulated by
+   * {@code .roles(...)} calls and applies it per Konzept §9.
+   * Currently a single concern: {@code RoleHierarchy} wiring via
+   * {@link SecurityServiceResolver#setRoleHierarchy(RoleHierarchy)}.
+   * Missing hierarchy is INFO ({@code roles/missing-hierarchy}).
+   * {@code RoleHierarchy.Builder.build()} surfaces cycle errors as
+   * {@code IllegalStateException}; the helper translates that into
+   * {@code roles/hierarchy-cycle} (STRICT throws).
+   */
+  protected final void applyRoleConfiguration(List<RegisteredSecurityService> services,
+                                              List<SecurityBootstrapWarning> warnings) {
+    if (!state.rolesConfigured()) {
+      return;
+    }
+    RoleState roles = state.roleState();
+    if (roles.hierarchy() == null) {
+      warnings.add(new SecurityBootstrapWarning(
+          Severity.INFO,
+          "roles/missing-hierarchy",
+          ".roles(...) was called without .hierarchy(...).",
+          "Configure a RoleHierarchy or drop the .roles(...) call."));
+      return;
+    }
+    try {
+      SecurityServiceResolver.setRoleHierarchy(roles.hierarchy());
+      services.add(new RegisteredSecurityService(
+          RoleHierarchy.class, roles.hierarchy().getClass(),
+          "bootstrap-explicit", false));
+    } catch (IllegalStateException cycle) {
+      warnings.add(new SecurityBootstrapWarning(
+          Severity.ERROR,
+          "roles/hierarchy-cycle",
+          "Role hierarchy is invalid: " + cycle.getMessage(),
+          "Inspect the RoleHierarchy.Builder includes() chain and remove the cycle."));
+    }
+  }
+
+  /**
+   * Consumes the {@link CredentialState} accumulated by
+   * {@code .credentials(...)} calls and applies it per Konzept §10.
+   * The legacy {@code PasswordHasher} path is wired through
+   * {@link SecurityServiceResolver#setPasswordHashingService(PasswordHasher)};
+   * the V00.71 pipeline services are reported in
+   * {@link SecurityRuntime#services()} but never stuffed into the
+   * legacy setter.
+   */
+  protected final void applyCredentialConfiguration(List<RegisteredSecurityService> services,
+                                                    List<SecurityBootstrapWarning> warnings) {
+    if (!state.credentialsConfigured()) {
+      return;
+    }
+    CredentialState cred = state.credentialState();
+
+    // .modern() probe: load BouncyCastleHashingServices.modern() reflectively
+    if (cred.modernRequested()) {
+      Object loaded = loadModernHashingService();
+      if (loaded == null) {
+        warnings.add(new SecurityBootstrapWarning(
+            Severity.ERROR,
+            "credentials/modern-without-bc",
+            ".modern() requires the security-crypto-bc module on the classpath.",
+            "Add the dependency:\n"
+                + "  <dependency>\n"
+                + "    <groupId>com.svenruppert</groupId>\n"
+                + "    <artifactId>security-crypto-bc</artifactId>\n"
+                + "    <version>${security-for-flow.version}</version>\n"
+                + "  </dependency>"));
+        // do not register anything further when the explicit modern
+        // request can't be honored
+        return;
+      }
+      if (cred.hashingService() == null) {
+        cred.hashingService((PasswordHashingService) loaded);
+      }
+    }
+
+    // .pbkdf2Defaults(): set BOTH worlds; never overwrite an explicit choice
+    if (cred.pbkdf2DefaultsRequested()) {
+      if (cred.passwordHasher() == null) {
+        cred.passwordHasher(new Pbkdf2PasswordHasher());
+      }
+      if (cred.hashingService() == null) {
+        cred.hashingService(PasswordHashingServices.defaults());
+      }
+    }
+
+    // legacy hasher path
+    if (cred.passwordHasher() != null) {
+      SecurityServiceResolver.setPasswordHashingService(cred.passwordHasher());
+      services.add(new RegisteredSecurityService(
+          PasswordHasher.class, cred.passwordHasher().getClass(),
+          "bootstrap-explicit", false));
+    }
+
+    // V00.71 pipeline — every service is reported but never wired
+    // through the legacy resolver setter
+    if (cred.hashingService() != null) {
+      services.add(new RegisteredSecurityService(
+          PasswordHashingService.class, cred.hashingService().getClass(),
+          "bootstrap-explicit", false));
+    }
+    if (cred.pepperService() != null) {
+      services.add(new RegisteredSecurityService(
+          PepperService.class, cred.pepperService().getClass(),
+          "bootstrap-explicit", false));
+    }
+    if (cred.credentialStore() != null) {
+      services.add(new RegisteredSecurityService(
+          CredentialStore.class, cred.credentialStore().getClass(),
+          "bootstrap-explicit", false));
+    }
+    if (cred.passwordChangeService() != null) {
+      services.add(new RegisteredSecurityService(
+          PasswordChangeService.class, cred.passwordChangeService().getClass(),
+          "bootstrap-explicit", false));
+    }
+    if (cred.passwordResetService() != null) {
+      services.add(new RegisteredSecurityService(
+          PasswordResetService.class, cred.passwordResetService().getClass(),
+          "bootstrap-explicit", false));
+    }
+
+    // STRICT-ERROR validation: change/reset need a hashing service
+    boolean needsHashing = cred.passwordChangeService() != null
+        || cred.passwordResetService() != null;
+    if (needsHashing && cred.hashingService() == null) {
+      warnings.add(new SecurityBootstrapWarning(
+          Severity.ERROR,
+          "credentials/missing-hashing",
+          "PasswordChangeService / PasswordResetService configured without .hashing(...).",
+          "Call .hashing(...) or .pbkdf2Defaults() before .passwordChange(...) / .passwordReset(...)."));
+    }
+  }
+
+  /**
+   * Reflective probe for {@code BouncyCastleHashingServices.modern()}.
+   * Returns the loaded {@link PasswordHashingService} or {@code null}
+   * when {@code security-crypto-bc} is not on the classpath.
+   */
+  private static Object loadModernHashingService() {
+    try {
+      Class<?> bc = Class.forName(
+          "com.svenruppert.vaadin.security.credential.password.bouncycastle.BouncyCastleHashingServices");
+      return bc.getMethod("modern").invoke(null);
+    } catch (ClassNotFoundException | NoSuchMethodException
+             | IllegalAccessException | java.lang.reflect.InvocationTargetException e) {
+      return null;
+    }
+  }
+
   private static final class RecordingPolicyBootstrap implements PolicyBootstrap {
     @Override
     public PolicyBootstrap register(Object policyContainer) {
@@ -454,19 +614,4 @@ public abstract class AbstractSecurityBootstrap<B extends CommonSecurityBootstra
     }
   }
 
-  private static final class RecordingRoleBootstrap implements RoleBootstrap {
-    @Override
-    public RoleBootstrap hierarchy(
-        RoleHierarchy hierarchy) {
-      Objects.requireNonNull(hierarchy, "hierarchy");
-      return this;
-    }
-  }
-
-  private static final class RecordingCredentialBootstrap implements CredentialBootstrap {
-    @Override
-    public CredentialBootstrap pbkdf2Defaults() {
-      return this;
-    }
-  }
 }

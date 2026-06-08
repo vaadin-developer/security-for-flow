@@ -14,13 +14,19 @@ import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleHierarchy;
 
 /**
- * Role sub-builder of the V00.72 fluent bootstrap.
- * <p>
- * <strong>V00.72 status:</strong> the call is <em>recorded only</em>;
- * no {@code RoleHierarchy} wiring into {@code SecurityServiceResolver}
- * is applied. Real hierarchy binding is staged for V00.73; the
- * hierarchy still works in V00.72 when registered through the existing
- * SPI / `META-INF/services` path.
+ * Role sub-builder of the fluent bootstrap.
+ *
+ * <p><strong>V00.73 status:</strong> single-method typed surface —
+ * {@link #hierarchy(RoleHierarchy)} wires
+ * {@code SecurityServiceResolver.setRoleHierarchy(...)}.
+ *
+ * <p>V00.73 intentionally exposes only {@code hierarchy(...)} in the
+ * fluent surface. The {@code RolePermissionMapping} type has no
+ * resolver setter in V00.71; a {@code .mapping(...)} fluent shortcut
+ * would have to either invent one (Konzept §9 rejects this) or be a
+ * silent no-op. The sub-builder shape stays in place so future
+ * releases can add methods without breaking the {@code .roles(...)}
+ * call site.
  *
  * @since 00.72.00
  */

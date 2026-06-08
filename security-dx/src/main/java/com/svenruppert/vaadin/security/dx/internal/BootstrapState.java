@@ -37,6 +37,8 @@ public final class BootstrapState {
 
   private final AuditState auditState = new AuditState();
   private final SessionState sessionState = new SessionState();
+  private final RoleState roleState = new RoleState();
+  private final CredentialState credentialState = new CredentialState();
 
   /** @return the typed audit sub-aggregate (V00.73) */
   public AuditState auditState() {
@@ -46,6 +48,16 @@ public final class BootstrapState {
   /** @return the typed sessions sub-aggregate (V00.73) */
   public SessionState sessionState() {
     return sessionState;
+  }
+
+  /** @return the typed roles sub-aggregate (V00.73) */
+  public RoleState roleState() {
+    return roleState;
+  }
+
+  /** @return the typed credentials sub-aggregate (V00.73) */
+  public CredentialState credentialState() {
+    return credentialState;
   }
 
   public AuthenticationService<?, ?> authenticationService() {

@@ -125,6 +125,10 @@ final class VaadinSecurityBootstrapImpl
     applyAuditConfiguration(services, warnings);
     // V00.73: apply sessions sub-builder state (full consumption on Vaadin).
     applySessionConfiguration(AdapterKind.VAADIN, services, warnings);
+    // V00.73: apply roles sub-builder state.
+    applyRoleConfiguration(services, warnings);
+    // V00.73: apply credentials sub-builder state.
+    applyCredentialConfiguration(services, warnings);
 
     // V00.73 (Prompt 009): auto-wire VaadinSessionSubjectStore as the
     // default SubjectStore when the consumer didn't register one.

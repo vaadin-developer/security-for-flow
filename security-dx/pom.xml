@@ -43,6 +43,19 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
+    <!--
+      V00.73 P6: AbstractSecurityBootstrap.applyCredentialConfiguration
+      probes BouncyCastleHashingServices.modern() reflectively. The
+      probe must be tested against the real classpath with bc present;
+      hence security-crypto-bc as a test-scope dependency only.
+      Runtime users decide for themselves whether to ship bc.
+    -->
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>security-crypto-bc</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>

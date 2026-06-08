@@ -112,6 +112,10 @@ final class StandaloneSecurityBootstrapImpl
     applyAuditConfiguration(services, warnings);
     // V00.73: apply sessions sub-builder state (no-op + INFO on standalone if configured).
     applySessionConfiguration(AdapterKind.STANDALONE, services, warnings);
+    // V00.73: apply roles sub-builder state.
+    applyRoleConfiguration(services, warnings);
+    // V00.73: apply credentials sub-builder state.
+    applyCredentialConfiguration(services, warnings);
 
     SecurityBootstrapMode mode = state.mode();
     if (mode == SecurityBootstrapMode.STRICT && warningsContainError(warnings)) {
