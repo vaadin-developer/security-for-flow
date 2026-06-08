@@ -45,6 +45,11 @@
       <artifactId>security-dx</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>security-autoservice-annotations</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>com.svenruppert</groupId>
@@ -61,6 +66,23 @@
 
   <build>
     <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>com.svenruppert</groupId>
+              <artifactId>security-autoservice-processor</artifactId>
+              <version>${project.version}</version>
+            </path>
+            <path>
+              <groupId>com.svenruppert</groupId>
+              <artifactId>security-autoservice-annotations</artifactId>
+              <version>${project.version}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>license-maven-plugin</artifactId>
