@@ -13,6 +13,9 @@ package com.svenruppert.vaadin.security.dx.vaadin.bootstrap;
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
+import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
+import com.svenruppert.vaadin.security.authorization.vaadin.VaadinSessionSubjectStore;
 import com.svenruppert.vaadin.security.dx.bootstrap.SecurityBootstrapException;
 import com.svenruppert.vaadin.security.dx.runtime.RegisteredSecurityService;
 import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
@@ -37,8 +40,7 @@ class VaadinSecurityBootstrapTest {
   @BeforeEach
   @AfterEach
   void resetResolver() {
-    SecurityServiceResolver.setAuthenticationService((AuthenticationService<?, ?>) null);
-    SecurityServiceResolver.setAuthorizationService((AuthorizationService<?>) null);
+    SecurityServiceResolver.resetAll();
   }
 
   @Test
@@ -52,7 +54,8 @@ class VaadinSecurityBootstrapTest {
         .install();
 
     assertEquals(SecurityBootstrapMode.COMMUNITY_DEFAULTS, runtime.mode());
-    assertEquals(2, runtime.services().size());
+    // V00.73: authn + authz + auto-wired VaadinSessionSubjectStore
+    assertEquals(3, runtime.services().size());
     assertTrue(runtime.warnings().isEmpty());
 
     RegisteredSecurityService first = runtime.services().get(0);
@@ -148,14 +151,122 @@ class VaadinSecurityBootstrapTest {
     FakeAuthenticationService<String, String> authn = FakeAuthenticationService.forType(String.class);
     FakeAuthorizationService<String> authz = new FakeAuthorizationService<>();
 
+    // V00.73: .sessionManagementView() is no longer a no-op flag — it
+    // requires .sessions(s -> s.storeBacked(...)). This test stays
+    // narrow to subjectType + securedComponents, which remain optional.
     SecurityRuntime runtime = VaadinSecurity.bootstrap()
         .authentication(authn)
         .authorization(authz)
         .subjectType(String.class)
         .securedComponents()
-        .sessionManagementView()
         .install();
 
     assertTrue(runtime.warnings().isEmpty());
+  }
+
+  @Test
+  void sessionManagementView_withStore_publishesContextAndAddsRuntimeEntry() {
+    com.svenruppert.vaadin.security.dx.vaadin.routes.SessionManagementContext.reset();
+    com.svenruppert.vaadin.security.session.SessionStore store =
+        new com.svenruppert.vaadin.security.session.InMemorySessionStore();
+
+    FakeAuthenticationService<String, String> authn = FakeAuthenticationService.forType(String.class);
+    FakeAuthorizationService<String> authz = new FakeAuthorizationService<>();
+
+    SecurityRuntime runtime = VaadinSecurity.bootstrap()
+        .authentication(authn)
+        .authorization(authz)
+        .sessions(s -> s.storeBacked(store))
+        .sessionManagementView()
+        .install();
+
+    boolean routeEntry = runtime.services().stream()
+        .anyMatch(s -> com.svenruppert.vaadin.security.dx.vaadin.routes.SessionManagementRoute.class.equals(s.spi())
+            && "bootstrap-activated".equals(s.source()));
+    assertTrue(routeEntry, "expected SessionManagementRoute entry in runtime");
+    // The route's no-arg constructor needs Vaadin's Grid/Composite
+    // (Jackson on classpath) which test classpath does not pull in.
+    // The runtime-entry assertion above is the V00.73 install-time
+    // contract; route instantiation happens at navigation time in
+    // the real app.
+  }
+
+  @Test
+  void sessionManagementView_withoutStore_strictThrows() {
+    com.svenruppert.vaadin.security.dx.vaadin.routes.SessionManagementContext.reset();
+    FakeAuthenticationService<String, String> authn = FakeAuthenticationService.forType(String.class);
+    FakeAuthorizationService<String> authz = new FakeAuthorizationService<>();
+
+    SecurityBootstrapException ex = assertThrows(SecurityBootstrapException.class, () ->
+        VaadinSecurity.bootstrap()
+            .mode(SecurityBootstrapMode.STRICT)
+            .authentication(authn)
+            .authorization(authz)
+            .sessionManagementView()
+            .install());
+    assertTrue(ex.warnings().stream()
+        .anyMatch(w -> "session-management-view-without-session-store".equals(w.code())));
+  }
+
+  @Test
+  void sessionManagementView_withoutStore_productionWarns() {
+    com.svenruppert.vaadin.security.dx.vaadin.routes.SessionManagementContext.reset();
+    FakeAuthenticationService<String, String> authn = FakeAuthenticationService.forType(String.class);
+    FakeAuthorizationService<String> authz = new FakeAuthorizationService<>();
+
+    SecurityRuntime runtime = VaadinSecurity.bootstrap()
+        .mode(SecurityBootstrapMode.PRODUCTION)
+        .authentication(authn)
+        .authorization(authz)
+        .sessionManagementView()
+        .install();
+    assertTrue(runtime.warnings().stream()
+        .anyMatch(w -> "session-management-view-without-session-store".equals(w.code())
+            && w.severity() == Severity.ERROR));
+  }
+
+  @Test
+  void vaadinSubjectStore_isPresentInRuntime() {
+    FakeAuthenticationService<String, String> authn = FakeAuthenticationService.forType(String.class);
+    FakeAuthorizationService<String> authz = new FakeAuthorizationService<>();
+
+    SecurityRuntime runtime = VaadinSecurity.bootstrap()
+        .authentication(authn)
+        .authorization(authz)
+        .install();
+
+    // P9: regardless of discovery mechanism (ServiceLoader-via-META-INF
+    // in security-vaadin, or bootstrap-default fallback when no
+    // ServiceLoader provider is on the classpath), VaadinSessionSubjectStore
+    // is the wired SubjectStore and shows up in SecurityRuntime.
+    boolean entryPresent = runtime.services().stream()
+        .anyMatch(s -> SubjectStore.class.equals(s.spi())
+            && VaadinSessionSubjectStore.class.equals(s.impl()));
+    assertTrue(entryPresent, "expected VaadinSessionSubjectStore in runtime services");
+    assertEquals(VaadinSessionSubjectStore.class,
+        SubjectStores.findSubjectStore().orElseThrow().getClass());
+  }
+
+  @Test
+  void vaadinSubjectStore_explicitWins() {
+    SubjectStore explicit = new com.svenruppert.vaadin.security.test.InMemorySubjectStore();
+    SubjectStores.setSubjectStore(explicit);
+
+    FakeAuthenticationService<String, String> authn = FakeAuthenticationService.forType(String.class);
+    FakeAuthorizationService<String> authz = new FakeAuthorizationService<>();
+
+    SecurityRuntime runtime = VaadinSecurity.bootstrap()
+        .authentication(authn)
+        .authorization(authz)
+        .install();
+
+    boolean explicitEntry = runtime.services().stream()
+        .anyMatch(s -> SubjectStore.class.equals(s.spi())
+            && explicit.getClass().equals(s.impl())
+            && !s.defaulted()
+            && "bootstrap-explicit".equals(s.source()));
+    assertTrue(explicitEntry, "explicitly-registered SubjectStore must win");
+    assertSame(explicit, SubjectStores.findSubjectStore().orElseThrow(),
+        "auto-wire must not replace an explicit registration");
   }
 }

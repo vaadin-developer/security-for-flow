@@ -13,6 +13,9 @@ package com.svenruppert.vaadin.security.dx.vaadin.bootstrap;
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
+import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
+import com.svenruppert.vaadin.security.authorization.vaadin.VaadinSessionSubjectStore;
 import com.svenruppert.vaadin.security.dx.bootstrap.SecurityBootstrapException;
 import com.svenruppert.vaadin.security.dx.internal.AbstractSecurityBootstrap;
 import com.svenruppert.vaadin.security.dx.runtime.RegisteredSecurityService;
@@ -20,6 +23,8 @@ import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
 import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapWarning;
 import com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime;
 import com.svenruppert.vaadin.security.dx.runtime.Severity;
+import com.svenruppert.vaadin.security.dx.vaadin.routes.SessionManagementContext;
+import com.svenruppert.vaadin.security.dx.vaadin.routes.SessionManagementRoute;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -121,6 +126,42 @@ final class VaadinSecurityBootstrapImpl
     // V00.73: apply sessions sub-builder state (full consumption on Vaadin).
     applySessionConfiguration(AdapterKind.VAADIN, services, warnings);
 
+    // V00.73 (Prompt 009): auto-wire VaadinSessionSubjectStore as the
+    // default SubjectStore when the consumer didn't register one.
+    // Caller-provided SubjectStore (via SubjectStores.setSubjectStore
+    // or @SecurityAutoService(SubjectStore.class)) always wins.
+    if (SubjectStores.findSubjectStore().isEmpty()) {
+      SubjectStore defaultStore = new VaadinSessionSubjectStore();
+      SubjectStores.setSubjectStore(defaultStore);
+      services.add(new RegisteredSecurityService(
+          SubjectStore.class, defaultStore.getClass(), "bootstrap-default", true));
+    } else {
+      SubjectStore existing = SubjectStores.subjectStore();
+      services.add(new RegisteredSecurityService(
+          SubjectStore.class, existing.getClass(), "bootstrap-explicit", false));
+    }
+
+    // V00.73 (Prompt 008): SessionManagementView activation.
+    // Validates the prerequisite (SessionStore present) and
+    // publishes the store into SessionManagementContext so the
+    // SessionManagementRoute can instantiate when Vaadin auto-
+    // discovers it on the classpath.
+    if (sessionManagementView) {
+      var sessionStore = state.sessionState().sessionStore();
+      if (sessionStore == null) {
+        warnings.add(new SecurityBootstrapWarning(
+            Severity.ERROR,
+            "session-management-view-without-session-store",
+            ".sessionManagementView() was set but no SessionStore is configured.",
+            "Call .sessions(s -> s.storeBacked(yourSessionStore)) before .sessionManagementView()."));
+      } else {
+        SessionManagementContext.publish(sessionStore, null);
+        services.add(new RegisteredSecurityService(
+            SessionManagementRoute.class, SessionManagementRoute.class,
+            "bootstrap-activated", false));
+      }
+    }
+
     SecurityBootstrapMode mode = state.mode();
 
     if (mode == SecurityBootstrapMode.STRICT && warningsContainError(warnings)) {
@@ -131,7 +172,6 @@ final class VaadinSecurityBootstrapImpl
     discard(subjectType);
     discard(loginRoute);
     discard(securedComponents);
-    discard(sessionManagementView);
 
     return new SecurityRuntime(services, warnings, mode);
   }
