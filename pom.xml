@@ -81,6 +81,10 @@
         <module>security-persistence-eclipsestore</module>
         <module>security-crypto-bc</module>
         <module>security-credentials-hibp</module>
+        <module>security-dx</module>
+        <module>security-dx-vaadin</module>
+        <module>security-dx-rest</module>
+        <module>security-dx-standalone</module>
         <module>demo-rest-shared</module>
         <module>demo-vaadin</module>
         <module>demo-rest</module>

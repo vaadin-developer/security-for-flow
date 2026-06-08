@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright © 2018 Sven Ruppert (sven.ruppert@gmail.com)
+
+    Licensed under the EUPL, Version 1.2 or - as soon they will be
+    approved by the European Commission - subsequent versions of the
+    EUPL (the "Licence"); You may not use this work except in
+    compliance with the Licence. You may obtain a copy of the Licence at:
+
+    https://joinup.ec.europa.eu/software/page/eupl
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <groupId>com.svenruppert</groupId>
+    <artifactId>security-for-flow-parent</artifactId>
+    <version>00.71.00-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>security-dx-vaadin</artifactId>
+  <name>Security DX – Vaadin Adapter</name>
+  <description>
+    V00.72 Vaadin-specific fluent bootstrap: VaadinSecurity.bootstrap()
+    facade and the VaadinSecurityBootstrap builder. Hosts the
+    VaadinDiagnosticContributor (added in Prompt 014a).
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>security-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>security-vaadin</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>security-dx</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>security-test</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>first</id>
+            <phase>none</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
