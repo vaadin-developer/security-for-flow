@@ -188,11 +188,33 @@ public final class DemoRestServer {
     DemoOwnedDocumentStore ownedDocumentStore = new DemoOwnedDocumentStore();
     handlers.setOwnedDocumentStore(ownedDocumentStore);
     PolicyRegistry policyRegistry = new InMemoryPolicyRegistry();
-    policyRegistry.register(DemoPolicies.documentOwnerOrAdmin());
-    SecurityServiceResolver.setPolicyRegistry(policyRegistry);
     ResourceResolverRegistry resourceRegistry = new InMemoryResourceResolverRegistry();
-    resourceRegistry.register(new DemoOwnedDocumentResolver(ownedDocumentStore));
-    SecurityServiceResolver.setResourceResolverRegistry(resourceRegistry);
+
+    // V00.73 fluent bootstrap. Replaces the V00.71 SecurityServiceResolver
+    // direct-set calls for PolicyRegistry / ResourceResolverRegistry /
+    // SecurityVersionStore and surfaces the V00.71 password-hashing pipeline.
+    //
+    // .audit(...) is intentionally NOT used here: ApiKeyAuthenticationService,
+    // TokenService and the demo's PasswordResetService capture
+    // SecurityServiceResolver.securityAuditService() at construction time
+    // (lines above), so replacing the audit service at install() would
+    // leave those references pointing at the previous instance. Demos
+    // that have full control over construction order — like demo-vaadin
+    // and demo-standalone — can use .audit(...) freely.
+    com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime runtime =
+        com.svenruppert.vaadin.security.dx.rest.bootstrap.RestSecurity.bootstrap()
+            .mode(com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode.DEVELOPMENT)
+            .subjectResolver(resolver)
+            .credentials(c -> c.hashing(hashingService))
+            .sessions(s -> s.securityVersion(versionStore))
+            .policies(p -> p
+                .registry(policyRegistry)
+                .resourceRegistry(resourceRegistry)
+                .register(DemoPolicies.documentOwnerOrAdmin())
+                .resourceResolver(new DemoOwnedDocumentResolver(ownedDocumentStore)))
+            .install();
+    System.out.println(runtime.log());
+
     SecurityVersionEnforcer versionEnforcer = new SecurityVersionEnforcer(
         versionStore, SecurityServiceResolver.securityAuditService());
     RestSecurityVersionFilter versionFilter = new RestSecurityVersionFilter(
@@ -274,20 +296,10 @@ public final class DemoRestServer {
 
   public static void main(String[] args) throws IOException {
     int port = args.length > 0 ? Integer.parseInt(args[0]) : 8080;
+    // V00.73: the RestSecurity.bootstrap() chain that prints the
+    // SecurityRuntime diagnostic banner now lives inside start(...) —
+    // every demo entry point (main, tests) sees the same wiring.
     DemoRestServer server = start(port);
-    // V00.72 fluent bootstrap. DemoRestServer wires its own AuthN +
-    // RestSubjectResolver in start(...); the explicit RestSecurity.bootstrap()
-    // call here demonstrates the V00.72 entry point and emits the
-    // SecurityRuntime diagnostics banner. Mode = DEVELOPMENT so missing
-    // resolver entries surface as warnings (the server has its own
-    // resolver instance — the bootstrap is informational only here).
-    com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime runtime =
-        com.svenruppert.vaadin.security.dx.rest.bootstrap.RestSecurity.bootstrap()
-            .mode(com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode.DEVELOPMENT)
-            .subjectResolver(server.subjectResolver())
-            .install();
-    System.out.println(runtime.log());
-
     System.out.println("Demo REST server running on http://localhost:" + server.port());
     System.out.println("Default demo users: editor/editor, viewer/viewer "
         + "(admin/admin only when bootstrap is disabled).");

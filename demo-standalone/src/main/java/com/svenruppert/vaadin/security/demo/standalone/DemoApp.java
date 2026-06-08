@@ -97,10 +97,15 @@ public final class DemoApp {
         .findFirst().orElseThrow(() -> new IllegalStateException(
             "No AuthorizationService registered (expected DemoAuthorizationService via @SecurityAutoService)"));
 
+    // V00.73 fluent bootstrap. The .audit(...) sub-builder adds an
+    // in-memory RingBuffer + a LoggingAuditSink so the CLI demo's
+    // diagnose command can show audit events end-to-end without any
+    // additional wiring on the consumer side.
     SecurityRuntime runtime = StandaloneSecurity.bootstrap()
         .mode(SecurityBootstrapMode.DEVELOPMENT)
         .authentication(authn)
         .authorization(authz)
+        .audit(a -> a.ringBuffer(256).logging())
         .install();
     System.out.println(runtime.log());
 

@@ -18,6 +18,7 @@ package com.svenruppert.vaadin.security.demo.app.security.bootstrap;
 
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
+import com.svenruppert.vaadin.security.credential.password.PasswordHashingServices;
 import com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime;
 import com.svenruppert.vaadin.security.dx.vaadin.bootstrap.VaadinSecurity;
 import com.svenruppert.vaadin.security.starter.profile.VaadinSecurityStarter;
@@ -61,12 +62,18 @@ public class BootstrapServiceInitListener implements VaadinServiceInitListener {
       // additive and not required for the demo to function.
       return;
     }
+    // V00.73: typed sub-builders. .audit(...) surfaces a logging sink
+    // and an in-memory ring buffer in SecurityDiagnostics; .credentials(...)
+    // exposes the V00.71 password-hashing pipeline that BootstrapWiring
+    // already uses internally so it shows up in SecurityRuntime.services().
     SecurityRuntime runtime = VaadinSecurity.bootstrap()
         .use(VaadinSecurityStarter.developmentDefaults())
         .authentication(authn)
         .authorization(authz)
         .loginRoute("login")
         .stepUpRoute("step-up")
+        .audit(a -> a.ringBuffer(256).logging())
+        .credentials(c -> c.hashing(PasswordHashingServices.defaults()))
         .install();
     System.out.println(runtime.log());
   }
