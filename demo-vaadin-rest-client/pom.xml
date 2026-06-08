@@ -52,6 +52,26 @@
       <artifactId>security-vaadin</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!--
+      V00.72 fluent bootstrap. DemoPolicyInitListener.serviceInit() runs
+      VaadinSecurity.bootstrap() once per JVM and logs the resulting
+      SecurityRuntime.
+    -->
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>security-dx</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>security-dx-vaadin</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>security-vaadin-starter</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <!-- Transport-only — endpoint constants and tiny JSON helper -->
     <dependency>
       <groupId>com.svenruppert</groupId>

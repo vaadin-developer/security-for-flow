@@ -16,16 +16,24 @@
  */
 package com.svenruppert.vaadin.security.demo.restclient.security;
 
+import com.svenruppert.vaadin.security.authentication.AuthenticationService;
+import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.demo.restclient.security.resource.DemoDocumentResolver;
+import com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime;
+import com.svenruppert.vaadin.security.dx.vaadin.bootstrap.VaadinSecurity;
 import com.svenruppert.vaadin.security.policy.api.Policy;
 import com.svenruppert.vaadin.security.policy.api.PolicyDecision;
 import com.svenruppert.vaadin.security.policy.api.ResourcePredicates;
 import com.svenruppert.vaadin.security.policy.api.SubjectPredicates;
 import com.svenruppert.vaadin.security.policy.spi.PolicyRegistry;
 import com.svenruppert.vaadin.security.policy.spi.ResourceResolverRegistry;
+import com.svenruppert.vaadin.security.starter.profile.VaadinSecurityStarter;
 import com.vaadin.flow.server.ServiceInitEvent;
 import com.vaadin.flow.server.VaadinServiceInitListener;
+
+import java.util.ServiceLoader;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Registers the demo-side policies and resource resolvers into the
@@ -58,10 +66,36 @@ public final class DemoPolicyInitListener implements VaadinServiceInitListener {
    */
   public static final String POLICY_SENSITIVE_REQUIRES_MFA = "sensitive.requires-mfa";
 
+  private static final AtomicBoolean DX_BOOTSTRAP_DONE = new AtomicBoolean();
+
   @Override
   public void serviceInit(ServiceInitEvent event) {
     registerResourceResolvers();
     registerPolicies();
+    if (DX_BOOTSTRAP_DONE.compareAndSet(false, true)) {
+      runDxBootstrap();
+    }
+  }
+
+  // V00.72: the Vaadin-side fluent bootstrap. Authenticates against the
+  // demo-rest backend via the @SecurityAutoService-registered
+  // RestBackedAuthenticationService / RestBackedAuthorizationService.
+  private static void runDxBootstrap() {
+    AuthenticationService<?, ?> authn = ServiceLoader.load(AuthenticationService.class)
+        .findFirst().orElse(null);
+    AuthorizationService<?> authz = ServiceLoader.load(AuthorizationService.class)
+        .findFirst().orElse(null);
+    if (authn == null || authz == null) {
+      return;
+    }
+    SecurityRuntime runtime = VaadinSecurity.bootstrap()
+        .use(VaadinSecurityStarter.developmentDefaults())
+        .authentication(authn)
+        .authorization(authz)
+        .loginRoute("login")
+        .stepUpRoute("step-up")
+        .install();
+    System.out.println(runtime.log());
   }
 
   private static void registerResourceResolvers() {
