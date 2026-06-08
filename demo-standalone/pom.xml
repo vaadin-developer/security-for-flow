@@ -17,7 +17,7 @@
   <parent>
     <groupId>com.svenruppert</groupId>
     <artifactId>security-for-flow-parent</artifactId>
-    <version>00.70.00</version>
+    <version>00.71.00-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -54,6 +54,16 @@
       <artifactId>proxybuilder-annotations</artifactId>
       <version>00.11.00</version>
     </dependency>
+    <!--
+      V00.72: @SecurityAutoService replaces the manual META-INF/services
+      files for DemoAuthenticationService and DemoAuthorizationService.
+      The processor is wired under annotationProcessorPaths below.
+    -->
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>security-autoservice-annotations</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
@@ -82,6 +92,18 @@
             <path>
               <groupId>com.svenruppert</groupId>
               <artifactId>security-processor</artifactId>
+              <version>${project.version}</version>
+            </path>
+            <path>
+              <groupId>com.svenruppert</groupId>
+              <artifactId>security-autoservice-processor</artifactId>
+              <version>${project.version}</version>
+            </path>
+            <!-- Processor reads the @SecurityAutoService annotation class
+                 reflectively; make sure it is on the processor path too. -->
+            <path>
+              <groupId>com.svenruppert</groupId>
+              <artifactId>security-autoservice-annotations</artifactId>
               <version>${project.version}</version>
             </path>
           </annotationProcessorPaths>
