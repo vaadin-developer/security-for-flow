@@ -24,15 +24,15 @@
     </parent>
 
     <artifactId>security-for-flow-parent</artifactId>
-    <version>00.70.00</version>
+    <version>00.72.00-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Security for Vaadin</name>
     <description>A Core Java Security Framework for Vaadin</description>
     <inceptionYear>2018</inceptionYear>
     <organization>
-        <name>Sven Ruppert</name>
-        <url>https://github.com/svenruppert</url>
+        <name>jSentinel by Sven Ruppert</name>
+        <url>https://jsentinel.eu</url>
     </organization>
     <url>https://github.com/vaadin-developer/security-for-flow</url>
 
@@ -81,12 +81,12 @@
         <module>security-persistence-eclipsestore</module>
         <module>security-crypto-bc</module>
         <module>security-credentials-hibp</module>
+        <module>security-autoservice-annotations</module>
+        <module>security-autoservice-processor</module>
         <module>security-dx</module>
         <module>security-dx-vaadin</module>
         <module>security-dx-rest</module>
         <module>security-dx-standalone</module>
-        <module>security-autoservice-annotations</module>
-        <module>security-autoservice-processor</module>
         <module>security-vaadin-starter</module>
         <module>demo-rest-shared</module>
         <module>demo-vaadin</module>
