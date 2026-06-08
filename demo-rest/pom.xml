@@ -47,6 +47,21 @@
       <artifactId>security-rest</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!--
+      V00.72 fluent bootstrap. DemoRestServer.main() calls
+      RestSecurity.bootstrap() and prints the SecurityRuntime.log()
+      banner before the server starts serving requests.
+    -->
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>security-dx</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>security-dx-rest</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>com.svenruppert</groupId>
       <artifactId>demo-rest-shared</artifactId>

@@ -81,10 +81,17 @@ public final class DemoRestServer {
 
   private final HttpServer httpServer;
   private final int port;
+  private final com.svenruppert.vaadin.security.rest.RestSubjectResolver subjectResolver;
 
   private DemoRestServer(HttpServer httpServer, int port) {
+    this(httpServer, port, null);
+  }
+
+  private DemoRestServer(HttpServer httpServer, int port,
+                         com.svenruppert.vaadin.security.rest.RestSubjectResolver subjectResolver) {
     this.httpServer = httpServer;
     this.port = port;
+    this.subjectResolver = subjectResolver;
   }
 
   public static DemoRestServer start(int port) throws IOException {
@@ -216,7 +223,7 @@ public final class DemoRestServer {
     HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
     server.createContext(DemoEndpoints.API_PREFIX, router);
     server.start();
-    return new DemoRestServer(server, server.getAddress().getPort());
+    return new DemoRestServer(server, server.getAddress().getPort(), resolver);
   }
 
   private static BootstrapTokenStore bootstrapTokenStore(BootstrapConfiguration cfg) {
@@ -266,10 +273,28 @@ public final class DemoRestServer {
   public static void main(String[] args) throws IOException {
     int port = args.length > 0 ? Integer.parseInt(args[0]) : 8080;
     DemoRestServer server = start(port);
+    // V00.72 fluent bootstrap. DemoRestServer wires its own AuthN +
+    // RestSubjectResolver in start(...); the explicit RestSecurity.bootstrap()
+    // call here demonstrates the V00.72 entry point and emits the
+    // SecurityRuntime diagnostics banner. Mode = DEVELOPMENT so missing
+    // resolver entries surface as warnings (the server has its own
+    // resolver instance — the bootstrap is informational only here).
+    com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime runtime =
+        com.svenruppert.vaadin.security.dx.rest.bootstrap.RestSecurity.bootstrap()
+            .mode(com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode.DEVELOPMENT)
+            .subjectResolver(server.subjectResolver())
+            .install();
+    System.out.println(runtime.log());
+
     System.out.println("Demo REST server running on http://localhost:" + server.port());
     System.out.println("Default demo users: editor/editor, viewer/viewer "
         + "(admin/admin only when bootstrap is disabled).");
     System.out.println("Press Ctrl+C to stop.");
     Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
+  }
+
+  /** @return the server's RestSubjectResolver — for V00.72 bootstrap wiring */
+  public com.svenruppert.vaadin.security.rest.RestSubjectResolver subjectResolver() {
+    return this.subjectResolver;
   }
 }
