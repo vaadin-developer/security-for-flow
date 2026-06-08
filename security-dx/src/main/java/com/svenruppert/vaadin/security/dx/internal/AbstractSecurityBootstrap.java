@@ -12,6 +12,7 @@ package com.svenruppert.vaadin.security.dx.internal;
 
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
+import com.svenruppert.vaadin.security.authorization.api.roles.RoleHierarchy;
 import com.svenruppert.vaadin.security.dx.bootstrap.AuditBootstrap;
 import com.svenruppert.vaadin.security.dx.bootstrap.CommonSecurityBootstrap;
 import com.svenruppert.vaadin.security.dx.bootstrap.CredentialBootstrap;
@@ -143,7 +144,7 @@ public abstract class AbstractSecurityBootstrap<B extends CommonSecurityBootstra
   private static final class RecordingRoleBootstrap implements RoleBootstrap {
     @Override
     public RoleBootstrap hierarchy(
-        com.svenruppert.vaadin.security.authorization.api.roles.RoleHierarchy hierarchy) {
+        RoleHierarchy hierarchy) {
       Objects.requireNonNull(hierarchy, "hierarchy");
       return this;
     }

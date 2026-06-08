@@ -24,6 +24,7 @@ import com.svenruppert.vaadin.security.demo.app.security.roles.VisibleFor;
 import com.svenruppert.vaadin.security.demo.app.views.components.PermissionDemoCard;
 import com.svenruppert.vaadin.security.demo.app.views.components.ViewNavigationCard;
 import com.svenruppert.vaadin.security.demo.app.views.workspaces.*;
+import com.svenruppert.vaadin.security.logout.SubjectId;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
@@ -209,11 +210,11 @@ public class MainView
           /* invalidateHttpSession= */ true);
 
   private void logout() {
-    com.svenruppert.vaadin.security.logout.SubjectId subjectId =
+    SubjectId subjectId =
         SubjectStores.subjectStore().currentSubject(MyUser.class)
-            .map(u -> com.svenruppert.vaadin.security.logout.SubjectId.of(
+            .map(u -> SubjectId.of(
                 String.valueOf(u.id())))
-            .orElse(com.svenruppert.vaadin.security.logout.SubjectId.of("anonymous"));
+            .orElse(SubjectId.of("anonymous"));
     LOGOUT_SERVICE.logout(subjectId,
         com.svenruppert.vaadin.security.logout.LogoutScope.CurrentSession);
   }

@@ -26,6 +26,7 @@ import com.svenruppert.vaadin.security.credential.input.ContextAwarePasswordVali
 import com.svenruppert.vaadin.security.credential.input.PasswordContext;
 import com.svenruppert.vaadin.security.credential.input.PasswordInputPolicy;
 import com.svenruppert.vaadin.security.credential.input.PasswordInputValidationResult;
+import com.svenruppert.vaadin.security.credential.input.PasswordInputViolation;
 import com.svenruppert.vaadin.security.credential.secret.SecretValue;
 import com.svenruppert.vaadin.security.demo.app.security.bootstrap.BootstrapWiring;
 import com.vaadin.flow.component.Composite;
@@ -141,8 +142,10 @@ public class SetupView extends Composite<Div> implements BeforeEnterObserver {
         username, emailField.getValue(), TenantId.DEFAULT, Set.of());
     PasswordInputValidationResult inputResult = INPUT_VALIDATOR.validate(
         SecretValue.ofString(password), INPUT_POLICY, context);
-    if (inputResult instanceof PasswordInputValidationResult.Rejected rejected) {
-      error("Password rejected: " + humanise(rejected.violation().name()));
+    if (inputResult instanceof PasswordInputValidationResult.Rejected(
+        PasswordInputViolation violation
+    )) {
+      error("Password rejected: " + humanise(violation.name()));
       return;
     }
     CompromisedPasswordResult cpResult = COMPROMISED_CHECKER.check(

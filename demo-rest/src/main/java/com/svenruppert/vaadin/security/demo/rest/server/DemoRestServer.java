@@ -25,6 +25,8 @@ import com.svenruppert.vaadin.security.authentication.InMemoryApiKeyStore;
 import com.svenruppert.vaadin.security.authentication.InMemoryRefreshTokenStore;
 import com.svenruppert.vaadin.security.authentication.TokenService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.credential.password.PasswordHashingService;
+import com.svenruppert.vaadin.security.credential.password.PasswordHashingServices;
 import com.svenruppert.vaadin.security.ratelimiting.InMemoryRateLimitPolicy;
 import com.svenruppert.vaadin.security.ratelimiting.InMemoryRateLimitStore;
 import com.svenruppert.vaadin.security.ratelimiting.RateLimitPolicy;
@@ -127,8 +129,8 @@ public final class DemoRestServer {
                                      LoginAttemptPolicy loginAttemptPolicy,
                                      LoginAttemptPolicy bootstrapAttemptPolicy) throws IOException {
     boolean bootstrapMode = bootstrapConfig.mode() != BootstrapMode.DISABLED;
-    com.svenruppert.vaadin.security.credential.password.PasswordHashingService hashingService =
-        com.svenruppert.vaadin.security.credential.password.PasswordHashingServices.defaults();
+    PasswordHashingService hashingService =
+        PasswordHashingServices.defaults();
     DemoUserStore users = new DemoUserStore(hashingService, bootstrapMode);
     DemoTokenStore tokens = new DemoTokenStore();
     DemoDocumentStore documents = new DemoDocumentStore();

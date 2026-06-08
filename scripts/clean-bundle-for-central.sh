@@ -27,7 +27,7 @@
 #
 # Usage:
 #   ./scripts/clean-bundle-for-central.sh             # version from pom.xml
-#   ./scripts/clean-bundle-for-central.sh 00.70.00    # explicit version
+#   ./scripts/clean-bundle-for-central.sh 00.72.00    # explicit version
 
 set -euo pipefail
 
@@ -39,6 +39,18 @@ GROUP_PATH="com/svenruppert"
 # (demo-vaadin, demo-rest, demo-vaadin-rest-client, demo-standalone,
 # demo-rest-shared) are deliberately excluded — they are reference
 # implementations, not publishable artefacts.
+#
+# Module list per release line:
+#   V00.70 baseline (9): parent, core, test, vaadin, rest, standalone,
+#                        processor, persistence-testkit, persistence-eclipsestore
+#   V00.71 additions (2): crypto-bc, credentials-hibp
+#   V00.72 additions (7): dx, dx-vaadin, dx-rest, dx-standalone,
+#                         autoservice-annotations, autoservice-processor,
+#                         vaadin-starter
+#
+# Note on security-autoservice-processor: published even though consumers
+# wire it via <annotationProcessorPath> rather than as a runtime dep.
+# Central still needs the jar so the path can be resolved.
 MODULES=(
     "security-for-flow-parent"
     "security-core"
@@ -49,6 +61,15 @@ MODULES=(
     "security-processor"
     "security-persistence-testkit"
     "security-persistence-eclipsestore"
+    "security-crypto-bc"
+    "security-credentials-hibp"
+    "security-dx"
+    "security-dx-vaadin"
+    "security-dx-rest"
+    "security-dx-standalone"
+    "security-autoservice-annotations"
+    "security-autoservice-processor"
+    "security-vaadin-starter"
 )
 
 if [ $# -ge 1 ]; then

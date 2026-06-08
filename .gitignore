@@ -216,3 +216,5 @@ __MACOSX/
 # Local commit message scratch files
 /commit-message.txt
 /docs/v00.71.00/prompts/
+/docs/v00.72.00/prompts/
+/docs/v00.73.00/prompts/
