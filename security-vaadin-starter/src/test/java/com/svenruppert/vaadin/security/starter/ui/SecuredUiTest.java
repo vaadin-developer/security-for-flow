@@ -47,10 +47,18 @@ class SecuredUiTest {
   }
 
   @Test
-  void requiresPolicyThrowsAtBuild() {
-    SecuredUi.SecuredButtonBuilder b = SecuredUi.button("X")
-        .requiresPolicy("doc.policy");
-    assertThrows(UnsupportedOperationException.class, b::build);
+  void requiresPolicyAndRoleMutuallyExclusive() {
+    // V00.73 (Prompt 011): requiresPolicy is no longer a build-time
+    // UnsupportedOperationException. Builder discipline still enforces
+    // "exactly one of requiresRole / requiresPermission / requiresPolicy".
+    assertThrows(IllegalStateException.class,
+        () -> SecuredUi.button("X")
+            .requiresRole("ADMIN")
+            .requiresPolicy("doc.policy"));
+    assertThrows(IllegalStateException.class,
+        () -> SecuredUi.button("X")
+            .requiresPolicy("doc.policy")
+            .requiresPermission("doc:read"));
   }
 
   @Test

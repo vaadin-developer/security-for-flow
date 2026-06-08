@@ -56,7 +56,10 @@ class VaadinSecurityBootstrapTest {
     assertEquals(SecurityBootstrapMode.COMMUNITY_DEFAULTS, runtime.mode());
     // V00.73: authn + authz + auto-wired VaadinSessionSubjectStore
     assertEquals(3, runtime.services().size());
-    assertTrue(runtime.warnings().isEmpty());
+    // V00.73: warnings may include INFO secure-route/discovery-disabled;
+    // assert "no ERROR warnings" instead of "no warnings at all".
+    assertTrue(runtime.warnings().stream()
+        .noneMatch(w -> w.severity() == Severity.ERROR));
 
     RegisteredSecurityService first = runtime.services().get(0);
     assertEquals(AuthenticationService.class, first.spi());
@@ -161,7 +164,8 @@ class VaadinSecurityBootstrapTest {
         .securedComponents()
         .install();
 
-    assertTrue(runtime.warnings().isEmpty());
+    assertTrue(runtime.warnings().stream()
+        .noneMatch(w -> w.severity() == Severity.ERROR));
   }
 
   @Test

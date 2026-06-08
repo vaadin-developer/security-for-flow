@@ -12,12 +12,17 @@ package com.svenruppert.vaadin.security.starter.routes;
 
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationEvaluator;
+import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
 import com.svenruppert.vaadin.security.authorization.api.permissions.HasPermissions;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.roles.HasRoles;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
+import com.svenruppert.vaadin.security.policy.api.Policy;
+import com.svenruppert.vaadin.security.policy.api.PolicyContext;
+import com.svenruppert.vaadin.security.policy.api.PolicyDecision;
+import com.svenruppert.vaadin.security.policy.spi.PolicyRegistry;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -58,15 +63,44 @@ public final class SecureRouteEvaluator implements AuthorizationEvaluator<Secure
       worst = combine(worst, evaluatePermissions(maybeSubject.get(), annotation.permissions()));
     }
     if (!annotation.policy().isEmpty()) {
-      // V00.72 limitation: PolicyRegistry lookup is owned by the
-      // adapter starter integration (Prompt 019). Until that lands,
-      // a non-empty policy() acts as "deny by default" to avoid a
-      // silent grant.
-      worst = combine(worst, new AuthorizationDecision.Forbidden(
-          "@SecureRoute(policy=\"" + annotation.policy()
-              + "\") requires the starter's PolicyRegistry integration."));
+      // V00.73 (Prompt 012): real PolicyRegistry evaluation.
+      worst = combine(worst, evaluatePolicy(context, maybeSubject.get(), annotation.policy()));
     }
     return worst;
+  }
+
+  private static AuthorizationDecision evaluatePolicy(AccessContext context,
+                                                      SecuritySubject subject,
+                                                      String policyName) {
+    PolicyRegistry registry = SecurityServiceResolver.policyRegistry();
+    Optional<Policy> known = registry.find(policyName);
+    if (known.isEmpty()) {
+      return new AuthorizationDecision.Forbidden(
+          "@SecureRoute(policy=\"" + policyName + "\") — PolicyRegistry has no entry.");
+    }
+    PolicyContext pc = new PolicyContext(context, policyName);
+    PolicyDecision decision = registry.evaluate(policyName, pc);
+    if (decision instanceof PolicyDecision.Allowed) {
+      return new AuthorizationDecision.Granted();
+    }
+    if (decision instanceof PolicyDecision.StepUpRequired stepUp) {
+      // SecureRoute does not declare a specific step-up method; use
+      // the policy's reason as the diagnostic.
+      String reason = stepUp.reason();
+      return new AuthorizationDecision.StepUpRequired(
+          reason == null || reason.isEmpty()
+              ? "step-up required for policy \"" + policyName + "\""
+              : reason,
+          stepUp.method().name());
+    }
+    // Denied — fail closed
+    String reason = decision instanceof PolicyDecision.Denied d
+        ? d.reason()
+        : "policy \"" + policyName + "\" denied access";
+    return new AuthorizationDecision.Forbidden(
+        reason == null || reason.isEmpty()
+            ? "policy \"" + policyName + "\" denied access"
+            : reason);
   }
 
   // Roles: any-of

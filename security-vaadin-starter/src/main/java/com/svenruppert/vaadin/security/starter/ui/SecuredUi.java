@@ -127,13 +127,18 @@ public final class SecuredUi {
         throw new IllegalStateException(
             "Exactly one of requiresRole / requiresPermission / requiresPolicy must be set");
       }
-      if (policyName != null) {
-        // V00.72 surface limit: policy enforcement in the Vaadin starter is deferred.
-        throw new UnsupportedOperationException(
-            "SecuredUi.requiresPolicy(...) is reserved for V00.73; "
-                + "use @SecureRoute(policy = \"...\") on the route class instead");
-      }
+      // V00.73: policy path is handled by PolicyVisibility; only the
+      // role/permission path uses SecuredVisibility.Requirement.
       return new SecuredVisibility.Requirement(roles, permissions);
+    }
+
+    /** @return {@code true} when {@code requiresPolicy(...)} was set. */
+    final boolean isPolicyMode() {
+      return policyName != null;
+    }
+
+    final String policyName() {
+      return policyName;
     }
 
     final SecuredVisibilityMode modeOrDefault(SecuredVisibilityMode defaultMode) {
@@ -180,6 +185,14 @@ public final class SecuredUi {
 
     public Button build() {
       markUsed();
+      if (isPolicyMode()) {
+        Button b = new Button(label);
+        if (clickListener != null) {
+          b.addClickListener(clickListener);
+        }
+        PolicyVisibility.install(b, policyName(), modeOrDefault(SecuredVisibilityMode.DISABLE));
+        return b;
+      }
       SecuredButton b = new SecuredButton(label, requirement(), modeOrDefault(SecuredVisibilityMode.DISABLE));
       if (clickListener != null) {
         b.addClickListener(clickListener);
@@ -214,6 +227,11 @@ public final class SecuredUi {
         throw new IllegalStateException("SecuredUi.link() requires .to(<route>)");
       }
       String effectiveText = text == null ? target.getSimpleName() : text;
+      if (isPolicyMode()) {
+        RouterLink link = new RouterLink(effectiveText, target);
+        PolicyVisibility.install(link, policyName(), modeOrDefault(SecuredVisibilityMode.HIDE));
+        return link;
+      }
       return new SecuredRouterLink(effectiveText, target, requirement(),
           modeOrDefault(SecuredVisibilityMode.HIDE));
     }
@@ -242,6 +260,10 @@ public final class SecuredUi {
       MenuItem item = clickListener == null
           ? parent.addItem(label)
           : parent.addItem(label, clickListener);
+      if (isPolicyMode()) {
+        PolicyVisibility.install(item, policyName(), modeOrDefault(SecuredVisibilityMode.HIDE));
+        return item;
+      }
       SecuredMenuItem.bind(item, requirement(), modeOrDefault(SecuredVisibilityMode.HIDE));
       return item;
     }

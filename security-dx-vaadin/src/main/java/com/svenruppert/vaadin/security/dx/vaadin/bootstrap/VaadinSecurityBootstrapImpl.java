@@ -23,6 +23,7 @@ import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
 import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapWarning;
 import com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime;
 import com.svenruppert.vaadin.security.dx.runtime.Severity;
+import com.svenruppert.vaadin.security.dx.vaadin.routes.SecureRouteDiscovery;
 import com.svenruppert.vaadin.security.dx.vaadin.routes.SessionManagementContext;
 import com.svenruppert.vaadin.security.dx.vaadin.routes.SessionManagementRoute;
 
@@ -47,6 +48,9 @@ final class VaadinSecurityBootstrapImpl
   private boolean securedComponents;
   private boolean sessionManagementView;
   private boolean installed;
+
+  private boolean discoverSecureRoutesEnabled;
+  private SecureRouteDiscovery secureRouteDiscovery;
 
   @Override
   public VaadinSecurityBootstrap subjectType(Class<?> subjectType) {
@@ -75,6 +79,19 @@ final class VaadinSecurityBootstrapImpl
   @Override
   public VaadinSecurityBootstrap sessionManagementView() {
     this.sessionManagementView = true;
+    return this;
+  }
+
+  @Override
+  public VaadinSecurityBootstrap discoverSecureRoutes(boolean enabled) {
+    this.discoverSecureRoutesEnabled = enabled;
+    return this;
+  }
+
+  @Override
+  public VaadinSecurityBootstrap discoverSecureRoutes(SecureRouteDiscovery discovery) {
+    this.secureRouteDiscovery = Objects.requireNonNull(discovery, "discovery");
+    this.discoverSecureRoutesEnabled = true;
     return this;
   }
 
@@ -132,6 +149,10 @@ final class VaadinSecurityBootstrapImpl
     // V00.73: apply policies sub-builder state.
     applyPolicyConfiguration(services, warnings);
 
+    // V00.73 (Prompt 012 / Konzept §8.5): deterministic SecureRoute
+    // cross-validation if discovery is opt-in.
+    crossCheckSecureRoutes(warnings);
+
     // V00.73 (Prompt 009): auto-wire VaadinSessionSubjectStore as the
     // default SubjectStore when the consumer didn't register one.
     // Caller-provided SubjectStore (via SubjectStores.setSubjectStore
@@ -185,5 +206,57 @@ final class VaadinSecurityBootstrapImpl
   @SuppressWarnings("unused")
   private static void discard(Object ignored) {
     // intentional no-op
+  }
+
+  /**
+   * Konzept §8.5 deterministic SecureRoute cross-validation.
+   * Only runs when {@code .discoverSecureRoutes(true)} or a custom
+   * {@link SecureRouteDiscovery} was configured. Without opt-in,
+   * emits {@code secure-route/discovery-disabled} (INFO).
+   */
+  private void crossCheckSecureRoutes(List<SecurityBootstrapWarning> warnings) {
+    if (!discoverSecureRoutesEnabled) {
+      warnings.add(new SecurityBootstrapWarning(
+          Severity.INFO,
+          "secure-route/discovery-disabled",
+          "@SecureRoute(policy=...) cross-validation is opt-in; deterministic STRICT checks are disabled.",
+          "Call .discoverSecureRoutes(true) to enable Vaadin-router-based discovery."));
+      return;
+    }
+    SecureRouteDiscovery discovery = secureRouteDiscovery != null
+        ? secureRouteDiscovery
+        : tryLoadDefaultDiscovery();
+    if (discovery == null) {
+      // discovery requested but no impl available — STRICT still
+      // benefits, but at least surface the diagnostic
+      warnings.add(new SecurityBootstrapWarning(
+          Severity.ERROR,
+          "secure-route/discovery-unavailable",
+          ".discoverSecureRoutes(true) was set, but no SecureRouteDiscovery implementation is on the classpath.",
+          "Add security-vaadin-starter, or pass an explicit SecureRouteDiscovery via .discoverSecureRoutes(impl)."));
+      return;
+    }
+    java.util.Set<String> knownNames = state.policyState().knownPolicyNames();
+    discovery.discoverPolicyNames().forEach(policyName -> {
+      if (!knownNames.contains(policyName)) {
+        warnings.add(new SecurityBootstrapWarning(
+            Severity.ERROR,
+            "secure-route/unknown-policy",
+            "@SecureRoute(policy=\"" + policyName
+                + "\") references an unknown policy.",
+            "Register the policy via .policies(p -> p.register(Policy.named(\""
+                + policyName + "\")...)), or fix the @SecureRoute annotation."));
+      }
+    });
+  }
+
+  private static SecureRouteDiscovery tryLoadDefaultDiscovery() {
+    try {
+      Class<?> defaultImpl = Class.forName(
+          "com.svenruppert.vaadin.security.starter.routes.VaadinRouterSecureRouteDiscovery");
+      return (SecureRouteDiscovery) defaultImpl.getDeclaredConstructor().newInstance();
+    } catch (ReflectiveOperationException ignored) {
+      return null;
+    }
   }
 }

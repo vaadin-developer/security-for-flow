@@ -67,6 +67,38 @@ public interface VaadinSecurityBootstrap
   VaadinSecurityBootstrap sessionManagementView();
 
   /**
+   * V00.73 (Konzept §8.5): opt into bootstrap-time discovery of
+   * {@code @SecureRoute}-annotated classes. With {@code true}, the
+   * default {@code VaadinRouterSecureRouteDiscovery} is used to
+   * enumerate routes; the bootstrap then cross-checks every
+   * {@code @SecureRoute(policy="…")} against the policy names
+   * registered via {@code .policies(...)}. Mismatches surface as
+   * {@code secure-route/unknown-policy} (STRICT throws).
+   *
+   * <p>Default: {@code false} — preserves V00.72 runtime-only
+   * behaviour. When disabled, the bootstrap logs INFO
+   * {@code secure-route/discovery-disabled}.
+   *
+   * @param enabled {@code true} to enable
+   * @return this builder
+   */
+  VaadinSecurityBootstrap discoverSecureRoutes(boolean enabled);
+
+  /**
+   * V00.73 (Konzept §8.5): escape hatch — registers a custom
+   * {@link com.svenruppert.vaadin.security.starter.routes.SecureRouteDiscovery}
+   * instead of the default {@code VaadinRouterSecureRouteDiscovery}.
+   * Useful for lazy-loading setups that do not have Vaadin's
+   * {@code RouteConfiguration} available at install-time. Implies
+   * {@code .discoverSecureRoutes(true)}.
+   *
+   * @param discovery non-null discovery implementation
+   * @return this builder
+   */
+  VaadinSecurityBootstrap discoverSecureRoutes(
+      com.svenruppert.vaadin.security.dx.vaadin.routes.SecureRouteDiscovery discovery);
+
+  /**
    * Applies a starter profile (e.g.
    * {@code VaadinSecurityStarter.developmentDefaults()}) to this
    * builder. The starter modules (downstream of
