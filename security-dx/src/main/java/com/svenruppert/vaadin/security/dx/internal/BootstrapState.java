@@ -35,6 +35,13 @@ public final class BootstrapState {
   private boolean rolesConfigured;
   private boolean credentialsConfigured;
 
+  private final AuditState auditState = new AuditState();
+
+  /** @return the typed audit sub-aggregate (V00.73) */
+  public AuditState auditState() {
+    return auditState;
+  }
+
   public AuthenticationService<?, ?> authenticationService() {
     return authenticationService;
   }

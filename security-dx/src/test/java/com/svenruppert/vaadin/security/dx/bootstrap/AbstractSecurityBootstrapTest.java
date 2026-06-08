@@ -64,7 +64,7 @@ class AbstractSecurityBootstrapTest {
     AtomicInteger policyCalls = new AtomicInteger();
     AtomicInteger credentialCalls = new AtomicInteger();
 
-    b.audit(a -> { auditCalls.incrementAndGet(); a.ringBuffer(); })
+    b.audit(a -> { auditCalls.incrementAndGet(); a.ringBuffer(256); })
      .sessions(s -> { sessionCalls.incrementAndGet(); s.timeout(Duration.ofMinutes(5)); })
      .policies(p -> { policyCalls.incrementAndGet(); p.register("dummy"); })
      .credentials(c -> { credentialCalls.incrementAndGet(); c.pbkdf2Defaults(); });

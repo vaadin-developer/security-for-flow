@@ -116,9 +116,12 @@ final class VaadinSecurityBootstrapImpl
       SecurityServiceResolver.setStepUpRouteName(stepUpRoute);
     }
 
+    // V00.73: apply audit sub-builder state (no-op when .audit(...) wasn't called).
+    applyAuditConfiguration(services, warnings);
+
     SecurityBootstrapMode mode = state.mode();
 
-    if (mode == SecurityBootstrapMode.STRICT && !warnings.isEmpty()) {
+    if (mode == SecurityBootstrapMode.STRICT && warningsContainError(warnings)) {
       throw new SecurityBootstrapException(warnings);
     }
 

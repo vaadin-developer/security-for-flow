@@ -108,15 +108,14 @@ final class StandaloneSecurityBootstrapImpl
           LoginAttemptPolicy.class, loginAttemptPolicy.getClass(), "bootstrap-explicit", false));
     }
 
+    // V00.73: apply audit sub-builder state (no-op when .audit(...) wasn't called).
+    applyAuditConfiguration(services, warnings);
+
     SecurityBootstrapMode mode = state.mode();
     if (mode == SecurityBootstrapMode.STRICT && warningsContainError(warnings)) {
       throw new SecurityBootstrapException(warnings);
     }
 
     return new SecurityRuntime(services, warnings, mode);
-  }
-
-  private static boolean warningsContainError(List<SecurityBootstrapWarning> warnings) {
-    return warnings.stream().anyMatch(w -> w.severity() == Severity.ERROR);
   }
 }
