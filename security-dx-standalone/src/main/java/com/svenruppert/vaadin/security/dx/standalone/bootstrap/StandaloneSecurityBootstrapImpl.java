@@ -110,6 +110,8 @@ final class StandaloneSecurityBootstrapImpl
 
     // V00.73: apply audit sub-builder state (no-op when .audit(...) wasn't called).
     applyAuditConfiguration(services, warnings);
+    // V00.73: apply sessions sub-builder state (no-op + INFO on standalone if configured).
+    applySessionConfiguration(AdapterKind.STANDALONE, services, warnings);
 
     SecurityBootstrapMode mode = state.mode();
     if (mode == SecurityBootstrapMode.STRICT && warningsContainError(warnings)) {

@@ -11,22 +11,54 @@
 package com.svenruppert.vaadin.security.dx.bootstrap;
 
 import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.SubjectIdResolver;
+import com.svenruppert.vaadin.security.session.SecurityVersionStore;
+import com.svenruppert.vaadin.security.session.SessionPolicy;
+import com.svenruppert.vaadin.security.session.SessionStore;
 
 import java.time.Duration;
 
 /**
- * Session sub-builder of the V00.72 fluent bootstrap.
- * <p>
- * <strong>V00.72 status:</strong> the call is <em>recorded only</em>;
- * no {@code SessionStore} / {@code SecurityVersionStore} wiring is
- * applied yet. Real session-policy wiring is staged for V00.73; the
- * timeout value is held in {@code BootstrapState} so diagnostics can
- * report it, but is not enforced at runtime in V00.72.
+ * Session sub-builder of the fluent bootstrap.
+ *
+ * <p><strong>V00.73 status:</strong> typed surface — most methods
+ * are wired through existing {@code SecurityServiceResolver}
+ * setters. The exception is {@link #storeBacked(SessionStore)}:
+ * no global {@code setSessionStore(...)} exists in the V00.71
+ * resolver, so the store stays in DX state and is consumed by
+ * adapter-DX modules (Vaadin: {@code SessionManagementView}).
+ *
+ * <p>Adapter symmetry (Konzept §4.1):
+ * <ul>
+ *   <li>Vaadin — full consumption (policy / version / resolver /
+ *       store via SessionManagementView).</li>
+ *   <li>REST — policy / version / resolver are consumed;
+ *       {@code .storeBacked(...)} is recorded but no-op
+ *       ({@code rest/session-store-unused} INFO).</li>
+ *   <li>Standalone — every selection produces
+ *       {@code standalone/sessions-not-applicable} INFO; the call
+ *       is accepted to keep the API symmetric.</li>
+ * </ul>
+ *
+ * <p>{@link #subjectIdResolver(SubjectIdResolver)} lives here
+ * because V00.70/V00.71 use {@code SubjectIdResolver} only for
+ * {@code SecurityVersion} drift detection — a session concept
+ * (Konzept §7.3).
  *
  * @since 00.72.00
  */
 @ExperimentalSecurityApi
 public interface SessionBootstrap {
 
-  SessionBootstrap timeout(Duration timeout);
+  SessionBootstrap storeBacked(SessionStore store);
+
+  SessionBootstrap securityVersion(SecurityVersionStore store);
+
+  SessionBootstrap subjectIdResolver(SubjectIdResolver<?> resolver);
+
+  SessionBootstrap timeout(Duration idleTimeout);
+
+  SessionBootstrap absoluteLifetime(Duration absoluteTimeout);
+
+  SessionBootstrap policy(SessionPolicy<?> policy);
 }

@@ -11,6 +11,7 @@
 package com.svenruppert.vaadin.security.dx.internal;
 
 import com.svenruppert.vaadin.security.audit.AuditSink;
+import com.svenruppert.vaadin.security.audit.NoopSecurityAuditService;
 import com.svenruppert.vaadin.security.audit.LoggingAuditSink;
 import com.svenruppert.vaadin.security.audit.RingBufferAuditSink;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
@@ -18,7 +19,12 @@ import com.svenruppert.vaadin.security.audit.StoreBackedSecurityAuditService;
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
 import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.SubjectIdResolver;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleHierarchy;
+import com.svenruppert.vaadin.security.session.SecurityVersionStore;
+import com.svenruppert.vaadin.security.session.SessionPolicy;
+import com.svenruppert.vaadin.security.session.SessionStore;
+import com.svenruppert.vaadin.security.session.TimeoutSessionPolicy;
 import com.svenruppert.vaadin.security.dx.bootstrap.AuditBootstrap;
 import com.svenruppert.vaadin.security.dx.bootstrap.CommonSecurityBootstrap;
 import com.svenruppert.vaadin.security.dx.bootstrap.CredentialBootstrap;
@@ -31,6 +37,7 @@ import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapWarning;
 import com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime;
 import com.svenruppert.vaadin.security.dx.runtime.Severity;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -83,7 +90,7 @@ public abstract class AbstractSecurityBootstrap<B extends CommonSecurityBootstra
 
   @Override
   public B sessions(Consumer<SessionBootstrap> config) {
-    Objects.requireNonNull(config, "config").accept(new RecordingSessionBootstrap());
+    Objects.requireNonNull(config, "config").accept(new SessionBootstrapImpl(state.sessionState()));
     state.markSessionsConfigured();
     return self();
   }
@@ -262,6 +269,160 @@ public abstract class AbstractSecurityBootstrap<B extends CommonSecurityBootstra
   }
 
   /**
+   * Identifies the kind of adapter calling
+   * {@link #applySessionConfiguration} so adapter-specific INFO codes
+   * (Konzept §4.1, §13.2) can be emitted from the shared helper.
+   */
+  protected enum AdapterKind {
+    VAADIN, REST, STANDALONE
+  }
+
+  /**
+   * Consumes the {@link SessionState} accumulated by
+   * {@code .sessions(...)} calls and applies it per Konzept §7. The
+   * {@code adapter} parameter selects the adapter-specific
+   * informational codes:
+   * <ul>
+   *   <li>{@link AdapterKind#STANDALONE} — any selection produces
+   *       {@code standalone/sessions-not-applicable} (INFO) and the
+   *       resolver is not touched.</li>
+   *   <li>{@link AdapterKind#REST} — every selection except
+   *       {@code storeBacked} is consumed; {@code storeBacked}
+   *       produces {@code rest/session-store-unused} (INFO).</li>
+   *   <li>{@link AdapterKind#VAADIN} — full consumption.</li>
+   * </ul>
+   */
+  protected final void applySessionConfiguration(AdapterKind adapter,
+                                                 List<RegisteredSecurityService> services,
+                                                 List<SecurityBootstrapWarning> warnings) {
+    if (!state.sessionsConfigured()) {
+      return;
+    }
+    SessionState session = state.sessionState();
+    if (!session.hasAnySelection()) {
+      // empty .sessions(s -> {}) — silent on purpose; no diagnostic noise
+      return;
+    }
+
+    if (adapter == AdapterKind.STANDALONE) {
+      warnings.add(new SecurityBootstrapWarning(
+          Severity.INFO,
+          "standalone/sessions-not-applicable",
+          ".sessions(...) was configured on StandaloneSecurity.bootstrap(); the CLI adapter has no session model.",
+          "Drop the .sessions(...) call or use Vaadin / REST adapters."));
+      return;
+    }
+
+    // Validate timeout/lifetime up front
+    if (session.timeoutConfigured() && !isValidDuration(session.idleTimeout())) {
+      warnings.add(new SecurityBootstrapWarning(
+          Severity.ERROR,
+          "sessions/invalid-timeout",
+          ".timeout(" + session.idleTimeout() + ") — must be a positive, finite Duration.",
+          "Pass Duration.ofMinutes(n) with n > 0."));
+      return;
+    }
+    if (session.absoluteLifetimeConfigured() && !isValidDuration(session.absoluteLifetime())) {
+      warnings.add(new SecurityBootstrapWarning(
+          Severity.ERROR,
+          "sessions/invalid-timeout",
+          ".absoluteLifetime(" + session.absoluteLifetime() + ") — must be a positive, finite Duration.",
+          "Pass Duration.ofHours(n) with n > 0."));
+      return;
+    }
+
+    // .timeout(...) without .storeBacked(...) AND without .policy(...) is invalid
+    boolean timeoutWithoutHome = (session.timeoutConfigured() || session.absoluteLifetimeConfigured())
+        && session.sessionStore() == null
+        && session.policy() == null;
+    if (timeoutWithoutHome) {
+      warnings.add(new SecurityBootstrapWarning(
+          Severity.ERROR,
+          "sessions/missing-store",
+          ".timeout(...) / .absoluteLifetime(...) were configured without a SessionStore or SessionPolicy.",
+          "Pair the timeout with .storeBacked(...) or .policy(...)."));
+      return;
+    }
+
+    // Policy: custom .policy(...) wins; otherwise construct TimeoutSessionPolicy
+    SessionPolicy<?> effectivePolicy = session.policy();
+    if (effectivePolicy == null
+        && (session.timeoutConfigured() || session.absoluteLifetimeConfigured())) {
+      effectivePolicy = buildTimeoutSessionPolicy(session);
+    }
+    if (effectivePolicy != null) {
+      registerSessionPolicy(effectivePolicy);
+      services.add(new RegisteredSecurityService(
+          SessionPolicy.class, effectivePolicy.getClass(),
+          session.policy() != null ? "bootstrap-explicit" : "bootstrap-composed",
+          false));
+    }
+
+    // SecurityVersion + SubjectIdResolver
+    if (session.securityVersionStore() != null) {
+      SecurityServiceResolver.setSecurityVersionStore(session.securityVersionStore());
+      services.add(new RegisteredSecurityService(
+          SecurityVersionStore.class, session.securityVersionStore().getClass(),
+          "bootstrap-explicit", false));
+      if (session.subjectIdResolver() == null
+          && SecurityServiceResolver.findSubjectIdResolver().isEmpty()) {
+        warnings.add(new SecurityBootstrapWarning(
+            Severity.ERROR,
+            "security-version-without-subject-id-resolver",
+            ".securityVersion(...) was configured without a SubjectIdResolver; drift detection cannot resolve subjects.",
+            "Call .subjectIdResolver(...) or register one via @SecurityAutoService."));
+      }
+    }
+    if (session.subjectIdResolver() != null) {
+      registerSubjectIdResolver(session.subjectIdResolver());
+      services.add(new RegisteredSecurityService(
+          SubjectIdResolver.class, session.subjectIdResolver().getClass(),
+          "bootstrap-explicit", false));
+    }
+
+    // SessionStore — adapter-specific consumption
+    if (session.sessionStore() != null) {
+      if (adapter == AdapterKind.REST) {
+        warnings.add(new SecurityBootstrapWarning(
+            Severity.INFO,
+            "rest/session-store-unused",
+            ".storeBacked(...) was configured on RestSecurity.bootstrap(); REST consumes Policy/Version/Resolver but not SessionStore.",
+            "Drop the .storeBacked(...) call or move it to the Vaadin adapter."));
+      } else {
+        services.add(new RegisteredSecurityService(
+            SessionStore.class, session.sessionStore().getClass(),
+            "bootstrap-explicit", false));
+      }
+    }
+  }
+
+  private static boolean isValidDuration(Duration d) {
+    return d != null && !d.isNegative() && !d.isZero();
+  }
+
+  private static SessionPolicy<?> buildTimeoutSessionPolicy(SessionState session) {
+    TimeoutSessionPolicy.Config defaults = TimeoutSessionPolicy.Config.defaults();
+    Duration idle = session.idleTimeout() != null ? session.idleTimeout() : defaults.idleTimeout();
+    Duration absolute = session.absoluteLifetime() != null
+        ? session.absoluteLifetime() : defaults.absoluteLifetime();
+    TimeoutSessionPolicy.Config config = new TimeoutSessionPolicy.Config(
+        idle, absolute, defaults.rotateSessionAfterLogin(), defaults.loginRoute());
+    SecurityAuditService audit = SecurityServiceResolver.findSecurityAuditService()
+        .orElseGet(NoopSecurityAuditService::new);
+    return new TimeoutSessionPolicy<>(config, Clock.systemUTC(), audit);
+  }
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private static void registerSessionPolicy(SessionPolicy<?> policy) {
+    SecurityServiceResolver.setSessionPolicy((SessionPolicy) policy);
+  }
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private static void registerSubjectIdResolver(SubjectIdResolver<?> resolver) {
+    SecurityServiceResolver.setSubjectIdResolver((SubjectIdResolver) resolver);
+  }
+
+  /**
    * Synthetic marker types used as the {@code impl} class of the
    * {@link RegisteredSecurityService} entry that surfaces the
    * {@code .credentialEvents(boolean)} flag in {@link SecurityRuntime}.
@@ -284,14 +445,6 @@ public abstract class AbstractSecurityBootstrap<B extends CommonSecurityBootstra
   }
 
   // ---- sub-builder recorders ---------------------------------------------
-
-  private static final class RecordingSessionBootstrap implements SessionBootstrap {
-    @Override
-    public SessionBootstrap timeout(Duration timeout) {
-      Objects.requireNonNull(timeout, "timeout");
-      return this;
-    }
-  }
 
   private static final class RecordingPolicyBootstrap implements PolicyBootstrap {
     @Override

@@ -118,6 +118,8 @@ final class VaadinSecurityBootstrapImpl
 
     // V00.73: apply audit sub-builder state (no-op when .audit(...) wasn't called).
     applyAuditConfiguration(services, warnings);
+    // V00.73: apply sessions sub-builder state (full consumption on Vaadin).
+    applySessionConfiguration(AdapterKind.VAADIN, services, warnings);
 
     SecurityBootstrapMode mode = state.mode();
 

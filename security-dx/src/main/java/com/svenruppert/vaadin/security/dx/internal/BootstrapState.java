@@ -36,10 +36,16 @@ public final class BootstrapState {
   private boolean credentialsConfigured;
 
   private final AuditState auditState = new AuditState();
+  private final SessionState sessionState = new SessionState();
 
   /** @return the typed audit sub-aggregate (V00.73) */
   public AuditState auditState() {
     return auditState;
+  }
+
+  /** @return the typed sessions sub-aggregate (V00.73) */
+  public SessionState sessionState() {
+    return sessionState;
   }
 
   public AuthenticationService<?, ?> authenticationService() {
