@@ -71,7 +71,9 @@ Every implementation prompt must obey these rules:
 5. `PasswordHasher` and `PasswordHashingService` remain distinct surfaces.
 6. `RoleBootstrap` stabilizes only `RoleHierarchy`.
 7. `security-processor` wrapper-generation semantics stay unchanged; the index is additive metadata.
-8. STRICT-mode warning promotions are documented as breaking changes.
+8. STRICT-mode codes split into two classes:
+   (a) Promotions of V00.72 warnings to V00.73 STRICT exceptions are breaking changes; they get their own RELEASE-NOTES section (Konzept §3.4, §13.1).
+   (b) Brand-new V00.73 validation codes (Konzept §13.2) are additive and only fire when the new sub-builder methods are used — they are not breaking changes per se.
 9. Stable promotion is per type; no blanket annotation removal.
 10. Tests use real fakes from `security-test` or local test-support helpers. No Mockito.
 11. Diagnostics never include secrets.
@@ -167,6 +169,7 @@ Codes:
 - `audit/missing-service`
 - `audit/store-backed-without-store`
 - `audit/invalid-ring-buffer-capacity`
+- `audit/conflicting-direct-service` — `.securityAuditService(...)` mixed with any other selection method in the same lambda
 
 ### 005 - RoleBootstrap real surface
 

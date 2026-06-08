@@ -49,6 +49,7 @@ V00.75 (Security Event Bus) und V00.80 (MFA, OIDC, Hardening) bauen darauf auf.
 - **Adapter-Symmetrie**: REST und Standalone bekommen wo sinnvoll dieselben Sub-Builder; Vaadin-spezifische Erweiterungen (`SessionManagementView`-Aktivierung, `VaadinSessionSubjectStore`-Auto-Wiring) werden konsumiert.
 - **`SecuredUi.requiresPolicy(...)`** integriert mit `PolicyRegistry`.
 - **`@SecureRoute(policy=...)`** integriert mit `PolicyRegistry` (V00.72 schlug Forbidden vor; V00.73 evaluiert echt).
+- **`SecureRouteDiscovery`-SPI** in `security-vaadin-starter` als opt-in (`.discoverSecureRoutes(true)` auf `VaadinSecurityBootstrap`). Default-Implementierung `VaadinRouterSecureRouteDiscovery` in `security-dx-vaadin` scannt `RouteConfiguration.getAvailableRoutes()`. Ohne Opt-in bleibt das V00.72-Runtime-Verhalten unverändert. Siehe §8.5.
 - **`security-processor`-Wrapper-Index-Writer**: `META-INF/security-for-flow/generated-wrappers.idx` wird beim Compile-Time-Wrapper-Generieren emittiert.
 - **Gezielte Stable-API-Promotion**: Entfernen von `@ExperimentalSecurityApi` nur nach Typ-Audit und nur für Typen, deren Semantik nach V00.73 stabil ist.
 - **`security-dx-test`-Modul nur dann, wenn während der Implementierung ein konkreter Cross-Module-Reuse-Fall auftritt.** Bis dahin: DX-typisierte Test-Helpers leben in `security-dx/src/test/java/.../testsupport/` und werden über Maven-Test-Jar (`<scope>test</scope>` + `<classifier>tests</classifier>`) für andere V00.72/V00.73-Module zugänglich gemacht. Erst wenn eine Demo oder ein externer Konsument diese Helper braucht, rechtfertigt das ein eigenes Modul.
@@ -119,12 +120,12 @@ Eine V00.72-Anwendung mit `mode(STRICT)` und einer dieser Warnings hat sich bish
 | Sub-Builder | Vaadin | REST | Standalone |
 |---|:---:|:---:|:---:|
 | `.audit(...)` | ✓ | ✓ | ✓ |
-| `.sessions(...)` | ✓ | ✓ (sofern HTTP-Session-Konzept verwendet wird) | ⚠ no-op (keine Session-Semantik in CLI) |
+| `.sessions(...)` | ✓ (`SessionPolicy`, `SecurityVersionStore`, `SessionStore` für `SessionManagementView`) | ✓ teilweise (`SessionPolicy` + `SecurityVersionStore` + `SubjectIdResolver` werden verwendet, `SessionStore` ist no-op — REST hat keine eigene UI-Komponente, die es konsumiert) | ⚠ no-op (CLI hat keine Session-Semantik) |
 | `.policies(...)` | ✓ | ✓ | ✓ |
 | `.roles(...)` | ✓ | ✓ | ✓ |
 | `.credentials(...)` | ✓ | ✓ | ✓ |
 
-`.sessions(...)` in `StandaloneSecurityBootstrap` ist kein Fehler — die Methode bleibt aufrufbar, aber `install()` warnt mit Code `standalone/sessions-not-applicable` (Severity.INFO; STRICT macht keine Exception, das wäre überreagiert). Adapter-spezifische Schritte (Vaadin: `SessionManagementView`-Activation, REST: `RestSecurityVersionFilter`) bleiben weiter auf dem jeweiligen Adapter-Bootstrap.
+`.sessions(...)` in `StandaloneSecurityBootstrap` ist kein Fehler — die Methode bleibt aufrufbar, aber `install()` warnt mit Code `standalone/sessions-not-applicable` (Severity.INFO; STRICT macht keine Exception, das wäre überreagiert). Für REST gilt das gleiche Muster auf Methodenebene: `.storeBacked(SessionStore)` wird im REST-Bootstrap akzeptiert, aber nicht konsumiert; `install()` loggt `rest/session-store-unused` (INFO), damit Aufrufer das sehen. Adapter-spezifische Schritte (Vaadin: `SessionManagementView`-Activation, REST: `RestSecurityVersionFilter`) bleiben weiter auf dem jeweiligen Adapter-Bootstrap.
 
 ---
 
@@ -175,14 +176,15 @@ Der aktuelle Core-Stand unterscheidet zwischen `SecurityAuditService`, `AuditSin
 )
 ```
 
-`install()` bildet aus den gewählten Bausteinen genau einen `SecurityAuditService`:
+`install()` bildet aus den gewählten Bausteinen genau einen `SecurityAuditService`. Mapping auf die existierenden Core-Typen:
 
-- `.securityAuditService(...)` setzt einen fertigen Service direkt.
-- `.storeBacked(...)` erzeugt einen `StoreBackedSecurityAuditService`.
-- `.logging()` und `.ringBuffer(...)` werden als Sinks in einen `CompositeAuditService` aufgenommen.
-- Werden mehrere Ziele konfiguriert, entsteht ein Composite; nichts wird still überschrieben.
+- `.securityAuditService(svc)` — `svc` wird direkt verwendet (kein Wrapping, kein Composite).
+- nur `.storeBacked(store)` — neuer `StoreBackedSecurityAuditService(store)`.
+- nur `.logging()` / nur `.ringBuffer(n)` — eine schlanke ad-hoc-`SecurityAuditService`-Implementierung, die an die konfigurierten Sinks weiterleitet (Sinks sind keine `SecurityAuditService` und passen daher nicht direkt in `setSecurityAuditService(...)`).
+- Kombinationen aus `storeBacked` + `logging` + `ringBuffer` — `CompositeAuditService` ist heute auf `(RingBufferAuditSink ringBuffer, AuditSink... extras)` zugeschnitten; eine Kombination mit `StoreBackedSecurityAuditService` lässt sich damit nicht direkt formen. V00.73 löst das pragmatisch über einen kleinen DX-internen `TeeingSecurityAuditService(SecurityAuditService primary, SecurityAuditService... siblings)`, der `publish/query` weiterleitet. Falls der Core-Komplex `CompositeAuditService` später erweitert wird, kann die Tee-Hilfsklasse durch ein Core-Composite ersetzt werden — die externe API bleibt gleich.
+- Nichts wird stillschweigend überschrieben — explizit gemischte Setups produzieren ein deterministisches Composite/Tee, keine letzte-Wins-Logik.
 
-Der resultierende Service wird über `SecurityServiceResolver.setSecurityAuditService(...)` registriert. `CredentialAuditPublisher` nutzt anschließend denselben Resolver-Pfad; V00.73 führt dafür keinen zweiten Audit-Kanal ein.
+Der resultierende Service wird über `SecurityServiceResolver.setSecurityAuditService(...)` registriert. `CredentialAuditPublisher` nutzt anschließend denselben Resolver-Pfad; V00.73 führt dafür keinen zweiten Audit-Kanal ein. Das `.credentialEvents(boolean)`-Flag in der API ist eine **Vorhalte-Schalter**: V00.73 dokumentiert die Absicht im `SecurityRuntime`, ändert das Laufzeitverhalten aber nicht (siehe Prompt 004). Sobald V00.75 per-Channel-Filter bekommt, wird das Flag wirksam — die API-Form muss dann nicht wechseln.
 
 ### 6.3 API-Skizze
 
@@ -201,6 +203,7 @@ public interface AuditBootstrap {
 - `audit/missing-service` — `audit(...)` aufgerufen ohne mindestens eine Auswahl-Methode → STRICT wirft.
 - `audit/store-backed-without-store` — `.storeBacked(null)` → STRICT wirft.
 - `audit/invalid-ring-buffer-capacity` — `.ringBuffer(0)` oder kleiner → STRICT wirft; PRODUCTION warnt.
+- `audit/conflicting-direct-service` — `.securityAuditService(svc)` UND eine weitere Auswahl-Methode (`storeBacked` / `logging` / `ringBuffer`) im selben `.audit(...)`-Lambda → STRICT wirft; PRODUCTION warnt. Direct-Service heißt "ich bringe meinen eigenen mit"; Mischung mit Bootstrap-Composing wäre mehrdeutig.
 
 ---
 
@@ -310,9 +313,29 @@ Konsumenten, die das schon in V00.72 nutzen wollten, bekommen ohne Code-Änderun
 
 **Deterministische Cross-Validation.** Da `.policies(...)` nach `install()` alle registrierten Policy-Namen kennt, prüft V00.73 zur Bootstrap-Zeit, ob Routes mit `@SecureRoute(policy="x")` einen unbekannten Namen referenzieren. Die Prüfung wird genau dann deterministisch, wenn der Konsument einen `SecureRouteDiscovery`-Hook bereitstellt — eine schmale neue SPI in `security-vaadin-starter`, die alle `@SecureRoute`-annotierten Klassen aufzählt. Sie hat eine Default-Implementierung, die Vaadins `RouteConfiguration.getAvailableRoutes()` benutzt; Konsumenten ohne diesen Hook (z. B. Tests, Lazy-Loading) bleiben beim V00.72-Verhalten (Prüfung erst zur Route-Visit-Zeit). Findet der Hook einen Mismatch → `secure-route/unknown-policy` als deterministischer STRICT-Fehler vor dem ersten Route-Visit; ohne Hook bleibt das ein Runtime-Warning.
 
-### 8.5 STRICT-Regeln
+### 8.5 `SecureRouteDiscovery`-SPI (neu, opt-in)
 
-- `secure-route/unknown-policy` (war V00.72 Warning) → STRICT-Exception.
+Scope-Entscheidung: V00.73 nimmt diese SPI in den Scope (§3.1), weil sie der einzige Weg ist, die `secure-route/unknown-policy`-Prüfung deterministisch zur Bootstrap-Zeit zu machen. Sie wird klein, opt-in und nicht-breaking gehalten.
+
+```java
+// security-vaadin-starter (neue SPI, public)
+@ExperimentalSecurityApi
+public interface SecureRouteDiscovery {
+  /** Alle @SecureRoute-tragenden Route-Klassen, die der Konsument zur Bootstrap-Zeit kennt. */
+  Stream<Class<?>> discoverSecureRoutes();
+}
+```
+
+- Eine Default-Implementierung `VaadinRouterSecureRouteDiscovery` lebt in `security-dx-vaadin`. Sie ruft `RouteConfiguration.forApplicationScope().getAvailableRoutes()` auf und filtert auf `@SecureRoute`-tragende Klassen.
+- Aktivierung über `VaadinSecurityBootstrap.discoverSecureRoutes(boolean)` (neuer Builder-Schritt). Default `false` — keine Verhaltensänderung gegenüber V00.72.
+- Aktiviert: `install()` cross-checkt jede `@SecureRoute(policy="x")`-Annotation gegen `PolicyState.knownPolicyNames()`. Mismatch im STRICT-Mode → `SecurityBootstrapException("secure-route/unknown-policy: <name>")`. PRODUCTION → Warning mit demselben Code.
+- Deaktiviert: V00.72-Runtime-Verhalten unverändert. Bootstrap loggt `secure-route/discovery-disabled` (INFO), damit Operatoren sehen, warum STRICT die Prüfung nicht macht.
+- Konsumenten können eigene `SecureRouteDiscovery`-Implementierungen via `.discoverSecureRoutes(myImpl)` (Overload mit Instance-Parameter) bereitstellen — z. B. für Lazy-Loading-Setups, die Vaadins `RouteConfiguration` nicht zur Bootstrap-Zeit befragen wollen.
+- Nicht im Scope von V00.73: Wrapping über REST/Standalone-Adapter — die Klassen-Annotationen sind Vaadin-spezifisch.
+
+### 8.6 STRICT-Regeln
+
+- `secure-route/unknown-policy` (war V00.72 Warning) → STRICT-Exception, deterministisch nur mit aktiviertem `SecureRouteDiscovery`-Hook (§8.5).
 - `policies/empty-registry` — `policies(...)` ohne tatsächlichen `register(...)`-Aufruf → INFO-Warning.
 
 ---
@@ -371,6 +394,12 @@ Ohne diese Core-Erweiterung darf das Konzept keine `.mapping(...)`-Methode als p
 - die V00.71-Credential-Pipeline mit `PasswordHashingService`, `CredentialStore`, `PasswordChangeService`, `PasswordResetService`, `PepperService`.
 
 V00.73 darf diese beiden Ebenen nicht unklar vermischen. Die Sub-Builder-Surface unterscheidet daher explizit zwischen dem legacy-kompatiblen `PasswordHasher`-Resolverpfad und der V00.71-Credential-Pipeline.
+
+**Namens-Kollision `PasswordResetService`.** Im Quellstand existieren zwei Klassen mit diesem Namen:
+- `com.svenruppert.vaadin.security.accountlifecycle.PasswordResetService` (V00.70, kontextlos / Account-Lifecycle),
+- `com.svenruppert.vaadin.security.credential.reset.PasswordResetService` (V00.71, Teil der neuen Credential-Pipeline).
+
+`.passwordReset(...)` im Sub-Builder referenziert **ausschließlich** die V00.71-Variante (`credential.reset.PasswordResetService`). Die V00.70-Variante bleibt erreichbar, wenn ein Konsument sie weiter selbst über den Resolver oder direkt instanziiert — der Sub-Builder kennt sie nicht. JavaDoc auf der Sub-Builder-Methode benennt die voll-qualifizierte V00.71-Klasse, damit IDE-Autocomplete den richtigen Import zieht.
 
 ### 10.2 Ziel
 
@@ -438,9 +467,11 @@ sourceFqn:generatedFqn:processor:proxyBuilderVer:method1,method2,...
 
 ### 11.3 Implementierungsdetails
 
-- Append-Modus pro Compilation-Round.
+- Schreibe einmal pro Annotation-Processing-Lifecycle, in `processingOver()`. Filer `createResource(...)` darf pro Resource-Pfad in einer Compilation nur einmal aufgerufen werden — ein "append pro Round" würde `FilerException("attempt to create the same resource again")` werfen.
+- Vor dem Schreiben: bestehende Datei einmal lesen (Filer `getResource(...)`; in In-Memory-FileManagern kann das `UnsupportedOperationException` werfen — `IOException | RuntimeException` als "kein Vorgängerstand" interpretieren).
+- Merge: Einträge zu Source-Klassen, die in dieser Compilation existieren, ersetzen Vorgängereinträge; Einträge zu nicht mehr existierenden Source-Klassen fallen raus.
 - Marker-Comment-Line am Anfang (analog zu `security-autoservice-processor`).
-- Idempotent über inkrementelle Builds.
+- Deterministisch sortiert nach `sourceFqn`. Re-Compilation mit identischer Source produziert byte-identische Output.
 - Dedup auf (sourceFqn, generatedFqn).
 - Wenn das Generieren eines Wrappers fehlschlägt, wird **kein** Index-Eintrag geschrieben (verhindert `secured-without-wrapper`-Warnings für tatsächlich nicht generierte Wrapper).
 
@@ -496,23 +527,39 @@ Konsumenten der Stable-API bekommen:
 
 ## 13. Validierung und Fehlermeldungen
 
-V00.73 ergänzt diese stabilen Warning-Codes (zusätzlich zu V00.72):
+Die V00.73-Warning-Codes zerfallen in zwei sprachlich klar getrennte Klassen:
+
+### 13.1 STRICT-Promotions aus V00.72 (semver-relevant, breaking)
+
+Diese drei Codes haben in V00.72 als Warning existiert und brechen ab V00.73 im STRICT-Mode den Bootstrap ab. Konsumenten, die ihre V00.72-STRICT-Diagnose nicht clean haben, müssen vor dem V00.73-Upgrade aktiv handeln. Die Promotion-Liste ist Spiegelbild von §3.4 und wird in `RELEASE-NOTES-00.73.00.md` als eigene Sektion ausgewiesen.
+
+| Code | Auslöser | V00.72-Verhalten | V00.73-STRICT |
+|---|---|---|:---:|
+| `secure-route/unknown-policy` | `@SecureRoute(policy="x")` und PolicyRegistry kennt "x" nicht | Warning + Runtime-Forbidden | ✓ deterministisch nur mit aktivem `SecureRouteDiscovery`-Hook (§8.5); ohne Hook bleibt Runtime-Forbidden + Warning, Bootstrap loggt `secure-route/discovery-disabled` (INFO) |
+| `session-management-view-without-session-store` | `.sessionManagementView()` + keine Session-Konfiguration | Warning | ✓ Exception |
+| `security-version-without-subject-id-resolver` | `.securityVersion(...)` ohne `.subjectIdResolver(...)` registriert | Warning | ✓ Exception |
+
+### 13.2 Neue V00.73-Validierungs-Codes (additiv, nicht breaking)
+
+Diese Codes feuern nur, wenn der Konsument die neu in V00.73 verfügbaren Sub-Builder-Methoden tatsächlich verwendet. V00.72-Konsumenten, die ihre direkten `SecurityServiceResolver.setXxx(...)`-Pfade behalten, sind nicht betroffen — die Codes sind kein Breaking Change im SemVer-Sinn.
 
 | Code | Auslöser | STRICT |
 |---|---|:---:|
 | `audit/missing-service` | `.audit(...)` ohne Auswahl-Methode | ✓ |
 | `audit/store-backed-without-store` | `.storeBacked(null)` | ✓ |
-| `sessions/missing-store` | `.timeout(...)` ohne `.storeBacked(...)` | ✓ |
+| `audit/invalid-ring-buffer-capacity` | `.ringBuffer(n)` mit `n <= 0` | ✓ |
+| `audit/conflicting-direct-service` | `.securityAuditService(...)` UND eine weitere Auswahl-Methode (storeBacked/logging/ringBuffer) im selben Lambda | ✓ |
+| `sessions/missing-store` | `.timeout(...)` ohne `.storeBacked(...)` oder `.policy(...)` | ✓ |
 | `sessions/invalid-timeout` | `timeout` / `absoluteLifetime` ist `null`, negativ oder `Duration.ZERO` | ✓ |
-| `sessions/session-management-view-without-session-store` | `.sessionManagementView()` + keine Session-Konfiguration | ✓ (war V00.72-Warning) |
-| `secure-route/unknown-policy` | `@SecureRoute(policy="x")` und PolicyRegistry kennt "x" nicht (deterministisch zur Bootstrap-Zeit, sofern Route-Discovery möglich) | ✓ (war V00.72-Warning) |
-| `policies/empty-registry` | `.policies(p -> {})` ohne `register(...)`-Aufruf — niedrige Priorität, gerne ganz droppen falls Implementierung Lärm produziert | INFO (optional) |
-| `standalone/sessions-not-applicable` | `.sessions(...)` an `StandaloneSecurityBootstrap` aufgerufen (CLI hat keine Session-Semantik) | INFO |
 | `roles/missing-hierarchy` | `.roles(...)` ohne `.hierarchy(...)` | INFO |
 | `roles/hierarchy-cycle` | RoleHierarchy enthält Zyklus | ✓ |
-| `credentials/missing-hashing` | `.passwordChange/.passwordReset(...)` ohne `.hashing(...)` | ✓ |
+| `credentials/missing-hashing` | `.passwordChange(...)` / `.passwordReset(...)` ohne `.hashing(...)` | ✓ |
 | `credentials/legacy-hasher-and-pipeline-diverge` | Legacy-Hasher und V00.71-Pipeline widersprechen sich | abhängig vom Modus |
 | `credentials/modern-without-bc` | `.modern()` und `security-crypto-bc` fehlt | ✓ |
+| `policies/empty-registry` | `.policies(p -> {})` ohne `register(...)`-Aufruf — niedrige Priorität, gerne ganz droppen falls Implementierung Lärm produziert | INFO (optional) |
+| `standalone/sessions-not-applicable` | `.sessions(...)` an `StandaloneSecurityBootstrap` aufgerufen | INFO |
+| `rest/session-store-unused` | `.sessions(s -> s.storeBacked(...))` an `RestSecurityBootstrap` aufgerufen | INFO |
+| `secure-route/discovery-disabled` | `.discoverSecureRoutes(true)` nicht gesetzt → deterministische STRICT-Prüfung für `secure-route/unknown-policy` ist abgeschaltet | INFO |
 
 ---
 
