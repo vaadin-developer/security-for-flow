@@ -17,8 +17,14 @@
 package com.svenruppert.vaadin.security.demo.standalone;
 
 import com.svenruppert.vaadin.security.authorization.api.AccessDeniedException;
+import com.svenruppert.vaadin.security.dx.diagnostics.SecurityDiagnostics;
+import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
+import com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime;
+import com.svenruppert.vaadin.security.dx.standalone.bootstrap.StandaloneSecurity;
 import com.svenruppert.vaadin.security.standalone.SecuredProxy;
 import com.svenruppert.vaadin.security.standalone.StandaloneLoginFlow;
+
+import java.util.ServiceLoader;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -78,6 +84,36 @@ public final class DemoApp {
   }
 
   public static void main(String[] args) throws Exception {
+    // V00.72 fluent bootstrap. The AuthN/AuthZ services are discovered
+    // through @SecurityAutoService and pulled here so the bootstrap can
+    // wire them explicitly into SecurityServiceResolver and produce a
+    // SecurityRuntime that lists every active service.
+    var authn = ServiceLoader.load(
+            com.svenruppert.vaadin.security.authentication.AuthenticationService.class)
+        .findFirst().orElseThrow(() -> new IllegalStateException(
+            "No AuthenticationService registered (expected DemoAuthenticationService via @SecurityAutoService)"));
+    var authz = ServiceLoader.load(
+            com.svenruppert.vaadin.security.authorization.api.AuthorizationService.class)
+        .findFirst().orElseThrow(() -> new IllegalStateException(
+            "No AuthorizationService registered (expected DemoAuthorizationService via @SecurityAutoService)"));
+
+    SecurityRuntime runtime = StandaloneSecurity.bootstrap()
+        .mode(SecurityBootstrapMode.DEVELOPMENT)
+        .authentication(authn)
+        .authorization(authz)
+        .install();
+    System.out.println(runtime.log());
+
+    // Inspect the broader diagnostics surface (DiagnosticContributor SPI).
+    var report = SecurityDiagnostics.inspect();
+    if (!report.missing().isEmpty() || !report.duplicates().isEmpty()
+        || !report.warnings().isEmpty()) {
+      System.out.println("--- SecurityDiagnostics ---");
+      report.missing().forEach(m -> System.out.println("  missing: " + m.spi().getSimpleName() + " — " + m.reason()));
+      report.duplicates().forEach(d -> System.out.println("  duplicate: " + d.spi().getSimpleName()));
+      report.warnings().forEach(w -> System.out.println("  " + w.code() + ": " + w.message()));
+    }
+
     BufferedReader reader = new BufferedReader(
         new InputStreamReader(System.in, StandardCharsets.UTF_8));
     new DemoApp(reader, System.out).run();

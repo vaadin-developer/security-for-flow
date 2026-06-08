@@ -17,7 +17,7 @@
   <parent>
     <groupId>com.svenruppert</groupId>
     <artifactId>security-for-flow-parent</artifactId>
-    <version>00.71.00-SNAPSHOT</version>
+    <version>00.72.00-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -62,6 +62,22 @@
     <dependency>
       <groupId>com.svenruppert</groupId>
       <artifactId>security-autoservice-annotations</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!--
+      V00.72 fluent bootstrap. DemoApp.main() calls
+      StandaloneSecurity.bootstrap() to wire services into
+      SecurityServiceResolver and print the resulting SecurityRuntime
+      diagnostics line at startup.
+    -->
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>security-dx</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>security-dx-standalone</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
