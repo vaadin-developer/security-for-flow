@@ -13,7 +13,14 @@ package com.svenruppert.vaadin.security.dx.bootstrap;
 import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 
 /**
- * Placeholder credential sub-builder of the V00.72 fluent bootstrap.
+ * Credential sub-builder of the V00.72 fluent bootstrap.
+ * <p>
+ * <strong>V00.72 status:</strong> the call is <em>recorded only</em>;
+ * no {@code PasswordHashingService} / {@code CredentialStore} wiring
+ * is applied through this surface. Real credential wiring is staged
+ * for V00.73; V00.71 callers continue to use the existing
+ * {@code SecurityServiceResolver.setPasswordHashingService(...)} and
+ * the {@code CredentialStore} SPI directly.
  *
  * @since 00.72.00
  */

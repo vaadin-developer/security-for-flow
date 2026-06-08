@@ -15,7 +15,13 @@ import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi
 import java.time.Duration;
 
 /**
- * Placeholder session sub-builder of the V00.72 fluent bootstrap.
+ * Session sub-builder of the V00.72 fluent bootstrap.
+ * <p>
+ * <strong>V00.72 status:</strong> the call is <em>recorded only</em>;
+ * no {@code SessionStore} / {@code SecurityVersionStore} wiring is
+ * applied yet. Real session-policy wiring is staged for V00.73; the
+ * timeout value is held in {@code BootstrapState} so diagnostics can
+ * report it, but is not enforced at runtime in V00.72.
  *
  * @since 00.72.00
  */

@@ -13,7 +13,13 @@ package com.svenruppert.vaadin.security.dx.bootstrap;
 import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 
 /**
- * Placeholder policy sub-builder of the V00.72 fluent bootstrap.
+ * Policy sub-builder of the V00.72 fluent bootstrap.
+ * <p>
+ * <strong>V00.72 status:</strong> the call is <em>recorded only</em>;
+ * no policy registry wiring is applied. Real {@code PolicyRegistry}
+ * binding is staged for V00.73; until then policy-based access
+ * decisions continue to use the existing {@code RequiresPolicy} /
+ * {@code @Secured} paths.
  *
  * @since 00.72.00
  */

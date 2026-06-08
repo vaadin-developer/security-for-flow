@@ -14,7 +14,13 @@ import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleHierarchy;
 
 /**
- * Placeholder role sub-builder of the V00.72 fluent bootstrap.
+ * Role sub-builder of the V00.72 fluent bootstrap.
+ * <p>
+ * <strong>V00.72 status:</strong> the call is <em>recorded only</em>;
+ * no {@code RoleHierarchy} wiring into {@code SecurityServiceResolver}
+ * is applied. Real hierarchy binding is staged for V00.73; the
+ * hierarchy still works in V00.72 when registered through the existing
+ * SPI / `META-INF/services` path.
  *
  * @since 00.72.00
  */

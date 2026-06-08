@@ -13,9 +13,14 @@ package com.svenruppert.vaadin.security.dx.bootstrap;
 import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 
 /**
- * Placeholder audit sub-builder of the V00.72 fluent bootstrap. The
- * {@link #ringBuffer()} method is a minimal-API anchor for later
- * extension (V00.72 only records the choice; no wiring yet).
+ * Audit sub-builder of the V00.72 fluent bootstrap.
+ * <p>
+ * <strong>V00.72 status:</strong> the call is <em>recorded only</em>
+ * (the {@code BootstrapState} flag is set so diagnostics can report
+ * "audit was configured"), but no service is actually wired into the
+ * {@code SecurityServiceResolver} yet. Real audit-store / ring-buffer
+ * wiring is staged for V00.73; callers should not rely on the choice
+ * being effective at runtime in V00.72.
  *
  * @since 00.72.00
  */
