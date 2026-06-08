@@ -11,20 +11,40 @@
 package com.svenruppert.vaadin.security.dx.bootstrap;
 
 import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.policy.api.Policy;
+import com.svenruppert.vaadin.security.policy.spi.PolicyRegistry;
+import com.svenruppert.vaadin.security.policy.spi.ResourceResolver;
+import com.svenruppert.vaadin.security.policy.spi.ResourceResolverRegistry;
 
 /**
- * Policy sub-builder of the V00.72 fluent bootstrap.
- * <p>
- * <strong>V00.72 status:</strong> the call is <em>recorded only</em>;
- * no policy registry wiring is applied. Real {@code PolicyRegistry}
- * binding is staged for V00.73; until then policy-based access
- * decisions continue to use the existing {@code RequiresPolicy} /
- * {@code @Secured} paths.
+ * Policy sub-builder of the fluent bootstrap.
+ *
+ * <p><strong>V00.73 status:</strong> typed surface (Konzept §8).
+ * Replaces the V00.72 untyped {@code register(Object)} placeholder.
+ *
+ * <ul>
+ *   <li>{@link #register(Policy)} — adds a policy to whatever
+ *       registry is active (custom via {@link #registry(PolicyRegistry)}
+ *       or the default {@code SecurityServiceResolver.policyRegistry()}).</li>
+ *   <li>{@link #resourceResolver(ResourceResolver)} — adds a resource
+ *       resolver to whatever registry is active.</li>
+ *   <li>{@link #registry(PolicyRegistry)} — replaces the active
+ *       policy registry via
+ *       {@code SecurityServiceResolver.setPolicyRegistry(...)}.</li>
+ *   <li>{@link #resourceRegistry(ResourceResolverRegistry)} — same
+ *       for resource resolvers.</li>
+ * </ul>
  *
  * @since 00.72.00
  */
 @ExperimentalSecurityApi
 public interface PolicyBootstrap {
 
-  PolicyBootstrap register(Object policyContainer);
+  PolicyBootstrap register(Policy policy);
+
+  PolicyBootstrap resourceResolver(ResourceResolver<?> resolver);
+
+  PolicyBootstrap registry(PolicyRegistry external);
+
+  PolicyBootstrap resourceRegistry(ResourceResolverRegistry external);
 }

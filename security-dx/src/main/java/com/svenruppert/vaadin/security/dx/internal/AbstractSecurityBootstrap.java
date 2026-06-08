@@ -29,6 +29,10 @@ import com.svenruppert.vaadin.security.credential.password.PasswordHashingServic
 import com.svenruppert.vaadin.security.credential.password.pepper.PepperService;
 import com.svenruppert.vaadin.security.credential.reset.PasswordResetService;
 import com.svenruppert.vaadin.security.credential.store.CredentialStore;
+import com.svenruppert.vaadin.security.policy.api.Policy;
+import com.svenruppert.vaadin.security.policy.spi.PolicyRegistry;
+import com.svenruppert.vaadin.security.policy.spi.ResourceResolver;
+import com.svenruppert.vaadin.security.policy.spi.ResourceResolverRegistry;
 import com.svenruppert.vaadin.security.session.SecurityVersionStore;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
 import com.svenruppert.vaadin.security.session.SessionStore;
@@ -105,7 +109,8 @@ public abstract class AbstractSecurityBootstrap<B extends CommonSecurityBootstra
 
   @Override
   public B policies(Consumer<PolicyBootstrap> config) {
-    Objects.requireNonNull(config, "config").accept(new RecordingPolicyBootstrap());
+    Objects.requireNonNull(config, "config")
+        .accept(new PolicyBootstrapImpl(state.policyState()));
     state.markPoliciesConfigured();
     return self();
   }
@@ -606,11 +611,56 @@ public abstract class AbstractSecurityBootstrap<B extends CommonSecurityBootstra
     }
   }
 
-  private static final class RecordingPolicyBootstrap implements PolicyBootstrap {
-    @Override
-    public PolicyBootstrap register(Object policyContainer) {
-      Objects.requireNonNull(policyContainer, "policyContainer");
-      return this;
+  /**
+   * Consumes the {@link PolicyState} accumulated by
+   * {@code .policies(...)} calls and applies it per Konzept §8.
+   *
+   * <p>Wiring rules:
+   * <ul>
+   *   <li>{@code .registry(external)} → {@link SecurityServiceResolver#setPolicyRegistry(PolicyRegistry)}.</li>
+   *   <li>{@code .resourceRegistry(external)} → {@link SecurityServiceResolver#setResourceResolverRegistry(ResourceResolverRegistry)}.</li>
+   *   <li>{@code .register(policy)} → active registry's
+   *       {@link PolicyRegistry#register(Policy)}.</li>
+   *   <li>{@code .resourceResolver(r)} → active registry's
+   *       {@link ResourceResolverRegistry#register(ResourceResolver)}.</li>
+   * </ul>
+   *
+   * <p>Empty {@code .policies(p -> {})} is silently allowed (Konzept §13
+   * marks the diagnostic as optional INFO; V00.73 drops it to avoid
+   * noise).
+   */
+  protected final void applyPolicyConfiguration(List<RegisteredSecurityService> services,
+                                                List<SecurityBootstrapWarning> warnings) {
+    if (!state.policiesConfigured()) {
+      return;
+    }
+    PolicyState policies = state.policyState();
+
+    if (policies.registry() != null) {
+      SecurityServiceResolver.setPolicyRegistry(policies.registry());
+      services.add(new RegisteredSecurityService(
+          PolicyRegistry.class, policies.registry().getClass(),
+          "bootstrap-explicit", false));
+    }
+    if (policies.resourceRegistry() != null) {
+      SecurityServiceResolver.setResourceResolverRegistry(policies.resourceRegistry());
+      services.add(new RegisteredSecurityService(
+          ResourceResolverRegistry.class, policies.resourceRegistry().getClass(),
+          "bootstrap-explicit", false));
+    }
+
+    PolicyRegistry activePolicyRegistry = policies.registry() != null
+        ? policies.registry()
+        : SecurityServiceResolver.policyRegistry();
+    ResourceResolverRegistry activeResourceRegistry = policies.resourceRegistry() != null
+        ? policies.resourceRegistry()
+        : SecurityServiceResolver.resourceResolverRegistry();
+
+    for (Policy policy : policies.policies()) {
+      activePolicyRegistry.register(policy);
+    }
+    for (ResourceResolver<?> resolver : policies.resolvers()) {
+      activeResourceRegistry.register(resolver);
     }
   }
 

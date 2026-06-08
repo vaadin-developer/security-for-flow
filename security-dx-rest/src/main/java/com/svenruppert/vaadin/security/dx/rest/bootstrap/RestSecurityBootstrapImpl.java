@@ -142,6 +142,8 @@ final class RestSecurityBootstrapImpl
     applyRoleConfiguration(services, warnings);
     // V00.73: apply credentials sub-builder state.
     applyCredentialConfiguration(services, warnings);
+    // V00.73: apply policies sub-builder state.
+    applyPolicyConfiguration(services, warnings);
 
     SecurityBootstrapMode mode = state.mode();
     if (mode == SecurityBootstrapMode.STRICT && warningsContainError(warnings)) {

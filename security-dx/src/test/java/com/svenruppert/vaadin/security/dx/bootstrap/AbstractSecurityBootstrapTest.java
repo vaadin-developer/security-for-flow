@@ -66,7 +66,11 @@ class AbstractSecurityBootstrapTest {
 
     b.audit(a -> { auditCalls.incrementAndGet(); a.ringBuffer(256); })
      .sessions(s -> { sessionCalls.incrementAndGet(); s.timeout(Duration.ofMinutes(5)); })
-     .policies(p -> { policyCalls.incrementAndGet(); p.register("dummy"); })
+     .policies(p -> {
+       policyCalls.incrementAndGet();
+       p.register(com.svenruppert.vaadin.security.policy.api.Policy.named("dummy")
+           .allowIf(c -> true).deny("none").build());
+     })
      .credentials(c -> { credentialCalls.incrementAndGet(); c.pbkdf2Defaults(); });
 
     assertEquals(1, auditCalls.get());

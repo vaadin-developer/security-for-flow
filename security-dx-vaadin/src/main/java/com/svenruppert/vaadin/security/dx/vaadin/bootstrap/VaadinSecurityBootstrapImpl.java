@@ -129,6 +129,8 @@ final class VaadinSecurityBootstrapImpl
     applyRoleConfiguration(services, warnings);
     // V00.73: apply credentials sub-builder state.
     applyCredentialConfiguration(services, warnings);
+    // V00.73: apply policies sub-builder state.
+    applyPolicyConfiguration(services, warnings);
 
     // V00.73 (Prompt 009): auto-wire VaadinSessionSubjectStore as the
     // default SubjectStore when the consumer didn't register one.
