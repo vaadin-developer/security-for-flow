@@ -34,6 +34,7 @@ import com.svenruppert.vaadin.security.dx.vaadin.bootstrap.VaadinSecurityBootstr
  */
 @ExperimentalSecurityApi
 public sealed interface VaadinSecurityStarter
+    extends java.util.function.Consumer<VaadinSecurityBootstrap>
     permits DevelopmentDefaults, ProductionDefaults, StrictDefaults {
 
   static VaadinSecurityStarter developmentDefaults() {
@@ -57,5 +58,15 @@ public sealed interface VaadinSecurityStarter
     if (mode != null) {
       bootstrap.mode(mode);
     }
+  }
+
+  /**
+   * {@link java.util.function.Consumer Consumer} bridge so the profile
+   * can be passed to
+   * {@link VaadinSecurityBootstrap#use(java.util.function.Consumer)}.
+   */
+  @Override
+  default void accept(VaadinSecurityBootstrap bootstrap) {
+    applyTo(bootstrap);
   }
 }

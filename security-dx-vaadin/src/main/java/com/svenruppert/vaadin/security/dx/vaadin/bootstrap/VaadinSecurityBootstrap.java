@@ -65,4 +65,22 @@ public interface VaadinSecurityBootstrap
    * @return this builder
    */
   VaadinSecurityBootstrap sessionManagementView();
+
+  /**
+   * Applies a starter profile (e.g.
+   * {@code VaadinSecurityStarter.developmentDefaults()}) to this
+   * builder. The starter modules (downstream of
+   * {@code security-dx-vaadin}) declare their profiles to implement
+   * the {@link java.util.function.Consumer} contract on this builder
+   * type; the profile sets defaults before any later builder calls so
+   * user-provided overrides always win.
+   *
+   * @param profile starter profile that accepts this builder, never {@code null}
+   * @return this builder
+   */
+  default VaadinSecurityBootstrap use(
+      java.util.function.Consumer<? super VaadinSecurityBootstrap> profile) {
+    java.util.Objects.requireNonNull(profile, "profile").accept(this);
+    return this;
+  }
 }
