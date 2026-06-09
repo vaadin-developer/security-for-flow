@@ -42,7 +42,7 @@ this framework "in FIPS mode" the operator must:
 
 ## FIPS profile skeleton
 
-The `com.svenruppert.vaadin.security.credential.standards.FipsProfile`
+The `com.svenruppert.jsentinel.credential.standards.FipsProfile`
 record is a typed configuration switch that operators set explicitly:
 
 ```java

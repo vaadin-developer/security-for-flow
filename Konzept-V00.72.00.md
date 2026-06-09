@@ -276,7 +276,7 @@ eine einzige statische Factory `bootstrap()` bereit:
 
 ```java
 // in security-dx-vaadin
-package com.svenruppert.vaadin.security.dx.vaadin.bootstrap;
+package com.svenruppert.jsentinel.dx.vaadin.bootstrap;
 
 public final class VaadinSecurity {
   public static VaadinJSentinelBootstrap bootstrap();
@@ -285,7 +285,7 @@ public final class VaadinSecurity {
 
 ```java
 // in security-dx-rest
-package com.svenruppert.vaadin.security.dx.rest.bootstrap;
+package com.svenruppert.jsentinel.dx.rest.bootstrap;
 
 public final class RestSecurity {
   public static RestJSentinelBootstrap bootstrap();
@@ -294,7 +294,7 @@ public final class RestSecurity {
 
 ```java
 // in security-dx-standalone
-package com.svenruppert.vaadin.security.dx.standalone.bootstrap;
+package com.svenruppert.jsentinel.dx.standalone.bootstrap;
 
 public final class StandaloneSecurity {
   public static StandaloneJSentinelBootstrap bootstrap();
@@ -486,7 +486,7 @@ public final class DemoAuthenticationService
 erzeugt:
 
 ```text
-META-INF/services/com.svenruppert.vaadin.security.authentication.AuthenticationService
+META-INF/services/com.svenruppert.jsentinel.authentication.AuthenticationService
 ```
 
 Mehrere SPIs gleichzeitig:
@@ -571,7 +571,7 @@ Suggested fix:
 SPI ein:
 
 ```java
-// in security-dx, Package com.svenruppert.vaadin.security.dx.diagnostics
+// in security-dx, Package com.svenruppert.jsentinel.dx.diagnostics
 public interface DiagnosticContributor {
 
   /**

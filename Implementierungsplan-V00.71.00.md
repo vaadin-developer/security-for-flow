@@ -1178,7 +1178,7 @@ Legend: ✓ done (signed commit on `develop`) · ⧗ in progress · · pending.
 
 - New runtime artifact: `security-crypto-bc` (BouncyCastle 1.78.1, optional opt-in module).
 - `security-core` runtime dependencies: unchanged from V00.70.00 — no new runtime deps.
-- New `security-core` packages under `com.svenruppert.vaadin.security.credential`:
+- New `security-core` packages under `com.svenruppert.jsentinel.credential`:
   - `credential` (CredentialType, PublicFailureType, InternalAuditEventType)
   - `credential.password` (PasswordHashResult, CredentialVerificationResult,
     RehashDecision, ProviderVerificationResult, PasswordHashingService,

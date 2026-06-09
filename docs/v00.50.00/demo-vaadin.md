@@ -16,7 +16,7 @@ UI without any HTTP boundary in between. For a two-tier setup
 
 ```text
 demo-vaadin/
-└── src/main/java/com/svenruppert/vaadin/security/demo/app/
+└── src/main/java/com/svenruppert/jsentinel/demo/app/
     ├── Application.java                    @Theme + @Push + AppShellConfigurator
     ├── MySessionAccessor.java              session helpers
     ├── security/

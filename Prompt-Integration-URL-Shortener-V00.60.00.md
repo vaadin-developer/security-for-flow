@@ -455,7 +455,7 @@ public final class ShortenerLoginListener
 Registrieren via:
 
 ```text
-META-INF/services/com.svenruppert.vaadin.security.authorization.LoginListener
+META-INF/services/com.svenruppert.jsentinel.authorization.LoginListener
 ```
 
 ### 6. Vaadin-Views schuetzen
@@ -551,18 +551,18 @@ und nie durch ein Lese-Feld.
 REST-Service (`src/main/resources/META-INF/services/`):
 
 ```text
-com.svenruppert.vaadin.security.authorization.api.AuthenticationService
-com.svenruppert.vaadin.security.authorization.api.AuthorizationService
-com.svenruppert.vaadin.security.authorization.api.permissions.RolePermissionMapping
-com.svenruppert.vaadin.security.authorization.rest.RestSubjectResolver
+com.svenruppert.jsentinel.authorization.api.AuthenticationService
+com.svenruppert.jsentinel.authorization.api.AuthorizationService
+com.svenruppert.jsentinel.authorization.api.permissions.RolePermissionMapping
+com.svenruppert.jsentinel.authorization.rest.RestSubjectResolver
 ```
 
 Vaadin-UI (`src/main/resources/META-INF/services/`):
 
 ```text
-com.svenruppert.vaadin.security.authorization.api.AuthenticationService
-com.svenruppert.vaadin.security.authorization.api.AuthorizationService
-com.svenruppert.vaadin.security.authorization.LoginListener
+com.svenruppert.jsentinel.authorization.api.AuthenticationService
+com.svenruppert.jsentinel.authorization.api.AuthorizationService
+com.svenruppert.jsentinel.authorization.LoginListener
 ```
 
 Nur genau eine Implementierung pro SPI registrieren. Die Resolver
@@ -572,7 +572,7 @@ werden.
 `SubjectStore` kommt automatisch ueber `security-vaadin`:
 
 ```text
-com.svenruppert.vaadin.security.authorization.vaadin.VaadinSessionSubjectStore
+com.svenruppert.jsentinel.authorization.vaadin.VaadinSessionSubjectStore
 ```
 
 ## Tests

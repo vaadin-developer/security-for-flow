@@ -314,22 +314,22 @@ This release contains **one** breaking move plus the new opt-in SPIs.
 ### Package move — `bootstrap.PasswordHash*` → `authentication.PasswordHash*`
 
 `PasswordHash`, `PasswordHasher`, `Pbkdf2PasswordHasher` moved from
-`com.svenruppert.vaadin.security.bootstrap` to
-`com.svenruppert.vaadin.security.authentication`. The contracts are
+`com.svenruppert.jsentinel.bootstrap` to
+`com.svenruppert.jsentinel.authentication`. The contracts are
 unchanged.
 
 ```java
 // 00.51
-import com.svenruppert.vaadin.security.bootstrap.PasswordHasher;
-import com.svenruppert.vaadin.security.bootstrap.Pbkdf2PasswordHasher;
+import com.svenruppert.jsentinel.bootstrap.PasswordHasher;
+import com.svenruppert.jsentinel.bootstrap.Pbkdf2PasswordHasher;
 
 // 00.60
-import com.svenruppert.vaadin.security.authentication.PasswordHasher;
-import com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher;
+import com.svenruppert.jsentinel.authentication.PasswordHasher;
+import com.svenruppert.jsentinel.authentication.Pbkdf2PasswordHasher;
 ```
 
-Update `META-INF/services/com.svenruppert.vaadin.security.bootstrap.PasswordHasher`
-to `META-INF/services/com.svenruppert.vaadin.security.authentication.PasswordHasher`.
+Update `META-INF/services/com.svenruppert.jsentinel.bootstrap.PasswordHasher`
+to `META-INF/services/com.svenruppert.jsentinel.authentication.PasswordHasher`.
 
 ### `LogoutService` API rewrite
 

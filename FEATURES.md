@@ -42,7 +42,7 @@ SPI-Datei unter `META-INF/services/`.
 ## 2. SPI-Contracts (ServiceLoader-basiert)
 
 Alle SPIs werden über `META-INF/services/<FQN>` registriert und über
-`com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver`
+`com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver`
 aufgelöst (cached AtomicReference + lazy ServiceLoader-Resolution).
 
 ### Authentifizierung & Autorisierung

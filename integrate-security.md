@@ -324,7 +324,7 @@ public final class AppLoginListener
 Registriere die Klasse via:
 
 ```text
-META-INF/services/com.svenruppert.vaadin.security.authorization.LoginListener
+META-INF/services/com.svenruppert.jsentinel.authorization.LoginListener
 ```
 
 ### 6. Vaadin-Views schuetzen
@@ -380,9 +380,9 @@ Keine lokale Rollen-/Permission-Matrix in der Vaadin-UI duplizieren.
 Lege in der Vaadin-Anwendung folgende Dateien an:
 
 ```text
-META-INF/services/com.svenruppert.vaadin.security.authorization.api.AuthenticationService
-META-INF/services/com.svenruppert.vaadin.security.authorization.api.AuthorizationService
-META-INF/services/com.svenruppert.vaadin.security.authorization.LoginListener
+META-INF/services/com.svenruppert.jsentinel.authorization.api.AuthenticationService
+META-INF/services/com.svenruppert.jsentinel.authorization.api.AuthorizationService
+META-INF/services/com.svenruppert.jsentinel.authorization.LoginListener
 ```
 
 Nur genau eine Implementierung pro SPI registrieren. Die Resolver schlagen
@@ -391,7 +391,7 @@ absichtlich fehl, wenn mehrere Implementierungen gefunden werden.
 `SubjectStore` kommt aus `security-vaadin`:
 
 ```text
-com.svenruppert.vaadin.security.authorization.vaadin.VaadinSessionSubjectStore
+com.svenruppert.jsentinel.authorization.vaadin.VaadinSessionSubjectStore
 ```
 
 Diese Registrierung wird vom Adaptermodul bereitgestellt und muss in der

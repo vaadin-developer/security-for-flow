@@ -109,7 +109,7 @@
         <artifactId>exec-maven-plugin</artifactId>
         <version>3.5.0</version>
         <configuration>
-          <mainClass>com.svenruppert.vaadin.security.demo.rest.server.DemoRestServer</mainClass>
+          <mainClass>com.svenruppert.jsentinel.demo.rest.server.DemoRestServer</mainClass>
         </configuration>
       </plugin>
     </plugins>

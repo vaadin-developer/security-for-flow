@@ -93,7 +93,7 @@ carve-out matches Konzept-V00.71.00 §1 and §7.
 
 | Module | New in 00.71.00 | Headline |
 |---|:--:|---|
-| `security-core` | no | New `com.svenruppert.vaadin.security.credential.*` packages (password hashing, envelope, policy, provider SPI, pepper, dummy, limiter, calibration, secret, input, store, lifecycle, change, token, reset, audit publisher, **abuse**, **compromised**, **emergency**, **history**, **metrics**, **standards**, **tenant**) + `JSentinelServiceResolver.setAuthenticationService` / `setAuthorizationService` parity setters |
+| `security-core` | no | New `com.svenruppert.jsentinel.credential.*` packages (password hashing, envelope, policy, provider SPI, pepper, dummy, limiter, calibration, secret, input, store, lifecycle, change, token, reset, audit publisher, **abuse**, **compromised**, **emergency**, **history**, **metrics**, **standards**, **tenant**) + `JSentinelServiceResolver.setAuthenticationService` / `setAuthorizationService` parity setters |
 | `security-crypto-bc` | **yes** | Argon2id / bcrypt / scrypt providers, `BouncyCastleHashingServices.modern()`, ServiceLoader registration |
 | `security-credentials-hibp` | **yes** | HaveIBeenPwned k-anonymity online checker (JDK HttpClient only — no extra runtime deps); strictly opt-in |
 | `security-vaadin` | no | unchanged |
@@ -117,8 +117,8 @@ Reactor module count: **16** (was 14 in 00.70.00; +`security-crypto-bc` and +`se
 
 ### Phase 1a — Minimal viable hashing core
 
-`com.svenruppert.vaadin.security.credential` /
-`com.svenruppert.vaadin.security.credential.password*`:
+`com.svenruppert.jsentinel.credential` /
+`com.svenruppert.jsentinel.credential.password*`:
 
 - `CredentialType` enum (Phase 1a: `PASSWORD` only).
 - `PublicFailureType` enum (`INVALID_CREDENTIALS`,
@@ -165,7 +165,7 @@ Reactor module count: **16** (was 14 in 00.70.00; +`security-crypto-bc` and +`se
 ### Phase 1b — Optional BouncyCastle module
 
 `security-crypto-bc` introduces the
-`com.svenruppert.vaadin.security.credential.password.bouncycastle.*`
+`com.svenruppert.jsentinel.credential.password.bouncycastle.*`
 package tree:
 
 - `BouncyCastleModuleInfo` (stable provider-id / algorithm constants).
@@ -188,7 +188,7 @@ package tree:
 
 ### Phase 2 — Pepper, secret handling and workflow hardening
 
-`com.svenruppert.vaadin.security.credential.password.calibration` /
+`com.svenruppert.jsentinel.credential.password.calibration` /
 `…secret` / `…input` / `…pepper` / `…audit`:
 
 - `PasswordHashPolicy.rejectedFormatVersions()` /
@@ -230,7 +230,7 @@ package tree:
 
 ### Phase 3 — Credential lifecycle, reset and atomic persistence
 
-`com.svenruppert.vaadin.security.credential.store` / `…lifecycle` /
+`com.svenruppert.jsentinel.credential.store` / `…lifecycle` /
 `…change` / `…token` / `…reset`:
 
 - `CredentialStatus` enum (`ACTIVE`, `MUST_CHANGE`, `RESET_PENDING`,

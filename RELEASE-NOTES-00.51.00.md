@@ -120,7 +120,7 @@ JDK.
 
 ---
 
-## First-run bootstrap (`com.svenruppert.vaadin.security.bootstrap`)
+## First-run bootstrap (`com.svenruppert.jsentinel.bootstrap`)
 
 A fresh installation now does **not** ship with a hard-coded admin.
 

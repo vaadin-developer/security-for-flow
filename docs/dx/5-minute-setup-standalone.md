@@ -51,8 +51,8 @@ public final class DemoAuthorizationService
 ```
 
 ```java
-import com.svenruppert.vaadin.security.dx.standalone.bootstrap.StandaloneSecurity;
-import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapMode;
+import com.svenruppert.jsentinel.dx.standalone.bootstrap.StandaloneSecurity;
+import com.svenruppert.jsentinel.dx.runtime.JSentinelBootstrapMode;
 
 var runtime = StandaloneSecurity.bootstrap()
     .mode(JSentinelBootstrapMode.DEVELOPMENT)

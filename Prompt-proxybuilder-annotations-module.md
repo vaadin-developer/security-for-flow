@@ -114,7 +114,7 @@ Marker emitted on every wrapper type. Retention bumped to `RUNTIME` so consumers
 @Target(ElementType.TYPE)
 public @interface GeneratedByProxyBuilder {
   /** Fully qualified name of the subprocessor that emitted this type
-   *  (e.g. "com.svenruppert.vaadin.security.processor.SecuredAnnotationProcessor"). */
+   *  (e.g. "com.svenruppert.jsentinel.processor.SecuredAnnotationProcessor"). */
   String processor() default "";
 
   /** Fully qualified name of the source class the wrapper extends. */

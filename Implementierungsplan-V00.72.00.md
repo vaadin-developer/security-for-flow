@@ -172,9 +172,9 @@ transitive dependency of the published starter artifact.
 - Dependency: `security-test` (test).
 - Reactor entry in root `pom.xml`.
 - Package layout:
-  - `com.svenruppert.vaadin.security.dx.bootstrap`
-  - `com.svenruppert.vaadin.security.dx.diagnostics`
-  - `com.svenruppert.vaadin.security.dx.runtime`
+  - `com.svenruppert.jsentinel.dx.bootstrap`
+  - `com.svenruppert.jsentinel.dx.diagnostics`
+  - `com.svenruppert.jsentinel.dx.runtime`
 - `package-info.java` per package documenting stability (`@ExperimentalJSentinelApi` initially).
 
 **Do not implement:** any class besides empty `package-info.java`. No SPI changes.
@@ -199,8 +199,8 @@ transitive dependency of the published starter artifact.
 - Dependencies: `security-core`, `security-vaadin`, `security-dx`.
 - Reactor entry in root `pom.xml`.
 - Package layout:
-  - `com.svenruppert.vaadin.security.dx.vaadin.bootstrap`
-  - `com.svenruppert.vaadin.security.dx.vaadin.runtime`
+  - `com.svenruppert.jsentinel.dx.vaadin.bootstrap`
+  - `com.svenruppert.jsentinel.dx.vaadin.runtime`
 - `package-info.java` per package documenting stability (`@ExperimentalJSentinelApi` initially).
 
 **Do not implement:** `VaadinJSentinelBootstrap`, factories, defaults or resolver wiring.
@@ -224,8 +224,8 @@ transitive dependency of the published starter artifact.
 - Dependencies: `security-core`, `security-rest`, `security-dx`.
 - Reactor entry in root `pom.xml`.
 - Package layout:
-  - `com.svenruppert.vaadin.security.dx.rest.bootstrap`
-  - `com.svenruppert.vaadin.security.dx.rest.runtime`
+  - `com.svenruppert.jsentinel.dx.rest.bootstrap`
+  - `com.svenruppert.jsentinel.dx.rest.runtime`
 - `package-info.java` per package documenting stability (`@ExperimentalJSentinelApi` initially).
 
 **Do not implement:** `RestJSentinelBootstrap`, factories, defaults or resolver wiring.
@@ -249,8 +249,8 @@ transitive dependency of the published starter artifact.
 - Dependencies: `security-core`, `security-standalone`, `security-dx`.
 - Reactor entry in root `pom.xml`.
 - Package layout:
-  - `com.svenruppert.vaadin.security.dx.standalone.bootstrap`
-  - `com.svenruppert.vaadin.security.dx.standalone.runtime`
+  - `com.svenruppert.jsentinel.dx.standalone.bootstrap`
+  - `com.svenruppert.jsentinel.dx.standalone.runtime`
 - `package-info.java` per package documenting stability (`@ExperimentalJSentinelApi` initially).
 
 **Do not implement:** `StandaloneJSentinelBootstrap`, factories, defaults or resolver wiring.
@@ -360,7 +360,7 @@ transitive dependency of the published starter artifact.
 
 **Implement:**
 
-- `VaadinSecurity.bootstrap()` static factory (final utility class `VaadinSecurity` in `com.svenruppert.vaadin.security.dx.vaadin.bootstrap`). No central `JSentinelBootstrap` class.
+- `VaadinSecurity.bootstrap()` static factory (final utility class `VaadinSecurity` in `com.svenruppert.jsentinel.dx.vaadin.bootstrap`). No central `JSentinelBootstrap` class.
 - `VaadinJSentinelBootstrap extends CommonJSentinelBootstrap<VaadinJSentinelBootstrap>`:
   - `subjectType(Class<?>)`
   - `loginRoute(String)`
@@ -388,7 +388,7 @@ transitive dependency of the published starter artifact.
 
 **Implement:**
 
-- `RestSecurity.bootstrap()` static factory (final utility class `RestSecurity` in `com.svenruppert.vaadin.security.dx.rest.bootstrap`). No central `JSentinelBootstrap` class.
+- `RestSecurity.bootstrap()` static factory (final utility class `RestSecurity` in `com.svenruppert.jsentinel.dx.rest.bootstrap`). No central `JSentinelBootstrap` class.
 - `RestJSentinelBootstrap`:
   - `subjectResolver(RestSubjectResolver)`
   - `decisionMapper(RestDecisionMapper)` (defaults to `HttpStatusDecisionMapper`)
@@ -409,7 +409,7 @@ transitive dependency of the published starter artifact.
 
 **Implement:**
 
-- `StandaloneSecurity.bootstrap()` static factory (final utility class `StandaloneSecurity` in `com.svenruppert.vaadin.security.dx.standalone.bootstrap`). No central `JSentinelBootstrap` class.
+- `StandaloneSecurity.bootstrap()` static factory (final utility class `StandaloneSecurity` in `com.svenruppert.jsentinel.dx.standalone.bootstrap`). No central `JSentinelBootstrap` class.
 - `StandaloneJSentinelBootstrap`:
   - `subjectStore(SubjectStore)` (defaults to `ThreadLocalSubjectStore`)
   - `loginAttemptPolicy(LoginAttemptPolicy)`.
@@ -493,7 +493,7 @@ transitive dependency of the published starter artifact.
   }
   ```
 
-- Package: `com.svenruppert.vaadin.security.autoservice.api`.
+- Package: `com.svenruppert.jsentinel.autoservice.api`.
 - No runtime dependency. No transitive dependency on `security-core`.
 
 **Tests:**
@@ -513,7 +513,7 @@ transitive dependency of the published starter artifact.
 - Maven module `security-autoservice-processor`.
 - Dependency: `security-autoservice-annotations` (provided scope).
 - `JSentinelAutoServiceProcessor extends AbstractProcessor`.
-- `@SupportedAnnotationTypes("com.svenruppert.vaadin.security.autoservice.api.JSentinelAutoService")`.
+- `@SupportedAnnotationTypes("com.svenruppert.jsentinel.autoservice.api.JSentinelAutoService")`.
 - `@SupportedSourceVersion(SourceVersion.RELEASE_26)`.
 - Registered via `META-INF/services/javax.annotation.processing.Processor` in this module.
 - Empty `process(...)` for now (returns true).
@@ -628,7 +628,7 @@ transitive dependency of the published starter artifact.
 
 - Fixture states cover each rule.
 - Contributor `id()` is exactly `"vaadin"`.
-- AutoService entry is generated under `target/classes/META-INF/services/com.svenruppert.vaadin.security.dx.diagnostics.DiagnosticContributor`.
+- AutoService entry is generated under `target/classes/META-INF/services/com.svenruppert.jsentinel.dx.diagnostics.DiagnosticContributor`.
 
 ---
 
@@ -681,9 +681,9 @@ transitive dependency of the published starter artifact.
 - Dependencies: `security-core`, `security-vaadin`, `security-dx`, `security-dx-vaadin`, `security-autoservice-annotations`.
 - Build-only annotation processor path: `security-autoservice-processor` for the starter's own `@JSentinelAutoService` registrations. This must be configured only in `maven-compiler-plugin` `annotationProcessorPaths`; it must not be declared under normal `<dependencies>`.
 - Package layout:
-  - `com.svenruppert.vaadin.security.starter.ui`
-  - `com.svenruppert.vaadin.security.starter.routes`
-  - `com.svenruppert.vaadin.security.starter.profile`
+  - `com.svenruppert.jsentinel.starter.ui`
+  - `com.svenruppert.jsentinel.starter.routes`
+  - `com.svenruppert.jsentinel.starter.profile`
 - No public classes yet; only `package-info.java`.
 
 **Tests:**
@@ -742,7 +742,7 @@ transitive dependency of the published starter artifact.
 
 **Implement:**
 
-- `@SecureRoute` annotation in `com.svenruppert.vaadin.security.starter.routes`:
+- `@SecureRoute` annotation in `com.svenruppert.jsentinel.starter.routes`:
 
   ```java
   @Target(ElementType.TYPE)

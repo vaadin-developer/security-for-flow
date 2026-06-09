@@ -53,7 +53,7 @@ Die Erweiterungen sollen diesen Ansatz nicht durch ein Spring-Security-Modell er
 >   `setPasswordHashingService(...)`), Default-Fallback ist ein
 >   gecachter `Pbkdf2PasswordHasher`.
 > - ✅ `PasswordHasher`, `PasswordHash` und `Pbkdf2PasswordHasher`
->   liegen jetzt in `com.svenruppert.vaadin.security.authentication`
+>   liegen jetzt in `com.svenruppert.jsentinel.authentication`
 >   (zusammen mit dem `AuthenticationService`-SPI). Das
 >   `bootstrap`-Paket hostet nur noch den First-Run-Bootstrap
 >   (`BootstrapToken[Generator]`, `InitialAdminBootstrapService`,
@@ -365,7 +365,7 @@ Für `00.60.00` sollte zunächst eine in-memory Default-Policy für Single-Node-
 > - ✅ Resolver-Accessors `sessionPolicy()` / `findSessionPolicy()` /
 >   `setSessionPolicy(...)`.
 > - ✅ **Vaadin-Adapter** `SessionLifetimeListener`
->   (`com.svenruppert.vaadin.security.session.vaadin`) —
+>   (`com.svenruppert.jsentinel.session.vaadin`) —
 >   `BeforeEnterListener` mit `@ListenerPriority(MAX_VALUE)` (vor
 >   `AuthorizationListener`). Baut `SessionMetadata` aus
 >   `WrappedSession.getCreationTime()` + `lastActivity`-Attribut,
@@ -608,7 +608,7 @@ Für `00.60.00` sollte ein zentraler Logout-Service eingeführt werden. Der Defa
 > **Status: ✅ umgesetzt (Demo-Migration als Folgearbeit)**
 >
 > - ✅ `ActionAuthorizationService<U>`-SPI in
->   `com.svenruppert.vaadin.security.action`:
+>   `com.svenruppert.jsentinel.action`:
 >   `isAllowed(U, ActionPermission)` + Default
 >   `requireAllowed(U, ActionPermission)`.
 > - ✅ `ActionPermission`-Record (`name`) mit Blank-Validierung — stabile
@@ -777,7 +777,7 @@ Für `00.60.00` sollte dieses Konzept aufgenommen werden. Die API sollte `isAllo
 > Im Original-Konzept nicht enthalten, in der Praxis aber Voraussetzung
 > dafür, dass das Projekt ohne hardcoded Default-Admin auskommt. Das
 > komplette Subsystem liegt im neuen Paket
-> `com.svenruppert.vaadin.security.bootstrap`.
+> `com.svenruppert.jsentinel.bootstrap`.
 >
 > Geliefert:
 >
@@ -886,12 +886,12 @@ diese existieren.
 ### Soll-Pakete (laut Konzept)
 
 ```text
-com.svenruppert.vaadin.security.authentication
-com.svenruppert.vaadin.security.audit
-com.svenruppert.vaadin.security.bruteforce
-com.svenruppert.vaadin.security.session
-com.svenruppert.vaadin.security.logout
-com.svenruppert.vaadin.security.action
+com.svenruppert.jsentinel.authentication
+com.svenruppert.jsentinel.audit
+com.svenruppert.jsentinel.bruteforce
+com.svenruppert.jsentinel.session
+com.svenruppert.jsentinel.logout
+com.svenruppert.jsentinel.action
 ```
 
 Alternativ kann die bestehende Struktur unter `authorization.api` nicht weiter überladen werden. Authentifizierung, Audit, Session und Logout sind eigene fachliche Bereiche und sollten eigene Pakete erhalten.
@@ -899,22 +899,22 @@ Alternativ kann die bestehende Struktur unter `authorization.api` nicht weiter �
 ### Ist-Pakete (Stand 2026-05-12)
 
 ```text
-com.svenruppert.vaadin.security.action                            (NEU)
-com.svenruppert.vaadin.security.audit                             (NEU)
-com.svenruppert.vaadin.security.authentication                    (NEU, AuthenticationService + PasswordHasher/PasswordHash/Pbkdf2)
-com.svenruppert.vaadin.security.authorization.annotations
-com.svenruppert.vaadin.security.authorization.api
-com.svenruppert.vaadin.security.authorization.api.operations      (NEU)
-com.svenruppert.vaadin.security.authorization.api.permissions
-com.svenruppert.vaadin.security.authorization.api.roles
-com.svenruppert.vaadin.security.authorization.impl
-com.svenruppert.vaadin.security.authorization.navigation
-com.svenruppert.vaadin.security.bootstrap                         (NEU)
-com.svenruppert.vaadin.security.bruteforce                        (NEU)
-com.svenruppert.vaadin.security.logout                            (NEU)
-com.svenruppert.vaadin.security.logout.vaadin                     (NEU, in security-vaadin)
-com.svenruppert.vaadin.security.session                           (NEU)
-com.svenruppert.vaadin.security.session.vaadin                    (NEU, in security-vaadin)
+com.svenruppert.jsentinel.action                            (NEU)
+com.svenruppert.jsentinel.audit                             (NEU)
+com.svenruppert.jsentinel.authentication                    (NEU, AuthenticationService + PasswordHasher/PasswordHash/Pbkdf2)
+com.svenruppert.jsentinel.authorization.annotations
+com.svenruppert.jsentinel.authorization.api
+com.svenruppert.jsentinel.authorization.api.operations      (NEU)
+com.svenruppert.jsentinel.authorization.api.permissions
+com.svenruppert.jsentinel.authorization.api.roles
+com.svenruppert.jsentinel.authorization.impl
+com.svenruppert.jsentinel.authorization.navigation
+com.svenruppert.jsentinel.bootstrap                         (NEU)
+com.svenruppert.jsentinel.bruteforce                        (NEU)
+com.svenruppert.jsentinel.logout                            (NEU)
+com.svenruppert.jsentinel.logout.vaadin                     (NEU, in security-vaadin)
+com.svenruppert.jsentinel.session                           (NEU)
+com.svenruppert.jsentinel.session.vaadin                    (NEU, in security-vaadin)
 ```
 
 Alle vom Konzept vorgeschlagenen Top-Level-Pakete (`audit/`,

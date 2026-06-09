@@ -181,7 +181,7 @@ promotes them to stable.
 
 ### Phase 1 — DX core (bootstrap + diagnostics)
 
-`com.svenruppert.vaadin.security.dx.runtime` /
+`com.svenruppert.jsentinel.dx.runtime` /
 `…dx.bootstrap` / `…dx.diagnostics`:
 
 - `JSentinelBootstrapMode` enum
@@ -229,8 +229,8 @@ promotes them to stable.
 
 ### Phase 2 — `@JSentinelAutoService`
 
-`com.svenruppert.vaadin.security.autoservice` /
-`com.svenruppert.vaadin.security.autoservice.processor`:
+`com.svenruppert.jsentinel.autoservice` /
+`com.svenruppert.jsentinel.autoservice.processor`:
 
 - `@JSentinelAutoService(Class<?>... value)` — annotation with
   `RetentionPolicy.SOURCE`, target `TYPE`. Multi-SPI support: a single
@@ -262,8 +262,8 @@ promotes them to stable.
 
 ### Phase 3 — Vaadin starter
 
-`com.svenruppert.vaadin.security.starter` /
-`com.svenruppert.vaadin.security.starter.route`:
+`com.svenruppert.jsentinel.starter` /
+`com.svenruppert.jsentinel.starter.route`:
 
 - `SecuredUi.button(...)`, `SecuredUi.link(...)`,
   `SecuredUi.menuItem(...)` — declarative builders over the existing
@@ -290,7 +290,7 @@ promotes them to stable.
 
 ### Phase 4 — Processor diagnostics integration
 
-`com.svenruppert.vaadin.security.dx.diagnostics.processor`:
+`com.svenruppert.jsentinel.dx.diagnostics.processor`:
 
 - `JSentinelProcessorReport` — exposed via
   `JSentinelServiceReport.processorReport()`. Lists every wrapper from

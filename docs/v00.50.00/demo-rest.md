@@ -155,14 +155,14 @@ mvn -pl :demo-rest exec:java -Dexec.args="9000"
 
 ```bash
 mvn -pl :demo-rest exec:java \
-    -Dexec.mainClass=com.svenruppert.vaadin.security.demo.rest.cli.DemoRestCli
+    -Dexec.mainClass=com.svenruppert.jsentinel.demo.rest.cli.DemoRestCli
 ```
 
 Pass a non-default base URL as an argument:
 
 ```bash
 mvn -pl :demo-rest exec:java \
-    -Dexec.mainClass=com.svenruppert.vaadin.security.demo.rest.cli.DemoRestCli \
+    -Dexec.mainClass=com.svenruppert.jsentinel.demo.rest.cli.DemoRestCli \
     -Dexec.args="http://localhost:9000"
 ```
 

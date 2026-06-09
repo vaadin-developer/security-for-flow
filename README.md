@@ -87,7 +87,7 @@ by both REST-side modules).
 | Vaadin role/permission UI in a single JVM, no backend | [`demo-vaadin`](docs/v00.50.00/demo-vaadin.md) |
 | Pure REST security (HTTP server + interactive CLI), no UI | [`demo-rest`](docs/v00.50.00/demo-rest.md) |
 | Vaadin UI talking to a separate REST backend (real two-tier setup) | [`demo-vaadin-rest-client`](docs/v00.50.00/demo-vaadin-rest-client.md) |
-| Plain-Java / CLI / desktop integration (no HTTP, no Vaadin) | `mvn -pl demo-standalone exec:java -Dexec.mainClass=com.svenruppert.vaadin.security.demo.standalone.DemoApp` |
+| Plain-Java / CLI / desktop integration (no HTTP, no Vaadin) | `mvn -pl demo-standalone exec:java -Dexec.mainClass=com.svenruppert.jsentinel.demo.standalone.DemoApp` |
 
 ### `demo-vaadin` — Standalone Vaadin demo
 
@@ -110,7 +110,7 @@ mvn -pl :demo-rest exec:java
 
 # Terminal 2 — interactive CLI
 mvn -pl :demo-rest exec:java \
-    -Dexec.mainClass=com.svenruppert.vaadin.security.demo.rest.cli.DemoRestCli
+    -Dexec.mainClass=com.svenruppert.jsentinel.demo.rest.cli.DemoRestCli
 # Use `init-admin` to create the first admin via the bootstrap token.
 # Then `login admin <new-password>` and play with `operations` / `call …`.
 ```
@@ -143,7 +143,7 @@ Walkthrough: [`docs/demo-vaadin-rest-client.md`](docs/v00.50.00/demo-vaadin-rest
 
 ```bash
 mvn -pl demo-standalone exec:java \
-    -Dexec.mainClass=com.svenruppert.vaadin.security.demo.standalone.DemoApp
+    -Dexec.mainClass=com.svenruppert.jsentinel.demo.standalone.DemoApp
 ```
 
 Demo users are seeded: `admin/admin`, `librarian/librarian`,
@@ -274,7 +274,7 @@ public class MyAuthenticationService
 }
 ```
 
-Register in `META-INF/services/com.svenruppert.vaadin.security.authentication.AuthenticationService`:
+Register in `META-INF/services/com.svenruppert.jsentinel.authentication.AuthenticationService`:
 ```
 com.example.MyAuthenticationService
 ```
@@ -291,7 +291,7 @@ public class MyAuthorizationService implements AuthorizationService<MyUser> {
 }
 ```
 
-Register in `META-INF/services/com.svenruppert.vaadin.security.authorization.api.AuthorizationService`.
+Register in `META-INF/services/com.svenruppert.jsentinel.authorization.api.AuthorizationService`.
 
 ### 4. Define a restriction annotation with `@JSentinelAnnotation`
 
@@ -338,7 +338,7 @@ public class MyRoleAccessEvaluator
 }
 ```
 
-Register in `META-INF/services/com.svenruppert.vaadin.security.authorization.api.AccessEvaluator`.
+Register in `META-INF/services/com.svenruppert.jsentinel.authorization.api.AccessEvaluator`.
 
 ### 6. Extend `LoginListener<U>`
 
@@ -355,7 +355,7 @@ public class MyLoginListener extends LoginListener<MyUser> {
 }
 ```
 
-Register in `META-INF/services/com.svenruppert.vaadin.security.authorization.LoginListener`.
+Register in `META-INF/services/com.svenruppert.jsentinel.authorization.LoginListener`.
 
 ### 7. Extend `LoginView`
 
@@ -823,7 +823,7 @@ the planned 00.71 follow-ups.
 ### V00.71.00 – Phase 1a–3 on `develop`
 
 `Konzept-V00.71.00.md` introduces a fully new credential-security
-stack under `com.svenruppert.vaadin.security.credential.password.*`.
+stack under `com.svenruppert.jsentinel.credential.password.*`.
 Prompts 001–025 are landed on `develop`; see
 `Implementierungsplan-V00.71.00.md` §20 for the per-prompt status
 table and `docs/v00.71.00/prompts/README.md` for the prompt

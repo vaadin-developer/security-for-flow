@@ -8,18 +8,18 @@ The `@JSentinelAutoService` annotation, the processor and the
 
 ```text
 demo-standalone/src/main/resources/META-INF/services/
-  ├── com.svenruppert.vaadin.security.authentication.AuthenticationService
-  └── com.svenruppert.vaadin.security.authorization.api.AuthorizationService
+  ├── com.svenruppert.jsentinel.authentication.AuthenticationService
+  └── com.svenruppert.jsentinel.authorization.api.AuthorizationService
 ```
 
 ```text
-# com.svenruppert.vaadin.security.authentication.AuthenticationService
-com.svenruppert.vaadin.security.demo.standalone.DemoAuthenticationService
+# com.svenruppert.jsentinel.authentication.AuthenticationService
+com.svenruppert.jsentinel.demo.standalone.DemoAuthenticationService
 ```
 
 ```text
-# com.svenruppert.vaadin.security.authorization.api.AuthorizationService
-com.svenruppert.vaadin.security.demo.standalone.DemoAuthorizationService
+# com.svenruppert.jsentinel.authorization.api.AuthorizationService
+com.svenruppert.jsentinel.demo.standalone.DemoAuthorizationService
 ```
 
 ## After

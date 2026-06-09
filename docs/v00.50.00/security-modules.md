@@ -22,7 +22,7 @@ Each demo has its own walkthrough in `docs/`:
 |---|---|---|
 | `demo-vaadin` | `cd demo-vaadin && mvn jetty:run` | <http://localhost:8080/> — see [`demo-vaadin.md`](demo-vaadin.md) |
 | `demo-rest` server | `mvn -pl :demo-rest exec:java` | http://localhost:8080 — see [`demo-rest.md`](demo-rest.md) |
-| `demo-rest` CLI | `mvn -pl :demo-rest exec:java -Dexec.mainClass=com.svenruppert.vaadin.security.demo.rest.cli.DemoRestCli` | interactive terminal |
+| `demo-rest` CLI | `mvn -pl :demo-rest exec:java -Dexec.mainClass=com.svenruppert.jsentinel.demo.rest.cli.DemoRestCli` | interactive terminal |
 | `demo-vaadin-rest-client` (UI) | `mvn -pl :demo-vaadin-rest-client jetty:run` | <http://localhost:9090/> — needs `demo-rest` running on port 8080. See [`demo-vaadin-rest-client.md`](demo-vaadin-rest-client.md) |
 
 ## Core Rule

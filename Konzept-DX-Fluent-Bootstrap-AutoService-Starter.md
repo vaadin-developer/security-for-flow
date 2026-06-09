@@ -184,7 +184,7 @@ public final class DemoAuthenticationService
 Der Annotation Processor erzeugt:
 
 ```text
-META-INF/services/com.svenruppert.vaadin.security.authentication.AuthenticationService
+META-INF/services/com.svenruppert.jsentinel.authentication.AuthenticationService
 ```
 
 ### Modulstrategie
@@ -235,7 +235,7 @@ public final class MyJSentinelServices
 Ergebnis:
 
 ```text
-META-INF/services/com.svenruppert.vaadin.security.authentication.AuthenticationService
+META-INF/services/com.svenruppert.jsentinel.authentication.AuthenticationService
 META-INF/services/com.example.SomeOtherSpi
 ```
 
@@ -627,9 +627,9 @@ Enthaelt:
 Vorher:
 
 ```text
-META-INF/services/com.svenruppert.vaadin.security.authentication.AuthenticationService
-META-INF/services/com.svenruppert.vaadin.security.authorization.api.AuthorizationService
-META-INF/services/com.svenruppert.vaadin.security.authorization.LoginListener
+META-INF/services/com.svenruppert.jsentinel.authentication.AuthenticationService
+META-INF/services/com.svenruppert.jsentinel.authorization.api.AuthorizationService
+META-INF/services/com.svenruppert.jsentinel.authorization.LoginListener
 META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener
 ```
 

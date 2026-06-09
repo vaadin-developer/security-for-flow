@@ -44,7 +44,7 @@ running.
 
 ---
 
-## Library API (`security-core` / `com.svenruppert.vaadin.security.bootstrap`)
+## Library API (`security-core` / `com.svenruppert.jsentinel.bootstrap`)
 
 | Type | Purpose |
 |---|---|

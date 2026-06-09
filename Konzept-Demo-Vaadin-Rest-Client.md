@@ -245,7 +245,7 @@ Vaadin Client
 demo-vaadin-rest-client/
 ├── pom.xml                                                (Vaadin-WAR, Jetty)
 ├── src/main/frontend/                                     (Theme analog demo-vaadin)
-└── src/main/java/com/svenruppert/vaadin/security/demo/restclient/
+└── src/main/java/com/svenruppert/jsentinel/demo/restclient/
     ├── Application.java                                   (AppShellConfigurator)
     ├── backend/                                           (✅ einziges Paket mit HTTP/JSON-Wissen)
     │   ├── BackendConfig.java                             (Base-URL via sysprop, default http://localhost:8080)

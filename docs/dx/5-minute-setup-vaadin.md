@@ -51,7 +51,7 @@ sub-builders are real, and `SecuredUi.requiresPolicy(...)` /
 ## 2. Annotate your SPI implementations
 
 ```java
-import com.svenruppert.vaadin.security.autoservice.api.JSentinelAutoService;
+import com.svenruppert.jsentinel.autoservice.api.JSentinelAutoService;
 
 @JSentinelAutoService(AuthenticationService.class)
 public final class MyAuthenticationService
@@ -65,10 +65,10 @@ public final class MyAuthorizationService
 ## 3. Bootstrap the app
 
 ```java
-import com.svenruppert.vaadin.security.dx.vaadin.bootstrap.VaadinSecurity;
-import com.svenruppert.vaadin.security.policy.api.Policy;
-import com.svenruppert.vaadin.security.policy.api.SubjectPredicates;
-import com.svenruppert.vaadin.security.starter.profile.VaadinJSentinelStarter;
+import com.svenruppert.jsentinel.dx.vaadin.bootstrap.VaadinSecurity;
+import com.svenruppert.jsentinel.policy.api.Policy;
+import com.svenruppert.jsentinel.policy.api.SubjectPredicates;
+import com.svenruppert.jsentinel.starter.profile.VaadinJSentinelStarter;
 
 public final class JSentinelInit {
   public static void install() {

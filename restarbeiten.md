@@ -67,7 +67,7 @@
 - ✅ `LoggingJSentinelAuditService` über `META-INF/services` in allen
   drei Demos registriert.
 - ✅ **Konzept § 3 — `LoginAttemptPolicy`**:
-  - SPI in `com.svenruppert.vaadin.security.bruteforce`.
+  - SPI in `com.svenruppert.jsentinel.bruteforce`.
   - **Sealed `LoginAttemptDecision`** = `Allowed` | `LockedOut(Duration remaining, int failedAttempts)`
     (Brief Q1 a — invasive Migration).
   - Top-Level `LoginAttemptConfiguration` + `LoginAttemptConfigurationLoader`
@@ -96,7 +96,7 @@
   - SPI-Default in beiden Vaadin-Demos via `META-INF/services`.
   - Tests: `DemoBruteForceTest` (3) + `DemoBootstrapBruteForceTest` (2).
 - ✅ **Konzept § 4 — `SessionPolicy` SPI**:
-  - SPI in `com.svenruppert.vaadin.security.session`.
+  - SPI in `com.svenruppert.jsentinel.session`.
   - Lifecycle-Hooks `onLogin` / `beforeNavigation` / `onLogout` mit
     `SessionContext<U>` und sealed `SessionDecision`
     (`Continue` / `RequireLogin` / `Invalidate`).
@@ -113,7 +113,7 @@
     `setSessionPolicy(...)`.
 - ✅ **§ 4 Adapter-Wiring (Step 2c+d)**:
   - **Vaadin** `SessionLifetimeListener` in
-    `com.svenruppert.vaadin.security.session.vaadin` —
+    `com.svenruppert.jsentinel.session.vaadin` —
     `BeforeEnterListener` mit `@ListenerPriority(MAX_VALUE)` (läuft
     vor `AuthorizationListener`). Baut `SessionMetadata` aus
     `WrappedSession.getCreationTime()` + `lastActivity`-Attribut,
@@ -213,15 +213,15 @@
   `bruteforce/`, `logout/`, `logout/vaadin/`, `session/`,
   `session/vaadin/` als Top-Level-Pakete.
 - ✅ `AuthenticationService` aus `authorization.api` →
-  `com.svenruppert.vaadin.security.authentication.AuthenticationService`.
+  `com.svenruppert.jsentinel.authentication.AuthenticationService`.
 - ✅ Logout-Bausteine aus `authorization.api` (LogoutService,
   LogoutScope, LogoutListener, NoopLogoutService,
   SubjectClearingLogoutService, SubjectSessionRegistry,
   InMemorySubjectSessionRegistry, SubjectId) →
-  `com.svenruppert.vaadin.security.logout`.
+  `com.svenruppert.jsentinel.logout`.
 - ✅ Vaadin-Logout-Bausteine (`VaadinLogoutService`,
   `VaadinLogoutGateway`, `DefaultVaadinLogoutGateway`) →
-  `com.svenruppert.vaadin.security.logout.vaadin`.
+  `com.svenruppert.jsentinel.logout.vaadin`.
 
 #### `JSentinelServiceResolver`-Lücken
 
@@ -289,7 +289,7 @@
   mit `ActionPermission`.
 - ✅ `DemoActionAuthorizationService` (no-arg, SPI-registriert) wrappt
   `StaticActionAuthorizationService<MyUser>`; SPI in
-  `META-INF/services/com.svenruppert.vaadin.security.action.ActionAuthorizationService`.
+  `META-INF/services/com.svenruppert.jsentinel.action.ActionAuthorizationService`.
 - ✅ `DemoPermission.actionPermission()`-Accessor liefert das
   passende `ActionPermission` (gleicher String wie `PermissionName.value()`).
 - ✅ Demo-side `PermissionGuard`-Wrapper komplett entfernt.

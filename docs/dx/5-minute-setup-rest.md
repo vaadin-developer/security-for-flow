@@ -51,8 +51,8 @@ public final class HeaderResolver implements RestSubjectResolver { /* ... */ }
 ```
 
 ```java
-import com.svenruppert.vaadin.security.dx.rest.bootstrap.RestSecurity;
-import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapMode;
+import com.svenruppert.jsentinel.dx.rest.bootstrap.RestSecurity;
+import com.svenruppert.jsentinel.dx.runtime.JSentinelBootstrapMode;
 
 var runtime = RestSecurity.bootstrap()
     .mode(JSentinelBootstrapMode.PRODUCTION)

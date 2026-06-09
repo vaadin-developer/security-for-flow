@@ -396,8 +396,8 @@ Ohne diese Core-Erweiterung darf das Konzept keine `.mapping(...)`-Methode als p
 V00.73 darf diese beiden Ebenen nicht unklar vermischen. Die Sub-Builder-Surface unterscheidet daher explizit zwischen dem legacy-kompatiblen `PasswordHasher`-Resolverpfad und der V00.71-Credential-Pipeline.
 
 **Namens-Kollision `PasswordResetService`.** Im Quellstand existieren zwei Klassen mit diesem Namen:
-- `com.svenruppert.vaadin.security.accountlifecycle.PasswordResetService` (V00.70, kontextlos / Account-Lifecycle),
-- `com.svenruppert.vaadin.security.credential.reset.PasswordResetService` (V00.71, Teil der neuen Credential-Pipeline).
+- `com.svenruppert.jsentinel.accountlifecycle.PasswordResetService` (V00.70, kontextlos / Account-Lifecycle),
+- `com.svenruppert.jsentinel.credential.reset.PasswordResetService` (V00.71, Teil der neuen Credential-Pipeline).
 
 `.passwordReset(...)` im Sub-Builder referenziert **ausschließlich** die V00.71-Variante (`credential.reset.PasswordResetService`). Die V00.70-Variante bleibt erreichbar, wenn ein Konsument sie weiter selbst über den Resolver oder direkt instanziiert — der Sub-Builder kennt sie nicht. JavaDoc auf der Sub-Builder-Methode benennt die voll-qualifizierte V00.71-Klasse, damit IDE-Autocomplete den richtigen Import zieht.
 
