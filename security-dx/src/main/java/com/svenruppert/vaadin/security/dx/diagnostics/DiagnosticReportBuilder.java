@@ -10,7 +10,6 @@
  */
 package com.svenruppert.vaadin.security.dx.diagnostics;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 
 /**
  * Builder handle passed to each {@link DiagnosticContributor} during a
@@ -20,7 +19,6 @@ import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public interface DiagnosticReportBuilder {
 
   DiagnosticReportBuilder addDiscovered(DiscoveredService entry);

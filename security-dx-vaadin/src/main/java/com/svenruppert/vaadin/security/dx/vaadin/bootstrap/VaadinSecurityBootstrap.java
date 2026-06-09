@@ -10,7 +10,6 @@
  */
 package com.svenruppert.vaadin.security.dx.vaadin.bootstrap;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 import com.svenruppert.vaadin.security.dx.bootstrap.CommonSecurityBootstrap;
 
 /**
@@ -19,7 +18,6 @@ import com.svenruppert.vaadin.security.dx.bootstrap.CommonSecurityBootstrap;
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public interface VaadinSecurityBootstrap
     extends CommonSecurityBootstrap<VaadinSecurityBootstrap> {
 

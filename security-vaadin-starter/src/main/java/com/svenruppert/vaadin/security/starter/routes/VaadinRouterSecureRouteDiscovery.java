@@ -10,7 +10,6 @@
  */
 package com.svenruppert.vaadin.security.starter.routes;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 import com.svenruppert.vaadin.security.dx.vaadin.routes.SecureRouteDiscovery;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.router.RouteData;
@@ -34,7 +33,6 @@ import java.util.stream.Stream;
  *
  * @since 00.73.00
  */
-@ExperimentalSecurityApi
 public final class VaadinRouterSecureRouteDiscovery implements SecureRouteDiscovery {
 
   @Override

@@ -10,11 +10,9 @@
  */
 package com.svenruppert.vaadin.security.starter.profile;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
 
 /** Strict profile — mode STRICT; missing critical SPIs raise SecurityBootstrapException. */
-@ExperimentalSecurityApi
 public final class StrictDefaults implements VaadinSecurityStarter {
 
   static final StrictDefaults INSTANCE = new StrictDefaults();

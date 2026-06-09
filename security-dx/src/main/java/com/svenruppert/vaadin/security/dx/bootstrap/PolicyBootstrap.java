@@ -10,7 +10,6 @@
  */
 package com.svenruppert.vaadin.security.dx.bootstrap;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 import com.svenruppert.vaadin.security.policy.api.Policy;
 import com.svenruppert.vaadin.security.policy.spi.PolicyRegistry;
 import com.svenruppert.vaadin.security.policy.spi.ResourceResolver;
@@ -37,7 +36,6 @@ import com.svenruppert.vaadin.security.policy.spi.ResourceResolverRegistry;
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public interface PolicyBootstrap {
 
   PolicyBootstrap register(Policy policy);

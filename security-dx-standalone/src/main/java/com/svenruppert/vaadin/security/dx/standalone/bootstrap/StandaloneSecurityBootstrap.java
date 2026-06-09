@@ -10,7 +10,6 @@
  */
 package com.svenruppert.vaadin.security.dx.standalone.bootstrap;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.vaadin.security.dx.bootstrap.CommonSecurityBootstrap;
@@ -21,7 +20,6 @@ import com.svenruppert.vaadin.security.dx.bootstrap.CommonSecurityBootstrap;
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public interface StandaloneSecurityBootstrap
     extends CommonSecurityBootstrap<StandaloneSecurityBootstrap> {
 

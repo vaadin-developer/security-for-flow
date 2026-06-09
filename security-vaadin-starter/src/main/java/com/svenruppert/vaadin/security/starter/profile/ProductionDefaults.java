@@ -10,11 +10,9 @@
  */
 package com.svenruppert.vaadin.security.starter.profile;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
 
 /** Production profile — mode PRODUCTION; missing SPIs warn but do not throw. */
-@ExperimentalSecurityApi
 public final class ProductionDefaults implements VaadinSecurityStarter {
 
   static final ProductionDefaults INSTANCE = new ProductionDefaults();

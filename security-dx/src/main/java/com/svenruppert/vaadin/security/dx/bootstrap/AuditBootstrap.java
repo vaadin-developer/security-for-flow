@@ -12,7 +12,6 @@ package com.svenruppert.vaadin.security.dx.bootstrap;
 
 import com.svenruppert.vaadin.security.audit.AuditEventStore;
 import com.svenruppert.vaadin.security.audit.SecurityAuditService;
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 
 /**
  * Audit sub-builder of the fluent bootstrap.
@@ -38,7 +37,6 @@ import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public interface AuditBootstrap {
 
   /**

@@ -11,7 +11,6 @@
 package com.svenruppert.vaadin.security.dx.bootstrap;
 
 import com.svenruppert.vaadin.security.authentication.PasswordHasher;
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 import com.svenruppert.vaadin.security.credential.change.PasswordChangeService;
 import com.svenruppert.vaadin.security.credential.password.PasswordHashingService;
 import com.svenruppert.vaadin.security.credential.password.pepper.PepperService;
@@ -43,7 +42,6 @@ import com.svenruppert.vaadin.security.credential.store.CredentialStore;
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public interface CredentialBootstrap {
 
   CredentialBootstrap passwordHasher(PasswordHasher hasher);

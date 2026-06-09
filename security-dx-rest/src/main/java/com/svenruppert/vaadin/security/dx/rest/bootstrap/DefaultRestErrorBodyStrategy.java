@@ -11,7 +11,6 @@
 package com.svenruppert.vaadin.security.dx.rest.bootstrap;
 
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 
 /**
  * Default {@link RestErrorBodyStrategy} returning the generic terse
@@ -19,7 +18,6 @@ import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public final class DefaultRestErrorBodyStrategy implements RestErrorBodyStrategy {
 
   @Override

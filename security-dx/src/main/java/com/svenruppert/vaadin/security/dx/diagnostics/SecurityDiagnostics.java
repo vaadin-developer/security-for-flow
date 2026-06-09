@@ -14,7 +14,6 @@ import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.AccessEvaluator;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationEvaluator;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 import com.svenruppert.vaadin.security.authorization.api.SubjectIdResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
 import com.svenruppert.vaadin.security.session.SecurityVersionStore;
@@ -48,7 +47,6 @@ import java.util.Set;
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public final class SecurityDiagnostics {
 
   private static final List<Class<?>> CORE_SPIS = List.of(

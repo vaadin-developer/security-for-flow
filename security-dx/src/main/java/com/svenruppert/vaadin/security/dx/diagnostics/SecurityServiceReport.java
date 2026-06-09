@@ -10,7 +10,6 @@
  */
 package com.svenruppert.vaadin.security.dx.diagnostics;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 
 import java.util.List;
 import java.util.Objects;
@@ -20,7 +19,6 @@ import java.util.Objects;
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public record SecurityServiceReport(
     List<DiscoveredService> discovered,
     List<MissingRecommendedService> missing,

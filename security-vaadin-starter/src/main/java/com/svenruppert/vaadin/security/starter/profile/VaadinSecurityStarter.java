@@ -10,7 +10,6 @@
  */
 package com.svenruppert.vaadin.security.starter.profile;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
 import com.svenruppert.vaadin.security.dx.vaadin.bootstrap.VaadinSecurityBootstrap;
 
@@ -32,7 +31,6 @@ import com.svenruppert.vaadin.security.dx.vaadin.bootstrap.VaadinSecurityBootstr
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public sealed interface VaadinSecurityStarter
     extends java.util.function.Consumer<VaadinSecurityBootstrap>
     permits DevelopmentDefaults, ProductionDefaults, StrictDefaults {

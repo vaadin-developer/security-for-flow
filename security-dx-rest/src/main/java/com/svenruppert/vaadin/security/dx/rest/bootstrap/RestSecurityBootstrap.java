@@ -10,7 +10,6 @@
  */
 package com.svenruppert.vaadin.security.dx.rest.bootstrap;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 import com.svenruppert.vaadin.security.dx.bootstrap.CommonSecurityBootstrap;
 import com.svenruppert.vaadin.security.rest.RestSubjectResolver;
 
@@ -20,7 +19,6 @@ import com.svenruppert.vaadin.security.rest.RestSubjectResolver;
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public interface RestSecurityBootstrap
     extends CommonSecurityBootstrap<RestSecurityBootstrap> {
 

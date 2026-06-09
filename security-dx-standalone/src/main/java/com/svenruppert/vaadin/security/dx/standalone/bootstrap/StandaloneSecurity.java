@@ -10,14 +10,12 @@
  */
 package com.svenruppert.vaadin.security.dx.standalone.bootstrap;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 
 /**
  * Entry point for the Standalone-side V00.72 fluent bootstrap.
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public final class StandaloneSecurity {
 
   private StandaloneSecurity() {

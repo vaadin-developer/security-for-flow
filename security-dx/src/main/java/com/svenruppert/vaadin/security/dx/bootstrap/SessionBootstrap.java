@@ -10,7 +10,6 @@
  */
 package com.svenruppert.vaadin.security.dx.bootstrap;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 import com.svenruppert.vaadin.security.authorization.api.SubjectIdResolver;
 import com.svenruppert.vaadin.security.session.SecurityVersionStore;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
@@ -47,7 +46,6 @@ import java.time.Duration;
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public interface SessionBootstrap {
 
   SessionBootstrap storeBacked(SessionStore store);

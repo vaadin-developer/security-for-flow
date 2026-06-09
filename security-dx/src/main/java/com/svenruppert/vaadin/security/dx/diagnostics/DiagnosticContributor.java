@@ -10,7 +10,6 @@
  */
 package com.svenruppert.vaadin.security.dx.diagnostics;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 
 /**
  * Adapter-specific diagnostic contributor.
@@ -35,7 +34,6 @@ import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public interface DiagnosticContributor {
 
   /**

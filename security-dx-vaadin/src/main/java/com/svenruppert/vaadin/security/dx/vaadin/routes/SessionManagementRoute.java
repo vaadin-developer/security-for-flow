@@ -10,7 +10,6 @@
  */
 package com.svenruppert.vaadin.security.dx.vaadin.routes;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 import com.svenruppert.vaadin.security.components.SessionManagementView;
 import com.svenruppert.vaadin.security.session.SessionStore;
 import com.vaadin.flow.router.Route;
@@ -35,7 +34,6 @@ import com.vaadin.flow.router.Route;
  *
  * @since 00.73.00
  */
-@ExperimentalSecurityApi
 @Route(SessionManagementRoute.ROUTE_NAME)
 public class SessionManagementRoute extends SessionManagementView {
 

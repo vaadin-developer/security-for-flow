@@ -10,7 +10,6 @@
  */
 package com.svenruppert.vaadin.security.starter.ui;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 import com.svenruppert.vaadin.security.components.SecuredButton;
@@ -54,7 +53,6 @@ import java.util.Set;
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public final class SecuredUi {
 
   private SecuredUi() {

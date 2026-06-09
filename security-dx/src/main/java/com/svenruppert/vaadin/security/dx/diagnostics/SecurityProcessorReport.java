@@ -10,7 +10,6 @@
  */
 package com.svenruppert.vaadin.security.dx.diagnostics;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 
 import java.util.List;
 import java.util.Objects;
@@ -24,7 +23,6 @@ import java.util.Objects;
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public record SecurityProcessorReport(
     List<GeneratedSecurityWrapper> wrappers,
     List<ProcessorWarning> warnings) {

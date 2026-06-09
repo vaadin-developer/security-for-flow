@@ -10,14 +10,12 @@
  */
 package com.svenruppert.vaadin.security.dx.rest.bootstrap;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 
 /**
  * Entry point for the REST-side V00.72 fluent bootstrap.
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public final class RestSecurity {
 
   private RestSecurity() {

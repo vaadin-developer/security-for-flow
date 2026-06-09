@@ -10,7 +10,6 @@
  */
 package com.svenruppert.vaadin.security.dx.rest.bootstrap;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
 
 /**
@@ -24,7 +23,6 @@ import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 @FunctionalInterface
 public interface RestErrorBodyStrategy {
 

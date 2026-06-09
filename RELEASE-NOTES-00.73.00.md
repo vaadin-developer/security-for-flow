@@ -95,26 +95,59 @@ calls are not affected.
 
 ## Stable-API audit (P14 — Konzept §12)
 
-V00.73 keeps every public DX type annotated `@ExperimentalSecurityApi`.
-A full per-type promote/keep decision is intentionally deferred until
-V00.75 confirms the integration shape (Security Event Bus, MFA hooks).
-The decision matrix below is the agreed direction; the annotation
-removal will follow in a dedicated minor release.
+V00.73 promotes **every** public DX type to stable. The
+`@ExperimentalSecurityApi` annotation is removed from 40 types across
+six modules (`security-dx`, `security-dx-vaadin`, `security-dx-rest`,
+`security-dx-standalone`, `security-vaadin-starter`, plus
+`@SecurityAutoService` in `security-autoservice-annotations`).
 
-| Type | Direction | Rationale |
-|---|---|---|
-| `SecurityRuntime` | Promote (V00.75) | Plain record with no resolver coupling |
-| `SecurityBootstrapMode`, `Severity`, `RegisteredSecurityService`, `SecurityBootstrapWarning`, `SecurityBootstrapException` | Promote (V00.75) | Stable value types; shape unchanged since V00.72 |
-| `SecurityDiagnostics` + report records | Promote (V00.75) | The contributor SPI is stable; record shapes have not changed |
-| `DiagnosticContributor` + `DiagnosticReportBuilder` | Promote (V00.75) | SPI shape is stable |
-| `@SecurityAutoService` | Promote (V00.75) | SOURCE-retention annotation; processor is the only consumer |
-| `VaadinSecurity` / `RestSecurity` / `StandaloneSecurity` facades | Keep | Recursive self-typed builders; may add adapter-specific methods in V00.75 |
-| `CommonSecurityBootstrap<B>` | Keep | Sub-builder set may grow (`.eventBus(...)` in V00.75) |
-| `AuditBootstrap`, `SessionBootstrap`, `PolicyBootstrap`, `RoleBootstrap`, `CredentialBootstrap` | Keep | Method sets may grow non-breakingly; current minimal surface ships first |
-| `SecureRouteDiscovery`, `SessionManagementRoute`, `VaadinRouterSecureRouteDiscovery` | Keep | New in V00.73; one minor release of stability before promotion |
-| `SecuredUi`, `@SecureRoute`, `VaadinSecurityStarter` | Keep | Tested against the new policy path; one release of soak time first |
-| `SecurityProcessorReport`, `GeneratedSecurityWrapper`, `ProcessorWarning` | Keep | The index format will get a richer column set in V00.75 (event-bus wrappers) |
-| `BootstrapState`, `AbstractSecurityBootstrap`, all internal state types | Keep (permanent) | `internal/` package; not part of the public surface |
+The promotion accepts the following SemVer commitments:
+
+- **Interfaces grow only via `default` methods.** The V00.75 sixth
+  sub-builder (`.eventBus(...)` per Konzept §17) and any future
+  additions to `CommonSecurityBootstrap<B>` or the five sub-builders
+  ship as default methods with sensible no-op or fail-closed
+  behaviour. This keeps existing implementations source- and
+  binary-compatible.
+- **Records and enums are additive only.** `SecurityRuntime`,
+  `SecurityBootstrapMode`, `RegisteredSecurityService`,
+  `SecurityBootstrapWarning`, `Severity`, `SecurityServiceReport`,
+  `DiscoveredService`, `MissingRecommendedService`, `DuplicateService`,
+  `ServiceWarning`, `GeneratedSecurityWrapper`, `ProcessorWarning`,
+  `SecurityProcessorReport` — none of these records receive component
+  removals; new components are introduced through a successor type
+  with a documented deprecation cycle on the previous one.
+- **Annotation surfaces stay backwards compatible.**
+  `@SecurityAutoService` and `@SecureRoute` may gain new methods only
+  via `default` element values.
+- **The `internal/` package types** (`BootstrapState`,
+  `AbstractSecurityBootstrap`, state aggregates) carry no annotation
+  either — the package name `internal/` is the API contract; consumers
+  importing from there do so at their own risk.
+
+| Module | Types promoted | Notes |
+|---|---:|---|
+| `security-dx` (bootstrap) | 6 | `CommonSecurityBootstrap`, `AuditBootstrap`, `SessionBootstrap`, `PolicyBootstrap`, `RoleBootstrap`, `CredentialBootstrap` |
+| `security-dx` (runtime) | 6 | `SecurityRuntime`, `SecurityBootstrapMode`, `Severity`, `RegisteredSecurityService`, `SecurityBootstrapWarning`, `SecurityBootstrapException` |
+| `security-dx` (diagnostics) | 11 | `SecurityDiagnostics`, `SecurityServiceReport`, `SecurityProcessorReport`, `GeneratedSecurityWrapper`, `ProcessorWarning`, `DiscoveredService`, `MissingRecommendedService`, `DuplicateService`, `ServiceWarning`, `DiagnosticContributor`, `DiagnosticReportBuilder` |
+| `security-dx-vaadin` | 4 | `VaadinSecurity`, `VaadinSecurityBootstrap`, `SecureRouteDiscovery`, `SessionManagementRoute` |
+| `security-dx-rest` | 6 | `RestSecurity`, `RestSecurityBootstrap`, `RestDecisionMapper`, `DefaultRestDecisionMapper`, `RestErrorBodyStrategy`, `DefaultRestErrorBodyStrategy` |
+| `security-dx-standalone` | 2 | `StandaloneSecurity`, `StandaloneSecurityBootstrap` |
+| `security-vaadin-starter` | 6 | `SecuredUi`, `VaadinSecurityStarter`, `DevelopmentDefaults`, `ProductionDefaults`, `StrictDefaults`, `VaadinRouterSecureRouteDiscovery` |
+| `security-autoservice-annotations` | 1 | `@SecurityAutoService` (SOURCE retention; promotion is documentation-only) |
+| **Total** | **42** | |
+
+Adapter `DiagnosticContributor` implementations (`VaadinDiagnosticContributor`,
+`RestDiagnosticContributor`, `StandaloneDiagnosticContributor`) were
+not annotated in V00.72; they are implementation classes registered via
+`@SecurityAutoService` and inherit stability from their SPI.
+
+Operational consequence: V00.74 may not remove or change any of the
+above types' public method signatures, record components, enum
+constants or annotation elements without a major-version bump.
+Breaking changes are still permitted in `internal/` package types and
+in adapter implementation classes that ship as registered SPI
+implementations.
 
 ## Known limitations
 

@@ -10,11 +10,9 @@
  */
 package com.svenruppert.vaadin.security.starter.profile;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
 
 /** Development profile — verbose diagnostics, DEVELOPMENT mode default. */
-@ExperimentalSecurityApi
 public final class DevelopmentDefaults implements VaadinSecurityStarter {
 
   static final DevelopmentDefaults INSTANCE = new DevelopmentDefaults();

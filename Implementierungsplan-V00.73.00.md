@@ -407,7 +407,7 @@ Legend: `✓` done, `~` partial / deferred, `.` pending.
 | 011 | SecuredUi.requiresPolicy real | ✓ | `ca24f07` |
 | 012 | @SecureRoute(policy) real + SecureRouteDiscovery | ✓ | `ca24f07` |
 | 013 | demo-vaadin-rest-client end state | ✓ | `34acda5` |
-| 014 | Stable API audit | ~ | `2b14d9c` (matrix in RELEASE-NOTES); promotion of 6 runtime types in release-finalize commit; remaining types kept experimental with rationale |
+| 014 | Stable API audit | ✓ | `2b14d9c` (matrix) + `d5e40f1` (6 runtime types) + release-promotion commit (all 42 public DX types — see RELEASE-NOTES §"Stable-API audit (P14 — Konzept §12)") |
 | 015 | Documentation pass | ~ | `2b14d9c` (RELEASE-NOTES-00.73.00.md); `docs/dx/` 5-Minute-Setup pages updated in release-finalize commit |
 | 016 | PIT regression check | ~ | release-finalize commit — touched-module PIT only; untouched-module baselines stay valid by construction |
 | 017 | demo-vaadin migration | ✓ | `3fba7ae` |

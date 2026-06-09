@@ -10,7 +10,6 @@
  */
 package com.svenruppert.vaadin.security.dx.bootstrap;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleHierarchy;
 
 /**
@@ -30,7 +29,6 @@ import com.svenruppert.vaadin.security.authorization.api.roles.RoleHierarchy;
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public interface RoleBootstrap {
 
   RoleBootstrap hierarchy(RoleHierarchy hierarchy);

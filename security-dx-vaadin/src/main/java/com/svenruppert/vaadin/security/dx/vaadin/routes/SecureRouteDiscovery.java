@@ -10,7 +10,6 @@
  */
 package com.svenruppert.vaadin.security.dx.vaadin.routes;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 
 import java.util.stream.Stream;
 
@@ -31,7 +30,6 @@ import java.util.stream.Stream;
  *
  * @since 00.73.00
  */
-@ExperimentalSecurityApi
 @FunctionalInterface
 public interface SecureRouteDiscovery {
 

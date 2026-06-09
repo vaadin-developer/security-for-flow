@@ -12,7 +12,6 @@ package com.svenruppert.vaadin.security.dx.bootstrap;
 
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
 import com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime;
 
@@ -31,7 +30,6 @@ import java.util.function.Consumer;
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public interface CommonSecurityBootstrap<B extends CommonSecurityBootstrap<B>> {
 
   B authentication(AuthenticationService<?, ?> service);

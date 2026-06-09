@@ -10,7 +10,6 @@
  */
 package com.svenruppert.vaadin.security.dx.vaadin.bootstrap;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 
 /**
  * Entry point for the Vaadin-side V00.72 fluent bootstrap. Each
@@ -19,7 +18,6 @@ import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public final class VaadinSecurity {
 
   private VaadinSecurity() {

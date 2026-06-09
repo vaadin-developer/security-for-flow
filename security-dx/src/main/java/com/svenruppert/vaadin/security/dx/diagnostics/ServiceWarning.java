@@ -10,7 +10,6 @@
  */
 package com.svenruppert.vaadin.security.dx.diagnostics;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 
 import java.util.Objects;
 
@@ -19,7 +18,6 @@ import java.util.Objects;
  *
  * @since 00.72.00
  */
-@ExperimentalSecurityApi
 public record ServiceWarning(String code, String message, String suggestedFix) {
 
   public ServiceWarning {
