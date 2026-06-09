@@ -10,12 +10,10 @@
  */
 package com.svenruppert.vaadin.security.dx.runtime;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
-
 import java.util.Objects;
 
 /**
- * One diagnostic entry produced by the V00.72 fluent bootstrap or by
+ * One diagnostic entry produced by the fluent bootstrap or by
  * {@code SecurityDiagnostics.inspect()}.
  *
  * @param severity     informational severity level
@@ -25,8 +23,9 @@ import java.util.Objects;
  * @param suggestedFix concrete fix recommendation; must not contain secrets
  *
  * @since 00.72.00
+ * @apiNote V00.73 — promoted to stable. Diagnostic codes have a stable
+ *          namespace (see RELEASE-NOTES-00.73.00.md §13.1 / §13.2).
  */
-@ExperimentalSecurityApi
 public record SecurityBootstrapWarning(
     Severity severity,
     String code,

@@ -1,6 +1,8 @@
 # Before / After — manual `META-INF/services` vs `@SecurityAutoService`
 
-A concrete diff from `demo-standalone` (V00.72/014).
+A concrete diff from `demo-standalone` introduced in V00.72/014.
+The `@SecurityAutoService` annotation, the processor and the
+`META-INF/services/...` emission are unchanged in V00.73.
 
 ## Before
 

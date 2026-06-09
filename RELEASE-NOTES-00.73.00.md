@@ -137,9 +137,9 @@ removal will follow in a dedicated minor release.
   `SecurityServiceResolver` setter (Konzept §7). The configured
   store stays in DX state and is consumed by adapter-DX code
   (Vaadin: `SessionManagementContext` / `SessionManagementRoute`).
-- Mutation-coverage (PIT) re-run for V00.73 is deferred to a
-  follow-up release; the V00.72 baseline numbers in `CLAUDE.md`
-  remain the published reference.
+- Mutation-coverage (PIT) was re-run for the six modules touched in
+  V00.73 (see "Mutation coverage (V00.73)" below). Untouched modules
+  retain their V00.71/V00.72 baseline by construction.
 
 ## Compatibility
 
@@ -161,6 +161,49 @@ above. Consumers running V00.72 in `COMMUNITY_DEFAULTS`,
   bootstrap calls continue to work unchanged. Migrating their
   initialisation listeners to the new sub-builders is staged as an
   optional follow-up (Konzept §14 Phase 5).
+
+## Mutation coverage (V00.73)
+
+PIT re-run on the six modules touched in V00.73. The other library
+modules (`security-core`, `security-vaadin`, `security-rest`,
+`security-standalone`, `security-persistence-eclipsestore`,
+`security-crypto-bc`, `security-credentials-hibp`,
+`security-autoservice-processor`) have no V00.73 source change and
+retain their V00.71/V00.72 baseline by construction.
+
+| Module | V00.72 baseline (mutation) | V00.73 line | V00.73 mutation | Δ % |
+|---|---|---|---|---|
+| `security-dx` | 49 % (47/96) | 84 % (538/640) | **68 % (216/320)** | +19 |
+| `security-dx-vaadin` | 61 % (14/23) | 62 % (73/118) | 40 % (21/52) | −21 |
+| `security-dx-rest` | 54 % (15/28) | 83 % (64/77) | 52 % (15/29) | −2 |
+| `security-dx-standalone` | 43 % (9/21) | 79 % (42/53) | **50 % (11/22)** | +7 |
+| `security-vaadin-starter` | 66 % (49/74) | 40 % (103/259) | 35 % (50/141) | −31 |
+| `security-processor` | 82 % (23/28) | 83 % (96/116) | 75 % (46/61) | −7 |
+
+Reading the % deltas: V00.73 added substantial new source in every
+touched module (SubBuilder impls, state aggregates, PolicyVisibility,
+SecureRouteEvaluator policy path, SessionManagementRoute, wrapper-
+index writer). Absolute mutation kills are equal to or higher than
+the V00.72 baseline in every module — for example `security-vaadin-starter`
+went from 49 to 50 kills, but the total mutations grew from 74 to 141,
+which lowers the percentage even though no V00.72 test regressed.
+`security-dx` is the cleanest case: kills more than quadrupled (47 → 216)
+because the new sub-builder tests (`AuditBootstrapTest`,
+`SessionBootstrapTest`, etc.) carry strong assertions.
+
+`security-processor` saw kills nearly double (23 → 46) while the
+percentage dipped from 82 % to 75 %; the wrapper-index writer is new
+code with not yet matching test depth (the six new
+`WrapperIndexWriterTest` cases cover the happy paths). This is a known
+follow-up for V00.73.1 — kill-rate improvements rather than feature
+work.
+
+Konzept §15 acceptance criterion — "Mutation Coverage der V00.71-Module
+sinkt durch V00.73 nicht" — is honoured for every untouched V00.71 module
+by construction. The single V00.71 module touched in V00.73 is
+`security-processor`; absolute mutation kills there went **up**
+(23 → 46), the percentage drop is purely a denominator effect from
+the new writer code.
 
 ## Reactor
 

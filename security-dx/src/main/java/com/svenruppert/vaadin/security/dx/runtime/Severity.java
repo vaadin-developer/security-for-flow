@@ -10,8 +10,6 @@
  */
 package com.svenruppert.vaadin.security.dx.runtime;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
-
 /**
  * Severity level of a {@link SecurityBootstrapWarning}.
  * <p>
@@ -20,8 +18,8 @@ import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi
  * entries are attached to the resulting {@link SecurityRuntime}.
  *
  * @since 00.72.00
+ * @apiNote V00.73 — promoted to stable.
  */
-@ExperimentalSecurityApi
 public enum Severity {
   INFO,
   WARNING,

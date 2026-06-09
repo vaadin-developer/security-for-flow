@@ -10,12 +10,10 @@
  */
 package com.svenruppert.vaadin.security.dx.runtime;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
-
 import java.util.Objects;
 
 /**
- * One service registered through the V00.72 fluent bootstrap or discovered
+ * One service registered through the fluent bootstrap or discovered
  * by {@code SecurityDiagnostics}.
  *
  * @param spi       the SPI contract this implementation satisfies
@@ -27,8 +25,8 @@ import java.util.Objects;
  *                  by the bootstrap (not requested explicitly)
  *
  * @since 00.72.00
+ * @apiNote V00.73 — promoted to stable. Record shape unchanged since V00.72.
  */
-@ExperimentalSecurityApi
 public record RegisteredSecurityService(
     Class<?> spi,
     Class<?> impl,

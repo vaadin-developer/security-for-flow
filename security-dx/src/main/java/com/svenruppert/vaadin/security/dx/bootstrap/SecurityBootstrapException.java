@@ -10,7 +10,6 @@
  */
 package com.svenruppert.vaadin.security.dx.bootstrap;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
 import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapWarning;
 
 import java.util.List;
@@ -24,8 +23,9 @@ import java.util.Objects;
  * {@code PRODUCTION} mode.
  *
  * @since 00.72.00
+ * @apiNote V00.73 — promoted to stable. The carried warning list is
+ *          unmodifiable and identical in shape to {@code SecurityRuntime.warnings()}.
  */
-@ExperimentalSecurityApi
 public final class SecurityBootstrapException extends RuntimeException {
 
   private static final long serialVersionUID = 1L;

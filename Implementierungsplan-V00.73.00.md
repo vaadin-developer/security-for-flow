@@ -390,26 +390,26 @@ Recommended order (matches `Konzept-V00.73.00.md` §18):
 
 ## 10. Implementation Status
 
-Legend: `✓` done, `>` in progress, `.` pending.
+Legend: `✓` done, `~` partial / deferred, `.` pending.
 
 | Nr. | Prompt | Status | Commit |
 |---:|---|:---:|---|
-| 001 | WrapperIndexFormat constants | . | pending |
-| 002 | Wrapper-index writer | . | pending |
-| 003 | End-to-end demo verification | . | pending |
-| 004 | AuditBootstrap real surface | . | pending |
-| 005 | RoleBootstrap hierarchy surface | . | pending |
-| 006 | CredentialBootstrap separated surfaces | . | pending |
-| 007 | SessionBootstrap real surface | . | pending |
-| 008 | Vaadin SessionManagementView activation | . | pending |
-| 009 | VaadinSessionSubjectStore auto-wiring | . | pending |
-| 010 | PolicyBootstrap real surface | . | pending |
-| 011 | SecuredUi.requiresPolicy real | . | pending |
-| 012 | @SecureRoute(policy) real | . | pending |
-| 013 | demo-vaadin-rest-client end state | . | pending |
-| 014 | Stable API audit | . | pending |
-| 015 | Documentation pass | . | pending |
-| 016 | PIT regression check | . | pending |
-| 017 | demo-vaadin migration optional | . | pending |
-| 018 | demo-rest migration optional | . | pending |
-| 019 | demo-standalone migration optional | . | pending |
+| 001 | WrapperIndexFormat constants | ✓ | `40d542b` |
+| 002 | Wrapper-index writer | ✓ | `40d542b` |
+| 003 | End-to-end demo verification | ✓ | `40d542b` |
+| 004 | AuditBootstrap real surface | ✓ | `3957d7d` |
+| 005 | RoleBootstrap hierarchy surface | ✓ | `096f04b` |
+| 006 | CredentialBootstrap separated surfaces | ✓ | `096f04b` |
+| 007 | SessionBootstrap real surface | ✓ | `0e8cb87` |
+| 008 | Vaadin SessionManagementView activation | ✓ | `2ed644a` |
+| 009 | VaadinSessionSubjectStore auto-wiring | ✓ | `2ed644a` |
+| 010 | PolicyBootstrap real surface | ✓ | `d340b88` |
+| 011 | SecuredUi.requiresPolicy real | ✓ | `ca24f07` |
+| 012 | @SecureRoute(policy) real + SecureRouteDiscovery | ✓ | `ca24f07` |
+| 013 | demo-vaadin-rest-client end state | ✓ | `34acda5` |
+| 014 | Stable API audit | ~ | `2b14d9c` (matrix in RELEASE-NOTES); promotion of 6 runtime types in release-finalize commit; remaining types kept experimental with rationale |
+| 015 | Documentation pass | ~ | `2b14d9c` (RELEASE-NOTES-00.73.00.md); `docs/dx/` 5-Minute-Setup pages updated in release-finalize commit |
+| 016 | PIT regression check | ~ | release-finalize commit — touched-module PIT only; untouched-module baselines stay valid by construction |
+| 017 | demo-vaadin migration | ✓ | `3fba7ae` |
+| 018 | demo-rest migration | ✓ | `3fba7ae` |
+| 019 | demo-standalone migration | ✓ | `3fba7ae` |

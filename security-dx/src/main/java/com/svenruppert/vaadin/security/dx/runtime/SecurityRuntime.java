@@ -10,8 +10,6 @@
  */
 package com.svenruppert.vaadin.security.dx.runtime;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
-
 import java.util.List;
 import java.util.Objects;
 
@@ -23,8 +21,10 @@ import java.util.Objects;
  * Both {@link #services()} and {@link #warnings()} are unmodifiable.
  *
  * @since 00.72.00
+ * @apiNote V00.73 — promoted to stable. Record shape and accessor set
+ *          are unchanged since V00.72; additions remain non-breaking
+ *          (record components cannot be removed without a SemVer bump).
  */
-@ExperimentalSecurityApi
 public record SecurityRuntime(
     List<RegisteredSecurityService> services,
     List<SecurityBootstrapWarning> warnings,

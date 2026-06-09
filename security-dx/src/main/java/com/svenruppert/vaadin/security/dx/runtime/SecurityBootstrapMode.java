@@ -10,10 +10,8 @@
  */
 package com.svenruppert.vaadin.security.dx.runtime;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
-
 /**
- * Operational mode of the V00.72 fluent bootstrap.
+ * Operational mode of the fluent bootstrap.
  *
  * <ul>
  *   <li>{@link #COMMUNITY_DEFAULTS} – minimal but safe; in-memory defaults
@@ -27,8 +25,9 @@ import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi
  * </ul>
  *
  * @since 00.72.00
+ * @apiNote V00.73 — promoted to stable. Enum constants added in a
+ *          future release would not break source compatibility.
  */
-@ExperimentalSecurityApi
 public enum SecurityBootstrapMode {
   COMMUNITY_DEFAULTS,
   DEVELOPMENT,

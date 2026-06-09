@@ -24,7 +24,7 @@
     </parent>
 
     <artifactId>security-for-flow-parent</artifactId>
-    <version>00.73.00-SNAPSHOT</version>
+    <version>00.73.00</version>
     <packaging>pom</packaging>
 
     <name>Security for Vaadin</name>
