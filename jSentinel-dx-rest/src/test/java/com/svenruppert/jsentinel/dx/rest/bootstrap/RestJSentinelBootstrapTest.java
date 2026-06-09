@@ -125,4 +125,97 @@ class RestJSentinelBootstrapTest {
     assertSame(JSentinelBootstrapMode.COMMUNITY_DEFAULTS, first.mode());
     assertThrows(IllegalStateException.class, b::install);
   }
+
+  // ── V00.74 A2.2 problemJsonErrors / cors / openApiMetadata ─────
+
+  @Test
+  void problemJsonErrors_selectsRfc7807Strategy() {
+    JSentinelRuntime runtime = RestSecurity.bootstrap()
+        .authentication(FakeAuthenticationService.forType(String.class))
+        .authorization(new FakeAuthorizationService<String>())
+        .subjectResolver(TEST_RESOLVER)
+        .problemJsonErrors()
+        .install();
+
+    RegisteredJSentinelService entry = runtime.services().stream()
+        .filter(s -> RestErrorBodyStrategy.class.equals(s.spi()))
+        .findFirst()
+        .orElseThrow();
+    assertEquals(ProblemJsonErrorBodyStrategy.class, entry.impl());
+    assertEquals("bootstrap-explicit", entry.source());
+
+    String body = ProblemJsonErrorBodyStrategy.INSTANCE.bodyFor(
+        new com.svenruppert.jsentinel.authorization.api.AuthorizationDecision
+            .Unauthenticated("nope"));
+    assertTrue(body.contains("\"title\":\"Unauthorized\""));
+    assertTrue(body.contains("\"status\":401"));
+  }
+
+  @Test
+  void cors_publishesConfigurationAndRuntimeEntry() {
+    RestCorsContext.reset();
+    JSentinelRuntime runtime = RestSecurity.bootstrap()
+        .authentication(FakeAuthenticationService.forType(String.class))
+        .authorization(new FakeAuthorizationService<String>())
+        .subjectResolver(TEST_RESOLVER)
+        .cors(c -> c
+            .allowedOrigins("https://app.example.com")
+            .allowedMethods("GET", "POST")
+            .allowedHeaders("Authorization", "Content-Type")
+            .exposedHeaders("X-Total-Count")
+            .allowCredentials(true)
+            .maxAgeSeconds(3600))
+        .install();
+
+    RestCorsConfiguration cfg = RestCorsContext.configuration().orElseThrow();
+    assertEquals(java.util.List.of("https://app.example.com"), cfg.allowedOrigins());
+    assertEquals(java.util.List.of("GET", "POST"), cfg.allowedMethods());
+    assertEquals(java.util.List.of("Authorization", "Content-Type"), cfg.allowedHeaders());
+    assertEquals(java.util.List.of("X-Total-Count"), cfg.exposedHeaders());
+    assertTrue(cfg.allowCredentials());
+    assertEquals(3600L, cfg.maxAgeSeconds());
+
+    assertTrue(runtime.services().stream()
+        .anyMatch(s -> RestCorsContext.class.equals(s.spi())
+            && RestCorsConfiguration.class.equals(s.impl())
+            && "bootstrap-cors".equals(s.source())));
+  }
+
+  @Test
+  void openApiMetadata_publishesAndRuntimeEntry() {
+    RestOpenApiContext.reset();
+    JSentinelRuntime runtime = RestSecurity.bootstrap()
+        .authentication(FakeAuthenticationService.forType(String.class))
+        .authorization(new FakeAuthorizationService<String>())
+        .subjectResolver(TEST_RESOLVER)
+        .openApiMetadata(o -> o
+            .title("Demo REST API")
+            .version("0.74.0")
+            .description("Demo endpoints secured by jSentinel.")
+            .servers("https://api.example.com"))
+        .install();
+
+    RestOpenApiMetadata meta = RestOpenApiContext.metadata().orElseThrow();
+    assertEquals("Demo REST API", meta.title());
+    assertEquals("0.74.0", meta.version());
+    assertEquals("Demo endpoints secured by jSentinel.", meta.description());
+    assertEquals(java.util.List.of("https://api.example.com"), meta.servers());
+
+    assertTrue(runtime.services().stream()
+        .anyMatch(s -> RestOpenApiContext.class.equals(s.spi())
+            && RestOpenApiMetadata.class.equals(s.impl())
+            && "bootstrap-openapi-metadata".equals(s.source())));
+  }
+
+  @Test
+  void openApiMetadata_blankTitleRejected() {
+    assertThrows(IllegalArgumentException.class,
+        () -> RestSecurity.bootstrap().openApiMetadata(o -> o.title("   ")));
+  }
+
+  @Test
+  void cors_nullConsumerRejected() {
+    assertThrows(NullPointerException.class,
+        () -> RestSecurity.bootstrap().cors(null));
+  }
 }

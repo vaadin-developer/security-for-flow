@@ -25,6 +25,7 @@ import com.svenruppert.jsentinel.rest.RestSubjectResolver;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * Package-private implementation of {@link RestJSentinelBootstrap}.
@@ -38,6 +39,8 @@ final class RestJSentinelBootstrapImpl
   private RestSubjectResolver subjectResolver;
   private RestDecisionMapper decisionMapper;
   private RestErrorBodyStrategy errorBodies;
+  private RestCorsConfiguration corsConfiguration;
+  private RestOpenApiMetadata openApiMetadata;
   private boolean installed;
 
   @Override
@@ -55,6 +58,24 @@ final class RestJSentinelBootstrapImpl
   @Override
   public RestJSentinelBootstrap errorBodies(RestErrorBodyStrategy strategy) {
     this.errorBodies = Objects.requireNonNull(strategy, "strategy");
+    return this;
+  }
+
+  @Override
+  public RestJSentinelBootstrap cors(Consumer<RestCorsConfigurationBuilder> consumer) {
+    Objects.requireNonNull(consumer, "consumer");
+    RestCorsConfigurationBuilder builder = new RestCorsConfigurationBuilder();
+    consumer.accept(builder);
+    this.corsConfiguration = builder.toConfiguration();
+    return this;
+  }
+
+  @Override
+  public RestJSentinelBootstrap openApiMetadata(Consumer<RestOpenApiMetadataBuilder> consumer) {
+    Objects.requireNonNull(consumer, "consumer");
+    RestOpenApiMetadataBuilder builder = new RestOpenApiMetadataBuilder();
+    consumer.accept(builder);
+    this.openApiMetadata = builder.toMetadata();
     return this;
   }
 
@@ -147,6 +168,21 @@ final class RestJSentinelBootstrapImpl
     applyCredentialConfiguration(services, warnings);
     // V00.73: apply policies sub-builder state.
     applyPolicyConfiguration(services, warnings);
+
+    // V00.74 (A2.2): publish CORS configuration when configured.
+    if (corsConfiguration != null) {
+      RestCorsContext.publish(corsConfiguration);
+      services.add(new RegisteredJSentinelService(
+          RestCorsContext.class, RestCorsConfiguration.class,
+          "bootstrap-cors", false));
+    }
+    // V00.74 (A2.2): publish OpenAPI metadata when configured.
+    if (openApiMetadata != null) {
+      RestOpenApiContext.publish(openApiMetadata);
+      services.add(new RegisteredJSentinelService(
+          RestOpenApiContext.class, RestOpenApiMetadata.class,
+          "bootstrap-openapi-metadata", false));
+    }
 
     JSentinelBootstrapMode mode = state.mode();
     if (mode == JSentinelBootstrapMode.STRICT && warningsContainError(warnings)) {

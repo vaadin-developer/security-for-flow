@@ -13,6 +13,8 @@ package com.svenruppert.jsentinel.dx.rest.bootstrap;
 import com.svenruppert.jsentinel.dx.bootstrap.CommonJSentinelBootstrap;
 import com.svenruppert.jsentinel.rest.RestSubjectResolver;
 
+import java.util.function.Consumer;
+
 /**
  * REST-specific fluent bootstrap. Entry point:
  * {@link RestSecurity#bootstrap()}.
@@ -27,4 +29,45 @@ public interface RestJSentinelBootstrap
   RestJSentinelBootstrap decisionMapper(RestDecisionMapper mapper);
 
   RestJSentinelBootstrap errorBodies(RestErrorBodyStrategy strategy);
+
+  /**
+   * V00.74: Convenience for
+   * {@code .errorBodies(ProblemJsonErrorBodyStrategy.INSTANCE)} —
+   * emits RFC 7807 {@code application/problem+json} bodies for
+   * denial decisions.
+   *
+   * @return this builder
+   * @since 00.74.00
+   */
+  default RestJSentinelBootstrap problemJsonErrors() {
+    return errorBodies(ProblemJsonErrorBodyStrategy.INSTANCE);
+  }
+
+  /**
+   * V00.74: Configures CORS for the REST adapter. The published
+   * {@link RestCorsConfiguration} is consumed by downstream REST
+   * glue (a servlet filter, embedded server, etc.) — the library
+   * does not ship a CORS filter itself.
+   *
+   * @param consumer non-null consumer that configures the
+   *                 {@link RestCorsConfigurationBuilder}
+   * @return this builder
+   * @since 00.74.00
+   */
+  RestJSentinelBootstrap cors(Consumer<RestCorsConfigurationBuilder> consumer);
+
+  /**
+   * V00.74: Configures OpenAPI document metadata
+   * ({@code Info.title} / {@code Info.version} /
+   * {@code Info.description} / {@code servers[]}). The published
+   * {@link RestOpenApiMetadata} is consumed by
+   * {@code OpenApiSecurityMetadataGenerator} at document-generation
+   * time.
+   *
+   * @param consumer non-null consumer that configures the
+   *                 {@link RestOpenApiMetadataBuilder}
+   * @return this builder
+   * @since 00.74.00
+   */
+  RestJSentinelBootstrap openApiMetadata(Consumer<RestOpenApiMetadataBuilder> consumer);
 }
