@@ -65,6 +65,43 @@ public interface VaadinJSentinelBootstrap
   VaadinJSentinelBootstrap sessionManagementView();
 
   /**
+   * V00.74: Configures the Vaadin {@code Component} class to render
+   * when navigation is denied. Published to
+   * {@link com.svenruppert.jsentinel.dx.vaadin.routes.VaadinRouteContext}
+   * for the starter's authorization listener to consume at attach
+   * time (alternative to the framework default redirect).
+   *
+   * @param errorViewClass non-null component class
+   * @return this builder
+   * @since 00.74.00
+   */
+  VaadinJSentinelBootstrap errorView(Class<?> errorViewClass);
+
+  /**
+   * V00.74: Configures the route name to navigate to after a
+   * successful login. Published to
+   * {@link com.svenruppert.jsentinel.dx.vaadin.routes.VaadinRouteContext}
+   * for the starter's login-flow callback to consume.
+   *
+   * @param route non-blank route name (without leading slash)
+   * @return this builder
+   * @since 00.74.00
+   */
+  VaadinJSentinelBootstrap afterLoginRoute(String route);
+
+  /**
+   * V00.74: Configures the route name of the password-reset view.
+   * Published to
+   * {@link com.svenruppert.jsentinel.dx.vaadin.routes.VaadinRouteContext}
+   * so the application's login view can link to it.
+   *
+   * @param route non-blank route name (without leading slash)
+   * @return this builder
+   * @since 00.74.00
+   */
+  VaadinJSentinelBootstrap passwordResetRoute(String route);
+
+  /**
    * V00.73 (Konzept §8.5): opt into bootstrap-time discovery of
    * {@code @SecureRoute}-annotated classes. With {@code true}, the
    * default {@code VaadinRouterSecureRouteDiscovery} is used to

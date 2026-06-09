@@ -273,4 +273,82 @@ class VaadinJSentinelBootstrapTest {
     assertSame(explicit, SubjectStores.findSubjectStore().orElseThrow(),
         "auto-wire must not replace an explicit registration");
   }
+
+  // ── V00.74 A2.1 errorView / afterLoginRoute / passwordResetRoute ──
+
+  @Test
+  void errorView_publishesToVaadinRouteContextAndRuntime() {
+    com.svenruppert.jsentinel.dx.vaadin.routes.VaadinRouteContext.reset();
+    FakeAuthenticationService<String, String> authn = FakeAuthenticationService.forType(String.class);
+    FakeAuthorizationService<String> authz = new FakeAuthorizationService<>();
+
+    JSentinelRuntime runtime = VaadinSecurity.bootstrap()
+        .authentication(authn)
+        .authorization(authz)
+        .errorView(MyErrorView.class)
+        .install();
+
+    assertSame(MyErrorView.class,
+        com.svenruppert.jsentinel.dx.vaadin.routes.VaadinRouteContext.errorView()
+            .orElseThrow());
+    assertTrue(runtime.services().stream()
+        .anyMatch(s -> com.svenruppert.jsentinel.dx.vaadin.routes.VaadinRouteContext.class.equals(s.spi())
+            && MyErrorView.class.equals(s.impl())
+            && "bootstrap-error-view".equals(s.source())));
+  }
+
+  @Test
+  void afterLoginRoute_publishesToContextAndRuntime() {
+    com.svenruppert.jsentinel.dx.vaadin.routes.VaadinRouteContext.reset();
+    FakeAuthenticationService<String, String> authn = FakeAuthenticationService.forType(String.class);
+    FakeAuthorizationService<String> authz = new FakeAuthorizationService<>();
+
+    JSentinelRuntime runtime = VaadinSecurity.bootstrap()
+        .authentication(authn)
+        .authorization(authz)
+        .afterLoginRoute("dashboard")
+        .install();
+
+    assertEquals("dashboard",
+        com.svenruppert.jsentinel.dx.vaadin.routes.VaadinRouteContext.afterLoginRoute()
+            .orElseThrow());
+    assertTrue(runtime.services().stream()
+        .anyMatch(s -> com.svenruppert.jsentinel.dx.vaadin.routes.VaadinRouteContext.class.equals(s.spi())
+            && "bootstrap-after-login=dashboard".equals(s.source())));
+  }
+
+  @Test
+  void passwordResetRoute_publishesToContextAndRuntime() {
+    com.svenruppert.jsentinel.dx.vaadin.routes.VaadinRouteContext.reset();
+    FakeAuthenticationService<String, String> authn = FakeAuthenticationService.forType(String.class);
+    FakeAuthorizationService<String> authz = new FakeAuthorizationService<>();
+
+    JSentinelRuntime runtime = VaadinSecurity.bootstrap()
+        .authentication(authn)
+        .authorization(authz)
+        .passwordResetRoute("password-reset")
+        .install();
+
+    assertEquals("password-reset",
+        com.svenruppert.jsentinel.dx.vaadin.routes.VaadinRouteContext.passwordResetRoute()
+            .orElseThrow());
+    assertTrue(runtime.services().stream()
+        .anyMatch(s -> com.svenruppert.jsentinel.dx.vaadin.routes.VaadinRouteContext.class.equals(s.spi())
+            && "bootstrap-password-reset=password-reset".equals(s.source())));
+  }
+
+  @Test
+  void afterLoginRoute_blankRejected() {
+    assertThrows(IllegalArgumentException.class,
+        () -> VaadinSecurity.bootstrap().afterLoginRoute("   "));
+  }
+
+  @Test
+  void passwordResetRoute_blankRejected() {
+    assertThrows(IllegalArgumentException.class,
+        () -> VaadinSecurity.bootstrap().passwordResetRoute(""));
+  }
+
+  /** Test-only stand-in for a real Vaadin error view; class identity is all that matters here. */
+  private static final class MyErrorView { }
 }

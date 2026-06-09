@@ -26,6 +26,7 @@ import com.svenruppert.jsentinel.dx.runtime.Severity;
 import com.svenruppert.jsentinel.dx.vaadin.routes.SecureRouteDiscovery;
 import com.svenruppert.jsentinel.dx.vaadin.routes.SessionManagementContext;
 import com.svenruppert.jsentinel.dx.vaadin.routes.SessionManagementRoute;
+import com.svenruppert.jsentinel.dx.vaadin.routes.VaadinRouteContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +52,10 @@ final class VaadinJSentinelBootstrapImpl
 
   private boolean discoverSecureRoutesEnabled;
   private SecureRouteDiscovery secureRouteDiscovery;
+
+  private Class<?> errorView;
+  private String afterLoginRoute;
+  private String passwordResetRoute;
 
   @Override
   public VaadinJSentinelBootstrap subjectType(Class<?> subjectType) {
@@ -80,6 +85,32 @@ final class VaadinJSentinelBootstrapImpl
   public VaadinJSentinelBootstrap sessionManagementView() {
     this.sessionManagementView = true;
     return this;
+  }
+
+  @Override
+  public VaadinJSentinelBootstrap errorView(Class<?> errorViewClass) {
+    this.errorView = Objects.requireNonNull(errorViewClass, "errorViewClass");
+    return this;
+  }
+
+  @Override
+  public VaadinJSentinelBootstrap afterLoginRoute(String route) {
+    this.afterLoginRoute = requireNonBlankRoute(route, "afterLoginRoute");
+    return this;
+  }
+
+  @Override
+  public VaadinJSentinelBootstrap passwordResetRoute(String route) {
+    this.passwordResetRoute = requireNonBlankRoute(route, "passwordResetRoute");
+    return this;
+  }
+
+  private static String requireNonBlankRoute(String route, String name) {
+    Objects.requireNonNull(route, name);
+    if (route.isBlank()) {
+      throw new IllegalArgumentException(name + " must not be blank");
+    }
+    return route;
   }
 
   @Override
@@ -190,6 +221,27 @@ final class VaadinJSentinelBootstrapImpl
             SessionManagementRoute.class, SessionManagementRoute.class,
             "bootstrap-activated", false));
       }
+    }
+
+    // V00.74 (A2.1): publish Vaadin route hints for the starter to
+    // pick up at attach time. errorView is mandatory-class, the two
+    // route names are mandatory-non-blank (validated on the setter).
+    if (errorView != null) {
+      VaadinRouteContext.publishErrorView(errorView);
+      services.add(new RegisteredJSentinelService(
+          VaadinRouteContext.class, errorView, "bootstrap-error-view", false));
+    }
+    if (afterLoginRoute != null) {
+      VaadinRouteContext.publishAfterLoginRoute(afterLoginRoute);
+      services.add(new RegisteredJSentinelService(
+          VaadinRouteContext.class, String.class,
+          "bootstrap-after-login=" + afterLoginRoute, false));
+    }
+    if (passwordResetRoute != null) {
+      VaadinRouteContext.publishPasswordResetRoute(passwordResetRoute);
+      services.add(new RegisteredJSentinelService(
+          VaadinRouteContext.class, String.class,
+          "bootstrap-password-reset=" + passwordResetRoute, false));
     }
 
     JSentinelBootstrapMode mode = state.mode();
