@@ -33,19 +33,23 @@ import java.util.Set;
 /**
  * Declarative fluent builders over the V00.71 {@link SecuredButton},
  * {@link SecuredRouterLink} and {@link SecuredMenuItem} components.
- * <p>
- * Discipline (V00.72 Prompts 016 / 017):
+ *
+ * <p>Discipline:
  * <ul>
  *   <li>Exactly one of {@code requiresRole}, {@code requiresPermission}
  *       or {@code requiresPolicy} must be set before {@code build()}.</li>
  *   <li>Exactly one of {@code hideWhenDenied()} or
  *       {@code disableWhenDenied()} may be set.</li>
  *   <li>Single-use: a second {@code build()} throws.</li>
- *   <li>{@code requiresPolicy(...)} is reserved for the V00.73 policy
- *       integration; calling {@code build()} after it throws
- *       {@link UnsupportedOperationException} so callers see the
- *       limitation explicitly rather than silently bypassing
- *       enforcement.</li>
+ *   <li>{@code requiresPolicy(...)} evaluates the named policy through
+ *       {@code PolicyRegistry} (V00.73). The component's visibility is
+ *       set per the chosen {@code hideWhenDenied()} /
+ *       {@code disableWhenDenied()} mode on every attach. See
+ *       {@code PolicyVisibility} (package-private) for the differentiated
+ *       log codes ({@code secured-ui/no-subject},
+ *       {@code secured-ui/policy-denied},
+ *       {@code secured-ui/unknown-policy},
+ *       {@code secured-ui/step-up-required}).</li>
  * </ul>
  *
  * @since 00.72.00

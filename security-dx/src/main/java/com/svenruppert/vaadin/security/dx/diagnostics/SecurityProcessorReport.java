@@ -16,8 +16,11 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Sub-report covering proxybuilder-generated wrappers. Populated by
- * Prompts 020-022; empty placeholder until then.
+ * Sub-report covering proxybuilder-generated wrappers. V00.73
+ * completes the pipeline: {@code security-processor} writes the
+ * index file at compile time, {@link WrapperIndexReader} parses it,
+ * and this record carries the result in
+ * {@link SecurityDiagnostics#inspect()}.
  *
  * @since 00.72.00
  */
