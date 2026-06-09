@@ -40,7 +40,7 @@ Timestamp: 2026-06-04_09-31-57 Europe/Berlin (state after V00.71.00 release)
 | Credential Pipeline | JDK PBKDF2-HMAC-SHA-256 provider (default) + `Pbkdf2ParameterCalibrator` | Shipped / V00.71 |
 | Credential Pipeline | `KdfExecutionLimiter` (sheds floods, kills timing-channel) | Shipped / V00.71 |
 | Credential Pipeline | `DummyVerificationService` for unknown-user / malformed-envelope paths | Shipped / V00.71 |
-| Credential Pipeline | Argon2id / bcrypt / scrypt providers in opt-in module `security-crypto-bc` (BouncyCastle 1.78.1, no global JCA provider registration) | Shipped / V00.71 |
+| Credential Pipeline | Argon2id / bcrypt / scrypt providers in opt-in module `jSentinel-crypto-bc` (BouncyCastle 1.78.1, no global JCA provider registration) | Shipped / V00.71 |
 | Credential Pipeline | `PepperService` SPI + `InMemoryPepperService` + post-KDF HMAC-SHA-256 + key rotation (`RehashReason.PEPPER_KEY_ROTATED`) | Shipped / V00.71 |
 | Credential Pipeline | `SecretValue` (`AutoCloseable`, char[]-based, zeroed on close) | Shipped / V00.71 |
 | Credential Pipeline | Backwards compat: experimental `PasswordHasher` / `Pbkdf2PasswordHasher` / `PasswordHash` retained for V00.70 callers; no wire-format shim | Shipped / V00.71 (carve-out documented in §1/§7) |
@@ -58,7 +58,7 @@ Timestamp: 2026-06-04_09-31-57 Europe/Berlin (state after V00.71.00 release)
 | Compromised Passwords | `CompromisedPasswordChecker` SPI + sealed `CompromisedPasswordResult` (Clean / Pwned / CheckFailed) | Shipped / V00.71 |
 | Compromised Passwords | `NoOpCompromisedPasswordChecker` (sovereign default) + `LocalBlocklistCompromisedPasswordChecker` | Shipped / V00.71 |
 | Compromised Passwords | `CompromisedPasswordPolicy` + `CheckFailurePolicy` (ALLOW / WARN / BLOCK) — check on set/change only by default | Shipped / V00.71 |
-| Compromised Passwords | `security-credentials-hibp` opt-in module (JDK HttpClient, k-anonymity 5-char SHA-1 prefix; plaintext never leaves the JVM) | Shipped / V00.71 |
+| Compromised Passwords | `jSentinel-credentials-hibp` opt-in module (JDK HttpClient, k-anonymity 5-char SHA-1 prefix; plaintext never leaves the JVM) | Shipped / V00.71 |
 | Password History | `PasswordHistoryPolicy` (opt-in) + `PasswordHistoryService` + `PasswordHistoryStore` SPI + `InMemoryPasswordHistoryStore` | Shipped / V00.71 |
 | Tokens | Remember-me tokens | Store shipped |
 | Tokens | Store-backed remember-me service | Shipped |
@@ -121,7 +121,7 @@ Timestamp: 2026-06-04_09-31-57 Europe/Berlin (state after V00.71.00 release)
 | Demo | Vaadin REST-client demo | Shipped |
 | Demo | Standalone demo | Shipped |
 | Demo | Vaadin demo SetupView with V00.71 context-aware validator + compromised-password check | Shipped / V00.71 |
-| Testing | `security-test` module | Shipped |
+| Testing | `jSentinel-test` module | Shipped |
 | Testing | Fixtures and test helpers | Shipped |
 | Testing | Contract tests for stores | Shipped |
 | Testing | Mutation testing setup (`pitest-test-classes=com.svenruppert.*`) | Shipped / V00.70 (typo fix vs. V00.60) |
@@ -150,9 +150,9 @@ Timestamp: 2026-06-04_09-31-57 Europe/Berlin (state after V00.71.00 release)
 | V00.80 | OIDC / OAuth2 bridge | Planned |
 | V00.80 | Device management | Planned |
 | V00.80 | Risk-based authentication | Planned |
-| V00.80 | Password hardening with Argon2id | Delivered in V00.71 (`security-crypto-bc`) |
+| V00.80 | Password hardening with Argon2id | Delivered in V00.71 (`jSentinel-crypto-bc`) |
 | V00.80 | Pepper support | Delivered in V00.71 (`PepperService` + HMAC-SHA-256 post-KDF) |
-| V00.80 | Password blocklists | Delivered in V00.71 (`LocalBlocklistCompromisedPasswordChecker` + `security-credentials-hibp`) |
+| V00.80 | Password blocklists | Delivered in V00.71 (`LocalBlocklistCompromisedPasswordChecker` + `jSentinel-credentials-hibp`) |
 | V00.80 | Tamper-evident audit | Planned |
 | V00.80 | Audit hash chaining | Planned |
 | V00.80 | Signed audit batches | Planned |

@@ -8,7 +8,7 @@ Errors)
 ## Trigger
 
 - A CVE is published against a JCA provider or against the
-  BouncyCastle library used by `security-crypto-bc`.
+  BouncyCastle library used by `jSentinel-crypto-bc`.
 - A vendor advisory retracts a provider (revoked certification,
   validation revoked, etc.).
 - A supply-chain incident affects the provider artefact (account
@@ -25,7 +25,7 @@ Errors)
 ### 1. Identify scope (minutes)
 
 - Locate the affected provider in the SBOM:
-  - `bcprov-jdk18on` → `security-crypto-bc`
+  - `bcprov-jdk18on` → `jSentinel-crypto-bc`
   - JDK security provider → all credential operations
 - Decide whether the compromise affects integrity (output is
   wrong), confidentiality (output is leakable) or availability
@@ -37,7 +37,7 @@ Errors)
   - Pin the unaffected version in the consuming project's POM and
     redeploy.
   - If no fixed version is available, temporarily remove
-    `security-crypto-bc` from the classpath. The core falls back
+    `jSentinel-crypto-bc` from the classpath. The core falls back
     to PBKDF2 (JDK-only). Existing Argon2id / bcrypt / scrypt
     envelopes will fail verification cleanly — fall back to the
     reset flow (see `../../playbooks/reset-abuse.md` for guidance

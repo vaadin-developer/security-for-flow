@@ -29,7 +29,7 @@ unset, the default applies.
 | `security.bootstrap.token.file` | `SECURITY_BOOTSTRAP_TOKEN_FILE` | `./data/bootstrap.token` | filesystem path (used only in `PERSISTENT_FILE` mode) |
 | `security.bootstrap.token.ttl` | `SECURITY_BOOTSTRAP_TOKEN_TTL` | `PT24H` | ISO-8601 duration, e.g. `PT15M`, `PT12H` |
 
-Reading is centralized in `BootstrapConfigurationLoader` (security-core). The
+Reading is centralized in `BootstrapConfigurationLoader` (jSentinel-core). The
 demos call it with their own defaults — no duplicated property parsing.
 Invalid values fail fast with `IllegalArgumentException`.
 
@@ -44,7 +44,7 @@ running.
 
 ---
 
-## Library API (`security-core` / `com.svenruppert.jsentinel.bootstrap`)
+## Library API (`jSentinel-core` / `com.svenruppert.jsentinel.bootstrap`)
 
 | Type | Purpose |
 |---|---|
@@ -62,7 +62,7 @@ running.
 | `CreateInitialAdminCommand`, `InitialAdminCreationResult` | Service contract |
 | `InitialAdminBootstrapService` | Orchestrator: validate → check race → hash → create → invalidate token, all under a single `ReentrantLock` |
 
-### Other reusable security-core types extracted in this round
+### Other reusable jSentinel-core types extracted in this round
 
 | Type | Package | Purpose |
 |---|---|---|
@@ -72,7 +72,7 @@ running.
 | `RolePermissionResolver` | `authorization.api.permissions` | Merges permissions across multiple roles. |
 | `SecuredOperationDescriptor`, `SecuredOperationRegistry`, `OperationVisibilityService` | `authorization.api.operations` | Generic operation discovery. Demo-rest uses this for the `/api/operations` endpoint and stores `httpMethod`/`path` in the descriptor's `attributes`. |
 
-### REST adapter additions (`security-rest`)
+### REST adapter additions (`jSentinel-rest`)
 
 | Type | Purpose |
 |---|---|
@@ -138,8 +138,8 @@ mechanism in a different way:
 | `demo-vaadin` | In-JVM via `InitialAdminBootstrapService` | Single-tier app — Vaadin process owns the user store. See [`demo-vaadin.md`](demo-vaadin.md). |
 | `demo-vaadin-rest-client` | REST call to `POST /api/bootstrap/admin` against `demo-rest` | Two-tier app — separate REST backend owns the user store. See [`demo-vaadin-rest-client.md`](demo-vaadin-rest-client.md). |
 
-`BootstrapStatus` (in `security-core`) and `BootstrapRestStatusMapper`
-(in `security-rest`) are designed so both wirings reuse the same
+`BootstrapStatus` (in `jSentinel-core`) and `BootstrapRestStatusMapper`
+(in `jSentinel-rest`) are designed so both wirings reuse the same
 result types — no code duplication.
 
 ### 3. Vaadin `/setup` (`demo-vaadin`)

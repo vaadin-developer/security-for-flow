@@ -15,8 +15,8 @@ result is now a sealed type — the boolean-only shape of the
 experimental `PasswordHasher` is gone from new code paths.
 
 The release ships **two new reactor modules** —
-`security-crypto-bc` (BouncyCastle-backed Argon2id / bcrypt / scrypt
-providers) and `security-credentials-hibp` (HaveIBeenPwned k-anonymity
+`jSentinel-crypto-bc` (BouncyCastle-backed Argon2id / bcrypt / scrypt
+providers) and `jSentinel-credentials-hibp` (HaveIBeenPwned k-anonymity
 checker, JDK HttpClient only). Both are strictly opt-in; applications
 that do not depend on them never pull in BouncyCastle or perform
 outbound HTTP calls. The release also ships **four new sealed
@@ -28,7 +28,7 @@ outbound HTTP calls. The release also ships **four new sealed
 
 No production API was removed. The experimental
 `PasswordHasher` / `Pbkdf2PasswordHasher` / `PasswordHash` types
-remain in `security-core` so the V00.70 callers
+remain in `jSentinel-core` so the V00.70 callers
 (`StoreBackedRememberMeService`, the legacy
 `accountlifecycle.PasswordResetService`, `EmailVerificationService`)
 keep compiling. No compatibility shim translates between the old
@@ -39,14 +39,14 @@ carve-out matches Konzept-V00.71.00 §1 and §7.
 
 ## Highlights
 
-- **16 reactor modules** — `security-crypto-bc` and
-  `security-credentials-hibp` join as strictly opt-in V00.71 modules.
+- **16 reactor modules** — `jSentinel-crypto-bc` and
+  `jSentinel-credentials-hibp` join as strictly opt-in V00.71 modules.
 - **Phases 1a–5 complete on `develop`** (35 of 36 prompts; prompt 036
   is deliberately deferred):
   - **Phase 1a** — JDK-only PBKDF2 core with self-describing envelope,
     sealed verification results, dummy-KDF + KDF execution limiter.
   - **Phase 1b** — Argon2id, bcrypt, scrypt providers in
-    `security-crypto-bc` (BouncyCastle 1.78.1, lightweight API only,
+    `jSentinel-crypto-bc` (BouncyCastle 1.78.1, lightweight API only,
     no global JCA mutation).
   - **Phase 2** — `SecretValue` (`AutoCloseable`), Unicode-aware input
     hygiene, real HMAC-SHA-256 pepper with rotation, calibration
@@ -63,7 +63,7 @@ carve-out matches Konzept-V00.71.00 §1 and §7.
     SPI.
   - **Phase 5** — `CompromisedPasswordChecker` SPI + `NoOp` / Local
     blocklist defaults, optional new module
-    `security-credentials-hibp` (JDK HttpClient + k-anonymity SHA-1
+    `jSentinel-credentials-hibp` (JDK HttpClient + k-anonymity SHA-1
     prefix, plaintext never leaves the JVM); FIPS profile + JDK
     distribution trust + SBOM / PKCS#11 HSM docs; emergency
     playbooks (pepper / algorithm / provider compromise, reset
@@ -72,12 +72,12 @@ carve-out matches Konzept-V00.71.00 §1 and §7.
     credential policies (`TenantCredentialContext` +
     `TenantAware*Resolver`); ASVS V2 / NIST SP 800-63B / PWH
     traceability matrix and explicit gap tracking.
-- **No new runtime dependency in `security-core`** — BouncyCastle
-  lives only inside the opt-in `security-crypto-bc` module;
+- **No new runtime dependency in `jSentinel-core`** — BouncyCastle
+  lives only inside the opt-in `jSentinel-crypto-bc` module;
   HaveIBeenPwned lookups live only inside the opt-in
-  `security-credentials-hibp` module.
+  `jSentinel-credentials-hibp` module.
 - **No silent downgrade** — requesting the modern profile without
-  `security-crypto-bc` on the classpath fails fast at construction
+  `jSentinel-crypto-bc` on the classpath fails fast at construction
   (CWE-693).
 - **Generic perimeter responses** — every failure variant collapses to
   the generic public type (`PublicFailureType.INVALID_CREDENTIALS`);
@@ -93,23 +93,23 @@ carve-out matches Konzept-V00.71.00 §1 and §7.
 
 | Module | New in 00.71.00 | Headline |
 |---|:--:|---|
-| `security-core` | no | New `com.svenruppert.jsentinel.credential.*` packages (password hashing, envelope, policy, provider SPI, pepper, dummy, limiter, calibration, secret, input, store, lifecycle, change, token, reset, audit publisher, **abuse**, **compromised**, **emergency**, **history**, **metrics**, **standards**, **tenant**) + `JSentinelServiceResolver.setAuthenticationService` / `setAuthorizationService` parity setters |
-| `security-crypto-bc` | **yes** | Argon2id / bcrypt / scrypt providers, `BouncyCastleHashingServices.modern()`, ServiceLoader registration |
-| `security-credentials-hibp` | **yes** | HaveIBeenPwned k-anonymity online checker (JDK HttpClient only — no extra runtime deps); strictly opt-in |
-| `security-vaadin` | no | unchanged |
-| `security-rest` | no | unchanged |
-| `security-standalone` | no | unchanged |
-| `security-test` | no | unchanged |
-| `security-processor` | no | unchanged |
-| `security-persistence-testkit` | no | unchanged |
-| `security-persistence-eclipsestore` | no | unchanged |
+| `jSentinel-core` | no | New `com.svenruppert.jsentinel.credential.*` packages (password hashing, envelope, policy, provider SPI, pepper, dummy, limiter, calibration, secret, input, store, lifecycle, change, token, reset, audit publisher, **abuse**, **compromised**, **emergency**, **history**, **metrics**, **standards**, **tenant**) + `JSentinelServiceResolver.setAuthenticationService` / `setAuthorizationService` parity setters |
+| `jSentinel-crypto-bc` | **yes** | Argon2id / bcrypt / scrypt providers, `BouncyCastleHashingServices.modern()`, ServiceLoader registration |
+| `jSentinel-credentials-hibp` | **yes** | HaveIBeenPwned k-anonymity online checker (JDK HttpClient only — no extra runtime deps); strictly opt-in |
+| `jSentinel-vaadin` | no | unchanged |
+| `jSentinel-rest` | no | unchanged |
+| `jSentinel-standalone` | no | unchanged |
+| `jSentinel-test` | no | unchanged |
+| `jSentinel-processor` | no | unchanged |
+| `jSentinel-persistence-testkit` | no | unchanged |
+| `jSentinel-persistence-eclipsestore` | no | unchanged |
 | `demo-rest-shared` | no | unchanged |
 | `demo-vaadin` | no | `BootstrapWiring` now uses `PasswordHashingService`; `SetupView` pre-flights `ContextAwarePasswordValidator` + `LocalBlocklistCompromisedPasswordChecker` |
 | `demo-rest` | no | `DemoUserStore` + bootstrap now use `PasswordHashingService` and `verifyAgainstNothing`; `DemoHandlers.login` consults `AbuseDetectionService`; `createUser` rejects blocklisted passwords |
 | `demo-vaadin-rest-client` | no | unchanged |
 | `demo-standalone` | no | unchanged |
 
-Reactor module count: **16** (was 14 in 00.70.00; +`security-crypto-bc` and +`security-credentials-hibp`).
+Reactor module count: **16** (was 14 in 00.70.00; +`jSentinel-crypto-bc` and +`jSentinel-credentials-hibp`).
 
 ---
 
@@ -164,7 +164,7 @@ Reactor module count: **16** (was 14 in 00.70.00; +`security-crypto-bc` and +`se
 
 ### Phase 1b — Optional BouncyCastle module
 
-`security-crypto-bc` introduces the
+`jSentinel-crypto-bc` introduces the
 `com.svenruppert.jsentinel.credential.password.bouncycastle.*`
 package tree:
 
@@ -366,20 +366,20 @@ and §7 cover the carve-out.
 ```xml
 <dependency>
   <groupId>com.svenruppert</groupId>
-  <artifactId>security-core</artifactId>
+  <artifactId>jSentinel-core</artifactId>
   <version>00.71.00</version>
 </dependency>
 
 <!-- Optional opt-in for the modern profile -->
 <dependency>
   <groupId>com.svenruppert</groupId>
-  <artifactId>security-crypto-bc</artifactId>
+  <artifactId>jSentinel-crypto-bc</artifactId>
   <version>00.71.00</version>
 </dependency>
 ```
 
-`security-crypto-bc` is the only new third-party-dependency module
-(`org.bouncycastle:bcprov-jdk18on:1.78.1`). `security-core` stays
+`jSentinel-crypto-bc` is the only new third-party-dependency module
+(`org.bouncycastle:bcprov-jdk18on:1.78.1`). `jSentinel-core` stays
 JDK-only.
 
 ---
@@ -426,25 +426,25 @@ Per-module PIT result measured on `develop` after V00.71.00:
 
 | Module                              | Line | Mutation | Test strength | Mutations  |
 |-------------------------------------|-----:|---------:|--------------:|-----------:|
-| `security-core`                     | 92%  | **87%**  | 91%           | 1901/2196  |
-| `security-vaadin`                   | 87%  | **79%**  | 92%           | 242/305    |
-| `security-rest`                     | 94%  | **95%**  | 95%           | 86/91      |
-| `security-standalone`               | 94%  | **97%**  | 97%           | 33/34      |
-| `security-processor`                | 100% | **82%**  | 82%           | 23/28      |
-| `security-persistence-eclipsestore` | 92%  | **70%**  | 72%           | 231/328    |
-| `security-crypto-bc` *(new V00.71)* | 86%  | **61%**  | 68%           | 110/181    |
-| `security-credentials-hibp` *(new V00.71)* | 67%  | **53%**  | 68%           | 39/74      |
+| `jSentinel-core`                     | 92%  | **87%**  | 91%           | 1901/2196  |
+| `jSentinel-vaadin`                   | 87%  | **79%**  | 92%           | 242/305    |
+| `jSentinel-rest`                     | 94%  | **95%**  | 95%           | 86/91      |
+| `jSentinel-standalone`               | 94%  | **97%**  | 97%           | 33/34      |
+| `jSentinel-processor`                | 100% | **82%**  | 82%           | 23/28      |
+| `jSentinel-persistence-eclipsestore` | 92%  | **70%**  | 72%           | 231/328    |
+| `jSentinel-crypto-bc` *(new V00.71)* | 86%  | **61%**  | 68%           | 110/181    |
+| `jSentinel-credentials-hibp` *(new V00.71)* | 67%  | **53%**  | 68%           | 39/74      |
 
-Delta vs. V00.70: `security-core` jumped from 86% (1191/1381) to
+Delta vs. V00.70: `jSentinel-core` jumped from 86% (1191/1381) to
 **87% (1901/2196)** — the V00.71 prompts added 813 mutations
 to the surface, of which the V00.71 test work kills 710 (~87%).
-The five untouched modules (`security-vaadin`, `security-rest`,
-`security-standalone`, `security-processor`,
-`security-persistence-eclipsestore`) are at the same numbers as
+The five untouched modules (`jSentinel-vaadin`, `jSentinel-rest`,
+`jSentinel-standalone`, `jSentinel-processor`,
+`jSentinel-persistence-eclipsestore`) are at the same numbers as
 V00.70. The two new V00.71 modules ship at 61% / 53% — first-PIT
 profile, dominated by parameter-validator boolean-guard survivors
-in `security-crypto-bc` and HTTP-response edge-case branches in
-`security-credentials-hibp`. Targeted uplift is tracked as a
+in `jSentinel-crypto-bc` and HTTP-response edge-case branches in
+`jSentinel-credentials-hibp`. Targeted uplift is tracked as a
 follow-up alongside the V00.72 release.
 
 Reports for each module land under

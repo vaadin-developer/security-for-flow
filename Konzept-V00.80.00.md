@@ -415,7 +415,7 @@ Ziele:
 ### 12. CSRF- und Web-Adapter-Hardening
 
 Die Feature-Ideen nach `v00.60.00` nennen CSRF-Schutz für
-`security-vaadin` und `security-rest`. Dieser Punkt passt in den
+`jSentinel-vaadin` und `jSentinel-rest`. Dieser Punkt passt in den
 High-Security-Scope, weil er adapter- und deploymentabhängig ist und
 saubere Defaults braucht.
 
@@ -547,7 +547,7 @@ optionalen externen Abhängigkeiten einführen.
 - Keine harte Cloud-Provider-Bindung.
 - Kein Quarkus-Adapter als Kernziel, solange Policy/Persistence/Identity
   APIs nicht stabil sind.
-- Kein eigenes `security-javafx`, solange `security-standalone` die
+- Kein eigenes `security-javafx`, solange `jSentinel-standalone` die
   benötigten Desktop-Flows ausreichend abdeckt.
 
 ## Ergebnisbild

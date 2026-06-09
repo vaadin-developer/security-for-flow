@@ -22,7 +22,7 @@ REST/Vaadin/Standalone-Adapter und Demo-UIs. `v00.70.00` soll darauf
 aufbauen und die produktiven Integrationspunkte schärfen.
 
 Der Feature-Katalog `FEATURES.md` beschreibt `00.60.00` als Stand mit
-zehn Reactor-Modulen, einschließlich `security-standalone` und
+zehn Reactor-Modulen, einschließlich `jSentinel-standalone` und
 `demo-standalone`. Für `v00.70.00` ist deshalb wichtig, vorhandene
 Adapter nicht umzubauen, sondern ihre gemeinsamen Erweiterungspunkte
 zu stärken: Policies, Persistenz, aktive Sessions und
@@ -129,9 +129,9 @@ eine explizite Persistence API.
 
 Regel:
 
-- `security-core` enthält nur fachliche Interfaces, Records, Queries
+- `jSentinel-core` enthält nur fachliche Interfaces, Records, Queries
   und Defaults.
-- `security-persistence-eclipsestore` enthält Eclipse-Store-spezifische
+- `jSentinel-persistence-eclipsestore` enthält Eclipse-Store-spezifische
   Root-Objekte, StorageManager-Integration und konkrete Stores.
 - Klassen wie `EclipseStoreJSentinelRoot` sind adapterinterne
   Implementierungsdetails.
@@ -463,7 +463,7 @@ security-quarkus
 
 ## Akzeptanzkriterien
 
-- `security-core` enthält keine Eclipse-Store-Abhängigkeit.
+- `jSentinel-core` enthält keine Eclipse-Store-Abhängigkeit.
 - Kein öffentlicher API-Typ heißt `JSentinelRoot`.
 - Eclipse-Store-Root-Klassen liegen ausschließlich im
   Eclipse-Store-Modul.
@@ -492,7 +492,7 @@ security-quarkus
 - Kein Quarkus-Adapter als Pflichtumfang; er bleibt ein optionales
   späteres Integrationsmodul.
 - Kein `security-javafx` als eigenes Ziel. `FEATURES.md` hält fest,
-  dass `security-standalone` Swing, JavaFX und CLI funktional bereits
+  dass `jSentinel-standalone` Swing, JavaFX und CLI funktional bereits
   abdeckt.
 
 ## Ergebnisbild

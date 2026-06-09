@@ -7,28 +7,28 @@ Repositories in eine bestehende Zielanwendung.
 
 Die Security-Bibliothek besteht aktuell aus:
 
-- `security-core`: Framework-neutrale Security-Typen, SPI-Vertraege,
+- `jSentinel-core`: Framework-neutrale Security-Typen, SPI-Vertraege,
   Annotationen, Rollen-/Permission-Helfer, Bootstrap-Logik und
   adapterneutrale Decisions.
-- `security-rest`: REST-Adapter mit `RestRequest`, `RestResponse`,
+- `jSentinel-rest`: REST-Adapter mit `RestRequest`, `RestResponse`,
   `RestSubjectResolver`, `BearerTokenExtractor`,
   `RestAuthenticationFilter`, `RestAuthorizationFilter`,
   `BodyRestRequest` und HTTP-Status-Mapping.
-- `security-vaadin`: Vaadin-Flow-Adapter mit `LoginView`,
+- `jSentinel-vaadin`: Vaadin-Flow-Adapter mit `LoginView`,
   `LoginListener`, `VaadinSessionSubjectStore`, `AuthorizationListener`,
   `VaadinAccessDecisionMapper` und
   `VaadinNavigationAccessDecisionMapper`.
-- `security-standalone`: Plain-Java-Adapter fuer CLI- / Desktop- /
+- `jSentinel-standalone`: Plain-Java-Adapter fuer CLI- / Desktop- /
   Daemon-Anwendungen mit `ThreadLocalSubjectStore`,
   `StandaloneLoginFlow` und `SecuredProxy.wrap(Interface, impl)`
   (JDK-Dynamic-Proxy, routet ueber `JSentinelEnforcer`).
-- `security-processor`: Compile-Time-Annotation-Processor. Erzeugt
+- `jSentinel-processor`: Compile-Time-Annotation-Processor. Erzeugt
   `<Type>Secured`-Subklassen fuer `@Secured`-annotierte konkrete
   Klassen. Wird im konsumierenden Modul als
   `<annotationProcessorPath>` eingebunden (nicht als
   Compile-Dependency). Beide Pfade — `SecuredProxy.wrap(...)` und der
   generierte Wrapper — landen im selben `JSentinelEnforcer`.
-- `security-test`: Wiederverwendbare Test-Fixtures (Fakes, In-Memory-
+- `jSentinel-test`: Wiederverwendbare Test-Fixtures (Fakes, In-Memory-
   SubjectStore, RecordingAuditSink, JUnit-5-Extension). Konsumiert per
   `<scope>test</scope>`.
 - `demo-rest`: Referenz fuer REST-seitige Benutzer, Rollen, Permissions,
@@ -53,7 +53,7 @@ Vertrauensgrenze ist:
 1. Der REST-Service authentifiziert Benutzer.
 2. Der REST-Service loest Tokens zu `JSentinelSubject` auf.
 3. Der REST-Service schuetzt alle fachlichen Endpunkte serverseitig mit
-   `security-rest`.
+   `jSentinel-rest`.
 4. Der REST-Service liefert fuer die UI nur die Operationen/Aktionen aus,
    die der aktuelle Benutzer sehen oder ausfuehren darf.
 5. Die Vaadin-UI nutzt diese REST-Endpunkte nur zur Darstellung und zur
@@ -71,7 +71,7 @@ REST-Service:
 ```xml
 <dependency>
   <groupId>com.svenruppert</groupId>
-  <artifactId>security-rest</artifactId>
+  <artifactId>jSentinel-rest</artifactId>
   <version>00.60.01-SNAPSHOT</version>
 </dependency>
 ```
@@ -81,13 +81,13 @@ Vaadin-UI:
 ```xml
 <dependency>
   <groupId>com.svenruppert</groupId>
-  <artifactId>security-vaadin</artifactId>
+  <artifactId>jSentinel-vaadin</artifactId>
   <version>00.60.01-SNAPSHOT</version>
 </dependency>
 ```
 
-`security-core` wird transitiv eingebunden. Fuehre keine direkte
-Abhaengigkeit zwischen `security-vaadin` und `security-rest` ein. Beide
+`jSentinel-core` wird transitiv eingebunden. Fuehre keine direkte
+Abhaengigkeit zwischen `jSentinel-vaadin` und `jSentinel-rest` ein. Beide
 Adapter bleiben getrennt; die Anwendung verbindet sie ueber REST-Clients
 und eigene Application-Services.
 
@@ -111,7 +111,7 @@ public enum AppPermission {
 ```
 
 Nutze `RoleName`, `PermissionName`, `StaticRolePermissionMapping`,
-`RolePermissionMapping` und `RolePermissionResolver` aus `security-core`,
+`RolePermissionMapping` und `RolePermissionResolver` aus `jSentinel-core`,
 um Rollen auf Permissions abzubilden.
 
 ### 2. JSentinelSubject als reduziertes REST-Security-Modell verwenden
@@ -219,7 +219,7 @@ Sie rendert nur die vom REST-Service gelieferten Operationen.
 ### 7. Bootstrap ueber REST fuehren
 
 Falls die Zielanwendung initial ohne Administrator startet, verwende die
-Bootstrap-Typen aus `security-core`:
+Bootstrap-Typen aus `jSentinel-core`:
 
 - `BootstrapConfigurationLoader`
 - `BootstrapStateService`
@@ -388,7 +388,7 @@ META-INF/services/com.svenruppert.jsentinel.authorization.LoginListener
 Nur genau eine Implementierung pro SPI registrieren. Die Resolver schlagen
 absichtlich fehl, wenn mehrere Implementierungen gefunden werden.
 
-`SubjectStore` kommt aus `security-vaadin`:
+`SubjectStore` kommt aus `jSentinel-vaadin`:
 
 ```text
 com.svenruppert.jsentinel.authorization.vaadin.VaadinSessionSubjectStore
@@ -435,7 +435,7 @@ Die Integration ist erst fertig, wenn:
   Rollen-/Permission-Matrix besitzt.
 - Alle fachlichen Operationen serverseitig im REST-Service geschuetzt sind.
 - Vaadin-View-Schutz nur Navigation und Darstellung absichert.
-- `security-vaadin` und `security-rest` nicht direkt voneinander abhaengen.
+- `jSentinel-vaadin` und `jSentinel-rest` nicht direkt voneinander abhaengen.
 - SPI-Dateien genau eine Implementierung pro Service enthalten.
 - Keine Passwoerter, Tokens, Bootstrap-Tokens oder Hashes geloggt werden.
 - Tests die Faelle 200, 401 und 403 explizit abdecken.
@@ -445,6 +445,6 @@ Die Integration ist erst fertig, wenn:
 
 Behandle die Vaadin-UI als untrusted Client mit Server-Rendering. Alles,
 was fachlich geschuetzt werden muss, gehoert in den REST-Service und muss
-dort mit `security-rest` autorisiert werden. Die UI kann Rechte anzeigen,
+dort mit `jSentinel-rest` autorisiert werden. Die UI kann Rechte anzeigen,
 verstecken und Navigation lenken, aber sie ist niemals die finale
 Security-Entscheidungsinstanz.

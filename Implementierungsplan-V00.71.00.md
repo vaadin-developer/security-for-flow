@@ -18,7 +18,7 @@ The plan deliberately avoids a single large implementation step. Instead, it dec
 
 The implementation strategy follows the central v9 decisions:
 
-- no runtime dependencies in `security-core`,
+- no runtime dependencies in `jSentinel-core`,
 - no custom cryptographic primitives,
 - no silent cryptographic downgrade,
 - explicit result objects instead of primitive boolean-only verification,
@@ -84,7 +84,7 @@ The first implementation step must not include:
 
 Every implementation prompt must repeat and enforce these invariants:
 
-1. **No runtime dependencies in `security-core`.**
+1. **No runtime dependencies in `jSentinel-core`.**
 2. **No custom cryptographic primitives.** Use JDK/JCA/JCE or optional provider libraries only.
 3. **No primitive boolean as the sole verification result.**
 4. **No global JCA provider reordering as a framework default.**
@@ -103,10 +103,10 @@ Every implementation prompt must repeat and enforce these invariants:
 
 | Module | Purpose | Runtime dependency policy | Implementation phase |
 |---|---|---:|---:|
-| `security-core` | Core SPI, password hash envelope, validator, PBKDF2 provider, policy, result objects, dummy verification, credential lifecycle contracts | no new runtime dependency | Phase 1a onward |
-| `security-crypto-bc` | Optional Argon2id, bcrypt and scrypt providers | `bcprov` allowed | Phase 1b |
+| `jSentinel-core` | Core SPI, password hash envelope, validator, PBKDF2 provider, policy, result objects, dummy verification, credential lifecycle contracts | no new runtime dependency | Phase 1a onward |
+| `jSentinel-crypto-bc` | Optional Argon2id, bcrypt and scrypt providers | `bcprov` allowed | Phase 1b |
 | `security-crypto-bcfips` | Optional FIPS-aware profile/provider integration | certified provider only | Phase 5 or later |
-| `security-credentials-hibp` | Optional k-anonymity compromised-password checker | JDK `HttpClient` only unless later justified | Phase 5 |
+| `jSentinel-credentials-hibp` | Optional k-anonymity compromised-password checker | JDK `HttpClient` only unless later justified | Phase 5 |
 | `security-credentials-recovery` | Optional reset/recovery implementation module if not kept core-near | no mandatory external dependency | Phase 3 |
 | `security-credentials-abuse` | Optional abuse detection implementation | no mandatory external dependency | Phase 4 |
 | `security-credentials-import` | Deferred Brownfield foreign hash import | depends on import source | Deferred |
@@ -123,7 +123,7 @@ Every implementation prompt must repeat and enforce these invariants:
 | M2 | Phase 1a | Implement JDK-only hashing path | PBKDF2 provider, policy, verification pipeline |
 | M3 | Phase 1a | Harden failure behaviour | dummy verification, generic failures, KDF concurrency limiter |
 | M4 | Phase 1a | Integrate with existing flows | bootstrap and demos use new architecture |
-| M5 | Phase 1b | Add optional modern providers | `security-crypto-bc`, Argon2id, bcrypt, scrypt |
+| M5 | Phase 1b | Add optional modern providers | `jSentinel-crypto-bc`, Argon2id, bcrypt, scrypt |
 | M6 | Phase 2 | Add secret and pepper capabilities | `SecretValue`, real pepper, rotation, input hygiene |
 | M7 | Phase 3 | Add lifecycle and reset foundation | credential store, lifecycle, reset, token digest service |
 | M8 | Phase 4 | Add abuse and policy intelligence | abuse detection, context-aware password policy, password history |
@@ -423,7 +423,7 @@ Every implementation prompt must repeat and enforce these invariants:
 
 ## 7. Phase 1b – Optional BouncyCastle Module
 
-**Goal:** Provide opt-in modern password hashing providers while keeping `security-core` dependency-free.
+**Goal:** Provide opt-in modern password hashing providers while keeping `jSentinel-core` dependency-free.
 
 **V9 feature coverage:**
 
@@ -435,7 +435,7 @@ Every implementation prompt must repeat and enforce these invariants:
 
 ### 7.1 Prompt 009 – BouncyCastle Module Setup
 
-**Objective:** Add `security-crypto-bc` as optional Maven module.
+**Objective:** Add `jSentinel-crypto-bc` as optional Maven module.
 
 **Implement:**
 
@@ -447,13 +447,13 @@ Every implementation prompt must repeat and enforce these invariants:
 
 **Do not implement yet:** actual Argon2id/bcrypt/scrypt providers.
 
-**Tests:** module builds independently; `security-core` still has no runtime dependency.
+**Tests:** module builds independently; `jSentinel-core` still has no runtime dependency.
 
 ---
 
 ### 7.2 Prompt 010 – Argon2id Provider
 
-**Objective:** Implement Argon2id provider in `security-crypto-bc`.
+**Objective:** Implement Argon2id provider in `jSentinel-crypto-bc`.
 
 **Implement:**
 
@@ -834,7 +834,7 @@ Every implementation prompt must repeat and enforce these invariants:
 
 **Implement:**
 
-- `security-credentials-hibp`,
+- `jSentinel-credentials-hibp`,
 - JDK `HttpClient` integration,
 - timeout and failure policy,
 - opt-in configuration,
@@ -1005,7 +1005,7 @@ feature/00-71-00-003-policy-validator
 Recommended review rules:
 
 1. No PR should mix unrelated phases.
-2. No PR should introduce optional dependencies into `security-core`.
+2. No PR should introduce optional dependencies into `jSentinel-core`.
 3. Every PR must include tests.
 4. Every PR must include JavaDoc or documentation for security-sensitive behaviour.
 5. Every PR must state which PWH IDs it implements.
@@ -1018,7 +1018,7 @@ Recommended review rules:
 
 ### Phase 1a acceptance
 
-- `security-core` has no new runtime dependency.
+- `jSentinel-core` has no new runtime dependency.
 - New password hashing architecture exists.
 - PBKDF2 hashes can be created and verified using the new envelope.
 - No primitive boolean-only verification API is required.
@@ -1029,7 +1029,7 @@ Recommended review rules:
 
 ### Phase 1b acceptance
 
-- Optional `security-crypto-bc` module builds.
+- Optional `jSentinel-crypto-bc` module builds.
 - Argon2id, bcrypt and scrypt providers are available through SPI.
 - Modern profile can select Argon2id.
 - Missing BC provider fails fast when configured.
@@ -1176,9 +1176,9 @@ Legend: ✓ done (signed commit on `develop`) · ⧗ in progress · · pending.
 
 ### Module footprint after Prompt 025
 
-- New runtime artifact: `security-crypto-bc` (BouncyCastle 1.78.1, optional opt-in module).
-- `security-core` runtime dependencies: unchanged from V00.70.00 — no new runtime deps.
-- New `security-core` packages under `com.svenruppert.jsentinel.credential`:
+- New runtime artifact: `jSentinel-crypto-bc` (BouncyCastle 1.78.1, optional opt-in module).
+- `jSentinel-core` runtime dependencies: unchanged from V00.70.00 — no new runtime deps.
+- New `jSentinel-core` packages under `com.svenruppert.jsentinel.credential`:
   - `credential` (CredentialType, PublicFailureType, InternalAuditEventType)
   - `credential.password` (PasswordHashResult, CredentialVerificationResult,
     RehashDecision, ProviderVerificationResult, PasswordHashingService,
@@ -1212,7 +1212,7 @@ and `LoggingAuditSink` were extended to match.
 ### Backwards compatibility carve-outs
 
 The experimental `PasswordHasher` / `Pbkdf2PasswordHasher` / `PasswordHash`
-classes are still present in `security-core` for Phase-3-bound callers
+classes are still present in `jSentinel-core` for Phase-3-bound callers
 (`StoreBackedRememberMeService`, the legacy `accountlifecycle.PasswordResetService`,
 `EmailVerificationService`). No compatibility shim translates between
 the old `pbkdf2$…` wire format and the new `$pwh$v=1$…` envelope —

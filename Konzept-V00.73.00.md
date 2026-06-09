@@ -20,10 +20,10 @@ Status: Architektur- und Umsetzungskonzept
 
 Begleitend werden zwei kleinere V00.72-Carve-outs nachgezogen:
 
-3. **Wrapper-Index-Writer.** `security-processor` schreibt die in V00.72 nur lesbare `META-INF/jsentinel/generated-wrappers.idx`. Damit funktioniert die `JSentinelDiagnostics`-Wrapper-Erkennung end-to-end.
+3. **Wrapper-Index-Writer.** `jSentinel-processor` schreibt die in V00.72 nur lesbare `META-INF/jsentinel/generated-wrappers.idx`. Damit funktioniert die `JSentinelDiagnostics`-Wrapper-Erkennung end-to-end.
 4. **`SecuredUi.requiresPolicy(...)`.** Der V00.72-Builder warf bei diesem Aufruf `UnsupportedOperationException`. V00.73 verdrahtet ihn gegen `PolicyRegistry`.
 
-Der Kern (`security-core`) bekommt keinen neuen Runtime-Dependency-Eintrag. `security-processor` erhält additive Metadaten-Ausgabe; die proxybuilder-Generierungs-Semantik bleibt unverändert.
+Der Kern (`jSentinel-core`) bekommt keinen neuen Runtime-Dependency-Eintrag. `jSentinel-processor` erhält additive Metadaten-Ausgabe; die proxybuilder-Generierungs-Semantik bleibt unverändert.
 
 V00.73 ändert keine bestehenden Core-SPIs. Wo der aktuelle Quellstand keinen passenden `JSentinelServiceResolver`-Setter besitzt, wird der Sub-Builder zunächst über `BootstrapState`, `JSentinelRuntime` und adapter-spezifische Verdrahtung wirksam. Ein neuer Core-Setter ist nur zulässig, wenn er als eigene Scope-Entscheidung dokumentiert und getestet wird.
 
@@ -49,10 +49,10 @@ V00.75 (Security Event Bus) und V00.80 (MFA, OIDC, Hardening) bauen darauf auf.
 - **Adapter-Symmetrie**: REST und Standalone bekommen wo sinnvoll dieselben Sub-Builder; Vaadin-spezifische Erweiterungen (`SessionManagementView`-Aktivierung, `VaadinSessionSubjectStore`-Auto-Wiring) werden konsumiert.
 - **`SecuredUi.requiresPolicy(...)`** integriert mit `PolicyRegistry`.
 - **`@SecureRoute(policy=...)`** integriert mit `PolicyRegistry` (V00.72 schlug Forbidden vor; V00.73 evaluiert echt).
-- **`SecureRouteDiscovery`-SPI** in `security-vaadin-starter` als opt-in (`.discoverSecureRoutes(true)` auf `VaadinJSentinelBootstrap`). Default-Implementierung `VaadinRouterSecureRouteDiscovery` in `security-dx-vaadin` scannt `RouteConfiguration.getAvailableRoutes()`. Ohne Opt-in bleibt das V00.72-Runtime-Verhalten unverändert. Siehe §8.5.
-- **`security-processor`-Wrapper-Index-Writer**: `META-INF/jsentinel/generated-wrappers.idx` wird beim Compile-Time-Wrapper-Generieren emittiert.
+- **`SecureRouteDiscovery`-SPI** in `jSentinel-vaadin-starter` als opt-in (`.discoverSecureRoutes(true)` auf `VaadinJSentinelBootstrap`). Default-Implementierung `VaadinRouterSecureRouteDiscovery` in `jSentinel-dx-vaadin` scannt `RouteConfiguration.getAvailableRoutes()`. Ohne Opt-in bleibt das V00.72-Runtime-Verhalten unverändert. Siehe §8.5.
+- **`jSentinel-processor`-Wrapper-Index-Writer**: `META-INF/jsentinel/generated-wrappers.idx` wird beim Compile-Time-Wrapper-Generieren emittiert.
 - **Gezielte Stable-API-Promotion**: Entfernen von `@ExperimentalJSentinelApi` nur nach Typ-Audit und nur für Typen, deren Semantik nach V00.73 stabil ist.
-- **`security-dx-test`-Modul nur dann, wenn während der Implementierung ein konkreter Cross-Module-Reuse-Fall auftritt.** Bis dahin: DX-typisierte Test-Helpers leben in `security-dx/src/test/java/.../testsupport/` und werden über Maven-Test-Jar (`<scope>test</scope>` + `<classifier>tests</classifier>`) für andere V00.72/V00.73-Module zugänglich gemacht. Erst wenn eine Demo oder ein externer Konsument diese Helper braucht, rechtfertigt das ein eigenes Modul.
+- **`jSentinel-dx-test`-Modul nur dann, wenn während der Implementierung ein konkreter Cross-Module-Reuse-Fall auftritt.** Bis dahin: DX-typisierte Test-Helpers leben in `jSentinel-dx/src/test/java/.../testsupport/` und werden über Maven-Test-Jar (`<scope>test</scope>` + `<classifier>tests</classifier>`) für andere V00.72/V00.73-Module zugänglich gemacht. Erst wenn eine Demo oder ein externer Konsument diese Helper braucht, rechtfertigt das ein eigenes Modul.
 - **STRICT-Mode-Regeln** für die neuen Sub-Builder (z. B. `STRICT` + `.sessions(s -> s.storeBacked(null))` → `JSentinelBootstrapException`).
 - **Dokumentations-Update**: 5-Minute-Setup-Dateien zeigen den vollständigen Fluent-Pfad statt der V00.72-Mischform.
 - **Acceptance-Kriterium**: `demo-vaadin-rest-client/DemoPolicyInitListener.registerDemoPolicies()` verschwindet — die Policy-Registrierung passiert vollständig im `.policies(...)`-Lambda.
@@ -101,7 +101,7 @@ Eine V00.72-Anwendung mit `mode(STRICT)` und einer dieser Warnings hat sich bish
 
 1. **Additiv über V00.72.** Bestehende Setup-Pfade (direkt auf `JSentinelServiceResolver.setXxx(...)` oder `.xxxRegistry()`) bleiben gleichwertig nutzbar. Sub-Builder-Wiring ersetzt sie nicht, sondern bietet einen alternativen Pfad.
 
-2. **Kein neuer Runtime-Dependency-Eintrag im Kern.** `security-core` bleibt dependency-stabil. Sub-Builder-Wiring verwendet bevorzugt bestehende `JSentinelServiceResolver`-Setter. Fehlt ein Setter, bleibt die Verdrahtung in `security-dx` / Adapter-DX oder wird als separate Core-SPI-Erweiterung entschieden.
+2. **Kein neuer Runtime-Dependency-Eintrag im Kern.** `jSentinel-core` bleibt dependency-stabil. Sub-Builder-Wiring verwendet bevorzugt bestehende `JSentinelServiceResolver`-Setter. Fehlt ein Setter, bleibt die Verdrahtung in `jSentinel-dx` / Adapter-DX oder wird als separate Core-SPI-Erweiterung entschieden.
 
 3. **Sub-Builder-Methoden sind explizit typisiert.** Statt der V00.72-Placeholder-Methoden (`.ringBuffer()`, `.timeout(Duration)`, `.register(Object)`, …) bekommen die fünf Sub-Builder konkrete Methoden für jede V00.70/V00.71-Service-Variante.
 
@@ -111,7 +111,7 @@ Eine V00.72-Anwendung mit `mode(STRICT)` und einer dieser Warnings hat sich bish
 
 6. **Stable-API-Promotion ist ein Versprechen.** Sobald `@ExperimentalJSentinelApi` entfernt ist, gilt SemVer: Breaking Changes nur in Major-Bumps. V00.73 prüft jede V00.72-Public-Surface darauf, ob sie nach dem echten Wiring stabil ist. Die Promotion ist kein Prozentziel, sondern eine Typ-für-Typ-Entscheidung.
 
-7. **`security-processor` bleibt fokussiert.** Der Wrapper-Index-Writer ist additive Metadaten-Ausgabe. Die `proxybuilder`-basierte Generierung bleibt byte-für-byte identisch zu V00.72.
+7. **`jSentinel-processor` bleibt fokussiert.** Der Wrapper-Index-Writer ist additive Metadaten-Ausgabe. Die `proxybuilder`-basierte Generierung bleibt byte-für-byte identisch zu V00.72.
 
 8. **Migration ist optional, nicht zwingend.** V00.72-Konsumenten, die direkt auf `JSentinelServiceResolver` setzen, müssen nichts ändern. V00.73 bietet einen besseren Pfad — Adoption bleibt Sache des Konsumenten.
 
@@ -131,29 +131,29 @@ Eine V00.72-Anwendung mit `mode(STRICT)` und einer dieser Warnings hat sich bish
 
 ## 5. Modulstrategie
 
-V00.73 erweitert sechs bestehende Module und fügt **kein neues Pflichtmodul** hinzu. Ein optionales `security-dx-test`-Modul kann später nachgezogen werden, wenn Demo-/Konsumenten-Tests den Bedarf konkret zeigen — bis dahin liefert `security-dx` seine Test-Helpers über das Maven-Test-Jar (`<classifier>tests</classifier>`).
+V00.73 erweitert sechs bestehende Module und fügt **kein neues Pflichtmodul** hinzu. Ein optionales `jSentinel-dx-test`-Modul kann später nachgezogen werden, wenn Demo-/Konsumenten-Tests den Bedarf konkret zeigen — bis dahin liefert `jSentinel-dx` seine Test-Helpers über das Maven-Test-Jar (`<classifier>tests</classifier>`).
 
 | Modul | V00.72-Status | V00.73-Änderung |
 |---|---|---|
-| `security-dx` | DX-Core | Sub-Builder-Surface stark erweitert (echte Methoden statt Platzhalter), `BootstrapState` in Sub-Aggregate aufgeteilt (`AuditState`, `SessionState`, `PolicyState`, `RoleState`, `CredentialState`), damit sie kein Gott-Objekt wird |
-| `security-dx-vaadin` | Vaadin-Bootstrap | `SessionManagementView`-Flag aktiviert echte View-Registrierung; `VaadinSessionSubjectStore`-Auto-Wiring |
-| `security-dx-rest` | REST-Bootstrap | Sub-Builder konsumieren Audit / Session / Policy für REST-Pfad |
-| `security-dx-standalone` | Standalone-Bootstrap | Sub-Builder konsumieren Audit / Session / Policy für Standalone-Pfad |
-| `security-vaadin-starter` | Starter | `SecuredUi.requiresPolicy(...)` echt; `@SecureRoute(policy=...)` über PolicyRegistry evaluiert |
-| `security-processor` | Wrapper-Generierung | Wrapper-Index-Writer ergänzt |
+| `jSentinel-dx` | DX-Core | Sub-Builder-Surface stark erweitert (echte Methoden statt Platzhalter), `BootstrapState` in Sub-Aggregate aufgeteilt (`AuditState`, `SessionState`, `PolicyState`, `RoleState`, `CredentialState`), damit sie kein Gott-Objekt wird |
+| `jSentinel-dx-vaadin` | Vaadin-Bootstrap | `SessionManagementView`-Flag aktiviert echte View-Registrierung; `VaadinSessionSubjectStore`-Auto-Wiring |
+| `jSentinel-dx-rest` | REST-Bootstrap | Sub-Builder konsumieren Audit / Session / Policy für REST-Pfad |
+| `jSentinel-dx-standalone` | Standalone-Bootstrap | Sub-Builder konsumieren Audit / Session / Policy für Standalone-Pfad |
+| `jSentinel-vaadin-starter` | Starter | `SecuredUi.requiresPolicy(...)` echt; `@SecureRoute(policy=...)` über PolicyRegistry evaluiert |
+| `jSentinel-processor` | Wrapper-Generierung | Wrapper-Index-Writer ergänzt |
 
-`security-core`, `security-vaadin`, `security-rest`, `security-standalone` bleiben unverändert. Ein eigenes `security-dx-test`-Modul wird **nicht** aufgemacht — Test-Helpers liegen unter `security-dx/src/test/java/.../testsupport/` und werden bei Bedarf über das Maven-Test-Jar (`<classifier>tests</classifier>`) wiederverwendet. Erst wenn ein konkreter Cross-Modul-Reuse-Fall entsteht, wird das Modul nachgezogen.
+`jSentinel-core`, `jSentinel-vaadin`, `jSentinel-rest`, `jSentinel-standalone` bleiben unverändert. Ein eigenes `jSentinel-dx-test`-Modul wird **nicht** aufgemacht — Test-Helpers liegen unter `jSentinel-dx/src/test/java/.../testsupport/` und werden bei Bedarf über das Maven-Test-Jar (`<classifier>tests</classifier>`) wiederverwendet. Erst wenn ein konkreter Cross-Modul-Reuse-Fall entsteht, wird das Modul nachgezogen.
 
 ### 5.1 Abhängigkeitsregeln (unverändert)
 
-Die V00.72-§5.2 Regeln gelten unverändert weiter. `security-dx-test` (falls eingeführt) folgt dem Muster von `security-test`: hängt nur an `security-dx` (+ `security-test` für Core-Fakes) und wird von Konsumenten als `<scope>test</scope>` gezogen.
+Die V00.72-§5.2 Regeln gelten unverändert weiter. `jSentinel-dx-test` (falls eingeführt) folgt dem Muster von `jSentinel-test`: hängt nur an `jSentinel-dx` (+ `jSentinel-test` für Core-Fakes) und wird von Konsumenten als `<scope>test</scope>` gezogen.
 
 ### 5.2 Forbidden
 
-- `security-dx` → adapter-spezifische Typen
-- `security-dx` → `security-dx-test`
-- Sub-Builder-Wiring führt zu `security-core`-Imports — kein Problem (DX hängt schon an Core)
-- Sub-Builder-Wiring führt zu `security-vaadin`-spezifischen Imports — nur in `security-dx-vaadin`
+- `jSentinel-dx` → adapter-spezifische Typen
+- `jSentinel-dx` → `jSentinel-dx-test`
+- Sub-Builder-Wiring führt zu `jSentinel-core`-Imports — kein Problem (DX hängt schon an Core)
+- Sub-Builder-Wiring führt zu `jSentinel-vaadin`-spezifischen Imports — nur in `jSentinel-dx-vaadin`
 
 ---
 
@@ -311,14 +311,14 @@ Konsumenten, die das schon in V00.72 nutzen wollten, bekommen ohne Code-Änderun
 - Konsistent mit der V00.72-Logik von `SecureRouteEvaluator` für nicht-leere `roles[]` / `permissions[]`.
 - `SecuredUi.requiresPolicy(...)` evaluiert über `SecuredVisibility.currentJSentinelView()`; ist die View leer (kein Login), zeigt sich das Verhalten gemäß gewähltem `hideWhenDenied()` / `disableWhenDenied()`.
 
-**Deterministische Cross-Validation.** Da `.policies(...)` nach `install()` alle registrierten Policy-Namen kennt, prüft V00.73 zur Bootstrap-Zeit, ob Routes mit `@SecureRoute(policy="x")` einen unbekannten Namen referenzieren. Die Prüfung wird genau dann deterministisch, wenn der Konsument einen `SecureRouteDiscovery`-Hook bereitstellt — eine schmale neue SPI in `security-vaadin-starter`, die alle `@SecureRoute`-annotierten Klassen aufzählt. Sie hat eine Default-Implementierung, die Vaadins `RouteConfiguration.getAvailableRoutes()` benutzt; Konsumenten ohne diesen Hook (z. B. Tests, Lazy-Loading) bleiben beim V00.72-Verhalten (Prüfung erst zur Route-Visit-Zeit). Findet der Hook einen Mismatch → `secure-route/unknown-policy` als deterministischer STRICT-Fehler vor dem ersten Route-Visit; ohne Hook bleibt das ein Runtime-Warning.
+**Deterministische Cross-Validation.** Da `.policies(...)` nach `install()` alle registrierten Policy-Namen kennt, prüft V00.73 zur Bootstrap-Zeit, ob Routes mit `@SecureRoute(policy="x")` einen unbekannten Namen referenzieren. Die Prüfung wird genau dann deterministisch, wenn der Konsument einen `SecureRouteDiscovery`-Hook bereitstellt — eine schmale neue SPI in `jSentinel-vaadin-starter`, die alle `@SecureRoute`-annotierten Klassen aufzählt. Sie hat eine Default-Implementierung, die Vaadins `RouteConfiguration.getAvailableRoutes()` benutzt; Konsumenten ohne diesen Hook (z. B. Tests, Lazy-Loading) bleiben beim V00.72-Verhalten (Prüfung erst zur Route-Visit-Zeit). Findet der Hook einen Mismatch → `secure-route/unknown-policy` als deterministischer STRICT-Fehler vor dem ersten Route-Visit; ohne Hook bleibt das ein Runtime-Warning.
 
 ### 8.5 `SecureRouteDiscovery`-SPI (neu, opt-in)
 
 Scope-Entscheidung: V00.73 nimmt diese SPI in den Scope (§3.1), weil sie der einzige Weg ist, die `secure-route/unknown-policy`-Prüfung deterministisch zur Bootstrap-Zeit zu machen. Sie wird klein, opt-in und nicht-breaking gehalten.
 
 ```java
-// security-vaadin-starter (neue SPI, public)
+// jSentinel-vaadin-starter (neue SPI, public)
 @ExperimentalJSentinelApi
 public interface SecureRouteDiscovery {
   /** Alle @SecureRoute-tragenden Route-Klassen, die der Konsument zur Bootstrap-Zeit kennt. */
@@ -326,7 +326,7 @@ public interface SecureRouteDiscovery {
 }
 ```
 
-- Eine Default-Implementierung `VaadinRouterSecureRouteDiscovery` lebt in `security-dx-vaadin`. Sie ruft `RouteConfiguration.forApplicationScope().getAvailableRoutes()` auf und filtert auf `@SecureRoute`-tragende Klassen.
+- Eine Default-Implementierung `VaadinRouterSecureRouteDiscovery` lebt in `jSentinel-dx-vaadin`. Sie ruft `RouteConfiguration.forApplicationScope().getAvailableRoutes()` auf und filtert auf `@SecureRoute`-tragende Klassen.
 - Aktivierung über `VaadinJSentinelBootstrap.discoverSecureRoutes(boolean)` (neuer Builder-Schritt). Default `false` — keine Verhaltensänderung gegenüber V00.72.
 - Aktiviert: `install()` cross-checkt jede `@SecureRoute(policy="x")`-Annotation gegen `PolicyState.knownPolicyNames()`. Mismatch im STRICT-Mode → `JSentinelBootstrapException("secure-route/unknown-policy: <name>")`. PRODUCTION → Warning mit demselben Code.
 - Deaktiviert: V00.72-Runtime-Verhalten unverändert. Bootstrap loggt `secure-route/discovery-disabled` (INFO), damit Operatoren sehen, warum STRICT die Prüfung nicht macht.
@@ -422,7 +422,7 @@ public interface CredentialBootstrap {
   CredentialBootstrap hashing(PasswordHashingService service);
   CredentialBootstrap pbkdf2Defaults();           // setzt PasswordHasher und V00.71 defaults, sofern moeglich
   CredentialBootstrap modern();                   // = .hashing(BouncyCastleHashingServices.modern())
-                                                  //   wirft, wenn security-crypto-bc fehlt
+                                                  //   wirft, wenn jSentinel-crypto-bc fehlt
   CredentialBootstrap pepper(PepperService service);
   CredentialBootstrap credentialStore(CredentialStore store);
   CredentialBootstrap passwordChange(PasswordChangeService service);
@@ -435,21 +435,21 @@ Wiring-Regeln:
 - `.passwordHasher(...)` wird über `JSentinelServiceResolver.setPasswordHashingService(...)` registriert.
 - `.hashing(...)`, `.credentialStore(...)`, `.passwordChange(...)`, `.passwordReset(...)` werden im `BootstrapState` / `JSentinelRuntime` als V00.71-Credential-Services verfügbar gemacht. Sie werden nicht über den alten `PasswordHasher`-Setter gequetscht.
 - `.pbkdf2Defaults()` ist eine Convenience-Methode. **Sie setzt beide Defaults gleichzeitig**: `Pbkdf2PasswordHasher` über den Legacy-Resolver-Setter UND `PasswordHashingServices.defaults(...)` in den DX-State. `JSentinelRuntime.services()` listet beide separat — Legacy unter `PasswordHasher.class`, Pipeline unter `PasswordHashingService.class` — damit ein Konsument im Audit sieht, dass nichts implizit ist. Konsumenten, die nur einen Pfad wollen, nutzen `.passwordHasher(...)` ODER `.hashing(...)` direkt statt `.pbkdf2Defaults()`.
-- `.modern()` darf nur die V00.71-Pipeline konfigurieren, sofern `security-crypto-bc` vorhanden ist. Sie darf keinen stillen Fallback auf PBKDF2 durchführen.
+- `.modern()` darf nur die V00.71-Pipeline konfigurieren, sofern `jSentinel-crypto-bc` vorhanden ist. Sie darf keinen stillen Fallback auf PBKDF2 durchführen.
 
 ### 10.4 STRICT-Regeln
 
 - `credentials/missing-hashing` — `.passwordChange(...)` oder `.passwordReset(...)` ohne `.hashing(...)` → STRICT wirft (die Services brauchen ein gehashtes Backend).
 - `credentials/legacy-hasher-and-pipeline-diverge` — `.passwordHasher(...)` und `.hashing(...)` sind beide gesetzt, aber nicht als bewusst getrennte Pfade dokumentiert → PRODUCTION warnt; STRICT wirft nur bei widersprüchlicher Default-Konfiguration.
-- `credentials/modern-without-bc` — `.modern()` aufgerufen, aber `security-crypto-bc` nicht auf dem Classpath → STRICT wirft mit konkretem Maven-Snippet als Fix.
+- `credentials/modern-without-bc` — `.modern()` aufgerufen, aber `jSentinel-crypto-bc` nicht auf dem Classpath → STRICT wirft mit konkretem Maven-Snippet als Fix.
 
 ---
 
-## 11. Baustein 6: Wrapper-Index-Writer (`security-processor`)
+## 11. Baustein 6: Wrapper-Index-Writer (`jSentinel-processor`)
 
 ### 11.1 Problem
 
-V00.72 hat den `WrapperIndexReader` in `security-dx` geliefert; der entsprechende Writer in `security-processor` wurde explizit nach V00.73 verschoben (Konzept-V00.72 §10.2). `JSentinelProcessorReport.wrappers()` ist daher heute in Demos leer.
+V00.72 hat den `WrapperIndexReader` in `jSentinel-dx` geliefert; der entsprechende Writer in `jSentinel-processor` wurde explizit nach V00.73 verschoben (Konzept-V00.72 §10.2). `JSentinelProcessorReport.wrappers()` ist daher heute in Demos leer.
 
 ### 11.2 Ziel
 
@@ -470,7 +470,7 @@ sourceFqn:generatedFqn:processor:proxyBuilderVer:method1,method2,...
 - Schreibe einmal pro Annotation-Processing-Lifecycle, in `processingOver()`. Filer `createResource(...)` darf pro Resource-Pfad in einer Compilation nur einmal aufgerufen werden — ein "append pro Round" würde `FilerException("attempt to create the same resource again")` werfen.
 - Vor dem Schreiben: bestehende Datei einmal lesen (Filer `getResource(...)`; in In-Memory-FileManagern kann das `UnsupportedOperationException` werfen — `IOException | RuntimeException` als "kein Vorgängerstand" interpretieren).
 - Merge: Einträge zu Source-Klassen, die in dieser Compilation existieren, ersetzen Vorgängereinträge; Einträge zu nicht mehr existierenden Source-Klassen fallen raus.
-- Marker-Comment-Line am Anfang (analog zu `security-autoservice-processor`).
+- Marker-Comment-Line am Anfang (analog zu `jSentinel-autoservice-processor`).
 - Deterministisch sortiert nach `sourceFqn`. Re-Compilation mit identischer Source produziert byte-identische Output.
 - Dedup auf (sourceFqn, generatedFqn).
 - Wenn das Generieren eines Wrappers fehlschlägt, wird **kein** Index-Eintrag geschrieben (verhindert `secured-without-wrapper`-Warnings für tatsächlich nicht generierte Wrapper).
@@ -555,7 +555,7 @@ Diese Codes feuern nur, wenn der Konsument die neu in V00.73 verfügbaren Sub-Bu
 | `roles/hierarchy-cycle` | RoleHierarchy enthält Zyklus | ✓ |
 | `credentials/missing-hashing` | `.passwordChange(...)` / `.passwordReset(...)` ohne `.hashing(...)` | ✓ |
 | `credentials/legacy-hasher-and-pipeline-diverge` | Legacy-Hasher und V00.71-Pipeline widersprechen sich | abhängig vom Modus |
-| `credentials/modern-without-bc` | `.modern()` und `security-crypto-bc` fehlt | ✓ |
+| `credentials/modern-without-bc` | `.modern()` und `jSentinel-crypto-bc` fehlt | ✓ |
 | `policies/empty-registry` | `.policies(p -> {})` ohne `register(...)`-Aufruf — niedrige Priorität, gerne ganz droppen falls Implementierung Lärm produziert | INFO (optional) |
 | `standalone/sessions-not-applicable` | `.sessions(...)` an `StandaloneJSentinelBootstrap` aufgerufen | INFO |
 | `rest/session-store-unused` | `.sessions(s -> s.storeBacked(...))` an `RestJSentinelBootstrap` aufgerufen | INFO |
@@ -566,12 +566,12 @@ Diese Codes feuern nur, wenn der Konsument die neu in V00.73 verfügbaren Sub-Bu
 ## 14. Phasenplan und Migration
 
 ### Phase 1 — Wrapper-Index-Writer (klein, isoliert)
-- `security-processor` ergänzen
+- `jSentinel-processor` ergänzen
 - Demo-Smoke-Test: `demo-standalone` druckt `MemberDirectorySecured` im `JSentinelRuntime.log()`
 
 ### Phase 2 — Audit + Sessions + Credentials + Roles Sub-Builder
 - Audit vollständig gegen vorhandene Core-Typen (`AuditEventStore`, `AuditSink`, `CompositeAuditService`) verdrahten
-- Sessions inkl. `SessionManagementView`-Aktivierung und `VaadinSessionSubjectStore`-Auto-Wiring (`security-dx-vaadin`)
+- Sessions inkl. `SessionManagementView`-Aktivierung und `VaadinSessionSubjectStore`-Auto-Wiring (`jSentinel-dx-vaadin`)
 - Credentials mit klar getrennter Legacy-Hasher- und V00.71-Pipeline-Semantik umsetzen
 - Roles zunächst nur `RoleHierarchy` produktionsreif machen; Mapping nur bei expliziter Core-SPI-Erweiterung
 - Tests + STRICT-Regeln pro Sub-Builder
@@ -599,11 +599,11 @@ Diese Codes feuern nur, wenn der Konsument die neu in V00.73 verfügbaren Sub-Bu
 - Alle fünf Sub-Builder haben konkrete typisierte Methoden statt Platzhaltern; bewusst ausgelassene Methoden sind dokumentiert und bleiben experimentell.
 - `install()` wired jeden Sub-Builder-Aufruf entweder in den entsprechenden `JSentinelServiceResolver`-Setter / Registry-Aufruf oder in eine dokumentierte Adapter-/Runtime-Struktur, wenn kein Core-Setter existiert.
 - STRICT-Mode raised für jede der documented Validierungs-Codes.
-- `security-processor` schreibt `generated-wrappers.idx`; `JSentinelDiagnostics.inspect()` listet die Wrapper.
+- `jSentinel-processor` schreibt `generated-wrappers.idx`; `JSentinelDiagnostics.inspect()` listet die Wrapper.
 - `SecuredUi.requiresPolicy(...)` und `@SecureRoute(policy=...)` evaluieren echt gegen `PolicyRegistry`.
 - `demo-vaadin-rest-client/DemoPolicyInitListener` ist eine reine Fluent-Bootstrap-Datei ohne direkte `JSentinelServiceResolver.policyRegistry()`-Aufrufe.
 - Jeder V00.72-Public-DX-Typ hat eine Promote-/Keep-Entscheidung mit Begründung. Es gibt kein Mindestprozent; Stabilität geht vor Quote.
-- Alle bestehenden Tests (`security-core`, `security-vaadin`, `security-rest`, `security-standalone`, `security-processor`, V00.72-DX-Module) bleiben grün.
+- Alle bestehenden Tests (`jSentinel-core`, `jSentinel-vaadin`, `jSentinel-rest`, `jSentinel-standalone`, `jSentinel-processor`, V00.72-DX-Module) bleiben grün.
 - Mutation-Coverage der V00.71-Module sinkt durch V00.73 nicht.
 - Voller Reactor (23+ Module): `./mvnw clean install` ist grün.
 
@@ -619,10 +619,10 @@ Diese Codes feuern nur, wenn der Konsument die neu in V00.73 verfügbaren Sub-Bu
 | RoleBootstrap verspricht Mapping ohne Resolver-Hook | V00.73 stabilisiert nur `RoleHierarchy`; Mapping nur mit expliziter Core-SPI-Erweiterung |
 | SessionStore kann nicht global über `JSentinelServiceResolver` gesetzt werden | `SessionStore` bleibt in `BootstrapState` / `JSentinelRuntime` und wird adapter-spezifisch konsumiert; kein versteckter Core-Setter |
 | Vaadin `SessionManagementView` wird ohne Konstruktorabhängigkeiten registriert | Route-/Factory-Strategie vor Implementierung festlegen; STRICT blockiert fehlenden `SessionStore` |
-| Wrapper-Index-Writer bricht den existierenden `security-processor` | Schreiben passiert in einem separaten Round-Handler nach erfolgreicher Wrapper-Generierung; Failure beim Index-Write ist `Diagnostic.Kind.WARNING`, nicht ERROR |
-| Policy-DSL-Wrapper in `.policies(...)` zieht Policy-Module-Imports in `security-dx` | Nur konkrete `Policy`-Typen werden referenziert (keine Builder-Wrapper); `Policy.named(...)` bleibt der Konstruktor und liegt in `security-core/policy/api` |
+| Wrapper-Index-Writer bricht den existierenden `jSentinel-processor` | Schreiben passiert in einem separaten Round-Handler nach erfolgreicher Wrapper-Generierung; Failure beim Index-Write ist `Diagnostic.Kind.WARNING`, nicht ERROR |
+| Policy-DSL-Wrapper in `.policies(...)` zieht Policy-Module-Imports in `jSentinel-dx` | Nur konkrete `Policy`-Typen werden referenziert (keine Builder-Wrapper); `Policy.named(...)` bleibt der Konstruktor und liegt in `jSentinel-core/policy/api` |
 | STRICT-Regel-Verschärfung bricht V00.72-Konsumenten | Jede neue STRICT-Regel wird explizit dokumentiert; V00.72-Demos werden im Phase-6-Schritt geprüft |
-| Demo-Tests brauchen DX-Test-Helfer, die in `security-test` nicht hingehören | Helpers landen in `security-dx/src/test/.../testsupport/` und werden über Maven-Test-Jar (`<classifier>tests</classifier>`) bereitgestellt; eigenes `security-dx-test`-Modul nur bei echtem Cross-Modul-Reuse-Bedarf |
+| Demo-Tests brauchen DX-Test-Helfer, die in `jSentinel-test` nicht hingehören | Helpers landen in `jSentinel-dx/src/test/.../testsupport/` und werden über Maven-Test-Jar (`<classifier>tests</classifier>`) bereitgestellt; eigenes `jSentinel-dx-test`-Modul nur bei echtem Cross-Modul-Reuse-Bedarf |
 | `BootstrapState` wird zum Gott-Objekt | In V00.73 in Sub-Aggregate aufgeteilt (`AuditState`, `SessionState`, …); Methoden auf `BootstrapState` delegieren in die Sub-Aggregate |
 | Adapter-spezifische No-ops verwirren Aufrufer | Adapter-Symmetrie-Tabelle in §4.1 dokumentiert genau, was wo passiert; INFO-Warning `standalone/sessions-not-applicable` macht das Verhalten sichtbar |
 | `SecuredUi.requiresPolicy` läuft asynchron / outside-of-session | PolicyRegistry-Lookup ist synchron und thread-safe; existierende V00.70-Garantie |

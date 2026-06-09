@@ -20,7 +20,7 @@ opt-in.
 ## Highlights
 
 - **5 → 7 Maven modules** with strict library / adapter / demo separation
-- New **REST adapter** (`security-rest`) for protecting REST handlers with
+- New **REST adapter** (`jSentinel-rest`) for protecting REST handlers with
   the same annotation model as Vaadin routes
 - Complete **first-run bootstrap** subsystem (3 modes, atomic POSIX-0600
   token files, configurable TTL, fail-fast on `DISABLED + no admin`)
@@ -46,9 +46,9 @@ opt-in.
 
 | Module | Artifact | Purpose |
 |---|---|---|
-| `security-core` | `security-core` | Generic, framework-neutral security concepts and decision logic |
-| `security-vaadin` | `security-vaadin` | Vaadin Flow adapter (navigation, listener, session, logout) |
-| `security-rest` | `security-rest` | Framework-light REST adapter (no Spring, no Jakarta Security) |
+| `jSentinel-core` | `jSentinel-core` | Generic, framework-neutral security concepts and decision logic |
+| `jSentinel-vaadin` | `jSentinel-vaadin` | Vaadin Flow adapter (navigation, listener, session, logout) |
+| `jSentinel-rest` | `jSentinel-rest` | Framework-light REST adapter (no Spring, no Jakarta Security) |
 | `demo-rest-shared` | `demo-rest-shared` | Tiny module — `DemoEndpoints` + `DemoJson` for the REST demos |
 | `demo-vaadin` | `demo-vaadin` | Single-JVM Vaadin reference (WAR) |
 | `demo-rest` | `demo-rest` | REST reference (JAR) — JDK `HttpServer`, no Spring |
@@ -69,7 +69,7 @@ demo-vaadin-rest-client -> security-core, security-vaadin, demo-rest-shared
 
 ## New SPI surface
 
-### `security-core`
+### `jSentinel-core`
 
 | Type | Package | Status |
 |---|---|---|
@@ -90,7 +90,7 @@ demo-vaadin-rest-client -> security-core, security-vaadin, demo-rest-shared
 | `JSentinelAnnotationScanner` (cached, multi-annotation rejection) | `authorization.impl` | **stable** |
 | Bootstrap subsystem (see below) | `bootstrap` | **stable** |
 
-### `security-vaadin`
+### `jSentinel-vaadin`
 
 | Type | Purpose |
 |---|---|
@@ -99,7 +99,7 @@ demo-vaadin-rest-client -> security-core, security-vaadin, demo-rest-shared
 | `VaadinLogoutService<U>` + `VaadinLogoutGateway` + `DefaultVaadinLogoutGateway` | Drops subject, browser-side redirect, then session invalidation in correct order |
 | `VaadinSessionSubjectStore` | `SubjectStore` backed by `VaadinSession` |
 
-### `security-rest`
+### `jSentinel-rest`
 
 | Type | Purpose |
 |---|---|
@@ -115,7 +115,7 @@ demo-vaadin-rest-client -> security-core, security-vaadin, demo-rest-shared
 | `BootstrapRestStatusMapper` | Maps `InitialAdminCreationResult` to HTTP status + stable error code |
 
 The REST adapter has **no** dependency on Spring Security, Jakarta
-Security, OAuth2/OIDC, or any HTTP client — only `security-core` and the
+Security, OAuth2/OIDC, or any HTTP client — only `jSentinel-core` and the
 JDK.
 
 ---
@@ -169,8 +169,8 @@ Configuration via system property → environment variable → default:
 
 ## Central logout flow
 
-`LogoutService` SPI in `security-core`, Vaadin adapter in
-`security-vaadin`. `LogoutPolicy` lets the application choose:
+`LogoutService` SPI in `jSentinel-core`, Vaadin adapter in
+`jSentinel-vaadin`. `LogoutPolicy` lets the application choose:
 
 | Policy factory | Subject cleared | Vaadin session closed | HTTP session invalidated |
 |---|:---:|:---:|:---:|
@@ -197,7 +197,7 @@ own user type into a `JSentinelSubject` snapshot, so generic evaluators
 (`RequiresRoleEvaluator`, `RequiresPermissionEvaluator`) work without
 each application writing its own.
 
-`HttpStatusDecisionMapper` in `security-rest` maps the same sealed
+`HttpStatusDecisionMapper` in `jSentinel-rest` maps the same sealed
 `AuthorizationDecision` to:
 
 - `Granted` → handler runs
@@ -265,16 +265,16 @@ running everything in one JVM.
 
 | Module | Killed mutants | Line coverage (mutated classes) | Test strength |
 |---|---|---|---|
-| `security-core` | 200 → **254** of 294 (68% → **86%**) | 81% → 85% | 83% → **95%** |
-| `security-rest` | 33 → **38** of 39 (85% → **97%**) | 88% → 93% | 92% → **97%** |
-| `security-vaadin` | 16 → **94** of 119 (13% → **79%**) | 13% → 73% | 89% → **95%** |
+| `jSentinel-core` | 200 → **254** of 294 (68% → **86%**) | 81% → 85% | 83% → **95%** |
+| `jSentinel-rest` | 33 → **38** of 39 (85% → **97%**) | 88% → 93% | 92% → **97%** |
+| `jSentinel-vaadin` | 16 → **94** of 119 (13% → **79%**) | 13% → 73% | 89% → **95%** |
 
 Run mutation coverage per module with:
 
 ```bash
-mvn -pl :security-core   org.pitest:pitest-maven:mutationCoverage -Dpitest-test-classes='com.svenruppert.*'
-mvn -pl :security-rest   org.pitest:pitest-maven:mutationCoverage -Dpitest-test-classes='com.svenruppert.*'
-mvn -pl :security-vaadin org.pitest:pitest-maven:mutationCoverage -Dpitest-test-classes='com.svenruppert.*'
+mvn -pl :jSentinel-core   org.pitest:pitest-maven:mutationCoverage -Dpitest-test-classes='com.svenruppert.*'
+mvn -pl :jSentinel-rest   org.pitest:pitest-maven:mutationCoverage -Dpitest-test-classes='com.svenruppert.*'
+mvn -pl :jSentinel-vaadin org.pitest:pitest-maven:mutationCoverage -Dpitest-test-classes='com.svenruppert.*'
 ```
 
 > **Note:** The `pitest-test-classes` override is required — the
@@ -340,7 +340,7 @@ shipped:
 ### Move role-to-permission mapping out of your code
 
 If you had a custom `RolePermissionMapping`, you can replace it with
-the new `StaticRolePermissionMapping.builder()` from `security-core`:
+the new `StaticRolePermissionMapping.builder()` from `jSentinel-core`:
 
 ```java
 StaticRolePermissionMapping mapping = StaticRolePermissionMapping.builder()

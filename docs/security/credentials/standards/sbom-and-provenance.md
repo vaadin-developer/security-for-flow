@@ -16,7 +16,7 @@ each module:
 
 ```bash
 ./mvnw clean package          # SBOM regenerated under every module
-ls security-core/target/CycloneDX-SBom.*
+ls jSentinel-core/target/CycloneDX-SBom.*
 ```
 
 ## What the SBOM covers
@@ -27,10 +27,10 @@ includes:
 
 | Module                          | Cryptographic third-party deps     |
 |---------------------------------|------------------------------------|
-| `security-core`                 | none — JDK-only                    |
-| `security-crypto-bc`            | `org.bouncycastle:bcprov-jdk18on:1.78.1` |
-| `security-credentials-hibp`     | none — JDK-only (`HttpClient`)     |
-| `security-persistence-eclipsestore` | none crypto-relevant            |
+| `jSentinel-core`                 | none — JDK-only                    |
+| `jSentinel-crypto-bc`            | `org.bouncycastle:bcprov-jdk18on:1.78.1` |
+| `jSentinel-credentials-hibp`     | none — JDK-only (`HttpClient`)     |
+| `jSentinel-persistence-eclipsestore` | none crypto-relevant            |
 
 The SBOM does **not** describe the cryptographic content of the JDK
 itself — the JDK is not a Maven coordinate. JDK trust is documented
@@ -75,8 +75,8 @@ Each released library jar carries:
 Consumers verify with:
 
 ```bash
-gpg --verify security-core-00.71.00.jar.asc security-core-00.71.00.jar
-sha512sum -c security-core-00.71.00.jar.sha512
+gpg --verify jSentinel-core-00.71.00.jar.asc jSentinel-core-00.71.00.jar
+sha512sum -c jSentinel-core-00.71.00.jar.sha512
 ```
 
 ## Maintenance

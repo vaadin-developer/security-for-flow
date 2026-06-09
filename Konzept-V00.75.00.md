@@ -73,7 +73,7 @@ security-events-persistence-eclipsestore
 
 Falls die bestehende Persistence-Schicht bereits generisch genug ist,
 kann `security-events-persistence-eclipsestore` auch in
-`security-persistence-eclipsestore` integriert werden. Der bevorzugte
+`jSentinel-persistence-eclipsestore` integriert werden. Der bevorzugte
 Schnitt bleibt jedoch: EventBus-Core kennt nur Store-Interfaces, konkrete
 Persistenzmodule liefern Implementierungen.
 
@@ -1030,7 +1030,7 @@ Produktionssysteme vorgesehen.
 
 ### security-core
 
-`security-core` publiziert Events an zentralen Stellen:
+`jSentinel-core` publiziert Events an zentralen Stellen:
 
 - Login Erfolg und Fehler
 - Logout
@@ -1046,7 +1046,7 @@ die EventBus API.
 
 ### security-rest
 
-`security-rest` integriert:
+`jSentinel-rest` integriert:
 
 - REST/SSE Bridge
 - REST Security Events fuer `401` und `403`
@@ -1057,7 +1057,7 @@ die EventBus API.
 
 ### security-vaadin
 
-`security-vaadin` konsumiert Events aus der Bridge:
+`jSentinel-vaadin` konsumiert Events aus der Bridge:
 
 - Session widerrufen -> UI-Session invalidieren
 - Role Refresh noetig -> Subject neu laden oder Logout erzwingen

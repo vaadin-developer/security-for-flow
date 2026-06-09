@@ -3,7 +3,7 @@
 | Situation | Recommended path |
 |---|---|
 | Interface available, want runtime proxy | `SecuredProxy.wrap(...)` |
-| Concrete class without interface | `@Secured` + generated `<Type>Secured` wrapper (security-processor) |
+| Concrete class without interface | `@Secured` + generated `<Type>Secured` wrapper (jSentinel-processor) |
 | Vaadin button / link / menu | `SecuredUi.button(...) / .link() / .menuItem(...)` |
 | Vaadin policy-guarded button / link / menu | `SecuredUi.button(...).requiresPolicy("...")` (V00.73 real evaluation) |
 | ServiceLoader configuration | `@JSentinelAutoService` |

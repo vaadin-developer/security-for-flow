@@ -7,7 +7,7 @@
 
 ---
 
-V00.70 foundation: security-test module + security-processor, step-up, resource policies, role hierarchy, method security via annotation processor
+V00.70 foundation: jSentinel-test module + jSentinel-processor, step-up, resource policies, role hierarchy, method security via annotation processor
 
 Phase 1 + Phase 5 (a/b/c/d) der V00.70-Roadmap, plus die testseitige
 Vorarbeit, die alle nachfolgenden Phasen mittragen.
@@ -18,20 +18,20 @@ in `JSentinelServiceResolver`, einer Parent-POM-Anhebung und einem
 Dokumentations-Refresh für die V00.70-/V00.80-Konzepte. Der Reactor
 hat damit 12 Module.
 
-— security-test als eigenes Modul (PR-1 Kandidat) —————————————————————
+— jSentinel-test als eigenes Modul (PR-1 Kandidat) —————————————————————
 
-Neues 5. Library-Modul `security-test` (Artefakt `security-test`,
+Neues 5. Library-Modul `jSentinel-test` (Artefakt `jSentinel-test`,
 Scope `compile`, weil `JSentinelTestExtension` JUnit-Lifecycle-Interfaces
 implementiert). Es bündelt die Test-Bausteine, die bisher dupliziert in
-`security-vaadin/src/test`, `security-rest/src/test`, `demo-vaadin`
+`jSentinel-vaadin/src/test`, `jSentinel-rest/src/test`, `demo-vaadin`
 und `demo-rest` lagen:
 
 - `FakeAuthenticationService` — `AuthenticationService<Credentials,U>`-Fake
   mit konfigurierbarem `checkCredentials` / `loadSubject`
 - `FakeAuthorizationService` — `AuthorizationService<U>`-Fake
 - `InMemorySubjectStore` — `SubjectStore`-Implementierung für Tests
-  (Quelldatei wandert aus `security-vaadin/src/test/.../impl/`
-  in `security-test/src/main`, alte Datei entfällt)
+  (Quelldatei wandert aus `jSentinel-vaadin/src/test/.../impl/`
+  in `jSentinel-test/src/main`, alte Datei entfällt)
 - `RecordingAuditSink` — fängt `AuditEvent`-Sequenzen für
   Assertion-freundliches Replay
 - `AccessContexts`, `JSentinelSubjects`, `SyntheticAnnotations`
@@ -41,14 +41,14 @@ und `demo-rest` lagen:
 - 8 begleitende Tests, einer pro neuer Klasse
 
 Pom-Verdrahtung:
-- Root `pom.xml`: `<module>security-test</module>`, Parent-Bump
+- Root `pom.xml`: `<module>jSentinel-test</module>`, Parent-Bump
   `dependencies` von `06.02.00` auf `06.02.01`
-- `security-rest`, `security-standalone`, `security-vaadin`,
-  `demo-vaadin`: jeweils Test-Scope-Dependency auf `security-test`
+- `jSentinel-rest`, `jSentinel-standalone`, `jSentinel-vaadin`,
+  `demo-vaadin`: jeweils Test-Scope-Dependency auf `jSentinel-test`
 
 Alle bestehenden Tests in den genannten Modulen sind auf die zentralen
 Fakes umgestellt; eigene Inline-Mocks und der `InMemorySubjectStore`-
-Klon in `security-vaadin/src/test` entfallen ersatzlos.
+Klon in `jSentinel-vaadin/src/test` entfallen ersatzlos.
 
 — Step-Up Authentication (PR-3 Kandidat) ——————————————————————————————
 
@@ -63,14 +63,14 @@ Klon in `security-vaadin/src/test` entfallen ersatzlos.
 
 Adapter-Verdrahtung:
 
-- `HttpStatusDecisionMapper` (security-rest) mappt `StepUpRequired`
+- `HttpStatusDecisionMapper` (jSentinel-rest) mappt `StepUpRequired`
   auf `401 Unauthorized` mit `WWW-Authenticate: StepUp method="<method>"`
   (RFC 7235); `RestHeaders` erhält die Konstante, neuer Test
   `HttpStatusDecisionMapperTest` hält das Verhalten fest
-- `AuthorizationListener` (security-vaadin) reroutet auf den durch
+- `AuthorizationListener` (jSentinel-vaadin) reroutet auf den durch
   `JSentinelServiceResolver.stepUpRouteName()` aufgelösten Route-Namen
   (Default `"step-up"`, Konstante `DEFAULT_STEP_UP_ROUTE_NAME`)
-- `Secured` (security-standalone) wirft `AccessDeniedException` —
+- `Secured` (jSentinel-standalone) wirft `AccessDeniedException` —
   Standalone hat kein Navigationskonzept, daher Step-Up als Exception
 
 Audit:
@@ -144,7 +144,7 @@ können beim PR-Split via `git add -p` getrennt gestaged werden.
 
 Schliesst Phase 5 a/b/c/d des Implementierungsplans ab.
 
-Neues 6. Library-Modul **security-processor**:
+Neues 6. Library-Modul **jSentinel-processor**:
 
 - POM: `com.svenruppert:proxybuilder:00.10.00` (heute auf Maven
   Central released) + `com.google.testing.compile:compile-testing:0.21.0`
@@ -173,7 +173,7 @@ Neues 6. Library-Modul **security-processor**:
   Konsumenten keine proxybuilder-Dependency brauchen (die Annotation
   hat `RetentionPolicy.SOURCE`, also semantisch unauffaellig).
 
-`security-core` Erweiterungen:
+`jSentinel-core` Erweiterungen:
 
 - `@Secured` (TYPE-Target, `RetentionPolicy.SOURCE`) — Compile-Time-
   Trigger, kein `@JSentinelAnnotation`-Binding (keine Runtime-Logik).
@@ -184,11 +184,11 @@ Neues 6. Library-Modul **security-processor**:
   `requirePolicy`) fuer den Annotation-Processor-Pfad. Wirft
   `AccessDeniedException` on deny.
 
-`security-standalone` Refactor:
+`jSentinel-standalone` Refactor:
 
 - `Secured.java` → `SecuredProxy.java` umbenannt (via `git mv`); die
   Enforcement-Logik (Scanner-Lookup, AccessContext-Bau, Decision-
-  Handling) ist nach `JSentinelEnforcer` in security-core gewandert.
+  Handling) ist nach `JSentinelEnforcer` in jSentinel-core gewandert.
   `SecuredProxy.wrap(...)` ruft jetzt nur noch
   `JSentinelEnforcer.enforce(method, declaringClass)` auf.
 - Test-Klassen aktualisiert (`SecuredProxyTest`, 17 Tests, alle gruen);
@@ -213,9 +213,9 @@ Neues 6. Library-Modul **security-processor**:
   Anonymous-Deny, MEMBER kann listen aber nicht inviten, LIBRARIAN
   kann inviten aber nicht audit-removen, ADMIN kann alles inkl.
   `resetAll`.
-- `demo-standalone/pom.xml` bindet `security-processor` ueber
+- `demo-standalone/pom.xml` bindet `jSentinel-processor` ueber
   `<annotationProcessorPaths>` ein (nicht als Compile-Dep) und ergaenzt
-  `security-test` als Test-Scope-Dep.
+  `jSentinel-test` als Test-Scope-Dep.
 
 — JSentinelServiceResolver-Erweiterungen ———————————————————————————————
 
@@ -259,14 +259,14 @@ Neue Konzept-/Plan-Dokumente:
 
 — Build-Status ————————————————————————————————————————————————————————
 
-- Voller Reactor (12 Module mit `security-test` + `security-processor`)
+- Voller Reactor (12 Module mit `jSentinel-test` + `jSentinel-processor`)
   baut gruen
 - Library-Module javadoc-rein
 - Mutation-Coverage der Library-Module unveraendert
-  (`security-rest` 95 %, `security-standalone` 98 %,
-  `security-vaadin` 80 %, `security-core` 79 %)
-- `security-test` und `security-processor` ueber ihre eigenen
-  Tests gedeckt (8 + 11 = 19 Tests); PIT-Run fuer `security-processor`
+  (`jSentinel-rest` 95 %, `jSentinel-standalone` 98 %,
+  `jSentinel-vaadin` 80 %, `jSentinel-core` 79 %)
+- `jSentinel-test` und `jSentinel-processor` ueber ihre eigenen
+  Tests gedeckt (8 + 11 = 19 Tests); PIT-Run fuer `jSentinel-processor`
   ist ein offenes Followup
 - demo-standalone: 34 Tests (26 alt + 8 neu fuer
   `MemberDirectorySecured`), alle gruen

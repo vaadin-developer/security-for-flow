@@ -17,9 +17,9 @@ rate-limit), and a Phase-8 UI layer with `SecuredButton`,
 plus an OpenAPI security-metadata exporter.
 
 Going beyond the eight phases, the release adds **three new
-reactor modules** (`security-persistence-testkit`,
-`security-persistence-eclipsestore`, and the previously-vendored
-`security-processor`/`security-test` are now first-class members
+reactor modules** (`jSentinel-persistence-testkit`,
+`jSentinel-persistence-eclipsestore`, and the previously-vendored
+`jSentinel-processor`/`jSentinel-test` are now first-class members
 of the 13-module reactor) and **27 sealed `AuditEvent` variants**
 (up from 16), all covered by `AuditQuery`, `LoggingAuditSink` and
 the new `StoreBackedJSentinelAuditService`.
@@ -35,8 +35,8 @@ persistence module) are noted in the migration section.
 
 ## Highlights
 
-- **13 reactor modules** — `security-persistence-testkit` and
-  `security-persistence-eclipsestore` join the library; the other
+- **13 reactor modules** — `jSentinel-persistence-testkit` and
+  `jSentinel-persistence-eclipsestore` join the library; the other
   modules were already in 00.60 but now ship V00.70 features.
 - **Multi-tenancy foundation** — `TenantId(value)` with `DEFAULT`,
   tenant-aware `ResourceRef(resourceType, resourceId, tenant)` and
@@ -49,9 +49,9 @@ persistence module) are noted in the migration section.
   `RateLimitStore` — every record hash-only or single-use as
   appropriate, every key tenant-scoped.
 - **Contract testkit + Eclipse-Store reference** — the new
-  `security-persistence-testkit` module ships `@Test default`
+  `jSentinel-persistence-testkit` module ships `@Test default`
   contracts that any store adapter implements to be vetted against
-  the library's persistence semantics. `security-persistence-eclipsestore`
+  the library's persistence semantics. `jSentinel-persistence-eclipsestore`
   is the Eclipse-Store reference impl, validated by the same 95+
   contract suite as the in-memory defaults.
 - **JSentinelVersion drift detection end-to-end** —
@@ -118,14 +118,14 @@ persistence module) are noted in the migration section.
 
 | Module | Artifact | Purpose |
 |---|---|---|
-| `security-core` | `security-core` | Generic, framework-neutral security concepts and decision logic. Owns every SPI contract, all 11 persistence-store interfaces, the JSentinelVersion stack, and the account-lifecycle / token / rate-limit services |
-| `security-vaadin` | `security-vaadin` | Vaadin Flow adapter — view/navigation security, Phase-4c enforcement listener, Phase-8 `SecuredButton` / `SecuredRouterLink` / `SecuredMenuItem` / `SessionManagementView` |
-| `security-rest` | `security-rest` | Framework-light REST adapter — Phase-4c `RestJSentinelVersionFilter`, Phase-8d `OpenApiJSentinelMetadataGenerator` |
-| `security-standalone` | `security-standalone` | Plain-Java / desktop / CLI adapter |
-| `security-test` | `security-test` | Reusable test fixtures (`FakeAuthenticationService`, `FakeAuthorizationService`, `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5 `JSentinelTestExtension`) |
-| `security-processor` | `security-processor` | Compile-time annotation processor for `@Secured` concrete classes |
-| `security-persistence-testkit` | `security-persistence-testkit` | **NEW** — Contract test suites (`@Test default` interfaces) for every persistence-store SPI; persistence-tech-agnostic |
-| `security-persistence-eclipsestore` | `security-persistence-eclipsestore` | **NEW** — Eclipse-Store (`org.eclipse.store:storage-embedded:4.1.0`) reference impl of every persistence-store SPI |
+| `jSentinel-core` | `jSentinel-core` | Generic, framework-neutral security concepts and decision logic. Owns every SPI contract, all 11 persistence-store interfaces, the JSentinelVersion stack, and the account-lifecycle / token / rate-limit services |
+| `jSentinel-vaadin` | `jSentinel-vaadin` | Vaadin Flow adapter — view/navigation security, Phase-4c enforcement listener, Phase-8 `SecuredButton` / `SecuredRouterLink` / `SecuredMenuItem` / `SessionManagementView` |
+| `jSentinel-rest` | `jSentinel-rest` | Framework-light REST adapter — Phase-4c `RestJSentinelVersionFilter`, Phase-8d `OpenApiJSentinelMetadataGenerator` |
+| `jSentinel-standalone` | `jSentinel-standalone` | Plain-Java / desktop / CLI adapter |
+| `jSentinel-test` | `jSentinel-test` | Reusable test fixtures (`FakeAuthenticationService`, `FakeAuthorizationService`, `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5 `JSentinelTestExtension`) |
+| `jSentinel-processor` | `jSentinel-processor` | Compile-time annotation processor for `@Secured` concrete classes |
+| `jSentinel-persistence-testkit` | `jSentinel-persistence-testkit` | **NEW** — Contract test suites (`@Test default` interfaces) for every persistence-store SPI; persistence-tech-agnostic |
+| `jSentinel-persistence-eclipsestore` | `jSentinel-persistence-eclipsestore` | **NEW** — Eclipse-Store (`org.eclipse.store:storage-embedded:4.1.0`) reference impl of every persistence-store SPI |
 | `demo-rest-shared` | `demo-rest-shared` | Transport-level constants + JSON helper |
 | `demo-vaadin` | `demo-vaadin` | Single-JVM Vaadin reference (WAR) |
 | `demo-rest` | `demo-rest` | REST reference (JDK `HttpServer`) |
@@ -133,9 +133,9 @@ persistence module) are noted in the migration section.
 | `demo-standalone` | `demo-standalone` | Interactive CLI library-borrowing demo |
 
 Dependency rules unchanged from 00.60 except the two new modules:
-`security-persistence-eclipsestore` is the only module with a
-third-party storage dependency; `security-persistence-testkit`
-has only a compile dependency on `security-core` so consumers can
+`jSentinel-persistence-eclipsestore` is the only module with a
+third-party storage dependency; `jSentinel-persistence-testkit`
+has only a compile dependency on `jSentinel-core` so consumers can
 embed the suites at test scope.
 
 ---
@@ -152,10 +152,10 @@ embed the suites at test scope.
 
 ### Persistence-store SPIs (Phase 2 — `@ExperimentalJSentinelApi`)
 
-Every store has an `InMemory*Store` default in `security-core` and
+Every store has an `InMemory*Store` default in `jSentinel-core` and
 an Eclipse-Store reference impl in
-`security-persistence-eclipsestore`, both verified against the
-same `security-persistence-testkit` contract.
+`jSentinel-persistence-eclipsestore`, both verified against the
+same `jSentinel-persistence-testkit` contract.
 
 | Store | Record / Key | Module |
 |---|---|---|
@@ -257,7 +257,7 @@ notification path so they cannot block the security flow.
 
 ## Method security via annotation processor (Phase 5c)
 
-`security-processor` produces `<Type>Secured` subclasses for
+`jSentinel-processor` produces `<Type>Secured` subclasses for
 `@Secured` concrete classes at compile time. The generated wrapper
 inserts `JSentinelEnforcer.require…(…)` ahead of `super.<method>(…)`
 for every annotated method. Built on
@@ -284,23 +284,23 @@ the parent POM's `pitest-test-classes` is now `com.svenruppert.*`
 
 | Module | 00.51.00 | 00.60.00 | 00.70.00 | Tests (V00.70) |
 |---|---:|---:|---:|---:|
-| `security-core` | 86 % | 79 % * | **86 %** (1191/1381) | 956 |
-| `security-vaadin` | 79 % | 90 % | **79 %** (242/305) ** | 172 |
-| `security-rest` | 97 % | 95 % | **95 %** (86/91) | 71 |
-| `security-standalone` | — | 98 % | **97 %** (33/34) | 30 |
-| `security-processor` | — | — | **82 %** (23/28) *** | 11 |
-| `security-persistence-eclipsestore` | — | — | **70 %** (231/328) **** | 104 |
-| `security-test` | — | — | n/a (test fixtures) | 44 |
-| `security-persistence-testkit` | — | — | n/a (contracts verified through consumers) | 104 |
+| `jSentinel-core` | 86 % | 79 % * | **86 %** (1191/1381) | 956 |
+| `jSentinel-vaadin` | 79 % | 90 % | **79 %** (242/305) ** | 172 |
+| `jSentinel-rest` | 97 % | 95 % | **95 %** (86/91) | 71 |
+| `jSentinel-standalone` | — | 98 % | **97 %** (33/34) | 30 |
+| `jSentinel-processor` | — | — | **82 %** (23/28) *** | 11 |
+| `jSentinel-persistence-eclipsestore` | — | — | **70 %** (231/328) **** | 104 |
+| `jSentinel-test` | — | — | n/a (test fixtures) | 44 |
+| `jSentinel-persistence-testkit` | — | — | n/a (contracts verified through consumers) | 104 |
 
-\* The 00.51 → 00.60 drop in `security-core` is a scope expansion,
+\* The 00.51 → 00.60 drop in `jSentinel-core` is a scope expansion,
    not a regression: V00.60 added the audit pipeline,
    `LoginAttemptPolicy`, `SessionPolicy`,
    `ActionAuthorizationService`, and the refactored `LogoutService`
    under PIT. Absolute mutant count went up; the percentage on the
    wider surface is the relevant number from 00.60 onwards.
 
-\** `security-vaadin` 90 % (00.60) → 79 % (00.70) reflects the
+\** `jSentinel-vaadin` 90 % (00.60) → 79 % (00.70) reflects the
    Phase-4c `JSentinelVersionEnforcerListener` and the Phase-8
    `SecuredButton` / `SecuredRouterLink` / `SecuredMenuItem` /
    `SessionManagementView` landing. The gap is dominated by
@@ -309,7 +309,7 @@ the parent POM's `pitest-test-classes` is now `com.svenruppert.*`
    no testable side effect in the JUnit harness. Absolute kill count
    went up from 16 (V00.51) → ~91 (V00.60) → 242 (V00.70).
 
-\*** `security-processor` 82 % with **100 % line coverage** on the
+\*** `jSentinel-processor` 82 % with **100 % line coverage** on the
     mutated classes. All five survivors come from
     `BooleanFalseReturnValsMutator` — `return true` → `return false`
     mutations on guard returns inside the annotation-detection paths
@@ -317,7 +317,7 @@ the parent POM's `pitest-test-classes` is now `com.svenruppert.*`
     boolean polarity of internal helpers). The 11 tests reach every
     line of the 52-line mutated surface.
 
-\**** `security-persistence-eclipsestore` 70 % with 92 % line
+\**** `jSentinel-persistence-eclipsestore` 70 % with 92 % line
      coverage on the mutated classes. The 6 NO_COVERAGE mutants and
      remaining survivors cluster in the `findAll()` / `findBySubject(…)`
      read-lock branches and the `remove(...) != null` truthy returns
@@ -325,9 +325,9 @@ the parent POM's `pitest-test-classes` is now `com.svenruppert.*`
      at 75 % (60/80) and `BooleanFalseReturnValsMutator` at 72 %
      (18/25) are the dominant mutators — typical storage-layer
      profile, equivalent to the in-memory defaults inside
-     `security-core` for these same code shapes.
+     `jSentinel-core` for these same code shapes.
 
-`security-core` went up within this release from 82 % (initial
+`jSentinel-core` went up within this release from 82 % (initial
 V00.70 baseline, run mid-stream) to **86 %** after the new audit
 tests (`LoggingAuditSinkAllVariantsTest`, `CompositeAuditServiceTest`,
 `DefaultCompositeAuditServiceTest`) — the audit package alone went
@@ -357,7 +357,7 @@ The pieces below are the deltas worth knowing about:
    ```xml
    <dependency>
      <groupId>com.svenruppert</groupId>
-     <artifactId>security-vaadin</artifactId>
+     <artifactId>jSentinel-vaadin</artifactId>
      <version>00.70.00</version>
    </dependency>
    ```
@@ -381,7 +381,7 @@ The pieces below are the deltas worth knowing about:
    `com.svenruppert.*`. Mutation-coverage numbers in this release
    are the first accurate measurement since the property regressed.
 
-5. **Optional `security-persistence-eclipsestore`** — wire it as
+5. **Optional `jSentinel-persistence-eclipsestore`** — wire it as
    a runtime dependency to swap every `InMemory*Store` default
    for the durable Eclipse-Store impl. Requires
    `org.eclipse.store:storage-embedded:4.1.0` on the runtime
@@ -400,7 +400,7 @@ exhaustiveness (which the compiler enforces, so it's hard to miss).
 - Jetty 12.1.8 EE11 for the Vaadin demos
 - Maven 4 (pinned via `./mvnw`; minimum `4.0.0-rc-5`)
 - Eclipse Store 4.1.0 (`org.eclipse.store:storage-embedded`) —
-  optional, only for `security-persistence-eclipsestore`
+  optional, only for `jSentinel-persistence-eclipsestore`
 - proxybuilder 00.11.00 (`com.svenruppert:proxybuilder` +
   `proxybuilder-annotations`) — for the compile-time
   annotation processor
@@ -416,16 +416,16 @@ exhaustiveness (which the compiler enforces, so it's hard to miss).
   `demo-vaadin-rest-client`, and a reset-flow demo with
   `LoggingNotificationSender` are followups. The library SPI is
   done; the demos catch up in 00.71.
-- **`security-processor` PIT coverage** — same followup as 00.60;
+- **`jSentinel-processor` PIT coverage** — same followup as 00.60;
   the annotation-processor module hasn't been re-PIT'd since the
   proxybuilder 00.11.00 bump. Compile-testing tests pass at
   11 / 11.
 - **Eclipse-Store PIT** — the 104 contract-validated tests are
   green; a PIT re-run for the storage-bound code is pending.
 - **`security-javafx`** — still on the roadmap, still gated on
-  real JavaFX usage of `security-standalone`. `LoginScene`,
+  real JavaFX usage of `jSentinel-standalone`. `LoginScene`,
   `SecuredAction`, and a `Task` / `Service` helper remain the
-  planned bricks. `security-standalone` covers JavaFX functionally
+  planned bricks. `jSentinel-standalone` covers JavaFX functionally
   until then.
 - **Cluster-mode** — intentionally out of scope. The Phase-2
   store SPIs are shaped so Redis / DB / IAM-backed

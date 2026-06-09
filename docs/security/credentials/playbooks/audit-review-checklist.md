@@ -60,7 +60,7 @@ The review must **not** rely on:
 - secret-shaped fields in `toString()` output.
 
 Any event whose `toString()` exposes such data is a defect in the
-event record — file it as a bug against `security-core` rather
+event record — file it as a bug against `jSentinel-core` rather
 than working around it in the review tooling.
 
 ## Reporting

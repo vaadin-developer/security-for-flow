@@ -21,9 +21,9 @@ The credential pipeline uses the following JCA primitives:
 | `Mac.HmacSHA256`      | post-KDF pepper application                      | JDK-only |
 | `MessageDigest.SHA-256` | token digest (selector/verifier), refresh tokens | JDK-only |
 | `SecureRandom` (`NativePRNGNonBlocking` / `Windows-PRNG` / `DRBG`) | salt + token generation | platform default |
-| `MessageDigest.SHA-1` | **only** in `security-credentials-hibp` for k-anonymity prefix lookup, **not** for storage | protocol requirement |
+| `MessageDigest.SHA-1` | **only** in `jSentinel-credentials-hibp` for k-anonymity prefix lookup, **not** for storage | protocol requirement |
 
-Algorithms from `security-crypto-bc` (Argon2id, bcrypt, scrypt) use
+Algorithms from `jSentinel-crypto-bc` (Argon2id, bcrypt, scrypt) use
 the BouncyCastle **low-level crypto APIs** — they do not register
 `BouncyCastleProvider` with the JCA, so the global provider order is
 never altered.
@@ -53,10 +53,10 @@ never altered.
    every implementation prompt.
 
 4. **Optional providers.**
-   - `security-crypto-bc` adds BouncyCastle for Argon2id / bcrypt /
+   - `jSentinel-crypto-bc` adds BouncyCastle for Argon2id / bcrypt /
      scrypt — pulled in only when the module is on the runtime
      classpath. The BC provider is **not** registered with the JCA.
-   - `security-credentials-hibp` adds a HaveIBeenPwned-style
+   - `jSentinel-credentials-hibp` adds a HaveIBeenPwned-style
      compromised-password lookup — uses JDK `HttpClient` only.
 
 ## Separation of concerns
@@ -90,5 +90,5 @@ certified — see `fips-profile.md`. An SBOM-listed dependency does
 
 This document is regenerated for each minor release. When the
 algorithm table changes, the corresponding test in
-`security-core/src/test/java/.../standards/JcaProviderOrderInvariantTest.java`
+`jSentinel-core/src/test/java/.../standards/JcaProviderOrderInvariantTest.java`
 must be updated.

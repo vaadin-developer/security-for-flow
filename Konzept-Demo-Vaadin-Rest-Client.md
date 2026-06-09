@@ -15,10 +15,10 @@
 >   client-relevante Result-Records). `demo-rest` und der neue
 >   Vaadin-Client hängen daran.
 > - **C**: ✅ **`LogoutService` wird zuvor im Framework implementiert**
->   (security-core + security-vaadin), bevor das neue Demo-Modul
+>   (jSentinel-core + jSentinel-vaadin), bevor das neue Demo-Modul
 >   aufgebaut wird. Die Demo nutzt dann das fertige SPI.
 > - **D**: ✅ **Beide View-Schutz-Stile zeigen** — generische
->   Annotationen aus `security-core` (`@RequiresPermission`,
+>   Annotationen aus `jSentinel-core` (`@RequiresPermission`,
 >   `@RequiresRole`) **und** eine projektspezifische Annotation
 >   (`@VisibleForRoles` o.ä.) mit eigenem Evaluator. Beide werden im
 >   selben Demo nebeneinander demonstriert.
@@ -165,8 +165,8 @@ einem neuen Namensschema und kollidiert nicht mit `demo-vaadin`.
 
 ```text
 demo-vaadin-rest-client
-    -> security-core
-    -> security-vaadin
+    -> jSentinel-core
+    -> jSentinel-vaadin
     -> demo-rest          (für Transport-Konstanten + DemoJson)
 ```
 
@@ -361,7 +361,7 @@ importiert.
 
 Es gibt parallel zwei Stilrichtungen, beide werden gezeigt:
 
-### Stil A — Generische Annotationen aus security-core
+### Stil A — Generische Annotationen aus jSentinel-core
 
 ```java
 @Route("documents")
@@ -373,7 +373,7 @@ public class DocumentsView extends Composite<Div> { … }
 public class AdminStatusView extends Composite<Div> { … }
 ```
 
-Die Annotationen aus `security-core` werden vom existierenden
+Die Annotationen aus `jSentinel-core` werden vom existierenden
 `AuthorizationListener` ausgewertet. Falls der Subject die Permission
 nicht hat, greift Reroute.
 
@@ -396,8 +396,8 @@ die drei Pfade direkt vergleichen:
 
 | Stil | Annotation | Evaluator |
 |---|---|---|
-| A1 | `@RequiresPermission` | `RequiresPermissionEvaluator` (security-core) |
-| A2 | `@RequiresRole` | `RequiresRoleEvaluator` (security-core) |
+| A1 | `@RequiresPermission` | `RequiresPermissionEvaluator` (jSentinel-core) |
+| A2 | `@RequiresRole` | `RequiresRoleEvaluator` (jSentinel-core) |
 | B | `@VisibleForRoles` | `ProjectRoleAccessEvaluator` (in diesem Modul) |
 
 ## 8. Demo-Inhalte: UI-Element-Ebenen-Schutz
@@ -474,7 +474,7 @@ Realistisch im Demo-Kontext:
 - **Authorization-Adapter-Tests**: `RestBackedAuthenticationService` und
   `RestBackedAuthorizationService` mit gemocktem Backend-Client.
 - **PermissionGuard-Verhalten** auf einem `RemoteUser` (eigentlich schon
-  durch `PermissionGuardTest` in `security-core` abgedeckt — diesem Demo
+  durch `PermissionGuardTest` in `jSentinel-core` abgedeckt — diesem Demo
   eigene Tests sparen).
 - ❌ **Keine UI-Tests** (Vaadin-Demo hat sowieso noch keine Karibu-/
   TestBench-Infrastruktur). Konsistent mit `demo-vaadin`.
@@ -539,9 +539,9 @@ Voraussetzungen werden zuerst gebaut, dann das eigentliche Demo-Modul.
 ### Phase 1 — Voraussetzungen (vor diesem Modul)
 
 1. **`LogoutService` im Framework**
-   - `security-core`: Interface `LogoutService`, Records `LogoutContext` /
+   - `jSentinel-core`: Interface `LogoutService`, Records `LogoutContext` /
      `LogoutPolicy`, Default `SubjectClearingLogoutService`.
-   - `security-vaadin`: `VaadinLogoutService` (clear subject + optional
+   - `jSentinel-vaadin`: `VaadinLogoutService` (clear subject + optional
      VaadinSession/HttpSession invalidate + navigate).
    - Tests core + vaadin-frei.
    - Bestehende `demo-vaadin`-Logout-Methode (`MainView.logout()`) auf

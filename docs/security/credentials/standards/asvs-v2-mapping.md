@@ -36,7 +36,7 @@ requirements is a deployment-level concern.
 | 2.1.4     | Allow all printable Unicode                                      | ✅ | PWH-A4 | NFKC normalisation. |
 | 2.1.5     | Account password change supported                                | ✅ | PWH-C2 / PasswordChangeService | Atomic, re-auth required. |
 | 2.1.6     | Compromised password check on set / change                        | ✅ | PWH-F1…F6 | Local blocklist + optional HIBP module. |
-| 2.1.7     | Compromised check uses k-anonymity                                | ✅ | PWH-F3 | `security-credentials-hibp` uses SHA-1 5-char prefix. |
+| 2.1.7     | Compromised check uses k-anonymity                                | ✅ | PWH-F3 | `jSentinel-credentials-hibp` uses SHA-1 5-char prefix. |
 | 2.1.8     | Password strength feedback                                        | ⚙️ | PWH-F2 | SPI present; estimator selection is operator's. |
 | 2.1.9     | No composition rules                                              | ✅ | PWH-B1 | Default policy has no composition rule. |
 | 2.1.10    | No periodic forced rotation                                       | ⚙️ | PWH-C5 | Framework does not schedule rotation; operator opt-in. |
@@ -68,10 +68,10 @@ requirements is a deployment-level concern.
 | ASVS req. | Summary                                                         | Status | Maps to | Notes |
 |----------:|------------------------------------------------------------------|:------:|---------|-------|
 | 2.4.1     | Pepper required                                                  | ✅ | PWH-E1 / PepperService | HMAC-SHA-256 post-KDF. |
-| 2.4.2     | Argon2id with operator-tunable parameters                        | ✅ | PWH-D2 | `security-crypto-bc` opt-in. |
-| 2.4.3     | bcrypt as fallback                                               | ✅ | PWH-D3 | `security-crypto-bc`. |
+| 2.4.2     | Argon2id with operator-tunable parameters                        | ✅ | PWH-D2 | `jSentinel-crypto-bc` opt-in. |
+| 2.4.3     | bcrypt as fallback                                               | ✅ | PWH-D3 | `jSentinel-crypto-bc`. |
 | 2.4.4     | PBKDF2 if FIPS required                                          | ✅ | PWH-D1 | Default JDK-only. |
-| 2.4.5     | scrypt allowed                                                    | ✅ | PWH-D4 | `security-crypto-bc`. |
+| 2.4.5     | scrypt allowed                                                    | ✅ | PWH-D4 | `jSentinel-crypto-bc`. |
 
 ## V2.5 Credential Recovery
 

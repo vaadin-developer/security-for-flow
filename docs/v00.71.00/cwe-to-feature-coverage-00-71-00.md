@@ -60,9 +60,9 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Central configuration in the existing loading style (`PWH-H5`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 - Start-up validation of configuration (`PWH-H6`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 
 
 ## CWE-20 – Improper Input Validation
@@ -70,30 +70,30 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Uniform self-describing codec; standards-compliant PHC/MCF string per method in its own envelope (`PWH-A3`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Separation of parsing, validation, provider resolution, pepper resolution, verification, and rehash decision (`PWH-A14`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Envelope format version separate from the policy version (`PWH-A16`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Algorithm-specific parameter validators and resource estimates (`PWH-B9`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - Format deprecation for own older format versions (`PWH-C4`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Upper-bound validation of hash parameters (`PWH-C10`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Length and encoding policy (`PWH-E4`, Version `00.71.00`)  
-  _Epic: Input Hygiene and Secure Handling; Module: `security-core`_
+  _Epic: Input Hygiene and Secure Handling; Module: `jSentinel-core`_
 - Start-up validation of configuration (`PWH-H6`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
 - Codec round-trip tests (`PWH-I2`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 - Malformed-input tests (`PWH-I3`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 - Unsupported-algorithm tests (`PWH-I4`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 
 
 ## CWE-200 – Exposure of Sensitive Information to an Unauthorized Actor
@@ -101,35 +101,35 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Generic public errors, differentiated internal audit types (`PWH-A11`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Processing via `SecretValue`, `char[]`, and `byte[]` instead of `String` (`PWH-E1`, Version `00.71.00`)  
-  _Epic: Input Hygiene and Secure Handling; Module: `security-core`_
+  _Epic: Input Hygiene and Secure Handling; Module: `jSentinel-core`_
 - Deterministic zeroing of sensitive arrays (`PWH-E2`, Version `00.71.00`)  
-  _Epic: Input Hygiene and Secure Handling; Module: `security-core`_
+  _Epic: Input Hygiene and Secure Handling; Module: `jSentinel-core`_
 - Optional module for k-anonymity checks (`PWH-F3`, Version `00.71.00`)  
-  _Epic: Quality and Compromise Checking; Module: `security-credentials-hibp`_
+  _Epic: Quality and Compromise Checking; Module: `jSentinel-credentials-hibp`_
 - Uniform public error message (`PWH-G4`, Version `00.71.00`)  
-  _Epic: Integration into the Existing Security Workflow; Module: `security-core`_
+  _Epic: Integration into the Existing Security Workflow; Module: `jSentinel-core`_
 - Measurement points for duration per `hash` and `verify` (`PWH-H1`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 - Audit and metric signals (`PWH-N8`, Version `00.71.00`)  
-  _Epic: Abuse Detection and Rate Limiting; Module: `security-core` / optional module_
+  _Epic: Abuse Detection and Rate Limiting; Module: `jSentinel-core` / optional module_
 - `SecretValue` or `PasswordSecret` (`PWH-P1`, Version `00.71.00`)  
-  _Epic: SecretValue API and Secret Handling; Module: `security-core`_
+  _Epic: SecretValue API and Secret Handling; Module: `jSentinel-core`_
 - `AutoCloseable` lifecycle (`PWH-P2`, Version `00.71.00`)  
-  _Epic: SecretValue API and Secret Handling; Module: `security-core`_
+  _Epic: SecretValue API and Secret Handling; Module: `jSentinel-core`_
 - Controlled conversion to UTF-8 (`PWH-P3`, Version `00.71.00`)  
-  _Epic: SecretValue API and Secret Handling; Module: `security-core`_
+  _Epic: SecretValue API and Secret Handling; Module: `jSentinel-core`_
 - No secret in `toString()` (`PWH-P4`, Version `00.71.00`)  
-  _Epic: SecretValue API and Secret Handling; Module: `security-core`_
+  _Epic: SecretValue API and Secret Handling; Module: `jSentinel-core`_
 - Destroyed state (`PWH-P5`, Version `00.71.00`)  
-  _Epic: SecretValue API and Secret Handling; Module: `security-core`_
+  _Epic: SecretValue API and Secret Handling; Module: `jSentinel-core`_
 - Tests against accidental exposure (`PWH-P7`, Version `00.71.00`)  
   _Epic: SecretValue API and Secret Handling; Module: Tests_
 - Tenant-safe audit data (`PWH-R5`, Version `00.71.00`)  
-  _Epic: Tenant-Specific Credential Policies; Module: `security-core`_
+  _Epic: Tenant-Specific Credential Policies; Module: `jSentinel-core`_
 - No tenant leak in error messages (`PWH-R6`, Version `00.71.00`)  
-  _Epic: Tenant-Specific Credential Policies; Module: `security-core`_
+  _Epic: Tenant-Specific Credential Policies; Module: `jSentinel-core`_
 
 
 ## CWE-203 – Observable Discrepancy
@@ -137,32 +137,32 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - New `PasswordHashingService` architecture instead of stabilising the experimental `PasswordHasher` API (`PWH-A1`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Encapsulated constant-time-like comparison (`PWH-A8`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Dummy verification for non-existent users and faulty hash states (`PWH-A9`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Explicit result objects instead of Boolean return values (`PWH-A10`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Generic public errors, differentiated internal audit types (`PWH-A11`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Pepper-symmetric dummy path (`PWH-D8`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`_
 - Uniform public error message (`PWH-G4`, Version `00.71.00`)  
-  _Epic: Integration into the Existing Security Workflow; Module: `security-core`_
+  _Epic: Integration into the Existing Security Workflow; Module: `jSentinel-core`_
 - Internal error classification (`PWH-G5`, Version `00.71.00`)  
-  _Epic: Integration into the Existing Security Workflow; Module: `security-core`_
+  _Epic: Integration into the Existing Security Workflow; Module: `jSentinel-core`_
 - Generic reset error messages (`PWH-L6`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core`_
 - Generic public response (`PWH-N7`, Version `00.71.00`)  
-  _Epic: Abuse Detection and Rate Limiting; Module: `security-core`_
+  _Epic: Abuse Detection and Rate Limiting; Module: `jSentinel-core`_
 - No tenant leak in error messages (`PWH-R6`, Version `00.71.00`)  
-  _Epic: Tenant-Specific Credential Policies; Module: `security-core`_
+  _Epic: Tenant-Specific Credential Policies; Module: `jSentinel-core`_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
 - Timing-sensitive failure-path tests (`PWH-I7`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 
 
 ## CWE-208 – Observable Timing Discrepancy
@@ -170,16 +170,16 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Encapsulated constant-time-like comparison (`PWH-A8`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Dummy verification for non-existent users and faulty hash states (`PWH-A9`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Pepper-symmetric dummy path (`PWH-D8`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
 - Timing-sensitive failure-path tests (`PWH-I7`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 
 
 ## CWE-209 – Generation of Error Message Containing Sensitive Information
@@ -187,19 +187,19 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Explicit result objects instead of Boolean return values (`PWH-A10`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Generic public errors, differentiated internal audit types (`PWH-A11`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Uniform public error message (`PWH-G4`, Version `00.71.00`)  
-  _Epic: Integration into the Existing Security Workflow; Module: `security-core`_
+  _Epic: Integration into the Existing Security Workflow; Module: `jSentinel-core`_
 - Internal error classification (`PWH-G5`, Version `00.71.00`)  
-  _Epic: Integration into the Existing Security Workflow; Module: `security-core`_
+  _Epic: Integration into the Existing Security Workflow; Module: `jSentinel-core`_
 - Generic reset error messages (`PWH-L6`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core`_
 - Generic public response (`PWH-N7`, Version `00.71.00`)  
-  _Epic: Abuse Detection and Rate Limiting; Module: `security-core`_
+  _Epic: Abuse Detection and Rate Limiting; Module: `jSentinel-core`_
 - No tenant leak in error messages (`PWH-R6`, Version `00.71.00`)  
-  _Epic: Tenant-Specific Credential Policies; Module: `security-core`_
+  _Epic: Tenant-Specific Credential Policies; Module: `jSentinel-core`_
 
 
 ## CWE-223 – Omission of Security-relevant Information
@@ -207,11 +207,11 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Algorithm distribution (`PWH-H2`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 - Rehash counters (`PWH-H3`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 - Credential lifecycle metrics (`PWH-H7`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
@@ -228,7 +228,7 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - JDK provider for `PBKDF2WithHmacSHA256` (`PWH-A4`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 
 
 ## CWE-257 – Storing Passwords in a Recoverable Format
@@ -236,11 +236,11 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - JDK provider for `PBKDF2WithHmacSHA256` (`PWH-A4`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - No blanket offline rotation without the password (`PWH-D5`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `docs`, `security-core`_
+  _Epic: Secret and Pepper Management; Module: `docs`, `jSentinel-core`_
 - Secure history storage (`PWH-O6`, Version `00.71.00`)  
-  _Epic: Context-Aware Password Policy and Password History; Module: `security-core` / `CredentialStore`_
+  _Epic: Context-Aware Password Policy and Password History; Module: `jSentinel-core` / `CredentialStore`_
 
 
 ## CWE-284 – Improper Access Control
@@ -248,30 +248,30 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Minimal `CredentialType` hook (`PWH-A15`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - `CredentialStatus` model (`PWH-K1`, Version `00.71.00`)  
-  _Epic: Credential Lifecycle and Password Change; Module: `security-core`_
+  _Epic: Credential Lifecycle and Password Change; Module: `jSentinel-core`_
 - `CredentialLifecycleService` (`PWH-K2`, Version `00.71.00`)  
-  _Epic: Credential Lifecycle and Password Change; Module: `security-core`_
+  _Epic: Credential Lifecycle and Password Change; Module: `jSentinel-core`_
 - UI/API-neutral status decision (`PWH-K9`, Version `00.71.00`)  
-  _Epic: Credential Lifecycle and Password Change; Module: `security-core`_
+  _Epic: Credential Lifecycle and Password Change; Module: `jSentinel-core`_
 - `TenantCredentialContext` (`PWH-R1`, Version `00.71.00`)  
-  _Epic: Tenant-Specific Credential Policies; Module: `security-core`_
+  _Epic: Tenant-Specific Credential Policies; Module: `jSentinel-core`_
 - Tenant-specific `PasswordHashPolicy` (`PWH-R2`, Version `00.71.00`)  
-  _Epic: Tenant-Specific Credential Policies; Module: `security-core`_
+  _Epic: Tenant-Specific Credential Policies; Module: `jSentinel-core`_
 - Tenant-specific pepper key resolution (`PWH-R3`, Version `00.71.00`)  
-  _Epic: Tenant-Specific Credential Policies; Module: `security-core`_
+  _Epic: Tenant-Specific Credential Policies; Module: `jSentinel-core`_
 - Tenant-specific rate limiting (`PWH-R4`, Version `00.71.00`)  
   _Epic: Tenant-Specific Credential Policies; Module: `security-credentials-abuse`_
 - Tenant-safe audit data (`PWH-R5`, Version `00.71.00`)  
-  _Epic: Tenant-Specific Credential Policies; Module: `security-core`_
+  _Epic: Tenant-Specific Credential Policies; Module: `jSentinel-core`_
 - Default for single-tenant applications (`PWH-R7`, Version `00.71.00`)  
-  _Epic: Tenant-Specific Credential Policies; Module: `security-core`_
+  _Epic: Tenant-Specific Credential Policies; Module: `jSentinel-core`_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
 - Lifecycle status tests (`PWH-I10`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 
 
 ## CWE-287 – Improper Authentication
@@ -279,64 +279,64 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - New `PasswordHashingService` architecture instead of stabilising the experimental `PasswordHasher` API (`PWH-A1`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Dummy verification for non-existent users and faulty hash states (`PWH-A9`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Explicit result objects instead of Boolean return values (`PWH-A10`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Provider selection during verification based on the algorithm identifier encoded in the hash (`PWH-A13`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Minimal `CredentialType` hook (`PWH-A15`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Unicode normalisation (`PWH-E3`, Version `00.71.00`)  
-  _Epic: Input Hygiene and Secure Handling; Module: `security-core`_
+  _Epic: Input Hygiene and Secure Handling; Module: `jSentinel-core`_
 - `CompromisedPasswordChecker` SPI (`PWH-F1`, Version `00.71.00`)  
-  _Epic: Quality and Compromise Checking; Module: `security-core`_
+  _Epic: Quality and Compromise Checking; Module: `jSentinel-core`_
 - Configurable behaviour when a check fails (`PWH-F4`, Version `00.71.00`)  
-  _Epic: Quality and Compromise Checking; Module: `security-core`_
+  _Epic: Quality and Compromise Checking; Module: `jSentinel-core`_
 - Check only when a password is set or changed (`PWH-F5`, Version `00.71.00`)  
-  _Epic: Quality and Compromise Checking; Module: `security-core`, `security-credentials-hibp`_
+  _Epic: Quality and Compromise Checking; Module: `jSentinel-core`, `jSentinel-credentials-hibp`_
 - Integration with `LoginAttemptPolicy` (`PWH-G2`, Version `00.71.00`)  
-  _Epic: Integration into the Existing Security Workflow; Module: `security-core`_
+  _Epic: Integration into the Existing Security Workflow; Module: `jSentinel-core`_
 - Demo integration for Vaadin and REST (`PWH-G6`, Version `00.71.00`)  
   _Epic: Integration into the Existing Security Workflow; Module: `demo-*`_
 - `CredentialStatus` model (`PWH-K1`, Version `00.71.00`)  
-  _Epic: Credential Lifecycle and Password Change; Module: `security-core`_
+  _Epic: Credential Lifecycle and Password Change; Module: `jSentinel-core`_
 - `CredentialLifecycleService` (`PWH-K2`, Version `00.71.00`)  
-  _Epic: Credential Lifecycle and Password Change; Module: `security-core`_
+  _Epic: Credential Lifecycle and Password Change; Module: `jSentinel-core`_
 - Secure password change (`PWH-K3`, Version `00.71.00`)  
-  _Epic: Credential Lifecycle and Password Change; Module: `security-core` / Demo_
+  _Epic: Credential Lifecycle and Password Change; Module: `jSentinel-core` / Demo_
 - Re-authentication before sensitive credential operations (`PWH-K4`, Version `00.71.00`)  
-  _Epic: Credential Lifecycle and Password Change; Module: `security-core` / Integrationsschicht_
+  _Epic: Credential Lifecycle and Password Change; Module: `jSentinel-core` / Integrationsschicht_
 - Session handling after password change (`PWH-K5`, Version `00.71.00`)  
   _Epic: Credential Lifecycle and Password Change; Module: Integrationsschicht / Demo_
 - Forced password change (`PWH-K6`, Version `00.71.00`)  
-  _Epic: Credential Lifecycle and Password Change; Module: `security-core`_
+  _Epic: Credential Lifecycle and Password Change; Module: `jSentinel-core`_
 - `PasswordResetTokenService` (`PWH-L1`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core` or `security-credentials-recovery`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core` or `security-credentials-recovery`_
 - Reset sets credential status (`PWH-L7`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core`_
 - No account state change before a valid token (`PWH-L10`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core`_
 - Persistence-neutral demos (`PWH-M7`, Version `00.71.00`)  
   _Epic: Credential Store and Persistence Consistency; Module: `demo-*`_
 - `AbuseDetectionService` (`PWH-N1`, Version `00.71.00`)  
-  _Epic: Abuse Detection and Rate Limiting; Module: `security-core` or `security-credentials-abuse`_
+  _Epic: Abuse Detection and Rate Limiting; Module: `jSentinel-core` or `security-credentials-abuse`_
 - Password spraying detection (`PWH-N3`, Version `00.71.00`)  
   _Epic: Abuse Detection and Rate Limiting; Module: `security-credentials-abuse`_
 - Credential stuffing signals (`PWH-N4`, Version `00.71.00`)  
   _Epic: Abuse Detection and Rate Limiting; Module: `security-credentials-abuse`_
 - Progressive response (`PWH-N6`, Version `00.71.00`)  
-  _Epic: Abuse Detection and Rate Limiting; Module: `security-core` / optional module_
+  _Epic: Abuse Detection and Rate Limiting; Module: `jSentinel-core` / optional module_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
 - Lifecycle status tests (`PWH-I10`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 - Emergency policy override (`PWH-Q4`, Version `00.71.00`)  
-  _Epic: Emergency Playbooks and Operational Responses; Module: `security-core`; Relationship: operational response/playbook: reduces damage duration and incorrect responses during incidents._
+  _Epic: Emergency Playbooks and Operational Responses; Module: `jSentinel-core`; Relationship: operational response/playbook: reduces damage duration and incorrect responses during incidents._
 - Mass forced password change (`PWH-Q5`, Version `00.71.00`)  
-  _Epic: Emergency Playbooks and Operational Responses; Module: `security-core` / Integrationsschicht; Relationship: operational response/playbook: reduces damage duration and incorrect responses during incidents._
+  _Epic: Emergency Playbooks and Operational Responses; Module: `jSentinel-core` / Integrationsschicht; Relationship: operational response/playbook: reduces damage duration and incorrect responses during incidents._
 - Mapping to OWASP ASVS V2 (Authentication) (`PWH-S1`, Version `00.71.00`)  
   _Epic: Compliance and Standards Evidence; Module: `docs`; Relationship: governance/evidence: creates traceability, but does not eliminate a runtime weakness on its own._
 
@@ -346,15 +346,15 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Minimal `CredentialType` hook (`PWH-A15`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Configurable behaviour when a check fails (`PWH-F4`, Version `00.71.00`)  
-  _Epic: Quality and Compromise Checking; Module: `security-core`_
+  _Epic: Quality and Compromise Checking; Module: `jSentinel-core`_
 - Integration into the bootstrap flow (`PWH-G1`, Version `00.71.00`)  
-  _Epic: Integration into the Existing Security Workflow; Module: `security-core`_
+  _Epic: Integration into the Existing Security Workflow; Module: `jSentinel-core`_
 - Re-authentication before sensitive credential operations (`PWH-K4`, Version `00.71.00`)  
-  _Epic: Credential Lifecycle and Password Change; Module: `security-core` / Integrationsschicht_
+  _Epic: Credential Lifecycle and Password Change; Module: `jSentinel-core` / Integrationsschicht_
 - No account state change before a valid token (`PWH-L10`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core`_
 
 
 ## CWE-307 – Improper Restriction of Excessive Authentication Attempts
@@ -362,21 +362,21 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Dummy verification for non-existent users and faulty hash states (`PWH-A9`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Integration with `LoginAttemptPolicy` (`PWH-G2`, Version `00.71.00`)  
-  _Epic: Integration into the Existing Security Workflow; Module: `security-core`_
+  _Epic: Integration into the Existing Security Workflow; Module: `jSentinel-core`_
 - Demo integration for Vaadin and REST (`PWH-G6`, Version `00.71.00`)  
   _Epic: Integration into the Existing Security Workflow; Module: `demo-*`_
 - Abuse and rate-limit metrics (`PWH-H8`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core` or `security-credentials-abuse`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core` or `security-credentials-abuse`_
 - Limiting concurrent KDF computations (`PWH-H9`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 - Reset rate limiting (`PWH-L9`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core` / `security-credentials-abuse`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core` / `security-credentials-abuse`_
 - `AbuseDetectionService` (`PWH-N1`, Version `00.71.00`)  
-  _Epic: Abuse Detection and Rate Limiting; Module: `security-core` or `security-credentials-abuse`_
+  _Epic: Abuse Detection and Rate Limiting; Module: `jSentinel-core` or `security-credentials-abuse`_
 - Multidimensional rate limiting (`PWH-N2`, Version `00.71.00`)  
-  _Epic: Abuse Detection and Rate Limiting; Module: `security-core` / optional module_
+  _Epic: Abuse Detection and Rate Limiting; Module: `jSentinel-core` / optional module_
 - Password spraying detection (`PWH-N3`, Version `00.71.00`)  
   _Epic: Abuse Detection and Rate Limiting; Module: `security-credentials-abuse`_
 - Credential stuffing signals (`PWH-N4`, Version `00.71.00`)  
@@ -384,9 +384,9 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 - Reset abuse detection (`PWH-N5`, Version `00.71.00`)  
   _Epic: Abuse Detection and Rate Limiting; Module: `security-credentials-abuse`_
 - Progressive response (`PWH-N6`, Version `00.71.00`)  
-  _Epic: Abuse Detection and Rate Limiting; Module: `security-core` / optional module_
+  _Epic: Abuse Detection and Rate Limiting; Module: `jSentinel-core` / optional module_
 - Generic public response (`PWH-N7`, Version `00.71.00`)  
-  _Epic: Abuse Detection and Rate Limiting; Module: `security-core`_
+  _Epic: Abuse Detection and Rate Limiting; Module: `jSentinel-core`_
 - Cluster/multi-node capability as an integration requirement (`PWH-N9`, Version `00.71.00`)  
   _Epic: Abuse Detection and Rate Limiting; Module: docs / Integrationsschicht_
 - Tenant-specific rate limiting (`PWH-R4`, Version `00.71.00`)  
@@ -409,27 +409,27 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 - Optional PKCS#11/HSM key provider (`PWH-D7`, Version `00.71.00`)  
   _Epic: Secret and Pepper Management; Module: separate optional module or `security-crypto-bcfips`_
 - Processing via `SecretValue`, `char[]`, and `byte[]` instead of `String` (`PWH-E1`, Version `00.71.00`)  
-  _Epic: Input Hygiene and Secure Handling; Module: `security-core`_
+  _Epic: Input Hygiene and Secure Handling; Module: `jSentinel-core`_
 - Deterministic zeroing of sensitive arrays (`PWH-E2`, Version `00.71.00`)  
-  _Epic: Input Hygiene and Secure Handling; Module: `security-core`_
+  _Epic: Input Hygiene and Secure Handling; Module: `jSentinel-core`_
 - Hashed storage of reset tokens (`PWH-L3`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core` / `CredentialStore`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core` / `CredentialStore`_
 - Selector/verifier model for reset tokens (`PWH-L11`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core` or `security-credentials-recovery`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core` or `security-credentials-recovery`_
 - Common token-digest abstraction (`PWH-L12`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core`_
 - Secure history storage (`PWH-O6`, Version `00.71.00`)  
-  _Epic: Context-Aware Password Policy and Password History; Module: `security-core` / `CredentialStore`_
+  _Epic: Context-Aware Password Policy and Password History; Module: `jSentinel-core` / `CredentialStore`_
 - `SecretValue` or `PasswordSecret` (`PWH-P1`, Version `00.71.00`)  
-  _Epic: SecretValue API and Secret Handling; Module: `security-core`_
+  _Epic: SecretValue API and Secret Handling; Module: `jSentinel-core`_
 - `AutoCloseable` lifecycle (`PWH-P2`, Version `00.71.00`)  
-  _Epic: SecretValue API and Secret Handling; Module: `security-core`_
+  _Epic: SecretValue API and Secret Handling; Module: `jSentinel-core`_
 - Controlled conversion to UTF-8 (`PWH-P3`, Version `00.71.00`)  
-  _Epic: SecretValue API and Secret Handling; Module: `security-core`_
+  _Epic: SecretValue API and Secret Handling; Module: `jSentinel-core`_
 - Destroyed state (`PWH-P5`, Version `00.71.00`)  
-  _Epic: SecretValue API and Secret Handling; Module: `security-core`_
+  _Epic: SecretValue API and Secret Handling; Module: `jSentinel-core`_
 - Interoperability with existing `char[]` APIs (`PWH-P6`, Version `00.71.00`)  
-  _Epic: SecretValue API and Secret Handling; Module: `security-core`_
+  _Epic: SecretValue API and Secret Handling; Module: `jSentinel-core`_
 
 
 ## CWE-321 – Use of Hard-coded Cryptographic Key
@@ -437,25 +437,25 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Pepper key ID in the stored hash value (`PWH-D2`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`_
 - `PepperService` SPI (`PWH-D3`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`_
 - Pepper rotation after successful verification (`PWH-D4`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`_
 - Local pepper source for demos and development (`PWH-D6`, Version `00.71.00`)  
   _Epic: Secret and Pepper Management; Module: `demo-*` or optional example module_
 - Optional PKCS#11/HSM key provider (`PWH-D7`, Version `00.71.00`)  
   _Epic: Secret and Pepper Management; Module: separate optional module or `security-crypto-bcfips`_
 - Pepper-symmetric dummy path (`PWH-D8`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`_
 - Pepper key generation and initial provisioning (`PWH-D9`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`, `docs`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`, `docs`_
 - Policy transition ‘without pepper → with pepper’ (`PWH-D10`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`_
 - Rotation window with multiple valid pepper keys (`PWH-D11`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`_
 - Tenant-specific pepper key resolution (`PWH-R3`, Version `00.71.00`)  
-  _Epic: Tenant-Specific Credential Policies; Module: `security-core`_
+  _Epic: Tenant-Specific Credential Policies; Module: `jSentinel-core`_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
@@ -468,34 +468,34 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - `PasswordHashProvider` SPI with resolution via `ServiceLoader` (`PWH-A2`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Uniform self-describing codec; standards-compliant PHC/MCF string per method in its own envelope (`PWH-A3`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Provider selection during verification based on the algorithm identifier encoded in the hash (`PWH-A13`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Separation of parsing, validation, provider resolution, pepper resolution, verification, and rehash decision (`PWH-A14`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Envelope format version separate from the policy version (`PWH-A16`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Policy versioning (`PWH-C2`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Format deprecation for own older format versions (`PWH-C4`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - No obligation to support legacy format compatibility (`PWH-C5`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `docs`, `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `docs`, `jSentinel-core`_
 - Algorithm fallback via policy, not implementation accident (`PWH-C7`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Pepper as a post-KDF HMAC over the derived key (`PWH-D1`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`_
 - Local provider selection per cryptographic operation (`PWH-J1`, Version `00.71.00`)  
-  _Epic: Provider Agility and Distribution Trust; Module: `security-core`_
+  _Epic: Provider Agility and Distribution Trust; Module: `jSentinel-core`_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
 - Known-answer test vectors per method (`PWH-I1`, Version `00.71.00`)  
   _Epic: Tests and Reproducibility; Module: respective module; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 - Codec round-trip tests (`PWH-I2`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 
 
 ## CWE-326 – Inadequate Encryption Strength
@@ -503,19 +503,19 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Central `PasswordHashPolicy` (`PWH-A5`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Secure core defaults (`PWH-A12`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Morn profile with Argon2id as the preferred method (`PWH-B6`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - No silent downgrade when the BC module is missing (`PWH-B7`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-core`, `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-core`, `jSentinel-crypto-bc`_
 - Central parameter policy per algorithm (`PWH-C1`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Deprecation policy by cut-off date or parameter set (`PWH-C6`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Algorithm fallback via policy, not implementation accident (`PWH-C7`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - FIPS profile as a separate deliberate operating mode (`PWH-J8`, Version `00.71.00`)  
   _Epic: Provider Agility and Distribution Trust; Module: `security-crypto-bcfips`, `docs`_
 
@@ -525,73 +525,73 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - `PasswordHashProvider` SPI with resolution via `ServiceLoader` (`PWH-A2`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Uniform self-describing codec; standards-compliant PHC/MCF string per method in its own envelope (`PWH-A3`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - JDK provider for `PBKDF2WithHmacSHA256` (`PWH-A4`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Central `PasswordHashPolicy` (`PWH-A5`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Policy-based `needsRehash` (`PWH-A6`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Transparent upgrade after successful verification (`PWH-A7`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Secure core defaults (`PWH-A12`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Provider selection during verification based on the algorithm identifier encoded in the hash (`PWH-A13`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Envelope format version separate from the policy version (`PWH-A16`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
-- New `security-crypto-bc` module (`PWH-B1`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
+- New `jSentinel-crypto-bc` module (`PWH-B1`, Version `00.71.00`)  
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - Argon2id provider (`PWH-B2`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - bcrypt provider (`PWH-B3`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - scrypt provider (`PWH-B4`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - Registration via `ServiceLoader` (`PWH-B5`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - Morn profile with Argon2id as the preferred method (`PWH-B6`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - No silent downgrade when the BC module is missing (`PWH-B7`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-core`, `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-core`, `jSentinel-crypto-bc`_
 - Cross-provider and round-trip tests (`PWH-B8`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - Central parameter policy per algorithm (`PWH-C1`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Policy versioning (`PWH-C2`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Transparent rehash after successful verification (`PWH-C3`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Format deprecation for own older format versions (`PWH-C4`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - No obligation to support legacy format compatibility (`PWH-C5`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `docs`, `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `docs`, `jSentinel-core`_
 - Deprecation policy by cut-off date or parameter set (`PWH-C6`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Algorithm fallback via policy, not implementation accident (`PWH-C7`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Optional pre-hashing of overlong passwords only with pepper HMAC (`PWH-E5`, Version `00.71.00`)  
-  _Epic: Input Hygiene and Secure Handling; Module: `security-core`_
+  _Epic: Input Hygiene and Secure Handling; Module: `jSentinel-core`_
 - Active provider and policy reporting (`PWH-H4`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 - Central configuration in the existing loading style (`PWH-H5`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 - Start-up validation of configuration (`PWH-H6`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 - Local provider selection per cryptographic operation (`PWH-J1`, Version `00.71.00`)  
-  _Epic: Provider Agility and Distribution Trust; Module: `security-core`_
+  _Epic: Provider Agility and Distribution Trust; Module: `jSentinel-core`_
 - Configurable JCA/JCE provider per primitive (`PWH-J2`, Version `00.71.00`)  
-  _Epic: Provider Agility and Distribution Trust; Module: `security-core`_
+  _Epic: Provider Agility and Distribution Trust; Module: `jSentinel-core`_
 - No change to the global JVM provider order without explicit opt-in (`PWH-J3`, Version `00.71.00`)  
-  _Epic: Provider Agility and Distribution Trust; Module: `security-core`_
+  _Epic: Provider Agility and Distribution Trust; Module: `jSentinel-core`_
 - Algorithm change via policy (`PWH-J5`, Version `00.71.00`)  
-  _Epic: Provider Agility and Distribution Trust; Module: `security-core`_
+  _Epic: Provider Agility and Distribution Trust; Module: `jSentinel-core`_
 - Documented JDK distribution decision (`PWH-J6`, Version `00.71.00`)  
   _Epic: Provider Agility and Distribution Trust; Module: `docs`_
 - SBOM and provenance evidence for the cryptographic path (`PWH-J7`, Version `00.71.00`)  
-  _Epic: Provider Agility and Distribution Trust; Module: `security-core`, `security-crypto-bc`, Build_
+  _Epic: Provider Agility and Distribution Trust; Module: `jSentinel-core`, `jSentinel-crypto-bc`, Build_
 - FIPS profile as a separate deliberate operating mode (`PWH-J8`, Version `00.71.00`)  
   _Epic: Provider Agility and Distribution Trust; Module: `security-crypto-bcfips`, `docs`_
 
@@ -602,15 +602,15 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 - Known-answer test vectors per method (`PWH-I1`, Version `00.71.00`)  
   _Epic: Tests and Reproducibility; Module: respective module; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 - Unsupported-algorithm tests (`PWH-I4`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 - Differential tests for BC providers (`PWH-I5`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-crypto-bc`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-crypto-bc`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 - Algorithm compromise playbook (`PWH-Q2`, Version `00.71.00`)  
   _Epic: Emergency Playbooks and Operational Responses; Module: `docs`; Relationship: operational response/playbook: reduces damage duration and incorrect responses during incidents._
 - Provider compromise playbook (`PWH-Q3`, Version `00.71.00`)  
   _Epic: Emergency Playbooks and Operational Responses; Module: `docs`; Relationship: operational response/playbook: reduces damage duration and incorrect responses during incidents._
 - Emergency policy override (`PWH-Q4`, Version `00.71.00`)  
-  _Epic: Emergency Playbooks and Operational Responses; Module: `security-core`; Relationship: operational response/playbook: reduces damage duration and incorrect responses during incidents._
+  _Epic: Emergency Playbooks and Operational Responses; Module: `jSentinel-core`; Relationship: operational response/playbook: reduces damage duration and incorrect responses during incidents._
 - Document rollback boundaries (`PWH-Q8`, Version `00.71.00`)  
   _Epic: Emergency Playbooks and Operational Responses; Module: `docs`; Relationship: operational response/playbook: reduces damage duration and incorrect responses during incidents._
 
@@ -620,22 +620,22 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Pepper key generation and initial provisioning (`PWH-D9`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`, `docs`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`, `docs`_
 - Configurable JCA/JCE provider per primitive (`PWH-J2`, Version `00.71.00`)  
-  _Epic: Provider Agility and Distribution Trust; Module: `security-core`_
+  _Epic: Provider Agility and Distribution Trust; Module: `jSentinel-core`_
 - Configurable entropy source (`PWH-J4`, Version `00.71.00`)  
-  _Epic: Provider Agility and Distribution Trust; Module: `security-core`_
+  _Epic: Provider Agility and Distribution Trust; Module: `jSentinel-core`_
 - Cryptographically strong reset tokens (`PWH-L2`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core`_
 - Common token-digest abstraction (`PWH-L12`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core`_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
 - Deterministic test mode with fixed salt (`PWH-I6`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 - Production lockout for test parameters (`PWH-I8`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 
 
 ## CWE-338 – Use of Cryptographically Weak Pseudo-Random Number Generator
@@ -643,20 +643,20 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Pepper key generation and initial provisioning (`PWH-D9`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`, `docs`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`, `docs`_
 - Configurable JCA/JCE provider per primitive (`PWH-J2`, Version `00.71.00`)  
-  _Epic: Provider Agility and Distribution Trust; Module: `security-core`_
+  _Epic: Provider Agility and Distribution Trust; Module: `jSentinel-core`_
 - Configurable entropy source (`PWH-J4`, Version `00.71.00`)  
-  _Epic: Provider Agility and Distribution Trust; Module: `security-core`_
+  _Epic: Provider Agility and Distribution Trust; Module: `jSentinel-core`_
 - Cryptographically strong reset tokens (`PWH-L2`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core`_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
 - Deterministic test mode with fixed salt (`PWH-I6`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 - Production lockout for test parameters (`PWH-I8`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 
 
 ## CWE-362 – Race Condition
@@ -664,19 +664,19 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Single-use reset tokens (`PWH-L4`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core` / `CredentialStore`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core` / `CredentialStore`_
 - `CredentialStore` abstraction (`PWH-M1`, Version `00.71.00`)  
-  _Epic: Credential Store and Persistence Consistency; Module: `security-core`_
+  _Epic: Credential Store and Persistence Consistency; Module: `jSentinel-core`_
 - Atomic rehash via compare-and-swap (`PWH-M2`, Version `00.71.00`)  
-  _Epic: Credential Store and Persistence Consistency; Module: `security-core` / Integrationsschicht_
+  _Epic: Credential Store and Persistence Consistency; Module: `jSentinel-core` / Integrationsschicht_
 - Atomic password change (`PWH-M3`, Version `00.71.00`)  
-  _Epic: Credential Store and Persistence Consistency; Module: `security-core` / Integrationsschicht_
+  _Epic: Credential Store and Persistence Consistency; Module: `jSentinel-core` / Integrationsschicht_
 - Atomic reset-token consumption (`PWH-M4`, Version `00.71.00`)  
-  _Epic: Credential Store and Persistence Consistency; Module: `security-core` / Integrationsschicht_
+  _Epic: Credential Store and Persistence Consistency; Module: `jSentinel-core` / Integrationsschicht_
 - Optimistic-locking metadata (`PWH-M5`, Version `00.71.00`)  
-  _Epic: Credential Store and Persistence Consistency; Module: `security-core`_
+  _Epic: Credential Store and Persistence Consistency; Module: `jSentinel-core`_
 - No blind overwrites during rehash (`PWH-M6`, Version `00.71.00`)  
-  _Epic: Credential Store and Persistence Consistency; Module: `security-core` / Integrationsschicht_
+  _Epic: Credential Store and Persistence Consistency; Module: `jSentinel-core` / Integrationsschicht_
 - Persistence-neutral demos (`PWH-M7`, Version `00.71.00`)  
   _Epic: Credential Store and Persistence Consistency; Module: `demo-*`_
 - Race-condition test cases (`PWH-M8`, Version `00.71.00`)  
@@ -685,7 +685,7 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Supporting Features, Tests, Governance, or Playbooks**
 
 - Race-condition tests for rehash and reset (`PWH-I9`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core` / Integrationsmodul; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core` / Integrationsmodul; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 
 
 ## CWE-367 – Time-of-check Time-of-use Race Condition
@@ -693,19 +693,19 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Single-use reset tokens (`PWH-L4`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core` / `CredentialStore`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core` / `CredentialStore`_
 - `CredentialStore` abstraction (`PWH-M1`, Version `00.71.00`)  
-  _Epic: Credential Store and Persistence Consistency; Module: `security-core`_
+  _Epic: Credential Store and Persistence Consistency; Module: `jSentinel-core`_
 - Atomic rehash via compare-and-swap (`PWH-M2`, Version `00.71.00`)  
-  _Epic: Credential Store and Persistence Consistency; Module: `security-core` / Integrationsschicht_
+  _Epic: Credential Store and Persistence Consistency; Module: `jSentinel-core` / Integrationsschicht_
 - Atomic password change (`PWH-M3`, Version `00.71.00`)  
-  _Epic: Credential Store and Persistence Consistency; Module: `security-core` / Integrationsschicht_
+  _Epic: Credential Store and Persistence Consistency; Module: `jSentinel-core` / Integrationsschicht_
 - Atomic reset-token consumption (`PWH-M4`, Version `00.71.00`)  
-  _Epic: Credential Store and Persistence Consistency; Module: `security-core` / Integrationsschicht_
+  _Epic: Credential Store and Persistence Consistency; Module: `jSentinel-core` / Integrationsschicht_
 - Optimistic-locking metadata (`PWH-M5`, Version `00.71.00`)  
-  _Epic: Credential Store and Persistence Consistency; Module: `security-core`_
+  _Epic: Credential Store and Persistence Consistency; Module: `jSentinel-core`_
 - No blind overwrites during rehash (`PWH-M6`, Version `00.71.00`)  
-  _Epic: Credential Store and Persistence Consistency; Module: `security-core` / Integrationsschicht_
+  _Epic: Credential Store and Persistence Consistency; Module: `jSentinel-core` / Integrationsschicht_
 - Persistence-neutral demos (`PWH-M7`, Version `00.71.00`)  
   _Epic: Credential Store and Persistence Consistency; Module: `demo-*`_
 - Race-condition test cases (`PWH-M8`, Version `00.71.00`)  
@@ -714,7 +714,7 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Supporting Features, Tests, Governance, or Playbooks**
 
 - Race-condition tests for rehash and reset (`PWH-I9`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core` / Integrationsmodul; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core` / Integrationsmodul; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 
 
 ## CWE-400 – Uncontrolled Resource Consumption
@@ -722,42 +722,42 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Separation of parsing, validation, provider resolution, pepper resolution, verification, and rehash decision (`PWH-A14`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Algorithm-specific parameter validators and resource estimates (`PWH-B9`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - Parameter calibration (`PWH-C8`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Persistable calibration profiles (`PWH-C9`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Upper-bound validation of hash parameters (`PWH-C10`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Length and encoding policy (`PWH-E4`, Version `00.71.00`)  
-  _Epic: Input Hygiene and Secure Handling; Module: `security-core`_
+  _Epic: Input Hygiene and Secure Handling; Module: `jSentinel-core`_
 - Configurable behaviour when a check fails (`PWH-F4`, Version `00.71.00`)  
-  _Epic: Quality and Compromise Checking; Module: `security-core`_
+  _Epic: Quality and Compromise Checking; Module: `jSentinel-core`_
 - Check only when a password is set or changed (`PWH-F5`, Version `00.71.00`)  
-  _Epic: Quality and Compromise Checking; Module: `security-core`, `security-credentials-hibp`_
+  _Epic: Quality and Compromise Checking; Module: `jSentinel-core`, `jSentinel-credentials-hibp`_
 - Limiting concurrent KDF computations (`PWH-H9`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 - Provider-based resource budget for memory-hard methods (`PWH-H10`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`, Provider-Module_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`, Provider-Module_
 - Reset rate limiting (`PWH-L9`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core` / `security-credentials-abuse`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core` / `security-credentials-abuse`_
 - Multidimensional rate limiting (`PWH-N2`, Version `00.71.00`)  
-  _Epic: Abuse Detection and Rate Limiting; Module: `security-core` / optional module_
+  _Epic: Abuse Detection and Rate Limiting; Module: `jSentinel-core` / optional module_
 - Cluster/multi-node capability as an integration requirement (`PWH-N9`, Version `00.71.00`)  
   _Epic: Abuse Detection and Rate Limiting; Module: docs / Integrationsschicht_
 - Minimum and maximum length (`PWH-O4`, Version `00.71.00`)  
-  _Epic: Context-Aware Password Policy and Password History; Module: `security-core`_
+  _Epic: Context-Aware Password Policy and Password History; Module: `jSentinel-core`_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
 - Malformed-input tests (`PWH-I3`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 - Abuse detection tests (`PWH-I11`, Version `00.71.00`)  
   _Epic: Tests and Reproducibility; Module: `security-credentials-abuse`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 - Resource budget tests (`PWH-I12`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`, Provider-Module; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`, Provider-Module; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 
 
 ## CWE-521 – Weak Password Requirements
@@ -765,33 +765,33 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Unicode normalisation (`PWH-E3`, Version `00.71.00`)  
-  _Epic: Input Hygiene and Secure Handling; Module: `security-core`_
+  _Epic: Input Hygiene and Secure Handling; Module: `jSentinel-core`_
 - Length and encoding policy (`PWH-E4`, Version `00.71.00`)  
-  _Epic: Input Hygiene and Secure Handling; Module: `security-core`_
+  _Epic: Input Hygiene and Secure Handling; Module: `jSentinel-core`_
 - `CompromisedPasswordChecker` SPI (`PWH-F1`, Version `00.71.00`)  
-  _Epic: Quality and Compromise Checking; Module: `security-core`_
+  _Epic: Quality and Compromise Checking; Module: `jSentinel-core`_
 - Pluggable strength estimation (`PWH-F2`, Version `00.71.00`)  
-  _Epic: Quality and Compromise Checking; Module: `security-core`_
+  _Epic: Quality and Compromise Checking; Module: `jSentinel-core`_
 - Optional module for k-anonymity checks (`PWH-F3`, Version `00.71.00`)  
-  _Epic: Quality and Compromise Checking; Module: `security-credentials-hibp`_
+  _Epic: Quality and Compromise Checking; Module: `jSentinel-credentials-hibp`_
 - Check only when a password is set or changed (`PWH-F5`, Version `00.71.00`)  
-  _Epic: Quality and Compromise Checking; Module: `security-core`, `security-credentials-hibp`_
+  _Epic: Quality and Compromise Checking; Module: `jSentinel-core`, `jSentinel-credentials-hibp`_
 - Local blocklists as the sovereign default (`PWH-F6`, Version `00.71.00`)  
-  _Epic: Quality and Compromise Checking; Module: `security-core` or optional data module_
+  _Epic: Quality and Compromise Checking; Module: `jSentinel-core` or optional data module_
 - No periodic rotation as the default (`PWH-K7`, Version `00.71.00`)  
-  _Epic: Credential Lifecycle and Password Change; Module: `security-core`, `docs`_
+  _Epic: Credential Lifecycle and Password Change; Module: `jSentinel-core`, `docs`_
 - `PasswordContext` (`PWH-O1`, Version `00.71.00`)  
-  _Epic: Context-Aware Password Policy and Password History; Module: `security-core`_
+  _Epic: Context-Aware Password Policy and Password History; Module: `jSentinel-core`_
 - Context-aware blocklist check (`PWH-O2`, Version `00.71.00`)  
-  _Epic: Context-Aware Password Policy and Password History; Module: `security-core`_
+  _Epic: Context-Aware Password Policy and Password History; Module: `jSentinel-core`_
 - No composition rules as the default (`PWH-O3`, Version `00.71.00`)  
-  _Epic: Context-Aware Password Policy and Password History; Module: `security-core`, `docs`_
+  _Epic: Context-Aware Password Policy and Password History; Module: `jSentinel-core`, `docs`_
 - Minimum and maximum length (`PWH-O4`, Version `00.71.00`)  
-  _Epic: Context-Aware Password Policy and Password History; Module: `security-core`_
+  _Epic: Context-Aware Password Policy and Password History; Module: `jSentinel-core`_
 - Optional password history (`PWH-O5`, Version `00.71.00`)  
-  _Epic: Context-Aware Password Policy and Password History; Module: `security-core`_
+  _Epic: Context-Aware Password Policy and Password History; Module: `jSentinel-core`_
 - Reuse check against older own policies (`PWH-O7`, Version `00.71.00`)  
-  _Epic: Context-Aware Password Policy and Password History; Module: `security-core`_
+  _Epic: Context-Aware Password Policy and Password History; Module: `jSentinel-core`_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
@@ -806,105 +806,105 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - New `PasswordHashingService` architecture instead of stabilising the experimental `PasswordHasher` API (`PWH-A1`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - `PasswordHashProvider` SPI with resolution via `ServiceLoader` (`PWH-A2`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Uniform self-describing codec; standards-compliant PHC/MCF string per method in its own envelope (`PWH-A3`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - JDK provider for `PBKDF2WithHmacSHA256` (`PWH-A4`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Central `PasswordHashPolicy` (`PWH-A5`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Policy-based `needsRehash` (`PWH-A6`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Transparent upgrade after successful verification (`PWH-A7`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Secure core defaults (`PWH-A12`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Separation of parsing, validation, provider resolution, pepper resolution, verification, and rehash decision (`PWH-A14`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Argon2id provider (`PWH-B2`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - bcrypt provider (`PWH-B3`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - scrypt provider (`PWH-B4`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - No silent downgrade when the BC module is missing (`PWH-B7`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-core`, `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-core`, `jSentinel-crypto-bc`_
 - Transparent rehash after successful verification (`PWH-C3`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - No obligation to support legacy format compatibility (`PWH-C5`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `docs`, `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `docs`, `jSentinel-core`_
 - Pepper as a post-KDF HMAC over the derived key (`PWH-D1`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`_
 - Pepper key ID in the stored hash value (`PWH-D2`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`_
 - `PepperService` SPI (`PWH-D3`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`_
 - Pepper rotation after successful verification (`PWH-D4`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`_
 - No blanket offline rotation without the password (`PWH-D5`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `docs`, `security-core`_
+  _Epic: Secret and Pepper Management; Module: `docs`, `jSentinel-core`_
 - Local pepper source for demos and development (`PWH-D6`, Version `00.71.00`)  
   _Epic: Secret and Pepper Management; Module: `demo-*` or optional example module_
 - Optional PKCS#11/HSM key provider (`PWH-D7`, Version `00.71.00`)  
   _Epic: Secret and Pepper Management; Module: separate optional module or `security-crypto-bcfips`_
 - Policy transition ‘without pepper → with pepper’ (`PWH-D10`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`_
 - Rotation window with multiple valid pepper keys (`PWH-D11`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`_
 - Processing via `SecretValue`, `char[]`, and `byte[]` instead of `String` (`PWH-E1`, Version `00.71.00`)  
-  _Epic: Input Hygiene and Secure Handling; Module: `security-core`_
+  _Epic: Input Hygiene and Secure Handling; Module: `jSentinel-core`_
 - Optional pre-hashing of overlong passwords only with pepper HMAC (`PWH-E5`, Version `00.71.00`)  
-  _Epic: Input Hygiene and Secure Handling; Module: `security-core`_
+  _Epic: Input Hygiene and Secure Handling; Module: `jSentinel-core`_
 - `CompromisedPasswordChecker` SPI (`PWH-F1`, Version `00.71.00`)  
-  _Epic: Quality and Compromise Checking; Module: `security-core`_
+  _Epic: Quality and Compromise Checking; Module: `jSentinel-core`_
 - Pluggable strength estimation (`PWH-F2`, Version `00.71.00`)  
-  _Epic: Quality and Compromise Checking; Module: `security-core`_
+  _Epic: Quality and Compromise Checking; Module: `jSentinel-core`_
 - Optional module for k-anonymity checks (`PWH-F3`, Version `00.71.00`)  
-  _Epic: Quality and Compromise Checking; Module: `security-credentials-hibp`_
+  _Epic: Quality and Compromise Checking; Module: `jSentinel-credentials-hibp`_
 - Local blocklists as the sovereign default (`PWH-F6`, Version `00.71.00`)  
-  _Epic: Quality and Compromise Checking; Module: `security-core` or optional data module_
+  _Epic: Quality and Compromise Checking; Module: `jSentinel-core` or optional data module_
 - Integration into the bootstrap flow (`PWH-G1`, Version `00.71.00`)  
-  _Epic: Integration into the Existing Security Workflow; Module: `security-core`_
+  _Epic: Integration into the Existing Security Workflow; Module: `jSentinel-core`_
 - Demo integration for Vaadin and REST (`PWH-G6`, Version `00.71.00`)  
   _Epic: Integration into the Existing Security Workflow; Module: `demo-*`_
 - Central configuration in the existing loading style (`PWH-H5`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 - FIPS profile as a separate deliberate operating mode (`PWH-J8`, Version `00.71.00`)  
   _Epic: Provider Agility and Distribution Trust; Module: `security-crypto-bcfips`, `docs`_
 - Secure password change (`PWH-K3`, Version `00.71.00`)  
-  _Epic: Credential Lifecycle and Password Change; Module: `security-core` / Demo_
+  _Epic: Credential Lifecycle and Password Change; Module: `jSentinel-core` / Demo_
 - Forced password change (`PWH-K6`, Version `00.71.00`)  
-  _Epic: Credential Lifecycle and Password Change; Module: `security-core`_
+  _Epic: Credential Lifecycle and Password Change; Module: `jSentinel-core`_
 - `PasswordResetTokenService` (`PWH-L1`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core` or `security-credentials-recovery`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core` or `security-credentials-recovery`_
 - Hashed storage of reset tokens (`PWH-L3`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core` / `CredentialStore`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core` / `CredentialStore`_
 - Selector/verifier model for reset tokens (`PWH-L11`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core` or `security-credentials-recovery`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core` or `security-credentials-recovery`_
 - Common token-digest abstraction (`PWH-L12`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core`_
 - `CredentialStore` abstraction (`PWH-M1`, Version `00.71.00`)  
-  _Epic: Credential Store and Persistence Consistency; Module: `security-core`_
+  _Epic: Credential Store and Persistence Consistency; Module: `jSentinel-core`_
 - Context-aware blocklist check (`PWH-O2`, Version `00.71.00`)  
-  _Epic: Context-Aware Password Policy and Password History; Module: `security-core`_
+  _Epic: Context-Aware Password Policy and Password History; Module: `jSentinel-core`_
 - Optional password history (`PWH-O5`, Version `00.71.00`)  
-  _Epic: Context-Aware Password Policy and Password History; Module: `security-core`_
+  _Epic: Context-Aware Password Policy and Password History; Module: `jSentinel-core`_
 - Secure history storage (`PWH-O6`, Version `00.71.00`)  
-  _Epic: Context-Aware Password Policy and Password History; Module: `security-core` / `CredentialStore`_
+  _Epic: Context-Aware Password Policy and Password History; Module: `jSentinel-core` / `CredentialStore`_
 - Reuse check against older own policies (`PWH-O7`, Version `00.71.00`)  
-  _Epic: Context-Aware Password Policy and Password History; Module: `security-core`_
+  _Epic: Context-Aware Password Policy and Password History; Module: `jSentinel-core`_
 - `SecretValue` or `PasswordSecret` (`PWH-P1`, Version `00.71.00`)  
-  _Epic: SecretValue API and Secret Handling; Module: `security-core`_
+  _Epic: SecretValue API and Secret Handling; Module: `jSentinel-core`_
 - Controlled conversion to UTF-8 (`PWH-P3`, Version `00.71.00`)  
-  _Epic: SecretValue API and Secret Handling; Module: `security-core`_
+  _Epic: SecretValue API and Secret Handling; Module: `jSentinel-core`_
 - Interoperability with existing `char[]` APIs (`PWH-P6`, Version `00.71.00`)  
-  _Epic: SecretValue API and Secret Handling; Module: `security-core`_
+  _Epic: SecretValue API and Secret Handling; Module: `jSentinel-core`_
 - Tenant-specific `PasswordHashPolicy` (`PWH-R2`, Version `00.71.00`)  
-  _Epic: Tenant-Specific Credential Policies; Module: `security-core`_
+  _Epic: Tenant-Specific Credential Policies; Module: `jSentinel-core`_
 - Tenant-specific pepper key resolution (`PWH-R3`, Version `00.71.00`)  
-  _Epic: Tenant-Specific Credential Policies; Module: `security-core`_
+  _Epic: Tenant-Specific Credential Policies; Module: `jSentinel-core`_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
@@ -915,7 +915,7 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 - Pepper compromise playbook (`PWH-Q1`, Version `00.71.00`)  
   _Epic: Emergency Playbooks and Operational Responses; Module: `docs`; Relationship: operational response/playbook: reduces damage duration and incorrect responses during incidents._
 - Mass forced password change (`PWH-Q5`, Version `00.71.00`)  
-  _Epic: Emergency Playbooks and Operational Responses; Module: `security-core` / Integrationsschicht; Relationship: operational response/playbook: reduces damage duration and incorrect responses during incidents._
+  _Epic: Emergency Playbooks and Operational Responses; Module: `jSentinel-core` / Integrationsschicht; Relationship: operational response/playbook: reduces damage duration and incorrect responses during incidents._
 - Document rollback boundaries (`PWH-Q8`, Version `00.71.00`)  
   _Epic: Emergency Playbooks and Operational Responses; Module: `docs`; Relationship: operational response/playbook: reduces damage duration and incorrect responses during incidents._
 - Mapping to OWASP ASVS V2 (Authentication) (`PWH-S1`, Version `00.71.00`)  
@@ -929,19 +929,19 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Processing via `SecretValue`, `char[]`, and `byte[]` instead of `String` (`PWH-E1`, Version `00.71.00`)  
-  _Epic: Input Hygiene and Secure Handling; Module: `security-core`_
+  _Epic: Input Hygiene and Secure Handling; Module: `jSentinel-core`_
 - Audit via `JSentinelAuditService` (`PWH-G3`, Version `00.71.00`)  
-  _Epic: Integration into the Existing Security Workflow; Module: `security-core`_
+  _Epic: Integration into the Existing Security Workflow; Module: `jSentinel-core`_
 - Measurement points for duration per `hash` and `verify` (`PWH-H1`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 - Audit for lifecycle events (`PWH-K8`, Version `00.71.00`)  
-  _Epic: Credential Lifecycle and Password Change; Module: `security-core`_
+  _Epic: Credential Lifecycle and Password Change; Module: `jSentinel-core`_
 - Reset audit without token values (`PWH-L8`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core`_
 - Audit and metric signals (`PWH-N8`, Version `00.71.00`)  
-  _Epic: Abuse Detection and Rate Limiting; Module: `security-core` / optional module_
+  _Epic: Abuse Detection and Rate Limiting; Module: `jSentinel-core` / optional module_
 - No secret in `toString()` (`PWH-P4`, Version `00.71.00`)  
-  _Epic: SecretValue API and Secret Handling; Module: `security-core`_
+  _Epic: SecretValue API and Secret Handling; Module: `jSentinel-core`_
 - Tests against accidental exposure (`PWH-P7`, Version `00.71.00`)  
   _Epic: SecretValue API and Secret Handling; Module: Tests_
 
@@ -953,7 +953,7 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 - Session handling after password change (`PWH-K5`, Version `00.71.00`)  
   _Epic: Credential Lifecycle and Password Change; Module: Integrationsschicht / Demo_
 - Time-limited reset tokens (`PWH-L5`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core`_
 
 
 ## CWE-620 – Unverified Password Change
@@ -961,11 +961,11 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Secure password change (`PWH-K3`, Version `00.71.00`)  
-  _Epic: Credential Lifecycle and Password Change; Module: `security-core` / Demo_
+  _Epic: Credential Lifecycle and Password Change; Module: `jSentinel-core` / Demo_
 - Re-authentication before sensitive credential operations (`PWH-K4`, Version `00.71.00`)  
-  _Epic: Credential Lifecycle and Password Change; Module: `security-core` / Integrationsschicht_
+  _Epic: Credential Lifecycle and Password Change; Module: `jSentinel-core` / Integrationsschicht_
 - Atomic password change (`PWH-M3`, Version `00.71.00`)  
-  _Epic: Credential Store and Persistence Consistency; Module: `security-core` / Integrationsschicht_
+  _Epic: Credential Store and Persistence Consistency; Module: `jSentinel-core` / Integrationsschicht_
 
 
 ## CWE-639 – Authorization Bypass Through User-Controlled Key
@@ -973,9 +973,9 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - `TenantCredentialContext` (`PWH-R1`, Version `00.71.00`)  
-  _Epic: Tenant-Specific Credential Policies; Module: `security-core`_
+  _Epic: Tenant-Specific Credential Policies; Module: `jSentinel-core`_
 - No tenant leak in error messages (`PWH-R6`, Version `00.71.00`)  
-  _Epic: Tenant-Specific Credential Policies; Module: `security-core`_
+  _Epic: Tenant-Specific Credential Policies; Module: `jSentinel-core`_
 
 
 ## CWE-640 – Weak Password Recovery Mechanism for Forgotten Password
@@ -983,29 +983,29 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - `PasswordResetTokenService` (`PWH-L1`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core` or `security-credentials-recovery`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core` or `security-credentials-recovery`_
 - Cryptographically strong reset tokens (`PWH-L2`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core`_
 - Hashed storage of reset tokens (`PWH-L3`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core` / `CredentialStore`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core` / `CredentialStore`_
 - Single-use reset tokens (`PWH-L4`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core` / `CredentialStore`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core` / `CredentialStore`_
 - Time-limited reset tokens (`PWH-L5`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core`_
 - Generic reset error messages (`PWH-L6`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core`_
 - Reset sets credential status (`PWH-L7`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core`_
 - Reset rate limiting (`PWH-L9`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core` / `security-credentials-abuse`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core` / `security-credentials-abuse`_
 - No account state change before a valid token (`PWH-L10`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core`_
 - Selector/verifier model for reset tokens (`PWH-L11`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core` or `security-credentials-recovery`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core` or `security-credentials-recovery`_
 - Common token-digest abstraction (`PWH-L12`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core`_
 - Atomic reset-token consumption (`PWH-M4`, Version `00.71.00`)  
-  _Epic: Credential Store and Persistence Consistency; Module: `security-core` / Integrationsschicht_
+  _Epic: Credential Store and Persistence Consistency; Module: `jSentinel-core` / Integrationsschicht_
 - Reset abuse detection (`PWH-N5`, Version `00.71.00`)  
   _Epic: Abuse Detection and Rate Limiting; Module: `security-credentials-abuse`_
 
@@ -1020,14 +1020,14 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - JDK provider for `PBKDF2WithHmacSHA256` (`PWH-A4`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
 - Deterministic test mode with fixed salt (`PWH-I6`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 - Production lockout for test parameters (`PWH-I8`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 
 
 ## CWE-760 – Use of a One-Way Hash with a Predictable Salt
@@ -1035,12 +1035,12 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - JDK provider for `PBKDF2WithHmacSHA256` (`PWH-A4`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
 - Deterministic test mode with fixed salt (`PWH-I6`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 
 
 ## CWE-770 – Allocation of Resources Without Limits or Throttling
@@ -1048,28 +1048,28 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Separation of parsing, validation, provider resolution, pepper resolution, verification, and rehash decision (`PWH-A14`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Algorithm-specific parameter validators and resource estimates (`PWH-B9`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - Parameter calibration (`PWH-C8`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Persistable calibration profiles (`PWH-C9`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Upper-bound validation of hash parameters (`PWH-C10`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Limiting concurrent KDF computations (`PWH-H9`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 - Provider-based resource budget for memory-hard methods (`PWH-H10`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`, Provider-Module_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`, Provider-Module_
 - Multidimensional rate limiting (`PWH-N2`, Version `00.71.00`)  
-  _Epic: Abuse Detection and Rate Limiting; Module: `security-core` / optional module_
+  _Epic: Abuse Detection and Rate Limiting; Module: `jSentinel-core` / optional module_
 - Cluster/multi-node capability as an integration requirement (`PWH-N9`, Version `00.71.00`)  
   _Epic: Abuse Detection and Rate Limiting; Module: docs / Integrationsschicht_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
 - Resource budget tests (`PWH-I12`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`, Provider-Module; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`, Provider-Module; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 
 
 ## CWE-778 – Insufficient Logging
@@ -1077,31 +1077,31 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Explicit result objects instead of Boolean return values (`PWH-A10`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Audit via `JSentinelAuditService` (`PWH-G3`, Version `00.71.00`)  
-  _Epic: Integration into the Existing Security Workflow; Module: `security-core`_
+  _Epic: Integration into the Existing Security Workflow; Module: `jSentinel-core`_
 - Internal error classification (`PWH-G5`, Version `00.71.00`)  
-  _Epic: Integration into the Existing Security Workflow; Module: `security-core`_
+  _Epic: Integration into the Existing Security Workflow; Module: `jSentinel-core`_
 - Measurement points for duration per `hash` and `verify` (`PWH-H1`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 - Algorithm distribution (`PWH-H2`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 - Rehash counters (`PWH-H3`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 - Active provider and policy reporting (`PWH-H4`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 - Credential lifecycle metrics (`PWH-H7`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`_
 - Abuse and rate-limit metrics (`PWH-H8`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core` or `security-credentials-abuse`_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core` or `security-credentials-abuse`_
 - Audit for lifecycle events (`PWH-K8`, Version `00.71.00`)  
-  _Epic: Credential Lifecycle and Password Change; Module: `security-core`_
+  _Epic: Credential Lifecycle and Password Change; Module: `jSentinel-core`_
 - Reset audit without token values (`PWH-L8`, Version `00.71.00`)  
-  _Epic: Password Reset and Recovery; Module: `security-core`_
+  _Epic: Password Reset and Recovery; Module: `jSentinel-core`_
 - Audit and metric signals (`PWH-N8`, Version `00.71.00`)  
-  _Epic: Abuse Detection and Rate Limiting; Module: `security-core` / optional module_
+  _Epic: Abuse Detection and Rate Limiting; Module: `jSentinel-core` / optional module_
 - Tenant-safe audit data (`PWH-R5`, Version `00.71.00`)  
-  _Epic: Tenant-Specific Credential Policies; Module: `security-core`_
+  _Epic: Tenant-Specific Credential Policies; Module: `jSentinel-core`_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
@@ -1124,11 +1124,11 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - `PepperService` SPI (`PWH-D3`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`_
 - Local pepper source for demos and development (`PWH-D6`, Version `00.71.00`)  
   _Epic: Secret and Pepper Management; Module: `demo-*` or optional example module_
 - Integration into the bootstrap flow (`PWH-G1`, Version `00.71.00`)  
-  _Epic: Integration into the Existing Security Workflow; Module: `security-core`_
+  _Epic: Integration into the Existing Security Workflow; Module: `jSentinel-core`_
 
 
 ## CWE-829 – Inclusion of Functionality from Untrusted Control Sphere
@@ -1136,17 +1136,17 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - `PasswordHashProvider` SPI with resolution via `ServiceLoader` (`PWH-A2`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
-- New `security-crypto-bc` module (`PWH-B1`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
+- New `jSentinel-crypto-bc` module (`PWH-B1`, Version `00.71.00`)  
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - Registration via `ServiceLoader` (`PWH-B5`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - No change to the global JVM provider order without explicit opt-in (`PWH-J3`, Version `00.71.00`)  
-  _Epic: Provider Agility and Distribution Trust; Module: `security-core`_
+  _Epic: Provider Agility and Distribution Trust; Module: `jSentinel-core`_
 - Documented JDK distribution decision (`PWH-J6`, Version `00.71.00`)  
   _Epic: Provider Agility and Distribution Trust; Module: `docs`_
 - SBOM and provenance evidence for the cryptographic path (`PWH-J7`, Version `00.71.00`)  
-  _Epic: Provider Agility and Distribution Trust; Module: `security-core`, `security-crypto-bc`, Build_
+  _Epic: Provider Agility and Distribution Trust; Module: `jSentinel-core`, `jSentinel-crypto-bc`, Build_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
@@ -1159,13 +1159,13 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - UI/API-neutral status decision (`PWH-K9`, Version `00.71.00`)  
-  _Epic: Credential Lifecycle and Password Change; Module: `security-core`_
+  _Epic: Credential Lifecycle and Password Change; Module: `jSentinel-core`_
 - `TenantCredentialContext` (`PWH-R1`, Version `00.71.00`)  
-  _Epic: Tenant-Specific Credential Policies; Module: `security-core`_
+  _Epic: Tenant-Specific Credential Policies; Module: `jSentinel-core`_
 - Tenant-specific `PasswordHashPolicy` (`PWH-R2`, Version `00.71.00`)  
-  _Epic: Tenant-Specific Credential Policies; Module: `security-core`_
+  _Epic: Tenant-Specific Credential Policies; Module: `jSentinel-core`_
 - Default for single-tenant applications (`PWH-R7`, Version `00.71.00`)  
-  _Epic: Tenant-Specific Credential Policies; Module: `security-core`_
+  _Epic: Tenant-Specific Credential Policies; Module: `jSentinel-core`_
 
 
 ## CWE-916 – Use of Password Hash With Insufficient Computational Effort
@@ -1173,47 +1173,47 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - JDK provider for `PBKDF2WithHmacSHA256` (`PWH-A4`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Central `PasswordHashPolicy` (`PWH-A5`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Policy-based `needsRehash` (`PWH-A6`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Transparent upgrade after successful verification (`PWH-A7`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Secure core defaults (`PWH-A12`, Version `00.71.00`)  
-  _Epic: Core Hashing Foundation; Module: `security-core`_
+  _Epic: Core Hashing Foundation; Module: `jSentinel-core`_
 - Argon2id provider (`PWH-B2`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - bcrypt provider (`PWH-B3`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - scrypt provider (`PWH-B4`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - Morn profile with Argon2id as the preferred method (`PWH-B6`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - Cross-provider and round-trip tests (`PWH-B8`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - Central parameter policy per algorithm (`PWH-C1`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Policy versioning (`PWH-C2`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Transparent rehash after successful verification (`PWH-C3`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Deprecation policy by cut-off date or parameter set (`PWH-C6`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Parameter calibration (`PWH-C8`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Persistable calibration profiles (`PWH-C9`, Version `00.71.00`)  
-  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `security-core`_
+  _Epic: Crypto-Agility, Policy Evolution, and Rehash; Module: `jSentinel-core`_
 - Pepper as a post-KDF HMAC over the derived key (`PWH-D1`, Version `00.71.00`)  
-  _Epic: Secret and Pepper Management; Module: `security-core`_
+  _Epic: Secret and Pepper Management; Module: `jSentinel-core`_
 - Optional pre-hashing of overlong passwords only with pepper HMAC (`PWH-E5`, Version `00.71.00`)  
-  _Epic: Input Hygiene and Secure Handling; Module: `security-core`_
+  _Epic: Input Hygiene and Secure Handling; Module: `jSentinel-core`_
 - Provider-based resource budget for memory-hard methods (`PWH-H10`, Version `00.71.00`)  
-  _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`, Provider-Module_
+  _Epic: Observability, Operations, and KDF Resource Control; Module: `jSentinel-core`, Provider-Module_
 - Algorithm change via policy (`PWH-J5`, Version `00.71.00`)  
-  _Epic: Provider Agility and Distribution Trust; Module: `security-core`_
+  _Epic: Provider Agility and Distribution Trust; Module: `jSentinel-core`_
 - Reuse check against older own policies (`PWH-O7`, Version `00.71.00`)  
-  _Epic: Context-Aware Password Policy and Password History; Module: `security-core`_
+  _Epic: Context-Aware Password Policy and Password History; Module: `jSentinel-core`_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
@@ -1222,13 +1222,13 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 - Known-answer test vectors per method (`PWH-I1`, Version `00.71.00`)  
   _Epic: Tests and Reproducibility; Module: respective module; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 - Differential tests for BC providers (`PWH-I5`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-crypto-bc`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-crypto-bc`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 - Production lockout for test parameters (`PWH-I8`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-core`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 - Algorithm compromise playbook (`PWH-Q2`, Version `00.71.00`)  
   _Epic: Emergency Playbooks and Operational Responses; Module: `docs`; Relationship: operational response/playbook: reduces damage duration and incorrect responses during incidents._
 - Emergency policy override (`PWH-Q4`, Version `00.71.00`)  
-  _Epic: Emergency Playbooks and Operational Responses; Module: `security-core`; Relationship: operational response/playbook: reduces damage duration and incorrect responses during incidents._
+  _Epic: Emergency Playbooks and Operational Responses; Module: `jSentinel-core`; Relationship: operational response/playbook: reduces damage duration and incorrect responses during incidents._
 - Mapping to NIST SP 800-63B (`PWH-S2`, Version `00.71.00`)  
   _Epic: Compliance and Standards Evidence; Module: `docs`; Relationship: governance/evidence: creates traceability, but does not eliminate a runtime weakness on its own._
 
@@ -1237,14 +1237,14 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 
 **Directly Covering Feature Names**
 
-- New `security-crypto-bc` module (`PWH-B1`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+- New `jSentinel-crypto-bc` module (`PWH-B1`, Version `00.71.00`)  
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - Registration via `ServiceLoader` (`PWH-B5`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - Documented JDK distribution decision (`PWH-J6`, Version `00.71.00`)  
   _Epic: Provider Agility and Distribution Trust; Module: `docs`_
 - SBOM and provenance evidence for the cryptographic path (`PWH-J7`, Version `00.71.00`)  
-  _Epic: Provider Agility and Distribution Trust; Module: `security-core`, `security-crypto-bc`, Build_
+  _Epic: Provider Agility and Distribution Trust; Module: `jSentinel-core`, `jSentinel-crypto-bc`, Build_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
@@ -1257,16 +1257,16 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 **Directly Covering Feature Names**
 
 - Cross-provider and round-trip tests (`PWH-B8`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - Algorithm-specific parameter validators and resource estimates (`PWH-B9`, Version `00.71.00`)  
-  _Epic: Optional BouncyCastle Provider Module; Module: `security-crypto-bc`_
+  _Epic: Optional BouncyCastle Provider Module; Module: `jSentinel-crypto-bc`_
 - Local provider selection per cryptographic operation (`PWH-J1`, Version `00.71.00`)  
-  _Epic: Provider Agility and Distribution Trust; Module: `security-core`_
+  _Epic: Provider Agility and Distribution Trust; Module: `jSentinel-core`_
 
 **Supporting Features, Tests, Governance, or Playbooks**
 
 - Differential tests for BC providers (`PWH-I5`, Version `00.71.00`)  
-  _Epic: Tests and Reproducibility; Module: `security-crypto-bc`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
+  _Epic: Tests and Reproducibility; Module: `jSentinel-crypto-bc`; Relationship: assurance/test: prevents regressions against the mapped weaknesses._
 
 
 ## How to Read This for Implementation and Review

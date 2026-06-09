@@ -35,7 +35,7 @@ Die Erweiterungen sollen diesen Ansatz nicht durch ein Spring-Security-Modell er
 
 > **Status: ✅ umgesetzt (mit Paket-Abweichung)**
 >
-> - ✅ `PasswordHasher`-SPI in `security-core/.../bootstrap/` mit
+> - ✅ `PasswordHasher`-SPI in `jSentinel-core/.../bootstrap/` mit
 >   `hash(char[])`, `verify(char[], String)`, `hashTo(char[])`,
 >   `verify(char[], PasswordHash)`, `needsRehash(PasswordHash)`,
 >   `needsRehash(String)`-Konvenienz, `parse(String)`, `serialize(...)`.
@@ -122,7 +122,7 @@ Für `00.60.00` sollte Passwort-Hashing als neues SPI eingeführt werden. Die Co
 > **Status: ✅ umgesetzt (inkl. Brief-Step 4 — typed `AuditEvent` +
 > `AuditSink` + `RingBufferAuditSink` + Vaadin `/audit`-Route)**
 >
-> - ✅ Sealed `AuditEvent`-Hierarchy in `security-core/audit/` mit
+> - ✅ Sealed `AuditEvent`-Hierarchy in `jSentinel-core/audit/` mit
 >   16 Record-Subtypes: `LoginSucceeded`, `LoginFailed`,
 >   `LogoutPerformed`, `AccessGranted`, `AccessDenied`,
 >   `ActionDenied`, `BruteForceLimitReached`, `SessionCreated`,
@@ -249,7 +249,7 @@ Audit Logging sollte in `00.60.00` aufgenommen werden, aber datensparsam. Das Fr
 
 > **Status: ✅ umgesetzt**
 >
-> - ✅ `LoginAttemptPolicy`-SPI in `security-core/.../bruteforce/`.
+> - ✅ `LoginAttemptPolicy`-SPI in `jSentinel-core/.../bruteforce/`.
 > - ✅ `LoginAttemptContext`-Record (`username, clientAddress, sessionId,
 >   timestamp`) mit Factories `now(...)`.
 > - ✅ **Sealed `LoginAttemptDecision`** = `Allowed` |
@@ -350,7 +350,7 @@ Für `00.60.00` sollte zunächst eine in-memory Default-Policy für Single-Node-
 
 > **Status: ✅ umgesetzt (inkl. Session-Rotation honour beim Login)**
 >
-> - ✅ `SessionPolicy<U>`-SPI in `security-core/.../session/` mit
+> - ✅ `SessionPolicy<U>`-SPI in `jSentinel-core/.../session/` mit
 >   `onLogin` / `beforeNavigation` / `onLogout` und sealed
 >   `SessionDecision` (`Continue` / `RequireLogin` / `Invalidate`).
 > - ✅ `SessionContext<U>` als Konzept-Record.
@@ -464,7 +464,7 @@ Für `00.60.00` sollte eine minimale Session-Policy eingeführt werden: Inaktivi
 >
 > - ✅ `AuthorizationService<U>` unverändert.
 > - ❌ Optionales `RoleStore`-SPI bewusst nicht eingeführt (Konzept-Position: „kann später folgen").
-> - ✅ Bonus: `RolePermissionMapping` + `StaticRolePermissionMapping` + `RolePermissionResolver` als wiederverwendbare Helfer für **Rolle → Permission**-Zuordnung im `security-core`. Das ist orthogonal zu „woher kommen die Rollen", löst aber das angrenzende Demo-Duplikationsproblem.
+> - ✅ Bonus: `RolePermissionMapping` + `StaticRolePermissionMapping` + `RolePermissionResolver` als wiederverwendbare Helfer für **Rolle → Permission**-Zuordnung im `jSentinel-core`. Das ist orthogonal zu „woher kommen die Rollen", löst aber das angrenzende Demo-Duplikationsproblem.
 
 ### Fachlicher Bedarf
 
@@ -506,7 +506,7 @@ Für `00.60.00` sollte keine konkrete Rollenpersistenz im Core erzwungen werden.
 
 > **Status: ✅ umgesetzt — API-Rewrite gemäß Brief Q3 a / Q7 (2026-05-11)**
 >
-> - ✅ `LogoutService`-SPI in `security-core` (`authorization.api`):
+> - ✅ `LogoutService`-SPI in `jSentinel-core` (`authorization.api`):
 >   `void logout(SubjectId, LogoutScope)`, `addListener` / `removeListener`.
 >   Ersetzt die V1-API mit `LogoutContext`/`LogoutPolicy`-Record
 >   (invasiv, kein Backwards-Compat-Schim).
@@ -520,7 +520,7 @@ Für `00.60.00` sollte keine konkrete Rollenpersistenz im Core erzwungen werden.
 >   `AllSessionsOfSubject`, fan-out je Session über
 >   `LogoutListener` (CopyOnWriteArrayList, Listener-Failures geschluckt),
 >   audit `LOGOUT` je Session.
-> - ✅ `VaadinLogoutService<U>` in `security-vaadin` — wrappt den Core-
+> - ✅ `VaadinLogoutService<U>` in `jSentinel-vaadin` — wrappt den Core-
 >   Default und ergänzt für `CurrentSession`: `policy.onLogout(...)`,
 >   browser-seitigen Redirect via `Page.setLocation(...)`,
 >   HTTP-Session / Vaadin-Session-Invalidierung (Konstruktor-Flags,
@@ -616,7 +616,7 @@ Für `00.60.00` sollte ein zentraler Logout-Service eingeführt werden. Der Defa
 > - ✅ `StaticActionAuthorizationService<U>` als adapter-neutrale Default-
 >   Implementierung; emittiert `ACTION_DENIED`-Audit bei verweigerten
 >   `requireAllowed`-Aufrufen.
-> - ✅ `AccessDeniedException` als generische Exception (`security-core`).
+> - ✅ `AccessDeniedException` als generische Exception (`jSentinel-core`).
 > - ✅ Resolver-Accessors `actionAuthorizationService()` /
 >   `findActionAuthorizationService()` / `setActionAuthorizationService(...)`.
 > - ✅ `PermissionGuard.hasPermission(...)` / `requirePermission(...)` /
@@ -912,9 +912,9 @@ com.svenruppert.jsentinel.authorization.navigation
 com.svenruppert.jsentinel.bootstrap                         (NEU)
 com.svenruppert.jsentinel.bruteforce                        (NEU)
 com.svenruppert.jsentinel.logout                            (NEU)
-com.svenruppert.jsentinel.logout.vaadin                     (NEU, in security-vaadin)
+com.svenruppert.jsentinel.logout.vaadin                     (NEU, in jSentinel-vaadin)
 com.svenruppert.jsentinel.session                           (NEU)
-com.svenruppert.jsentinel.session.vaadin                    (NEU, in security-vaadin)
+com.svenruppert.jsentinel.session.vaadin                    (NEU, in jSentinel-vaadin)
 ```
 
 Alle vom Konzept vorgeschlagenen Top-Level-Pakete (`audit/`,
@@ -1051,8 +1051,8 @@ schreibbar sind.
 
 ### Zusätzlich nachgereicht (post-2026-05-12)
 
-- ✅ **Vierter Adapter `security-standalone`** — wir hatten im
-  Konzept nur Vaadin/REST vorgesehen. `security-standalone` schlägt
+- ✅ **Vierter Adapter `jSentinel-standalone`** — wir hatten im
+  Konzept nur Vaadin/REST vorgesehen. `jSentinel-standalone` schlägt
   die gleiche Bridge für reine Java-Anwendungen (Desktop, CLI,
   Daemon) ohne UI-Toolkit:
   - `ThreadLocalSubjectStore` als SPI-Default (nicht inherited
@@ -1075,10 +1075,10 @@ schreibbar sind.
 
   | Modul | Mutation Coverage |
   |---|---|
-  | security-core | 79 % |
-  | security-vaadin | 70 % → 80 % |
-  | security-rest | 78 % → 95 % |
-  | security-standalone | 98 % (neu) |
+  | jSentinel-core | 79 % |
+  | jSentinel-vaadin | 70 % → 80 % |
+  | jSentinel-rest | 78 % → 95 % |
+  | jSentinel-standalone | 98 % (neu) |
   | demo-vaadin | 18 % → 70 % |
   | demo-rest | 49 % |
   | demo-vaadin-rest-client | 10 % |
@@ -1094,12 +1094,12 @@ schreibbar sind.
 | # | Punkt | Konzept-Priorität | Aufwand-Schätzung |
 |---:|---|---|---|
 | — | `demo-rest` und `demo-vaadin-rest-client` Mutation Coverage anheben (aktuell 49 % / 10 %) — analog zum Vorgehen in `demo-vaadin` (Browserless-Tests + Filter-Audit-Tests). | (Test-Coverage) | mittel |
-| — | Möglicher `security-javafx`-Adapter (siehe § "JavaFX module" weiter unten) — erst bauen, wenn `security-standalone` reale Anwender hat. | (neuer Adapter) | mittel |
+| — | Möglicher `security-javafx`-Adapter (siehe § "JavaFX module" weiter unten) — erst bauen, wenn `jSentinel-standalone` reale Anwender hat. | (neuer Adapter) | mittel |
 
 ### Empfohlene Reihenfolge der nächsten Iterationen
 
 1. **`demo-rest` Mutation Coverage** auf ≥ 70 % heben — die
-   Filter-Audit-Pfade sind schon im `security-rest`-Testpaket
+   Filter-Audit-Pfade sind schon im `jSentinel-rest`-Testpaket
    gepinnt; demo-rest braucht zusätzlich End-to-End-Tests gegen
    Bootstrap, Brute-Force-429, und die Admin-CRUD-Endpoints.
 2. **`demo-vaadin-rest-client` Mutation Coverage** — Browserless-
@@ -1108,7 +1108,7 @@ schreibbar sind.
 
 ### JavaFX module (geplant, noch nicht angefangen)
 
-`security-standalone` deckt CLI + Swing + JavaFX *funktional* ab.
+`jSentinel-standalone` deckt CLI + Swing + JavaFX *funktional* ab.
 Ein eigenes `security-javafx`-Modul lohnt sich erst, wenn drei
 oder vier konkrete UI-Bausteine + Thread-Propagation entstehen:
 - `LoginScene` (Pendant zu Vaadin-`LoginView`),
@@ -1147,11 +1147,11 @@ Die Version `00.60.00` sollte damit den Übergang von einer demo-orientierten Si
 > UI, eine vollständige Role-Admin-UI in beiden Vaadin-Demos und
 > User-CRUD (REST `POST/DELETE /api/admin/users` + neue
 > `UserCreated`/`UserDeleted`-Audit-Events) ergänzt. **Post-Konzept-
-> Erweiterung**: vierter Adapter `security-standalone` für
+> Erweiterung**: vierter Adapter `jSentinel-standalone` für
 > plain-Java / Desktop / CLI-Anwendungen, plus Demo-Modul
 > `demo-standalone` und ein durchgängiger Mutation-Coverage-Push
-> über alle Library-Module (security-standalone 98 %, security-rest
-> 95 %, security-core 79 %, security-vaadin 80 %). Die fünf
+> über alle Library-Module (jSentinel-standalone 98 %, jSentinel-rest
+> 95 %, jSentinel-core 79 %, jSentinel-vaadin 80 %). Die fünf
 > zentralen Service-SPIs (Audit, Logout, Brute-Force, Session,
 > Action) sind im Core mit Default-Implementation, Resolver-
 > Registrierung, Adapter-Wiring und Tests vorhanden; die Demos

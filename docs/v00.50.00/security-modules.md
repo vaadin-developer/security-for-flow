@@ -6,9 +6,9 @@ This project is split into reusable library modules and demo modules.
 
 | Module | Purpose |
 |--------|---------|
-| `security-core` | Generic security concepts and adapter-neutral decision logic. |
-| `security-vaadin` | Vaadin Flow adapter for view and navigation security. |
-| `security-rest` | Framework-light REST adapter for request and handler security. |
+| `jSentinel-core` | Generic security concepts and adapter-neutral decision logic. |
+| `jSentinel-vaadin` | Vaadin Flow adapter for view and navigation security. |
+| `jSentinel-rest` | Framework-light REST adapter for request and handler security. |
 | `demo-rest-shared` | Transport-level constants (`DemoEndpoints`) and a tiny JSON helper, shared between the REST server and any client. No project-specific code. |
 | `demo-vaadin` | Standalone Vaadin demo: login, roles, permissions, in-JVM auth and UI integration. |
 | `demo-rest` | JDK-only HTTP server + interactive CLI client. Protected handlers, HTTP status mapping, bootstrap. |
@@ -31,21 +31,21 @@ Library modules do not define project-specific permissions. Concrete roles,
 permissions, and business operations belong to consuming applications or demo
 modules.
 
-`security-core` provides generic types such as `JSentinelSubject`, `RoleName`,
+`jSentinel-core` provides generic types such as `JSentinelSubject`, `RoleName`,
 `PermissionName`, `AccessContext`, `AuthorizationDecision`, evaluator
 contracts, plus the reusable building blocks listed below. It has no
 Vaadin, Servlet, REST framework, demo, or application dependencies.
 
-`security-vaadin` maps security decisions to Vaadin navigation behavior.
+`jSentinel-vaadin` maps security decisions to Vaadin navigation behavior.
 It owns Vaadin session access through `VaadinSessionSubjectStore`, login
 redirection, access-denied rerouting, and `BeforeEnterListener` integration.
 
-`security-rest` maps semantic authorization decisions to REST behavior. It
+`jSentinel-rest` maps semantic authorization decisions to REST behavior. It
 uses minimal abstractions (`RestRequest`, `RestResponse`, `RestHandler`,
 `BodyRestRequest`) and does not pull in Spring Security, Jakarta Security,
 OAuth2/OIDC, or a web framework.
 
-### Reusable building blocks (security-core)
+### Reusable building blocks (jSentinel-core)
 
 | Type | Package | Purpose |
 |---|---|---|
@@ -55,7 +55,7 @@ OAuth2/OIDC, or a web framework.
 | `BootstrapConfigurationLoader` | `bootstrap` | Single source for sysprop + env + default loading; ISO-8601 TTL; fail-fast on invalid input. |
 | `BootstrapStatus` | `bootstrap` | Leak-safe status snapshot — never carries the token. |
 
-### Reusable building blocks (security-rest)
+### Reusable building blocks (jSentinel-rest)
 
 | Type | Purpose |
 |---|---|
@@ -81,8 +81,8 @@ The demo modules define demo permissions only to show expected usage:
 - `demo-vaadin-rest-client` carries no permissions of its own — it
   consumes whatever the backend sends back.
 
-These values must not move into `security-core`, `security-vaadin`,
-`security-rest`, or `demo-rest-shared`.
+These values must not move into `jSentinel-core`, `jSentinel-vaadin`,
+`jSentinel-rest`, or `demo-rest-shared`.
 
 ## Vaadin Security
 

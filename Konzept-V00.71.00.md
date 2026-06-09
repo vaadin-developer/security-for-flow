@@ -14,7 +14,7 @@ Status: Architektur- und Umsetzungskonzept
 
 Dieses Konzept beschreibt die Passwort- und Credential-Sicherheit für `security-for-flow` in Version `00.71.00`. Ziel ist eine robuste, dependency-arme und krypto-agile Schicht, die sichere Defaults bietet, optionale Krypto-Provider sauber kapselt, künftige Policy-Änderungen kontrolliert unterstützt und den Lebenszyklus von Credentials abbildet.
 
-Der Kern (`security-core`) bleibt ohne neue externe Runtime-Abhängigkeiten. Er stellt PBKDF2 über JDK/JCA/JCE bereit, definiert Provider-SPIs, Codec, Validator, Policy, Rehash-Entscheidungen, sichere Failure-Pfade und zentrale Ergebnisobjekte. Moderne Verfahren wie Argon2id, bcrypt und scrypt werden in ein optionales Modul `security-crypto-bc` ausgelagert.
+Der Kern (`jSentinel-core`) bleibt ohne neue externe Runtime-Abhängigkeiten. Er stellt PBKDF2 über JDK/JCA/JCE bereit, definiert Provider-SPIs, Codec, Validator, Policy, Rehash-Entscheidungen, sichere Failure-Pfade und zentrale Ergebnisobjekte. Moderne Verfahren wie Argon2id, bcrypt und scrypt werden in ein optionales Modul `jSentinel-crypto-bc` ausgelagert.
 
 Die bisherige experimentelle `PasswordHasher`-/`Pbkdf2PasswordHasher`-Struktur wird nicht als stabile öffentliche API betrachtet. Da keine produktiven Altbestände oder stabilen externen Konsumenten bestehen, darf die neue Architektur sauber geschnitten werden. Es gibt keine Pflicht zur Kompatibilität mit bisherigen experimentellen Hashformaten.
 
@@ -62,7 +62,7 @@ Die Architektur folgt diesen Regeln:
    Primitive werden ausschließlich aus JDK/JCA/JCE oder geprüften Provider-Bibliotheken bezogen.
 
 2. **Dependency-armer Kern.**  
-   `security-core` erhält keine neuen externen Runtime-Abhängigkeiten.
+   `jSentinel-core` erhält keine neuen externen Runtime-Abhängigkeiten.
 
 3. **Explizite Provider-Auswahl.**  
    Provider werden lokal pro Operation ausgewählt. Die globale JCA-Provider-Reihenfolge wird nicht still verändert.
@@ -88,10 +88,10 @@ Die Architektur folgt diesen Regeln:
 
 | Modul | Aufgabe | Abhängigkeit | Rolle |
 |---|---|---:|---|
-| `security-core` | Core-SPIs, Codec, Validator, PBKDF2, Policy, Rehash, Dummy-Failure-Pfade, KDF-Limiter | keine neuen Runtime-Dependencies | Pflichtmodul |
-| `security-crypto-bc` | Argon2id, bcrypt, scrypt, Resource Estimates, algorithmusspezifische Validatoren | `bcprov` | optional |
+| `jSentinel-core` | Core-SPIs, Codec, Validator, PBKDF2, Policy, Rehash, Dummy-Failure-Pfade, KDF-Limiter | keine neuen Runtime-Dependencies | Pflichtmodul |
+| `jSentinel-crypto-bc` | Argon2id, bcrypt, scrypt, Resource Estimates, algorithmusspezifische Validatoren | `bcprov` | optional |
 | `security-crypto-bcfips` | FIPS-Profil mit zulässigen Providern/Algorithmen | abhängig vom Provider | optional |
-| `security-credentials-hibp` | k-Anonymitätsprüfung gegen externen Dienst | JDK `HttpClient` ausreichend | optional |
+| `jSentinel-credentials-hibp` | k-Anonymitätsprüfung gegen externen Dienst | JDK `HttpClient` ausreichend | optional |
 | `security-credentials-recovery` | Reset-/Recovery-Flows | keine zwingende | optional oder Core-nah |
 | `security-credentials-abuse` | Credential Stuffing, Spraying, multidimensionales Rate Limiting | keine zwingende | optional |
 | `security-credentials-import` | Brownfield-Import fremder Hashformate | abhängig vom Quellformat | zurückgestellt |
@@ -168,7 +168,7 @@ Der konkrete Iterationswert wird über `PasswordHashPolicy` definiert. Später k
 
 ### 6.2 Modernes Profil
 
-Das Profil `modern` bevorzugt `Argon2id`, aber nur wenn `security-crypto-bc` vorhanden und das Profil explizit aktiviert ist. Fehlt der Provider, muss die Initialisierung kontrolliert fehlschlagen, sofern kein expliziter Policy-Fallback erlaubt ist.
+Das Profil `modern` bevorzugt `Argon2id`, aber nur wenn `jSentinel-crypto-bc` vorhanden und das Profil explizit aktiviert ist. Fehlt der Provider, muss die Initialisierung kontrolliert fehlschlagen, sofern kein expliziter Policy-Fallback erlaubt ist.
 
 ### 6.3 FIPS-Profil
 

@@ -12,7 +12,7 @@ seven security-core concept points (`PasswordHasher`,
 implementation, audit hooks, and adapter wiring.
 
 Going beyond the original concept, the release adds a **fourth adapter**
-(`security-standalone`) for plain-Java / desktop / CLI applications,
+(`jSentinel-standalone`) for plain-Java / desktop / CLI applications,
 the matching **demo-standalone** CLI reference, a sustained
 **mutation-coverage push** across every existing module, and a
 **Browserless-Testing**-based UI adapter-test suite for the Vaadin side.
@@ -28,7 +28,7 @@ is noted in the migration section.
 ## Highlights
 
 - **8 → 10 Maven modules** with a fourth adapter and its demo
-- **`security-standalone`** — plain-Java / desktop / CLI adapter with
+- **`jSentinel-standalone`** — plain-Java / desktop / CLI adapter with
   `ThreadLocalSubjectStore`, `StandaloneLoginFlow<T, U>`,
   `Secured.wrap(Interface, impl)` (JDK Dynamic Proxy) and
   `Secured.requireAllowed(...)` for callbacks
@@ -54,7 +54,7 @@ is noted in the migration section.
   `StaticActionAuthorizationService` default emitting `ActionDenied`
 - **First-run bootstrap** — fully implemented in 00.51 — now audits
   `BootstrapAdminCreated` / `BootstrapTokenRejected` with reason
-- **Vaadin Browserless Testing** wired in `security-vaadin` and the
+- **Vaadin Browserless Testing** wired in `jSentinel-vaadin` and the
   Vaadin demos (free since Vaadin 25.1) — adapter tests now run
   without TestBench
 - **Mutation coverage** lifted in every module, with the library
@@ -66,17 +66,17 @@ is noted in the migration section.
 
 | Module | Artifact | Purpose |
 |---|---|---|
-| `security-core` | `security-core` | Generic, framework-neutral security concepts and decision logic |
-| `security-vaadin` | `security-vaadin` | Vaadin Flow adapter (navigation, listener, session, logout) |
-| `security-rest` | `security-rest` | Framework-light REST adapter (no Spring, no Jakarta Security) |
-| `security-standalone` | `security-standalone` | Plain-Java / desktop / CLI adapter — ThreadLocal subject + dynamic-proxy enforcement |
+| `jSentinel-core` | `jSentinel-core` | Generic, framework-neutral security concepts and decision logic |
+| `jSentinel-vaadin` | `jSentinel-vaadin` | Vaadin Flow adapter (navigation, listener, session, logout) |
+| `jSentinel-rest` | `jSentinel-rest` | Framework-light REST adapter (no Spring, no Jakarta Security) |
+| `jSentinel-standalone` | `jSentinel-standalone` | Plain-Java / desktop / CLI adapter — ThreadLocal subject + dynamic-proxy enforcement |
 | `demo-rest-shared` | `demo-rest-shared` | Transport-level constants + tiny JSON helper |
 | `demo-vaadin` | `demo-vaadin` | Single-JVM Vaadin reference (WAR) |
 | `demo-rest` | `demo-rest` | REST reference (JAR) — JDK `HttpServer` |
 | `demo-vaadin-rest-client` | `demo-vaadin-rest-client` | Vaadin UI consumes a separate REST backend |
 | `demo-standalone` | `demo-standalone` | Interactive CLI library-borrowing demo |
 
-Dependency rules unchanged: `security-core` has no project deps; the
+Dependency rules unchanged: `jSentinel-core` has no project deps; the
 three adapter modules never depend on each other; demos depend only
 on the core + their adapter.
 
@@ -274,7 +274,7 @@ which the project already runs on. Test dependency:
 </dependency>
 ```
 
-In place across `security-vaadin` and the two Vaadin demos. Existing
+In place across `jSentinel-vaadin` and the two Vaadin demos. Existing
 adapter tests cover:
 
 - LoginView policy ordering (`checkCredentials → SessionPolicy.onLogin → navigateToApp` on success; `checkCredentials → reactOnFailedLogin` on failure)
@@ -289,16 +289,16 @@ adapter tests cover:
 
 | Module | 00.51.00 | 00.60.00 |
 |---|---:|---:|
-| `security-core` | 86 % | 79 % * |
-| `security-vaadin` | 79 % | 90 % |
-| `security-rest` | 97 % | 95 % |
-| `security-standalone` | — | 98 % (new) |
+| `jSentinel-core` | 86 % | 79 % * |
+| `jSentinel-vaadin` | 79 % | 90 % |
+| `jSentinel-rest` | 97 % | 95 % |
+| `jSentinel-standalone` | — | 98 % (new) |
 | `demo-rest` | — | 49 % |
 | `demo-vaadin` | — | 70 % |
 | `demo-vaadin-rest-client` | — | 10 % |
 | `demo-standalone` | — | 86 % (new) |
 
-\* `security-core` measurement at 00.51 was scoped narrower than the
+\* `jSentinel-core` measurement at 00.51 was scoped narrower than the
    00.60 surface (which now includes the audit pipeline, the
    `LoginAttemptPolicy`, the `SessionPolicy`, the
    `ActionAuthorizationService`, and the refactored `LogoutService`).
@@ -392,9 +392,9 @@ blocks the login flow.
   49 % and 10 % respectively — coverage push planned for the next
   iteration.
 - `security-javafx` adapter is on the roadmap but gated on real
-  JavaFX usage of `security-standalone`. `LoginScene`,
+  JavaFX usage of `jSentinel-standalone`. `LoginScene`,
   `SecuredAction` / `SecuredMenuItem`, and a `Task` / `Service`
-  helper are the planned bricks. Until then `security-standalone`
+  helper are the planned bricks. Until then `jSentinel-standalone`
   covers JavaFX functionally (manual `Secured.wrap(...)` +
   `StandaloneLoginFlow`).
 - Cluster-mode is intentionally out of scope. The SPIs are shaped

@@ -36,8 +36,8 @@ this framework "in FIPS mode" the operator must:
 | Default pepper Mac       | HMAC-SHA-256 — FIPS-acceptable per FIPS 198-1. |
 | Default token digest     | SHA-256 — FIPS-acceptable per FIPS 180-4. |
 | Salt / token RNG         | Java `SecureRandom`. **FIPS-acceptable only if the underlying provider's DRBG is.** |
-| Argon2id / bcrypt / scrypt (`security-crypto-bc`) | **Not FIPS-acceptable**. Argon2 has no FIPS approval; bcrypt and scrypt have none. Operators in FIPS mode must keep this module off the classpath. |
-| SHA-1 in `security-credentials-hibp` | Used only for the HIBP k-anonymity protocol prefix, never for credential storage. SHA-1 for hashing is **deprecated** in FIPS 180-4 §6 but the *use site* is not a credential store. Operators in strict-FIPS deployments should disable this module. |
+| Argon2id / bcrypt / scrypt (`jSentinel-crypto-bc`) | **Not FIPS-acceptable**. Argon2 has no FIPS approval; bcrypt and scrypt have none. Operators in FIPS mode must keep this module off the classpath. |
+| SHA-1 in `jSentinel-credentials-hibp` | Used only for the HIBP k-anonymity protocol prefix, never for credential storage. SHA-1 for hashing is **deprecated** in FIPS 180-4 §6 but the *use site* is not a credential store. Operators in strict-FIPS deployments should disable this module. |
 | Global JCA provider order | Never modified by the framework. Operator decision. |
 
 ## FIPS profile skeleton
@@ -75,8 +75,8 @@ constructed. Its purpose is to be:
 
 - [ ] JDK is a vendor distribution with a FIPS-validated provider.
 - [ ] `java.security` lists the validated provider first.
-- [ ] `security-crypto-bc` is **not** on the runtime classpath.
-- [ ] `security-credentials-hibp` is either off the classpath or
+- [ ] `jSentinel-crypto-bc` is **not** on the runtime classpath.
+- [ ] `jSentinel-credentials-hibp` is either off the classpath or
       replaced by an offline blocklist.
 - [ ] Pepper material is stored in a FIPS-validated HSM (see
       `pkcs11-hsm-pepper-key.md`).

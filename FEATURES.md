@@ -6,7 +6,7 @@ feature-complete** — alle acht Phasen aus `Konzept-V00.70.00.md` sind
 gemerged: Tenant/Resource-Modell, 11 Persistence-Store-SPIs, Contract-
 Testkit + Eclipse-Store-Referenz-Impl, `JSentinelVersion`-Drift-
 Detection inkl. automatischem Capture im `LoginView`, Policy-API +
-`security-processor`, RoleHierarchy + Any/All-Permission-Annotationen,
+`jSentinel-processor`, RoleHierarchy + Any/All-Permission-Annotationen,
 Account-Lifecycle / API-Keys / RefreshTokens / Rate-Limit, Phase-8
 Secured-Komponenten + `SessionManagementView` + OpenAPI-Metadaten).
 Geordnet nach Reaktor-Modul und Funktionsbereich. Jeder Eintrag nennt
@@ -23,14 +23,14 @@ SPI-Datei unter `META-INF/services/`.
 
 | Modul | Artefakt | Zweck |
 |---|---|---|
-| `security-core` | `security-core` | Framework-neutrale Kern-Typen, alle SPIs, alle 11 Persistence-Store-Interfaces (Phase 2), `JSentinelVersion`-Stack (Phase 4), Audit-Pipeline (27 Variants), Bootstrap, `JSentinelEnforcer`, Account-Lifecycle- / Token- / RateLimit-Services (Phase 7) |
-| `security-vaadin` | `security-vaadin` | Vaadin-Flow-Adapter: Navigation, Login, Session, Logout — plus Phase-8 `SecuredButton` / `SecuredRouterLink` / `SecuredMenuItem` / `SessionManagementView` und Phase-4c `JSentinelVersionEnforcerListener` |
-| `security-rest` | `security-rest` | Framework-light REST-Adapter (Filter, BearerToken, HTTP-Status-Mapping, Step-Up `WWW-Authenticate`) — plus Phase-4c `RestJSentinelVersionFilter` und Phase-8d `OpenApiJSentinelMetadataGenerator` |
-| `security-standalone` | `security-standalone` | Plain-Java / Desktop / CLI Adapter (ThreadLocal-Subject, `SecuredProxy` Dynamic-Proxy) |
-| `security-test` | `security-test` | Wiederverwendbare Test-Fixtures: `FakeAuthenticationService`, `FakeAuthorizationService`, `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5-`JSentinelTestExtension`. Test-Scope-Dependency. |
-| `security-processor` | `security-processor` | Compile-Time-Annotation-Processor: erzeugt `<Type>Secured`-Subklassen für `@Secured`-annotierte konkrete Klassen. Wird als `<annotationProcessorPath>` eingebunden. Basiert auf `com.svenruppert:proxybuilder:00.11.00` + `proxybuilder-annotations:00.11.00`. |
-| `security-persistence-testkit` | `security-persistence-testkit` | ⚠️ Contract-Test-Suites für jede Persistence-Store-SPI: `@Test default`-Methoden-Interfaces, die ein eigener Store-Adapter implementiert, um automatisch gegen den Library-Persistence-Kontrakt verifiziert zu werden. Persistence-Tech-agnostisch. |
-| `security-persistence-eclipsestore` | `security-persistence-eclipsestore` | ⚠️ Eclipse-Store (`org.eclipse.store:storage-embedded:4.1.0`) Referenz-Impl jeder Persistence-Store-SPI; besteht dieselbe 95+ Contract-Suite wie die In-Memory-Defaults. Drop-in für durable Persistence. |
+| `jSentinel-core` | `jSentinel-core` | Framework-neutrale Kern-Typen, alle SPIs, alle 11 Persistence-Store-Interfaces (Phase 2), `JSentinelVersion`-Stack (Phase 4), Audit-Pipeline (27 Variants), Bootstrap, `JSentinelEnforcer`, Account-Lifecycle- / Token- / RateLimit-Services (Phase 7) |
+| `jSentinel-vaadin` | `jSentinel-vaadin` | Vaadin-Flow-Adapter: Navigation, Login, Session, Logout — plus Phase-8 `SecuredButton` / `SecuredRouterLink` / `SecuredMenuItem` / `SessionManagementView` und Phase-4c `JSentinelVersionEnforcerListener` |
+| `jSentinel-rest` | `jSentinel-rest` | Framework-light REST-Adapter (Filter, BearerToken, HTTP-Status-Mapping, Step-Up `WWW-Authenticate`) — plus Phase-4c `RestJSentinelVersionFilter` und Phase-8d `OpenApiJSentinelMetadataGenerator` |
+| `jSentinel-standalone` | `jSentinel-standalone` | Plain-Java / Desktop / CLI Adapter (ThreadLocal-Subject, `SecuredProxy` Dynamic-Proxy) |
+| `jSentinel-test` | `jSentinel-test` | Wiederverwendbare Test-Fixtures: `FakeAuthenticationService`, `FakeAuthorizationService`, `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5-`JSentinelTestExtension`. Test-Scope-Dependency. |
+| `jSentinel-processor` | `jSentinel-processor` | Compile-Time-Annotation-Processor: erzeugt `<Type>Secured`-Subklassen für `@Secured`-annotierte konkrete Klassen. Wird als `<annotationProcessorPath>` eingebunden. Basiert auf `com.svenruppert:proxybuilder:00.11.00` + `proxybuilder-annotations:00.11.00`. |
+| `jSentinel-persistence-testkit` | `jSentinel-persistence-testkit` | ⚠️ Contract-Test-Suites für jede Persistence-Store-SPI: `@Test default`-Methoden-Interfaces, die ein eigener Store-Adapter implementiert, um automatisch gegen den Library-Persistence-Kontrakt verifiziert zu werden. Persistence-Tech-agnostisch. |
+| `jSentinel-persistence-eclipsestore` | `jSentinel-persistence-eclipsestore` | ⚠️ Eclipse-Store (`org.eclipse.store:storage-embedded:4.1.0`) Referenz-Impl jeder Persistence-Store-SPI; besteht dieselbe 95+ Contract-Suite wie die In-Memory-Defaults. Drop-in für durable Persistence. |
 | `demo-rest-shared` | `demo-rest-shared` | Transport-Konstanten + JSON-Helper für REST-Demos |
 | `demo-vaadin` | `demo-vaadin` | Vollständige Vaadin-Demo mit lokaler User-Verwaltung |
 | `demo-rest` | `demo-rest` | JDK-`HttpServer` + interaktive CLI |
@@ -107,9 +107,9 @@ aufgelöst (cached AtomicReference + lazy ServiceLoader-Resolution).
 
 ### Persistence-Stores (Phase 2 — alle 11 ⚠️ `@ExperimentalJSentinelApi`)
 
-Jeder Store hat ein `InMemory*Store`-Default in `security-core` und
-eine Eclipse-Store-Referenz-Impl in `security-persistence-eclipsestore`,
-beide verifiziert über `security-persistence-testkit`-Contract-Tests.
+Jeder Store hat ein `InMemory*Store`-Default in `jSentinel-core` und
+eine Eclipse-Store-Referenz-Impl in `jSentinel-persistence-eclipsestore`,
+beide verifiziert über `jSentinel-persistence-testkit`-Contract-Tests.
 
 | Store | Modul / Package | Record / Key | Zweck |
 |---|---|---|---|
@@ -183,11 +183,11 @@ sie die Security-Flow-Auswertung nie blockieren.
 | `@RequiresPolicy("doc.owner-or-admin")` ⚠️ | core | `RequiresPolicyEvaluator` | Benannte Policy aus `PolicyRegistry`, mit Step-Up-Support |
 | `@ProtectedBy(class.class)` | core | `ProtectedByEvaluator` | Eigene Logik via `AccessEvaluator`-Klasse |
 | `@JSentinelAnnotation(MyEvaluator.class)` | core | — (Meta-Annotation) | Bindet eine projekt-eigene Annotation an einen Evaluator |
-| `@Secured` | core | — (Compile-Time-Trigger) | Markiert eine konkrete Klasse, damit `security-processor` einen `<Type>Secured`-Wrapper generiert (RetentionPolicy.SOURCE) |
+| `@Secured` | core | — (Compile-Time-Trigger) | Markiert eine konkrete Klasse, damit `jSentinel-processor` einen `<Type>Secured`-Wrapper generiert (RetentionPolicy.SOURCE) |
 | `@ExperimentalJSentinelApi(reason)` | core | — | Markiert API als experimentell |
 
 Projekt-eigene Annotationen (Beispiele aus den Demos): `@VisibleFor`
-(demo-vaadin), `@CustomCheck` (security-vaadin Tests).
+(demo-vaadin), `@CustomCheck` (jSentinel-vaadin Tests).
 
 ---
 
@@ -393,7 +393,7 @@ und `LoggingAuditSink` decken alle 27 Varianten ab.
 | `VaadinJSentinelVersionContext` (Package `session/vaadin`) | Per-VaadinSession Snapshot-Carrier (`record(subjectId, tenant, snapshot, sessionId)` / `current()` / `clear()`). Survives Session-Rotation. |
 | `JSentinelVersionEnforcerListener` (`@ListenerPriority(Integer.MAX_VALUE)`) | BeforeEnter-Listener vor `AuthorizationListener`. On Drift: clear snapshot + reroute zur konfigurierten LoginView-Klasse. |
 
-### Phase-8a/b Components (`security-vaadin/components/` — ⚠️)
+### Phase-8a/b Components (`jSentinel-vaadin/components/` — ⚠️)
 
 | Klasse | Zweck |
 |---|---|
@@ -420,7 +420,7 @@ und `LoggingAuditSink` decken alle 27 Varianten ab.
 | `RestHeaders` | Helper für Header-Lookup |
 | `RestJSentinelVersionContext` + `RestJSentinelVersionFilter` (Phase 4c, ⚠️) | Drift-Filter; `RestSubjectResolver.resolveJSentinelVersionContext` als opt-in Default-Methode. Bei Drift: `401 + WWW-Authenticate: SessionStale` (RFC 7235-Style) und Audit-Event. |
 
-### Phase-8d OpenAPI-Metadaten (`security-rest/openapi/` — ⚠️)
+### Phase-8d OpenAPI-Metadaten (`jSentinel-rest/openapi/` — ⚠️)
 
 | Klasse | Zweck |
 |---|---|
@@ -442,14 +442,14 @@ und `LoggingAuditSink` decken alle 27 Varianten ab.
 
 ---
 
-## 10b. Method Security via Annotation Processor (`security-processor`)
+## 10b. Method Security via Annotation Processor (`jSentinel-processor`)
 
 | Klasse / Datei | Zweck |
 |---|---|
-| `@Secured` (in security-core, `…/authorization/annotations`) | Compile-Time-Trigger — markiert eine **konkrete Klasse** für die Wrapper-Erzeugung. `RetentionPolicy.SOURCE`, Target `TYPE`. |
+| `@Secured` (in jSentinel-core, `…/authorization/annotations`) | Compile-Time-Trigger — markiert eine **konkrete Klasse** für die Wrapper-Erzeugung. `RetentionPolicy.SOURCE`, Target `TYPE`. |
 | `SecuredAnnotationProcessor` | `BasicStaticProxyAnnotationProcessor<Secured>` aus `com.svenruppert:proxybuilder:00.11.00`. Generiert `<Type>Secured extends <Type>` und ersetzt jede annotierte Methode durch `JSentinelEnforcer.require…(…)` + `super.<method>(…)`. Marker am Wrapper: `@GeneratedByProxyBuilder(processor, sourceClass, proxyBuilderVersion="00.11.00", date, comments)` (RUNTIME-reflectable via `proxybuilder-annotations`) + `@DelegatesTo("Owner#method(params)")` pro generierter Methode. |
 | `META-INF/services/javax.annotation.processing.Processor` | Registriert den Processor für `javac` / Maven-Compiler. |
-| `JSentinelEnforcer` (in security-core) | Zentrale Enforcement-API, geteilt mit `SecuredProxy`. Methoden: `requirePermission`, `requireAllPermissions`, `requireAnyPermission`, `requireRole`, `requireAnyRole`, `requirePolicy`; plus die Generic-`enforce(Method, Class)` für den Dynamic-Proxy-Pfad. Wirft `AccessDeniedException` on deny. |
+| `JSentinelEnforcer` (in jSentinel-core) | Zentrale Enforcement-API, geteilt mit `SecuredProxy`. Methoden: `requirePermission`, `requireAllPermissions`, `requireAnyPermission`, `requireRole`, `requireAnyRole`, `requirePolicy`; plus die Generic-`enforce(Method, Class)` für den Dynamic-Proxy-Pfad. Wirft `AccessDeniedException` on deny. |
 
 Konsumenten binden das Modul über `<annotationProcessorPaths>` in
 `maven-compiler-plugin` ein — nie als reguläre Compile-Dependency, da
@@ -474,7 +474,7 @@ Annotation-Mapping (Method-Level wins über Class-Level):
 Diagnostics für `@Secured` auf `final` Klassen oder Method-Security-
 Annotationen auf `final`/`private`/`static`-Methoden werden vom
 proxybuilder-Base-Processor als `Diagnostic.Kind.ERROR` emittiert —
-kein Code in `security-processor` selbst nötig.
+kein Code in `jSentinel-processor` selbst nötig.
 
 ---
 
@@ -579,9 +579,9 @@ Beide Pfade landen im selben `JSentinelEnforcer`.
 
 | Toolchain | Modul | Zweck |
 |---|---|---|
-| `security-test` (eigenes Modul) | core / vaadin / rest / standalone / demo-vaadin / demo-standalone | Wiederverwendbare Fakes (`FakeAuthenticationService`, `FakeAuthorizationService`), `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5-`JSentinelTestExtension`, `AccessContexts` / `JSentinelSubjects` / `SyntheticAnnotations`-Helper. Konsumiert per `<scope>test</scope>`. |
+| `jSentinel-test` (eigenes Modul) | core / vaadin / rest / standalone / demo-vaadin / demo-standalone | Wiederverwendbare Fakes (`FakeAuthenticationService`, `FakeAuthorizationService`), `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5-`JSentinelTestExtension`, `AccessContexts` / `JSentinelSubjects` / `SyntheticAnnotations`-Helper. Konsumiert per `<scope>test</scope>`. |
 | Vaadin Browserless Testing 1.0.0 (`com.vaadin:browserless-test-junit6`) | vaadin / demo-vaadin | UI-Adapter-Tests ohne Browser; `BrowserlessTest`-Basisklasse, `navigate(Class)`, `$view(Class)`, typed Tester (`ButtonTester`, `GridTester`, `ComboBoxTester`, `NotificationTester`, `ConfirmDialogTester`) |
-| `com.google.testing.compile:compile-testing` 0.21.0 | security-processor | Annotation-Processor-Tests: `Compiler.javac().withProcessors(...).compile(...)`, `assertThat(compilation).succeeded()`, `generatedSourceFile(...).contentsAsUtf8String().contains(...)`. |
+| `com.google.testing.compile:compile-testing` 0.21.0 | jSentinel-processor | Annotation-Processor-Tests: `Compiler.javac().withProcessors(...).compile(...)`, `assertThat(compilation).succeeded()`, `generatedSourceFile(...).contentsAsUtf8String().contains(...)`. |
 | JUnit Jupiter 6.1.0-M1 | alle | Test-Framework |
 | PIT 1.x | alle | Mutation Testing |
 
@@ -589,7 +589,7 @@ Beide Pfade landen im selben `JSentinelEnforcer`.
 
 PIT-Re-Runs für die V00.70-Stacks. Die Library-Module liegen alle
 bei ≥ 79 %, drei davon ≥ 95 %. Die nicht voll erreichte
-security-vaadin-Marke kommt überwiegend von `VoidMethodCallMutator`-
+jSentinel-vaadin-Marke kommt überwiegend von `VoidMethodCallMutator`-
 Mutationen auf Vaadin-Component-Settern in den Phase-8-UI-Klassen
 (`SessionManagementView`, `SecuredButton`-Konstruktor-Setup etc.) —
 das Entfernen eines `setSizeFull()` / `addClassName(…)` / `add(…)`-
@@ -598,14 +598,14 @@ Das Mutations-Surface ohne UI-Konstruktion liegt deutlich höher.
 
 | Modul | Coverage | Kommentar |
 |---|---:|---|
-| security-core | **86 %** (1191/1381) | Up from 79 % historisch / 82 % erste V00.70-Messung. `LoggingAuditSinkAllVariantsTest`, `CompositeAuditServiceTest`, `DefaultCompositeAuditServiceTest` ergänzt — Audit-Paket von 39 % auf solid. |
-| security-vaadin | **79 %** (242/305) | UI-Konstruktion-Mutationen (`VoidMethodCallMutator` auf Vaadin-Settern in `SessionManagementView` etc.) dominieren die Lücke; Phase-4c `session.vaadin`-Paket bei 91 %, `authorization.impl` bei 91 %. |
-| security-rest | **95 %** (86/91) | Unverändert hoch. Phase-4c-Filter + Phase-8d-OpenAPI-Generator vollständig gecovert. |
-| security-standalone | **97 %** (33/34) | Unverändert. |
-| security-test | (kein PIT-Run; Tests prüfen ihre Fakes direkt) | |
-| security-processor | (PIT-Run noch offen — Phase 5c-Followup) | |
-| security-persistence-testkit | (kein PIT-Run; Contracts werden über Consumer verifiziert) | |
-| security-persistence-eclipsestore | (PIT-Re-Run nach Phase 4a noch offen) | |
+| jSentinel-core | **86 %** (1191/1381) | Up from 79 % historisch / 82 % erste V00.70-Messung. `LoggingAuditSinkAllVariantsTest`, `CompositeAuditServiceTest`, `DefaultCompositeAuditServiceTest` ergänzt — Audit-Paket von 39 % auf solid. |
+| jSentinel-vaadin | **79 %** (242/305) | UI-Konstruktion-Mutationen (`VoidMethodCallMutator` auf Vaadin-Settern in `SessionManagementView` etc.) dominieren die Lücke; Phase-4c `session.vaadin`-Paket bei 91 %, `authorization.impl` bei 91 %. |
+| jSentinel-rest | **95 %** (86/91) | Unverändert hoch. Phase-4c-Filter + Phase-8d-OpenAPI-Generator vollständig gecovert. |
+| jSentinel-standalone | **97 %** (33/34) | Unverändert. |
+| jSentinel-test | (kein PIT-Run; Tests prüfen ihre Fakes direkt) | |
+| jSentinel-processor | (PIT-Run noch offen — Phase 5c-Followup) | |
+| jSentinel-persistence-testkit | (kein PIT-Run; Contracts werden über Consumer verifiziert) | |
+| jSentinel-persistence-eclipsestore | (PIT-Re-Run nach Phase 4a noch offen) | |
 | demo-vaadin | 70 % | (alte Messung, vor V00.70-Demo-Glue) |
 | demo-rest | 49 % | |
 | demo-vaadin-rest-client | 10 % | |
@@ -621,11 +621,11 @@ finden (sämtliche Mutationen "no coverage"). Bei V00.70 auf
 
 | Modul | Tests |
 |---|---:|
-| security-core | 921 |
-| security-vaadin | 172 |
-| security-rest | 71 |
-| security-standalone | 30 |
-| security-persistence-eclipsestore | 104 |
+| jSentinel-core | 921 |
+| jSentinel-vaadin | 172 |
+| jSentinel-rest | 71 |
+| jSentinel-standalone | 30 |
+| jSentinel-persistence-eclipsestore | 104 |
 
 Alle Module grün.
 
@@ -657,7 +657,7 @@ Alle Module grün.
 - ❌ **Policy-Composing-DSL** — Annotationen und Code sind die
   Konfigurations-Schicht.
 - ❌ **`security-javafx`** — geplant, wartet auf realen JavaFX-Bedarf.
-  `security-standalone` deckt funktional Swing / JavaFX / CLI ab.
+  `jSentinel-standalone` deckt funktional Swing / JavaFX / CLI ab.
 
 ---
 
@@ -668,7 +668,7 @@ Alle Module grün.
 - **Jetty 12.1.8 EE11** als Dev-Server für die Vaadin-Demos
 - **Maven 4** (pinned via `./mvnw`; Minimum `4.0.0-rc-5`)
 - **Eclipse Store 4.1.0** (`org.eclipse.store:storage-embedded`) für
-  die durable Persistence-Referenz in `security-persistence-eclipsestore`
+  die durable Persistence-Referenz in `jSentinel-persistence-eclipsestore`
 - **proxybuilder 00.11.00** (`com.svenruppert:proxybuilder` +
   `proxybuilder-annotations`) für den Compile-Time-Processor
 - **Lizenz:** EUPL v1.2

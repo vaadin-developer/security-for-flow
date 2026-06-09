@@ -19,9 +19,9 @@ ohne Jakarta Security, ohne OAuth2/OIDC-Klötze.
 mehr will als die Defaults, registriert eigene Implementierungen in
 `META-INF/services/` und ist fertig — kein Bean-Container, kein XML.
 
-**Adapter-neutral**: der Kern (`security-core`) hat keine Vaadin- und
-keine HTTP-Abhängigkeit. Die drei Adapter (`security-vaadin`,
-`security-rest`, `security-standalone`) sind dünne Schichten obendrauf.
+**Adapter-neutral**: der Kern (`jSentinel-core`) hat keine Vaadin- und
+keine HTTP-Abhängigkeit. Die drei Adapter (`jSentinel-vaadin`,
+`jSentinel-rest`, `jSentinel-standalone`) sind dünne Schichten obendrauf.
 
 ---
 
@@ -65,20 +65,20 @@ keine HTTP-Abhängigkeit. Die drei Adapter (`security-vaadin`,
 
 | Modul | Zweck |
 |---|---|
-| `security-core` | Project-neutraler Kern: SPIs, Decisions, Audit-Pipeline, Bootstrap, Brute-Force, Session-Policies, Password-Hashing, `JSentinelEnforcer`. |
-| `security-vaadin` | Vaadin-Flow-Adapter: `AuthorizationListener`, `SessionLifetimeListener`, `LoginView`, `VaadinLogoutService`, `VaadinSessionSubjectStore`. |
-| `security-rest` | REST-Adapter: `RestAuthenticationFilter`, `RestAuthorizationFilter`, `BearerTokenExtractor`. |
-| `security-standalone` | Plain-Java-Adapter: `ThreadLocalSubjectStore`, `StandaloneLoginFlow`, `SecuredProxy.wrap(Interface, impl)` (JDK Dynamic Proxy). |
-| `security-test` | Wiederverwendbare Test-Fixtures: `FakeAuthenticationService`, `FakeAuthorizationService`, `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5-`JSentinelTestExtension`. Konsumenten ziehen das Modul als `<scope>test</scope>`. |
-| `security-processor` | Compile-Time-Annotation-Processor: erzeugt `<Type>Secured`-Subklassen für `@Secured`-annotierte konkrete Klassen. Eingebunden als `<annotationProcessorPath>`. Basiert auf `com.svenruppert:proxybuilder:00.10.00`. |
+| `jSentinel-core` | Project-neutraler Kern: SPIs, Decisions, Audit-Pipeline, Bootstrap, Brute-Force, Session-Policies, Password-Hashing, `JSentinelEnforcer`. |
+| `jSentinel-vaadin` | Vaadin-Flow-Adapter: `AuthorizationListener`, `SessionLifetimeListener`, `LoginView`, `VaadinLogoutService`, `VaadinSessionSubjectStore`. |
+| `jSentinel-rest` | REST-Adapter: `RestAuthenticationFilter`, `RestAuthorizationFilter`, `BearerTokenExtractor`. |
+| `jSentinel-standalone` | Plain-Java-Adapter: `ThreadLocalSubjectStore`, `StandaloneLoginFlow`, `SecuredProxy.wrap(Interface, impl)` (JDK Dynamic Proxy). |
+| `jSentinel-test` | Wiederverwendbare Test-Fixtures: `FakeAuthenticationService`, `FakeAuthorizationService`, `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5-`JSentinelTestExtension`. Konsumenten ziehen das Modul als `<scope>test</scope>`. |
+| `jSentinel-processor` | Compile-Time-Annotation-Processor: erzeugt `<Type>Secured`-Subklassen für `@Secured`-annotierte konkrete Klassen. Eingebunden als `<annotationProcessorPath>`. Basiert auf `com.svenruppert:proxybuilder:00.10.00`. |
 | `demo-vaadin` | Vollständig lauffähige Vaadin-Demo mit lokaler User-Verwaltung, Rollen, Audit-Grid und Role-Admin-UI. |
 | `demo-rest` | JDK-`HttpServer`-basierter REST-Demo-Server + CLI-Client. Bootstrap, Token-Auth, Document-CRUD, User-Admin-Endpoints, `/api/audit`. |
 | `demo-vaadin-rest-client` | Vaadin-UI ohne lokale Auth — schickt alle Operationen gegen einen demo-rest-Backend. Caches `RemoteUser` lokal für UX-Entscheidungen. |
 | `demo-standalone` | Interaktive CLI-Demo — zeigt **beide** Method-Security-Pfade nebeneinander: `LibraryService` via `SecuredProxy.wrap(...)` (Runtime/Dynamic-Proxy) und `MemberDirectory` via processor-generierter `MemberDirectorySecured` (Compile-Time). |
 
-Strenge Modul-Abhängigkeiten: `security-core` hat keine Abhängigkeiten
+Strenge Modul-Abhängigkeiten: `jSentinel-core` hat keine Abhängigkeiten
 auf Adapter; die vier Adapter dürfen sich nicht gegenseitig sehen;
-Demos hängen nur am Kern + ihrem Adapter; `security-test` ist
+Demos hängen nur am Kern + ihrem Adapter; `jSentinel-test` ist
 test-scope-only.
 
 ---
@@ -222,7 +222,7 @@ Annotation-driven Routen-Schutz greift dann automatisch über den
 
 ## REST-Integration
 
-`security-rest` definiert minimale Abstraktionen (`RestRequest`,
+`jSentinel-rest` definiert minimale Abstraktionen (`RestRequest`,
 `RestResponse`, `RestHandler`) — kein konkretes Servlet-Container-
 Lock-in. Reference: `demo-rest`, läuft auf reinem JDK `HttpServer`.
 
@@ -234,7 +234,7 @@ Lock-in. Reference: `demo-rest`, läuft auf reinem JDK `HttpServer`.
 
 ## Standalone-Integration (CLI / Desktop / Daemon)
 
-`security-standalone` setzt das gleiche SPI-Modell ohne HTTP- und ohne
+`jSentinel-standalone` setzt das gleiche SPI-Modell ohne HTTP- und ohne
 Vaadin-Schicht um. Reference: `demo-standalone`, eine interaktive
 Library-Borrowing-CLI mit drei Demo-Usern.
 
@@ -282,11 +282,11 @@ EUPL (European Union Public License) v1.2.
 Aktueller Stand: **V00.60.00-Iteration**. Konzept-V00.60 alle sieben
 Konzept-Punkte plus Brief-Step-4 ausgeliefert; Demos zusätzlich mit
 Lockout-UI, Role-Admin-UI, User-CRUD und Drawer-Menü-Integration. Über
-das Konzept hinaus: **vierter Adapter `security-standalone`** für
+das Konzept hinaus: **vierter Adapter `jSentinel-standalone`** für
 plain-Java-Anwendungen plus Demo-Modul `demo-standalone`, sowie ein
 durchgängiger **Mutation-Coverage-Push** über alle Library-Module
-(security-standalone 98 %, security-rest 95 %, security-core 79 %,
-security-vaadin 80 %, demo-standalone 86 %, demo-vaadin 70 %).
+(jSentinel-standalone 98 %, jSentinel-rest 95 %, jSentinel-core 79 %,
+jSentinel-vaadin 80 %, demo-standalone 86 %, demo-vaadin 70 %).
 Browserless-basierte UI-Adapter-Tests sind über alle relevanten
 Vaadin-Views ausgerollt. Roadmap-Kandidat: `security-javafx` — wartet
 auf realen Bedarf.

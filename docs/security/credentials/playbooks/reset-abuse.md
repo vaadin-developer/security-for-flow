@@ -17,7 +17,7 @@ CWE-203 (Observable Discrepancy)
 ## Pre-conditions
 
 - The deployment uses `PasswordResetService` from
-  `security-core` (V00.71.00 selector/verifier model).
+  `jSentinel-core` (V00.71.00 selector/verifier model).
 - `AbuseDetectionService` and `AbusePatternMonitor` are wired
   into the reset flow.
 

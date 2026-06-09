@@ -9,17 +9,17 @@ gone: `.audit(...)`, `.policies(...)`, `.roles(...)` and
 ```xml
 <dependency>
   <groupId>com.svenruppert</groupId>
-  <artifactId>security-rest</artifactId>
+  <artifactId>jSentinel-rest</artifactId>
   <version>${security-for-flow.version}</version>
 </dependency>
 <dependency>
   <groupId>com.svenruppert</groupId>
-  <artifactId>security-dx-rest</artifactId>
+  <artifactId>jSentinel-dx-rest</artifactId>
   <version>${security-for-flow.version}</version>
 </dependency>
 <dependency>
   <groupId>com.svenruppert</groupId>
-  <artifactId>security-autoservice-annotations</artifactId>
+  <artifactId>jSentinel-autoservice-annotations</artifactId>
   <version>${security-for-flow.version}</version>
 </dependency>
 ```
@@ -28,12 +28,12 @@ gone: `.audit(...)`, `.policies(...)`, `.roles(...)` and
 <annotationProcessorPaths>
   <path>
     <groupId>com.svenruppert</groupId>
-    <artifactId>security-autoservice-processor</artifactId>
+    <artifactId>jSentinel-autoservice-processor</artifactId>
     <version>${security-for-flow.version}</version>
   </path>
   <path>
     <groupId>com.svenruppert</groupId>
-    <artifactId>security-autoservice-annotations</artifactId>
+    <artifactId>jSentinel-autoservice-annotations</artifactId>
     <version>${security-for-flow.version}</version>
   </path>
 </annotationProcessorPaths>
@@ -72,7 +72,7 @@ to `HttpStatusDecisionMapper` and a generic-strings error body strategy.
 | `.audit(...)` | Full — composes `LoggingAuditSink`, `RingBufferAuditSink`, `StoreBackedJSentinelAuditService` as in Vaadin |
 | `.policies(...)` | Full — registers policies and resource resolvers into `PolicyRegistry` |
 | `.roles(...)` | `.hierarchy(...)` only (V00.73 deliberately keeps `RolePermissionMapping` out) |
-| `.credentials(...)` | Full — `.passwordHasher(...)` (legacy resolver), `.hashing(...)` / `.pepper(...)` / `.credentialStore(...)` (V00.71 pipeline). `.modern()` requires `security-crypto-bc` |
+| `.credentials(...)` | Full — `.passwordHasher(...)` (legacy resolver), `.hashing(...)` / `.pepper(...)` / `.credentialStore(...)` (V00.71 pipeline). `.modern()` requires `jSentinel-crypto-bc` |
 | `.sessions(...)` | `SessionPolicy` / `JSentinelVersionStore` / `SubjectIdResolver` only. `.storeBacked(...)` records `rest/session-store-unused` INFO — REST has no concept of a session store |
 
 ## STRICT mode

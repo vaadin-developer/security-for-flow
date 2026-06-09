@@ -18,18 +18,18 @@ Die Zielanwendung besteht aus zwei Komponenten:
 
 Verwendet werden die Bibliotheksmodule der Version `00.60.00`:
 
-- `security-core` — framework-neutrale Security-Typen, SPI-Vertraege,
+- `jSentinel-core` — framework-neutrale Security-Typen, SPI-Vertraege,
   Annotationen, Decision-Modell, Audit, Login-Attempt-Policy,
   Session-Policy, Bootstrap, `PasswordHasher`, `PasswordPolicy`.
-- `security-rest` — REST-Adapter mit `RestRequest`, `RestResponse`,
+- `jSentinel-rest` — REST-Adapter mit `RestRequest`, `RestResponse`,
   `RestSubjectResolver`, `BearerTokenExtractor`,
   `RestAuthenticationFilter`, `RestAuthorizationFilter`,
   `HttpStatusDecisionMapper`.
-- `security-vaadin` — Vaadin-Flow-Adapter mit `LoginView`,
+- `jSentinel-vaadin` — Vaadin-Flow-Adapter mit `LoginView`,
   `LoginListener`, `VaadinSessionSubjectStore`, `AuthorizationListener`,
   `VaadinAccessDecisionMapper`, `VaadinNavigationAccessDecisionMapper`.
 
-`security-standalone` wird **nicht** benoetigt.
+`jSentinel-standalone` wird **nicht** benoetigt.
 
 ## Zielarchitektur
 
@@ -38,7 +38,7 @@ Der REST-Service ist die einzige Vertrauensgrenze:
 1. Der REST-Service authentifiziert Benutzer (`/api/login`).
 2. Der REST-Service loest Tokens zu `JSentinelSubject` auf.
 3. Der REST-Service schuetzt alle fachlichen Endpunkte serverseitig mit
-   `security-rest`. Das gilt fuer:
+   `jSentinel-rest`. Das gilt fuer:
    - **Link-Endpunkte** (`/api/links`, `/api/links/{id}`, `/api/links/{id}/stats`)
    - **Benutzer-Endpunkte** (`/api/users`, `/api/users/{id}`,
      `/api/users/{id}/roles`)
@@ -66,7 +66,7 @@ REST-Service (`pom.xml`):
 ```xml
 <dependency>
   <groupId>com.svenruppert</groupId>
-  <artifactId>security-rest</artifactId>
+  <artifactId>jSentinel-rest</artifactId>
   <version>00.60.00</version>
 </dependency>
 ```
@@ -76,13 +76,13 @@ Vaadin-UI (`pom.xml`):
 ```xml
 <dependency>
   <groupId>com.svenruppert</groupId>
-  <artifactId>security-vaadin</artifactId>
+  <artifactId>jSentinel-vaadin</artifactId>
   <version>00.60.00</version>
 </dependency>
 ```
 
-`security-core` wird transitiv eingebunden. Fuehre **keine** direkte
-Abhaengigkeit zwischen `security-vaadin` und `security-rest` ein. Beide
+`jSentinel-core` wird transitiv eingebunden. Fuehre **keine** direkte
+Abhaengigkeit zwischen `jSentinel-vaadin` und `jSentinel-rest` ein. Beide
 Adapter bleiben getrennt; die Anwendung verbindet sie ueber REST-Clients
 und eigene Application-Services.
 
@@ -134,7 +134,7 @@ public enum ShortenerPermission {
 ```
 
 Verwende `RoleName`, `PermissionName`, `StaticRolePermissionMapping`,
-`RolePermissionMapping` und `RolePermissionResolver` aus `security-core`,
+`RolePermissionMapping` und `RolePermissionResolver` aus `jSentinel-core`,
 um Rollen auf Permissions abzubilden. Registriere das `RolePermissionMapping`
 ueber `META-INF/services/`.
 
@@ -163,7 +163,7 @@ vollstaendige Domain-User-Objekte enthalten.
 
 ### 3. Passwort-Speicherung
 
-Verwende `PasswordHasher` und `PasswordPolicy` aus `security-core`:
+Verwende `PasswordHasher` und `PasswordPolicy` aus `jSentinel-core`:
 
 - Passwoerter beim Anlegen/Aendern mit dem `PasswordHasher` hashen.
 - Passwort-Policy (Laenge, Komplexitaet) zentral konfigurieren.
@@ -231,7 +231,7 @@ public final class ShortenerRestSubjectResolver
 
 ### 8. REST-Endpunkte schuetzen
 
-Annotiere Handler mit den generischen Annotationen aus `security-core`:
+Annotiere Handler mit den generischen Annotationen aus `jSentinel-core`:
 
 Link-Endpunkte:
 
@@ -340,7 +340,7 @@ Domain-Ereignissen verwaessert werden.
 ### 12. Logout
 
 Verwende `LogoutService.logout(SubjectId, LogoutScope)` aus
-`security-core`. `LogoutScope` unterscheidet `CURRENT_SESSION` vs.
+`jSentinel-core`. `LogoutScope` unterscheidet `CURRENT_SESSION` vs.
 `ALL_SESSIONS`. Implementiere `SubjectSessionRegistry` zur
 Verwaltung aktiver Sessions je Benutzer. Registriere optional
 `LogoutListener` fuer Aufraeumlogik (z. B. Token aus dem Token-Store
@@ -349,7 +349,7 @@ entfernen).
 ### 13. Bootstrap des ersten Administrators
 
 Falls die Anwendung initial leer startet, verwende die Bootstrap-Typen
-aus `security-core`:
+aus `jSentinel-core`:
 
 - `BootstrapConfigurationLoader`
 - `BootstrapStateService`
@@ -569,7 +569,7 @@ Nur genau eine Implementierung pro SPI registrieren. Die Resolver
 schlagen absichtlich fehl, wenn mehrere Implementierungen gefunden
 werden.
 
-`SubjectStore` kommt automatisch ueber `security-vaadin`:
+`SubjectStore` kommt automatisch ueber `jSentinel-vaadin`:
 
 ```text
 com.svenruppert.jsentinel.authorization.vaadin.VaadinSessionSubjectStore
@@ -626,7 +626,7 @@ Die Integration ist erst fertig, wenn:
 - Die oeffentliche Short-Link-Aufloesung `GET /{shortCode}` ohne
   Authentifizierung funktioniert.
 - Vaadin-View-Schutz nur Navigation und Darstellung absichert.
-- `security-vaadin` und `security-rest` nicht direkt voneinander
+- `jSentinel-vaadin` und `jSentinel-rest` nicht direkt voneinander
   abhaengen.
 - SPI-Dateien genau eine Implementierung pro Service enthalten.
 - `PasswordHasher` und `PasswordPolicy` fuer alle
@@ -645,6 +645,6 @@ Die Integration ist erst fertig, wenn:
 Behandle die Vaadin-UI als untrusted Client mit Server-Rendering. Alles,
 was fachlich geschuetzt werden muss — sowohl Short-Link-Operationen als
 auch die Benutzer-/Rollenpflege — gehoert in den REST-Service und wird
-dort mit `security-rest` autorisiert. Die UI kann Rechte anzeigen,
+dort mit `jSentinel-rest` autorisiert. Die UI kann Rechte anzeigen,
 verstecken und Navigation lenken, aber sie ist niemals die finale
 Security-Entscheidungsinstanz.

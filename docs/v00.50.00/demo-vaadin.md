@@ -216,5 +216,5 @@ mvn -pl :demo-vaadin -am test
 ```
 
 The Vaadin demo currently has **no UI tests** (no Karibu/TestBench
-infrastructure). The 9 tests in `security-vaadin` cover the framework
+infrastructure). The 9 tests in `jSentinel-vaadin` cover the framework
 side; the demo wiring is exercised manually via `jetty:run`.

@@ -81,7 +81,7 @@ Timestamp: 2026-05-31_22-00-34 Europe/Berlin (state after V00.70.00 release)
 | Demo | REST demo | Shipped |
 | Demo | Vaadin REST-client demo | Shipped |
 | Demo | Standalone demo | Shipped |
-| Testing | `security-test` module | Shipped |
+| Testing | `jSentinel-test` module | Shipped |
 | Testing | Fixtures and test helpers | Shipped |
 | Testing | Contract tests for stores | Shipped |
 | Testing | Mutation testing setup (`pitest-test-classes=com.svenruppert.*`) | Shipped / V00.70 (typo fix vs. V00.60) |

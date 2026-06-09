@@ -15,7 +15,7 @@ CWE-693 (Protection Mechanism Failure)
 
 ## Pre-conditions
 
-- `security-core` is at V00.71.00 or later (envelope carries
+- `jSentinel-core` is at V00.71.00 or later (envelope carries
   `alg=`, `prov=` and `pol=` markers).
 - The deployment runs verifications regularly enough that a
   transparent rehash window of weeks-to-months is acceptable. If
@@ -28,7 +28,7 @@ CWE-693 (Protection Mechanism Failure)
 - Identify the new algorithm and parameters: PBKDF2 with higher
   iteration count, Argon2id with larger {m,t,p}, or a switch
   between PBKDF2 / Argon2id / bcrypt / scrypt.
-- If the replacement requires `security-crypto-bc` and the module
+- If the replacement requires `jSentinel-crypto-bc` and the module
   is not yet on the classpath, plan the dependency change.
 
 ### 2. Update the policy

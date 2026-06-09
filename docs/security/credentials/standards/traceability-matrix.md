@@ -43,9 +43,9 @@ Status legend identical to `asvs-v2-mapping.md`.
 | ID    | Feature                                          | Status | Code                                                      | Tests                                                | Standards            | CWE       |
 |-------|--------------------------------------------------|:------:|-----------------------------------------------------------|------------------------------------------------------|----------------------|-----------|
 | PWH-D1 | JDK PBKDF2 provider                               | ✅ | `credential.password.pbkdf2.Pbkdf2PasswordHashProvider`   | `Pbkdf2PasswordHashProviderTest`                     | NIST SP 800-132       | CWE-916   |
-| PWH-D2 | Argon2id (BouncyCastle)                           | ✅ | `security-crypto-bc` `Argon2idPasswordHashProvider`       | `Argon2idPasswordHashProviderTest`                   | ASVS 2.4.2            | CWE-916   |
-| PWH-D3 | bcrypt (BouncyCastle)                             | ✅ | `security-crypto-bc` `BcryptPasswordHashProvider`         | `BcryptPasswordHashProviderTest`                     | ASVS 2.4.3            | CWE-916   |
-| PWH-D4 | scrypt (BouncyCastle)                             | ✅ | `security-crypto-bc` `ScryptPasswordHashProvider`         | `ScryptPasswordHashProviderTest`                     | ASVS 2.4.5            | CWE-916   |
+| PWH-D2 | Argon2id (BouncyCastle)                           | ✅ | `jSentinel-crypto-bc` `Argon2idPasswordHashProvider`       | `Argon2idPasswordHashProviderTest`                   | ASVS 2.4.2            | CWE-916   |
+| PWH-D3 | bcrypt (BouncyCastle)                             | ✅ | `jSentinel-crypto-bc` `BcryptPasswordHashProvider`         | `BcryptPasswordHashProviderTest`                     | ASVS 2.4.3            | CWE-916   |
+| PWH-D4 | scrypt (BouncyCastle)                             | ✅ | `jSentinel-crypto-bc` `ScryptPasswordHashProvider`         | `ScryptPasswordHashProviderTest`                     | ASVS 2.4.5            | CWE-916   |
 | PWH-D5 | Modern profile factory                            | ✅ | `BouncyCastleHashingServices.modern()`                    | `CrossProviderTest`                                  | —                    | —         |
 | PWH-D7 | PKCS#11 / HSM pepper key (docs only)              | 📄 | `docs/.../pkcs11-hsm-pepper-key.md`                       | n/a                                                  | NIST §5.2.5           | CWE-320   |
 
@@ -62,7 +62,7 @@ Status legend identical to `asvs-v2-mapping.md`.
 |-------|--------------------------------------------------|:------:|-----------------------------------------------------------|------------------------------------------------------|----------------------|-----------|
 | PWH-F1 | `CompromisedPasswordChecker` SPI                  | ✅ | `credential.compromised.CompromisedPasswordChecker`        | `CompromisedPasswordCoreTest`                        | ASVS 2.1.6            | CWE-521   |
 | PWH-F2 | Strength estimation hook                          | ⚙️ | n/a                                                       | n/a                                                  | ASVS 2.1.8            | —         |
-| PWH-F3 | k-anonymity HIBP module                           | ✅ | `security-credentials-hibp`                                | `HaveIBeenPwnedCompromisedPasswordCheckerTest`       | ASVS 2.1.7            | CWE-359   |
+| PWH-F3 | k-anonymity HIBP module                           | ✅ | `jSentinel-credentials-hibp`                                | `HaveIBeenPwnedCompromisedPasswordCheckerTest`       | ASVS 2.1.7            | CWE-359   |
 | PWH-F4 | `CheckFailurePolicy` (ALLOW / WARN / BLOCK)       | ✅ | `credential.compromised.CheckFailurePolicy`                | `CompromisedPasswordCoreTest`                        | —                    | CWE-693   |
 | PWH-F5 | Check on set / change only by default             | ✅ | `CompromisedPasswordPolicy.defaults()`                    | ditto                                                | NIST 5.2.2            | CWE-307   |
 | PWH-F6 | Local blocklist as sovereign default              | ✅ | `LocalBlocklistCompromisedPasswordChecker`                 | ditto                                                | ASVS 2.1.6            | CWE-521   |

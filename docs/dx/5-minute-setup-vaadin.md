@@ -13,17 +13,17 @@ sub-builders are real, and `SecuredUi.requiresPolicy(...)` /
 ```xml
 <dependency>
   <groupId>com.svenruppert</groupId>
-  <artifactId>security-vaadin</artifactId>
+  <artifactId>jSentinel-vaadin</artifactId>
   <version>${security-for-flow.version}</version>
 </dependency>
 <dependency>
   <groupId>com.svenruppert</groupId>
-  <artifactId>security-vaadin-starter</artifactId>
+  <artifactId>jSentinel-vaadin-starter</artifactId>
   <version>${security-for-flow.version}</version>
 </dependency>
 <dependency>
   <groupId>com.svenruppert</groupId>
-  <artifactId>security-autoservice-annotations</artifactId>
+  <artifactId>jSentinel-autoservice-annotations</artifactId>
   <version>${security-for-flow.version}</version>
 </dependency>
 ```
@@ -35,12 +35,12 @@ sub-builders are real, and `SecuredUi.requiresPolicy(...)` /
     <annotationProcessorPaths>
       <path>
         <groupId>com.svenruppert</groupId>
-        <artifactId>security-autoservice-processor</artifactId>
+        <artifactId>jSentinel-autoservice-processor</artifactId>
         <version>${security-for-flow.version}</version>
       </path>
       <path>
         <groupId>com.svenruppert</groupId>
-        <artifactId>security-autoservice-annotations</artifactId>
+        <artifactId>jSentinel-autoservice-annotations</artifactId>
         <version>${security-for-flow.version}</version>
       </path>
     </annotationProcessorPaths>

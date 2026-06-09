@@ -7,7 +7,7 @@ Protected Credentials)
 
 ## Why this matters
 
-The `PepperService` SPI in `security-core` exposes a pepper key as a
+The `PepperService` SPI in `jSentinel-core` exposes a pepper key as a
 `PepperReference` and an `HmacSHA256` operation. The default
 `InMemoryPepperService` holds the key bytes in a `byte[]` inside the
 JVM heap, which is appropriate for development and small-scale

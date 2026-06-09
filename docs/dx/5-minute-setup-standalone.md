@@ -10,17 +10,17 @@ thread-local `SubjectStore`).
 ```xml
 <dependency>
   <groupId>com.svenruppert</groupId>
-  <artifactId>security-standalone</artifactId>
+  <artifactId>jSentinel-standalone</artifactId>
   <version>${security-for-flow.version}</version>
 </dependency>
 <dependency>
   <groupId>com.svenruppert</groupId>
-  <artifactId>security-dx-standalone</artifactId>
+  <artifactId>jSentinel-dx-standalone</artifactId>
   <version>${security-for-flow.version}</version>
 </dependency>
 <dependency>
   <groupId>com.svenruppert</groupId>
-  <artifactId>security-autoservice-annotations</artifactId>
+  <artifactId>jSentinel-autoservice-annotations</artifactId>
   <version>${security-for-flow.version}</version>
 </dependency>
 ```
@@ -29,12 +29,12 @@ thread-local `SubjectStore`).
 <annotationProcessorPaths>
   <path>
     <groupId>com.svenruppert</groupId>
-    <artifactId>security-autoservice-processor</artifactId>
+    <artifactId>jSentinel-autoservice-processor</artifactId>
     <version>${security-for-flow.version}</version>
   </path>
   <path>
     <groupId>com.svenruppert</groupId>
-    <artifactId>security-autoservice-annotations</artifactId>
+    <artifactId>jSentinel-autoservice-annotations</artifactId>
     <version>${security-for-flow.version}</version>
   </path>
 </annotationProcessorPaths>
@@ -67,8 +67,8 @@ one with `.subjectStore(...)` if you have background workers.
 ## Method-level security and the wrapper index
 
 Method-level security on a concrete class without an interface uses the
-compile-time `<Type>Secured` wrapper (`@Secured` + `security-processor`).
-V00.73 completes the wrapper-index pipeline: `security-processor` now
+compile-time `<Type>Secured` wrapper (`@Secured` + `jSentinel-processor`).
+V00.73 completes the wrapper-index pipeline: `jSentinel-processor` now
 writes `META-INF/jsentinel/generated-wrappers.idx` after each
 compile (the V00.72 reader path was already in place). One line per
 generated wrapper, format

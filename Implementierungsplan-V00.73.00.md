@@ -15,7 +15,7 @@
 V00.73.00 completes the V00.72 DX surface and makes the usable parts production-ready:
 
 - recorded-only sub-builders become real typed wiring,
-- `security-processor` writes the wrapper index that `security-dx` already reads,
+- `jSentinel-processor` writes the wrapper index that `jSentinel-dx` already reads,
 - `SecuredUi.requiresPolicy(...)` and `@SecureRoute(policy=...)` evaluate against `PolicyRegistry`,
 - stable API promotion happens per type after a wiring audit.
 
@@ -41,7 +41,7 @@ The plan intentionally follows the improved concept: no broad new Security SPIs,
   - `CredentialState`
 - Wire sub-builder state through existing `JSentinelServiceResolver` setters where they exist.
 - Expose non-resolver state through `JSentinelRuntime` / adapter-DX code where no core setter exists.
-- Add wrapper-index writer in `security-processor`.
+- Add wrapper-index writer in `jSentinel-processor`.
 - Implement policy evaluation in `SecuredUi.requiresPolicy(...)` and `@SecureRoute(policy=...)`.
 - Promote V00.72 public DX API only after per-type audit.
 - Update docs, release notes, and prompt status.
@@ -53,7 +53,7 @@ The plan intentionally follows the improved concept: no broad new Security SPIs,
 - No replacement for `JSentinelServiceResolver`.
 - No new Policy DSL.
 - No new crypto provider.
-- No mandatory `security-dx-test` module.
+- No mandatory `jSentinel-dx-test` module.
 - No global `JSentinelServiceResolver.setSessionStore(...)`.
 - No `RolePermissionMapping` bootstrap method unless a separate core SPI is explicitly approved.
 - No silent conversion between `PasswordHashingService` and legacy `PasswordHasher`.
@@ -64,18 +64,18 @@ The plan intentionally follows the improved concept: no broad new Security SPIs,
 
 Every implementation prompt must obey these rules:
 
-1. `security-core` gets no new runtime dependency.
+1. `jSentinel-core` gets no new runtime dependency.
 2. Existing direct `JSentinelServiceResolver.setXxx(...)` setup paths remain valid.
 3. `JSentinelServiceResolver` API stays unchanged unless the prompt explicitly says a new core SPI has been approved.
 4. `SessionStore` is stored in DX state / runtime output and consumed by adapters; it is not globally registered through a nonexistent resolver setter.
 5. `PasswordHasher` and `PasswordHashingService` remain distinct surfaces.
 6. `RoleBootstrap` stabilizes only `RoleHierarchy`.
-7. `security-processor` wrapper-generation semantics stay unchanged; the index is additive metadata.
+7. `jSentinel-processor` wrapper-generation semantics stay unchanged; the index is additive metadata.
 8. STRICT-mode codes split into two classes:
    (a) Promotions of V00.72 warnings to V00.73 STRICT exceptions are breaking changes; they get their own RELEASE-NOTES section (Konzept §3.4, §13.1).
    (b) Brand-new V00.73 validation codes (Konzept §13.2) are additive and only fire when the new sub-builder methods are used — they are not breaking changes per se.
 9. Stable promotion is per type; no blanket annotation removal.
-10. Tests use real fakes from `security-test` or local test-support helpers. No Mockito.
+10. Tests use real fakes from `jSentinel-test` or local test-support helpers. No Mockito.
 11. Diagnostics never include secrets.
 
 ---
@@ -84,14 +84,14 @@ Every implementation prompt must obey these rules:
 
 | Module | V00.73 work |
 |---|---|
-| `security-dx` | Typed sub-builders, sub-state aggregates, common wiring, validation, runtime reporting |
-| `security-dx-vaadin` | `SessionManagementView` activation strategy, `VaadinSessionSubjectStore` auto-wiring |
-| `security-dx-rest` | Consumes common audit/session/policy/role/credential state where applicable |
-| `security-dx-standalone` | Consumes common state; `.sessions(...)` produces INFO `standalone/sessions-not-applicable` |
-| `security-vaadin-starter` | `SecuredUi.requiresPolicy(...)`, `@SecureRoute(policy=...)` |
-| `security-processor` | Writes `META-INF/jsentinel/generated-wrappers.idx` |
+| `jSentinel-dx` | Typed sub-builders, sub-state aggregates, common wiring, validation, runtime reporting |
+| `jSentinel-dx-vaadin` | `SessionManagementView` activation strategy, `VaadinSessionSubjectStore` auto-wiring |
+| `jSentinel-dx-rest` | Consumes common audit/session/policy/role/credential state where applicable |
+| `jSentinel-dx-standalone` | Consumes common state; `.sessions(...)` produces INFO `standalone/sessions-not-applicable` |
+| `jSentinel-vaadin-starter` | `SecuredUi.requiresPolicy(...)`, `@SecureRoute(policy=...)` |
+| `jSentinel-processor` | Writes `META-INF/jsentinel/generated-wrappers.idx` |
 
-`security-dx-test` is not created in V00.73 by default. Shared DX test helpers stay under `security-dx/src/test/java/.../testsupport/` and may be exposed through a test-jar only if a real cross-module test need appears.
+`jSentinel-dx-test` is not created in V00.73 by default. Shared DX test helpers stay under `jSentinel-dx/src/test/java/.../testsupport/` and may be exposed through a test-jar only if a real cross-module test need appears.
 
 ---
 
@@ -100,7 +100,7 @@ Every implementation prompt must obey these rules:
 | Milestone | Prompt | Objective |
 |---:|---:|---|
 | M1 | 001 | Define shared wrapper-index format constants |
-| M2 | 002 | Write wrapper index from `security-processor` |
+| M2 | 002 | Write wrapper index from `jSentinel-processor` |
 | M3 | 003 | Verify demo diagnostics see generated wrappers |
 | M4 | 004 | Implement real `AuditBootstrap` with existing audit core types |
 | M5 | 005 | Implement `RoleBootstrap` for `RoleHierarchy` only |
@@ -123,7 +123,7 @@ Every implementation prompt must obey these rules:
 
 ### 001 - WrapperIndexFormat constants
 
-Move the wrapper index path, marker, and separators into a shared package-private format helper in `security-dx`. Refactor `WrapperIndexReader` to use it. Reader behavior must remain unchanged.
+Move the wrapper index path, marker, and separators into a shared package-private format helper in `jSentinel-dx`. Refactor `WrapperIndexReader` to use it. Reader behavior must remain unchanged.
 
 Tests: existing `WrapperIndexReaderTest` stays green.
 
@@ -213,7 +213,7 @@ Rules:
 - `.passwordHasher(...)` calls `JSentinelServiceResolver.setPasswordHashingService(...)`.
 - `.hashing(...)` and lifecycle services are retained in DX state/runtime output.
 - `.pbkdf2Defaults()` must explicitly document whether it sets legacy, pipeline, or both. Recommended: both, reported separately.
-- `.modern()` configures only the V00.71 pipeline and requires `security-crypto-bc`.
+- `.modern()` configures only the V00.71 pipeline and requires `jSentinel-crypto-bc`.
 
 Codes:
 
@@ -383,7 +383,7 @@ Recommended order (matches `Konzept-V00.73.00.md` §18):
 | Credential APIs are conflated | Separate `passwordHasher(...)` and `hashing(...)` |
 | Role mapping is over-promised | Expose only hierarchy in V00.73 |
 | Stable promotion too early | Per-type audit, no quota |
-| `security-dx-test` module churn | Use local test support/test-jar first; module only after real need |
+| `jSentinel-dx-test` module churn | Use local test support/test-jar first; module only after real need |
 | STRICT promotions break users | Release notes list all promoted warnings |
 
 ---
@@ -413,3 +413,16 @@ Legend: `✓` done, `~` partial / deferred, `.` pending.
 | 017 | demo-vaadin migration | ✓ | `3fba7ae` |
 | 018 | demo-rest migration | ✓ | `3fba7ae` |
 | 019 | demo-standalone migration | ✓ | `3fba7ae` |
+| R1 | Rebrand: Class `Security*` → `JSentinel*` (29 classes) | ✓ | `46ade08` |
+| R2 | Rebrand: Java package `com.svenruppert.vaadin.security` → `com.svenruppert.jsentinel` | ✓ | `f3bd349` |
+| R3 | Rebrand: Maven groupId / artifactId / module-dir / META-INF resource path | ✓ | `d10d93f` |
+| R4 | Rebrand: documentation pass + narrative migration section | ✓ | release-finalize commit (this one) |
+
+Note: Items R1–R4 were not part of the original V00.73 implementation
+plan; they were added to the V00.73 release after the V00.73 feature
+work landed. Konzept §3.4 STRICT-promotion and the new sub-builder
+codes already make V00.73 binary/source breaking, so the rebrand
+ships at the same time to amortise the migration cost for consumers.
+The historical V00.72 names still appear in `Konzept-V00.73.00.md`
+and the prompt files for context; the running code uses the new
+names.

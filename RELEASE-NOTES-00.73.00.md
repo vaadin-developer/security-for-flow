@@ -1,4 +1,118 @@
-# Release Notes — V00.73.00 (Fluent-Bootstrap completion)
+# Release Notes — V00.73.00 (Fluent-Bootstrap completion + jSentinel rebrand)
+
+## Headline change — rebrand to jSentinel
+
+V00.73.00 is a **breaking-rebrand release**. Every binary coordinate
+and every Java package moves to the new `jSentinel` namespace. There
+is no compatibility shim — consumers must update their dependencies
+and imports.
+
+| Old | New |
+|---|---|
+| `<groupId>com.svenruppert</groupId>` (for our own artifacts) | `<groupId>com.svenruppert.jsentinel</groupId>` |
+| `<artifactId>security-for-flow-parent</artifactId>` | `<artifactId>jSentinel-parent</artifactId>` |
+| `<artifactId>security-core</artifactId>` ... | `<artifactId>jSentinel-core</artifactId>` ... (17 modules) |
+| `com.svenruppert.vaadin.security.*` (Java package) | `com.svenruppert.jsentinel.*` |
+| `SecurityRuntime`, `SecurityServiceResolver`, `SecurityBootstrapMode`, ... | `JSentinelRuntime`, `JSentinelServiceResolver`, `JSentinelBootstrapMode`, ... (29 prefix classes) |
+| `META-INF/security-for-flow/generated-wrappers.idx` | `META-INF/jsentinel/generated-wrappers.idx` |
+| `@SecurityAutoService` | `@JSentinelAutoService` |
+
+External `com.svenruppert.*` dependencies — `com.svenruppert:dependencies`,
+`com.svenruppert:core`, `com.svenruppert:functional-reactive`,
+`com.svenruppert:proxybuilder`, `com.svenruppert:proxybuilder-annotations` —
+keep their old coordinates; only artifacts owned by this project move.
+
+Suffix-classes intentionally kept as-is (no `Security` prefix to rename):
+`VaadinSecurity`, `RestSecurity`, `StandaloneSecurity` (adapter
+facades), `SecuredButton`, `SecuredRouterLink`, `SecuredMenuItem`,
+`SecuredVisibility`, `SecuredProxy`, `SecuredUi`, `@Secured`,
+`@SecureRoute`, `SecureRouteEvaluator`, `SecureRouteDiscovery`.
+
+`demo-*` Maven modules keep their old names — they are demos, not the
+library proper.
+
+`java.lang.SecurityException` (JDK) is untouched; the original sed
+pass caught it as a false positive and was rolled back per file.
+
+### Migration in one minute
+
+```xml
+<!-- before V00.73 -->
+<dependency>
+  <groupId>com.svenruppert</groupId>
+  <artifactId>security-vaadin</artifactId>
+  <version>00.72.00</version>
+</dependency>
+
+<!-- V00.73 -->
+<dependency>
+  <groupId>com.svenruppert.jsentinel</groupId>
+  <artifactId>jSentinel-vaadin</artifactId>
+  <version>00.73.00</version>
+</dependency>
+```
+
+```java
+// before V00.73
+import com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime;
+import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
+
+// V00.73
+import com.svenruppert.jsentinel.dx.runtime.JSentinelRuntime;
+import com.svenruppert.jsentinel.dx.runtime.JSentinelBootstrapMode;
+```
+
+IDE bulk-refactor recipe: rename the package
+`com.svenruppert.vaadin.security` to `com.svenruppert.jsentinel`,
+then `Find usages` on each `Security*` class for which V00.73 ships a
+`JSentinel*` replacement (see the §"Class renames" table below).
+
+## Class renames
+
+29 distinct class / interface / record / enum / annotation names move
+from the `Security` prefix to the `JSentinel` prefix. Method names
+derived from the renamed classes
+(`setSecurityAuditService` → `setJSentinelAuditService` etc.) move
+with them.
+
+- `SecurityAnnotation`, `SecurityAnnotationScanner`
+- `SecurityAuditService` (plus impls: `NoopSecurityAuditService` →
+  `NoopJSentinelAuditService`, `StoreBackedSecurityAuditService` →
+  `StoreBackedJSentinelAuditService`, `TeeingSecurityAuditService` →
+  `TeeingJSentinelAuditService`)
+- `SecurityAutoService`, `SecurityAutoServiceProcessor`
+- `SecurityBootstrapException`, `SecurityBootstrapMode`,
+  `SecurityBootstrapWarning`
+- `SecurityDiagnostics`
+- `SecurityEnforcer`
+- `SecurityNotification`, `SecurityNotificationSender`
+- `SecurityProcessorReport`
+- `SecurityRequirement`
+- `SecurityRuntime`
+- `SecurityServiceReport`
+- `SecurityServiceResolver`
+- `SecuritySubject`, `SecuritySubjects`
+- `SecurityTestExtension`
+- `SecurityVersion`, `SecurityVersionCheck`, `SecurityVersionEnforcer`,
+  `SecurityVersionEnforcerListener`, `SecurityVersionInitListener`,
+  `SecurityVersionKey`, `SecurityVersionStatus`, `SecurityVersionStore`
+  (and `InMemorySecurityVersionStore`), `SecurityVersionStoreContract`
+- `RegisteredSecurityService` → `RegisteredJSentinelService`
+- `AbstractSecurityBootstrap` → `AbstractJSentinelBootstrap`
+- `CommonSecurityBootstrap` → `CommonJSentinelBootstrap`
+- adapter bootstraps:
+  `RestSecurityBootstrap` → `RestJSentinelBootstrap`,
+  `StandaloneSecurityBootstrap` → `StandaloneJSentinelBootstrap`,
+  `VaadinSecurityBootstrap` → `VaadinJSentinelBootstrap`
+- starter:
+  `VaadinSecurityStarter` → `VaadinJSentinelStarter`
+- `ExperimentalSecurityApi` → `ExperimentalJSentinelApi` (still
+  removed from every V00.72/V00.73 public surface — see "Stable-API
+  audit" below)
+- `JSentinelDiagnosticContributor` SPI implementations carry adapter
+  prefixes: `VaadinJSentinelDiagnosticContributor`,
+  `RestJSentinelDiagnosticContributor`,
+  `StandaloneJSentinelDiagnosticContributor`
 
 ## What's new
 
@@ -11,7 +125,7 @@ the fluent bootstrap surface for production use:
    through the existing `JSentinelServiceResolver` setters (where
    they exist) and through DX-state / adapter consumption (where
    no resolver setter applies).
-2. **Wrapper-index writer** — `security-processor` now emits
+2. **Wrapper-index writer** — `jSentinel-processor` now emits
    `META-INF/jsentinel/generated-wrappers.idx`, completing
    the V00.72 reader path. `JSentinelDiagnostics.inspect()` shows
    every generated wrapper from compile-time.
@@ -31,15 +145,15 @@ the fluent bootstrap surface for production use:
 
 | Module | Type | Notes |
 |---|---|---|
-| `security-dx` | `AuditState`, `SessionState`, `RoleState`, `CredentialState`, `PolicyState` | Sub-aggregates split out of `BootstrapState` (Konzept §5) |
-| `security-dx` | `AuditBootstrapImpl`, `SessionBootstrapImpl`, `RoleBootstrapImpl`, `CredentialBootstrapImpl`, `PolicyBootstrapImpl` | Real V00.73 implementations replacing the V00.72 Recording* placeholders |
-| `security-dx` | `TeeingJSentinelAuditService` | Internal helper for `audit(...)` mixed setups (Konzept §6.2) |
-| `security-dx` | `WrapperIndexFormat` | Package-private constants shared with `security-processor` |
-| `security-dx-vaadin` | `SessionManagementContext`, `SessionManagementRoute` | Adapter-owned `@Route` for the V00.70 `SessionManagementView` Composite |
-| `security-dx-vaadin` | `SecureRouteDiscovery` | New SPI (returns `Stream<String>` of policy names) |
-| `security-vaadin-starter` | `VaadinRouterSecureRouteDiscovery` | Default `SecureRouteDiscovery` impl (reads `RouteConfiguration.forApplicationScope()`) |
-| `security-vaadin-starter` | `PolicyVisibility` (package-private) | Backs `SecuredUi.requiresPolicy(...)` |
-| `security-vaadin-starter` | `VaadinJSentinelBootstrap.discoverSecureRoutes(...)` overloads | Opt-in for the discovery hook |
+| `jSentinel-dx` | `AuditState`, `SessionState`, `RoleState`, `CredentialState`, `PolicyState` | Sub-aggregates split out of `BootstrapState` (Konzept §5) |
+| `jSentinel-dx` | `AuditBootstrapImpl`, `SessionBootstrapImpl`, `RoleBootstrapImpl`, `CredentialBootstrapImpl`, `PolicyBootstrapImpl` | Real V00.73 implementations replacing the V00.72 Recording* placeholders |
+| `jSentinel-dx` | `TeeingJSentinelAuditService` | Internal helper for `audit(...)` mixed setups (Konzept §6.2) |
+| `jSentinel-dx` | `WrapperIndexFormat` | Package-private constants shared with `jSentinel-processor` |
+| `jSentinel-dx-vaadin` | `SessionManagementContext`, `SessionManagementRoute` | Adapter-owned `@Route` for the V00.70 `SessionManagementView` Composite |
+| `jSentinel-dx-vaadin` | `SecureRouteDiscovery` | New SPI (returns `Stream<String>` of policy names) |
+| `jSentinel-vaadin-starter` | `VaadinRouterSecureRouteDiscovery` | Default `SecureRouteDiscovery` impl (reads `RouteConfiguration.forApplicationScope()`) |
+| `jSentinel-vaadin-starter` | `PolicyVisibility` (package-private) | Backs `SecuredUi.requiresPolicy(...)` |
+| `jSentinel-vaadin-starter` | `VaadinJSentinelBootstrap.discoverSecureRoutes(...)` overloads | Opt-in for the discovery hook |
 
 ## Adapter symmetry (Konzept §4.1)
 
@@ -87,7 +201,7 @@ calls are not affected.
 | `roles/missing-hierarchy` | `.roles(r -> {})` without `.hierarchy(...)` | INFO |
 | `roles/hierarchy-cycle` | RoleHierarchy validation failure | ✓ |
 | `credentials/missing-hashing` | `.passwordChange(...)` / `.passwordReset(...)` without `.hashing(...)` | ✓ |
-| `credentials/modern-without-bc` | `.modern()` without `security-crypto-bc` on classpath | ✓ |
+| `credentials/modern-without-bc` | `.modern()` without `jSentinel-crypto-bc` on classpath | ✓ |
 | `standalone/sessions-not-applicable` | `.sessions(...)` on Standalone | INFO |
 | `rest/session-store-unused` | `.sessions(s -> s.storeBacked(...))` on REST | INFO |
 | `secure-route/discovery-disabled` | `.discoverSecureRoutes(true)` not set | INFO |
@@ -97,9 +211,9 @@ calls are not affected.
 
 V00.73 promotes **every** public DX type to stable. The
 `@ExperimentalJSentinelApi` annotation is removed from 40 types across
-six modules (`security-dx`, `security-dx-vaadin`, `security-dx-rest`,
-`security-dx-standalone`, `security-vaadin-starter`, plus
-`@JSentinelAutoService` in `security-autoservice-annotations`).
+six modules (`jSentinel-dx`, `jSentinel-dx-vaadin`, `jSentinel-dx-rest`,
+`jSentinel-dx-standalone`, `jSentinel-vaadin-starter`, plus
+`@JSentinelAutoService` in `jSentinel-autoservice-annotations`).
 
 The promotion accepts the following SemVer commitments:
 
@@ -127,14 +241,14 @@ The promotion accepts the following SemVer commitments:
 
 | Module | Types promoted | Notes |
 |---|---:|---|
-| `security-dx` (bootstrap) | 6 | `CommonJSentinelBootstrap`, `AuditBootstrap`, `SessionBootstrap`, `PolicyBootstrap`, `RoleBootstrap`, `CredentialBootstrap` |
-| `security-dx` (runtime) | 6 | `JSentinelRuntime`, `JSentinelBootstrapMode`, `Severity`, `RegisteredJSentinelService`, `JSentinelBootstrapWarning`, `JSentinelBootstrapException` |
-| `security-dx` (diagnostics) | 11 | `JSentinelDiagnostics`, `JSentinelServiceReport`, `JSentinelProcessorReport`, `GeneratedJSentinelWrapper`, `ProcessorWarning`, `DiscoveredService`, `MissingRecommendedService`, `DuplicateService`, `ServiceWarning`, `DiagnosticContributor`, `DiagnosticReportBuilder` |
-| `security-dx-vaadin` | 4 | `VaadinSecurity`, `VaadinJSentinelBootstrap`, `SecureRouteDiscovery`, `SessionManagementRoute` |
-| `security-dx-rest` | 6 | `RestSecurity`, `RestJSentinelBootstrap`, `RestDecisionMapper`, `DefaultRestDecisionMapper`, `RestErrorBodyStrategy`, `DefaultRestErrorBodyStrategy` |
-| `security-dx-standalone` | 2 | `StandaloneSecurity`, `StandaloneJSentinelBootstrap` |
-| `security-vaadin-starter` | 6 | `SecuredUi`, `VaadinJSentinelStarter`, `DevelopmentDefaults`, `ProductionDefaults`, `StrictDefaults`, `VaadinRouterSecureRouteDiscovery` |
-| `security-autoservice-annotations` | 1 | `@JSentinelAutoService` (SOURCE retention; promotion is documentation-only) |
+| `jSentinel-dx` (bootstrap) | 6 | `CommonJSentinelBootstrap`, `AuditBootstrap`, `SessionBootstrap`, `PolicyBootstrap`, `RoleBootstrap`, `CredentialBootstrap` |
+| `jSentinel-dx` (runtime) | 6 | `JSentinelRuntime`, `JSentinelBootstrapMode`, `Severity`, `RegisteredJSentinelService`, `JSentinelBootstrapWarning`, `JSentinelBootstrapException` |
+| `jSentinel-dx` (diagnostics) | 11 | `JSentinelDiagnostics`, `JSentinelServiceReport`, `JSentinelProcessorReport`, `GeneratedJSentinelWrapper`, `ProcessorWarning`, `DiscoveredService`, `MissingRecommendedService`, `DuplicateService`, `ServiceWarning`, `DiagnosticContributor`, `DiagnosticReportBuilder` |
+| `jSentinel-dx-vaadin` | 4 | `VaadinSecurity`, `VaadinJSentinelBootstrap`, `SecureRouteDiscovery`, `SessionManagementRoute` |
+| `jSentinel-dx-rest` | 6 | `RestSecurity`, `RestJSentinelBootstrap`, `RestDecisionMapper`, `DefaultRestDecisionMapper`, `RestErrorBodyStrategy`, `DefaultRestErrorBodyStrategy` |
+| `jSentinel-dx-standalone` | 2 | `StandaloneSecurity`, `StandaloneJSentinelBootstrap` |
+| `jSentinel-vaadin-starter` | 6 | `SecuredUi`, `VaadinJSentinelStarter`, `DevelopmentDefaults`, `ProductionDefaults`, `StrictDefaults`, `VaadinRouterSecureRouteDiscovery` |
+| `jSentinel-autoservice-annotations` | 1 | `@JSentinelAutoService` (SOURCE retention; promotion is documentation-only) |
 | **Total** | **42** | |
 
 Adapter `DiagnosticContributor` implementations (`VaadinDiagnosticContributor`,
@@ -198,33 +312,33 @@ above. Consumers running V00.72 in `COMMUNITY_DEFAULTS`,
 ## Mutation coverage (V00.73)
 
 PIT re-run on the six modules touched in V00.73. The other library
-modules (`security-core`, `security-vaadin`, `security-rest`,
-`security-standalone`, `security-persistence-eclipsestore`,
-`security-crypto-bc`, `security-credentials-hibp`,
-`security-autoservice-processor`) have no V00.73 source change and
+modules (`jSentinel-core`, `jSentinel-vaadin`, `jSentinel-rest`,
+`jSentinel-standalone`, `jSentinel-persistence-eclipsestore`,
+`jSentinel-crypto-bc`, `jSentinel-credentials-hibp`,
+`jSentinel-autoservice-processor`) have no V00.73 source change and
 retain their V00.71/V00.72 baseline by construction.
 
 | Module | V00.72 baseline (mutation) | V00.73 line | V00.73 mutation | Δ % |
 |---|---|---|---|---|
-| `security-dx` | 49 % (47/96) | 84 % (538/640) | **68 % (216/320)** | +19 |
-| `security-dx-vaadin` | 61 % (14/23) | 62 % (73/118) | 40 % (21/52) | −21 |
-| `security-dx-rest` | 54 % (15/28) | 83 % (64/77) | 52 % (15/29) | −2 |
-| `security-dx-standalone` | 43 % (9/21) | 79 % (42/53) | **50 % (11/22)** | +7 |
-| `security-vaadin-starter` | 66 % (49/74) | 40 % (103/259) | 35 % (50/141) | −31 |
-| `security-processor` | 82 % (23/28) | 83 % (96/116) | 75 % (46/61) | −7 |
+| `jSentinel-dx` | 49 % (47/96) | 84 % (538/640) | **68 % (216/320)** | +19 |
+| `jSentinel-dx-vaadin` | 61 % (14/23) | 62 % (73/118) | 40 % (21/52) | −21 |
+| `jSentinel-dx-rest` | 54 % (15/28) | 83 % (64/77) | 52 % (15/29) | −2 |
+| `jSentinel-dx-standalone` | 43 % (9/21) | 79 % (42/53) | **50 % (11/22)** | +7 |
+| `jSentinel-vaadin-starter` | 66 % (49/74) | 40 % (103/259) | 35 % (50/141) | −31 |
+| `jSentinel-processor` | 82 % (23/28) | 83 % (96/116) | 75 % (46/61) | −7 |
 
 Reading the % deltas: V00.73 added substantial new source in every
 touched module (SubBuilder impls, state aggregates, PolicyVisibility,
 SecureRouteEvaluator policy path, SessionManagementRoute, wrapper-
 index writer). Absolute mutation kills are equal to or higher than
-the V00.72 baseline in every module — for example `security-vaadin-starter`
+the V00.72 baseline in every module — for example `jSentinel-vaadin-starter`
 went from 49 to 50 kills, but the total mutations grew from 74 to 141,
 which lowers the percentage even though no V00.72 test regressed.
-`security-dx` is the cleanest case: kills more than quadrupled (47 → 216)
+`jSentinel-dx` is the cleanest case: kills more than quadrupled (47 → 216)
 because the new sub-builder tests (`AuditBootstrapTest`,
 `SessionBootstrapTest`, etc.) carry strong assertions.
 
-`security-processor` saw kills nearly double (23 → 46) while the
+`jSentinel-processor` saw kills nearly double (23 → 46) while the
 percentage dipped from 82 % to 75 %; the wrapper-index writer is new
 code with not yet matching test depth (the six new
 `WrapperIndexWriterTest` cases cover the happy paths). This is a known
@@ -234,7 +348,7 @@ work.
 Konzept §15 acceptance criterion — "Mutation Coverage der V00.71-Module
 sinkt durch V00.73 nicht" — is honoured for every untouched V00.71 module
 by construction. The single V00.71 module touched in V00.73 is
-`security-processor`; absolute mutation kills there went **up**
+`jSentinel-processor`; absolute mutation kills there went **up**
 (23 → 46), the percentage drop is purely a denominator effect from
 the new writer code.
 
@@ -247,6 +361,6 @@ the new writer code.
   - `CredentialBootstrapTest` (6)
   - `RoleBootstrapTest` (3)
   - `PolicyBootstrapTest` (3)
-  - `WrapperIndexWriterTest` (6) in `security-processor`
+  - `WrapperIndexWriterTest` (6) in `jSentinel-processor`
   - `DemoAppWrapperIndexSmokeTest` (1) in `demo-standalone`
-  - 5 new bootstrap activation tests in `security-dx-vaadin`
+  - 5 new bootstrap activation tests in `jSentinel-dx-vaadin`

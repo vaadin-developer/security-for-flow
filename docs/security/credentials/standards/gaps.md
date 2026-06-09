@@ -65,7 +65,7 @@ Even within scope, V00.71.00 has known limitations:
 | Area       | Limitation                                                                 | Mitigation |
 |------------|----------------------------------------------------------------------------|------------|
 | Pepper     | `InMemoryPepperService` holds keys in heap                                  | HSM-backed implementation via PKCS#11 — see `pkcs11-hsm-pepper-key.md`. |
-| Compromise check | `LocalBlocklist` requires operator-maintained list                    | Pair with `security-credentials-hibp` for breach-corpus check. |
+| Compromise check | `LocalBlocklist` requires operator-maintained list                    | Pair with `jSentinel-credentials-hibp` for breach-corpus check. |
 | Rate limiting | `InMemoryAbuseDetectionService` does not survive a JVM restart         | Persist counters via a custom `AbuseDetectionService` impl. |
 | Password history | History compares re-derived hashes per attempt; bounded cost via `retainLast` | Tune `retainLast`; disable for low-assurance services. |
 | HIBP module | Optional; requires outbound HTTPS                                        | Air-gapped deployments use local blocklist only.   |

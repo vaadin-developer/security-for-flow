@@ -7,15 +7,15 @@
 > Code-Stand nach Standalone-Adapter, Demo-Erweiterungen
 > (Lockout-UI, Role-Admin-UI, User-CRUD, Menü-Integration),
 > Mutation-Coverage-Push, V00.70-Foundation (Step-Up, Resource Policies,
-> Role-Hierarchy, security-test) und **Phase 5 a–d (Method Security
+> Role-Hierarchy, jSentinel-test) und **Phase 5 a–d (Method Security
 > via Annotation Processor + Demo-Integration)** vollstaendig
 > abgeschlossen.
 
 ## Erledigt im Working Tree seit 00.60.00
 
-- ✅ **security-test** als eigenes 5. Reactor-Modul (Phase-8-Vorzug):
+- ✅ **jSentinel-test** als eigenes 5. Reactor-Modul (Phase-8-Vorzug):
   `FakeAuthenticationService`, `FakeAuthorizationService`,
-  `InMemorySubjectStore` (umgezogen aus security-vaadin/test),
+  `InMemorySubjectStore` (umgezogen aus jSentinel-vaadin/test),
   `RecordingAuditSink`, `AccessContexts`, `JSentinelSubjects`,
   `SyntheticAnnotations`, `JSentinelTestExtension` — jeweils mit
   begleitenden Tests.
@@ -39,7 +39,7 @@
     (`requirePermission` / `requireAllPermissions` /
     `requireAnyPermission` / `requireRole` / `requireAnyRole` /
     `requirePolicy` + Generic `enforce(Method, Class)`)
-  - 5c Neues Modul **security-processor** mit
+  - 5c Neues Modul **jSentinel-processor** mit
     `SecuredAnnotationProcessor` auf
     `com.svenruppert:proxybuilder:00.11.00` (+ `proxybuilder-annotations`).
     11 compile-testing-Tests. Generierte Wrapper tragen RUNTIME-
@@ -132,7 +132,7 @@
 ### § 4 — Lifecycle-Hook-Wiring ✅
 
 - ✅ SPI-Default-Registrierung des `SessionLifetimeListener`
-  (im Framework via `security-vaadin`-SPI) und
+  (im Framework via `jSentinel-vaadin`-SPI) und
   `TimeoutSessionPolicy` als Default-`SessionPolicy` in allen
   drei Demos.
 - ✅ `demo-rest`: `DemoSubjectResolver.resolveSessionMetadata(...)`
@@ -236,7 +236,7 @@
 
 - ✅ **Vaadin Browserless Testing eingerichtet** (statt Karibu).
   Ab Vaadin 25.1 free; wir laufen auf 25.1.1. Test-Dependency
-  `com.vaadin:browserless-test-junit6:1.0.0` in `security-vaadin`.
+  `com.vaadin:browserless-test-junit6:1.0.0` in `jSentinel-vaadin`.
   POC `BrowserlessSmokeTest` mit Fixture-Route, `navigate(Class)`,
   `$view(Class).id(...)`, `test(component)` → typed Tester (z. B.
   `ButtonTester`). Reactor 89 Tests grün (1 neu).
@@ -275,7 +275,7 @@
 - [ ] Adapter-Tests: Logout-Button nutzt zentralen Service
   (für jede Demo-`MainView` einzeln). Heute indirekt durch
   `MainViewBrowserlessTest` in demo-vaadin gedeckt; offen ist
-  ein generischer Adapter-Smoke-Test in security-vaadin selbst.
+  ein generischer Adapter-Smoke-Test in jSentinel-vaadin selbst.
 - ✅ Adapter-Tests: SessionPolicy-Decisions werden korrekt
   umgesetzt — `SessionLifetimeListenerTest` (Vaadin) +
   `RestSessionLifetimeTest` (REST). Beide ohne Karibu.
@@ -305,7 +305,7 @@
 
 ### Step 3 — Q3 (a) `LogoutService` API-Rewrite ✅
 
-- ✅ `record SubjectId(String value)` (Q7) in `security-core`.
+- ✅ `record SubjectId(String value)` (Q7) in `jSentinel-core`.
 - ✅ `LogoutService.logout(SubjectId, LogoutScope)` mit
   `LogoutScope { CurrentSession | AllSessionsOfSubject }` —
   ersetzt das bestehende `logout(LogoutContext)` (invasiv).
@@ -345,7 +345,7 @@ Reactor-grün vor dem nächsten Schritt.
 **4A — Sealed `AuditEvent`-Hierarchy + AuditSink ✅**
 
 - ✅ `AuditEvent` (sealed interface) + 14 Record-Subtypes in
-  `security-core/audit/`: `LoginSucceeded`, `LoginFailed`,
+  `jSentinel-core/audit/`: `LoginSucceeded`, `LoginFailed`,
   `LogoutPerformed`, `AccessGranted`, `AccessDenied`,
   `ActionDenied`, `BruteForceLimitReached`, `SessionCreated`,
   `SessionExpired`, `SessionInvalidated`, `RoleAssigned`,
@@ -454,8 +454,8 @@ Reactor-grün vor dem nächsten Schritt.
 2. **`security-javafx`-Adapter** (siehe `Konzept-V00.60.00.md` §
    "JavaFX module"): `LoginScene`, `SecuredAction`/`SecuredMenuItem`,
    `Task`/`Service` Thread-Propagation für das Subject. Erst bauen,
-   wenn `security-standalone` reale Anwender hat — sonst duplicieren
-   wir das gleiche Boilerplate, das `security-standalone` schon
+   wenn `jSentinel-standalone` reale Anwender hat — sonst duplicieren
+   wir das gleiche Boilerplate, das `jSentinel-standalone` schon
    abdeckt.
 3. **Optional:** Readiness-Check in `DemoRestServer.start(...)`,
    falls der Bootstrap-Test wirklich flaky bleibt.
@@ -553,7 +553,7 @@ Reactor-grün vor dem nächsten Schritt.
     DELETE 204+second-404, POST/DELETE 403 für editor) →
     demo-rest 48 Tests.
 - ✅ **Standalone-Adapter** (vierter Adapter neben Vaadin/REST):
-  - Neues Modul `security-standalone` mit
+  - Neues Modul `jSentinel-standalone` mit
     `ThreadLocalSubjectStore` (SPI-Default, **nicht** vererbend
     über Thread-Grenzen, by design), `StandaloneLoginFlow<T,U>`
     (LoginAttemptPolicy → AuthenticationService → SubjectStore,
@@ -568,18 +568,18 @@ Reactor-grün vor dem nächsten Schritt.
     `@RequiresPermission`/`@RequiresRole` auf einem
     `LibraryService`-Interface, `Secured.wrap(...)`-Verdrahtung
     im `DemoApp.main`.
-  - Tests: 29 in `security-standalone`
+  - Tests: 29 in `jSentinel-standalone`
     (`ThreadLocalSubjectStoreTest`, `StandaloneLoginFlowTest`,
     `SecuredTest`) + 26 in `demo-standalone`
     (`DemoAppCliTest`, `DemoStandaloneJSentinelTest` und drei
     kleine Klassen-Tests).
-  - Mutation-Coverage: `security-standalone` 98 % (44/45),
+  - Mutation-Coverage: `jSentinel-standalone` 98 % (44/45),
     `demo-standalone` 86 % (54/63).
 - ✅ **Mutation-Coverage-Push** über alle bestehenden Module:
-  - `security-rest`: 78 % → 95 % (RestFilterAuditTest: alle
+  - `jSentinel-rest`: 78 % → 95 % (RestFilterAuditTest: alle
     AccessGranted / AccessDenied / SessionExpired-Branches in
     beiden Filtern + Throwing-Sink-Garantie).
-  - `security-vaadin`: 70 % → 80 % (LoginListenersCacheTest,
+  - `jSentinel-vaadin`: 70 % → 80 % (LoginListenersCacheTest,
     LoginListenerBeforeEnterTest, DefaultVaadinLogoutGatewayWithUITest
     via Browserless, AuthorizationListenerNavigationTest).
   - `demo-vaadin`: 18 % → 70 % (Browserless-Tests für Workspaces,

@@ -1,7 +1,7 @@
 # Demo REST application
 
 `demo-rest` is a self-contained, runnable example showing how to use
-`security-core` and `security-rest` to protect HTTP handlers with permissions.
+`jSentinel-core` and `jSentinel-rest` to protect HTTP handlers with permissions.
 
 It uses **JDK APIs only** (`com.sun.net.httpserver.HttpServer` for the server,
 `java.net.http.HttpClient` for the CLI). No web framework is involved.
@@ -63,8 +63,8 @@ and re-uses them transparently.
 
 
 Generic logic — bearer extraction, authentication filter, operation
-registry, bootstrap configuration loading — lives in `security-core` /
-`security-rest`. `demo-rest` only carries demo data and demo wiring.
+registry, bootstrap configuration loading — lives in `jSentinel-core` /
+`jSentinel-rest`. `demo-rest` only carries demo data and demo wiring.
 
 ---
 
@@ -106,7 +106,7 @@ ROLE_VIEWER -> document:read
 ```
 
 These permissions are demo-specific. They live only in `demo-rest` and must
-not be moved into `security-core`, `security-vaadin`, or `security-rest`.
+not be moved into `jSentinel-core`, `jSentinel-vaadin`, or `jSentinel-rest`.
 
 ---
 
@@ -124,7 +124,7 @@ not be moved into `security-core`, `security-vaadin`, or `security-rest`.
 | GET    | `/api/admin/status`     | `@RequiresPermission("admin:access")`    |
 
 Permission-protected endpoints run through `RestAuthorizationFilter` from
-`security-rest`. The filter resolves the subject, scans the handler method
+`jSentinel-rest`. The filter resolves the subject, scans the handler method
 for a `@RequiresPermission` annotation, and maps the decision:
 
 - `Granted` → the handler runs.
@@ -285,9 +285,9 @@ of truth.
 
 ---
 
-## Relationship to `security-rest` and `security-core`
+## Relationship to `jSentinel-rest` and `jSentinel-core`
 
-`security-rest` provides:
+`jSentinel-rest` provides:
 
 - `RestRequest`, `RestResponse`, `RestHandler` — minimal abstractions
 - `BodyRestRequest` — body-capable request (handlers pattern-match on this)
@@ -299,7 +299,7 @@ of truth.
 - `HttpStatusDecisionMapper` — maps decisions to HTTP status
 - `BootstrapRestStatusMapper` — `InitialAdminCreationResult` → status code
 
-`security-core` provides:
+`jSentinel-core` provides:
 
 - `SecuredOperationRegistry` + `OperationVisibilityService` — generic
   operation discovery (the `/api/operations` endpoint sits on top)
