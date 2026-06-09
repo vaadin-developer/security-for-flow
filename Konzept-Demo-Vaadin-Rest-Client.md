@@ -264,7 +264,7 @@ demo-vaadin-rest-client/
     │   ├── RemoteUser.java                                (record subjectId,displayName,roles,permissions)
     │   ├── RestBackedAuthenticationService.java           (AuthenticationService<Credentials,RemoteUser>)
     │   ├── RestBackedAuthorizationService.java            (AuthorizationService<RemoteUser>)
-    │   ├── ClientSecurityContext.java                     (token + RemoteUser in VaadinSession)
+    │   ├── ClientJSentinelContext.java                     (token + RemoteUser in VaadinSession)
     │   ├── BackedLoginListener.java                       (extends LoginListener<RemoteUser>)
     │   └── ... META-INF/services/ Dateien
     └── views/
@@ -380,7 +380,7 @@ nicht hat, greift Reroute.
 ### Stil B — Eigene Annotation `@VisibleForRoles` (bestätigt: zusätzlich)
 
 Eine projektspezifische Annotation, mit
-`@SecurityAnnotation(ProjectRoleAccessEvaluator.class)` an einen
+`@JSentinelAnnotation(ProjectRoleAccessEvaluator.class)` an einen
 projekt-spezifischen Evaluator gebunden. Zeigt den dritten Pfad (Custom
 Annotation) parallel zu `@RequiresRole` / `@RequiresPermission`.
 

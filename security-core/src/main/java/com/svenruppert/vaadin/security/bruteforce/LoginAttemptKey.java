@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.bruteforce;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 
 /**
@@ -33,7 +33,7 @@ import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
  * @param userId username dimension; non-blank
  * @param ip     client-address dimension; non-blank
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public record LoginAttemptKey(TenantId tenant, String userId, String ip) {
 
   /**

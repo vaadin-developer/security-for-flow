@@ -17,13 +17,13 @@
 package com.svenruppert.vaadin.security.policy.impl;
 
 import com.svenruppert.vaadin.security.audit.PolicyEvaluated;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPolicy;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationEvaluator;
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 import com.svenruppert.vaadin.security.policy.api.PolicyContext;
 import com.svenruppert.vaadin.security.policy.api.PolicyDecision;
@@ -43,7 +43,7 @@ import java.util.Optional;
  * Behaviour:
  * <ol>
  *   <li>Resolve the configured {@link PolicyRegistry} via
- *       {@link SecurityServiceResolver#policyRegistry()}.</li>
+ *       {@link JSentinelServiceResolver#policyRegistry()}.</li>
  *   <li>Build a {@link PolicyContext} from the inbound
  *       {@link AccessContext}.</li>
  *   <li>Evaluate the named policy. If the policy is not registered, the
@@ -62,7 +62,7 @@ import java.util.Optional;
  * resolved per evaluation through the static resolver, matching the
  * pattern of {@code RequiresRoleEvaluator}.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class RequiresPolicyEvaluator
     implements AuthorizationEvaluator<RequiresPolicy> {
 
@@ -77,7 +77,7 @@ public final class RequiresPolicyEvaluator
     PolicyContext policyContext = new PolicyContext(
         context, policyName, resourceRef, Map.of());
 
-    PolicyRegistry registry = SecurityServiceResolver.policyRegistry();
+    PolicyRegistry registry = JSentinelServiceResolver.policyRegistry();
     PolicyDecision policyDecision = registry.evaluate(policyName, policyContext);
 
     publish(policyDecision, policyContext);
@@ -102,8 +102,8 @@ public final class RequiresPolicyEvaluator
   }
 
   private static void publish(PolicyDecision decision, PolicyContext context) {
-    SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
-    String subjectId = context.subject().map(SecuritySubject::subjectId).orElse(null);
+    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
+    String subjectId = context.subject().map(JSentinelSubject::subjectId).orElse(null);
     String label = label(decision);
     String reason = reason(decision);
     try {

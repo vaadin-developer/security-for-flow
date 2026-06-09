@@ -26,7 +26,7 @@ import com.svenruppert.vaadin.security.logout.SubjectSessionRegistry;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
 import com.svenruppert.vaadin.security.session.SessionContext;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 
 import java.time.Instant;
 import java.util.Map;
@@ -184,7 +184,7 @@ public final class VaadinLogoutService<U> implements LogoutService {
   private void notifySessionPolicyOnLogout() {
     try {
       Optional<U> currentSubject = subjectStore.currentSubject(subjectType);
-      SessionPolicy<Object> policy = SecurityServiceResolver.sessionPolicy();
+      SessionPolicy<Object> policy = JSentinelServiceResolver.sessionPolicy();
       Instant now = Instant.now();
       SessionContext<Object> sessionContext = new SessionContext<>(
           currentSubject.orElse(null), null, now, now, null, Map.of());

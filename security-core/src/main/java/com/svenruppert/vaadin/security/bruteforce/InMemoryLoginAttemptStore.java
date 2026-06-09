@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.bruteforce;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -33,7 +33,7 @@ import static java.util.Objects.requireNonNull;
  * package-local {@code Ledger} record, mutated atomically through
  * {@code compute}/{@code merge}-style map operations.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class InMemoryLoginAttemptStore implements LoginAttemptStore {
 
   private final ConcurrentHashMap<LoginAttemptKey, Ledger> ledgers = new ConcurrentHashMap<>();

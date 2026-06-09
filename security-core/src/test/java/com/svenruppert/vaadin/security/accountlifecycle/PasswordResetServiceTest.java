@@ -20,7 +20,7 @@ import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.PasswordResetCompleted;
 import com.svenruppert.vaadin.security.audit.PasswordResetRequested;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.authentication.PasswordHasher;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
@@ -113,8 +113,8 @@ class PasswordResetServiceTest {
 
     // notification with plain token
     assertEquals(1, sender.received.size());
-    SecurityNotification n = sender.received.get(0);
-    assertEquals(SecurityNotification.Kind.PASSWORD_RESET_REQUESTED, n.kind());
+    JSentinelNotification n = sender.received.get(0);
+    assertEquals(JSentinelNotification.Kind.PASSWORD_RESET_REQUESTED, n.kind());
     assertEquals("tok-1", n.attributes().get("tokenPlain"));
     assertEquals(issued.record().expiresAt().toString(), n.attributes().get("expiresAt"));
   }
@@ -184,7 +184,7 @@ class PasswordResetServiceTest {
 
     // request notification + completion notification
     assertEquals(2, sender.received.size());
-    assertEquals(SecurityNotification.Kind.PASSWORD_RESET_COMPLETED,
+    assertEquals(JSentinelNotification.Kind.PASSWORD_RESET_COMPLETED,
         sender.received.get(1).kind());
   }
 
@@ -234,11 +234,11 @@ class PasswordResetServiceTest {
   @DisplayName("audit + notification failures do not block the lifecycle flow")
   void sinkFailuresSwallowed() {
     InMemoryPasswordResetTokenStore store = new InMemoryPasswordResetTokenStore();
-    SecurityAuditService throwingAudit = new SecurityAuditService() {
+    JSentinelAuditService throwingAudit = new JSentinelAuditService() {
       @Override public void publish(AuditEvent event) { throw new RuntimeException("boom"); }
       @Override public List<AuditEvent> query(AuditQuery query) { return List.of(); }
     };
-    SecurityNotificationSender throwingSender = n -> { throw new RuntimeException("boom"); };
+    JSentinelNotificationSender throwingSender = n -> { throw new RuntimeException("boom"); };
     PasswordResetService service = new PasswordResetService(
         store, new FakeHasher(), throwingAudit, throwingSender,
         TenantId.DEFAULT, steppingClock(T0, Duration.ofSeconds(1)),
@@ -302,14 +302,14 @@ class PasswordResetServiceTest {
     assertFalse(issued.record().isConsumed());
   }
 
-  private static final class CollectingAuditService implements SecurityAuditService {
+  private static final class CollectingAuditService implements JSentinelAuditService {
     final List<AuditEvent> published = new ArrayList<>();
     @Override public void publish(AuditEvent event) { published.add(event); }
     @Override public List<AuditEvent> query(AuditQuery query) { return List.copyOf(published); }
   }
 
-  private static final class RecordingNotificationSender implements SecurityNotificationSender {
-    final List<SecurityNotification> received = new ArrayList<>();
-    @Override public void send(SecurityNotification n) { received.add(n); }
+  private static final class RecordingNotificationSender implements JSentinelNotificationSender {
+    final List<JSentinelNotification> received = new ArrayList<>();
+    @Override public void send(JSentinelNotification n) { received.add(n); }
   }
 }

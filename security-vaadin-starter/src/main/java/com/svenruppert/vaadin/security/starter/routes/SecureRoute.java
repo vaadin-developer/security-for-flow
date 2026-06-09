@@ -10,7 +10,7 @@
  */
 package com.svenruppert.vaadin.security.starter.routes;
 
-import com.svenruppert.vaadin.security.authorization.annotations.SecurityAnnotation;
+import com.svenruppert.vaadin.security.authorization.annotations.JSentinelAnnotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -38,7 +38,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-@SecurityAnnotation(SecureRouteEvaluator.class)
+@JSentinelAnnotation(SecureRouteEvaluator.class)
 public @interface SecureRoute {
 
   String[] roles() default {};

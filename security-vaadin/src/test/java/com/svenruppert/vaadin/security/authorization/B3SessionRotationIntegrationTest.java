@@ -17,7 +17,7 @@
 package com.svenruppert.vaadin.security.authorization;
 
 import com.svenruppert.vaadin.security.audit.SessionInvalidated;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.session.SessionContext;
 import com.svenruppert.vaadin.security.session.SessionDecision;
 import com.svenruppert.vaadin.security.session.SessionMetadata;
@@ -77,15 +77,15 @@ class B3SessionRotationIntegrationTest extends BrowserlessTest {
 
   @BeforeEach
   void wire() {
-    SecurityServiceResolver.resetAll();
-    SecurityServiceResolver.setSecurityAuditService(audit);
-    SecurityServiceResolver.setSessionPolicy(new RotatingPolicy(capturedContext, "B3-Test-Rotation"));
+    JSentinelServiceResolver.resetAll();
+    JSentinelServiceResolver.setJSentinelAuditService(audit);
+    JSentinelServiceResolver.setSessionPolicy(new RotatingPolicy(capturedContext, "B3-Test-Rotation"));
     B3FixtureLoginView.lastNavigateToAppCalled = false;
   }
 
   @AfterEach
   void cleanUp() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
   }
 
   @Test

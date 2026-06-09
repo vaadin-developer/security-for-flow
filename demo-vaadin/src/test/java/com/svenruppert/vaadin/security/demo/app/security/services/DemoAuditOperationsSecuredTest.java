@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.demo.app.security.services;
 import com.svenruppert.proxybuilder.annotations.DelegatesTo;
 import com.svenruppert.proxybuilder.annotations.GeneratedByProxyBuilder;
 import com.svenruppert.vaadin.security.authorization.api.AccessDeniedException;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
@@ -66,7 +66,7 @@ class DemoAuditOperationsSecuredTest {
   @AfterEach
   void tearDown() {
     SubjectStores.reset();
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
   }
 
   @Test
@@ -103,7 +103,7 @@ class DemoAuditOperationsSecuredTest {
   void listEventsDeniedWithoutSubject() {
     DemoAuditOperationsSecured wrapper = new DemoAuditOperationsSecured();
     assertThrows(AccessDeniedException.class, wrapper::listEvents,
-        "no current subject → SecurityEnforcer must refuse audit:read");
+        "no current subject → JSentinelEnforcer must refuse audit:read");
   }
 
   @Test

@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.authorization.api.permissions;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresAnyPermission;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationEvaluator;
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 
 import java.util.Arrays;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  * Generic evaluator for {@link RequiresAnyPermission} — OR-semantics
  * across the listed permissions.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class RequiresAnyPermissionEvaluator
     implements AuthorizationEvaluator<RequiresAnyPermission> {
 

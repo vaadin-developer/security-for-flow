@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.bootstrap;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 
 import java.time.Instant;
@@ -48,7 +48,7 @@ import static java.util.Objects.requireNonNull;
  *                       {@code adminCreated} is {@code true}, must
  *                       be empty when it is {@code false}
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public record BootstrapState(
     TenantId tenant,
     boolean adminCreated,

@@ -18,9 +18,9 @@ package com.svenruppert.vaadin.security.authorization.impl;
 
 import com.svenruppert.vaadin.security.audit.AccessDenied;
 import com.svenruppert.vaadin.security.audit.AccessGranted;
-import com.svenruppert.vaadin.security.authorization.annotations.SecurityAnnotation;
+import com.svenruppert.vaadin.security.authorization.annotations.JSentinelAnnotation;
 import com.svenruppert.vaadin.security.authorization.api.AccessEvaluator;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessDecision;
@@ -57,16 +57,16 @@ class AuthorizationListenerNavigationTest extends BrowserlessTest {
   @org.junit.jupiter.api.BeforeEach
   @Override
   protected void initVaadinEnvironment() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     SubjectStores.reset();
     SubjectStores.setSubjectStore(new InMemorySubjectStore());
-    SecurityServiceResolver.setSecurityAuditService(audit);
+    JSentinelServiceResolver.setJSentinelAuditService(audit);
     super.initVaadinEnvironment();
   }
 
   @AfterEach
   void cleanUp() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     SubjectStores.reset();
   }
 
@@ -113,7 +113,7 @@ class AuthorizationListenerNavigationTest extends BrowserlessTest {
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target(ElementType.TYPE)
-  @SecurityAnnotation(GrantingEvaluator.class)
+  @JSentinelAnnotation(GrantingEvaluator.class)
   public @interface Granting { }
 
   public static final class GrantingEvaluator implements AccessEvaluator<Granting> {
@@ -124,7 +124,7 @@ class AuthorizationListenerNavigationTest extends BrowserlessTest {
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target(ElementType.TYPE)
-  @SecurityAnnotation(ReroutingEvaluator.class)
+  @JSentinelAnnotation(ReroutingEvaluator.class)
   public @interface Rerouting { }
 
   public static final class ReroutingEvaluator implements AccessEvaluator<Rerouting> {

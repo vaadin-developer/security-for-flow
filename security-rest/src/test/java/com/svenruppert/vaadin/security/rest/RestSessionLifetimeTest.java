@@ -17,8 +17,8 @@
 package com.svenruppert.vaadin.security.rest;
 
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPermission;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.session.SessionContext;
 import com.svenruppert.vaadin.security.session.SessionDecision;
@@ -45,7 +45,7 @@ class RestSessionLifetimeTest {
 
   @AfterEach
   void resetResolver() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
   }
 
   // ── RestAuthenticationFilter ─────────────────────────────────
@@ -53,7 +53,7 @@ class RestSessionLifetimeTest {
   @Test
   @DisplayName("authenticated request with active session passes through")
   void authFilter_active_passes() {
-    SecurityServiceResolver.setSessionPolicy(new AlwaysActive<>());
+    JSentinelServiceResolver.setSessionPolicy(new AlwaysActive<>());
     AtomicBoolean executed = new AtomicBoolean();
 
     RestAuthenticationFilter filter = new RestAuthenticationFilter(
@@ -70,7 +70,7 @@ class RestSessionLifetimeTest {
   @Test
   @DisplayName("authenticated request with idle-timeout session → 401")
   void authFilter_idleTimeout_unauthorized() {
-    SecurityServiceResolver.setSessionPolicy(new AlwaysDecide<>(SessionPolicyDecision.idleTimeout()));
+    JSentinelServiceResolver.setSessionPolicy(new AlwaysDecide<>(SessionPolicyDecision.idleTimeout()));
     AtomicBoolean executed = new AtomicBoolean();
 
     RestAuthenticationFilter filter = new RestAuthenticationFilter(
@@ -106,7 +106,7 @@ class RestSessionLifetimeTest {
   @Test
   @DisplayName("authorization filter rejects an expired session before evaluating annotations")
   void authzFilter_idleTimeout_unauthorized() throws NoSuchMethodException {
-    SecurityServiceResolver.setSessionPolicy(new AlwaysDecide<>(SessionPolicyDecision.idleTimeout()));
+    JSentinelServiceResolver.setSessionPolicy(new AlwaysDecide<>(SessionPolicyDecision.idleTimeout()));
     AtomicBoolean executed = new AtomicBoolean();
 
     RestAuthorizationFilter filter = new RestAuthorizationFilter(
@@ -125,7 +125,7 @@ class RestSessionLifetimeTest {
   @Test
   @DisplayName("authorization filter passes through when session is Active")
   void authzFilter_active_passes() throws NoSuchMethodException {
-    SecurityServiceResolver.setSessionPolicy(new AlwaysActive<>());
+    JSentinelServiceResolver.setSessionPolicy(new AlwaysActive<>());
     AtomicBoolean executed = new AtomicBoolean();
 
     RestAuthorizationFilter filter = new RestAuthorizationFilter(
@@ -153,8 +153,8 @@ class RestSessionLifetimeTest {
     return new SimpleRestRequest("DELETE", "/api/documents/42", Map.of(), Map.of());
   }
 
-  private static SecuritySubject subjectWith(Set<PermissionName> perms) {
-    return new SecuritySubject("u1", "alice", Set.of(), perms);
+  private static JSentinelSubject subjectWith(Set<PermissionName> perms) {
+    return new JSentinelSubject("u1", "alice", Set.of(), perms);
   }
 
   static final class SecuredHandler {
@@ -177,7 +177,7 @@ class RestSessionLifetimeTest {
     }
 
     @Override
-    public Optional<SecuritySubject> resolveSubject(RestRequest request) {
+    public Optional<JSentinelSubject> resolveSubject(RestRequest request) {
       return Optional.of(subjectWith(permissions));
     }
 

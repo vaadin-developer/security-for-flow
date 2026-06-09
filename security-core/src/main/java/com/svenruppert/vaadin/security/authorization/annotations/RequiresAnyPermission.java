@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.authorization.annotations;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.permissions.RequiresAnyPermissionEvaluator;
 
 import java.lang.annotation.Retention;
@@ -37,10 +37,10 @@ import static java.lang.annotation.ElementType.TYPE;
  * "subject has both X and Y" — the latter being explicit about the
  * AND-semantics that {@code @RequiresPermission} also offers.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 @Retention(RetentionPolicy.RUNTIME)
 @Target({TYPE, METHOD})
-@SecurityAnnotation(RequiresAnyPermissionEvaluator.class)
+@JSentinelAnnotation(RequiresAnyPermissionEvaluator.class)
 public @interface RequiresAnyPermission {
 
   /**

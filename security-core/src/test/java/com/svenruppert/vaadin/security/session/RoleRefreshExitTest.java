@@ -18,7 +18,7 @@ package com.svenruppert.vaadin.security.session;
 
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.audit.SessionStale;
 import com.svenruppert.vaadin.security.authorization.api.roles.InMemoryRoleAssignmentStore;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleAssignmentKey;
@@ -27,7 +27,7 @@ import com.svenruppert.vaadin.security.authorization.api.roles.StoreBackedRoleAu
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.StoreBackedSubjectSessionRegistry;
 import com.svenruppert.vaadin.security.logout.SubjectId;
-import com.svenruppert.vaadin.security.session.SecurityVersionEnforcer.EnforcementOutcome;
+import com.svenruppert.vaadin.security.session.JSentinelVersionEnforcer.EnforcementOutcome;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -54,12 +54,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * End-to-end against the real stores and services (no mocks):
  * <ol>
  *   <li>Alice logs in with role ADMIN. The session registry
- *       captures her {@link SecurityVersion} (still INITIAL).</li>
+ *       captures her {@link JSentinelVersion} (still INITIAL).</li>
  *   <li>An admin revokes ADMIN — represented by removing the
  *       role assignment from the store and bumping
- *       {@link SecurityVersionStore#increment} for alice.</li>
+ *       {@link JSentinelVersionStore#increment} for alice.</li>
  *   <li>Alice's next request runs through
- *       {@link SecurityVersionEnforcer}; the enforcer sees that the
+ *       {@link JSentinelVersionEnforcer}; the enforcer sees that the
  *       session's snapshot is behind the current version and
  *       returns {@link EnforcementOutcome.SessionStale} plus a
  *       {@link SessionStale} audit event.</li>
@@ -75,15 +75,15 @@ class RoleRefreshExitTest {
   private static final RoleName ADMIN = new RoleName("ADMIN");
   private static final RoleAssignmentKey ALICE_ROLES =
       new RoleAssignmentKey(TenantId.DEFAULT, ALICE);
-  private static final SecurityVersionKey ALICE_VERSION_KEY =
-      new SecurityVersionKey(TenantId.DEFAULT, ALICE);
+  private static final JSentinelVersionKey ALICE_VERSION_KEY =
+      new JSentinelVersionKey(TenantId.DEFAULT, ALICE);
   private static final Instant T0 = Instant.parse("2026-01-01T00:00:00Z");
 
   @Test
   @DisplayName("admin revokes role + bumps version → next request reports SessionStale; re-login is current again")
   void roleRevocationDriftsNextRequest() {
     // ── Wiring ─────────────────────────────────────────────────────
-    InMemorySecurityVersionStore versionStore = new InMemorySecurityVersionStore();
+    InMemoryJSentinelVersionStore versionStore = new InMemoryJSentinelVersionStore();
     InMemoryRoleAssignmentStore roleStore = new InMemoryRoleAssignmentStore();
     InMemorySessionStore sessionStore = new InMemorySessionStore();
     Clock clock = Clock.fixed(T0, ZoneOffset.UTC);
@@ -92,8 +92,8 @@ class RoleRefreshExitTest {
         sessionStore, TenantId.DEFAULT, clock, versionStore);
 
     CollectingAuditService audit = new CollectingAuditService();
-    SecurityVersionEnforcer enforcer = new SecurityVersionEnforcer(
-        new SecurityVersionCheck(versionStore), audit, clock);
+    JSentinelVersionEnforcer enforcer = new JSentinelVersionEnforcer(
+        new JSentinelVersionCheck(versionStore), audit, clock);
 
     StoreBackedRoleAuthorizationService<SubjectId> authz =
         new StoreBackedRoleAuthorizationService<>(roleStore, id -> id);
@@ -103,7 +103,7 @@ class RoleRefreshExitTest {
     registry.register(ALICE, "sid-alice");
 
     SessionRecord aliceSession = sessionStore.findById(new SessionId("sid-alice")).orElseThrow();
-    assertEquals(SecurityVersion.INITIAL, aliceSession.securityVersionAtLogin(),
+    assertEquals(JSentinelVersion.INITIAL, aliceSession.securityVersionAtLogin(),
         "fresh subject has version INITIAL captured on the session");
     assertTrue(authorisedRoles(authz, ALICE).contains(ADMIN));
 
@@ -127,8 +127,8 @@ class RoleRefreshExitTest {
 
     EnforcementOutcome.SessionStale stale =
         assertInstanceOf(EnforcementOutcome.SessionStale.class, secondRequest);
-    assertEquals(SecurityVersion.INITIAL, stale.status().snapshot());
-    assertEquals(new SecurityVersion(1L), stale.status().current());
+    assertEquals(JSentinelVersion.INITIAL, stale.status().snapshot());
+    assertEquals(new JSentinelVersion(1L), stale.status().current());
 
     // SessionStale audit event was published with both values
     assertEquals(1, audit.published.size());
@@ -143,7 +143,7 @@ class RoleRefreshExitTest {
     registry.register(ALICE, "sid-alice-2");
     SessionRecord refreshedSession =
         sessionStore.findById(new SessionId("sid-alice-2")).orElseThrow();
-    assertEquals(new SecurityVersion(1L), refreshedSession.securityVersionAtLogin(),
+    assertEquals(new JSentinelVersion(1L), refreshedSession.securityVersionAtLogin(),
         "fresh login captures the bumped current version");
 
     EnforcementOutcome afterReLogin = enforcer.enforce(
@@ -159,7 +159,7 @@ class RoleRefreshExitTest {
     return new HashSet<>(authz.rolesFor(subject).roleNames());
   }
 
-  private static final class CollectingAuditService implements SecurityAuditService {
+  private static final class CollectingAuditService implements JSentinelAuditService {
     final List<AuditEvent> published = new ArrayList<>();
     @Override public void publish(AuditEvent event) { published.add(event); }
     @Override public List<AuditEvent> query(AuditQuery query) { return List.copyOf(published); }

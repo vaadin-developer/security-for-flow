@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.policy.api;
 
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 import org.junit.jupiter.api.DisplayName;
@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("ResourceAccessContext")
 class ResourceAccessContextTest {
 
-  private static final SecuritySubject ALICE = new SecuritySubject(
+  private static final JSentinelSubject ALICE = new JSentinelSubject(
       "alice", "Alice", Set.of(), Set.of());
 
   private static AccessContext sampleAccessContext() {

@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.policy.spi;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.policy.api.ResourceRef;
 
 import java.util.Map;
@@ -30,7 +30,7 @@ import java.util.Optional;
  * Discovered via {@code java.util.ServiceLoader}; consuming
  * applications register a default implementation in
  * {@code META-INF/services/com.svenruppert.vaadin.security.policy.spi.ResourceResolverRegistry}.
- * If no implementation is registered, the {@code SecurityServiceResolver}
+ * If no implementation is registered, the {@code JSentinelServiceResolver}
  * supplies an in-memory default into which individual
  * {@link ResourceResolver}s are registered programmatically at
  * startup.
@@ -39,7 +39,7 @@ import java.util.Optional;
  * typically happens at startup, resolution runs on every protected
  * access.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public interface ResourceResolverRegistry {
 
   /**

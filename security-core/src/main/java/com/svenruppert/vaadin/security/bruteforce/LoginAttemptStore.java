@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.bruteforce;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -39,7 +39,7 @@ import java.util.Optional;
  * <p>Implementations must be thread-safe; concurrent
  * {@code recordFailure} calls happen on every failed login.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public interface LoginAttemptStore {
 
   /**

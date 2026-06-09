@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.server;
 
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.api.operations.OperationVisibilityService;
 import com.svenruppert.vaadin.security.authorization.api.operations.SecuredOperationDescriptor;
 import com.svenruppert.vaadin.security.authorization.api.operations.SecuredOperationRegistry;
@@ -68,7 +68,7 @@ public final class DemoOperationRegistry {
     return registry.all();
   }
 
-  public List<SecuredOperationDescriptor> visibleFor(SecuritySubject subject) {
+  public List<SecuredOperationDescriptor> visibleFor(JSentinelSubject subject) {
     return visibility.visibleFor(subject);
   }
 }

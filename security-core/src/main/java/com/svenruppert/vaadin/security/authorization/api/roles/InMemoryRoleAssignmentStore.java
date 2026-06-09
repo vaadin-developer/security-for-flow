@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.authorization.api.roles;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -30,7 +30,7 @@ import static java.util.Objects.requireNonNull;
  * {@code compute} calls so add / revoke / set don't race against
  * each other.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class InMemoryRoleAssignmentStore implements RoleAssignmentStore {
 
   private final ConcurrentHashMap<RoleAssignmentKey, Set<RoleName>> assignments =

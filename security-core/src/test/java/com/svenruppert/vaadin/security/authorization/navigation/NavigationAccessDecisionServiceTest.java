@@ -41,7 +41,7 @@ class NavigationAccessDecisionServiceTest {
     @Test
     @DisplayName("public route — always allowed")
     void publicRoute_allowed() {
-      var ctx = new NavigationSecurityContext(
+      var ctx = new NavigationJSentinelContext(
           PublicView.class, false, false, false);
 
       var decision = service.evaluateAuthentication(ctx);
@@ -52,7 +52,7 @@ class NavigationAccessDecisionServiceTest {
     @Test
     @DisplayName("restricted route without subject — login required")
     void restrictedRoute_noSubject_loginRequired() {
-      var ctx = new NavigationSecurityContext(
+      var ctx = new NavigationJSentinelContext(
           AdminView.class, true, false, false);
 
       var decision = service.evaluateAuthentication(ctx);
@@ -63,7 +63,7 @@ class NavigationAccessDecisionServiceTest {
     @Test
     @DisplayName("restricted route without subject on login page — allowed (user can enter credentials)")
     void restrictedRoute_noSubject_loginPage_allowed() {
-      var ctx = new NavigationSecurityContext(
+      var ctx = new NavigationJSentinelContext(
           LoginPage.class, true, false, true);
 
       var decision = service.evaluateAuthentication(ctx);
@@ -74,7 +74,7 @@ class NavigationAccessDecisionServiceTest {
     @Test
     @DisplayName("restricted route with subject — allowed (authentication passed)")
     void restrictedRoute_withSubject_allowed() {
-      var ctx = new NavigationSecurityContext(
+      var ctx = new NavigationJSentinelContext(
           AdminView.class, true, true, false);
 
       var decision = service.evaluateAuthentication(ctx);
@@ -85,7 +85,7 @@ class NavigationAccessDecisionServiceTest {
     @Test
     @DisplayName("subject navigating to login page — already logged in")
     void loginPage_withSubject_alreadyLoggedIn() {
-      var ctx = new NavigationSecurityContext(
+      var ctx = new NavigationJSentinelContext(
           LoginPage.class, true, true, true);
 
       var decision = service.evaluateAuthentication(ctx);
@@ -96,7 +96,7 @@ class NavigationAccessDecisionServiceTest {
     @Test
     @DisplayName("public route with subject — allowed")
     void publicRoute_withSubject_allowed() {
-      var ctx = new NavigationSecurityContext(
+      var ctx = new NavigationJSentinelContext(
           PublicView.class, false, true, false);
 
       var decision = service.evaluateAuthentication(ctx);

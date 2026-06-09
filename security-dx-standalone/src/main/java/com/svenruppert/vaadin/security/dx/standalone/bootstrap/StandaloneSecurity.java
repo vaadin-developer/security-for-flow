@@ -21,7 +21,7 @@ public final class StandaloneSecurity {
   private StandaloneSecurity() {
   }
 
-  public static StandaloneSecurityBootstrap bootstrap() {
-    return new StandaloneSecurityBootstrapImpl();
+  public static StandaloneJSentinelBootstrap bootstrap() {
+    return new StandaloneJSentinelBootstrapImpl();
   }
 }

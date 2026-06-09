@@ -16,15 +16,15 @@ import com.svenruppert.vaadin.security.audit.AuditEventStore;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.CompositeAuditService;
 import com.svenruppert.vaadin.security.audit.LoginSucceeded;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
-import com.svenruppert.vaadin.security.audit.StoreBackedSecurityAuditService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
+import com.svenruppert.vaadin.security.audit.StoreBackedJSentinelAuditService;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
-import com.svenruppert.vaadin.security.dx.internal.AbstractSecurityBootstrap;
-import com.svenruppert.vaadin.security.dx.runtime.RegisteredSecurityService;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapWarning;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime;
+import com.svenruppert.vaadin.security.dx.internal.AbstractJSentinelBootstrap;
+import com.svenruppert.vaadin.security.dx.runtime.RegisteredJSentinelService;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapMode;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapWarning;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelRuntime;
 import com.svenruppert.vaadin.security.dx.runtime.Severity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * V00.73 audit-bootstrap behaviour tests. Drives the real adapter
  * (concrete subclass {@link TestAuditOnlyBootstrap} below) so audit
- * state actually reaches the {@code SecurityServiceResolver}. No
+ * state actually reaches the {@code JSentinelServiceResolver}. No
  * Mockito — fake stores are real implementations.
  */
 @DisplayName("AuditBootstrap real surface (V00.73)")
@@ -53,32 +53,32 @@ class AuditBootstrapTest {
   @BeforeEach
   @AfterEach
   void resetResolver() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
   }
 
   @Test
-  @DisplayName(".storeBacked(store) registers a StoreBackedSecurityAuditService")
+  @DisplayName(".storeBacked(store) registers a StoreBackedJSentinelAuditService")
   void storeBackedRegistersStoreBackedService() {
     AuditEventStore store = new InMemoryAuditEventStore();
-    SecurityRuntime runtime = new TestAuditOnlyBootstrap()
+    JSentinelRuntime runtime = new TestAuditOnlyBootstrap()
         .audit(a -> a.storeBacked(store))
         .install();
 
-    SecurityAuditService registered = SecurityServiceResolver
-        .findSecurityAuditService().orElseThrow();
-    assertInstanceOf(StoreBackedSecurityAuditService.class, registered);
-    assertRuntimeHasAuditEntry(runtime, StoreBackedSecurityAuditService.class);
+    JSentinelAuditService registered = JSentinelServiceResolver
+        .findJSentinelAuditService().orElseThrow();
+    assertInstanceOf(StoreBackedJSentinelAuditService.class, registered);
+    assertRuntimeHasAuditEntry(runtime, StoreBackedJSentinelAuditService.class);
   }
 
   @Test
   @DisplayName("sinks-only (logging only) registers a CompositeAuditService with a default ring buffer")
   void loggingOnlyComposes() {
-    SecurityRuntime runtime = new TestAuditOnlyBootstrap()
+    JSentinelRuntime runtime = new TestAuditOnlyBootstrap()
         .audit(a -> a.logging())
         .install();
 
-    SecurityAuditService registered = SecurityServiceResolver
-        .findSecurityAuditService().orElseThrow();
+    JSentinelAuditService registered = JSentinelServiceResolver
+        .findJSentinelAuditService().orElseThrow();
     assertInstanceOf(CompositeAuditService.class, registered);
     assertRuntimeHasAuditEntry(runtime, CompositeAuditService.class);
   }
@@ -86,12 +86,12 @@ class AuditBootstrapTest {
   @Test
   @DisplayName("logging + ringBuffer composes into a single CompositeAuditService")
   void loggingPlusRingBufferComposes() {
-    SecurityRuntime runtime = new TestAuditOnlyBootstrap()
+    JSentinelRuntime runtime = new TestAuditOnlyBootstrap()
         .audit(a -> a.logging().ringBuffer(64))
         .install();
 
-    SecurityAuditService registered = SecurityServiceResolver
-        .findSecurityAuditService().orElseThrow();
+    JSentinelAuditService registered = JSentinelServiceResolver
+        .findJSentinelAuditService().orElseThrow();
     assertInstanceOf(CompositeAuditService.class, registered);
     CompositeAuditService composite = (CompositeAuditService) registered;
     assertEquals(64, composite.ringBuffer().capacity());
@@ -100,16 +100,16 @@ class AuditBootstrapTest {
   }
 
   @Test
-  @DisplayName("storeBacked + sinks → TeeingSecurityAuditService")
+  @DisplayName("storeBacked + sinks → TeeingJSentinelAuditService")
   void storeBackedPlusSinksTees() {
     AuditEventStore store = new InMemoryAuditEventStore();
-    SecurityRuntime runtime = new TestAuditOnlyBootstrap()
+    JSentinelRuntime runtime = new TestAuditOnlyBootstrap()
         .audit(a -> a.storeBacked(store).ringBuffer(32).logging())
         .install();
 
-    SecurityAuditService registered = SecurityServiceResolver
-        .findSecurityAuditService().orElseThrow();
-    assertEquals("TeeingSecurityAuditService", registered.getClass().getSimpleName());
+    JSentinelAuditService registered = JSentinelServiceResolver
+        .findJSentinelAuditService().orElseThrow();
+    assertEquals("TeeingJSentinelAuditService", registered.getClass().getSimpleName());
     assertRuntimeHasAuditEntry(runtime, registered.getClass());
 
     AuditEvent event = new LoginSucceeded(Instant.EPOCH, "alice", "127.0.0.1", null);
@@ -121,23 +121,23 @@ class AuditBootstrapTest {
   @Test
   @DisplayName(".securityAuditService(svc) registers svc directly without wrapping")
   void directServiceWinsWithoutWrapping() {
-    SecurityAuditService direct = new RecordingAuditService();
+    JSentinelAuditService direct = new RecordingAuditService();
     new TestAuditOnlyBootstrap()
         .audit(a -> a.securityAuditService(direct))
         .install();
 
-    SecurityAuditService registered = SecurityServiceResolver
-        .findSecurityAuditService().orElseThrow();
+    JSentinelAuditService registered = JSentinelServiceResolver
+        .findJSentinelAuditService().orElseThrow();
     assertEquals(direct, registered, "direct service must not be wrapped");
   }
 
   @Test
   @DisplayName("STRICT empty .audit(a -> {}) throws audit/missing-service")
   void strictEmptyAuditThrows() {
-    SecurityBootstrapException ex = assertThrows(
-        SecurityBootstrapException.class,
+    JSentinelBootstrapException ex = assertThrows(
+        JSentinelBootstrapException.class,
         () -> new TestAuditOnlyBootstrap()
-            .mode(SecurityBootstrapMode.STRICT)
+            .mode(JSentinelBootstrapMode.STRICT)
             .audit(a -> { })
             .install());
     assertTrue(ex.warnings().stream()
@@ -147,8 +147,8 @@ class AuditBootstrapTest {
   @Test
   @DisplayName("PRODUCTION empty .audit(a -> {}) records ERROR warning but does not throw")
   void productionEmptyAuditWarns() {
-    SecurityRuntime runtime = new TestAuditOnlyBootstrap()
-        .mode(SecurityBootstrapMode.PRODUCTION)
+    JSentinelRuntime runtime = new TestAuditOnlyBootstrap()
+        .mode(JSentinelBootstrapMode.PRODUCTION)
         .audit(a -> { })
         .install();
     assertTrue(runtime.warnings().stream()
@@ -159,10 +159,10 @@ class AuditBootstrapTest {
   @Test
   @DisplayName("STRICT .storeBacked(null) throws audit/store-backed-without-store")
   void strictStoreBackedNullThrows() {
-    SecurityBootstrapException ex = assertThrows(
-        SecurityBootstrapException.class,
+    JSentinelBootstrapException ex = assertThrows(
+        JSentinelBootstrapException.class,
         () -> new TestAuditOnlyBootstrap()
-            .mode(SecurityBootstrapMode.STRICT)
+            .mode(JSentinelBootstrapMode.STRICT)
             .audit(a -> a.storeBacked(null))
             .install());
     assertTrue(ex.warnings().stream()
@@ -172,10 +172,10 @@ class AuditBootstrapTest {
   @Test
   @DisplayName("STRICT .ringBuffer(0) throws audit/invalid-ring-buffer-capacity")
   void strictRingBufferZeroThrows() {
-    SecurityBootstrapException ex = assertThrows(
-        SecurityBootstrapException.class,
+    JSentinelBootstrapException ex = assertThrows(
+        JSentinelBootstrapException.class,
         () -> new TestAuditOnlyBootstrap()
-            .mode(SecurityBootstrapMode.STRICT)
+            .mode(JSentinelBootstrapMode.STRICT)
             .audit(a -> a.ringBuffer(0))
             .install());
     assertTrue(ex.warnings().stream()
@@ -185,10 +185,10 @@ class AuditBootstrapTest {
   @Test
   @DisplayName("STRICT direct + composition throws audit/conflicting-direct-service")
   void strictDirectPlusCompositionThrows() {
-    SecurityBootstrapException ex = assertThrows(
-        SecurityBootstrapException.class,
+    JSentinelBootstrapException ex = assertThrows(
+        JSentinelBootstrapException.class,
         () -> new TestAuditOnlyBootstrap()
-            .mode(SecurityBootstrapMode.STRICT)
+            .mode(JSentinelBootstrapMode.STRICT)
             .audit(a -> a.securityAuditService(new RecordingAuditService())
                 .ringBuffer(16))
             .install());
@@ -200,14 +200,14 @@ class AuditBootstrapTest {
   @DisplayName(".credentialEvents(true) is recorded but does not change audit wiring")
   void credentialEventsRecordedNotWired() {
     AuditEventStore store = new InMemoryAuditEventStore();
-    SecurityRuntime runtime = new TestAuditOnlyBootstrap()
+    JSentinelRuntime runtime = new TestAuditOnlyBootstrap()
         .audit(a -> a.storeBacked(store).credentialEvents(true))
         .install();
 
-    SecurityAuditService registered = SecurityServiceResolver
-        .findSecurityAuditService().orElseThrow();
-    assertInstanceOf(StoreBackedSecurityAuditService.class, registered);
-    // SecurityRuntime surfaces the flag through a synthetic SPI entry
+    JSentinelAuditService registered = JSentinelServiceResolver
+        .findJSentinelAuditService().orElseThrow();
+    assertInstanceOf(StoreBackedJSentinelAuditService.class, registered);
+    // JSentinelRuntime surfaces the flag through a synthetic SPI entry
     boolean flagEntryPresent = runtime.services().stream()
         .anyMatch(s -> s.spi().getSimpleName().equals("CredentialEventsFlag"));
     assertTrue(flagEntryPresent, "credentialEvents flag must appear in runtime");
@@ -215,12 +215,12 @@ class AuditBootstrapTest {
 
   // ── helpers ──────────────────────────────────────────────────────
 
-  private static void assertRuntimeHasAuditEntry(SecurityRuntime runtime, Class<?> implClass) {
+  private static void assertRuntimeHasAuditEntry(JSentinelRuntime runtime, Class<?> implClass) {
     boolean found = runtime.services().stream()
-        .anyMatch(s -> SecurityAuditService.class.equals(s.spi())
+        .anyMatch(s -> JSentinelAuditService.class.equals(s.spi())
             && implClass.equals(s.impl()));
     assertTrue(found,
-        "runtime.services() expected to contain SecurityAuditService impl=" + implClass);
+        "runtime.services() expected to contain JSentinelAuditService impl=" + implClass);
     assertFalse(runtime.services().isEmpty());
   }
 
@@ -230,18 +230,18 @@ class AuditBootstrapTest {
    * must remain independent of those.
    */
   private static final class TestAuditOnlyBootstrap
-      extends AbstractSecurityBootstrap<TestAuditOnlyBootstrap> {
+      extends AbstractJSentinelBootstrap<TestAuditOnlyBootstrap> {
 
     @Override
-    public SecurityRuntime install() {
-      java.util.List<RegisteredSecurityService> services = new java.util.ArrayList<>();
-      java.util.List<SecurityBootstrapWarning> warnings = new java.util.ArrayList<>();
+    public JSentinelRuntime install() {
+      java.util.List<RegisteredJSentinelService> services = new java.util.ArrayList<>();
+      java.util.List<JSentinelBootstrapWarning> warnings = new java.util.ArrayList<>();
       applyAuditConfiguration(services, warnings);
-      SecurityBootstrapMode mode = state.mode();
-      if (mode == SecurityBootstrapMode.STRICT && warningsContainError(warnings)) {
-        throw new SecurityBootstrapException(warnings);
+      JSentinelBootstrapMode mode = state.mode();
+      if (mode == JSentinelBootstrapMode.STRICT && warningsContainError(warnings)) {
+        throw new JSentinelBootstrapException(warnings);
       }
-      return new SecurityRuntime(services, warnings, mode);
+      return new JSentinelRuntime(services, warnings, mode);
     }
   }
 
@@ -267,7 +267,7 @@ class AuditBootstrapTest {
   }
 
   /** Pass-through audit service used to verify direct-wiring. */
-  private static final class RecordingAuditService implements SecurityAuditService {
+  private static final class RecordingAuditService implements JSentinelAuditService {
     @Override public void publish(AuditEvent event) { }
     @Override public List<AuditEvent> query(AuditQuery query) { return List.of(); }
   }

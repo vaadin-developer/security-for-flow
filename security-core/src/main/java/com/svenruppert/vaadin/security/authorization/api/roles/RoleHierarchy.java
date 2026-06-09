@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.authorization.api.roles;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 import java.util.Set;
 
@@ -37,7 +37,7 @@ import java.util.Set;
  * {@link #impliedRoles(RoleName)} runs on every role-based admission
  * check.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public interface RoleHierarchy {
 
   /**

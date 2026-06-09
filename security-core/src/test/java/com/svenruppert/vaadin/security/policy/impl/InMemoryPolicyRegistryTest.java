@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.policy.impl;
 
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InMemoryPolicyRegistryTest {
 
-  private static PolicyContext ctxWithSubject(SecuritySubject subject, String policyName) {
+  private static PolicyContext ctxWithSubject(JSentinelSubject subject, String policyName) {
     return new PolicyContext(
         new AccessContext(Optional.of(subject), "rest-endpoint", "/x", "read", Map.of()),
         policyName);
@@ -127,9 +127,9 @@ class InMemoryPolicyRegistryTest {
         .deny("must be ADMIN")
         .build());
 
-    SecuritySubject admin = new SecuritySubject(
+    JSentinelSubject admin = new JSentinelSubject(
         "u-1", "u-1", Set.of(new RoleName("ADMIN")), Set.of());
-    SecuritySubject user = new SecuritySubject(
+    JSentinelSubject user = new JSentinelSubject(
         "u-2", "u-2", Set.of(new RoleName("USER")), Set.of());
 
     assertInstanceOf(PolicyDecision.Allowed.class,
@@ -149,11 +149,11 @@ class InMemoryPolicyRegistryTest {
         .deny("must be admin or document:write holder")
         .build());
 
-    SecuritySubject admin = new SecuritySubject(
+    JSentinelSubject admin = new JSentinelSubject(
         "u-admin", "admin", Set.of(new RoleName("ADMIN")), Set.of());
-    SecuritySubject writer = new SecuritySubject(
+    JSentinelSubject writer = new JSentinelSubject(
         "u-writer", "writer", Set.of(), Set.of(new PermissionName("document:write")));
-    SecuritySubject reader = new SecuritySubject(
+    JSentinelSubject reader = new JSentinelSubject(
         "u-reader", "reader", Set.of(), Set.of(new PermissionName("document:read")));
 
     assertInstanceOf(PolicyDecision.Allowed.class, registry.evaluate(

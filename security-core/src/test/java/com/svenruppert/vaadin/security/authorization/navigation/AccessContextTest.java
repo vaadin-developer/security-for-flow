@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.authorization.navigation;
 
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +33,7 @@ class AccessContextTest {
   @Test
   @DisplayName("stores neutral access metadata")
   void storesNeutralMetadata() {
-    SecuritySubject subject = new SecuritySubject("u1", "User", Set.of(), Set.of());
+    JSentinelSubject subject = new JSentinelSubject("u1", "User", Set.of(), Set.of());
 
     AccessContext context = new AccessContext(
         Optional.of(subject),

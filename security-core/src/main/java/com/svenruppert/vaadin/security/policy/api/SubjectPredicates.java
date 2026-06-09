@@ -16,8 +16,8 @@
  */
 package com.svenruppert.vaadin.security.policy.api;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 
@@ -28,13 +28,13 @@ import java.util.function.Predicate;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Predicate factories that branch on the {@link SecuritySubject} carried
+ * Predicate factories that branch on the {@link JSentinelSubject} carried
  * by a {@link PolicyContext}.
  *
  * <p>All predicates return {@code false} when no subject is present,
  * except {@link #isAnonymous()} which is the explicit complement.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class SubjectPredicates {
 
   private SubjectPredicates() {
@@ -69,7 +69,7 @@ public final class SubjectPredicates {
         .map(RoleName::new)
         .toArray(RoleName[]::new);
     return ctx -> {
-      Optional<SecuritySubject> subject = ctx.subject();
+      Optional<JSentinelSubject> subject = ctx.subject();
       if (subject.isEmpty()) {
         return false;
       }

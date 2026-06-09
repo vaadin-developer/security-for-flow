@@ -24,7 +24,7 @@
   <artifactId>security-autoservice-annotations</artifactId>
   <name>Security AutoService Annotations</name>
   <description>
-    V00.72 @SecurityAutoService annotation — SOURCE retention, no
+    V00.72 @JSentinelAutoService annotation — SOURCE retention, no
     runtime trace, zero project-internal dependencies. Consumed at
     compile time by security-autoservice-processor.
   </description>

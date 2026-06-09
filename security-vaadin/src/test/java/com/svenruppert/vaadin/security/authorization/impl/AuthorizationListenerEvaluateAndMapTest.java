@@ -145,29 +145,29 @@ class AuthorizationListenerEvaluateAndMapTest {
   @Test
   @DisplayName("map(StepUpRequired) → AccessDecision.Reroute to the default 'step-up' route")
   void map_stepUpDefaultRoute() throws Exception {
-    com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver.resetAll();
+    com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver.resetAll();
     try {
       Object result = invokeMap(new AuthorizationDecision.StepUpRequired("needs mfa", "MFA"));
       AccessDecision.Reroute reroute = (AccessDecision.Reroute) result;
       assertEquals("step-up", reroute.target());
       assertEquals(false, reroute.asForward());
     } finally {
-      com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver.resetAll();
+      com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver.resetAll();
     }
   }
 
   @Test
   @DisplayName("map(StepUpRequired) honours the configured stepUpRouteName")
   void map_stepUpConfiguredRoute() throws Exception {
-    com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver.resetAll();
-    com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver
+    com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver.resetAll();
+    com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver
         .setStepUpRouteName("mfa-challenge");
     try {
       Object result = invokeMap(new AuthorizationDecision.StepUpRequired("needs mfa", "MFA"));
       AccessDecision.Reroute reroute = (AccessDecision.Reroute) result;
       assertEquals("mfa-challenge", reroute.target());
     } finally {
-      com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver.resetAll();
+      com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver.resetAll();
     }
   }
 

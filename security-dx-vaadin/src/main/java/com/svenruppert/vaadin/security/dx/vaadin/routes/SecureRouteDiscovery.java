@@ -25,7 +25,7 @@ import java.util.stream.Stream;
  * implementation (in starter) reads it.
  *
  * <p>Enabled via
- * {@code VaadinSecurityBootstrap.discoverSecureRoutes(boolean)} or
+ * {@code VaadinJSentinelBootstrap.discoverSecureRoutes(boolean)} or
  * {@code .discoverSecureRoutes(SecureRouteDiscovery)}.
  *
  * @since 00.73.00

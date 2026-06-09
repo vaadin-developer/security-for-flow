@@ -18,8 +18,8 @@ package com.svenruppert.vaadin.security.authentication;
 
 import com.svenruppert.vaadin.security.audit.ApiKeyDenied;
 import com.svenruppert.vaadin.security.audit.ApiKeyUsed;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 
 import java.time.Clock;
@@ -55,12 +55,12 @@ import static java.util.Objects.requireNonNull;
  * <p>Bound to one {@link TenantId} at construction. Multi-tenant
  * deployments instantiate one service per tenant.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class ApiKeyAuthenticationService {
 
   private final ApiKeyStore store;
   private final PasswordHasher hasher;
-  private final SecurityAuditService auditService;
+  private final JSentinelAuditService auditService;
   private final TenantId tenant;
   private final Clock clock;
 
@@ -74,7 +74,7 @@ public final class ApiKeyAuthenticationService {
    */
   public ApiKeyAuthenticationService(ApiKeyStore store,
                                      PasswordHasher hasher,
-                                     SecurityAuditService auditService) {
+                                     JSentinelAuditService auditService) {
     this(store, hasher, auditService, TenantId.DEFAULT, Clock.systemUTC());
   }
 
@@ -90,7 +90,7 @@ public final class ApiKeyAuthenticationService {
    */
   public ApiKeyAuthenticationService(ApiKeyStore store,
                                      PasswordHasher hasher,
-                                     SecurityAuditService auditService,
+                                     JSentinelAuditService auditService,
                                      TenantId tenant,
                                      Clock clock) {
     this.store = requireNonNull(store, "store must not be null");

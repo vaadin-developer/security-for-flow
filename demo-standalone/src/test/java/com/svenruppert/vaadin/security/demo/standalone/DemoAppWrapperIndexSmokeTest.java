@@ -10,8 +10,8 @@
  */
 package com.svenruppert.vaadin.security.demo.standalone;
 
-import com.svenruppert.vaadin.security.dx.diagnostics.GeneratedSecurityWrapper;
-import com.svenruppert.vaadin.security.dx.diagnostics.SecurityDiagnostics;
+import com.svenruppert.vaadin.security.dx.diagnostics.GeneratedJSentinelWrapper;
+import com.svenruppert.vaadin.security.dx.diagnostics.JSentinelDiagnostics;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * V00.73 end-to-end smoke check: the security-processor wrote the
  * wrapper index at compile time, the V00.72 reader is on the
- * classpath, and {@link SecurityDiagnostics#inspect()} surfaces
+ * classpath, and {@link JSentinelDiagnostics#inspect()} surfaces
  * {@code MemberDirectorySecured} as a generated wrapper for
  * {@link MemberDirectory}.
  *
@@ -35,16 +35,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DemoAppWrapperIndexSmokeTest {
 
   @Test
-  @DisplayName("MemberDirectory appears in SecurityDiagnostics.processorReport().wrappers()")
+  @DisplayName("MemberDirectory appears in JSentinelDiagnostics.processorReport().wrappers()")
   void memberDirectoryIsListed() {
-    List<GeneratedSecurityWrapper> wrappers =
-        SecurityDiagnostics.inspect().processorReport().wrappers();
+    List<GeneratedJSentinelWrapper> wrappers =
+        JSentinelDiagnostics.inspect().processorReport().wrappers();
 
     assertFalse(wrappers.isEmpty(),
         "expected at least one wrapper entry — the security-processor "
             + "must have written generated-wrappers.idx during compile");
 
-    GeneratedSecurityWrapper memberDir = wrappers.stream()
+    GeneratedJSentinelWrapper memberDir = wrappers.stream()
         .filter(w -> w.sourceType().equals(MemberDirectory.class))
         .findFirst()
         .orElseThrow(() -> new AssertionError(

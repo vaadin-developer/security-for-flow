@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.policy.spi;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.policy.api.ResourceRef;
 
 import java.util.Map;
@@ -36,7 +36,7 @@ import java.util.Optional;
  *
  * @param <T> the domain type for this resolver
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public interface ResourceResolver<T> {
 
   /**

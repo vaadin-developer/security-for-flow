@@ -31,9 +31,9 @@ import static java.util.Objects.requireNonNull;
 /** Eclipse-Store-backed {@link SessionStore}. */
 final class EclipseStoreSessionStore implements SessionStore {
 
-  private final EclipseStoreSecurityStorage storage;
+  private final EclipseStoreJSentinelStorage storage;
 
-  EclipseStoreSessionStore(EclipseStoreSecurityStorage storage) {
+  EclipseStoreSessionStore(EclipseStoreJSentinelStorage storage) {
     this.storage = storage;
   }
 

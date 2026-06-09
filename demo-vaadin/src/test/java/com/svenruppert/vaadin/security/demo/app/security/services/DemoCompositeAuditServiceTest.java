@@ -21,8 +21,8 @@ import com.svenruppert.vaadin.security.audit.AuditEventStore;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.InMemoryAuditEventStore;
 import com.svenruppert.vaadin.security.audit.LoginSucceeded;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,13 +40,13 @@ class DemoCompositeAuditServiceTest {
 
   @AfterEach
   void tearDown() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
   }
 
   @Test
   @DisplayName("SPI resolves the demo composite service (not the framework default)")
   void spiResolvesDemoService() {
-    SecurityAuditService service = SecurityServiceResolver.securityAuditService();
+    JSentinelAuditService service = JSentinelServiceResolver.securityAuditService();
     assertInstanceOf(DemoCompositeAuditService.class, service,
         "demo-vaadin must publish DemoCompositeAuditService via META-INF/services");
   }

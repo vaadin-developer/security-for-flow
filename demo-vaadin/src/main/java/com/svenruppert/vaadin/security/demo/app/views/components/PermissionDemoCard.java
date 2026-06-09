@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.demo.app.views.components;
 import com.svenruppert.vaadin.security.action.ActionAuthorizationService;
 import com.svenruppert.vaadin.security.action.ActionPermission;
 import com.svenruppert.vaadin.security.authorization.api.AccessDeniedException;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.components.SecuredButton;
 import com.svenruppert.vaadin.security.components.SecuredVisibility.Requirement;
@@ -83,7 +83,7 @@ public class PermissionDemoCard extends Composite<VerticalLayout> {
         "Same UX adaptation as Pattern A, but expressed declaratively via "
             + "SecuredButton + SecuredVisibility.Requirement. The framework "
             + "looks up the current subject's permissions through "
-            + "SecurityServiceResolver — no manual isAllowed plumbing per "
+            + "JSentinelServiceResolver — no manual isAllowed plumbing per "
             + "button. DISABLE mode keeps the affordance visible (greyed "
             + "out) to teach the user about the missing permission."));
     root.add(buildSecuredButtonRow());
@@ -161,7 +161,7 @@ public class PermissionDemoCard extends Composite<VerticalLayout> {
   }
 
   private static ActionAuthorizationService<MyUser> actionAuthorizationService() {
-    return SecurityServiceResolver.actionAuthorizationService();
+    return JSentinelServiceResolver.actionAuthorizationService();
   }
 
   private static Optional<MyUser> currentUser() {

@@ -55,7 +55,7 @@
       <version>00.11.00</version>
     </dependency>
     <!--
-      V00.72: @SecurityAutoService replaces the manual META-INF/services
+      V00.72: @JSentinelAutoService replaces the manual META-INF/services
       files for DemoAuthenticationService and DemoAuthorizationService.
       The processor is wired under annotationProcessorPaths below.
     -->
@@ -67,7 +67,7 @@
     <!--
       V00.72 fluent bootstrap. DemoApp.main() calls
       StandaloneSecurity.bootstrap() to wire services into
-      SecurityServiceResolver and print the resulting SecurityRuntime
+      JSentinelServiceResolver and print the resulting JSentinelRuntime
       diagnostics line at startup.
     -->
     <dependency>
@@ -102,7 +102,7 @@
             Wire security-processor as a compile-time annotation
             processor. The processor expands @Secured-annotated classes
             into a <Type>Secured subclass that routes every guarded
-            method through SecurityEnforcer before the super-call.
+            method through JSentinelEnforcer before the super-call.
           -->
           <annotationProcessorPaths>
             <path>
@@ -115,7 +115,7 @@
               <artifactId>security-autoservice-processor</artifactId>
               <version>${project.version}</version>
             </path>
-            <!-- Processor reads the @SecurityAutoService annotation class
+            <!-- Processor reads the @JSentinelAutoService annotation class
                  reflectively; make sure it is on the processor path too. -->
             <path>
               <groupId>com.svenruppert</groupId>

@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.policy.api;
 
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,7 +42,7 @@ class PolicyContextTest {
         Map.of());
   }
 
-  private static AccessContext accessContextWithSubject(SecuritySubject subject) {
+  private static AccessContext accessContextWithSubject(JSentinelSubject subject) {
     return new AccessContext(
         Optional.of(subject),
         "rest-endpoint",
@@ -99,7 +99,7 @@ class PolicyContextTest {
   @Test
   @DisplayName("subject() returns the wrapped access context's subject")
   void subjectShortcut() {
-    SecuritySubject subject = new SecuritySubject("u-1", "u-1", Set.of(), Set.of());
+    JSentinelSubject subject = new JSentinelSubject("u-1", "u-1", Set.of(), Set.of());
     PolicyContext ctx = new PolicyContext(accessContextWithSubject(subject), "policy.x");
     assertTrue(ctx.subject().isPresent());
     assertSame(subject, ctx.subject().orElseThrow());

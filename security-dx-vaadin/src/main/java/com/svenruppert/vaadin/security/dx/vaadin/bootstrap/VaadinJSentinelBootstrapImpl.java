@@ -1,0 +1,262 @@
+/**
+ * Copyright © 2018 Sven Ruppert (sven.ruppert@gmail.com)
+ *
+ * Licensed under the EUPL, Version 1.2 or - as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence"); You may not use this work except in
+ * compliance with the Licence. You may obtain a copy of the Licence at:
+ *
+ * https://joinup.ec.europa.eu/software/page/eupl
+ */
+package com.svenruppert.vaadin.security.dx.vaadin.bootstrap;
+
+import com.svenruppert.vaadin.security.authentication.AuthenticationService;
+import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
+import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
+import com.svenruppert.vaadin.security.authorization.vaadin.VaadinSessionSubjectStore;
+import com.svenruppert.vaadin.security.dx.bootstrap.JSentinelBootstrapException;
+import com.svenruppert.vaadin.security.dx.internal.AbstractJSentinelBootstrap;
+import com.svenruppert.vaadin.security.dx.runtime.RegisteredJSentinelService;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapMode;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapWarning;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelRuntime;
+import com.svenruppert.vaadin.security.dx.runtime.Severity;
+import com.svenruppert.vaadin.security.dx.vaadin.routes.SecureRouteDiscovery;
+import com.svenruppert.vaadin.security.dx.vaadin.routes.SessionManagementContext;
+import com.svenruppert.vaadin.security.dx.vaadin.routes.SessionManagementRoute;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * Package-private implementation of {@link VaadinJSentinelBootstrap}.
+ * <p>
+ * Single-use: a second {@code install()} call throws.
+ *
+ * @since 00.72.00
+ */
+final class VaadinJSentinelBootstrapImpl
+    extends AbstractJSentinelBootstrap<VaadinJSentinelBootstrap>
+    implements VaadinJSentinelBootstrap {
+
+  private Class<?> subjectType;
+  private String loginRoute;
+  private String stepUpRoute;
+  private boolean securedComponents;
+  private boolean sessionManagementView;
+  private boolean installed;
+
+  private boolean discoverSecureRoutesEnabled;
+  private SecureRouteDiscovery secureRouteDiscovery;
+
+  @Override
+  public VaadinJSentinelBootstrap subjectType(Class<?> subjectType) {
+    this.subjectType = Objects.requireNonNull(subjectType, "subjectType");
+    return this;
+  }
+
+  @Override
+  public VaadinJSentinelBootstrap loginRoute(String route) {
+    this.loginRoute = Objects.requireNonNull(route, "route");
+    return this;
+  }
+
+  @Override
+  public VaadinJSentinelBootstrap stepUpRoute(String route) {
+    this.stepUpRoute = Objects.requireNonNull(route, "route");
+    return this;
+  }
+
+  @Override
+  public VaadinJSentinelBootstrap securedComponents() {
+    this.securedComponents = true;
+    return this;
+  }
+
+  @Override
+  public VaadinJSentinelBootstrap sessionManagementView() {
+    this.sessionManagementView = true;
+    return this;
+  }
+
+  @Override
+  public VaadinJSentinelBootstrap discoverSecureRoutes(boolean enabled) {
+    this.discoverSecureRoutesEnabled = enabled;
+    return this;
+  }
+
+  @Override
+  public VaadinJSentinelBootstrap discoverSecureRoutes(SecureRouteDiscovery discovery) {
+    this.secureRouteDiscovery = Objects.requireNonNull(discovery, "discovery");
+    this.discoverSecureRoutesEnabled = true;
+    return this;
+  }
+
+  @Override
+  public JSentinelRuntime install() {
+    if (installed) {
+      throw new IllegalStateException("install() may only be called once on the same builder");
+    }
+    installed = true;
+
+    List<RegisteredJSentinelService> services = new ArrayList<>();
+    List<JSentinelBootstrapWarning> warnings = new ArrayList<>();
+
+    AuthenticationService<?, ?> authn = state.authenticationService();
+    AuthorizationService<?> authz = state.authorizationService();
+
+    if (authn != null) {
+      JSentinelServiceResolver.setAuthenticationService(authn);
+      services.add(new RegisteredJSentinelService(
+          AuthenticationService.class, authn.getClass(), "bootstrap-explicit", false));
+    } else {
+      warnings.add(new JSentinelBootstrapWarning(
+          Severity.ERROR,
+          "missing-authentication-service",
+          "No AuthenticationService configured for VaadinSecurity.bootstrap().",
+          "Call .authentication(...) before install(), or register an implementation "
+              + "via @JSentinelAutoService(AuthenticationService.class)."));
+    }
+
+    if (authz != null) {
+      JSentinelServiceResolver.setAuthorizationService(authz);
+      services.add(new RegisteredJSentinelService(
+          AuthorizationService.class, authz.getClass(), "bootstrap-explicit", false));
+    } else {
+      warnings.add(new JSentinelBootstrapWarning(
+          Severity.ERROR,
+          "missing-authorization-service",
+          "No AuthorizationService configured for VaadinSecurity.bootstrap().",
+          "Call .authorization(...) before install(), or register an implementation "
+              + "via @JSentinelAutoService(AuthorizationService.class)."));
+    }
+
+    if (stepUpRoute != null) {
+      JSentinelServiceResolver.setStepUpRouteName(stepUpRoute);
+    }
+
+    // V00.73: apply audit sub-builder state (no-op when .audit(...) wasn't called).
+    applyAuditConfiguration(services, warnings);
+    // V00.73: apply sessions sub-builder state (full consumption on Vaadin).
+    applySessionConfiguration(AdapterKind.VAADIN, services, warnings);
+    // V00.73: apply roles sub-builder state.
+    applyRoleConfiguration(services, warnings);
+    // V00.73: apply credentials sub-builder state.
+    applyCredentialConfiguration(services, warnings);
+    // V00.73: apply policies sub-builder state.
+    applyPolicyConfiguration(services, warnings);
+
+    // V00.73 (Prompt 012 / Konzept §8.5): deterministic SecureRoute
+    // cross-validation if discovery is opt-in.
+    crossCheckSecureRoutes(warnings);
+
+    // V00.73 (Prompt 009): auto-wire VaadinSessionSubjectStore as the
+    // default SubjectStore when the consumer didn't register one.
+    // Caller-provided SubjectStore (via SubjectStores.setSubjectStore
+    // or @JSentinelAutoService(SubjectStore.class)) always wins.
+    if (SubjectStores.findSubjectStore().isEmpty()) {
+      SubjectStore defaultStore = new VaadinSessionSubjectStore();
+      SubjectStores.setSubjectStore(defaultStore);
+      services.add(new RegisteredJSentinelService(
+          SubjectStore.class, defaultStore.getClass(), "bootstrap-default", true));
+    } else {
+      SubjectStore existing = SubjectStores.subjectStore();
+      services.add(new RegisteredJSentinelService(
+          SubjectStore.class, existing.getClass(), "bootstrap-explicit", false));
+    }
+
+    // V00.73 (Prompt 008): SessionManagementView activation.
+    // Validates the prerequisite (SessionStore present) and
+    // publishes the store into SessionManagementContext so the
+    // SessionManagementRoute can instantiate when Vaadin auto-
+    // discovers it on the classpath.
+    if (sessionManagementView) {
+      var sessionStore = state.sessionState().sessionStore();
+      if (sessionStore == null) {
+        warnings.add(new JSentinelBootstrapWarning(
+            Severity.ERROR,
+            "session-management-view-without-session-store",
+            ".sessionManagementView() was set but no SessionStore is configured.",
+            "Call .sessions(s -> s.storeBacked(yourSessionStore)) before .sessionManagementView()."));
+      } else {
+        SessionManagementContext.publish(sessionStore, null);
+        services.add(new RegisteredJSentinelService(
+            SessionManagementRoute.class, SessionManagementRoute.class,
+            "bootstrap-activated", false));
+      }
+    }
+
+    JSentinelBootstrapMode mode = state.mode();
+
+    if (mode == JSentinelBootstrapMode.STRICT && warningsContainError(warnings)) {
+      throw new JSentinelBootstrapException(warnings);
+    }
+
+    // Suppress unused-warning until the starter consumes these in Phase 3.
+    discard(subjectType);
+    discard(loginRoute);
+    discard(securedComponents);
+
+    return new JSentinelRuntime(services, warnings, mode);
+  }
+
+  @SuppressWarnings("unused")
+  private static void discard(Object ignored) {
+    // intentional no-op
+  }
+
+  /**
+   * Konzept §8.5 deterministic SecureRoute cross-validation.
+   * Only runs when {@code .discoverSecureRoutes(true)} or a custom
+   * {@link SecureRouteDiscovery} was configured. Without opt-in,
+   * emits {@code secure-route/discovery-disabled} (INFO).
+   */
+  private void crossCheckSecureRoutes(List<JSentinelBootstrapWarning> warnings) {
+    if (!discoverSecureRoutesEnabled) {
+      warnings.add(new JSentinelBootstrapWarning(
+          Severity.INFO,
+          "secure-route/discovery-disabled",
+          "@SecureRoute(policy=...) cross-validation is opt-in; deterministic STRICT checks are disabled.",
+          "Call .discoverSecureRoutes(true) to enable Vaadin-router-based discovery."));
+      return;
+    }
+    SecureRouteDiscovery discovery = secureRouteDiscovery != null
+        ? secureRouteDiscovery
+        : tryLoadDefaultDiscovery();
+    if (discovery == null) {
+      // discovery requested but no impl available — STRICT still
+      // benefits, but at least surface the diagnostic
+      warnings.add(new JSentinelBootstrapWarning(
+          Severity.ERROR,
+          "secure-route/discovery-unavailable",
+          ".discoverSecureRoutes(true) was set, but no SecureRouteDiscovery implementation is on the classpath.",
+          "Add security-vaadin-starter, or pass an explicit SecureRouteDiscovery via .discoverSecureRoutes(impl)."));
+      return;
+    }
+    java.util.Set<String> knownNames = state.policyState().knownPolicyNames();
+    discovery.discoverPolicyNames().forEach(policyName -> {
+      if (!knownNames.contains(policyName)) {
+        warnings.add(new JSentinelBootstrapWarning(
+            Severity.ERROR,
+            "secure-route/unknown-policy",
+            "@SecureRoute(policy=\"" + policyName
+                + "\") references an unknown policy.",
+            "Register the policy via .policies(p -> p.register(Policy.named(\""
+                + policyName + "\")...)), or fix the @SecureRoute annotation."));
+      }
+    });
+  }
+
+  private static SecureRouteDiscovery tryLoadDefaultDiscovery() {
+    try {
+      Class<?> defaultImpl = Class.forName(
+          "com.svenruppert.vaadin.security.starter.routes.VaadinRouterSecureRouteDiscovery");
+      return (SecureRouteDiscovery) defaultImpl.getDeclaredConstructor().newInstance();
+    } catch (ReflectiveOperationException ignored) {
+      return null;
+    }
+  }
+}

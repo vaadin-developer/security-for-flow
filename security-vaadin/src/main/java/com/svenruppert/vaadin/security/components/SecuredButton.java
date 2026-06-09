@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.components;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.button.Button;
 
@@ -46,12 +46,12 @@ import static java.util.Objects.requireNonNull;
  * (or its annotation-driven equivalent) in the click listener.
  * A hidden button does not protect against a hand-crafted RPC.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public class SecuredButton extends Button {
 
   private final SecuredVisibility.Requirement requirement;
   private final SecuredVisibilityMode mode;
-  private final Supplier<Optional<SecuredVisibility.SecurityView>> viewSupplier;
+  private final Supplier<Optional<SecuredVisibility.JSentinelView>> viewSupplier;
 
   /**
    * Builds a secured button with the default
@@ -63,7 +63,7 @@ public class SecuredButton extends Button {
    */
   public SecuredButton(String text, SecuredVisibility.Requirement requirement) {
     this(text, requirement, SecuredVisibilityMode.DISABLE,
-        SecuredVisibility::currentSecurityView);
+        SecuredVisibility::currentJSentinelView);
   }
 
   /**
@@ -77,7 +77,7 @@ public class SecuredButton extends Button {
   public SecuredButton(String text,
                        SecuredVisibility.Requirement requirement,
                        SecuredVisibilityMode mode) {
-    this(text, requirement, mode, SecuredVisibility::currentSecurityView);
+    this(text, requirement, mode, SecuredVisibility::currentJSentinelView);
   }
 
   /**
@@ -92,7 +92,7 @@ public class SecuredButton extends Button {
   public SecuredButton(String text,
                        SecuredVisibility.Requirement requirement,
                        SecuredVisibilityMode mode,
-                       Supplier<Optional<SecuredVisibility.SecurityView>> viewSupplier) {
+                       Supplier<Optional<SecuredVisibility.JSentinelView>> viewSupplier) {
     super(requireNonNull(text, "text must not be null"));
     this.requirement = requireNonNull(requirement, "requirement must not be null");
     this.mode = requireNonNull(mode, "mode must not be null");

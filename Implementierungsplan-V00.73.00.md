@@ -19,7 +19,7 @@ V00.73.00 completes the V00.72 DX surface and makes the usable parts production-
 - `SecuredUi.requiresPolicy(...)` and `@SecureRoute(policy=...)` evaluate against `PolicyRegistry`,
 - stable API promotion happens per type after a wiring audit.
 
-The plan intentionally follows the improved concept: no broad new Security SPIs, no new mandatory module, no hidden `SecurityServiceResolver` setters, and no false stable promise for APIs whose backing hooks are not mature yet.
+The plan intentionally follows the improved concept: no broad new Security SPIs, no new mandatory module, no hidden `JSentinelServiceResolver` setters, and no false stable promise for APIs whose backing hooks are not mature yet.
 
 ---
 
@@ -39,8 +39,8 @@ The plan intentionally follows the improved concept: no broad new Security SPIs,
   - `PolicyState`
   - `RoleState`
   - `CredentialState`
-- Wire sub-builder state through existing `SecurityServiceResolver` setters where they exist.
-- Expose non-resolver state through `SecurityRuntime` / adapter-DX code where no core setter exists.
+- Wire sub-builder state through existing `JSentinelServiceResolver` setters where they exist.
+- Expose non-resolver state through `JSentinelRuntime` / adapter-DX code where no core setter exists.
 - Add wrapper-index writer in `security-processor`.
 - Implement policy evaluation in `SecuredUi.requiresPolicy(...)` and `@SecureRoute(policy=...)`.
 - Promote V00.72 public DX API only after per-type audit.
@@ -50,11 +50,11 @@ The plan intentionally follows the improved concept: no broad new Security SPIs,
 
 - No Security Event Bus. That remains V00.75.
 - No MFA, OIDC, WebAuthn, device trust, or high-security identity integration. Those remain V00.80.
-- No replacement for `SecurityServiceResolver`.
+- No replacement for `JSentinelServiceResolver`.
 - No new Policy DSL.
 - No new crypto provider.
 - No mandatory `security-dx-test` module.
-- No global `SecurityServiceResolver.setSessionStore(...)`.
+- No global `JSentinelServiceResolver.setSessionStore(...)`.
 - No `RolePermissionMapping` bootstrap method unless a separate core SPI is explicitly approved.
 - No silent conversion between `PasswordHashingService` and legacy `PasswordHasher`.
 
@@ -65,8 +65,8 @@ The plan intentionally follows the improved concept: no broad new Security SPIs,
 Every implementation prompt must obey these rules:
 
 1. `security-core` gets no new runtime dependency.
-2. Existing direct `SecurityServiceResolver.setXxx(...)` setup paths remain valid.
-3. `SecurityServiceResolver` API stays unchanged unless the prompt explicitly says a new core SPI has been approved.
+2. Existing direct `JSentinelServiceResolver.setXxx(...)` setup paths remain valid.
+3. `JSentinelServiceResolver` API stays unchanged unless the prompt explicitly says a new core SPI has been approved.
 4. `SessionStore` is stored in DX state / runtime output and consumed by adapters; it is not globally registered through a nonexistent resolver setter.
 5. `PasswordHasher` and `PasswordHashingService` remain distinct surfaces.
 6. `RoleBootstrap` stabilizes only `RoleHierarchy`.
@@ -149,7 +149,7 @@ Use real core audit types:
 
 ```java
 public interface AuditBootstrap {
-  AuditBootstrap securityAuditService(SecurityAuditService service);
+  AuditBootstrap securityAuditService(JSentinelAuditService service);
   AuditBootstrap storeBacked(AuditEventStore store);
   AuditBootstrap logging();
   AuditBootstrap ringBuffer(int capacity);
@@ -159,10 +159,10 @@ public interface AuditBootstrap {
 
 Rules:
 
-- `.storeBacked(...)` creates `StoreBackedSecurityAuditService`.
+- `.storeBacked(...)` creates `StoreBackedJSentinelAuditService`.
 - `.logging()` and `.ringBuffer(...)` add sinks.
 - multiple choices create a composite service.
-- final service is registered via `SecurityServiceResolver.setSecurityAuditService(...)`.
+- final service is registered via `JSentinelServiceResolver.setJSentinelAuditService(...)`.
 
 Codes:
 
@@ -183,7 +183,7 @@ public interface RoleBootstrap {
 
 Rules:
 
-- `.hierarchy(...)` wires `SecurityServiceResolver.setRoleHierarchy(...)`.
+- `.hierarchy(...)` wires `JSentinelServiceResolver.setRoleHierarchy(...)`.
 - no `.mapping(...)` and no `.resolver(...)` in V00.73 unless a separate core SPI is approved first.
 
 Codes:
@@ -210,7 +210,7 @@ public interface CredentialBootstrap {
 
 Rules:
 
-- `.passwordHasher(...)` calls `SecurityServiceResolver.setPasswordHashingService(...)`.
+- `.passwordHasher(...)` calls `JSentinelServiceResolver.setPasswordHashingService(...)`.
 - `.hashing(...)` and lifecycle services are retained in DX state/runtime output.
 - `.pbkdf2Defaults()` must explicitly document whether it sets legacy, pipeline, or both. Recommended: both, reported separately.
 - `.modern()` configures only the V00.71 pipeline and requires `security-crypto-bc`.
@@ -226,7 +226,7 @@ Codes:
 ```java
 public interface SessionBootstrap {
   SessionBootstrap storeBacked(SessionStore store);
-  SessionBootstrap securityVersion(SecurityVersionStore store);
+  SessionBootstrap securityVersion(JSentinelVersionStore store);
   SessionBootstrap subjectIdResolver(SubjectIdResolver<?> resolver);
   SessionBootstrap timeout(Duration idleTimeout);
   SessionBootstrap absoluteLifetime(Duration absoluteTimeout);
@@ -236,10 +236,10 @@ public interface SessionBootstrap {
 
 Rules:
 
-- `.policy(...)` calls `SecurityServiceResolver.setSessionPolicy(...)`.
+- `.policy(...)` calls `JSentinelServiceResolver.setSessionPolicy(...)`.
 - timeout settings create a `TimeoutSessionPolicy` only if no custom policy is set.
-- `.securityVersion(...)` calls `SecurityServiceResolver.setSecurityVersionStore(...)`.
-- `.subjectIdResolver(...)` calls `SecurityServiceResolver.setSubjectIdResolver(...)`.
+- `.securityVersion(...)` calls `JSentinelServiceResolver.setJSentinelVersionStore(...)`.
+- `.subjectIdResolver(...)` calls `JSentinelServiceResolver.setSubjectIdResolver(...)`.
 - `.storeBacked(...)` remains in state/runtime and is consumed by adapter-DX modules.
 
 Codes:
@@ -260,7 +260,7 @@ STRICT + `.sessionManagementView()` without `.sessions(s -> s.storeBacked(...))`
 
 ### 009 - VaadinSessionSubjectStore auto-wiring
 
-If no custom `SubjectStore` is configured, Vaadin DX registers `VaadinSessionSubjectStore` and reports it in `SecurityRuntime` as `defaulted=true`. A custom store always wins.
+If no custom `SubjectStore` is configured, Vaadin DX registers `VaadinSessionSubjectStore` and reports it in `JSentinelRuntime` as `defaulted=true`. A custom store always wins.
 
 ### 010 - PolicyBootstrap real surface
 
@@ -276,7 +276,7 @@ public interface PolicyBootstrap {
 Rules:
 
 - external registries replace defaults,
-- otherwise policies/resolvers are registered into the default registries from `SecurityServiceResolver`,
+- otherwise policies/resolvers are registered into the default registries from `JSentinelServiceResolver`,
 - empty registry warning is optional INFO and may be dropped if noisy.
 
 ### 011 - SecuredUi.requiresPolicy real
@@ -291,14 +291,14 @@ Tests cover granted, denied, missing policy, and no subject behavior.
 
 ### 013 - demo-vaadin-rest-client end state
 
-Move demo policy registration into the `.policies(...)` lambda. Remove direct `SecurityServiceResolver.policyRegistry()` setup from the demo listener.
+Move demo policy registration into the `.policies(...)` lambda. Remove direct `JSentinelServiceResolver.policyRegistry()` setup from the demo listener.
 
 ### 014 - Stable API audit
 
 For every V00.72 public DX type:
 
 - decide Promote or Keep,
-- remove `@ExperimentalSecurityApi` only for Promote,
+- remove `@ExperimentalJSentinelApi` only for Promote,
 - document Keep reasons in JavaDoc and release notes.
 
 No quota. Stability beats percentage.

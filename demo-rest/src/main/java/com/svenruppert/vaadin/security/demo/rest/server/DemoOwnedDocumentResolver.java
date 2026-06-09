@@ -30,7 +30,7 @@ import java.util.Optional;
  * evaluation time.
  * <p>
  * Registered programmatically with the
- * {@code SecurityServiceResolver}'s
+ * {@code JSentinelServiceResolver}'s
  * {@link com.svenruppert.vaadin.security.policy.spi.ResourceResolverRegistry}
  * at {@code DemoRestServer} startup — no SPI file needed because
  * the resolver depends on a concrete store instance.

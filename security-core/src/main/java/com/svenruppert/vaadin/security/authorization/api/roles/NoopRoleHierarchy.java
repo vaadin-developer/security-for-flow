@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.authorization.api.roles;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 import java.util.Set;
 
@@ -27,11 +27,11 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * Equivalent to the pre-hierarchy semantics where role-based
  * admission was a plain set membership check. Returned by
- * {@code SecurityServiceResolver.roleHierarchy()} when no SPI
+ * {@code JSentinelServiceResolver.roleHierarchy()} when no SPI
  * implementation is registered, so existing applications keep their
  * exact behaviour after the upgrade.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class NoopRoleHierarchy implements RoleHierarchy {
 
   /** Shared singleton instance — the hierarchy is stateless. */

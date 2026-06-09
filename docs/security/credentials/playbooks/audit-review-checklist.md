@@ -14,7 +14,7 @@ hygiene.
 ## Audit events to review
 
 The credential pipeline produces a fixed inventory of events
-under `SecurityAuditService`. The review covers:
+under `JSentinelAuditService`. The review covers:
 
 | Event                              | Look for                                                |
 |------------------------------------|---------------------------------------------------------|

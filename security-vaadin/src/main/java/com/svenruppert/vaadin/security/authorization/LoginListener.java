@@ -17,13 +17,13 @@
 package com.svenruppert.vaadin.security.authorization;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
-import com.svenruppert.vaadin.security.authorization.impl.SecurityAnnotationScanner;
+import com.svenruppert.vaadin.security.authorization.impl.JSentinelAnnotationScanner;
 import com.svenruppert.vaadin.security.authorization.impl.VaadinNavigationAccessDecisionMapper;
 import com.svenruppert.vaadin.security.authorization.navigation.NavigationAccessDecision;
 import com.svenruppert.vaadin.security.authorization.navigation.NavigationAccessDecisionService;
-import com.svenruppert.vaadin.security.authorization.navigation.NavigationSecurityContext;
+import com.svenruppert.vaadin.security.authorization.navigation.NavigationJSentinelContext;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterListener;
@@ -47,7 +47,7 @@ public abstract class LoginListener<U>
   private final NavigationAccessDecisionService decisionService = new NavigationAccessDecisionService();
 
   /** Scanner for framework security annotations. */
-  private final SecurityAnnotationScanner scanner = new SecurityAnnotationScanner();
+  private final JSentinelAnnotationScanner scanner = new JSentinelAnnotationScanner();
 
   /** Maps authentication-phase decisions to Vaadin navigation operations. */
   private final VaadinNavigationAccessDecisionMapper decisionMapper =
@@ -66,7 +66,7 @@ public abstract class LoginListener<U>
         .currentSubject(subjectType())
         .isPresent();
 
-    NavigationSecurityContext ctx = new NavigationSecurityContext(
+    NavigationJSentinelContext ctx = new NavigationJSentinelContext(
         navigationTarget, isRestricted, subjectAvailable, isLoginView);
 
     NavigationAccessDecision decision = decisionService.evaluateAuthentication(ctx);
@@ -121,7 +121,7 @@ public abstract class LoginListener<U>
 
   @SuppressWarnings("unchecked")
   private Class<U> subjectType() {
-    return (Class<U>) SecurityServiceResolver
+    return (Class<U>) JSentinelServiceResolver
         .<Object, Object>authenticationService()
         .subjectType();
   }

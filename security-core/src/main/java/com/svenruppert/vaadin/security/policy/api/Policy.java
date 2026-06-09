@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.policy.api;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 /**
  * Named, single-shot authorisation rule.
@@ -36,7 +36,7 @@ import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi
  * interface and the {@link PolicyBuilder}. Implementations stay
  * package-private.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public sealed interface Policy permits NamedPolicy {
 
   /**

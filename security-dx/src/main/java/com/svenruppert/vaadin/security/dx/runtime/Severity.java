@@ -11,11 +11,11 @@
 package com.svenruppert.vaadin.security.dx.runtime;
 
 /**
- * Severity level of a {@link SecurityBootstrapWarning}.
+ * Severity level of a {@link JSentinelBootstrapWarning}.
  * <p>
  * In {@code STRICT} mode, {@link #ERROR} entries are converted into a
- * {@code SecurityBootstrapException}; {@link #WARNING} and {@link #INFO}
- * entries are attached to the resulting {@link SecurityRuntime}.
+ * {@code JSentinelBootstrapException}; {@link #WARNING} and {@link #INFO}
+ * entries are attached to the resulting {@link JSentinelRuntime}.
  *
  * @since 00.72.00
  * @apiNote V00.73 — promoted to stable.

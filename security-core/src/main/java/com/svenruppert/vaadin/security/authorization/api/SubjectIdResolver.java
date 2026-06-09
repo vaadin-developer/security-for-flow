@@ -31,15 +31,15 @@ import com.svenruppert.vaadin.security.logout.SubjectId;
  * is the single hook: applications register an implementation via
  * {@code META-INF/services/com.svenruppert.vaadin.security.authorization.api.SubjectIdResolver}
  * (or programmatically via
- * {@link SecurityServiceResolver#setSubjectIdResolver}) so the
+ * {@link JSentinelServiceResolver#setSubjectIdResolver}) so the
  * framework can construct {@link SubjectId} from {@code U}
  * without guessing.
  *
  * <p>Used by {@code security-vaadin}'s {@code LoginView} after a
- * successful login to capture the {@code SecurityVersion}
- * snapshot into {@code VaadinSecurityVersionContext}. Without a
+ * successful login to capture the {@code JSentinelVersion}
+ * snapshot into {@code VaadinJSentinelVersionContext}. Without a
  * resolver, the capture is silently skipped — the
- * {@code SecurityVersionEnforcerListener} simply finds no snapshot
+ * {@code JSentinelVersionEnforcerListener} simply finds no snapshot
  * and lets every request through.
  *
  * @param <U> application user type

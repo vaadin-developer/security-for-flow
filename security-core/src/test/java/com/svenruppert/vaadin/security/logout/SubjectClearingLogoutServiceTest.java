@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.logout;
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.LogoutPerformed;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -176,7 +176,7 @@ class SubjectClearingLogoutServiceTest {
     }
   }
 
-  static final class RecordingAudit implements SecurityAuditService {
+  static final class RecordingAudit implements JSentinelAuditService {
     final List<AuditEvent> events = new ArrayList<>();
 
     @Override public void publish(AuditEvent event) {

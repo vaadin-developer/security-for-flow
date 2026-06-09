@@ -16,9 +16,9 @@
  */
 package com.svenruppert.vaadin.security.authentication;
 
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.audit.TokenRotated;
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 
@@ -69,7 +69,7 @@ import static java.util.Objects.requireNonNull;
  *
  * <p>Bound to one {@link TenantId} at construction.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class TokenService {
 
   /** Default token entropy in bytes (256 bits). */
@@ -77,7 +77,7 @@ public final class TokenService {
 
   private final RefreshTokenStore store;
   private final PasswordHasher hasher;
-  private final SecurityAuditService auditService;
+  private final JSentinelAuditService auditService;
   private final TenantId tenant;
   private final Clock clock;
   private final Supplier<String> tokenSource;
@@ -95,7 +95,7 @@ public final class TokenService {
    */
   public TokenService(RefreshTokenStore store,
                       PasswordHasher hasher,
-                      SecurityAuditService auditService) {
+                      JSentinelAuditService auditService) {
     this(store, hasher, auditService, TenantId.DEFAULT, Clock.systemUTC(),
         defaultTokenSource(),
         Duration.ofMinutes(15), Duration.ofDays(30));
@@ -116,7 +116,7 @@ public final class TokenService {
    */
   public TokenService(RefreshTokenStore store,
                       PasswordHasher hasher,
-                      SecurityAuditService auditService,
+                      JSentinelAuditService auditService,
                       TenantId tenant,
                       Clock clock,
                       Supplier<String> tokenSource,

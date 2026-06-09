@@ -17,9 +17,9 @@
 package com.svenruppert.vaadin.security.rest;
 
 import com.svenruppert.vaadin.security.audit.SessionExpired;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.session.SessionMetadata;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
 import com.svenruppert.vaadin.security.session.SessionPolicyDecision;
@@ -46,7 +46,7 @@ public final class RestAuthenticationFilter {
   }
 
   public void requireAuthenticated(RestRequest request, RestResponse response, RestHandler handler) {
-    Optional<SecuritySubject> subject = subjectResolver.resolveSubject(request);
+    Optional<JSentinelSubject> subject = subjectResolver.resolveSubject(request);
     if (subject.isEmpty()) {
       response.status(401);
       response.body("Unauthorized");
@@ -54,7 +54,7 @@ public final class RestAuthenticationFilter {
     }
     Optional<SessionMetadata> metadata = subjectResolver.resolveSessionMetadata(request);
     if (metadata.isPresent()) {
-      SessionPolicy<Object> policy = SecurityServiceResolver.sessionPolicy();
+      SessionPolicy<Object> policy = JSentinelServiceResolver.sessionPolicy();
       SessionPolicyDecision decision = policy.evaluate(metadata.get());
       if (!(decision instanceof SessionPolicyDecision.Active)) {
         auditExpired(metadata.get(), subject.orElse(null), decision);
@@ -67,14 +67,14 @@ public final class RestAuthenticationFilter {
   }
 
   private static void auditExpired(SessionMetadata metadata,
-                                   SecuritySubject subject,
+                                   JSentinelSubject subject,
                                    SessionPolicyDecision decision) {
     String reason = switch (decision) {
       case SessionPolicyDecision.Active ignored -> "Active";
       case SessionPolicyDecision.IdleTimeout ignored -> "IdleTimeout";
       case SessionPolicyDecision.AbsoluteLifetimeExceeded ignored -> "AbsoluteLifetimeExceeded";
     };
-    SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
+    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
     try {
       sink.publish(new SessionExpired(
           Instant.now(Clock.systemUTC()),

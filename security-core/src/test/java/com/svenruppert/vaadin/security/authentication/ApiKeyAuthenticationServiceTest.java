@@ -20,7 +20,7 @@ import com.svenruppert.vaadin.security.audit.ApiKeyDenied;
 import com.svenruppert.vaadin.security.audit.ApiKeyUsed;
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
@@ -185,7 +185,7 @@ class ApiKeyAuthenticationServiceTest {
     FakeHasher hasher = new FakeHasher();
     seed(store, hasher, "plain", "k");
 
-    SecurityAuditService throwing = new SecurityAuditService() {
+    JSentinelAuditService throwing = new JSentinelAuditService() {
       @Override public void publish(AuditEvent event) { throw new RuntimeException("boom"); }
       @Override public List<AuditEvent> query(AuditQuery query) { return List.of(); }
     };
@@ -212,7 +212,7 @@ class ApiKeyAuthenticationServiceTest {
         () -> new ApiKeyAuthenticationService(store, hasher, audit, TenantId.DEFAULT, null));
   }
 
-  private static final class CollectingAuditService implements SecurityAuditService {
+  private static final class CollectingAuditService implements JSentinelAuditService {
     final List<AuditEvent> published = new ArrayList<>();
     @Override public void publish(AuditEvent event) { published.add(event); }
     @Override public List<AuditEvent> query(AuditQuery query) { return List.copyOf(published); }

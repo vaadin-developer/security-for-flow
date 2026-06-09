@@ -25,7 +25,7 @@
   <name>Security AutoService Processor</name>
   <description>
     V00.72 annotation processor that generates META-INF/services
-    descriptors from @SecurityAutoService annotations at compile time.
+    descriptors from @JSentinelAutoService annotations at compile time.
     Wire as annotationProcessorPath; do NOT place on the runtime
     classpath.
   </description>

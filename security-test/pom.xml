@@ -37,7 +37,7 @@
     </dependency>
     <!--
       JUnit Jupiter API is compile-scope here (not test-scope) because
-      SecurityTestExtension implements JUnit lifecycle interfaces. The
+      JSentinelTestExtension implements JUnit lifecycle interfaces. The
       aggregator artifact org.junit.jupiter:junit-jupiter pulls
       jupiter-api only as a runtime dep, so we depend on jupiter-api
       directly and inherit the version from the parent POM's
@@ -49,7 +49,7 @@
       <version>${junit-jupiter.version}</version>
       <!--
         Override the grandparent's test-scope pin: this module needs
-        the Jupiter API at compile time for SecurityTestExtension.
+        the Jupiter API at compile time for JSentinelTestExtension.
       -->
       <scope>compile</scope>
     </dependency>

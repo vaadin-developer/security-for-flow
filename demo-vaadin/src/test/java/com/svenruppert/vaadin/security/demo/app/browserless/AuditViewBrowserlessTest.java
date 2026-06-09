@@ -20,8 +20,8 @@ import com.svenruppert.vaadin.security.audit.AccessDenied;
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.LoginSucceeded;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.demo.app.security.bootstrap.BootstrapWiring;
 import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectoryProvider;
@@ -70,7 +70,7 @@ class AuditViewBrowserlessTest extends BrowserlessTest {
     System.setProperty("security.bootstrap.mode", "DISABLED");
     resetBootstrapWiringSingleton();
 
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
     // Seed an admin so the directory reports hasAnyAdministrator() — keeps
     // BootstrapStateService from forwarding to /setup even if a stale
@@ -83,12 +83,12 @@ class AuditViewBrowserlessTest extends BrowserlessTest {
     audit.events.add(new LoginSucceeded(T0, "admin", "127.0.0.1", null));
     audit.events.add(new LoginSucceeded(T0.plusSeconds(1), "editor", "127.0.0.1", null));
     audit.events.add(new AccessDenied(T0.plusSeconds(2), "bob", "/secret", "MissingRole"));
-    SecurityServiceResolver.setSecurityAuditService(audit);
+    JSentinelServiceResolver.setJSentinelAuditService(audit);
   }
 
   @AfterEach
   void tearDown() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
   }
 
@@ -139,7 +139,7 @@ class AuditViewBrowserlessTest extends BrowserlessTest {
    * {@code query} call. Lets the {@code AuditView}'s default behaviour
    * exercise the type-filter logic against deterministic data.
    */
-  private static final class SeedingAudit implements SecurityAuditService {
+  private static final class SeedingAudit implements JSentinelAuditService {
     final List<AuditEvent> events = new ArrayList<>();
 
     @Override public void publish(AuditEvent event) {

@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.bootstrap;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 
 import java.time.Clock;
@@ -38,7 +38,7 @@ import static java.util.Objects.requireNonNull;
  * construction. Multi-tenant deployments instantiate one service
  * per tenant.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class StoreBackedBootstrapStateService {
 
   private final BootstrapStateStore store;

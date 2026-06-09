@@ -32,7 +32,7 @@ import java.util.function.Consumer;
  * <p><strong>Thread-safety.</strong> The holder is process-wide.
  * A second bootstrap call replaces the previous configuration —
  * matches the "single-use builder" contract on
- * {@code VaadinSecurityBootstrapImpl}.
+ * {@code VaadinJSentinelBootstrapImpl}.
  *
  * @since 00.73.00
  */

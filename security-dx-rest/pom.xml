@@ -25,7 +25,7 @@
   <name>Security DX – REST Adapter</name>
   <description>
     V00.72 REST-specific fluent bootstrap: RestSecurity.bootstrap()
-    facade and the RestSecurityBootstrap builder. Hosts the
+    facade and the RestJSentinelBootstrap builder. Hosts the
     RestDiagnosticContributor (added in Prompt 014b).
   </description>
 

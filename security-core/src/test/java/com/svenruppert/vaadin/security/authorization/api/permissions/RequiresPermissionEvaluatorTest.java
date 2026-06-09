@@ -18,7 +18,7 @@ package com.svenruppert.vaadin.security.authorization.api.permissions;
 
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPermission;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -48,7 +48,7 @@ class RequiresPermissionEvaluatorTest {
   @Test
   @DisplayName("matching permission grants access")
   void matchingPermission() throws NoSuchMethodException {
-    SecuritySubject subject = new SecuritySubject(
+    JSentinelSubject subject = new JSentinelSubject(
         "u1", "User", Set.of(), Set.of(new PermissionName("document:read")));
 
     AuthorizationDecision decision = evaluator.evaluate(
@@ -61,7 +61,7 @@ class RequiresPermissionEvaluatorTest {
   @Test
   @DisplayName("missing permission forbids access")
   void missingPermission() throws NoSuchMethodException {
-    SecuritySubject subject = new SecuritySubject("u1", "User", Set.of(), Set.of());
+    JSentinelSubject subject = new JSentinelSubject("u1", "User", Set.of(), Set.of());
 
     AuthorizationDecision decision = evaluator.evaluate(
         context(Optional.of(subject)),
@@ -70,7 +70,7 @@ class RequiresPermissionEvaluatorTest {
     assertInstanceOf(AuthorizationDecision.Forbidden.class, decision);
   }
 
-  private static AccessContext context(Optional<SecuritySubject> subject) {
+  private static AccessContext context(Optional<JSentinelSubject> subject) {
     return new AccessContext(subject, "rest-endpoint", "/documents", "read", Map.of());
   }
 

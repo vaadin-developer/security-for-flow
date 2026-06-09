@@ -18,7 +18,7 @@ package com.svenruppert.vaadin.security.test;
 
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,7 +30,7 @@ import java.util.List;
  * {@link #all(Class)} to assert on specific event types without
  * casting.
  */
-public final class RecordingAuditSink implements SecurityAuditService {
+public final class RecordingAuditSink implements JSentinelAuditService {
 
   private final List<AuditEvent> events = new ArrayList<>();
 

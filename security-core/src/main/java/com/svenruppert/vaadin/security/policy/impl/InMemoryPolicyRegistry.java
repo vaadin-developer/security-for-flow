@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.policy.impl;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.policy.api.Policy;
 import com.svenruppert.vaadin.security.policy.api.PolicyContext;
 import com.svenruppert.vaadin.security.policy.api.PolicyDecision;
@@ -36,10 +36,10 @@ import static java.util.Objects.requireNonNull;
  * backing map is a {@link ConcurrentHashMap}.
  *
  * <p>This is the default implementation returned by
- * {@code SecurityServiceResolver.policyRegistry()} when no SPI override
+ * {@code JSentinelServiceResolver.policyRegistry()} when no SPI override
  * is registered.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class InMemoryPolicyRegistry implements PolicyRegistry {
 
   private final ConcurrentMap<String, Policy> policies = new ConcurrentHashMap<>();

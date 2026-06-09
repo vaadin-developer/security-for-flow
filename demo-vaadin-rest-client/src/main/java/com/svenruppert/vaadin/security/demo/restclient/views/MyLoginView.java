@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.demo.restclient.views;
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.vaadin.security.authorization.LoginView;
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
@@ -40,7 +40,7 @@ public class MyLoginView extends LoginView implements HasLogger, BeforeEnterObse
   public static final String NAV = "login";
 
   private final AuthenticationService<Credentials, RemoteUser> authenticationService =
-      SecurityServiceResolver.authenticationService();
+      JSentinelServiceResolver.authenticationService();
 
   @Override
   public void beforeEnter(BeforeEnterEvent event) {
@@ -61,7 +61,7 @@ public class MyLoginView extends LoginView implements HasLogger, BeforeEnterObse
     boolean ok = authenticationService.checkCredentials(credentials);
     if (!ok) return false;
     // RestBackedAuthenticationService already cached the RemoteUser via
-    // ClientSecurityContext / SubjectStore, so no extra step here.
+    // ClientJSentinelContext / SubjectStore, so no extra step here.
     return true;
   }
 
@@ -93,7 +93,7 @@ public class MyLoginView extends LoginView implements HasLogger, BeforeEnterObse
       return LoginAttemptDecision.allowed();
     }
     try {
-      LoginAttemptPolicy policy = SecurityServiceResolver.loginAttemptPolicy();
+      LoginAttemptPolicy policy = JSentinelServiceResolver.loginAttemptPolicy();
       return policy.beforeAttempt(
           LoginAttemptContext.now(username, currentClientAddress(), null));
     } catch (RuntimeException ignored) {

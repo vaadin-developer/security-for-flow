@@ -22,7 +22,7 @@ package com.svenruppert.vaadin.security.audit;
  * Sinks are the side-effecting end of the audit pipeline — they log to
  * stderr, append to disk, ship to a SIEM, or buffer in memory. The
  * read-side ({@code query(AuditQuery)}) belongs on
- * {@code SecurityAuditService}, not here.
+ * {@code JSentinelAuditService}, not here.
  * <p>
  * Implementations <strong>must not throw</strong> from {@link #accept}.
  * A failing sink must catch its own exceptions and degrade silently, so

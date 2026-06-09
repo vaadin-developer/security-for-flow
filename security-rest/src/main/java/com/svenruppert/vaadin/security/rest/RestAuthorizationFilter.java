@@ -20,13 +20,13 @@ import com.svenruppert.vaadin.security.audit.AccessDenied;
 import com.svenruppert.vaadin.security.audit.AccessGranted;
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.SessionExpired;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.audit.StepUpChallenged;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationEvaluator;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
-import com.svenruppert.vaadin.security.authorization.impl.SecurityAnnotationScanner;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
+import com.svenruppert.vaadin.security.authorization.impl.JSentinelAnnotationScanner;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 import com.svenruppert.vaadin.security.session.SessionMetadata;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
@@ -45,10 +45,10 @@ import java.util.Optional;
 public final class RestAuthorizationFilter {
 
   private final RestSubjectResolver subjectResolver;
-  private final SecurityAnnotationScanner scanner;
+  private final JSentinelAnnotationScanner scanner;
   private final RestAccessContextFactory contextFactory;
   private final HttpStatusDecisionMapper decisionMapper;
-  private final SecurityAuditService auditService;
+  private final JSentinelAuditService auditService;
 
   /**
    * Creates a REST authorization filter.
@@ -58,7 +58,7 @@ public final class RestAuthorizationFilter {
   public RestAuthorizationFilter(RestSubjectResolver subjectResolver) {
     this(
         subjectResolver,
-        new SecurityAnnotationScanner(),
+        new JSentinelAnnotationScanner(),
         new RestAccessContextFactory(),
         new HttpStatusDecisionMapper(),
         null);
@@ -66,7 +66,7 @@ public final class RestAuthorizationFilter {
 
   RestAuthorizationFilter(
       RestSubjectResolver subjectResolver,
-      SecurityAnnotationScanner scanner,
+      JSentinelAnnotationScanner scanner,
       RestAccessContextFactory contextFactory,
       HttpStatusDecisionMapper decisionMapper) {
     this(subjectResolver, scanner, contextFactory, decisionMapper, null);
@@ -74,10 +74,10 @@ public final class RestAuthorizationFilter {
 
   RestAuthorizationFilter(
       RestSubjectResolver subjectResolver,
-      SecurityAnnotationScanner scanner,
+      JSentinelAnnotationScanner scanner,
       RestAccessContextFactory contextFactory,
       HttpStatusDecisionMapper decisionMapper,
-      SecurityAuditService auditService) {
+      JSentinelAuditService auditService) {
     this.subjectResolver = subjectResolver;
     this.scanner = scanner;
     this.contextFactory = contextFactory;
@@ -130,12 +130,12 @@ public final class RestAuthorizationFilter {
       return;
     }
 
-    Optional<SecuritySubject> subject = subjectResolver.resolveSubject(request);
+    Optional<JSentinelSubject> subject = subjectResolver.resolveSubject(request);
 
     if (subject.isPresent()) {
       Optional<SessionMetadata> metadata = subjectResolver.resolveSessionMetadata(request);
       if (metadata.isPresent()) {
-        SessionPolicy<Object> policy = SecurityServiceResolver.sessionPolicy();
+        SessionPolicy<Object> policy = JSentinelServiceResolver.sessionPolicy();
         SessionPolicyDecision sessionDecision = policy.evaluate(metadata.get());
         if (!(sessionDecision instanceof SessionPolicyDecision.Active)) {
           auditSessionExpired(metadata.get(), subject.get(), sessionDecision);
@@ -155,16 +155,16 @@ public final class RestAuthorizationFilter {
   }
 
   private void auditSessionExpired(SessionMetadata metadata,
-                                   SecuritySubject subject,
+                                   JSentinelSubject subject,
                                    SessionPolicyDecision decision) {
     String reason = switch (decision) {
       case SessionPolicyDecision.Active ignored -> "Active";
       case SessionPolicyDecision.IdleTimeout ignored -> "IdleTimeout";
       case SessionPolicyDecision.AbsoluteLifetimeExceeded ignored -> "AbsoluteLifetimeExceeded";
     };
-    SecurityAuditService sink = auditService != null
+    JSentinelAuditService sink = auditService != null
         ? auditService
-        : SecurityServiceResolver.securityAuditService();
+        : JSentinelServiceResolver.securityAuditService();
     try {
       sink.publish(new SessionExpired(
           Instant.now(Clock.systemUTC()),
@@ -178,12 +178,12 @@ public final class RestAuthorizationFilter {
 
   private void audit(AuthorizationDecision decision,
                      AccessContext context,
-                     Optional<SecuritySubject> subject) {
-    SecurityAuditService sink = auditService != null
+                     Optional<JSentinelSubject> subject) {
+    JSentinelAuditService sink = auditService != null
         ? auditService
-        : SecurityServiceResolver.securityAuditService();
+        : JSentinelServiceResolver.securityAuditService();
 
-    String subjectId = subject.map(SecuritySubject::subjectId).orElse(null);
+    String subjectId = subject.map(JSentinelSubject::subjectId).orElse(null);
     String route = context.resourceName();
     Instant now = Instant.now(Clock.systemUTC());
 

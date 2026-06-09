@@ -18,7 +18,7 @@ package com.svenruppert.vaadin.security.persistence.testkit;
 
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
-import com.svenruppert.vaadin.security.session.SecurityVersion;
+import com.svenruppert.vaadin.security.session.JSentinelVersion;
 import com.svenruppert.vaadin.security.session.SessionId;
 import com.svenruppert.vaadin.security.session.SessionRecord;
 import com.svenruppert.vaadin.security.session.SessionStatus;
@@ -62,7 +62,7 @@ public interface SessionStoreContract {
         tenant,
         now,
         now,
-        SecurityVersion.INITIAL,
+        JSentinelVersion.INITIAL,
         SessionStatus.ACTIVE);
   }
 

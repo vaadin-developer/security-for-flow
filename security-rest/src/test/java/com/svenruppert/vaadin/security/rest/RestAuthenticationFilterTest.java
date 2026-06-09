@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.rest;
 
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -54,7 +54,7 @@ class RestAuthenticationFilterTest {
   void authenticated() {
     RecordingResponse response = new RecordingResponse();
     AtomicBoolean called = new AtomicBoolean();
-    SecuritySubject subject = new SecuritySubject("u", "User", Set.of(), Set.of());
+    JSentinelSubject subject = new JSentinelSubject("u", "User", Set.of(), Set.of());
     new RestAuthenticationFilter(req -> Optional.of(subject))
         .requireAuthenticated(REQUEST, response, (r, w) -> {
           called.set(true);

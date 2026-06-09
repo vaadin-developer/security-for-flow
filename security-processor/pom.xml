@@ -27,7 +27,7 @@
     Compile-time annotation processor that generates a Secured wrapper
     subclass for each @Secured-annotated concrete class. The generated
     wrapper routes every public, non-final, non-static method through
-    SecurityEnforcer when the method (or class) carries a method-security
+    JSentinelEnforcer when the method (or class) carries a method-security
     annotation (@RequiresRole, @RequiresPermission, @RequiresAnyPermission,
     @RequiresAllPermissions, @RequiresPolicy).
 

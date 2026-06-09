@@ -41,21 +41,21 @@ thread-local `SubjectStore`).
 ```
 
 ```java
-@SecurityAutoService(AuthenticationService.class)
+@JSentinelAutoService(AuthenticationService.class)
 public final class DemoAuthenticationService
     implements AuthenticationService<Credentials, User> { /* ... */ }
 
-@SecurityAutoService(AuthorizationService.class)
+@JSentinelAutoService(AuthorizationService.class)
 public final class DemoAuthorizationService
     implements AuthorizationService<User> { /* ... */ }
 ```
 
 ```java
 import com.svenruppert.vaadin.security.dx.standalone.bootstrap.StandaloneSecurity;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapMode;
 
 var runtime = StandaloneSecurity.bootstrap()
-    .mode(SecurityBootstrapMode.DEVELOPMENT)
+    .mode(JSentinelBootstrapMode.DEVELOPMENT)
     .audit(a -> a.logging().ringBuffer(128))
     .install();
 System.out.println(runtime.log());
@@ -74,7 +74,7 @@ compile (the V00.72 reader path was already in place). One line per
 generated wrapper, format
 `sourceFqn:generatedFqn:processor:proxyBuilderVer:method1,method2,...`.
 
-`SecurityDiagnostics.inspect()` reports every generated wrapper visible
+`JSentinelDiagnostics.inspect()` reports every generated wrapper visible
 through that file. Running `./mvnw -pl :demo-standalone -am compile`
 produces an entry for `MemberDirectorySecured`.
 

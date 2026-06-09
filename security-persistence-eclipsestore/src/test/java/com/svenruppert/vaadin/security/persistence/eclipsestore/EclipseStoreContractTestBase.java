@@ -25,7 +25,7 @@ import java.nio.file.Path;
 /**
  * Boilerplate for every contract test that runs an Eclipse-Store-
  * backed adapter: a fresh {@code @TempDir} per test method, a
- * matching {@link EclipseStoreSecurityStorage} started in
+ * matching {@link EclipseStoreJSentinelStorage} started in
  * {@code @BeforeEach}, and a clean shutdown in {@code @AfterEach}.
  * <p>
  * Concrete contract tests extend this class <strong>and</strong>
@@ -38,11 +38,11 @@ abstract class EclipseStoreContractTestBase {
   @TempDir
   Path tempDir;
 
-  protected EclipseStoreSecurityStorage storage;
+  protected EclipseStoreJSentinelStorage storage;
 
   @BeforeEach
   void startStorage() {
-    storage = EclipseStoreSecurityStorage.openAt(tempDir);
+    storage = EclipseStoreJSentinelStorage.openAt(tempDir);
   }
 
   @AfterEach

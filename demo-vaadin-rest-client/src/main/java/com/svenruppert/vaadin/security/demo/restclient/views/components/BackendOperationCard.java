@@ -20,7 +20,7 @@ import com.svenruppert.vaadin.security.demo.restclient.backend.BackendClientProv
 import com.svenruppert.vaadin.security.demo.restclient.backend.BackendException;
 import com.svenruppert.vaadin.security.demo.restclient.backend.RemoteAdminStatus;
 import com.svenruppert.vaadin.security.demo.restclient.backend.RemoteDocument;
-import com.svenruppert.vaadin.security.demo.restclient.security.ClientSecurityContext;
+import com.svenruppert.vaadin.security.demo.restclient.security.ClientJSentinelContext;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -97,7 +97,7 @@ public class BackendOperationCard extends Composite<VerticalLayout> {
   }
 
   private static void runWithToken(java.util.function.Consumer<String> action) {
-    String token = ClientSecurityContext.token().orElse(null);
+    String token = ClientJSentinelContext.token().orElse(null);
     if (token == null) {
       err("No active session — log in again");
       return;

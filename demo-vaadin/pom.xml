@@ -50,7 +50,7 @@
         <!--
             V00.72 fluent bootstrap. BootstrapServiceInitListener now calls
             VaadinSecurity.bootstrap() with .use(developmentDefaults()) at
-            Vaadin service init and prints the SecurityRuntime.log() banner.
+            Vaadin service init and prints the JSentinelRuntime.log() banner.
         -->
         <dependency>
             <groupId>com.svenruppert</groupId>
@@ -132,7 +132,7 @@
                       Wire security-processor as a compile-time annotation
                       processor. The processor expands @Secured-annotated
                       classes into a <Type>Secured subclass that routes
-                      every guarded method through SecurityEnforcer before
+                      every guarded method through JSentinelEnforcer before
                       the super-call.
                     -->
                     <annotationProcessorPaths>

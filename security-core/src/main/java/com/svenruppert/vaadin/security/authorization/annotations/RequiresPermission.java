@@ -30,7 +30,7 @@ import static java.lang.annotation.ElementType.TYPE;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({TYPE, METHOD})
-@SecurityAnnotation(RequiresPermissionEvaluator.class)
+@JSentinelAnnotation(RequiresPermissionEvaluator.class)
 public @interface RequiresPermission {
 
   /**

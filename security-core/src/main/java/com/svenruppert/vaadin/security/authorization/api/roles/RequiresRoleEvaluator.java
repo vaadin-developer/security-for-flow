@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.authorization.api.roles;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresRole;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationEvaluator;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 
 import java.util.Arrays;
@@ -44,7 +44,7 @@ public final class RequiresRoleEvaluator implements AuthorizationEvaluator<Requi
     boolean granted = RoleMatcher.containsAnyImplied(
         context.subject().orElseThrow().roleNames(),
         required,
-        SecurityServiceResolver.roleHierarchy());
+        JSentinelServiceResolver.roleHierarchy());
 
     return granted
         ? AuthorizationDecision.granted()

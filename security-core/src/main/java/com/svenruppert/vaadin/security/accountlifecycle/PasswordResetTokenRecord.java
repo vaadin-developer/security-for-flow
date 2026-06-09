@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.accountlifecycle;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 
@@ -42,7 +42,7 @@ import static java.util.Objects.requireNonNull;
  *                   still pending; if present must be strictly after
  *                   {@code createdAt}
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public record PasswordResetTokenRecord(
     String tokenHash,
     TenantId tenant,

@@ -29,9 +29,9 @@ import static java.util.Objects.requireNonNull;
 /** Eclipse-Store-backed {@link EmailVerificationTokenStore}. */
 final class EclipseStoreEmailVerificationTokenStore implements EmailVerificationTokenStore {
 
-  private final EclipseStoreSecurityStorage storage;
+  private final EclipseStoreJSentinelStorage storage;
 
-  EclipseStoreEmailVerificationTokenStore(EclipseStoreSecurityStorage storage) {
+  EclipseStoreEmailVerificationTokenStore(EclipseStoreJSentinelStorage storage) {
     this.storage = storage;
   }
 

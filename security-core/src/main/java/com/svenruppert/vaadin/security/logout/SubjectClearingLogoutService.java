@@ -17,8 +17,8 @@
 package com.svenruppert.vaadin.security.logout;
 
 import com.svenruppert.vaadin.security.audit.LogoutPerformed;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
 
 import java.time.Clock;
@@ -49,7 +49,7 @@ public final class SubjectClearingLogoutService<U> implements LogoutService {
   private final SubjectStore subjectStore;
   private final Class<U> subjectType;
   private final SubjectSessionRegistry registry;
-  private final SecurityAuditService auditService;
+  private final JSentinelAuditService auditService;
   private final List<LogoutListener> listeners = new CopyOnWriteArrayList<>();
 
   /**
@@ -70,14 +70,14 @@ public final class SubjectClearingLogoutService<U> implements LogoutService {
    * @param registry     session registry consulted for
    *                     {@link LogoutScope#AllSessionsOfSubject}
    * @param auditService audit sink, or {@code null} to resolve from
-   *                     {@link SecurityServiceResolver#securityAuditService()}
+   *                     {@link JSentinelServiceResolver#securityAuditService()}
    *                     at logout time
    */
   public SubjectClearingLogoutService(
       SubjectStore subjectStore,
       Class<U> subjectType,
       SubjectSessionRegistry registry,
-      SecurityAuditService auditService) {
+      JSentinelAuditService auditService) {
     this.subjectStore = Objects.requireNonNull(subjectStore, "subjectStore");
     this.subjectType = Objects.requireNonNull(subjectType, "subjectType");
     this.registry = Objects.requireNonNull(registry, "registry");
@@ -131,9 +131,9 @@ public final class SubjectClearingLogoutService<U> implements LogoutService {
   }
 
   private void audit(SubjectId subjectId, String sessionId, LogoutScope scope) {
-    SecurityAuditService sink = auditService != null
+    JSentinelAuditService sink = auditService != null
         ? auditService
-        : SecurityServiceResolver.securityAuditService();
+        : JSentinelServiceResolver.securityAuditService();
     try {
       sink.publish(new LogoutPerformed(
           Instant.now(Clock.systemUTC()), subjectId.value(), sessionId, scope));

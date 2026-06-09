@@ -12,8 +12,8 @@ package com.svenruppert.vaadin.security.starter.routes;
 
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationEvaluator;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.api.permissions.HasPermissions;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.roles.HasRoles;
@@ -42,7 +42,7 @@ public final class SecureRouteEvaluator implements AuthorizationEvaluator<Secure
 
   @Override
   public AuthorizationDecision evaluate(AccessContext context, SecureRoute annotation) {
-    Optional<SecuritySubject> maybeSubject = context.subject();
+    Optional<JSentinelSubject> maybeSubject = context.subject();
     if (maybeSubject.isEmpty()) {
       // Treat any check as Unauthenticated when no subject is bound.
       if (annotation.roles().length == 0
@@ -70,9 +70,9 @@ public final class SecureRouteEvaluator implements AuthorizationEvaluator<Secure
   }
 
   private static AuthorizationDecision evaluatePolicy(AccessContext context,
-                                                      SecuritySubject subject,
+                                                      JSentinelSubject subject,
                                                       String policyName) {
-    PolicyRegistry registry = SecurityServiceResolver.policyRegistry();
+    PolicyRegistry registry = JSentinelServiceResolver.policyRegistry();
     Optional<Policy> known = registry.find(policyName);
     if (known.isEmpty()) {
       return new AuthorizationDecision.Forbidden(
@@ -104,7 +104,7 @@ public final class SecureRouteEvaluator implements AuthorizationEvaluator<Secure
   }
 
   // Roles: any-of
-  private static AuthorizationDecision evaluateRoles(SecuritySubject subject, String[] roles) {
+  private static AuthorizationDecision evaluateRoles(JSentinelSubject subject, String[] roles) {
     Set<RoleName> subjectRoles = subject instanceof HasRoles hr
         ? copy(hr.roleNames()) : Collections.emptySet();
     boolean any = Arrays.stream(roles).anyMatch(r -> subjectRoles.contains(new RoleName(r)));
@@ -115,7 +115,7 @@ public final class SecureRouteEvaluator implements AuthorizationEvaluator<Secure
   }
 
   // Permissions: all-of
-  private static AuthorizationDecision evaluatePermissions(SecuritySubject subject, String[] perms) {
+  private static AuthorizationDecision evaluatePermissions(JSentinelSubject subject, String[] perms) {
     Set<PermissionName> subjectPerms = subject instanceof HasPermissions hp
         ? copy(hp.permissionNames()) : Collections.emptySet();
     boolean missing = Arrays.stream(perms).anyMatch(p -> !subjectPerms.contains(new PermissionName(p)));

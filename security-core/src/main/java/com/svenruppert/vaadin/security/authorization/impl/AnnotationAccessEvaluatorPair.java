@@ -23,7 +23,7 @@ import java.lang.annotation.Annotation;
 /**
  * Pairs a restriction annotation instance with the
  * evaluator class declared via
- * {@link com.svenruppert.vaadin.security.authorization.annotations.SecurityAnnotation}.
+ * {@link com.svenruppert.vaadin.security.authorization.annotations.JSentinelAnnotation}.
  *
  * @param annotation     the restriction annotation instance
  * @param evaluatorClass the evaluator class to instantiate

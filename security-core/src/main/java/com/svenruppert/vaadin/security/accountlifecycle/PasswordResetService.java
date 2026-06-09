@@ -18,9 +18,9 @@ package com.svenruppert.vaadin.security.accountlifecycle;
 
 import com.svenruppert.vaadin.security.audit.PasswordResetCompleted;
 import com.svenruppert.vaadin.security.audit.PasswordResetRequested;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.authentication.PasswordHasher;
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 
@@ -42,7 +42,7 @@ import static java.util.Objects.requireNonNull;
  *   <li>{@link #request(SubjectId, Duration) request(subject, ttl)} —
  *       generates a fresh plain token, persists only its hash,
  *       publishes a {@link PasswordResetRequested} audit event, and
- *       hands the plain token to the {@link SecurityNotificationSender}
+ *       hands the plain token to the {@link JSentinelNotificationSender}
  *       so the application can deliver it (mail, SMS, log).</li>
  *   <li>{@link #validate(String) validate(plain)} — looks the token
  *       up by its hash and returns the record only when it exists,
@@ -62,7 +62,7 @@ import static java.util.Objects.requireNonNull;
  * <p>Bound to one {@link TenantId} at construction. Multi-tenant
  * deployments instantiate one service per tenant.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class PasswordResetService {
 
   /** Default token entropy in bytes (256 bits). */
@@ -70,8 +70,8 @@ public final class PasswordResetService {
 
   private final PasswordResetTokenStore store;
   private final PasswordHasher hasher;
-  private final SecurityAuditService auditService;
-  private final SecurityNotificationSender notificationSender;
+  private final JSentinelAuditService auditService;
+  private final JSentinelNotificationSender notificationSender;
   private final TenantId tenant;
   private final Clock clock;
   private final Supplier<String> tokenSource;
@@ -88,8 +88,8 @@ public final class PasswordResetService {
    */
   public PasswordResetService(PasswordResetTokenStore store,
                               PasswordHasher hasher,
-                              SecurityAuditService auditService,
-                              SecurityNotificationSender notificationSender) {
+                              JSentinelAuditService auditService,
+                              JSentinelNotificationSender notificationSender) {
     this(store, hasher, auditService, notificationSender,
         TenantId.DEFAULT, Clock.systemUTC(), defaultTokenSource());
   }
@@ -111,8 +111,8 @@ public final class PasswordResetService {
    */
   public PasswordResetService(PasswordResetTokenStore store,
                               PasswordHasher hasher,
-                              SecurityAuditService auditService,
-                              SecurityNotificationSender notificationSender,
+                              JSentinelAuditService auditService,
+                              JSentinelNotificationSender notificationSender,
                               TenantId tenant,
                               Clock clock,
                               Supplier<String> tokenSource) {
@@ -150,7 +150,7 @@ public final class PasswordResetService {
         hash, tenant, subjectId, now, now.plus(ttl), Optional.empty());
     store.save(record);
     publishRequested(now, subjectId, hash);
-    notify(SecurityNotification.Kind.PASSWORD_RESET_REQUESTED,
+    notify(JSentinelNotification.Kind.PASSWORD_RESET_REQUESTED,
         subjectId, now,
         java.util.Map.of(
             "tokenPlain", plain,
@@ -195,7 +195,7 @@ public final class PasswordResetService {
   /**
    * Marks the supplied plain token consumed and publishes a
    * {@link PasswordResetCompleted} audit + a
-   * {@link SecurityNotification.Kind#PASSWORD_RESET_COMPLETED}
+   * {@link JSentinelNotification.Kind#PASSWORD_RESET_COMPLETED}
    * notification. Returns the consumed record exactly once;
    * subsequent calls on the same token yield empty.
    *
@@ -216,7 +216,7 @@ public final class PasswordResetService {
       return Optional.empty();
     }
     publishCompleted(now, record.subjectId(), record.tokenHash());
-    notify(SecurityNotification.Kind.PASSWORD_RESET_COMPLETED,
+    notify(JSentinelNotification.Kind.PASSWORD_RESET_COMPLETED,
         record.subjectId(), now, java.util.Map.of());
     return Optional.of(record.withConsumedAt(now));
   }
@@ -259,12 +259,12 @@ public final class PasswordResetService {
     }
   }
 
-  private void notify(SecurityNotification.Kind kind,
+  private void notify(JSentinelNotification.Kind kind,
                       SubjectId subjectId,
                       Instant at,
                       java.util.Map<String, String> attributes) {
     try {
-      notificationSender.send(new SecurityNotification(
+      notificationSender.send(new JSentinelNotification(
           kind, subjectId, tenant, at, attributes));
     } catch (RuntimeException ignored) {
       // senders must not block the lifecycle flow

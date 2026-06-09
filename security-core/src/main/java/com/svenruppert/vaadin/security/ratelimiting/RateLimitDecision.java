@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.ratelimiting;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 import java.time.Duration;
 
@@ -29,7 +29,7 @@ import static java.util.Objects.requireNonNull;
  * request through or refuse it with a {@code 429 Too Many
  * Requests} (REST) / equivalent rejection (UI).
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public sealed interface RateLimitDecision {
 
   /**

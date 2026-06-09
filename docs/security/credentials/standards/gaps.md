@@ -27,8 +27,8 @@ document.
 | ASVS 2.8 | One-time verifier (TOTP / HOTP)                                          | Deferred | V00.75 (TBD)   |
 | ASVS 2.9 | Cryptographic verifier (WebAuthn / FIDO2)                                | Deferred | V00.80 (TBD)   |
 | NIST 8.1.5 | Verifier impersonation resistance                                       | Deferred | V00.80 (TBD)   |
-| Konzept V00.71 §10 | Optional foreign hash import for brownfield migration            | Deferred | V00.72 (Prompt 036) |
-| Konzept V00.71 §3 | Password strength estimator implementation (zxcvbn-style)         | Deferred | V00.72         |
+| Konzept V00.71 §10 | Optional foreign hash import for brownfield migration            | Deferred | V00.71 Prompt 036 (still open) |
+| Konzept V00.71 §3 | Password strength estimator implementation (zxcvbn-style)         | Deferred | TBD — no committed version |
 
 ## Operator-only items
 

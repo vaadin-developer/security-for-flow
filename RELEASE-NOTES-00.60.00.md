@@ -6,7 +6,7 @@
 
 This release closes the Konzept-V00.60 milestone — every one of the
 seven security-core concept points (`PasswordHasher`,
-`SecurityAuditService`, `LoginAttemptPolicy`, `SessionPolicy`,
+`JSentinelAuditService`, `LoginAttemptPolicy`, `SessionPolicy`,
 `AuthorizationService` role-permission mapping, `LogoutService`,
 `ActionAuthorizationService`) ships as a stable SPI with a default
 implementation, audit hooks, and adapter wiring.
@@ -34,7 +34,7 @@ is noted in the migration section.
   `Secured.requireAllowed(...)` for callbacks
 - **`demo-standalone`** — interactive library-borrowing CLI with three
   seeded users showing role-based + permission-based access enforcement
-- **Audit pipeline** — `SecurityAuditService` with `publish/query`,
+- **Audit pipeline** — `JSentinelAuditService` with `publish/query`,
   16 sealed `AuditEvent` record variants, `AuditSink` contract,
   `RingBufferAuditSink` + `LoggingAuditSink` + `DefaultCompositeAuditService`
 - **`LoginAttemptPolicy` SPI** with sealed `LoginAttemptDecision`
@@ -88,7 +88,7 @@ on the core + their adapter.
 
 | Type | Module | Default |
 |---|---|---|
-| `SecurityAuditService` | core | `DefaultCompositeAuditService` (RingBuffer + Logging) |
+| `JSentinelAuditService` | core | `DefaultCompositeAuditService` (RingBuffer + Logging) |
 | `AuditSink` | core | `RingBufferAuditSink`, `LoggingAuditSink` |
 | sealed `AuditEvent` (16 records) | core | — |
 | `AuditQuery(types, subjectId, from, to, limit)` + matchers | core | — |
@@ -188,7 +188,7 @@ both `Created` returns and the three rejection paths (`Unknown`,
 
 ### Resolver completeness
 
-`SecurityServiceResolver` now exposes a uniform strict / `find...()` /
+`JSentinelServiceResolver` now exposes a uniform strict / `find...()` /
 `set...()` triple for every cross-cutting service:
 `authenticationService`, `authorizationService`,
 `securityAuditService`, `actionAuthorizationService`,
@@ -355,7 +355,7 @@ logoutService.logout(SubjectId.of(String.valueOf(user.id())),
 Existing applications keep working without any of these. Wire them
 in only when you need them:
 
-- `SecurityAuditService` — leave registered or override with your
+- `JSentinelAuditService` — leave registered or override with your
   own backend
 - `LoginAttemptPolicy` — register an implementation to get throttling
 - `SessionPolicy` — register a `TimeoutSessionPolicy` to get idle /
@@ -399,5 +399,5 @@ blocks the login flow.
   `StandaloneLoginFlow`).
 - Cluster-mode is intentionally out of scope. The SPIs are shaped
   so Redis / DB / IAM-backed `SubjectSessionRegistry`,
-  `SecurityAuditService`, and `LoginAttemptPolicy` implementations
+  `JSentinelAuditService`, and `LoginAttemptPolicy` implementations
   can be drop-in replacements when needed.

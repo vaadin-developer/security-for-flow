@@ -24,7 +24,7 @@ package com.svenruppert.vaadin.security.authorization.api.roles;
 
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.authorization.api.permissions.HasPermissions;
@@ -90,15 +90,15 @@ class RoleBasedAccessEvaluatorTest {
 
   @BeforeEach
   void setUp() {
-    SecurityServiceResolver.resetAll();
-    SecurityServiceResolver.setAuthenticationService(new TestAuthn());
+    JSentinelServiceResolver.resetAll();
+    JSentinelServiceResolver.setAuthenticationService(new TestAuthn());
     store = new HeapStore();
     SubjectStores.setSubjectStore(store);
   }
 
   @AfterEach
   void tearDown() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
   }
 
   private static AccessContext ctx() {
@@ -148,7 +148,7 @@ class RoleBasedAccessEvaluatorTest {
   @DisplayName("RoleHierarchy implied role grants access")
   void hierarchyImpliedGrants() {
     store.setCurrentSubject(new Sub(Set.of("ADMIN")), Sub.class);
-    SecurityServiceResolver.setRoleHierarchy(role -> {
+    JSentinelServiceResolver.setRoleHierarchy(role -> {
       if ("ADMIN".equals(role.value())) {
         return Set.of(new RoleName("ADMIN"), new RoleName("VIEWER"));
       }

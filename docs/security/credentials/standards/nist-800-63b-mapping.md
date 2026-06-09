@@ -63,7 +63,7 @@ Out of scope of V00.71 — credentials, not transport.
 
 | §       | Requirement                                                            | Status | Maps to                        | Notes |
 |---------|------------------------------------------------------------------------|:------:|---------------------------------|-------|
-| 7.1.1   | Subscriber actions recorded                                             | ✅ | PWH-N1 / SecurityAuditService  | `LoginSucceeded`, `LoginFailed`, etc. |
+| 7.1.1   | Subscriber actions recorded                                             | ✅ | PWH-N1 / JSentinelAuditService  | `LoginSucceeded`, `LoginFailed`, etc. |
 | 7.1.1   | Verifier actions recorded                                               | ✅ | PWH-N1                          | `CredentialVerification*` events. |
 | 7.1.1   | Records retain enough detail for audit                                  | ⚙️ | PWH-N3                          | Retention is operator-configured. |
 

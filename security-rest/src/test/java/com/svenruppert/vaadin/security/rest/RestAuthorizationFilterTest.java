@@ -17,7 +17,7 @@
 package com.svenruppert.vaadin.security.rest;
 
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPermission;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -146,8 +146,8 @@ class RestAuthorizationFilterTest {
     return new SimpleRestRequest("DELETE", "/api/documents/42", Map.of(), Map.of());
   }
 
-  private static SecuritySubject subject(Set<PermissionName> permissions) {
-    return new SecuritySubject("u1", "User", Set.of(), permissions);
+  private static JSentinelSubject subject(Set<PermissionName> permissions) {
+    return new JSentinelSubject("u1", "User", Set.of(), permissions);
   }
 
   static final class HandlerFixture {

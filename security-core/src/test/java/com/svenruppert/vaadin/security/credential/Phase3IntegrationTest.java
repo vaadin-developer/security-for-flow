@@ -24,7 +24,7 @@ package com.svenruppert.vaadin.security.credential;
 
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.credential.change.PasswordChangeCommand;
 import com.svenruppert.vaadin.security.credential.change.PasswordChangeResult;
 import com.svenruppert.vaadin.security.credential.change.PasswordChangeService;
@@ -84,7 +84,7 @@ class Phase3IntegrationTest {
   private static final Instant T0 = Instant.parse("2026-06-01T12:00:00Z");
   private static final Duration TTL = Duration.ofMinutes(15);
 
-  private static final class RecordingAudit implements SecurityAuditService {
+  private static final class RecordingAudit implements JSentinelAuditService {
     final List<AuditEvent> events = new ArrayList<>();
     @Override public void publish(AuditEvent event) { events.add(event); }
     @Override public List<AuditEvent> query(AuditQuery q) { return List.copyOf(events); }

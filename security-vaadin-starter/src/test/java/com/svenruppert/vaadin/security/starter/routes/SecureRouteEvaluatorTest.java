@@ -11,7 +11,7 @@
 package com.svenruppert.vaadin.security.starter.routes;
 
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
@@ -55,7 +55,7 @@ class SecureRouteEvaluatorTest {
 
   @Test
   void permissionsAreAllOf() {
-    SecuritySubject sub = subject(Set.of(),
+    JSentinelSubject sub = subject(Set.of(),
         Set.of(new PermissionName("doc:read")));
     // Subject has only "doc:read"; annotation needs read+write.
     AuthorizationDecision d = evaluator.evaluate(ctx(Optional.of(sub)),
@@ -66,7 +66,7 @@ class SecureRouteEvaluatorTest {
   @Test
   void combinedRolesAndPermissions_grantedOnlyWhenBoth() {
     // Subject has role ADMIN but not permission doc:write
-    SecuritySubject sub = subject(Set.of(new RoleName("ADMIN")), Set.of());
+    JSentinelSubject sub = subject(Set.of(new RoleName("ADMIN")), Set.of());
     AuthorizationDecision d = evaluator.evaluate(ctx(Optional.of(sub)),
         ann(new String[]{"ADMIN"}, new String[]{"doc:write"}, ""));
     assertInstanceOf(AuthorizationDecision.Forbidden.class, d);
@@ -83,7 +83,7 @@ class SecureRouteEvaluatorTest {
 
   @Test
   void policyAlone_isForbidden_v0072Limitation() {
-    SecuritySubject sub = subject(Set.of(), Set.of());
+    JSentinelSubject sub = subject(Set.of(), Set.of());
     AuthorizationDecision d = evaluator.evaluate(ctx(Optional.of(sub)),
         ann(new String[]{}, new String[]{}, "doc.owner-or-admin"));
     assertInstanceOf(AuthorizationDecision.Forbidden.class, d);
@@ -104,17 +104,17 @@ class SecureRouteEvaluatorTest {
     };
   }
 
-  private static SecuritySubject subject(Set<RoleName> roles, Set<PermissionName> perms) {
-    return new SecuritySubject("u1", "Test User", roles, perms);
+  private static JSentinelSubject subject(Set<RoleName> roles, Set<PermissionName> perms) {
+    return new JSentinelSubject("u1", "Test User", roles, perms);
   }
 
-  private static AccessContext ctx(Optional<SecuritySubject> sub) {
+  private static AccessContext ctx(Optional<JSentinelSubject> sub) {
     return new AccessContext(sub, "vaadin-route", "/test", "view", Map.of());
   }
 
   @Test
   void granted_whenSubjectHasAllPermissions() {
-    SecuritySubject sub = subject(Set.of(),
+    JSentinelSubject sub = subject(Set.of(),
         Set.of(new PermissionName("doc:read"), new PermissionName("doc:write")));
     AuthorizationDecision d = evaluator.evaluate(ctx(Optional.of(sub)),
         ann(new String[]{}, new String[]{"doc:read", "doc:write"}, ""));

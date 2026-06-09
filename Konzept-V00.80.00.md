@@ -105,7 +105,7 @@ ersetzt aber keine etablierten Identity-Provider-Clients.
 
 Ziel:
 
-- Externe Claims werden in interne `SecuritySubject`, Rollen,
+- Externe Claims werden in interne `JSentinelSubject`, Rollen,
   Permissions und Tenant-Kontext übersetzt.
 - Die interne Autorisierung bleibt Framework-eigen.
 - Token- und Session-Verarbeitung bleiben klar getrennt.
@@ -215,7 +215,7 @@ DeviceTrustedEvent
 DeviceRevokedEvent
 RateLimitExceededEvent
 SuspiciousLoginDetectedEvent
-SessionSecurityVersionOutdatedEvent
+SessionJSentinelVersionOutdatedEvent
 ```
 
 Publizierte Events:
@@ -304,19 +304,19 @@ LoggingEventPublisher
 WebhookEventPublisher
 OpenTelemetryEventPublisher
 SiemEventExporter
-SecurityAlertPublisher
+JSentinelAlertPublisher
 EventStreamPublisher
 ```
 
 EventBus-Fehler werden selbst beobachtbar:
 
 ```text
-SecurityEventEnvelopeRejectedEvent
-SecurityEventReplayDetectedEvent
-SecurityEventSignatureInvalidEvent
-SecurityEventSequenceViolationEvent
-SecurityEventListenerFailedEvent
-SecurityEventDeadLetteredEvent
+JSentinelEventEnvelopeRejectedEvent
+JSentinelEventReplayDetectedEvent
+JSentinelEventSignatureInvalidEvent
+JSentinelEventSequenceViolationEvent
+JSentinelEventListenerFailedEvent
+JSentinelEventDeadLetteredEvent
 ```
 
 ### 9. Betrieb und Monitoring
@@ -365,9 +365,9 @@ security.eventbus.sse.reconnects.total
 SPIs:
 
 ```text
-SecurityMetricsPublisher
-SecurityHealthIndicator
-SecurityDiagnostics
+JSentinelMetricsPublisher
+JSentinelHealthIndicator
+JSentinelDiagnostics
 ```
 
 Ziel ist kein großer Monitoring-Stack, sondern saubere Exportpunkte.
@@ -447,8 +447,8 @@ Geplante Bausteine:
 UserAnonymizationService
 RetentionPolicy
 SoftDeletePolicy
-SecurityBackupService
-SecurityRestoreService
+JSentinelBackupService
+JSentinelRestoreService
 ```
 
 Ziele:

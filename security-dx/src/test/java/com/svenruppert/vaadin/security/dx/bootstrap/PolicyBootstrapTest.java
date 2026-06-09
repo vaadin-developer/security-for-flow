@@ -10,12 +10,12 @@
  */
 package com.svenruppert.vaadin.security.dx.bootstrap;
 
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.dx.internal.AbstractSecurityBootstrap;
-import com.svenruppert.vaadin.security.dx.runtime.RegisteredSecurityService;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapWarning;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.vaadin.security.dx.internal.AbstractJSentinelBootstrap;
+import com.svenruppert.vaadin.security.dx.runtime.RegisteredJSentinelService;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapMode;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapWarning;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelRuntime;
 import com.svenruppert.vaadin.security.dx.runtime.Severity;
 import com.svenruppert.vaadin.security.policy.api.Policy;
 import com.svenruppert.vaadin.security.policy.api.SubjectPredicates;
@@ -42,11 +42,11 @@ class PolicyBootstrapTest {
   @BeforeEach
   @AfterEach
   void resetResolver() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
   }
 
   @Test
-  @DisplayName(".register(policy) lands in the default PolicyRegistry from SecurityServiceResolver")
+  @DisplayName(".register(policy) lands in the default PolicyRegistry from JSentinelServiceResolver")
   void registerLandsInDefaultRegistry() {
     Policy policy = Policy.named("docs.viewer")
         .allowIf(SubjectPredicates.hasRole("ROLE_USER"))
@@ -55,11 +55,11 @@ class PolicyBootstrapTest {
     new TestBootstrap()
         .policies(p -> p.register(policy))
         .install();
-    assertTrue(SecurityServiceResolver.policyRegistry().find("docs.viewer").isPresent());
+    assertTrue(JSentinelServiceResolver.policyRegistry().find("docs.viewer").isPresent());
   }
 
   @Test
-  @DisplayName(".registry(external) replaces the default via SecurityServiceResolver.setPolicyRegistry")
+  @DisplayName(".registry(external) replaces the default via JSentinelServiceResolver.setPolicyRegistry")
   void externalRegistryReplacesDefault() {
     RecordingPolicyRegistry external = new RecordingPolicyRegistry();
     Policy policy = Policy.named("docs.owner")
@@ -69,7 +69,7 @@ class PolicyBootstrapTest {
     new TestBootstrap()
         .policies(p -> p.registry(external).register(policy))
         .install();
-    assertSame(external, SecurityServiceResolver.policyRegistry());
+    assertSame(external, JSentinelServiceResolver.policyRegistry());
     assertTrue(external.registered.containsKey("docs.owner"));
   }
 
@@ -80,29 +80,29 @@ class PolicyBootstrapTest {
     new TestBootstrap()
         .policies(p -> p.resourceResolver(resolver))
         .install();
-    assertTrue(SecurityServiceResolver.resourceResolverRegistry()
+    assertTrue(JSentinelServiceResolver.resourceResolverRegistry()
         .find("document").isPresent());
   }
 
   // ── helpers ──────────────────────────────────────────────────────
 
   private static final class TestBootstrap
-      extends AbstractSecurityBootstrap<TestBootstrap> {
+      extends AbstractJSentinelBootstrap<TestBootstrap> {
     @Override
-    public SecurityRuntime install() {
-      List<RegisteredSecurityService> services = new ArrayList<>();
-      List<SecurityBootstrapWarning> warnings = new ArrayList<>();
+    public JSentinelRuntime install() {
+      List<RegisteredJSentinelService> services = new ArrayList<>();
+      List<JSentinelBootstrapWarning> warnings = new ArrayList<>();
       applyAuditConfiguration(services, warnings);
       applySessionConfiguration(AdapterKind.VAADIN, services, warnings);
       applyRoleConfiguration(services, warnings);
       applyCredentialConfiguration(services, warnings);
       applyPolicyConfiguration(services, warnings);
-      SecurityBootstrapMode mode = state.mode();
-      if (mode == SecurityBootstrapMode.STRICT
+      JSentinelBootstrapMode mode = state.mode();
+      if (mode == JSentinelBootstrapMode.STRICT
           && warnings.stream().anyMatch(w -> w.severity() == Severity.ERROR)) {
-        throw new SecurityBootstrapException(warnings);
+        throw new JSentinelBootstrapException(warnings);
       }
-      return new SecurityRuntime(services, warnings, mode);
+      return new JSentinelRuntime(services, warnings, mode);
     }
   }
 

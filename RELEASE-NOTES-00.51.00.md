@@ -25,7 +25,7 @@ opt-in.
 - Complete **first-run bootstrap** subsystem (3 modes, atomic POSIX-0600
   token files, configurable TTL, fail-fast on `DISABLED + no admin`)
 - **Adapter-neutral decision model** (`AuthorizationDecision`,
-  `AccessContext`, `SecuritySubject`) usable from both Vaadin and REST
+  `AccessContext`, `JSentinelSubject`) usable from both Vaadin and REST
 - **Generic annotations** `@RequiresRole`, `@RequiresPermission`,
   `@ProtectedBy` shipped with built-in evaluators
 - **Central `LogoutService`** SPI with Vaadin adapter that handles
@@ -75,9 +75,9 @@ demo-vaadin-rest-client -> security-core, security-vaadin, demo-rest-shared
 |---|---|---|
 | `AuthorizationEvaluator<A>` | `authorization.api` | **stable** — adapter-neutral counterpart to `AccessEvaluator` |
 | `AuthorizationDecision` (sealed: `Granted` / `Unauthenticated` / `Forbidden`) | `authorization.api` | **stable** |
-| `SecuritySubject` (record) | `authorization.api` | **stable** |
+| `JSentinelSubject` (record) | `authorization.api` | **stable** |
 | `AccessContext` (record) | `authorization.navigation` | **stable** |
-| `RoleName` / `PermissionName` (records) | `authorization.api.roles` / `.permissions` | **stable** for `RoleName`, `@ExperimentalSecurityApi` for `PermissionName` |
+| `RoleName` / `PermissionName` (records) | `authorization.api.roles` / `.permissions` | **stable** for `RoleName`, `@ExperimentalJSentinelApi` for `PermissionName` |
 | `HasRoles` / `HasPermissions` | `authorization.api.roles` / `.permissions` | **stable** for roles, experimental for permissions |
 | `RolePermissionMapping` + `StaticRolePermissionMapping` (with Builder) | `authorization.api.permissions` | **stable** |
 | `RolePermissionResolver` | `authorization.api.permissions` | **stable** |
@@ -87,7 +87,7 @@ demo-vaadin-rest-client -> security-core, security-vaadin, demo-rest-shared
 | `LogoutService` + `LogoutContext` + `LogoutPolicy` | `authorization.api` | **stable** |
 | `SubjectClearingLogoutService<U>` (default) | `authorization.api` | **stable** |
 | `@RequiresRole` / `@RequiresPermission` / `@ProtectedBy` + their evaluators | `authorization.annotations` / `.api.*` | **stable** |
-| `SecurityAnnotationScanner` (cached, multi-annotation rejection) | `authorization.impl` | **stable** |
+| `JSentinelAnnotationScanner` (cached, multi-annotation rejection) | `authorization.impl` | **stable** |
 | Bootstrap subsystem (see below) | `bootstrap` | **stable** |
 
 ### `security-vaadin`
@@ -193,7 +193,7 @@ before the local logout to invalidate the bearer token on the server.
 The same evaluator can now drive both Vaadin and REST. The fixed
 `VaadinAccessContextFactory` populates `AccessContext.subject()` from
 `SubjectStores` + `AuthorizationService` and adapts the application's
-own user type into a `SecuritySubject` snapshot, so generic evaluators
+own user type into a `JSentinelSubject` snapshot, so generic evaluators
 (`RequiresRoleEvaluator`, `RequiresPermissionEvaluator`) work without
 each application writing its own.
 
@@ -356,7 +356,7 @@ StaticRolePermissionMapping mapping = StaticRolePermissionMapping.builder()
 The following items are described in `Konzept-V00.60.00.md` and remain
 **not yet implemented** in 00.51.00:
 
-- `SecurityAuditService` (Login / Logout / AccessDenied / ActionDenied
+- `JSentinelAuditService` (Login / Logout / AccessDenied / ActionDenied
   events)
 - `LoginAttemptPolicy` (brute-force throttling)
 - minimal `SessionPolicy` (idle timeout, absolute lifetime, rotation
@@ -365,7 +365,7 @@ The following items are described in `Konzept-V00.60.00.md` and remain
 - `ActionAuthorizationService` as injectable SPI (currently only the
   static `PermissionGuard`)
 - Karibu / TestBench-based UI tests
-- `SecurityServiceResolver` extensions for the new SPIs
+- `JSentinelServiceResolver` extensions for the new SPIs
 
 A V00.60.00 / V00.65.00 with at least audit + brute-force + minimal
 session policy is intended to follow.

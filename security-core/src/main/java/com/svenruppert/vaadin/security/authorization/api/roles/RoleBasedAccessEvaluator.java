@@ -17,7 +17,7 @@
 package com.svenruppert.vaadin.security.authorization.api.roles;
 
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessDecision;
@@ -57,7 +57,7 @@ public abstract class RoleBasedAccessEvaluator<T extends Annotation, U>
         }
 
         final AuthorizationService<U> authorizationService = this.authorizationService();
-        final RoleHierarchy hierarchy = SecurityServiceResolver.roleHierarchy();
+        final RoleHierarchy hierarchy = JSentinelServiceResolver.roleHierarchy();
 
         Set<RoleName> heldRoles = currentSubject.stream()
                 .map(authorizationService::rolesFor)
@@ -74,7 +74,7 @@ public abstract class RoleBasedAccessEvaluator<T extends Annotation, U>
 
     @SuppressWarnings("unchecked")
     private Class<U> subjectType() {
-        return (Class<U>) SecurityServiceResolver
+        return (Class<U>) JSentinelServiceResolver
             .<Object, Object>authenticationService()
             .subjectType();
     }

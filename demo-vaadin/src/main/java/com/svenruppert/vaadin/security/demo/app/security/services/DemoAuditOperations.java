@@ -18,11 +18,11 @@ package com.svenruppert.vaadin.security.demo.app.security.services;
 
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresAllPermissions;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPermission;
 import com.svenruppert.vaadin.security.authorization.annotations.Secured;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 
 import java.util.List;
 
@@ -32,7 +32,7 @@ import java.util.List;
  * processor. The {@link Secured @Secured} mark triggers code
  * generation: a {@code DemoAuditOperationsSecured} subclass is
  * emitted alongside this class, with each annotated method
- * delegating through {@code SecurityEnforcer} before invoking
+ * delegating through {@code JSentinelEnforcer} before invoking
  * {@code super.<method>(...)}.
  * <p>
  * Concrete-class flavour of the same demonstration that
@@ -52,7 +52,7 @@ public class DemoAuditOperations {
    */
   @RequiresPermission("audit:read")
   public List<AuditEvent> listEvents() {
-    SecurityAuditService audit = SecurityServiceResolver.securityAuditService();
+    JSentinelAuditService audit = JSentinelServiceResolver.securityAuditService();
     return audit.query(AuditQuery.all());
   }
 
@@ -73,7 +73,7 @@ public class DemoAuditOperations {
     if (days < 0) {
       throw new IllegalArgumentException("days must be non-negative");
     }
-    SecurityAuditService audit = SecurityServiceResolver.securityAuditService();
+    JSentinelAuditService audit = JSentinelServiceResolver.securityAuditService();
     // Pretend purge: count events that would qualify. Production
     // code would actually drop them via AuditEventStore.purgeOlderThan.
     return audit.query(AuditQuery.all()).size();

@@ -16,8 +16,8 @@
  */
 package com.svenruppert.vaadin.security.policy.api;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.policy.spi.ResourceResolverRegistry;
 
 import java.util.Map;
@@ -33,7 +33,7 @@ import static java.util.Objects.requireNonNull;
  *
  * <p>The predicates consult the
  * {@link ResourceResolverRegistry} resolved via
- * {@link SecurityServiceResolver#resourceResolverRegistry()} to turn
+ * {@link JSentinelServiceResolver#resourceResolverRegistry()} to turn
  * the reference into a resolved attribute map. None of them throw on
  * missing references, missing resolvers, or unresolvable ids — they
  * return {@code false} so a policy denies gracefully.
@@ -47,7 +47,7 @@ import static java.util.Objects.requireNonNull;
  *   <li>resolve to attributes via the registry.</li>
  * </ul>
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class ResourcePredicates {
 
   private ResourcePredicates() {
@@ -120,7 +120,7 @@ public final class ResourcePredicates {
     if (!expectedType.equals(ref.resourceType())) {
       return Optional.empty();
     }
-    return SecurityServiceResolver.resourceResolverRegistry()
+    return JSentinelServiceResolver.resourceResolverRegistry()
         .resolveAttributes(ref);
   }
 

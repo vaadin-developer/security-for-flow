@@ -24,10 +24,10 @@ import com.svenruppert.vaadin.security.credential.store.CredentialStore;
  * <ul>
  *   <li>{@link #passwordHasher(PasswordHasher)} is the legacy V00.70
  *       resolver path — wired through
- *       {@code SecurityServiceResolver.setPasswordHashingService(...)}.</li>
+ *       {@code JSentinelServiceResolver.setPasswordHashingService(...)}.</li>
  *   <li>{@link #hashing(PasswordHashingService)} is the V00.71
  *       credential-pipeline path — stored in DX state and reported
- *       in {@code SecurityRuntime}; <strong>never</strong> stuffed
+ *       in {@code JSentinelRuntime}; <strong>never</strong> stuffed
  *       into the legacy setter.</li>
  *   <li>{@link #pbkdf2Defaults()} sets BOTH worlds; {@link #modern()}
  *       sets only the V00.71 pipeline and requires
@@ -51,7 +51,7 @@ public interface CredentialBootstrap {
   /**
    * Convenience: sets both the legacy {@code Pbkdf2PasswordHasher}
    * AND the V00.71 {@code PasswordHashingServices.defaults()}.
-   * {@code SecurityRuntime} reports them as two separate entries —
+   * {@code JSentinelRuntime} reports them as two separate entries —
    * legacy under {@link PasswordHasher}, pipeline under
    * {@link PasswordHashingService}.
    */
@@ -60,7 +60,7 @@ public interface CredentialBootstrap {
   /**
    * Configures the V00.71 modern (BouncyCastle) password-hashing
    * pipeline. Requires {@code security-crypto-bc} on the classpath;
-   * throws {@code SecurityBootstrapException} with code
+   * throws {@code JSentinelBootstrapException} with code
    * {@code credentials/modern-without-bc} when the module is missing.
    * Never silently falls back to PBKDF2.
    */

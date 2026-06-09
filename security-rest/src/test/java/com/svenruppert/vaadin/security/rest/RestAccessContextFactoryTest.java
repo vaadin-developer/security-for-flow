@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.rest;
 
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -61,7 +61,7 @@ class RestAccessContextFactoryTest {
   @Test
   @DisplayName("subject Optional is forwarded to the context as-is")
   void subjectIsForwarded() {
-    SecuritySubject subject = new SecuritySubject("u1", "User", Set.of(), Set.of());
+    JSentinelSubject subject = new JSentinelSubject("u1", "User", Set.of(), Set.of());
 
     AccessContext ctx = factory.create(req(), Optional.of(subject), "read", Map.of());
 

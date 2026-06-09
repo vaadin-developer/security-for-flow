@@ -10,19 +10,19 @@
  */
 package com.svenruppert.vaadin.security.dx.bootstrap;
 
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectIdResolver;
-import com.svenruppert.vaadin.security.dx.internal.AbstractSecurityBootstrap;
-import com.svenruppert.vaadin.security.dx.runtime.RegisteredSecurityService;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapWarning;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime;
+import com.svenruppert.vaadin.security.dx.internal.AbstractJSentinelBootstrap;
+import com.svenruppert.vaadin.security.dx.runtime.RegisteredJSentinelService;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapMode;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapWarning;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelRuntime;
 import com.svenruppert.vaadin.security.dx.runtime.Severity;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 import com.svenruppert.vaadin.security.session.InMemorySessionStore;
-import com.svenruppert.vaadin.security.session.SecurityVersion;
-import com.svenruppert.vaadin.security.session.SecurityVersionKey;
-import com.svenruppert.vaadin.security.session.SecurityVersionStore;
+import com.svenruppert.vaadin.security.session.JSentinelVersion;
+import com.svenruppert.vaadin.security.session.JSentinelVersionKey;
+import com.svenruppert.vaadin.security.session.JSentinelVersionStore;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
 import com.svenruppert.vaadin.security.session.SessionStore;
 import com.svenruppert.vaadin.security.session.TimeoutSessionPolicy;
@@ -55,18 +55,18 @@ class SessionBootstrapTest {
   @BeforeEach
   @AfterEach
   void resetResolver() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
   }
 
   @Test
   @DisplayName("timeout + storeBacked constructs and registers a TimeoutSessionPolicy")
   void timeoutAndStoreConstructsTimeoutPolicy() {
     SessionStore store = new InMemorySessionStore();
-    SecurityRuntime runtime = new VaadinTestBootstrap()
+    JSentinelRuntime runtime = new VaadinTestBootstrap()
         .sessions(s -> s.storeBacked(store).timeout(Duration.ofMinutes(15)))
         .install();
 
-    SessionPolicy<?> policy = SecurityServiceResolver.findSessionPolicy().orElseThrow();
+    SessionPolicy<?> policy = JSentinelServiceResolver.findSessionPolicy().orElseThrow();
     assertInstanceOf(TimeoutSessionPolicy.class, policy);
     assertTrue(runtime.services().stream()
         .anyMatch(s -> SessionPolicy.class.equals(s.spi())));
@@ -82,30 +82,30 @@ class SessionBootstrapTest {
     new VaadinTestBootstrap()
         .sessions(s -> s.policy(custom).timeout(Duration.ofHours(1)))
         .install();
-    SessionPolicy<?> registered = SecurityServiceResolver.findSessionPolicy().orElseThrow();
+    SessionPolicy<?> registered = JSentinelServiceResolver.findSessionPolicy().orElseThrow();
     assertSame(custom, registered, "custom policy must not be wrapped or replaced");
   }
 
   @Test
   @DisplayName(".securityVersion(...) + .subjectIdResolver(...) register both via resolver")
   void securityVersionAndSubjectIdResolverRegister() {
-    SecurityVersionStore vstore = new RecordingVersionStore();
+    JSentinelVersionStore vstore = new RecordingVersionStore();
     SubjectIdResolver<String> resolver = subject -> SubjectId.of(subject);
     new VaadinTestBootstrap()
         .sessions(s -> s.securityVersion(vstore).subjectIdResolver(resolver))
         .install();
-    assertSame(vstore, SecurityServiceResolver.findSecurityVersionStore().orElseThrow());
-    Optional<SubjectIdResolver<Object>> found = SecurityServiceResolver.findSubjectIdResolver();
+    assertSame(vstore, JSentinelServiceResolver.findJSentinelVersionStore().orElseThrow());
+    Optional<SubjectIdResolver<Object>> found = JSentinelServiceResolver.findSubjectIdResolver();
     assertTrue(found.isPresent());
   }
 
   @Test
   @DisplayName("STRICT timeout without store throws sessions/missing-store")
   void strictTimeoutWithoutStoreThrows() {
-    SecurityBootstrapException ex = assertThrows(
-        SecurityBootstrapException.class,
+    JSentinelBootstrapException ex = assertThrows(
+        JSentinelBootstrapException.class,
         () -> new VaadinTestBootstrap()
-            .mode(SecurityBootstrapMode.STRICT)
+            .mode(JSentinelBootstrapMode.STRICT)
             .sessions(s -> s.timeout(Duration.ofMinutes(5)))
             .install());
     assertTrue(ex.warnings().stream()
@@ -115,10 +115,10 @@ class SessionBootstrapTest {
   @Test
   @DisplayName("STRICT invalid timeout (zero) throws sessions/invalid-timeout")
   void strictInvalidTimeoutThrows() {
-    SecurityBootstrapException ex = assertThrows(
-        SecurityBootstrapException.class,
+    JSentinelBootstrapException ex = assertThrows(
+        JSentinelBootstrapException.class,
         () -> new VaadinTestBootstrap()
-            .mode(SecurityBootstrapMode.STRICT)
+            .mode(JSentinelBootstrapMode.STRICT)
             .sessions(s -> s.storeBacked(new InMemorySessionStore()).timeout(Duration.ZERO))
             .install());
     assertTrue(ex.warnings().stream()
@@ -127,11 +127,11 @@ class SessionBootstrapTest {
 
   @Test
   @DisplayName("STRICT securityVersion without subjectIdResolver throws security-version-without-subject-id-resolver")
-  void strictSecurityVersionWithoutResolverThrows() {
-    SecurityBootstrapException ex = assertThrows(
-        SecurityBootstrapException.class,
+  void strictJSentinelVersionWithoutResolverThrows() {
+    JSentinelBootstrapException ex = assertThrows(
+        JSentinelBootstrapException.class,
         () -> new VaadinTestBootstrap()
-            .mode(SecurityBootstrapMode.STRICT)
+            .mode(JSentinelBootstrapMode.STRICT)
             .sessions(s -> s.securityVersion(new RecordingVersionStore()))
             .install());
     assertTrue(ex.warnings().stream()
@@ -141,31 +141,31 @@ class SessionBootstrapTest {
   @Test
   @DisplayName("standalone .sessions(...) records INFO standalone/sessions-not-applicable")
   void standaloneSessionsRecordsInfo() {
-    SecurityRuntime runtime = new StandaloneTestBootstrap()
+    JSentinelRuntime runtime = new StandaloneTestBootstrap()
         .sessions(s -> s.storeBacked(new InMemorySessionStore()))
         .install();
     assertTrue(runtime.warnings().stream()
         .anyMatch(w -> "standalone/sessions-not-applicable".equals(w.code())
             && w.severity() == Severity.INFO));
     // resolver must not be touched
-    assertFalse(SecurityServiceResolver.findSessionPolicy().isPresent());
+    assertFalse(JSentinelServiceResolver.findSessionPolicy().isPresent());
   }
 
   @Test
   @DisplayName("REST .storeBacked(...) records INFO rest/session-store-unused but still wires policy/version")
   void restStoreBackedUnusedButOthersWired() {
     SessionStore store = new InMemorySessionStore();
-    SecurityVersionStore vstore = new RecordingVersionStore();
+    JSentinelVersionStore vstore = new RecordingVersionStore();
     SubjectIdResolver<String> resolver = s -> SubjectId.of(s);
-    SecurityRuntime runtime = new RestTestBootstrap()
+    JSentinelRuntime runtime = new RestTestBootstrap()
         .sessions(s -> s.storeBacked(store).securityVersion(vstore).subjectIdResolver(resolver)
             .timeout(Duration.ofMinutes(10)))
         .install();
     assertTrue(runtime.warnings().stream()
         .anyMatch(w -> "rest/session-store-unused".equals(w.code())
             && w.severity() == Severity.INFO));
-    assertTrue(SecurityServiceResolver.findSessionPolicy().isPresent(),
-        "REST still wires SessionPolicy/SecurityVersion/SubjectIdResolver");
+    assertTrue(JSentinelServiceResolver.findSessionPolicy().isPresent(),
+        "REST still wires SessionPolicy/JSentinelVersion/SubjectIdResolver");
   }
 
   // ── adapter test doubles ─────────────────────────────────────────
@@ -177,23 +177,23 @@ class SessionBootstrapTest {
    * is the only thing that varies across them.
    */
   private abstract static class BaseTestBootstrap<B extends BaseTestBootstrap<B>>
-      extends AbstractSecurityBootstrap<B> {
+      extends AbstractJSentinelBootstrap<B> {
 
     abstract AdapterKind adapterKind();
 
     @Override
-    public SecurityRuntime install() {
-      List<RegisteredSecurityService> services = new ArrayList<>();
-      List<SecurityBootstrapWarning> warnings = new ArrayList<>();
+    public JSentinelRuntime install() {
+      List<RegisteredJSentinelService> services = new ArrayList<>();
+      List<JSentinelBootstrapWarning> warnings = new ArrayList<>();
       applyAuditConfiguration(services, warnings);
       applySessionConfiguration(adapterKind(), services, warnings);
-      SecurityBootstrapMode mode = state.mode();
-      boolean strictError = mode == SecurityBootstrapMode.STRICT
+      JSentinelBootstrapMode mode = state.mode();
+      boolean strictError = mode == JSentinelBootstrapMode.STRICT
           && warnings.stream().anyMatch(w -> w.severity() == Severity.ERROR);
       if (strictError) {
-        throw new SecurityBootstrapException(warnings);
+        throw new JSentinelBootstrapException(warnings);
       }
-      return new SecurityRuntime(services, warnings, mode);
+      return new JSentinelRuntime(services, warnings, mode);
     }
   }
 
@@ -209,16 +209,16 @@ class SessionBootstrapTest {
     @Override AdapterKind adapterKind() { return AdapterKind.STANDALONE; }
   }
 
-  /** Empty SecurityVersionStore stub — just needs to be a real instance. */
-  private static final class RecordingVersionStore implements SecurityVersionStore {
-    private SecurityVersion version = SecurityVersion.INITIAL;
-    @Override public SecurityVersion current(SecurityVersionKey key) { return version; }
-    @Override public SecurityVersion increment(SecurityVersionKey key) {
+  /** Empty JSentinelVersionStore stub — just needs to be a real instance. */
+  private static final class RecordingVersionStore implements JSentinelVersionStore {
+    private JSentinelVersion version = JSentinelVersion.INITIAL;
+    @Override public JSentinelVersion current(JSentinelVersionKey key) { return version; }
+    @Override public JSentinelVersion increment(JSentinelVersionKey key) {
       version = version.next();
       return version;
     }
-    @Override public void reset(SecurityVersionKey key) {
-      version = SecurityVersion.INITIAL;
+    @Override public void reset(JSentinelVersionKey key) {
+      version = JSentinelVersion.INITIAL;
     }
   }
 }

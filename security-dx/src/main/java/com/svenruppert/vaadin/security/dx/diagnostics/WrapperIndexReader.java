@@ -27,7 +27,7 @@ import java.util.Set;
 
 /**
  * Reads the generated-wrappers index emitted by {@code security-processor}
- * into a {@link SecurityProcessorReport}. The index lives at
+ * into a {@link JSentinelProcessorReport}. The index lives at
  * {@code META-INF/security-for-flow/generated-wrappers.idx} on the
  * classpath; each non-blank, non-comment line follows the format:
  *
@@ -56,12 +56,12 @@ final class WrapperIndexReader {
    * @return the merged processor report from every visible index file
    *         on the given class loader.
    */
-  static SecurityProcessorReport read(ClassLoader cl) {
+  static JSentinelProcessorReport read(ClassLoader cl) {
     if (cl == null) {
-      return SecurityProcessorReport.empty();
+      return JSentinelProcessorReport.empty();
     }
 
-    List<GeneratedSecurityWrapper> wrappers = new ArrayList<>();
+    List<GeneratedJSentinelWrapper> wrappers = new ArrayList<>();
     List<ProcessorWarning> warnings = new ArrayList<>();
     Set<String> seenKeys = new LinkedHashSet<>();
 
@@ -73,7 +73,7 @@ final class WrapperIndexReader {
           "processor/index-malformed",
           "Failed to enumerate generated-wrappers.idx: " + io.getMessage(),
           "Inspect the security-processor build configuration."));
-      return new SecurityProcessorReport(wrappers, warnings);
+      return new JSentinelProcessorReport(wrappers, warnings);
     }
 
     while (indexResources.hasMoreElements()) {
@@ -94,11 +94,11 @@ final class WrapperIndexReader {
             "Inspect the security-processor build configuration."));
       }
     }
-    return new SecurityProcessorReport(wrappers, warnings);
+    return new JSentinelProcessorReport(wrappers, warnings);
   }
 
   private static void parseLine(String line,
-                                List<GeneratedSecurityWrapper> wrappers,
+                                List<GeneratedJSentinelWrapper> wrappers,
                                 List<ProcessorWarning> warnings,
                                 Set<String> seenKeys,
                                 ClassLoader cl,
@@ -154,7 +154,7 @@ final class WrapperIndexReader {
           fixSnippet()));
     }
 
-    wrappers.add(new GeneratedSecurityWrapper(
+    wrappers.add(new GeneratedJSentinelWrapper(
         sourceType, generatedType, processor, version, methods));
   }
 

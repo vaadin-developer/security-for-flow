@@ -20,13 +20,13 @@ import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.vaadin.security.audit.AccessDenied;
 import com.svenruppert.vaadin.security.audit.AccessGranted;
 import com.svenruppert.vaadin.security.audit.AuditEvent;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.audit.StepUpChallenged;
 import com.svenruppert.vaadin.security.authorization.api.AccessEvaluator;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationEvaluator;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessDecision;
 import com.vaadin.flow.component.UI;
@@ -49,7 +49,7 @@ import static java.util.Objects.requireNonNull;
  * Vaadin adapter for the authorization phase.
  * <p>
  * This listener intercepts navigation events, delegates annotation
- * scanning to {@link SecurityAnnotationScanner}, evaluator resolution
+ * scanning to {@link JSentinelAnnotationScanner}, evaluator resolution
  * to the Vaadin instantiator, and decision evaluation to
  * {@link AccessEvaluator#evaluate}. It then maps the resulting
  * {@link AccessDecision} to the {@link BeforeEnterEvent}.
@@ -65,7 +65,7 @@ public class AuthorizationListener
   private static final long serialVersionUID = 974589421761348380L;
 
   /** Cached scanner for restriction annotations. */
-  private final SecurityAnnotationScanner scanner = new SecurityAnnotationScanner();
+  private final JSentinelAnnotationScanner scanner = new JSentinelAnnotationScanner();
 
   /** Creates core contexts from Vaadin events. */
   private final VaadinAccessContextFactory contextFactory = new VaadinAccessContextFactory();
@@ -133,7 +133,7 @@ public class AuthorizationListener
   }
 
   private void audit(EvaluatedDecision evaluated, AccessContext context) {
-    String subjectId = context.subject().map(SecuritySubject::subjectId).orElse(null);
+    String subjectId = context.subject().map(JSentinelSubject::subjectId).orElse(null);
     String route = context.resourceName();
     Instant now = Instant.now(Clock.systemUTC());
 
@@ -153,7 +153,7 @@ public class AuthorizationListener
       event = new AccessDenied(now, subjectId, route, reason);
     }
 
-    SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
+    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
     try {
       sink.publish(event);
     } catch (RuntimeException auditFailure) {
@@ -232,7 +232,7 @@ public class AuthorizationListener
           // Reroute to the configured step-up route — the consuming
           // application registers a Route under that name to render
           // the MFA / re-auth challenge.
-          AccessDecision.reroute(SecurityServiceResolver.stepUpRouteName(), false);
+          AccessDecision.reroute(JSentinelServiceResolver.stepUpRouteName(), false);
     };
   }
 }

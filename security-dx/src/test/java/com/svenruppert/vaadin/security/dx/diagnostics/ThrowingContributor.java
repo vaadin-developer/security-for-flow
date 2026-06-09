@@ -12,7 +12,7 @@ package com.svenruppert.vaadin.security.dx.diagnostics;
 
 /**
  * Test-only contributor that always throws. Used to verify the
- * fail-soft behavior of {@link SecurityDiagnostics#inspect()}.
+ * fail-soft behavior of {@link JSentinelDiagnostics#inspect()}.
  */
 public final class ThrowingContributor implements DiagnosticContributor {
 

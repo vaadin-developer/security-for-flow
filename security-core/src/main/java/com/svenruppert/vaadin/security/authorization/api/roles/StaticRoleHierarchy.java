@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.authorization.api.roles;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -49,7 +49,7 @@ import static java.util.Objects.requireNonNull;
  * <p>Cycles in the declared inheritance graph are rejected at
  * {@link Builder#build()} time.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class StaticRoleHierarchy implements RoleHierarchy {
 
   private final Map<RoleName, Set<RoleName>> closure;

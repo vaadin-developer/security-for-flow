@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.components;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 import com.svenruppert.vaadin.security.session.InMemorySessionStore;
-import com.svenruppert.vaadin.security.session.SecurityVersion;
+import com.svenruppert.vaadin.security.session.JSentinelVersion;
 import com.svenruppert.vaadin.security.session.SessionId;
 import com.svenruppert.vaadin.security.session.SessionRecord;
 import com.svenruppert.vaadin.security.session.SessionStatus;
@@ -47,7 +47,7 @@ class SessionManagementViewTest {
                                          SessionStatus status) {
     return new SessionRecord(
         new SessionId(sid), subjectId, TenantId.DEFAULT,
-        T0, T0, SecurityVersion.INITIAL, status);
+        T0, T0, JSentinelVersion.INITIAL, status);
   }
 
   @Test

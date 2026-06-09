@@ -18,7 +18,7 @@ package com.svenruppert.vaadin.security.authorization.api.permissions;
 
 import com.svenruppert.vaadin.security.authorization.api.AccessEvaluator;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessDecision;
 
@@ -31,7 +31,7 @@ import java.util.Set;
  * @param <T> the restriction annotation type
  * @param <U> the user/subject type
  */
-@ExperimentalSecurityApi("Permission-based access evaluation is experimental. "
+@ExperimentalJSentinelApi("Permission-based access evaluation is experimental. "
     + "Use role-based access for stable production use.")
 public abstract class PermissionBasedAccessEvaluator<T extends Annotation, U>
     implements AccessEvaluator<T> {

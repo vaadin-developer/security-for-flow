@@ -18,7 +18,7 @@ package com.svenruppert.vaadin.security.authorization.api.roles;
 
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresRole;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -48,7 +48,7 @@ class RequiresRoleEvaluatorTest {
   @Test
   @DisplayName("matching role grants access")
   void matchingRole() throws NoSuchMethodException {
-    SecuritySubject subject = new SecuritySubject(
+    JSentinelSubject subject = new JSentinelSubject(
         "u1", "User", Set.of(new RoleName("ROLE_ADMIN")), Set.of());
 
     AuthorizationDecision decision = evaluator.evaluate(
@@ -61,7 +61,7 @@ class RequiresRoleEvaluatorTest {
   @Test
   @DisplayName("missing role forbids access")
   void missingRole() throws NoSuchMethodException {
-    SecuritySubject subject = new SecuritySubject(
+    JSentinelSubject subject = new JSentinelSubject(
         "u1", "User", Set.of(new RoleName("ROLE_VIEWER")), Set.of());
 
     AuthorizationDecision decision = evaluator.evaluate(
@@ -71,7 +71,7 @@ class RequiresRoleEvaluatorTest {
     assertInstanceOf(AuthorizationDecision.Forbidden.class, decision);
   }
 
-  private static AccessContext context(Optional<SecuritySubject> subject) {
+  private static AccessContext context(Optional<JSentinelSubject> subject) {
     return new AccessContext(subject, "rest-endpoint", "/admin", "access", Map.of());
   }
 

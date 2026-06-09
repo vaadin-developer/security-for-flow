@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.authorization.api.operations;
 
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 import org.junit.jupiter.api.DisplayName;
@@ -74,7 +74,7 @@ class SecuredOperationRegistryTest {
     registry.register(op("delete", Set.of(del)));
     OperationVisibilityService service = new OperationVisibilityService(registry);
 
-    SecuritySubject viewer = new SecuritySubject("u", "Viewer",
+    JSentinelSubject viewer = new JSentinelSubject("u", "Viewer",
         Set.of(new RoleName("ROLE_VIEWER")), Set.of(read));
     List<SecuredOperationDescriptor> visible = service.visibleFor(viewer);
     assertEquals(1, visible.size());
@@ -97,7 +97,7 @@ class SecuredOperationRegistryTest {
     registry.register(op("ping", Set.of()));
     OperationVisibilityService service = new OperationVisibilityService(registry);
 
-    SecuritySubject anon = new SecuritySubject("u", "Any", Set.of(), Set.of());
+    JSentinelSubject anon = new JSentinelSubject("u", "Any", Set.of(), Set.of());
     assertEquals(1, service.visibleFor(anon).size());
   }
 
@@ -141,7 +141,7 @@ class SecuredOperationRegistryTest {
     registry.register(opWithRole("admin-only", new RoleName("ROLE_ADMIN")));
     OperationVisibilityService service = new OperationVisibilityService(registry);
 
-    SecuritySubject viewer = new SecuritySubject("u", "Viewer",
+    JSentinelSubject viewer = new JSentinelSubject("u", "Viewer",
         Set.of(new RoleName("ROLE_VIEWER")), Set.of());
     assertTrue(service.visibleFor(viewer).isEmpty());
   }
@@ -154,7 +154,7 @@ class SecuredOperationRegistryTest {
     registry.register(opWithRole("admin-only", admin));
     OperationVisibilityService service = new OperationVisibilityService(registry);
 
-    SecuritySubject adminSubject = new SecuritySubject("u", "Admin",
+    JSentinelSubject adminSubject = new JSentinelSubject("u", "Admin",
         Set.of(admin), Set.of());
     assertEquals(1, service.visibleFor(adminSubject).size());
   }

@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.audit;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 
 import static java.util.Objects.requireNonNull;
@@ -36,7 +36,7 @@ import static java.util.Objects.requireNonNull;
  *               {@link TenantId#DEFAULT}
  * @param event  the wrapped audit event; never {@code null}
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public record AuditEnvelope(String id, TenantId tenant, AuditEvent event) {
 
   /**

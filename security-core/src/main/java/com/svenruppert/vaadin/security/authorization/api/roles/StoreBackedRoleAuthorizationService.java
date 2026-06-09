@@ -17,7 +17,7 @@
 package com.svenruppert.vaadin.security.authorization.api.roles;
 
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 
@@ -45,7 +45,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @param <U> application user type
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class StoreBackedRoleAuthorizationService<U> implements AuthorizationService<U> {
 
   private final RoleAssignmentStore store;

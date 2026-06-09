@@ -18,7 +18,7 @@ package com.svenruppert.vaadin.security.persistence.eclipsestore;
 
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptKey;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptStore;
-import com.svenruppert.vaadin.security.persistence.eclipsestore.EclipseStoreSecurityRoot.LoginAttemptLedger;
+import com.svenruppert.vaadin.security.persistence.eclipsestore.EclipseStoreJSentinelRoot.LoginAttemptLedger;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -28,9 +28,9 @@ import static java.util.Objects.requireNonNull;
 /** Eclipse-Store-backed {@link LoginAttemptStore}. */
 final class EclipseStoreLoginAttemptStore implements LoginAttemptStore {
 
-  private final EclipseStoreSecurityStorage storage;
+  private final EclipseStoreJSentinelStorage storage;
 
-  EclipseStoreLoginAttemptStore(EclipseStoreSecurityStorage storage) {
+  EclipseStoreLoginAttemptStore(EclipseStoreJSentinelStorage storage) {
     this.storage = storage;
   }
 

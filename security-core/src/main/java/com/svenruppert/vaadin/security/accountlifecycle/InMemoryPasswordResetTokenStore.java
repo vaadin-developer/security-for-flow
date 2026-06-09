@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.accountlifecycle;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 
@@ -30,7 +30,7 @@ import static java.util.Objects.requireNonNull;
  * In-memory {@link PasswordResetTokenStore} backed by a
  * {@link ConcurrentHashMap} keyed on the token hash.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class InMemoryPasswordResetTokenStore implements PasswordResetTokenStore {
 
   private final ConcurrentHashMap<String, PasswordResetTokenRecord> tokens = new ConcurrentHashMap<>();

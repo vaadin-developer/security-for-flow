@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.policy.api;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 
 /**
@@ -45,7 +45,7 @@ import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
  * @param tenant       tenant scope of the resource; {@code null} is
  *                     normalised to {@link TenantId#DEFAULT}
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public record ResourceRef(String resourceType, String resourceId, TenantId tenant) {
 
   /**

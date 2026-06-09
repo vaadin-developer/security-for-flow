@@ -60,11 +60,11 @@ class SecuredRouterLinkTest {
     @Override public VaadinContext getContext() { return null; }
   }
 
-  private static Optional<SecuredVisibility.SecurityView> view(Set<RoleName> roles,
+  private static Optional<SecuredVisibility.JSentinelView> view(Set<RoleName> roles,
                                                                Set<PermissionName> perms) {
     HasRoles r = () -> List.copyOf(roles);
     HasPermissions p = () -> List.copyOf(perms);
-    return Optional.of(new SecuredVisibility.SecurityView(r, p));
+    return Optional.of(new SecuredVisibility.JSentinelView(r, p));
   }
 
   @Test
@@ -103,7 +103,7 @@ class SecuredRouterLinkTest {
   @Test
   @DisplayName("refresh() recomputes against the current view")
   void refreshRecomputes() {
-    AtomicReference<Optional<SecuredVisibility.SecurityView>> ref =
+    AtomicReference<Optional<SecuredVisibility.JSentinelView>> ref =
         new AtomicReference<>(view(Set.of(), Set.of()));
     SecuredRouterLink link = new SecuredRouterLink(ROUTER, "Admin", Dummy.class,
         SecuredVisibility.Requirement.role(ADMIN),

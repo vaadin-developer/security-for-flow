@@ -43,7 +43,7 @@ keine HTTP-Abhängigkeit. Die drei Adapter (`security-vaadin`,
 ## Highlights
 
 - ✅ **Vollständige Vaadin-Integration** — `@RequiresRole`, `@RequiresPermission`,
-  eigene Annotationen via `@SecurityAnnotation`, Routenschutz über
+  eigene Annotationen via `@JSentinelAnnotation`, Routenschutz über
   `BeforeEnterListener`, fertige `LoginView`-Basisklasse, sicherer
   `LogoutService`.
 - ✅ **Production-grade Defaults** — PBKDF2-Hashing mit Drift-Detection,
@@ -65,11 +65,11 @@ keine HTTP-Abhängigkeit. Die drei Adapter (`security-vaadin`,
 
 | Modul | Zweck |
 |---|---|
-| `security-core` | Project-neutraler Kern: SPIs, Decisions, Audit-Pipeline, Bootstrap, Brute-Force, Session-Policies, Password-Hashing, `SecurityEnforcer`. |
+| `security-core` | Project-neutraler Kern: SPIs, Decisions, Audit-Pipeline, Bootstrap, Brute-Force, Session-Policies, Password-Hashing, `JSentinelEnforcer`. |
 | `security-vaadin` | Vaadin-Flow-Adapter: `AuthorizationListener`, `SessionLifetimeListener`, `LoginView`, `VaadinLogoutService`, `VaadinSessionSubjectStore`. |
 | `security-rest` | REST-Adapter: `RestAuthenticationFilter`, `RestAuthorizationFilter`, `BearerTokenExtractor`. |
 | `security-standalone` | Plain-Java-Adapter: `ThreadLocalSubjectStore`, `StandaloneLoginFlow`, `SecuredProxy.wrap(Interface, impl)` (JDK Dynamic Proxy). |
-| `security-test` | Wiederverwendbare Test-Fixtures: `FakeAuthenticationService`, `FakeAuthorizationService`, `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5-`SecurityTestExtension`. Konsumenten ziehen das Modul als `<scope>test</scope>`. |
+| `security-test` | Wiederverwendbare Test-Fixtures: `FakeAuthenticationService`, `FakeAuthorizationService`, `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5-`JSentinelTestExtension`. Konsumenten ziehen das Modul als `<scope>test</scope>`. |
 | `security-processor` | Compile-Time-Annotation-Processor: erzeugt `<Type>Secured`-Subklassen für `@Secured`-annotierte konkrete Klassen. Eingebunden als `<annotationProcessorPath>`. Basiert auf `com.svenruppert:proxybuilder:00.10.00`. |
 | `demo-vaadin` | Vollständig lauffähige Vaadin-Demo mit lokaler User-Verwaltung, Rollen, Audit-Grid und Role-Admin-UI. |
 | `demo-rest` | JDK-`HttpServer`-basierter REST-Demo-Server + CLI-Client. Bootstrap, Token-Auth, Document-CRUD, User-Admin-Endpoints, `/api/audit`. |
@@ -100,7 +100,7 @@ test-scope-only.
 ### Autorisierung (View-Level + Action-Level)
 
 - **Rollen-basiert** mit `@RequiresRole({"ROLE_ADMIN", "ROLE_EDITOR"})`
-  oder projekt-spezifischen Annotationen über `@SecurityAnnotation`.
+  oder projekt-spezifischen Annotationen über `@JSentinelAnnotation`.
 - **Permission-basiert** mit `@RequiresPermission("document:delete")`.
 - **`ActionAuthorizationService<U>`-SPI** für `isAllowed`/`requireAllowed`
   innerhalb von Views (z. B. Button-Visibility + Server-Guard).
@@ -115,7 +115,7 @@ test-scope-only.
   `SessionInvalidated`, `RoleAssigned`, `RoleRevoked`,
   `UserCreated`, `UserDeleted`, `BootstrapAdminCreated`,
   `BootstrapTokenRejected`. Pattern-matchbar in Switch-Expressions.
-- **`SecurityAuditService`**: `publish(AuditEvent)` + `query(AuditQuery)`.
+- **`JSentinelAuditService`**: `publish(AuditEvent)` + `query(AuditQuery)`.
 - **`AuditSink`**-Vertrag: write-only, „must not throw". Standard-Sinks:
   `RingBufferAuditSink` (256 Events Default) und `LoggingAuditSink`
   (JUL).
@@ -211,7 +211,7 @@ SPIs (Reference: `demo-vaadin`):
 2. `AuthenticationService<Credentials, MyUser>` für Credential-Check
    und Subject-Loading.
 3. `AuthorizationService<MyUser>` für Rollen/Permissions.
-4. Optional eigene Restriction-Annotation via `@SecurityAnnotation`,
+4. Optional eigene Restriction-Annotation via `@JSentinelAnnotation`,
    gepaart mit einem `AccessEvaluator` (oder die generischen
    `@RequiresRole`/`@RequiresPermission` verwenden).
 5. `LoginListener<MyUser>` für Lifecycle-Hooks.
@@ -227,7 +227,7 @@ Annotation-driven Routen-Schutz greift dann automatisch über den
 Lock-in. Reference: `demo-rest`, läuft auf reinem JDK `HttpServer`.
 
 1. `PermissionName`-Konstanten + `RolePermissionMapping` definieren.
-2. `RestSubjectResolver` implementieren (Bearer-Token → `SecuritySubject`).
+2. `RestSubjectResolver` implementieren (Bearer-Token → `JSentinelSubject`).
 3. Handler-Methoden mit `@RequiresPermission` / `@RequiresRole`
    annotieren.
 4. `RestAuthorizationFilter` vor die Handler hängen.
@@ -245,7 +245,7 @@ Library-Borrowing-CLI mit drei Demo-Usern.
    annotieren.
 3. `Secured.wrap(MyService.class, new MyServiceImpl())` einmal beim
    Bootstrappen aufrufen — jede Methode des zurückgegebenen Proxies
-   läuft danach durch den `SecurityAnnotationScanner` + Evaluator.
+   läuft danach durch den `JSentinelAnnotationScanner` + Evaluator.
 4. Login-Lifecycle via `StandaloneLoginFlow<Credentials, User>`
    treiben — sealed `LoginResult = Success | Rejected | LockedOut`,
    Audit-Events feuern automatisch.

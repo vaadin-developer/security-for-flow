@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.rest;
 
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.session.SessionMetadata;
 
 import java.util.Optional;
@@ -33,7 +33,7 @@ public interface RestSubjectResolver {
    * @param request request
    * @return subject, or empty if no subject is authenticated
    */
-  Optional<SecuritySubject> resolveSubject(RestRequest request);
+  Optional<JSentinelSubject> resolveSubject(RestRequest request);
 
   /**
    * Resolves session metadata for the current request.
@@ -55,12 +55,12 @@ public interface RestSubjectResolver {
 
   /**
    * Resolves the session's security-version snapshot for
-   * {@link RestSecurityVersionFilter}.
+   * {@link RestJSentinelVersionFilter}.
    * <p>
    * The default returns {@link Optional#empty()} so existing
    * implementations keep working — the filter becomes a no-op for
    * them. Override this when your token / session store records
-   * the {@link com.svenruppert.vaadin.security.session.SecurityVersion}
+   * the {@link com.svenruppert.vaadin.security.session.JSentinelVersion}
    * captured at login time and you want drifted sessions refused
    * with {@code 401 + WWW-Authenticate: SessionStale}.
    *
@@ -68,7 +68,7 @@ public interface RestSubjectResolver {
    * @return security-version context, or empty when the resolver
    *         doesn't track per-session versions
    */
-  default Optional<RestSecurityVersionContext> resolveSecurityVersionContext(RestRequest request) {
+  default Optional<RestJSentinelVersionContext> resolveJSentinelVersionContext(RestRequest request) {
     return Optional.empty();
   }
 }

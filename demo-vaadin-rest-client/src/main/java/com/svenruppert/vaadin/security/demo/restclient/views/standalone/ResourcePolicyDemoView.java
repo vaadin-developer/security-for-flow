@@ -17,13 +17,13 @@
 package com.svenruppert.vaadin.security.demo.restclient.views.standalone;
 
 import com.svenruppert.vaadin.security.audit.PolicyEvaluated;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresRole;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 import com.svenruppert.vaadin.security.demo.restclient.backend.RemoteUser;
-import com.svenruppert.vaadin.security.demo.restclient.security.ClientSecurityContext;
+import com.svenruppert.vaadin.security.demo.restclient.security.ClientJSentinelContext;
 import com.svenruppert.vaadin.security.demo.restclient.security.DemoPolicyInitListener;
 import com.svenruppert.vaadin.security.demo.restclient.security.resource.DemoDocument;
 import com.svenruppert.vaadin.security.demo.restclient.security.resource.DemoDocumentStore;
@@ -114,14 +114,14 @@ public class ResourcePolicyDemoView extends Composite<Div> {
 
   private static void attemptEdit(DemoDocument doc) {
     PolicyContext policyContext = buildPolicyContext(doc.id());
-    PolicyDecision decision = SecurityServiceResolver.policyRegistry()
+    PolicyDecision decision = JSentinelServiceResolver.policyRegistry()
         .evaluate(DemoPolicyInitListener.POLICY_DOCUMENT_OWNER_OR_ADMIN, policyContext);
     publishAudit(decision, policyContext);
     showNotification(doc, decision);
   }
 
   private static PolicyContext buildPolicyContext(String docId) {
-    Optional<SecuritySubject> subject = currentSecuritySubject();
+    Optional<JSentinelSubject> subject = currentJSentinelSubject();
     ResourceRef ref = new ResourceRef(DemoDocumentResolver.RESOURCE_TYPE, docId);
     AccessContext access = new AccessContext(
         subject,
@@ -135,12 +135,12 @@ public class ResourcePolicyDemoView extends Composite<Div> {
         ref);
   }
 
-  private static Optional<SecuritySubject> currentSecuritySubject() {
-    return ClientSecurityContext.user().map(ResourcePolicyDemoView::toSecuritySubject);
+  private static Optional<JSentinelSubject> currentJSentinelSubject() {
+    return ClientJSentinelContext.user().map(ResourcePolicyDemoView::toJSentinelSubject);
   }
 
-  private static SecuritySubject toSecuritySubject(RemoteUser user) {
-    return new SecuritySubject(
+  private static JSentinelSubject toJSentinelSubject(RemoteUser user) {
+    return new JSentinelSubject(
         user.subjectId(),
         user.displayName(),
         Set.copyOf(user.roles()),
@@ -148,8 +148,8 @@ public class ResourcePolicyDemoView extends Composite<Div> {
   }
 
   private static void publishAudit(PolicyDecision decision, PolicyContext context) {
-    SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
-    String subjectId = context.subject().map(SecuritySubject::subjectId).orElse(null);
+    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
+    String subjectId = context.subject().map(JSentinelSubject::subjectId).orElse(null);
     String label = switch (decision) {
       case PolicyDecision.Allowed ignored -> "Allowed";
       case PolicyDecision.Denied ignored -> "Denied";

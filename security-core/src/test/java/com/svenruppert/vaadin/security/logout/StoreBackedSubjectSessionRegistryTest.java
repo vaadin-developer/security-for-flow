@@ -17,10 +17,10 @@
 package com.svenruppert.vaadin.security.logout;
 
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
-import com.svenruppert.vaadin.security.session.InMemorySecurityVersionStore;
+import com.svenruppert.vaadin.security.session.InMemoryJSentinelVersionStore;
 import com.svenruppert.vaadin.security.session.InMemorySessionStore;
-import com.svenruppert.vaadin.security.session.SecurityVersion;
-import com.svenruppert.vaadin.security.session.SecurityVersionKey;
+import com.svenruppert.vaadin.security.session.JSentinelVersion;
+import com.svenruppert.vaadin.security.session.JSentinelVersionKey;
 import com.svenruppert.vaadin.security.session.SessionId;
 import com.svenruppert.vaadin.security.session.SessionStatus;
 import org.junit.jupiter.api.DisplayName;
@@ -152,12 +152,12 @@ class StoreBackedSubjectSessionRegistryTest {
   }
 
   @Test
-  @DisplayName("with a SecurityVersionStore wired, register captures the subject's current version on a fresh session")
-  void registerCapturesCurrentSecurityVersion() {
+  @DisplayName("with a JSentinelVersionStore wired, register captures the subject's current version on a fresh session")
+  void registerCapturesCurrentJSentinelVersion() {
     InMemorySessionStore sessionStore = new InMemorySessionStore();
-    InMemorySecurityVersionStore versionStore = new InMemorySecurityVersionStore();
-    versionStore.increment(new SecurityVersionKey(TenantId.DEFAULT, ALICE)); // current → 1
-    versionStore.increment(new SecurityVersionKey(TenantId.DEFAULT, ALICE)); // current → 2
+    InMemoryJSentinelVersionStore versionStore = new InMemoryJSentinelVersionStore();
+    versionStore.increment(new JSentinelVersionKey(TenantId.DEFAULT, ALICE)); // current → 1
+    versionStore.increment(new JSentinelVersionKey(TenantId.DEFAULT, ALICE)); // current → 2
 
     StoreBackedSubjectSessionRegistry registry =
         new StoreBackedSubjectSessionRegistry(sessionStore, TenantId.DEFAULT, fixed(T0), versionStore);
@@ -165,20 +165,20 @@ class StoreBackedSubjectSessionRegistryTest {
     registry.register(ALICE, "sid-1");
 
     SessionId sid = new SessionId("sid-1");
-    SecurityVersion snapshot = sessionStore.findById(sid)
+    JSentinelVersion snapshot = sessionStore.findById(sid)
         .orElseThrow().securityVersionAtLogin();
-    assertEquals(new SecurityVersion(2L), snapshot,
+    assertEquals(new JSentinelVersion(2L), snapshot,
         "the registry must capture the subject's current security version at register-time");
 
     // A later increment must NOT mutate the snapshot — it's frozen on the SessionRecord.
-    versionStore.increment(new SecurityVersionKey(TenantId.DEFAULT, ALICE)); // current → 3
-    SecurityVersion snapshotAfter = sessionStore.findById(sid)
+    versionStore.increment(new JSentinelVersionKey(TenantId.DEFAULT, ALICE)); // current → 3
+    JSentinelVersion snapshotAfter = sessionStore.findById(sid)
         .orElseThrow().securityVersionAtLogin();
-    assertEquals(new SecurityVersion(2L), snapshotAfter);
+    assertEquals(new JSentinelVersion(2L), snapshotAfter);
   }
 
   @Test
-  @DisplayName("without a SecurityVersionStore, register falls back to INITIAL")
+  @DisplayName("without a JSentinelVersionStore, register falls back to INITIAL")
   void registerFallsBackToInitialWithoutVersionStore() {
     InMemorySessionStore sessionStore = new InMemorySessionStore();
     StoreBackedSubjectSessionRegistry registry =
@@ -186,9 +186,9 @@ class StoreBackedSubjectSessionRegistryTest {
 
     registry.register(ALICE, "sid-1");
 
-    SecurityVersion snapshot = sessionStore.findById(new SessionId("sid-1"))
+    JSentinelVersion snapshot = sessionStore.findById(new SessionId("sid-1"))
         .orElseThrow().securityVersionAtLogin();
-    assertEquals(SecurityVersion.INITIAL, snapshot);
+    assertEquals(JSentinelVersion.INITIAL, snapshot);
   }
 
   @Test

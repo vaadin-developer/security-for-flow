@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.demo.app.security.roles;
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.vaadin.security.authorization.api.AccessEvaluator;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
@@ -57,7 +57,7 @@ public class MyRoleAccessEvaluator
     }
 
     AuthorizationService<MyUser> authorizationService =
-        SecurityServiceResolver.authorizationService();
+        JSentinelServiceResolver.authorizationService();
     boolean hasRole = authorizationService.rolesFor(currentSubject.get())
         .roleNames()
         .stream()

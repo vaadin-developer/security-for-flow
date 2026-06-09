@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.action;
 import com.svenruppert.vaadin.security.audit.ActionDenied;
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.authorization.api.AccessDeniedException;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
 import com.svenruppert.vaadin.security.authorization.api.permissions.HasPermissions;
@@ -110,7 +110,7 @@ class StaticActionAuthorizationServiceTest {
   @Test
   @DisplayName("audit-sink failure must not block the AccessDeniedException")
   void auditFailureIsSwallowed() {
-    SecurityAuditService throwingAudit = new SecurityAuditService() {
+    JSentinelAuditService throwingAudit = new JSentinelAuditService() {
       @Override public void publish(AuditEvent event) {
         throw new RuntimeException("audit boom");
       }
@@ -155,7 +155,7 @@ class StaticActionAuthorizationServiceTest {
     };
   }
 
-  static final class RecordingAudit implements SecurityAuditService {
+  static final class RecordingAudit implements JSentinelAuditService {
     final List<AuditEvent> events = new ArrayList<>();
 
     @Override

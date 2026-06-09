@@ -10,15 +10,15 @@
  */
 package com.svenruppert.vaadin.security.dx.bootstrap;
 
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleHierarchy;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 import com.svenruppert.vaadin.security.authorization.api.roles.StaticRoleHierarchy;
-import com.svenruppert.vaadin.security.dx.internal.AbstractSecurityBootstrap;
-import com.svenruppert.vaadin.security.dx.runtime.RegisteredSecurityService;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapWarning;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime;
+import com.svenruppert.vaadin.security.dx.internal.AbstractJSentinelBootstrap;
+import com.svenruppert.vaadin.security.dx.runtime.RegisteredJSentinelService;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapMode;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapWarning;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelRuntime;
 import com.svenruppert.vaadin.security.dx.runtime.Severity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,22 +43,22 @@ class RoleBootstrapTest {
   @BeforeEach
   @AfterEach
   void resetResolver() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
   }
 
   @Test
-  @DisplayName(".hierarchy(...) registers the hierarchy via SecurityServiceResolver")
+  @DisplayName(".hierarchy(...) registers the hierarchy via JSentinelServiceResolver")
   void hierarchyRegistersAndAppearsInRuntime() {
     RoleHierarchy hierarchy = StaticRoleHierarchy.builder()
         .role(new RoleName("ROLE_ADMIN")).inheritsFrom(new RoleName("ROLE_USER"))
         .role(new RoleName("ROLE_USER"))
         .build();
 
-    SecurityRuntime runtime = new TestBootstrap()
+    JSentinelRuntime runtime = new TestBootstrap()
         .roles(r -> r.hierarchy(hierarchy))
         .install();
 
-    assertSame(hierarchy, SecurityServiceResolver.findRoleHierarchy().orElseThrow());
+    assertSame(hierarchy, JSentinelServiceResolver.findRoleHierarchy().orElseThrow());
     boolean entry = runtime.services().stream()
         .anyMatch(s -> RoleHierarchy.class.equals(s.spi())
             && hierarchy.getClass().equals(s.impl())
@@ -69,7 +69,7 @@ class RoleBootstrapTest {
   @Test
   @DisplayName("empty .roles(r -> {}) records INFO roles/missing-hierarchy")
   void emptyRolesRecordsInfo() {
-    SecurityRuntime runtime = new TestBootstrap()
+    JSentinelRuntime runtime = new TestBootstrap()
         .roles(r -> { })
         .install();
     assertTrue(runtime.warnings().stream()
@@ -90,20 +90,20 @@ class RoleBootstrapTest {
   // ── adapter test double ──────────────────────────────────────────
 
   private static final class TestBootstrap
-      extends AbstractSecurityBootstrap<TestBootstrap> {
+      extends AbstractJSentinelBootstrap<TestBootstrap> {
     @Override
-    public SecurityRuntime install() {
-      List<RegisteredSecurityService> services = new ArrayList<>();
-      List<SecurityBootstrapWarning> warnings = new ArrayList<>();
+    public JSentinelRuntime install() {
+      List<RegisteredJSentinelService> services = new ArrayList<>();
+      List<JSentinelBootstrapWarning> warnings = new ArrayList<>();
       applyAuditConfiguration(services, warnings);
       applySessionConfiguration(AdapterKind.VAADIN, services, warnings);
       applyRoleConfiguration(services, warnings);
-      SecurityBootstrapMode mode = state.mode();
-      if (mode == SecurityBootstrapMode.STRICT
+      JSentinelBootstrapMode mode = state.mode();
+      if (mode == JSentinelBootstrapMode.STRICT
           && warnings.stream().anyMatch(w -> w.severity() == Severity.ERROR)) {
-        throw new SecurityBootstrapException(warnings);
+        throw new JSentinelBootstrapException(warnings);
       }
-      return new SecurityRuntime(services, warnings, mode);
+      return new JSentinelRuntime(services, warnings, mode);
     }
   }
 }

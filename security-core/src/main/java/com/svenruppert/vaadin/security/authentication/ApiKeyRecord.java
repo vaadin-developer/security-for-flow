@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.authentication;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
@@ -62,7 +62,7 @@ import static java.util.Objects.requireNonNull;
  * @param revokedAt  revocation instant; if present must not predate
  *                   {@code createdAt}
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public record ApiKeyRecord(
     String keyHash,
     TenantId tenant,

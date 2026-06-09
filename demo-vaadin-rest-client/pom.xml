@@ -55,7 +55,7 @@
     <!--
       V00.72 fluent bootstrap. DemoPolicyInitListener.serviceInit() runs
       VaadinSecurity.bootstrap() once per JVM and logs the resulting
-      SecurityRuntime.
+      JSentinelRuntime.
     -->
     <dependency>
       <groupId>com.svenruppert</groupId>

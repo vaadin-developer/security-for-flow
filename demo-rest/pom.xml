@@ -49,7 +49,7 @@
     </dependency>
     <!--
       V00.72 fluent bootstrap. DemoRestServer.main() calls
-      RestSecurity.bootstrap() and prints the SecurityRuntime.log()
+      RestSecurity.bootstrap() and prints the JSentinelRuntime.log()
       banner before the server starts serving requests.
     -->
     <dependency>

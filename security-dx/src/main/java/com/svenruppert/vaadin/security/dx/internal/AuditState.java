@@ -11,7 +11,7 @@
 package com.svenruppert.vaadin.security.dx.internal;
 
 import com.svenruppert.vaadin.security.audit.AuditEventStore;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 
 /**
  * Sub-aggregate of {@link BootstrapState} holding everything the
@@ -26,7 +26,7 @@ import com.svenruppert.vaadin.security.audit.SecurityAuditService;
  */
 public final class AuditState {
 
-  private SecurityAuditService directService;
+  private JSentinelAuditService directService;
   private AuditEventStore storeBackedStore;
   private boolean storeBackedRequested;
   private boolean loggingEnabled;
@@ -36,11 +36,11 @@ public final class AuditState {
   private boolean credentialEventsConfigured;
   private boolean credentialEventsEnabled;
 
-  public SecurityAuditService directService() {
+  public JSentinelAuditService directService() {
     return directService;
   }
 
-  public void directService(SecurityAuditService service) {
+  public void directService(JSentinelAuditService service) {
     this.directService = service;
   }
 

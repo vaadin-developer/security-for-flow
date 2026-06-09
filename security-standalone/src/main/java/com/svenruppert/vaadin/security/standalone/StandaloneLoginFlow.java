@@ -18,9 +18,9 @@ package com.svenruppert.vaadin.security.standalone;
 
 import com.svenruppert.vaadin.security.audit.LoginFailed;
 import com.svenruppert.vaadin.security.audit.LoginSucceeded;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;
@@ -64,7 +64,7 @@ public final class StandaloneLoginFlow<T, U> {
    * UTC clock. The most common entry point.
    */
   public StandaloneLoginFlow() {
-    this(SecurityServiceResolver.authenticationService(), Clock.systemUTC());
+    this(JSentinelServiceResolver.authenticationService(), Clock.systemUTC());
   }
 
   /**
@@ -87,7 +87,7 @@ public final class StandaloneLoginFlow<T, U> {
    * @return the outcome
    */
   public LoginResult<U> login(T credentials, String username) {
-    LoginAttemptPolicy policy = SecurityServiceResolver.loginAttemptPolicy();
+    LoginAttemptPolicy policy = JSentinelServiceResolver.loginAttemptPolicy();
     LoginAttemptContext attempt = LoginAttemptContext.now(username, null, null);
 
     LoginAttemptDecision gate = policy.beforeAttempt(attempt);
@@ -130,7 +130,7 @@ public final class StandaloneLoginFlow<T, U> {
   }
 
   private static void audit(com.svenruppert.vaadin.security.audit.AuditEvent event) {
-    SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
+    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
     try {
       sink.publish(event);
     } catch (RuntimeException ignored) {

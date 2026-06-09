@@ -19,13 +19,13 @@ package com.svenruppert.vaadin.security.demo.restclient.security;
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
 import com.svenruppert.vaadin.security.demo.restclient.security.resource.DemoDocumentResolver;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelRuntime;
 import com.svenruppert.vaadin.security.dx.vaadin.bootstrap.VaadinSecurity;
 import com.svenruppert.vaadin.security.policy.api.Policy;
 import com.svenruppert.vaadin.security.policy.api.PolicyDecision;
 import com.svenruppert.vaadin.security.policy.api.ResourcePredicates;
 import com.svenruppert.vaadin.security.policy.api.SubjectPredicates;
-import com.svenruppert.vaadin.security.starter.profile.VaadinSecurityStarter;
+import com.svenruppert.vaadin.security.starter.profile.VaadinJSentinelStarter;
 import com.vaadin.flow.server.ServiceInitEvent;
 import com.vaadin.flow.server.VaadinServiceInitListener;
 
@@ -36,21 +36,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * <strong>V00.73 reference: the simplest possible Vaadin-side bootstrap.</strong>
  * <p>
  * This file is the entire security-init surface of {@code demo-vaadin-rest-client}.
- * Everything else is wired through {@code @SecurityAutoService}:
+ * Everything else is wired through {@code @JSentinelAutoService}:
  * <ul>
- *   <li>{@code RestBackedAuthenticationService}  — {@code @SecurityAutoService(AuthenticationService.class)}</li>
- *   <li>{@code RestBackedAuthorizationService}   — {@code @SecurityAutoService(AuthorizationService.class)}</li>
- *   <li>{@code BackedLoginListener}              — {@code @SecurityAutoService(LoginListener.class)}</li>
- *   <li>{@code ProjectRoleAccessEvaluator}       — {@code @SecurityAutoService(AuthorizationEvaluator.class)}</li>
+ *   <li>{@code RestBackedAuthenticationService}  — {@code @JSentinelAutoService(AuthenticationService.class)}</li>
+ *   <li>{@code RestBackedAuthorizationService}   — {@code @JSentinelAutoService(AuthorizationService.class)}</li>
+ *   <li>{@code BackedLoginListener}              — {@code @JSentinelAutoService(LoginListener.class)}</li>
+ *   <li>{@code ProjectRoleAccessEvaluator}       — {@code @JSentinelAutoService(AuthorizationEvaluator.class)}</li>
  * </ul>
  * No hand-written {@code META-INF/services/*} files for those SPIs.
  * <p>
  * The {@link #serviceInit(ServiceInitEvent)} body shows the V00.73 way:
  * one fluent call to {@link VaadinSecurity#bootstrap()}, the
- * {@code VaadinSecurityStarter.developmentDefaults()} profile, and a
+ * {@code VaadinJSentinelStarter.developmentDefaults()} profile, and a
  * {@code .policies(...)} lambda that registers the three demo policies
  * and the document resource resolver — all inline through the fluent
- * surface, no direct {@code SecurityServiceResolver} calls.
+ * surface, no direct {@code JSentinelServiceResolver} calls.
  */
 public final class DemoPolicyInitListener implements VaadinServiceInitListener {
 
@@ -78,14 +78,14 @@ public final class DemoPolicyInitListener implements VaadinServiceInitListener {
     AuthenticationService<?, ?> authn = ServiceLoader.load(AuthenticationService.class)
         .findFirst().orElseThrow(() -> new IllegalStateException(
             "No AuthenticationService registered. "
-                + "Expected RestBackedAuthenticationService via @SecurityAutoService."));
+                + "Expected RestBackedAuthenticationService via @JSentinelAutoService."));
     AuthorizationService<?> authz = ServiceLoader.load(AuthorizationService.class)
         .findFirst().orElseThrow(() -> new IllegalStateException(
             "No AuthorizationService registered. "
-                + "Expected RestBackedAuthorizationService via @SecurityAutoService."));
+                + "Expected RestBackedAuthorizationService via @JSentinelAutoService."));
 
-    SecurityRuntime runtime = VaadinSecurity.bootstrap()
-        .use(VaadinSecurityStarter.developmentDefaults())
+    JSentinelRuntime runtime = VaadinSecurity.bootstrap()
+        .use(VaadinJSentinelStarter.developmentDefaults())
         .authentication(authn)
         .authorization(authz)
         .loginRoute("login")

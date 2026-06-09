@@ -36,7 +36,7 @@ Verwendet werden die Bibliotheksmodule der Version `00.60.00`:
 Der REST-Service ist die einzige Vertrauensgrenze:
 
 1. Der REST-Service authentifiziert Benutzer (`/api/login`).
-2. Der REST-Service loest Tokens zu `SecuritySubject` auf.
+2. Der REST-Service loest Tokens zu `JSentinelSubject` auf.
 3. Der REST-Service schuetzt alle fachlichen Endpunkte serverseitig mit
    `security-rest`. Das gilt fuer:
    - **Link-Endpunkte** (`/api/links`, `/api/links/{id}`, `/api/links/{id}/stats`)
@@ -144,13 +144,13 @@ Beispiel-Mapping:
   `link:delete:own`, `link:stats:own`.
 - `ROLE_ADMIN` → alle `link:*`, alle `user:*`, `admin:access`.
 
-### 2. SecuritySubject als reduziertes REST-Security-Modell
+### 2. JSentinelSubject als reduziertes REST-Security-Modell
 
 Der REST-Service erzeugt nach erfolgreicher Token-Aufloesung einen
-`SecuritySubject`:
+`JSentinelSubject`:
 
 ```java
-new SecuritySubject(
+new JSentinelSubject(
     userId,
     displayName,
     Set<RoleName> roles,
@@ -158,7 +158,7 @@ new SecuritySubject(
 );
 ```
 
-`SecuritySubject` darf keine Credentials, Passwort-Hashes, Tokens oder
+`JSentinelSubject` darf keine Credentials, Passwort-Hashes, Tokens oder
 vollstaendige Domain-User-Objekte enthalten.
 
 ### 3. Passwort-Speicherung
@@ -222,7 +222,7 @@ public final class ShortenerRestSubjectResolver
   }
 
   @Override
-  public Optional<SecuritySubject> resolveSubject(RestRequest request) {
+  public Optional<JSentinelSubject> resolveSubject(RestRequest request) {
     return BEARER.extract(request)
         .flatMap(tokenService::resolveSubject);
   }
@@ -297,12 +297,12 @@ aendern) muessen im Handler nach Permission-Pruefung explizit gegen
 Der Endpunkt `GET /{shortCode}` ist oeffentlich. Setze hier keinen
 `RestAuthorizationFilter` und keine `@RequiresPermission`-Annotation.
 Falls Klick-Statistiken erfasst werden, geschieht das ohne Zugriff
-auf einen `SecuritySubject`.
+auf einen `JSentinelSubject`.
 
 ### 10. Operation Discovery serverseitig filtern
 
 Implementiere `GET /api/operations`. Der Endpunkt liefert nur die
-fuer den aktuellen `SecuritySubject` erlaubten Operationen zurueck.
+fuer den aktuellen `JSentinelSubject` erlaubten Operationen zurueck.
 Verwende:
 
 - `SecuredOperationDescriptor`
@@ -318,7 +318,7 @@ Operationen.
 
 ### 11. Audit-Pipeline einbinden
 
-Aktiviere `SecurityAuditService` (Default: `DefaultCompositeAuditService`
+Aktiviere `JSentinelAuditService` (Default: `DefaultCompositeAuditService`
 mit `RingBufferAuditSink` + `LoggingAuditSink`). Audit-Events der
 URL-Shortener-Anwendung:
 
@@ -376,7 +376,7 @@ geloggt werden.
 
 ```java
 public record UiSessionSubject(
-    SecuritySubject subject,
+    JSentinelSubject subject,
     String accessToken
 ) {
 }
@@ -394,7 +394,7 @@ aufrufen:
 
 1. `POST /api/login` mit Username/Passwort.
 2. REST-Service prueft Credentials.
-3. REST-Service liefert Token und reduzierten `SecuritySubject`.
+3. REST-Service liefert Token und reduzierten `JSentinelSubject`.
 4. Vaadin speichert `UiSessionSubject` in der `VaadinSession`.
 
 Die UI darf **keine** eigene Benutzer- oder Rechte-Datenbank
@@ -579,7 +579,7 @@ com.svenruppert.vaadin.security.authorization.vaadin.VaadinSessionSubjectStore
 
 REST-Service (mindestens):
 
-- Login erfolgreich → Token + `SecuritySubject` mit korrekten Rollen
+- Login erfolgreich → Token + `JSentinelSubject` mit korrekten Rollen
   und Permissions.
 - Login falsch → 401, generische Fehlerantwort, kein Detail-Leak.
 - Wiederholter Fehl-Login triggert `LoginAttemptPolicy` → `LockedOut`.
@@ -633,7 +633,7 @@ Die Integration ist erst fertig, wenn:
   Passwort-Operationen verwendet werden.
 - `LoginAttemptPolicy` aktiv ist und Brute-Force abdeckt.
 - `SessionPolicy` (Idle-/Absolut-Lifetime) aktiv ist.
-- `SecurityAuditService` Login, Logout, Access-Denied,
+- `JSentinelAuditService` Login, Logout, Access-Denied,
   Bootstrap-Events erfasst.
 - Keine Passwoerter, Tokens, Bootstrap-Tokens oder Hashes geloggt
   werden.

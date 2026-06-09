@@ -18,8 +18,8 @@ package com.svenruppert.vaadin.security.authorization.impl;
 
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * events.
  * <p>
  * Reads the current authenticated subject (via {@link SubjectStores}) and
- * adapts it to a {@link SecuritySubject} so generic
+ * adapts it to a {@link JSentinelSubject} so generic
  * {@code AuthorizationEvaluator} implementations (such as
  * {@code RequiresRoleEvaluator} and {@code RequiresPermissionEvaluator}
  * shipped in {@code security-core}) see the subject's roles and
@@ -64,7 +64,7 @@ public final class VaadinAccessContextFactory {
     attributes.put("path", event.getLocation().getPath());
     attributes.put("target", event.getNavigationTarget());
     return new AccessContext(
-        currentSecuritySubject(),
+        currentJSentinelSubject(),
         "vaadin-view",
         event.getNavigationTarget().getSimpleName(),
         "navigate",
@@ -72,17 +72,17 @@ public final class VaadinAccessContextFactory {
   }
 
   /**
-   * Builds a {@link SecuritySubject} snapshot for the current
+   * Builds a {@link JSentinelSubject} snapshot for the current
    * Vaadin-session subject so generic evaluators can read roles and
    * permissions from the {@link AccessContext}. Returns
    * {@link Optional#empty()} if no subject is authenticated or the
    * security services are not (yet) wired.
    */
   @SuppressWarnings({"rawtypes", "unchecked"})
-  private static Optional<SecuritySubject> currentSecuritySubject() {
+  private static Optional<JSentinelSubject> currentJSentinelSubject() {
     Class subjectType;
     try {
-      AuthenticationService<?, ?> authentication = SecurityServiceResolver.authenticationService();
+      AuthenticationService<?, ?> authentication = JSentinelServiceResolver.authenticationService();
       if (authentication == null) return Optional.empty();
       subjectType = authentication.subjectType();
       if (subjectType == null) return Optional.empty();
@@ -95,7 +95,7 @@ public final class VaadinAccessContextFactory {
 
     AuthorizationService<Object> authorization;
     try {
-      authorization = SecurityServiceResolver.authorizationService();
+      authorization = JSentinelServiceResolver.authorizationService();
       if (authorization == null) return Optional.empty();
     } catch (RuntimeException e) {
       return Optional.empty();
@@ -116,6 +116,6 @@ public final class VaadinAccessContextFactory {
         + Integer.toHexString(System.identityHashCode(subject));
     String displayName = subject.toString();
     if (displayName == null || displayName.isBlank()) displayName = subjectId;
-    return Optional.of(new SecuritySubject(subjectId, displayName, roles, permissions));
+    return Optional.of(new JSentinelSubject(subjectId, displayName, roles, permissions));
   }
 }

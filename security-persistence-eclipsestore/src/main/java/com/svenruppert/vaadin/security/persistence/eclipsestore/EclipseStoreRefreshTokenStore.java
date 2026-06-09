@@ -29,9 +29,9 @@ import static java.util.Objects.requireNonNull;
 /** Eclipse-Store-backed {@link RefreshTokenStore}. */
 final class EclipseStoreRefreshTokenStore implements RefreshTokenStore {
 
-  private final EclipseStoreSecurityStorage storage;
+  private final EclipseStoreJSentinelStorage storage;
 
-  EclipseStoreRefreshTokenStore(EclipseStoreSecurityStorage storage) {
+  EclipseStoreRefreshTokenStore(EclipseStoreJSentinelStorage storage) {
     this.storage = storage;
   }
 

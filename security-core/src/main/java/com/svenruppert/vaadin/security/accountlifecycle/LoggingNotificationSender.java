@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.accountlifecycle;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 import java.util.Map;
 import java.util.Objects;
@@ -24,13 +24,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Default {@link SecurityNotificationSender} that writes a single
+ * Default {@link JSentinelNotificationSender} that writes a single
  * INFO line per notification — useful for demos and tests that
  * need lifecycle flows to complete without a real mail provider.
  * <p>
  * The line format mirrors {@code LoggingAuditSink}: a stable
  * {@code NOTIFY type=…} prefix followed by key=value pairs so log
- * scrapers can pivot on the {@link SecurityNotification.Kind} and
+ * scrapers can pivot on the {@link JSentinelNotification.Kind} and
  * the attribute keys without parsing free-form text.
  *
  * <p>Plain token values are written verbatim into the line —
@@ -38,8 +38,8 @@ import java.util.logging.Logger;
  * point at a production log aggregator. Production deployments
  * register their own transport.
  */
-@ExperimentalSecurityApi
-public final class LoggingNotificationSender implements SecurityNotificationSender {
+@ExperimentalJSentinelApi
+public final class LoggingNotificationSender implements JSentinelNotificationSender {
 
   private static final Logger DEFAULT_LOGGER =
       Logger.getLogger("com.svenruppert.vaadin.security.accountlifecycle");
@@ -59,7 +59,7 @@ public final class LoggingNotificationSender implements SecurityNotificationSend
   }
 
   @Override
-  public void send(SecurityNotification notification) {
+  public void send(JSentinelNotification notification) {
     if (notification == null) return;
     try {
       logger.log(Level.INFO, format(notification));
@@ -68,7 +68,7 @@ public final class LoggingNotificationSender implements SecurityNotificationSend
     }
   }
 
-  private static String format(SecurityNotification n) {
+  private static String format(JSentinelNotification n) {
     StringBuilder sb = new StringBuilder("NOTIFY ");
     sb.append("type=").append(n.kind().name());
     sb.append(' ').append("subject=").append(n.subjectId().value());

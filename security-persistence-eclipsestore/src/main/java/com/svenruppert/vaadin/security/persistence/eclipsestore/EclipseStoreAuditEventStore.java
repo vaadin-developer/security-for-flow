@@ -31,14 +31,14 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Eclipse-Store-backed {@link AuditEventStore}. Operates on the
- * shared {@link EclipseStoreSecurityRoot#auditEnvelopes} map under
+ * shared {@link EclipseStoreJSentinelRoot#auditEnvelopes} map under
  * the storage's read-write lock.
  */
 final class EclipseStoreAuditEventStore implements AuditEventStore {
 
-  private final EclipseStoreSecurityStorage storage;
+  private final EclipseStoreJSentinelStorage storage;
 
-  EclipseStoreAuditEventStore(EclipseStoreSecurityStorage storage) {
+  EclipseStoreAuditEventStore(EclipseStoreJSentinelStorage storage) {
     this.storage = storage;
   }
 

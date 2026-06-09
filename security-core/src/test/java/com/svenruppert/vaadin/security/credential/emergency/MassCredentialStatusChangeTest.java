@@ -25,7 +25,7 @@ package com.svenruppert.vaadin.security.credential.emergency;
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.CredentialStatusChanged;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.credential.store.CredentialRecord;
 import com.svenruppert.vaadin.security.credential.store.CredentialStatus;
 import com.svenruppert.vaadin.security.credential.store.InMemoryCredentialStore;
@@ -47,7 +47,7 @@ class MassCredentialStatusChangeTest {
 
   private static final Instant T0 = Instant.parse("2026-06-01T12:00:00Z");
 
-  private static final class RecordingAudit implements SecurityAuditService {
+  private static final class RecordingAudit implements JSentinelAuditService {
     final List<AuditEvent> events = new ArrayList<>();
     @Override public void publish(AuditEvent event) { events.add(event); }
     @Override public List<AuditEvent> query(AuditQuery q) { return List.copyOf(events); }

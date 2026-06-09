@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.components;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 /**
  * How a secured component reacts when the current subject is not
@@ -35,7 +35,7 @@ import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi
  * still has to enforce the permission on every action invocation.
  * Hiding a button does not protect against a hand-crafted RPC call.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public enum SecuredVisibilityMode {
   HIDE,
   DISABLE

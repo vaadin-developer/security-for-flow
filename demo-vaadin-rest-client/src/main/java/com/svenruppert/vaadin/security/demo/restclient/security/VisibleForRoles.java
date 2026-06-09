@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.demo.restclient.security;
 
-import com.svenruppert.vaadin.security.authorization.annotations.SecurityAnnotation;
+import com.svenruppert.vaadin.security.authorization.annotations.JSentinelAnnotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -32,7 +32,7 @@ import static java.lang.annotation.ElementType.TYPE;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(TYPE)
-@SecurityAnnotation(ProjectRoleAccessEvaluator.class)
+@JSentinelAnnotation(ProjectRoleAccessEvaluator.class)
 public @interface VisibleForRoles {
 
   ProjectRole[] value();

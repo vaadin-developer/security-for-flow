@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.authentication;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 
@@ -54,7 +54,7 @@ import static java.util.Objects.requireNonNull;
  *                        the first rotation
  * @param revokedAt       revocation instant, empty until revoked
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public record RefreshTokenRecord(
     String tokenHash,
     TenantId tenant,

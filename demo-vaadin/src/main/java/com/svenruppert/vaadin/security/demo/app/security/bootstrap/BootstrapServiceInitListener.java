@@ -19,9 +19,9 @@ package com.svenruppert.vaadin.security.demo.app.security.bootstrap;
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
 import com.svenruppert.vaadin.security.credential.password.PasswordHashingServices;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelRuntime;
 import com.svenruppert.vaadin.security.dx.vaadin.bootstrap.VaadinSecurity;
-import com.svenruppert.vaadin.security.starter.profile.VaadinSecurityStarter;
+import com.svenruppert.vaadin.security.starter.profile.VaadinJSentinelStarter;
 import com.vaadin.flow.server.ServiceInitEvent;
 import com.vaadin.flow.server.VaadinServiceInitListener;
 
@@ -35,9 +35,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * <p>
  * <strong>V00.72:</strong> the listener also runs the new fluent bootstrap
  * once per JVM ({@link VaadinSecurity#bootstrap()} with the
- * {@link VaadinSecurityStarter#developmentDefaults()} profile), pulling the
- * {@code @SecurityAutoService}-registered SPIs through {@code ServiceLoader}
- * and printing the resulting {@link SecurityRuntime#log()} so the operator
+ * {@link VaadinJSentinelStarter#developmentDefaults()} profile), pulling the
+ * {@code @JSentinelAutoService}-registered SPIs through {@code ServiceLoader}
+ * and printing the resulting {@link JSentinelRuntime#log()} so the operator
  * sees which services are active at startup.
  */
 public class BootstrapServiceInitListener implements VaadinServiceInitListener {
@@ -63,11 +63,11 @@ public class BootstrapServiceInitListener implements VaadinServiceInitListener {
       return;
     }
     // V00.73: typed sub-builders. .audit(...) surfaces a logging sink
-    // and an in-memory ring buffer in SecurityDiagnostics; .credentials(...)
+    // and an in-memory ring buffer in JSentinelDiagnostics; .credentials(...)
     // exposes the V00.71 password-hashing pipeline that BootstrapWiring
-    // already uses internally so it shows up in SecurityRuntime.services().
-    SecurityRuntime runtime = VaadinSecurity.bootstrap()
-        .use(VaadinSecurityStarter.developmentDefaults())
+    // already uses internally so it shows up in JSentinelRuntime.services().
+    JSentinelRuntime runtime = VaadinSecurity.bootstrap()
+        .use(VaadinJSentinelStarter.developmentDefaults())
         .authentication(authn)
         .authorization(authz)
         .loginRoute("login")

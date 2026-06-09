@@ -23,7 +23,7 @@
 package com.svenruppert.vaadin.security.credential.lifecycle;
 
 import com.svenruppert.vaadin.security.audit.CredentialStatusChanged;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.credential.store.CredentialStatus;
 import com.svenruppert.vaadin.security.credential.store.CredentialStore;
 import com.svenruppert.vaadin.security.credential.store.CredentialUpdateResult;
@@ -60,12 +60,12 @@ public final class CredentialLifecycleService {
       buildAllowedTransitions();
 
   private final CredentialStore store;
-  private final SecurityAuditService auditService;
+  private final JSentinelAuditService auditService;
   private final Clock clock;
 
   public CredentialLifecycleService(
       CredentialStore store,
-      SecurityAuditService auditService,
+      JSentinelAuditService auditService,
       Clock clock) {
     this.store = Objects.requireNonNull(store, "store");
     this.auditService = Objects.requireNonNull(auditService, "auditService");

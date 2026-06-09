@@ -18,7 +18,7 @@ import java.util.Objects;
 /**
  * Real V00.73 implementation of {@link RoleBootstrap}. Stores the
  * configured hierarchy in {@link RoleState}; install-time wiring
- * happens in {@code AbstractSecurityBootstrap.applyRoleConfiguration}.
+ * happens in {@code AbstractJSentinelBootstrap.applyRoleConfiguration}.
  *
  * @since 00.73.00
  */

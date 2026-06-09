@@ -18,7 +18,7 @@ package com.svenruppert.vaadin.security.authorization.api.roles;
 
 import com.svenruppert.vaadin.security.authorization.api.AccessEvaluator;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 
 import java.lang.annotation.Annotation;
@@ -34,7 +34,7 @@ public interface RoleBasedAccessEvaluatorAPI<T extends Annotation, U>
         extends AccessEvaluator<T> {
 
     /**
-     * Resolves the {@link AuthorizationService} via SPI using {@link SecurityServiceResolver}.
+     * Resolves the {@link AuthorizationService} via SPI using {@link JSentinelServiceResolver}.
      * <p>
      * If you need to deal with another technology, override this method in your implementation.
      * The resolved service is cached by the resolver.
@@ -42,7 +42,7 @@ public interface RoleBasedAccessEvaluatorAPI<T extends Annotation, U>
      * @return the AuthorizationService of your choice.
      */
     default AuthorizationService<U> authorizationService() {
-        return SecurityServiceResolver.authorizationService();
+        return JSentinelServiceResolver.authorizationService();
     }
 
     /**

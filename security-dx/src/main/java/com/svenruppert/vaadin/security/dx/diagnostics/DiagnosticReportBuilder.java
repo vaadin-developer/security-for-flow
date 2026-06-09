@@ -13,9 +13,9 @@ package com.svenruppert.vaadin.security.dx.diagnostics;
 
 /**
  * Builder handle passed to each {@link DiagnosticContributor} during a
- * {@link SecurityDiagnostics#inspect()} sweep. Contributors append
+ * {@link JSentinelDiagnostics#inspect()} sweep. Contributors append
  * findings; the diagnostics engine assembles the final immutable
- * {@link SecurityServiceReport}.
+ * {@link JSentinelServiceReport}.
  *
  * @since 00.72.00
  */

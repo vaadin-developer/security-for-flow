@@ -30,10 +30,10 @@
     tokens, ApiKey, RefreshToken, RateLimit). Each implementation is
     verified bit-for-bit against the contract shipped by
     security-persistence-testkit. The runtime root object
-    (EclipseStoreSecurityRoot) is package-private — applications
+    (EclipseStoreJSentinelRoot) is package-private — applications
     consume the stores through their existing Phase-2 SPIs and
     control the lifecycle through the public
-    EclipseStoreSecurityStorage facade.
+    EclipseStoreJSentinelStorage facade.
   </description>
 
   <properties>

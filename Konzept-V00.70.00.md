@@ -6,7 +6,7 @@
 > mit Eclipse Store als Referenzimplementierung und besser steuerbaren
 > aktiven Sessions.
 >
-> **Foundation-Stand 2026-05-28:** Policy-API (5a), `SecurityEnforcer`
+> **Foundation-Stand 2026-05-28:** Policy-API (5a), `JSentinelEnforcer`
 > (5b), Method-Security via Annotation-Processor (5c) und die
 > Demo-Integration in `demo-standalone` (5d) sind umgesetzt — siehe
 > `Implementierungsplan-V00.70.00.md` für den Phasen-Status. Step-Up
@@ -133,7 +133,7 @@ Regel:
   und Defaults.
 - `security-persistence-eclipsestore` enthält Eclipse-Store-spezifische
   Root-Objekte, StorageManager-Integration und konkrete Stores.
-- Klassen wie `EclipseStoreSecurityRoot` sind adapterinterne
+- Klassen wie `EclipseStoreJSentinelRoot` sind adapterinterne
   Implementierungsdetails.
 
 Geplante Store-Interfaces:
@@ -171,7 +171,7 @@ security-persistence-eclipsestore
 Interne Struktur:
 
 ```java
-final class EclipseStoreSecurityRoot {
+final class EclipseStoreJSentinelRoot {
   final List<AuditEnvelope> auditEvents = new ArrayList<>();
   final Map<LoginAttemptKey, LoginAttemptState> loginAttempts = new HashMap<>();
   final Map<SessionId, SessionRecord> sessions = new HashMap<>();
@@ -226,7 +226,7 @@ Security-Versionen und Role Refresh.
 Ziele:
 
 - Role Refresh während aktiver Sessions.
-- `SecurityVersion` pro Subject/Tenant.
+- `JSentinelVersion` pro Subject/Tenant.
 - Session-Invalidierung bei kritischen Rollenänderungen.
 - Remote Logout.
 - `LogoutScope.AllSessionsOfSubject` store-backed.
@@ -241,7 +241,7 @@ public record SessionRecord(
     TenantId tenantId,
     Instant createdAt,
     Instant lastActivityAt,
-    SecurityVersion securityVersionAtLogin,
+    JSentinelVersion securityVersionAtLogin,
     SessionStatus status
 ) {}
 ```
@@ -257,7 +257,7 @@ ohne dass Anwendungen direkt überall Store-Interfaces verwenden müssen.
 Geplante Implementierungen:
 
 ```text
-StoreBackedSecurityAuditService
+StoreBackedJSentinelAuditService
 StoreBackedLoginAttemptPolicy
 StoreBackedSubjectSessionRegistry
 StoreBackedRoleAuthorizationService
@@ -326,7 +326,7 @@ Anforderungen:
   produktiven Mail-Provider-Zwang.
 
 Nicht-Ziel ist ein vollständiges E-Mail-Versandframework. Der Versand
-läuft über ein kleines SPI, z. B. `SecurityNotificationSender`.
+läuft über ein kleines SPI, z. B. `JSentinelNotificationSender`.
 
 ### 11. Token-, API-Key- und Rate-Limiting-Grundlagen
 
@@ -422,8 +422,8 @@ Geplante Bausteine:
 security-test
 FakeAuthenticationService
 InMemoryTokenService
-SecurityTestExtension
-OpenApiSecurityMetadataGenerator
+JSentinelTestExtension
+OpenApiJSentinelMetadataGenerator
 ```
 
 Ziele:
@@ -464,7 +464,7 @@ security-quarkus
 ## Akzeptanzkriterien
 
 - `security-core` enthält keine Eclipse-Store-Abhängigkeit.
-- Kein öffentlicher API-Typ heißt `SecurityRoot`.
+- Kein öffentlicher API-Typ heißt `JSentinelRoot`.
 - Eclipse-Store-Root-Klassen liegen ausschließlich im
   Eclipse-Store-Modul.
 - Store-Interfaces sind klein und fachlich geschnitten.

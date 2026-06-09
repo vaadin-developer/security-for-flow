@@ -12,8 +12,8 @@ package com.svenruppert.vaadin.security.starter.ui;
 
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.components.SecuredVisibilityMode;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
@@ -31,7 +31,7 @@ import java.util.logging.Logger;
  * V00.73 policy-aware visibility helper for {@link SecuredUi}.
  *
  * <p>Adds an attach listener that resolves the current
- * {@link SecuritySubject}, builds a {@link PolicyContext}, and asks
+ * {@link JSentinelSubject}, builds a {@link PolicyContext}, and asks
  * the configured {@link PolicyRegistry} how to render the component.
  * The same instance is re-evaluated on every attach so navigation
  * between routes refreshes the decision (mirrors V00.71
@@ -97,11 +97,11 @@ final class PolicyVisibility {
   }
 
   private static Verdict evaluate(String policyName) {
-    SecuritySubject subject = resolveSubject().orElse(null);
+    JSentinelSubject subject = resolveSubject().orElse(null);
     if (subject == null) {
       return Verdict.DeniedNoSubject;
     }
-    PolicyRegistry registry = SecurityServiceResolver.policyRegistry();
+    PolicyRegistry registry = JSentinelServiceResolver.policyRegistry();
     Optional<Policy> known = registry.find(policyName);
     if (known.isEmpty()) {
       return Verdict.UnknownPolicy;
@@ -124,9 +124,9 @@ final class PolicyVisibility {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  private static Optional<SecuritySubject> resolveSubject() {
+  private static Optional<JSentinelSubject> resolveSubject() {
     try {
-      Class subjectType = SecurityServiceResolver
+      Class subjectType = JSentinelServiceResolver
           .<Object, Object>findAuthenticationService()
           .map(AuthenticationService::subjectType)
           .orElse(null);
@@ -139,13 +139,13 @@ final class PolicyVisibility {
         return Optional.empty();
       }
       Optional<AuthorizationService<Object>> authzOpt =
-          SecurityServiceResolver.findAuthorizationService();
+          JSentinelServiceResolver.findAuthorizationService();
       if (authzOpt.isEmpty()) {
         return Optional.empty();
       }
       AuthorizationService<Object> authz = authzOpt.get();
       Object u = rawSubject.get();
-      return Optional.of(new SecuritySubject(
+      return Optional.of(new JSentinelSubject(
           String.valueOf(u),
           String.valueOf(u),
           new java.util.LinkedHashSet<>(authz.rolesFor(u).roleNames()),

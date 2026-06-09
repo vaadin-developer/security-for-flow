@@ -17,7 +17,7 @@
 package com.svenruppert.vaadin.security.demo.app.security.services;
 
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
-import com.svenruppert.vaadin.security.autoservice.api.SecurityAutoService;
+import com.svenruppert.vaadin.security.autoservice.api.JSentinelAutoService;
 import com.svenruppert.vaadin.security.authorization.api.permissions.HasPermissions;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.permissions.RolePermissionMapping;
@@ -44,7 +44,7 @@ import static com.svenruppert.vaadin.security.demo.app.security.permissions.Demo
  * {@link RolePermissionResolver}. This keeps the demo free of
  * authorization helper code.
  */
-@SecurityAutoService(AuthorizationService.class)
+@JSentinelAutoService(AuthorizationService.class)
 public class MyAuthorizationService
     implements AuthorizationService<MyUser> {
 

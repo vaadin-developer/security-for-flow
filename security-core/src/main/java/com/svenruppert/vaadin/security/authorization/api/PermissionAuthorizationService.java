@@ -31,7 +31,7 @@ import com.svenruppert.vaadin.security.authorization.api.permissions.HasPermissi
  *
  * @param <U> the user/subject type
  */
-@ExperimentalSecurityApi("Permission-based authorization is experimental. "
+@ExperimentalJSentinelApi("Permission-based authorization is experimental. "
     + "Use role-based AuthorizationService for stable production use.")
 public interface PermissionAuthorizationService<U> extends AuthorizationService<U> {
 

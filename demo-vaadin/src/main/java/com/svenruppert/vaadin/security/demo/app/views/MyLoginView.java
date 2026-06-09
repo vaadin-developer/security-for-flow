@@ -24,7 +24,7 @@ import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.vaadin.security.demo.app.security.bootstrap.BootstrapWiring;
 import com.svenruppert.vaadin.security.demo.app.security.services.DemoSessionStoreProvider;
 import com.svenruppert.vaadin.security.logout.SubjectId;
-import com.svenruppert.vaadin.security.session.SecurityVersion;
+import com.svenruppert.vaadin.security.session.JSentinelVersion;
 import com.svenruppert.vaadin.security.session.SessionId;
 import com.svenruppert.vaadin.security.session.SessionRecord;
 import com.svenruppert.vaadin.security.session.SessionStatus;
@@ -43,7 +43,7 @@ import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectory
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.authorization.LoginView;
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 
 import java.time.Clock;
@@ -71,7 +71,7 @@ public class MyLoginView
 
 
   private final AuthenticationService<Credentials, MyUser> authenticationService
-      = SecurityServiceResolver.authenticationService();
+      = JSentinelServiceResolver.authenticationService();
 
   public MyLoginView() {
     super();
@@ -102,7 +102,7 @@ public class MyLoginView
       return LoginAttemptDecision.allowed();
     }
     try {
-      LoginAttemptPolicy policy = SecurityServiceResolver.loginAttemptPolicy();
+      LoginAttemptPolicy policy = JSentinelServiceResolver.loginAttemptPolicy();
       return policy.beforeAttempt(
           LoginAttemptContext.now(username, currentClientAddress(), null));
     } catch (RuntimeException ignored) {
@@ -199,7 +199,7 @@ public class MyLoginView
           TenantId.DEFAULT,
           now,
           now,
-          SecurityVersion.INITIAL,
+          JSentinelVersion.INITIAL,
           SessionStatus.ACTIVE));
     } catch (RuntimeException ignored) {
       // session bookkeeping must not block login

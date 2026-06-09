@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.authorization;
 import com.svenruppert.vaadin.security.action.ActionAuthorizationService;
 import com.svenruppert.vaadin.security.action.ActionPermission;
 import com.svenruppert.vaadin.security.authorization.api.AccessDeniedException;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.vaadin.browserless.BrowserlessTest;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.UI;
@@ -66,15 +66,15 @@ class ActionGatedUiPatternTest extends BrowserlessTest {
 
   @BeforeEach
   void wire() {
-    SecurityServiceResolver.resetAll();
-    SecurityServiceResolver.setActionAuthorizationService(actionService);
+    JSentinelServiceResolver.resetAll();
+    JSentinelServiceResolver.setActionAuthorizationService(actionService);
     actionService.reset();
     Fixture.deleteCalls.set(0);
   }
 
   @AfterEach
   void cleanUp() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
   }
 
   // ── Pattern A — visibility driven by isAllowed ────────────────
@@ -146,7 +146,7 @@ class ActionGatedUiPatternTest extends BrowserlessTest {
 
     public Fixture() {
       ActionAuthorizationService<Object> svc =
-          SecurityServiceResolver.actionAuthorizationService();
+          JSentinelServiceResolver.actionAuthorizationService();
 
       // Pattern A — visibility hint
       adminButton = new Button("Delete (visible only when allowed)");

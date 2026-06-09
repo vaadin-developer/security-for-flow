@@ -20,9 +20,9 @@ import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.LoginFailed;
 import com.svenruppert.vaadin.security.audit.LoginSucceeded;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;
@@ -58,9 +58,9 @@ class StandaloneLoginFlowTest {
 
   @BeforeEach
   void setUp() {
-    SecurityServiceResolver.resetAll();
-    SecurityServiceResolver.setSecurityAuditService(audit);
-    SecurityServiceResolver.setLoginAttemptPolicy(policy);
+    JSentinelServiceResolver.resetAll();
+    JSentinelServiceResolver.setJSentinelAuditService(audit);
+    JSentinelServiceResolver.setLoginAttemptPolicy(policy);
     // Reset the cached SubjectStore so every test starts clean — the
     // SPI-registered ThreadLocalSubjectStore is recreated lazily.
     SubjectStores.reset();
@@ -70,7 +70,7 @@ class StandaloneLoginFlowTest {
 
   @AfterEach
   void tearDown() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     SubjectStores.reset();
     InMemoryStore.clear();
   }
@@ -177,7 +177,7 @@ class StandaloneLoginFlowTest {
   @Test
   @DisplayName("A throwing audit sink does NOT block a successful login")
   void throwingAuditSinkDoesNotBlockSuccess() {
-    SecurityServiceResolver.setSecurityAuditService(new SecurityAuditService() {
+    JSentinelServiceResolver.setJSentinelAuditService(new JSentinelAuditService() {
       @Override public void publish(AuditEvent event) { throw new RuntimeException("boom"); }
       @Override public List<AuditEvent> query(AuditQuery q) { return List.of(); }
     });

@@ -59,7 +59,7 @@ carve-out matches Konzept-V00.71.00 §1 and §7.
     GLOBAL), `AbusePatternMonitor` (privacy-minimised stuffing /
     spraying / reset detectors), `ContextAwarePasswordValidator`
     (rejects username / email / forbidden-term overlap), opt-in
-    `PasswordHistoryService`, data-minimised `CredentialSecurityMetrics`
+    `PasswordHistoryService`, data-minimised `CredentialJSentinelMetrics`
     SPI.
   - **Phase 5** — `CompromisedPasswordChecker` SPI + `NoOp` / Local
     blocklist defaults, optional new module
@@ -93,7 +93,7 @@ carve-out matches Konzept-V00.71.00 §1 and §7.
 
 | Module | New in 00.71.00 | Headline |
 |---|:--:|---|
-| `security-core` | no | New `com.svenruppert.vaadin.security.credential.*` packages (password hashing, envelope, policy, provider SPI, pepper, dummy, limiter, calibration, secret, input, store, lifecycle, change, token, reset, audit publisher, **abuse**, **compromised**, **emergency**, **history**, **metrics**, **standards**, **tenant**) + `SecurityServiceResolver.setAuthenticationService` / `setAuthorizationService` parity setters |
+| `security-core` | no | New `com.svenruppert.vaadin.security.credential.*` packages (password hashing, envelope, policy, provider SPI, pepper, dummy, limiter, calibration, secret, input, store, lifecycle, change, token, reset, audit publisher, **abuse**, **compromised**, **emergency**, **history**, **metrics**, **standards**, **tenant**) + `JSentinelServiceResolver.setAuthenticationService` / `setAuthorizationService` parity setters |
 | `security-crypto-bc` | **yes** | Argon2id / bcrypt / scrypt providers, `BouncyCastleHashingServices.modern()`, ServiceLoader registration |
 | `security-credentials-hibp` | **yes** | HaveIBeenPwned k-anonymity online checker (JDK HttpClient only — no extra runtime deps); strictly opt-in |
 | `security-vaadin` | no | unchanged |
@@ -347,7 +347,7 @@ If you want to adopt the new credential stack:
    `InMemoryPepperService` (or a custom backend) when you are ready
    to add HMAC peppering. The rehash engine transparently migrates
    pre-pepper hashes via `PEPPER_KEY_ROTATED`.
-6. **Audit** — keep your existing `SecurityAuditService` wiring; the
+6. **Audit** — keep your existing `JSentinelAuditService` wiring; the
    four new `AuditEvent` variants are picked up automatically by
    `AuditQuery` and `LoggingAuditSink`.
 

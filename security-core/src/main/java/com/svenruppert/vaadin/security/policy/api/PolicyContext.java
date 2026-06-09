@@ -16,8 +16,8 @@
  */
 package com.svenruppert.vaadin.security.policy.api;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 
 import java.util.Map;
@@ -52,7 +52,7 @@ import static java.util.Objects.requireNonNull;
  * @param resourceRef        reference to the concrete domain resource, if any
  * @param resourceAttributes policy-specific resource attributes
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public record PolicyContext(
     AccessContext accessContext,
     String policyName,
@@ -124,7 +124,7 @@ public record PolicyContext(
    *
    * @return authenticated subject, if any
    */
-  public Optional<SecuritySubject> subject() {
+  public Optional<JSentinelSubject> subject() {
     return accessContext.subject();
   }
 }

@@ -17,8 +17,8 @@
 package com.svenruppert.vaadin.security.ratelimiting;
 
 import com.svenruppert.vaadin.security.audit.RateLimitExceeded;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -52,13 +52,13 @@ import static java.util.Objects.requireNonNull;
  * backoff and lockout semantics. This policy is for steady-state
  * traffic shaping.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class InMemoryRateLimitPolicy implements RateLimitPolicy {
 
   private static final String SUBJECT_PREFIX = "subject:";
 
   private final RateLimitStore store;
-  private final SecurityAuditService auditService;
+  private final JSentinelAuditService auditService;
   private final int limit;
   private final Duration window;
   private final Clock clock;
@@ -70,7 +70,7 @@ public final class InMemoryRateLimitPolicy implements RateLimitPolicy {
    * @param window       sliding-window duration; non-null, strictly positive
    */
   public InMemoryRateLimitPolicy(RateLimitStore store,
-                                 SecurityAuditService auditService,
+                                 JSentinelAuditService auditService,
                                  int limit,
                                  Duration window) {
     this(store, auditService, limit, window, Clock.systemUTC());
@@ -86,7 +86,7 @@ public final class InMemoryRateLimitPolicy implements RateLimitPolicy {
    * @param clock        time source; non-null
    */
   public InMemoryRateLimitPolicy(RateLimitStore store,
-                                 SecurityAuditService auditService,
+                                 JSentinelAuditService auditService,
                                  int limit,
                                  Duration window,
                                  Clock clock) {

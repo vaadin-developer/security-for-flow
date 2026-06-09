@@ -18,7 +18,7 @@ package com.svenruppert.vaadin.security.logout;
 
 /**
  * Default {@link LogoutService} — discards every call. Returned by
- * {@link com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver#logoutService()}
+ * {@link com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver#logoutService()}
  * when no real implementation has been registered.
  * <p>
  * Production applications must register a concrete

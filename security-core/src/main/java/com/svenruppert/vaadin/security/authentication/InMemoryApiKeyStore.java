@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.authentication;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 
@@ -36,7 +36,7 @@ import static java.util.Objects.requireNonNull;
  * preserves insertion order. Read-write lock keeps mutations atomic
  * while letting concurrent lookups proceed.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class InMemoryApiKeyStore implements ApiKeyStore {
 
   private final Map<String, ApiKeyRecord> keys = new LinkedHashMap<>();

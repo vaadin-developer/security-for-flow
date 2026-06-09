@@ -55,7 +55,7 @@ public final class NavigationAccessDecisionService {
    * @param ctx the navigation security context
    * @return the authentication-phase decision
    */
-  public NavigationAccessDecision evaluateAuthentication(NavigationSecurityContext ctx) {
+  public NavigationAccessDecision evaluateAuthentication(NavigationJSentinelContext ctx) {
     if (!ctx.restricted()) {
       return NavigationAccessDecision.allowed();
     }

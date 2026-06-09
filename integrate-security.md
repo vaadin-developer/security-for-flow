@@ -21,13 +21,13 @@ Die Security-Bibliothek besteht aktuell aus:
 - `security-standalone`: Plain-Java-Adapter fuer CLI- / Desktop- /
   Daemon-Anwendungen mit `ThreadLocalSubjectStore`,
   `StandaloneLoginFlow` und `SecuredProxy.wrap(Interface, impl)`
-  (JDK-Dynamic-Proxy, routet ueber `SecurityEnforcer`).
+  (JDK-Dynamic-Proxy, routet ueber `JSentinelEnforcer`).
 - `security-processor`: Compile-Time-Annotation-Processor. Erzeugt
   `<Type>Secured`-Subklassen fuer `@Secured`-annotierte konkrete
   Klassen. Wird im konsumierenden Modul als
   `<annotationProcessorPath>` eingebunden (nicht als
   Compile-Dependency). Beide Pfade — `SecuredProxy.wrap(...)` und der
-  generierte Wrapper — landen im selben `SecurityEnforcer`.
+  generierte Wrapper — landen im selben `JSentinelEnforcer`.
 - `security-test`: Wiederverwendbare Test-Fixtures (Fakes, In-Memory-
   SubjectStore, RecordingAuditSink, JUnit-5-Extension). Konsumiert per
   `<scope>test</scope>`.
@@ -51,7 +51,7 @@ Setze die Integration so um, dass der REST-Service die einzige
 Vertrauensgrenze ist:
 
 1. Der REST-Service authentifiziert Benutzer.
-2. Der REST-Service loest Tokens zu `SecuritySubject` auf.
+2. Der REST-Service loest Tokens zu `JSentinelSubject` auf.
 3. Der REST-Service schuetzt alle fachlichen Endpunkte serverseitig mit
    `security-rest`.
 4. Der REST-Service liefert fuer die UI nur die Operationen/Aktionen aus,
@@ -114,13 +114,13 @@ Nutze `RoleName`, `PermissionName`, `StaticRolePermissionMapping`,
 `RolePermissionMapping` und `RolePermissionResolver` aus `security-core`,
 um Rollen auf Permissions abzubilden.
 
-### 2. SecuritySubject als reduziertes REST-Security-Modell verwenden
+### 2. JSentinelSubject als reduziertes REST-Security-Modell verwenden
 
 Der REST-Service soll nach erfolgreicher Token-Aufloesung einen
-`SecuritySubject` erzeugen:
+`JSentinelSubject` erzeugen:
 
 ```java
-new SecuritySubject(
+new JSentinelSubject(
     userId,
     displayName,
     Set<RoleName> roles,
@@ -128,7 +128,7 @@ new SecuritySubject(
 );
 ```
 
-`SecuritySubject` darf keine Credentials, Passwort-Hashes, Tokens oder
+`JSentinelSubject` darf keine Credentials, Passwort-Hashes, Tokens oder
 vollstaendige Domain-User-Objekte enthalten.
 
 ### 3. Token-Strategie im REST-Service kapseln
@@ -161,7 +161,7 @@ public final class AppRestSubjectResolver implements RestSubjectResolver {
   private final TokenService tokenService;
 
   @Override
-  public Optional<SecuritySubject> resolveSubject(RestRequest request) {
+  public Optional<JSentinelSubject> resolveSubject(RestRequest request) {
     return BEARER.extract(request)
         .flatMap(tokenService::resolveSubject);
   }
@@ -206,7 +206,7 @@ Fuer Endpunkte, die nur irgendeinen authentifizierten Benutzer brauchen
 
 Implementiere einen REST-Endpunkt wie `GET /api/operations`.
 
-Dieser Endpunkt muss serverseitig anhand des aktuellen `SecuritySubject`
+Dieser Endpunkt muss serverseitig anhand des aktuellen `JSentinelSubject`
 filtern und nur erlaubte Operationen zur UI schicken. Verwende dafuer:
 
 - `SecuredOperationDescriptor`
@@ -243,7 +243,7 @@ enthaelt, was die UI fuer Darstellung und REST-Aufrufe braucht:
 
 ```java
 public record UiSessionSubject(
-    SecuritySubject subject,
+    JSentinelSubject subject,
     String accessToken
 ) {
 }
@@ -261,7 +261,7 @@ Beispielverhalten:
 
 1. `POST /api/login` mit Username/Passwort.
 2. REST-Service prueft Credentials.
-3. REST-Service liefert Token und reduzierten `SecuritySubject`.
+3. REST-Service liefert Token und reduzierten `JSentinelSubject`.
 4. Vaadin speichert `UiSessionSubject` in der VaadinSession.
 
 Die UI darf keine eigene Benutzer- oder Rechte-Datenbank verwenden.
@@ -338,7 +338,7 @@ public final class AdminView extends VerticalLayout {
 }
 ```
 
-Oder verwende eine projektspezifische Annotation mit `@SecurityAnnotation`.
+Oder verwende eine projektspezifische Annotation mit `@JSentinelAnnotation`.
 Die Vaadin-Navigation darf unzulaessige Views blockieren oder zur
 Default-View/Login-View weiterleiten. Das ersetzt aber nicht den
 REST-seitigen Schutz fachlicher Operationen.
@@ -404,7 +404,7 @@ Implementiere mindestens folgende Tests:
 
 REST-Service:
 
-- Login erfolgreich -> Token + `SecuritySubject`.
+- Login erfolgreich -> Token + `JSentinelSubject`.
 - Login falsch -> 401 oder generische Fehlerantwort.
 - Geschuetzter Endpunkt ohne Token -> 401.
 - Geschuetzter Endpunkt mit Token, aber ohne Permission -> 403.

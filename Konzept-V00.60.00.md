@@ -48,7 +48,7 @@ Die Erweiterungen sollen diesen Ansatz nicht durch ein Spring-Security-Modell er
 >   Hash transparent, wenn der Hasher Drift meldet.
 > - ✅ Demo-`UserStorage` und `DemoUserStore` speichern Hashes, kein
 >   Klartext.
-> - ✅ Im `SecurityServiceResolver` registriert
+> - ✅ Im `JSentinelServiceResolver` registriert
 >   (`passwordHashingService()` / `findPasswordHashingService()` /
 >   `setPasswordHashingService(...)`), Default-Fallback ist ein
 >   gecachter `Pbkdf2PasswordHasher`.
@@ -61,7 +61,7 @@ Die Erweiterungen sollen diesen Ansatz nicht durch ein Spring-Security-Modell er
 > - ⚠️ PBKDF2 statt Argon2id (Konzept akzeptiert das als pragmatische
 >   Alternative).
 > - ✅ Demos rufen
->   `SecurityServiceResolver.passwordHashingService()` in
+>   `JSentinelServiceResolver.passwordHashingService()` in
 >   `DemoRestServer` und `InMemoryDemoUserDirectory`; Tests behalten
 >   bewusst den direkten Konstruktor für deterministische Unit-Tests.
 
@@ -131,19 +131,19 @@ Für `00.60.00` sollte Passwort-Hashing als neues SPI eingeführt werden. Die Co
 >   `BootstrapAdminCreated`, `BootstrapTokenRejected`.
 >   Jede Variante trägt ihre eigenen Felder — kein
 >   Free-Form-Attributes-Map mehr.
-> - ✅ `SecurityAuditService`-SPI: `publish(AuditEvent)` +
->   `query(AuditQuery)`. Die alte API `record(SecurityAuditEvent)`
+> - ✅ `JSentinelAuditService`-SPI: `publish(AuditEvent)` +
+>   `query(AuditQuery)`. Die alte API `record(JSentinelAuditEvent)`
 >   wurde ersatzlos entfernt (Brief Q4 a = hartes Replace).
 > - ✅ `AuditQuery`-Record (`types`, `subjectId`, `from`, `to`,
 >   `limit`) mit Factories `all()`/`ofType(...)`/`forSubject(...)`.
 > - ✅ `AuditSink`-Vertrag (write-only, "must not throw").
-> - ✅ Implementierungen: `NoopSecurityAuditService` (Default-Fallback),
+> - ✅ Implementierungen: `NoopJSentinelAuditService` (Default-Fallback),
 >   `RingBufferAuditSink` (default cap. 256, thread-safe),
 >   `LoggingAuditSink` (JUL, pattern-match-formatiert),
 >   `CompositeAuditService` (RingBuffer + zusätzliche Sinks),
 >   `DefaultCompositeAuditService` (no-arg, SPI-registrierbar).
 > - ✅ Resolver-Accessors `securityAuditService()` /
->   `findSecurityAuditService()` / `setSecurityAuditService(...)`.
+>   `findJSentinelAuditService()` / `setJSentinelAuditService(...)`.
 > - ✅ Emit-Sites:
 >   `SubjectClearingLogoutService` → `LogoutPerformed`;
 >   `VaadinLogoutService` indirekt via Core-Service;
@@ -171,7 +171,7 @@ Für `00.60.00` sollte Passwort-Hashing als neues SPI eingeführt werden. Die Co
 >   (`@RequiresPermission("audit:read")`) mit `Grid<AuditEvent>`,
 >   ComboBox-Typ-Filter, TextField-Subject-Filter, Refresh-Button.
 > - ✅ Tests: `AuditQueryTest`, `RingBufferAuditSinkTest`,
->   `LoggingAuditSinkTest`, `NoopSecurityAuditServiceTest`,
+>   `LoggingAuditSinkTest`, `NoopJSentinelAuditServiceTest`,
 >   `InitialAdminBootstrapAuditTest` (4 Cases) plus alle migrierten
 >   Emit-Site-Tests.
 
@@ -181,22 +181,22 @@ Sicherheitsrelevante Ereignisse müssen nachvollziehbar sein. Dazu gehören erfo
 
 ### Konzept
 
-Ein neues SPI `SecurityAuditService` nimmt strukturierte Security Events entgegen.
+Ein neues SPI `JSentinelAuditService` nimmt strukturierte Security Events entgegen.
 
 Vorgeschlagene API:
 
 ```java
-public interface SecurityAuditService {
-  void record(SecurityAuditEvent event);
+public interface JSentinelAuditService {
+  void record(JSentinelAuditEvent event);
 }
 ```
 
 Vorgeschlagenes Event-Modell:
 
 ```java
-public record SecurityAuditEvent(
+public record JSentinelAuditEvent(
     Instant timestamp,
-    SecurityAuditEventType type,
+    JSentinelAuditEventType type,
     String subjectId,
     String username,
     String route,
@@ -210,7 +210,7 @@ public record SecurityAuditEvent(
 Vorgeschlagene Event-Typen:
 
 ```java
-public enum SecurityAuditEventType {
+public enum JSentinelAuditEventType {
   LOGIN_SUCCESS,
   LOGIN_FAILURE,
   LOGOUT,
@@ -227,8 +227,8 @@ public enum SecurityAuditEventType {
 
 Default-Implementierung:
 
-- `NoopSecurityAuditService` im Core als sichere technische Default-Implementierung.
-- Optional `Slf4jSecurityAuditService` als einfache produktionsfähige Ausgabe.
+- `NoopJSentinelAuditService` im Core als sichere technische Default-Implementierung.
+- Optional `Slf4jJSentinelAuditService` als einfache produktionsfähige Ausgabe.
 - Persistente Audit-Ziele bleiben Aufgabe der Anwendung.
 
 ### Bewertung
@@ -266,7 +266,7 @@ Audit Logging sollte in `00.60.00` aufgenommen werden, aber datensparsam. Das Fr
 >   `strictBootstrap()` (3 / 1 h / 1 h / 24 h).
 > - ✅ `NoopLoginAttemptPolicy` als Resolver-Fallback;
 >   `loginAttemptPolicy()` / `findLoginAttemptPolicy()` /
->   `setLoginAttemptPolicy(...)` im `SecurityServiceResolver`.
+>   `setLoginAttemptPolicy(...)` im `JSentinelServiceResolver`.
 > - ✅ Demo-Wiring: `DemoHandlers.login(...)` ruft `beforeAttempt` vor
 >   der Passwortprüfung, antwortet mit **429 + `Retry-After`** bei
 >   Lockout, ruft `recordSuccess`/`recordFailure`. Router stashed
@@ -330,7 +330,7 @@ Das Login-Flow-Verhalten:
 2. Bei `allowed=false` wird keine Passwortprüfung durchgeführt.
 3. Fehlgeschlagene Login-Prüfung ruft `recordFailure(...)`.
 4. Erfolgreiche Login-Prüfung ruft `recordSuccess(...)`.
-5. Relevante Ereignisse werden an `SecurityAuditService` gemeldet.
+5. Relevante Ereignisse werden an `JSentinelAuditService` gemeldet.
 
 ### Bewertung
 
@@ -528,20 +528,20 @@ Für `00.60.00` sollte keine konkrete Rollenpersistenz im Core erzwungen werden.
 >   `VaadinLogoutGateway` versteckt (`DefaultVaadinLogoutGateway` als
 >   Default).
 > - ✅ `NoopLogoutService.INSTANCE` als Resolver-Fallback.
->   `SecurityServiceResolver.logoutService()` /
+>   `JSentinelServiceResolver.logoutService()` /
 >   `findLogoutService()` / `setLogoutService(...)`.
 > - ✅ Demo-vaadin und demo-vaadin-rest-client: `MainView.logout()`
 >   ruft `LogoutService.logout(SubjectId.of(...), LogoutScope.CurrentSession)`.
 > - ✅ demo-rest: `POST /api/logout` resolved `SubjectId` aus dem
 >   Bearer-Token, revoked den Token lokal und delegiert für Audit +
->   Listener-Fan-out an `SecurityServiceResolver.logoutService()`. Der
+>   Listener-Fan-out an `JSentinelServiceResolver.logoutService()`. Der
 >   Service ist in `DemoRestServer.start(...)` mit Token-revokendem
 >   Listener registriert; `DemoTokenStore` implementiert
 >   `SubjectSessionRegistry` (Per-User-Token-Index).
 > - ✅ `LOGOUT`-Audit-Event wird emittiert (war zum 2026-05-06 noch offen).
 > - ✅ Tests: `SubjectIdTest`, `InMemorySubjectSessionRegistryTest`,
 >   `SubjectClearingLogoutServiceTest` (7 Cases inkl. Listener-Lifecycle),
->   `SecurityServiceResolverTest` (4 Logout-Cases), `VaadinLogoutServiceTest`
+>   `JSentinelServiceResolverTest` (4 Logout-Cases), `VaadinLogoutServiceTest`
 >   (7 Cases), `DemoTokenStoreLogoutTest` (3 Cases).
 
 ### Fachlicher Bedarf
@@ -612,7 +612,7 @@ Für `00.60.00` sollte ein zentraler Logout-Service eingeführt werden. Der Defa
 >   `isAllowed(U, ActionPermission)` + Default
 >   `requireAllowed(U, ActionPermission)`.
 > - ✅ `ActionPermission`-Record (`name`) mit Blank-Validierung — stabile
->   API, kein `@ExperimentalSecurityApi`.
+>   API, kein `@ExperimentalJSentinelApi`.
 > - ✅ `StaticActionAuthorizationService<U>` als adapter-neutrale Default-
 >   Implementierung; emittiert `ACTION_DENIED`-Audit bei verweigerten
 >   `requireAllowed`-Aufrufen.
@@ -622,13 +622,13 @@ Für `00.60.00` sollte ein zentraler Logout-Service eingeführt werden. Der Defa
 > - ✅ `PermissionGuard.hasPermission(...)` / `requirePermission(...)` /
 >   `hasRole` / `requireRole` bleiben als statische Convenience-Helfer
 >   erhalten (gleicher Befund, andere Aufrufflavour).
-> - ✅ `PermissionName` weiterhin mit `@ExperimentalSecurityApi` —
+> - ✅ `PermissionName` weiterhin mit `@ExperimentalJSentinelApi` —
 >   gehört zur Permission-Domain (Routenschutz), nicht zur
 >   Action-Domain.
 > - [ ] **Demo-Migration offen:** `PermissionDemoCard` in `demo-vaadin`
 >   nutzt heute den statischen `PermissionGuard`; sollte auf
 >   `ActionAuthorizationService<U>` umgestellt werden.
-> - [ ] **Konzept-Stilfrage:** Demo-`SecurityActions`-Konstanten
+> - [ ] **Konzept-Stilfrage:** Demo-`JSentinelActions`-Konstanten
 >   (Beispiel: `USER_ADMINISTRATION_DELETE`) als zentrale
 >   `ActionPermission`-Konstanten anlegen — heute nutzt die Demo
 >   direkt `DemoPermission`-Enum-Werte.
@@ -714,11 +714,11 @@ Empfohlene fachliche Regel:
 Beispiel für zentrale Konstanten:
 
 ```java
-public final class SecurityActions {
+public final class JSentinelActions {
   public static final ActionPermission USER_ADMINISTRATION_DELETE =
       new ActionPermission("USER_ADMINISTRATION_DELETE");
 
-  private SecurityActions() {
+  private JSentinelActions() {
   }
 }
 ```
@@ -729,11 +729,11 @@ Verwendung in Vaadin:
 Button deleteAllButton = new Button("Delete all users");
 
 deleteAllButton.setVisible(
-    actionAuthorizationService.isAllowed(subject, SecurityActions.USER_ADMINISTRATION_DELETE)
+    actionAuthorizationService.isAllowed(subject, JSentinelActions.USER_ADMINISTRATION_DELETE)
 );
 
 deleteAllButton.addClickListener(event -> {
-  actionAuthorizationService.requireAllowed(subject, SecurityActions.USER_ADMINISTRATION_DELETE);
+  actionAuthorizationService.requireAllowed(subject, JSentinelActions.USER_ADMINISTRATION_DELETE);
   userAdministrationService.deleteAllUsers();
 });
 
@@ -813,7 +813,7 @@ Das Bootstrap-System löst die im Konzept implizit vorausgesetzte Frage
 „Wie kommt der erste Admin in die Anwendung, ohne dass wir
 admin/admin ausliefern?". Es ist orthogonal zu den sieben
 Konzept-Punkten und kann in zukünftigen Iterationen gegen
-`SecurityAuditService` und `LogoutService` integriert werden, sobald
+`JSentinelAuditService` und `LogoutService` integriert werden, sobald
 diese existieren.
 
 ## Gesamtbewertung
@@ -835,7 +835,7 @@ diese existieren.
 
 - ✅ `PasswordHashingService` — als `PasswordHasher` + `PasswordHash`-Record + `needsRehash` umgesetzt, im Resolver registriert
 - ✅ sichere Demo-Authentifizierung mit gehashten Passwörtern
-- ✅ `SecurityAuditService` mit sealed `AuditEvent`-Hierarchy +
+- ✅ `JSentinelAuditService` mit sealed `AuditEvent`-Hierarchy +
   `AuditSink` + Ring-Buffer + Logging-Sink (publish + query API)
 - ✅ `LoginAttemptPolicy` mit in-memory Default-Implementation
 - ✅ zentraler `LogoutService` (Core + Vaadin-Adapter, Demos migriert) — neue API `logout(SubjectId, LogoutScope)`
@@ -921,12 +921,12 @@ Alle vom Konzept vorgeschlagenen Top-Level-Pakete (`audit/`,
 `authentication/`, `bruteforce/`, `logout/`, `session/`, `action/`)
 sind angelegt. `authorization.api` enthält nur noch die
 adapter-neutralen Authorization-Primitives (Decisions, SubjectStore,
-SecurityServiceResolver, PermissionGuard) — alle adjazenten Subsysteme
+JSentinelServiceResolver, PermissionGuard) — alle adjazenten Subsysteme
 sind in eigene Pakete extrahiert.
 
-### `SecurityServiceResolver` Soll vs. Ist
+### `JSentinelServiceResolver` Soll vs. Ist
 
-Der `SecurityServiceResolver` umfasst aktuell:
+Der `JSentinelServiceResolver` umfasst aktuell:
 
 ```java
 authenticationService()        // ✅
@@ -972,7 +972,7 @@ Bonus-Testabdeckung außerhalb des Konzepts:
 - ✅ `InitialAdminBootstrapServiceTest` (10 Cases inkl. 16-Thread-Parallelism, expired/expired-regen, Cleanup-Failure-Warning).
 - ✅ `SecuredOperationRegistryTest` (Register/Find, Duplikat, Visibility, Null-Subject, Authenticated-Only).
 - ✅ REST: `BearerTokenExtractor`, `RestAuthenticationFilter`, `BootstrapRestStatusMapper`, `RestAuthorizationFilter`.
-- ✅ Demo: `DemoRestServerTest` (13), `DemoRestSecurityTest` (4), `DemoBootstrapServerTest` (4).
+- ✅ Demo: `DemoRestServerTest` (13), `DemoRestJSentinelTest` (4), `DemoBootstrapServerTest` (4).
 
 Vaadin-nahe Tests sollten nur die Adapter prüfen:
 
@@ -992,11 +992,11 @@ schreibbar sind.
 ### Gelieferte Konzept-Punkte
 
 - ✅ **Punkt 1 — Passwort-Hashing**: SPI inkl. `PasswordHash`-Record und
-  `needsRehash`, im `SecurityServiceResolver` registriert, Re-Hash-Drift
+  `needsRehash`, im `JSentinelServiceResolver` registriert, Re-Hash-Drift
   in beiden Demo-Stores umgesetzt.
 - ✅ **Punkt 2 — Audit Logging**: vollständig (inkl. Brief-Step 4).
   Sealed `AuditEvent`-Hierarchy mit 16 Record-Subtypes,
-  `SecurityAuditService.publish(AuditEvent) + query(AuditQuery)`,
+  `JSentinelAuditService.publish(AuditEvent) + query(AuditQuery)`,
   `AuditSink`-Vertrag, `RingBufferAuditSink` +
   `LoggingAuditSink` + `CompositeAuditService` als Defaults.
   Alle Emit-Sites migriert, neue Events (`LoginSucceeded`,
@@ -1062,7 +1062,7 @@ schreibbar sind.
     `LoginAttemptPolicy → AuthenticationService → SubjectStore`
     und sealed `LoginResult = Success | Rejected | LockedOut`.
   - `Secured.wrap(Interface, impl)` (JDK Dynamic Proxy +
-    `SecurityAnnotationScanner`) und `Secured.requireAllowed(
+    `JSentinelAnnotationScanner`) und `Secured.requireAllowed(
     Class, methodName)` für Lambdas/Callbacks. Reroute-
     Entscheidungen werden zu `AccessDeniedException` (Standalone
     hat kein Navigation-Konzept).

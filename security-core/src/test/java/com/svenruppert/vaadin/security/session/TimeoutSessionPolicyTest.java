@@ -21,7 +21,7 @@ import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.SessionCreated;
 import com.svenruppert.vaadin.security.audit.SessionExpired;
 import com.svenruppert.vaadin.security.audit.SessionInvalidated;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -198,7 +198,7 @@ class TimeoutSessionPolicyTest {
   void auditFailureSwallowed() {
     Instant t0 = Instant.parse("2026-05-08T10:00:00Z");
     Instant now = t0.plus(CONFIG.absoluteLifetime()).plusSeconds(1);
-    SecurityAuditService throwingAudit = new SecurityAuditService() {
+    JSentinelAuditService throwingAudit = new JSentinelAuditService() {
       @Override public void publish(AuditEvent event) {
         throw new RuntimeException("audit boom");
       }
@@ -328,7 +328,7 @@ class TimeoutSessionPolicyTest {
 
   // ── Test fixtures ────────────────────────────────────────────
 
-  static final class RecordingAudit implements SecurityAuditService {
+  static final class RecordingAudit implements JSentinelAuditService {
     final List<AuditEvent> events = new ArrayList<>();
 
     @Override

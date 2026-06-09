@@ -51,7 +51,7 @@ public final class DemoEndpoints {
   /**
    * Password-reset request endpoint — POST {"subjectId":"…"}, returns 200
    * with the issued plain token (demo-only; production never echoes the
-   * token, the {@code SecurityNotificationSender} delivers it instead).
+   * token, the {@code JSentinelNotificationSender} delivers it instead).
    */
   public static final String PASSWORD_RESET_REQUEST = "/api/password-reset/request";
   /**

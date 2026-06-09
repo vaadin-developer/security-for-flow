@@ -10,7 +10,7 @@
  */
 package com.svenruppert.vaadin.security.dx.vaadin.diagnostics;
 
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.dx.diagnostics.DiagnosticContributor;
 import com.svenruppert.vaadin.security.dx.diagnostics.DiagnosticReportBuilder;
 import com.svenruppert.vaadin.security.dx.diagnostics.DiscoveredService;
@@ -34,7 +34,7 @@ class VaadinDiagnosticContributorTest {
   @BeforeEach
   @AfterEach
   void resetResolver() {
-    SecurityServiceResolver.setStepUpRouteName(SecurityServiceResolver.DEFAULT_STEP_UP_ROUTE_NAME);
+    JSentinelServiceResolver.setStepUpRouteName(JSentinelServiceResolver.DEFAULT_STEP_UP_ROUTE_NAME);
   }
 
   @Test

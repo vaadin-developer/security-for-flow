@@ -24,7 +24,7 @@ package com.svenruppert.vaadin.security.credential.reset;
 
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.credential.input.PasswordInputPolicy;
 import com.svenruppert.vaadin.security.credential.input.PasswordInputValidator;
 import com.svenruppert.vaadin.security.credential.lifecycle.CredentialLifecycleService;
@@ -64,7 +64,7 @@ class PasswordResetServiceTest {
   private static final Instant T0 = Instant.parse("2026-06-01T12:00:00Z");
   private static final Duration TTL = Duration.ofMinutes(15);
 
-  private static final class RecordingAudit implements SecurityAuditService {
+  private static final class RecordingAudit implements JSentinelAuditService {
     final List<AuditEvent> events = new ArrayList<>();
     @Override public void publish(AuditEvent event) { events.add(event); }
     @Override public List<AuditEvent> query(AuditQuery q) { return List.copyOf(events); }

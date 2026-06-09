@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.demo.app.browserless;
 
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.demo.app.security.bootstrap.BootstrapWiring;
@@ -27,7 +27,7 @@ import com.svenruppert.vaadin.security.demo.app.security.services.DemoSessionSto
 import com.svenruppert.vaadin.security.demo.app.views.AdminSessionsView;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 import com.svenruppert.vaadin.security.session.SessionId;
-import com.svenruppert.vaadin.security.session.SecurityVersion;
+import com.svenruppert.vaadin.security.session.JSentinelVersion;
 import com.svenruppert.vaadin.security.session.SessionRecord;
 import com.svenruppert.vaadin.security.session.SessionStatus;
 import com.svenruppert.vaadin.security.session.SessionStore;
@@ -71,7 +71,7 @@ class AdminSessionsViewBrowserlessTest extends BrowserlessTest {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
     MyUser admin = new MyUser(1L, "Admin",
         java.util.EnumSet.of(AuthorizationRole.ADMIN, AuthorizationRole.USER));
@@ -91,7 +91,7 @@ class AdminSessionsViewBrowserlessTest extends BrowserlessTest {
   @AfterEach
   void tearDown() {
     DemoSessionStoreProvider.sessionStore().delete(SID);
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
   }
 
@@ -115,7 +115,7 @@ class AdminSessionsViewBrowserlessTest extends BrowserlessTest {
     Instant now = Instant.now();
     SessionRecord record = new SessionRecord(
         SID, SubjectId.of("1"), TenantId.DEFAULT,
-        now, now, SecurityVersion.INITIAL, SessionStatus.ACTIVE);
+        now, now, JSentinelVersion.INITIAL, SessionStatus.ACTIVE);
     DemoSessionStoreProvider.sessionStore().save(record);
 
     navigate(AdminSessionsView.class);

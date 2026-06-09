@@ -109,7 +109,7 @@ Das Modul `security-events-rest` enthaelt:
 - REST-Endpunkte zum Publizieren oder Abrufen von Envelopes, sofern
   konfiguriert erlaubt
 - SSE-Endpunkt fuer abonnierte Event-Streams
-- REST/SSE-Serialisierung von `SignedSecurityEventEnvelope`
+- REST/SSE-Serialisierung von `SignedJSentinelEventEnvelope`
 - Consumer-Verifikation eingehender Envelopes
 - Export-Policy fuer Event-Typen
 - Authentifizierungs- und Autorisierungs-Hooks fuer Event-Kanaele
@@ -146,7 +146,7 @@ Daraus folgt:
 Beispiel:
 
 ```java
-eventBus.subscribe(SecurityEvent.class, auditListener);
+eventBus.subscribe(JSentinelEvent.class, auditListener);
 eventBus.subscribe(PolicyDeniedEvent.class, monitoringListener);
 eventBus.subscribe(SessionRevokedEvent.class, vaadinSessionListener);
 ```
@@ -159,14 +159,14 @@ als freie Maps oder unstrukturierte Logtexte modelliert werden.
 Basis-Interface:
 
 ```java
-public interface SecurityEvent {
+public interface JSentinelEvent {
   EventId eventId();
   EventType eventType();
   TenantId tenantId();
   SubjectId subjectId();
   Instant occurredAt();
-  SecurityEventSeverity severity();
-  SecurityEventCategory category();
+  JSentinelEventSeverity severity();
+  JSentinelEventCategory category();
 }
 ```
 
@@ -198,7 +198,7 @@ INTEGRITY
 ### Severity
 
 ```java
-public enum SecurityEventSeverity {
+public enum JSentinelEventSeverity {
   DEBUG,
   INFO,
   NOTICE,
@@ -245,7 +245,7 @@ StepUpRequiredEvent
 SessionCreatedEvent
 SessionExpiredEvent
 SessionRevokedEvent
-SessionSecurityVersionOutdatedEvent
+SessionJSentinelVersionOutdatedEvent
 ConcurrentSessionLimitExceededEvent
 ```
 
@@ -255,7 +255,7 @@ ConcurrentSessionLimitExceededEvent
 RoleAssignedEvent
 RoleRevokedEvent
 RoleHierarchyChangedEvent
-TenantSecurityPolicyChangedEvent
+TenantJSentinelPolicyChangedEvent
 ```
 
 ### Tokens und Devices
@@ -285,12 +285,12 @@ SuspiciousLoginDetectedEvent
 ### Bus, Envelope und Integritaet
 
 ```text
-SecurityEventEnvelopeRejectedEvent
-SecurityEventReplayDetectedEvent
-SecurityEventSignatureInvalidEvent
-SecurityEventSequenceViolationEvent
-SecurityEventListenerFailedEvent
-SecurityEventDeadLetteredEvent
+JSentinelEventEnvelopeRejectedEvent
+JSentinelEventReplayDetectedEvent
+JSentinelEventSignatureInvalidEvent
+JSentinelEventSequenceViolationEvent
+JSentinelEventListenerFailedEvent
+JSentinelEventDeadLetteredEvent
 ```
 
 ## Security Event Envelope
@@ -300,7 +300,7 @@ Der Envelope enthaelt fachliche Metadaten, technische Producer-Daten,
 Replay-Schutz, Sequenzinformationen und Signaturinformationen.
 
 ```java
-public record SignedSecurityEventEnvelope(
+public record SignedJSentinelEventEnvelope(
     EventEnvelopeId envelopeId,
     EventId eventId,
     EventType eventType,
@@ -416,12 +416,12 @@ sondern ein kontrolliertes kanonisches Payload-Modell. Dadurch bleibt
 die Signaturbasis stabiler, versionierbar und testbar.
 
 ```text
-SecurityEvent
-  -> CanonicalSecurityEventPayload
-  -> SecurityEventPayloadCodec
+JSentinelEvent
+  -> CanonicalJSentinelEventPayload
+  -> JSentinelEventPayloadCodec
   -> canonicalPayload bytes
   -> canonicalPayloadHash
-  -> SignedSecurityEventEnvelope
+  -> SignedJSentinelEventEnvelope
 ```
 
 Die wichtigste Regel lautet: Die Signatur haengt an der Bytefolge, die
@@ -493,12 +493,12 @@ Nachteile:
 - Consumer benoetigen den passenden Codec und kompatible Payload-Typen
 
 Auch beim Eclipse Serializer gilt: Es werden nicht beliebige
-`SecurityEvent`-Implementierungen direkt signiert. Signiert wird die
-serialisierte Form von `CanonicalSecurityEventPayload`.
+`JSentinelEvent`-Implementierungen direkt signiert. Signiert wird die
+serialisierte Form von `CanonicalJSentinelEventPayload`.
 
 ```text
 LoginSucceededEvent
-  -> CanonicalSecurityEventPayload
+  -> CanonicalJSentinelEventPayload
   -> EclipseSerializerPayloadCodec
   -> canonicalPayload bytes
   -> hash
@@ -527,16 +527,16 @@ Nachteile:
 Die Serialisierung wird ueber ein SPI gekapselt:
 
 ```java
-public interface SecurityEventCanonicalizer {
-  CanonicalSecurityEventPayload canonicalize(SecurityEvent event);
+public interface JSentinelEventCanonicalizer {
+  CanonicalJSentinelEventPayload canonicalize(JSentinelEvent event);
 }
 ```
 
 ```java
-public interface SecurityEventPayloadCodec {
+public interface JSentinelEventPayloadCodec {
   PayloadContentType contentType();
-  byte[] encode(CanonicalSecurityEventPayload payload);
-  CanonicalSecurityEventPayload decode(byte[] bytes);
+  byte[] encode(CanonicalJSentinelEventPayload payload);
+  CanonicalJSentinelEventPayload decode(byte[] bytes);
 }
 ```
 
@@ -555,7 +555,7 @@ wahlweise aktivierbarer Java-nativer Codec bereitgestellt werden. Eine
 Anwendung kann den Codec explizit konfigurieren:
 
 ```java
-SecurityEventBusConfig config = SecurityEventBusConfig.builder()
+JSentinelEventBusConfig config = JSentinelEventBusConfig.builder()
     .payloadCodec(PayloadContentType.ECLIPSE_SERIALIZER)
     .build();
 ```
@@ -572,7 +572,7 @@ Implementierung.
 ### SPI
 
 ```java
-public interface SecurityEventSigningKeyProvider {
+public interface JSentinelEventSigningKeyProvider {
   KeyId currentKeyId();
   PrivateKey currentSigningKey();
   SignatureAlgorithm currentAlgorithm();
@@ -580,7 +580,7 @@ public interface SecurityEventSigningKeyProvider {
 ```
 
 ```java
-public interface SecurityEventVerificationKeyResolver {
+public interface JSentinelEventVerificationKeyResolver {
   Optional<PublicKey> resolveVerificationKey(KeyId keyId);
   KeyStatus keyStatus(KeyId keyId);
 }
@@ -636,7 +636,7 @@ Der Verifier prueft:
 ### Replay Store
 
 ```java
-public interface SecurityEventReplayStore {
+public interface JSentinelEventReplayStore {
   boolean markSeen(EventEnvelopeId envelopeId, Instant expiresAt);
   boolean hasSeen(EventEnvelopeId envelopeId);
   void purgeExpired(Instant now);
@@ -649,7 +649,7 @@ Consumer denselben Envelope erfolgreich markieren.
 ### Sequence Store
 
 ```java
-public interface SecurityEventSequenceStore {
+public interface JSentinelEventSequenceStore {
   Optional<EventSequence> lastSequence(TenantId tenantId, EventProducerId producerId);
   void updateSequence(TenantId tenantId, EventProducerId producerId, EventSequence sequence);
 }
@@ -680,7 +680,7 @@ Producer den angegebenen Event-Typ fuer den angegebenen Tenant
 publizieren darf.
 
 ```java
-public interface SecurityEventProducerPolicy {
+public interface JSentinelEventProducerPolicy {
   boolean mayPublish(EventProducerId producerId, EventType eventType, TenantId tenantId);
 }
 ```
@@ -706,15 +706,15 @@ optional Event-Zustellung.
 ### Pflicht-Stores
 
 ```text
-SecurityEventReplayStore
-SecurityEventSequenceStore
-SecurityEventDeadLetterStore
+JSentinelEventReplayStore
+JSentinelEventSequenceStore
+JSentinelEventDeadLetterStore
 ```
 
 ### Optionaler Store
 
 ```text
-SecurityEventEnvelopeStore
+JSentinelEventEnvelopeStore
 ```
 
 Der Envelope Store speichert Events fuer Resume, Diagnose oder
@@ -723,19 +723,19 @@ revisionsfaehig gespeichert werden muss, geschieht das ueber einen
 Audit-Listener.
 
 ```java
-public interface SecurityEventEnvelopeStore {
-  void append(SignedSecurityEventEnvelope envelope);
-  List<SignedSecurityEventEnvelope> findAfter(SecurityEventCursor cursor, int limit);
-  Optional<SignedSecurityEventEnvelope> findByEnvelopeId(EventEnvelopeId envelopeId);
+public interface JSentinelEventEnvelopeStore {
+  void append(SignedJSentinelEventEnvelope envelope);
+  List<SignedJSentinelEventEnvelope> findAfter(JSentinelEventCursor cursor, int limit);
+  Optional<SignedJSentinelEventEnvelope> findByEnvelopeId(EventEnvelopeId envelopeId);
 }
 ```
 
 ### Dead Letter Store
 
 ```java
-public interface SecurityEventDeadLetterStore {
-  void store(SecurityEventDeadLetter deadLetter);
-  List<SecurityEventDeadLetter> findOpen(int limit);
+public interface JSentinelEventDeadLetterStore {
+  void store(JSentinelEventDeadLetter deadLetter);
+  List<JSentinelEventDeadLetter> findOpen(int limit);
   void markResolved(DeadLetterId id);
 }
 ```
@@ -757,7 +757,7 @@ sein, weil unterschiedliche Anwendungen unterschiedliche
 Sicherheitsanforderungen haben.
 
 ```java
-public enum SecurityEventFailureStrategy {
+public enum JSentinelEventFailureStrategy {
   LOG_AND_CONTINUE,
   DEAD_LETTER,
   RETRY,
@@ -769,10 +769,10 @@ public enum SecurityEventFailureStrategy {
 Strategien sollten pro Kategorie oder Event-Typ konfigurierbar sein:
 
 ```java
-SecurityEventBusConfig config = SecurityEventBusConfig.builder()
-    .defaultFailureStrategy(SecurityEventFailureStrategy.DEAD_LETTER)
-    .strategy(SecurityEventCategory.INTEGRITY, SecurityEventFailureStrategy.FAIL_CLOSED)
-    .strategy(SecurityEventCategory.SESSION, SecurityEventFailureStrategy.REJECT)
+JSentinelEventBusConfig config = JSentinelEventBusConfig.builder()
+    .defaultFailureStrategy(JSentinelEventFailureStrategy.DEAD_LETTER)
+    .strategy(JSentinelEventCategory.INTEGRITY, JSentinelEventFailureStrategy.FAIL_CLOSED)
+    .strategy(JSentinelEventCategory.SESSION, JSentinelEventFailureStrategy.REJECT)
     .build();
 ```
 
@@ -791,28 +791,28 @@ Anforderungen:
 ## EventBus API
 
 ```java
-public interface SecurityEventBus {
-  void publish(SecurityEvent event);
+public interface JSentinelEventBus {
+  void publish(JSentinelEvent event);
 
-  CompletionStage<Void> publishAsync(SecurityEvent event);
+  CompletionStage<Void> publishAsync(JSentinelEvent event);
 
-  <E extends SecurityEvent> Registration subscribe(
+  <E extends JSentinelEvent> Registration subscribe(
       Class<E> eventType,
-      SecurityEventListener<? super E> listener
+      JSentinelEventListener<? super E> listener
   );
 
-  <E extends SecurityEvent> Registration subscribe(
+  <E extends JSentinelEvent> Registration subscribe(
       Class<E> eventType,
-      SecurityEventListenerOptions options,
-      SecurityEventListener<? super E> listener
+      JSentinelEventListenerOptions options,
+      JSentinelEventListener<? super E> listener
   );
 }
 ```
 
 ```java
 @FunctionalInterface
-public interface SecurityEventListener<E extends SecurityEvent> {
-  void onSecurityEvent(E event);
+public interface JSentinelEventListener<E extends JSentinelEvent> {
+  void onJSentinelEvent(E event);
 }
 ```
 
@@ -828,7 +828,7 @@ public interface Registration extends AutoCloseable {
 Beim Publizieren eines lokalen Security Events:
 
 ```text
-SecurityEvent
+JSentinelEvent
   -> Event-Kontext vervollstaendigen
   -> Producer Policy pruefen
   -> Sequenz reservieren
@@ -851,7 +851,7 @@ transaktionale oder zumindest atomare Implementierung notwendig sein.
 Beim Empfang eines Envelopes von REST/SSE oder einem spaeteren Broker:
 
 ```text
-SignedSecurityEventEnvelope
+SignedJSentinelEventEnvelope
   -> syntaktisch validieren
   -> Public Key ueber keyId aufloesen
   -> Payload Hash pruefen
@@ -875,25 +875,25 @@ Die Verifikation darf nicht nur `boolean` liefern. Fuer Audit,
 Monitoring und Diagnose braucht es strukturierte Ergebnisse.
 
 ```java
-public sealed interface SecurityEventVerificationResult {
-  record Valid(SignedSecurityEventEnvelope envelope) implements SecurityEventVerificationResult {}
-  record InvalidSignature(String reason) implements SecurityEventVerificationResult {}
-  record UnknownKey(KeyId keyId) implements SecurityEventVerificationResult {}
-  record KeyRevoked(KeyId keyId) implements SecurityEventVerificationResult {}
-  record Expired(Instant expiresAt) implements SecurityEventVerificationResult {}
-  record PayloadHashMismatch(EventEnvelopeId envelopeId) implements SecurityEventVerificationResult {}
-  record ReplayDetected(EventEnvelopeId envelopeId) implements SecurityEventVerificationResult {}
+public sealed interface JSentinelEventVerificationResult {
+  record Valid(SignedJSentinelEventEnvelope envelope) implements JSentinelEventVerificationResult {}
+  record InvalidSignature(String reason) implements JSentinelEventVerificationResult {}
+  record UnknownKey(KeyId keyId) implements JSentinelEventVerificationResult {}
+  record KeyRevoked(KeyId keyId) implements JSentinelEventVerificationResult {}
+  record Expired(Instant expiresAt) implements JSentinelEventVerificationResult {}
+  record PayloadHashMismatch(EventEnvelopeId envelopeId) implements JSentinelEventVerificationResult {}
+  record ReplayDetected(EventEnvelopeId envelopeId) implements JSentinelEventVerificationResult {}
   record SequenceViolation(
       TenantId tenantId,
       EventProducerId producerId,
       EventSequence expected,
       EventSequence actual
-  ) implements SecurityEventVerificationResult {}
+  ) implements JSentinelEventVerificationResult {}
   record ProducerNotAllowed(
       EventProducerId producerId,
       EventType eventType,
       TenantId tenantId
-  ) implements SecurityEventVerificationResult {}
+  ) implements JSentinelEventVerificationResult {}
 }
 ```
 
@@ -911,7 +911,7 @@ REST-Service zeitnah verarbeiten koennen:
 RoleAssignedEvent
 RoleRevokedEvent
 SessionRevokedEvent
-SessionSecurityVersionOutdatedEvent
+SessionJSentinelVersionOutdatedEvent
 PolicyChangedEvent
 StepUpRequiredEvent
 TokenRevokedEvent
@@ -921,8 +921,8 @@ Nicht jedes Event muss an die UI exportiert werden. Ein Export-Filter
 entscheidet, welche Event-Typen ueber die Bridge sichtbar werden.
 
 ```java
-public interface SecurityEventExportPolicy {
-  boolean shouldExport(SignedSecurityEventEnvelope envelope, SecurityEventSubscriber subscriber);
+public interface JSentinelEventExportPolicy {
+  boolean shouldExport(SignedJSentinelEventEnvelope envelope, JSentinelEventSubscriber subscriber);
 }
 ```
 
@@ -941,7 +941,7 @@ Der Server sendet signierte Envelopes:
 ```text
 event: security-event
 id: <cursor>
-data: <serialized SignedSecurityEventEnvelope>
+data: <serialized SignedJSentinelEventEnvelope>
 ```
 
 Bei Fehlern:
@@ -957,7 +957,7 @@ SSE-Verbindungen koennen abbrechen. Deshalb braucht die Bridge einen
 Cursor:
 
 ```java
-public record SecurityEventCursor(
+public record JSentinelEventCursor(
     TenantId tenantId,
     EventProducerId producerId,
     EventSequence sequence
@@ -1000,13 +1000,13 @@ Infrastruktur geschlossen wird.
 Beispiel:
 
 ```java
-SecurityEventBusConfig config = SecurityEventBusConfig.builder()
-    .mode(SecurityEventBusMode.SIGNED)
+JSentinelEventBusConfig config = JSentinelEventBusConfig.builder()
+    .mode(JSentinelEventBusMode.SIGNED)
     .signatureAlgorithm(SignatureAlgorithm.ED25519)
     .defaultTtl(Duration.ofMinutes(5))
     .replayProtectionRequired(true)
     .sequenceScope(SequenceScope.TENANT_AND_PRODUCER)
-    .defaultFailureStrategy(SecurityEventFailureStrategy.DEAD_LETTER)
+    .defaultFailureStrategy(JSentinelEventFailureStrategy.DEAD_LETTER)
     .strictProducerPolicy(true)
     .tenantRequired(true)
     .build();
@@ -1015,7 +1015,7 @@ SecurityEventBusConfig config = SecurityEventBusConfig.builder()
 Modi:
 
 ```java
-public enum SecurityEventBusMode {
+public enum JSentinelEventBusMode {
   UNSIGNED_LOCAL,
   SIGNED,
   SIGNED_STRICT
@@ -1105,8 +1105,8 @@ Erlaubt:
 Die Redaction sollte als SPI vorbereitet werden:
 
 ```java
-public interface SecurityEventRedactor {
-  SecurityEvent redact(SecurityEvent event);
+public interface JSentinelEventRedactor {
+  JSentinelEvent redact(JSentinelEvent event);
 }
 ```
 

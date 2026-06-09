@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.authorization.api.roles;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 
@@ -34,7 +34,7 @@ import static java.util.Objects.requireNonNull;
  * @param tenant    tenant scope; {@code null} becomes {@link TenantId#DEFAULT}
  * @param subjectId subject identifier; non-null
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public record RoleAssignmentKey(TenantId tenant, SubjectId subjectId) {
 
   /**

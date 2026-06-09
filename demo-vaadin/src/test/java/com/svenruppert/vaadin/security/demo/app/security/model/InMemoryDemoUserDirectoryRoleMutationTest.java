@@ -18,7 +18,7 @@ package com.svenruppert.vaadin.security.demo.app.security.model;
 
 import com.svenruppert.vaadin.security.audit.RoleAssigned;
 import com.svenruppert.vaadin.security.audit.RoleRevoked;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
 import com.svenruppert.vaadin.security.test.RecordingAuditSink;
@@ -39,14 +39,14 @@ class InMemoryDemoUserDirectoryRoleMutationTest {
 
   @BeforeEach
   void setUp() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     audit = new RecordingAuditSink();
-    SecurityServiceResolver.setSecurityAuditService(audit);
+    JSentinelServiceResolver.setJSentinelAuditService(audit);
   }
 
   @AfterEach
   void tearDown() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
   }
 
   @Test

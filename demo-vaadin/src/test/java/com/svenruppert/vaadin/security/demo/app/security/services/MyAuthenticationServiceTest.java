@@ -19,8 +19,8 @@ package com.svenruppert.vaadin.security.demo.app.security.services;
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.LoginSucceeded;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
@@ -55,9 +55,9 @@ class MyAuthenticationServiceTest {
 
   @BeforeEach
   void wire() {
-    SecurityServiceResolver.resetAll();
-    SecurityServiceResolver.setSecurityAuditService(audit);
-    SecurityServiceResolver.setLoginAttemptPolicy(policy);
+    JSentinelServiceResolver.resetAll();
+    JSentinelServiceResolver.setJSentinelAuditService(audit);
+    JSentinelServiceResolver.setLoginAttemptPolicy(policy);
     DemoUserDirectoryProvider.reset();
     DemoUserDirectoryProvider.directory().addUser("admin", "admin",
         new MyUser(1L, "Admin",
@@ -68,7 +68,7 @@ class MyAuthenticationServiceTest {
 
   @AfterEach
   void reset() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
   }
 
@@ -130,7 +130,7 @@ class MyAuthenticationServiceTest {
   @DisplayName("Audit-sink RuntimeException is swallowed — login still returns true")
   void auditFailureDoesNotBlockLogin() {
     policy.next = new LoginAttemptDecision.Allowed();
-    SecurityServiceResolver.setSecurityAuditService(new SecurityAuditService() {
+    JSentinelServiceResolver.setJSentinelAuditService(new JSentinelAuditService() {
       @Override public void publish(AuditEvent event) { throw new RuntimeException("boom"); }
       @Override public List<AuditEvent> query(AuditQuery q) { return List.of(); }
     });

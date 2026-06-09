@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.policy.api;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -33,7 +33,7 @@ import static java.util.Objects.requireNonNull;
  * {@link PolicyContext#resourceAttributes()}), use
  * {@link #resourceAttributeEquals(String, Object)}.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class ContextPredicates {
 
   private ContextPredicates() {

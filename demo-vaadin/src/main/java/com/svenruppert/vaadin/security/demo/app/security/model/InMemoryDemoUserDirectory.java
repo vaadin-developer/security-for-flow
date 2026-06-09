@@ -18,10 +18,10 @@ package com.svenruppert.vaadin.security.demo.app.security.model;
 
 import com.svenruppert.vaadin.security.audit.RoleAssigned;
 import com.svenruppert.vaadin.security.audit.RoleRevoked;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.audit.UserCreated;
 import com.svenruppert.vaadin.security.audit.UserDeleted;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authentication.PasswordHasher;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
 
@@ -51,7 +51,7 @@ public final class InMemoryDemoUserDirectory implements DemoUserDirectory {
   private final Map<Long, MyUser> byId = new ConcurrentHashMap<>();
 
   public InMemoryDemoUserDirectory() {
-    this(SecurityServiceResolver.passwordHashingService());
+    this(JSentinelServiceResolver.passwordHashingService());
   }
 
   public InMemoryDemoUserDirectory(PasswordHasher hasher) {
@@ -193,7 +193,7 @@ public final class InMemoryDemoUserDirectory implements DemoUserDirectory {
   }
 
   private static void audit(com.svenruppert.vaadin.security.audit.AuditEvent event) {
-    SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
+    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
     try {
       sink.publish(event);
     } catch (RuntimeException ignored) {

@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.logout.vaadin;
 import com.svenruppert.vaadin.security.logout.InMemorySubjectSessionRegistry;
 import com.svenruppert.vaadin.security.logout.LogoutListener;
 import com.svenruppert.vaadin.security.logout.LogoutScope;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
 import com.svenruppert.vaadin.security.logout.SubjectSessionRegistry;
@@ -41,7 +41,7 @@ class VaadinLogoutServiceTest {
 
   @AfterEach
   void resetResolver() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
   }
 
   @Test
@@ -126,7 +126,7 @@ class VaadinLogoutServiceTest {
   @DisplayName("CurrentSession notifies SessionPolicy.onLogout")
   void currentSession_notifiesSessionPolicy() {
     RecordingSessionPolicy<String> policy = new RecordingSessionPolicy<>();
-    SecurityServiceResolver.setSessionPolicy(policy);
+    JSentinelServiceResolver.setSessionPolicy(policy);
 
     new VaadinLogoutService<>(new RecordingSubjectStore(), String.class,
         new RecordingGateway(), "/login", true, true)
@@ -139,7 +139,7 @@ class VaadinLogoutServiceTest {
   @DisplayName("AllSessionsOfSubject does NOT notify SessionPolicy.onLogout (current-thread concern)")
   void allSessions_doesNotNotifySessionPolicy() {
     RecordingSessionPolicy<String> policy = new RecordingSessionPolicy<>();
-    SecurityServiceResolver.setSessionPolicy(policy);
+    JSentinelServiceResolver.setSessionPolicy(policy);
 
     new VaadinLogoutService<>(new RecordingSubjectStore(), String.class,
         new RecordingGateway(), "/login", true, true)

@@ -92,7 +92,7 @@ Status legend identical to `asvs-v2-mapping.md`.
 
 | ID    | Feature                                          | Status | Code                                                      | Tests                                                | Standards            | CWE       |
 |-------|--------------------------------------------------|:------:|-----------------------------------------------------------|------------------------------------------------------|----------------------|-----------|
-| PWH-M1 | `CredentialSecurityMetrics` SPI                   | ✅ | `credential.metrics.*`                                     | `CredentialMetricEventTest`                          | —                    | CWE-778   |
+| PWH-M1 | `CredentialJSentinelMetrics` SPI                   | ✅ | `credential.metrics.*`                                     | `CredentialMetricEventTest`                          | —                    | CWE-778   |
 
 ## N — Audit
 

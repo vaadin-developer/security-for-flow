@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.authorization.annotations;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.policy.impl.RequiresPolicyEvaluator;
 
 import java.lang.annotation.Retention;
@@ -34,10 +34,10 @@ import static java.lang.annotation.ElementType.TYPE;
  * algorithms (any-of / all-of) will be added later via a separate
  * annotation to keep this contract stable.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 @Retention(RetentionPolicy.RUNTIME)
 @Target({TYPE, METHOD})
-@SecurityAnnotation(RequiresPolicyEvaluator.class)
+@JSentinelAnnotation(RequiresPolicyEvaluator.class)
 public @interface RequiresPolicy {
 
   /**

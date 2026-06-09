@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * a {@code MemberDirectorySecured} subclass at compile time. The
  * generated subclass overrides every public, non-final, non-static
  * method, calls the matching
- * {@code SecurityEnforcer.require…(…)} helper, and then forwards to
+ * {@code JSentinelEnforcer.require…(…)} helper, and then forwards to
  * {@code super.<method>(…)}.
  *
  * <p>Counterpart to {@link LibraryService} (an interface guarded via
@@ -52,13 +52,13 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <ul>
  *   <li>{@link RequiresPermission} (single value) →
- *       {@code SecurityEnforcer.requirePermission(name)}</li>
+ *       {@code JSentinelEnforcer.requirePermission(name)}</li>
  *   <li>{@link RequiresAnyPermission} →
- *       {@code SecurityEnforcer.requireAnyPermission(...)}</li>
+ *       {@code JSentinelEnforcer.requireAnyPermission(...)}</li>
  *   <li>{@link RequiresAllPermissions} →
- *       {@code SecurityEnforcer.requireAllPermissions(...)}</li>
+ *       {@code JSentinelEnforcer.requireAllPermissions(...)}</li>
  *   <li>{@link RequiresRole} (single value) →
- *       {@code SecurityEnforcer.requireRole(role)}</li>
+ *       {@code JSentinelEnforcer.requireRole(role)}</li>
  * </ul>
  */
 @Secured

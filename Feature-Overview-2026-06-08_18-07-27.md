@@ -6,29 +6,29 @@ Timestamp: 2026-06-08_18-07-27 Europe/Berlin (state after V00.72.00 release)
 |---|---|---|
 | Core Security | Authentication | Shipped |
 | Core Security | Authorization via roles and permissions | Shipped |
-| Core Security | `SecurityEnforcer` as central enforcement point | Shipped |
+| Core Security | `JSentinelEnforcer` as central enforcement point | Shipped |
 | Core Security | Method security via annotations | Shipped |
 | Core Security | Annotation processor for security wrappers | Shipped |
 | Core Security | Dynamic-proxy security | Shipped |
-| Core Security | `SecurityServiceResolver.setAuthenticationService` / `setAuthorizationService` (test/composite-deployment parity) | Shipped / V00.71 |
+| Core Security | `JSentinelServiceResolver.setAuthenticationService` / `setAuthorizationService` (test/composite-deployment parity) | Shipped / V00.71 |
 | Developer Experience | Fluent bootstrap facade `VaadinSecurity.bootstrap()` | Shipped / V00.72 |
 | Developer Experience | Fluent bootstrap facade `RestSecurity.bootstrap()` | Shipped / V00.72 |
 | Developer Experience | Fluent bootstrap facade `StandaloneSecurity.bootstrap()` | Shipped / V00.72 |
-| Developer Experience | `CommonSecurityBootstrap<B>` shared contract (Vaadin / REST / Standalone) | Shipped / V00.72 |
-| Developer Experience | `SecurityRuntime` result record (`services()`, `warnings()`, `mode()`, `defaulted=true` markers) | Shipped / V00.72 |
-| Developer Experience | `SecurityRuntime.log()` — secret-free multi-line startup log | Shipped / V00.72 |
-| Developer Experience | `SecurityBootstrapMode` (`COMMUNITY_DEFAULTS` / `DEVELOPMENT` / `PRODUCTION` / `STRICT`) | Shipped / V00.72 |
-| Developer Experience | `SecurityBootstrapException` (`STRICT` raises on `Severity.ERROR` warnings) | Shipped / V00.72 |
-| Developer Experience | `VaadinSecurityBootstrap.use(Consumer<VaadinSecurityBootstrap>)` profile-hook | Shipped / V00.72 |
-| Developer Experience | `CommonSecurityBootstrap` sub-builders (`audit / sessions / policies / roles / credentials`) recorded; wiring staged for V00.73 | Shipped (record-only) / V00.72 |
-| Developer Experience | All public DX types annotated `@ExperimentalSecurityApi` (promotion staged for V00.73) | Shipped / V00.72 |
-| Diagnostics | `SecurityDiagnostics.inspect()` — standalone, side-effect free, callable any time | Shipped / V00.72 |
-| Diagnostics | `SecurityServiceReport` + `SecurityWarning` with stable codes + severity | Shipped / V00.72 |
+| Developer Experience | `CommonJSentinelBootstrap<B>` shared contract (Vaadin / REST / Standalone) | Shipped / V00.72 |
+| Developer Experience | `JSentinelRuntime` result record (`services()`, `warnings()`, `mode()`, `defaulted=true` markers) | Shipped / V00.72 |
+| Developer Experience | `JSentinelRuntime.log()` — secret-free multi-line startup log | Shipped / V00.72 |
+| Developer Experience | `JSentinelBootstrapMode` (`COMMUNITY_DEFAULTS` / `DEVELOPMENT` / `PRODUCTION` / `STRICT`) | Shipped / V00.72 |
+| Developer Experience | `JSentinelBootstrapException` (`STRICT` raises on `Severity.ERROR` warnings) | Shipped / V00.72 |
+| Developer Experience | `VaadinJSentinelBootstrap.use(Consumer<VaadinJSentinelBootstrap>)` profile-hook | Shipped / V00.72 |
+| Developer Experience | `CommonJSentinelBootstrap` sub-builders (`audit / sessions / policies / roles / credentials`) recorded; wiring staged for V00.73 | Shipped (record-only) / V00.72 |
+| Developer Experience | All public DX types annotated `@ExperimentalJSentinelApi` (promotion staged for V00.73) | Shipped / V00.72 |
+| Diagnostics | `JSentinelDiagnostics.inspect()` — standalone, side-effect free, callable any time | Shipped / V00.72 |
+| Diagnostics | `JSentinelServiceReport` + `JSentinelWarning` with stable codes + severity | Shipped / V00.72 |
 | Diagnostics | `DiagnosticContributor` SPI (adapter-DX modules contribute without polluting `security-dx` with adapter types) | Shipped / V00.72 |
-| Diagnostics | `VaadinDiagnosticContributor` / `RestDiagnosticContributor` / `StandaloneDiagnosticContributor` (registered via `@SecurityAutoService`) | Shipped / V00.72 |
-| Diagnostics | `SecurityProcessorReport` + `WrapperIndexReader` (reads `META-INF/security-for-flow/generated-wrappers.idx`) | Reader Shipped / V00.72 — writer in `security-processor` staged for V00.73 |
+| Diagnostics | `VaadinDiagnosticContributor` / `RestDiagnosticContributor` / `StandaloneDiagnosticContributor` (registered via `@JSentinelAutoService`) | Shipped / V00.72 |
+| Diagnostics | `JSentinelProcessorReport` + `WrapperIndexReader` (reads `META-INF/security-for-flow/generated-wrappers.idx`) | Reader Shipped / V00.72 — writer in `security-processor` staged for V00.73 |
 | Diagnostics | `secured-without-wrapper` warning (`PRODUCTION` records; `STRICT` raises) | Shipped / V00.72 (fires once V00.73 writer ships) |
-| AutoService | `@SecurityAutoService(Class<?>... value)` — `RetentionPolicy.SOURCE`, no runtime trace | Shipped / V00.72 |
+| AutoService | `@JSentinelAutoService(Class<?>... value)` — `RetentionPolicy.SOURCE`, no runtime trace | Shipped / V00.72 |
 | AutoService | `security-autoservice-processor` — JDK annotation-processing API only, no external `auto-service` | Shipped / V00.72 |
 | AutoService | Maven Enforcer ban on `com.google.auto.service:auto-service*` reactor-wide | Shipped / V00.72 |
 | AutoService | Multi-SPI support — one implementation registered under several contracts | Shipped / V00.72 |
@@ -39,9 +39,9 @@ Timestamp: 2026-06-08_18-07-27 Europe/Berlin (state after V00.72.00 release)
 | Vaadin Starter | `SecuredUi.link(...)` declarative builder | Shipped / V00.72 |
 | Vaadin Starter | `SecuredUi.menuItem(...)` declarative builder | Shipped / V00.72 |
 | Vaadin Starter | `@SecureRoute(roles, permissions, policy)` annotation + `SecureRouteEvaluator` (most-restrictive-wins) | Shipped / V00.72 |
-| Vaadin Starter | `VaadinSecurityStarter.developmentDefaults()` profile | Shipped / V00.72 |
-| Vaadin Starter | `VaadinSecurityStarter.productionDefaults()` profile | Shipped / V00.72 |
-| Vaadin Starter | `VaadinSecurityStarter.strictDefaults()` profile | Shipped / V00.72 |
+| Vaadin Starter | `VaadinJSentinelStarter.developmentDefaults()` profile | Shipped / V00.72 |
+| Vaadin Starter | `VaadinJSentinelStarter.productionDefaults()` profile | Shipped / V00.72 |
+| Vaadin Starter | `VaadinJSentinelStarter.strictDefaults()` profile | Shipped / V00.72 |
 | Vaadin Starter | `SecuredUi.requiresPolicy(...)` | Stubbed in V00.72 (throws `UnsupportedOperationException` at `build()`); `PolicyRegistry` integration staged for V00.73 |
 | Policies | Java policy DSL | V00.70 core feature |
 | Policies | `PolicyRegistry` | V00.70 core feature |
@@ -58,9 +58,9 @@ Timestamp: 2026-06-08_18-07-27 Europe/Berlin (state after V00.72.00 release)
 | Sessions | Session revocation (`SessionManagementView` with per-row Revoke) | Shipped / V00.70 |
 | Sessions | Role refresh during an active session | V00.70 core feature |
 | Sessions | Security-version store (Phase 2) | Shipped |
-| Sessions | SecurityVersion drift detection (Phase 4c, end-to-end Vaadin + REST + Standalone) | Shipped / V00.70 |
+| Sessions | JSentinelVersion drift detection (Phase 4c, end-to-end Vaadin + REST + Standalone) | Shipped / V00.70 |
 | Sessions | `SessionStale` audit event + `WWW-Authenticate: SessionStale` (RFC 7235) | Shipped / V00.70 |
-| Sessions | Automatic SecurityVersion snapshot capture in `LoginView` | Shipped / V00.70 |
+| Sessions | Automatic JSentinelVersion snapshot capture in `LoginView` | Shipped / V00.70 |
 | Tenants | `TenantId` as the foundation | Shipped / V00.70 |
 | Tenants | Tenant-aware store keys / records (all 11 Phase-2 stores) | Shipped / V00.70 |
 | Tenants | Tenant-aware role persistence (`RoleAssignmentKey(tenant, subjectId)`) | Shipped / V00.70 |
@@ -80,7 +80,7 @@ Timestamp: 2026-06-08_18-07-27 Europe/Berlin (state after V00.72.00 release)
 | Account Lifecycle | `PasswordResetService` (request / validate / consume; single-use; tenant-scoped) | Shipped / V00.70 |
 | Account Lifecycle | Email-verification store | Shipped |
 | Account Lifecycle | `EmailVerificationService` (request / validate / consume; carries verified email) | Shipped / V00.70 |
-| Account Lifecycle | `SecurityNotificationSender` SPI + `LoggingNotificationSender` default | Shipped / V00.70 |
+| Account Lifecycle | `JSentinelNotificationSender` SPI + `LoggingNotificationSender` default | Shipped / V00.70 |
 | Account Lifecycle | `CredentialStore` with compare-and-swap updates + 8-state `CredentialStatus` + `CredentialLifecycleService` (deterministic transitions) | Shipped / V00.71 |
 | Account Lifecycle | `PasswordChangeService` (atomic, re-auth required) + `SessionHandlingDecision` | Shipped / V00.71 |
 | Account Lifecycle | `PasswordResetService` rewrite — selector/verifier `TokenDigestService` + single-use dual-CAS consumption | Shipped / V00.71 |
@@ -109,7 +109,7 @@ Timestamp: 2026-06-08_18-07-27 Europe/Berlin (state after V00.72.00 release)
 | Rate Limiting / Abuse | Cluster-aware brute-force protection | Not yet implemented |
 | Operations | `EmergencyPolicyOverride` (incidentId, structured Reason, time-bounded, authorisedBy) | Shipped / V00.71 |
 | Operations | `MassCredentialStatusChange` (CAS loop over operator-supplied usernames, audit-recorded) | Shipped / V00.71 |
-| Operations | `CredentialSecurityMetrics` SPI (data-minimised: HashDuration / VerifyDuration / RehashRequested / LifecycleTransition / AbuseSignal / KdfLimiterRejection) + `NoOpCredentialSecurityMetrics` default | Shipped / V00.71 |
+| Operations | `CredentialJSentinelMetrics` SPI (data-minimised: HashDuration / VerifyDuration / RehashRequested / LifecycleTransition / AbuseSignal / KdfLimiterRejection) + `NoOpCredentialJSentinelMetrics` default | Shipped / V00.71 |
 | Operations | Operational playbooks: pepper / algorithm / provider compromise, reset abuse, audit-review checklist, rollback boundaries | Shipped / V00.71 (docs/security/credentials/playbooks) |
 | Compliance | ASVS V2 Authentication mapping | Shipped / V00.71 (docs/security/credentials/standards/asvs-v2-mapping.md) |
 | Compliance | NIST SP 800-63B mapping | Shipped / V00.71 (docs/security/credentials/standards/nist-800-63b-mapping.md) |
@@ -138,22 +138,22 @@ Timestamp: 2026-06-08_18-07-27 Europe/Berlin (state after V00.72.00 release)
 | Vaadin | Vaadin security adapter | Shipped |
 | Vaadin | Login / logout integration | Shipped |
 | Vaadin | Navigation security | Shipped |
-| Vaadin | Step-up route integration (`AuthorizationDecision.StepUpRequired` + `SecurityServiceResolver.stepUpRouteName()`) | Shipped / V00.70 |
+| Vaadin | Step-up route integration (`AuthorizationDecision.StepUpRequired` + `JSentinelServiceResolver.stepUpRouteName()`) | Shipped / V00.70 |
 | Vaadin | `SessionManagementView` (reusable Composite with grid + per-row Revoke) | Shipped / V00.70 |
 | Vaadin | `SecuredButton` / `SecuredRouterLink` / `SecuredMenuItem` / `SecuredVisibility(HIDE \| DISABLE)` (Phase 8a/8b) | Shipped / V00.70 |
-| Vaadin | `SecurityVersionEnforcerListener` (`@ListenerPriority(MAX_VALUE)`) | Shipped / V00.70 |
+| Vaadin | `JSentinelVersionEnforcerListener` (`@ListenerPriority(MAX_VALUE)`) | Shipped / V00.70 |
 | REST | REST security adapter | Shipped |
 | REST | REST security filter / 401 / 403 handling | Shipped |
 | REST | REST step-up via `401 + WWW-Authenticate: StepUp method="<m>"` (RFC 7235) | Shipped / V00.70 |
-| REST | `RestSecurityVersionFilter` (drift → `401 + WWW-Authenticate: SessionStale`) | Shipped / V00.70 |
-| REST | `OpenApiSecurityMetadataGenerator` + `HandlerSecurityMetadata` (Phase 8d) | Shipped / V00.70 |
+| REST | `RestJSentinelVersionFilter` (drift → `401 + WWW-Authenticate: SessionStale`) | Shipped / V00.70 |
+| REST | `OpenApiJSentinelMetadataGenerator` + `HandlerJSentinelMetadata` (Phase 8d) | Shipped / V00.70 |
 | REST | Default `RestDecisionMapper` + `RestErrorBodyStrategy` (short generic perimeter responses) | Shipped / V00.72 |
 | Standalone | Standalone security adapter | Shipped |
 | Standalone | `StandaloneSecurity.bootstrap()` with `ThreadLocalSubjectStore` as default subject store | Shipped / V00.72 |
-| Demo | Vaadin demo | Shipped; V00.72 migrated to `VaadinSecurity.bootstrap()` + `@SecurityAutoService` |
+| Demo | Vaadin demo | Shipped; V00.72 migrated to `VaadinSecurity.bootstrap()` + `@JSentinelAutoService` |
 | Demo | REST demo (V00.71 glue: `AbuseDetectionService` in login, `LocalBlocklistCompromisedPasswordChecker` in createUser) | Shipped / V00.71; V00.72 migrated to `RestSecurity.bootstrap()` |
-| Demo | Vaadin REST-client demo — minimal V00.72 reference (`VaadinSecurity.bootstrap()` + `@SecurityAutoService`) | Shipped / V00.72 |
-| Demo | Standalone demo — V00.72 reference (`StandaloneSecurity.bootstrap()` + `@SecurityAutoService`); both `SecuredProxy.wrap(...)` and `<Type>Secured` paths side by side | Shipped / V00.72 |
+| Demo | Vaadin REST-client demo — minimal V00.72 reference (`VaadinSecurity.bootstrap()` + `@JSentinelAutoService`) | Shipped / V00.72 |
+| Demo | Standalone demo — V00.72 reference (`StandaloneSecurity.bootstrap()` + `@JSentinelAutoService`); both `SecuredProxy.wrap(...)` and `<Type>Secured` paths side by side | Shipped / V00.72 |
 | Demo | Vaadin demo SetupView with V00.71 context-aware validator + compromised-password check | Shipped / V00.71 |
 | Testing | `security-test` module | Shipped |
 | Testing | Fixtures and test helpers | Shipped |
@@ -163,17 +163,17 @@ Timestamp: 2026-06-08_18-07-27 Europe/Berlin (state after V00.72.00 release)
 | Testing | PIT regression check V00.72 — V00.71 modules at the same numbers, no drift | Shipped / V00.72 |
 | Testing | PIT baseline V00.72 (dx 49%, dx-vaadin 61%, dx-rest 54%, dx-standalone 43%, vaadin-starter 66%, autoservice-processor 52%) | Shipped / V00.72 (first-pass baseline; uplift tracked for V00.73) |
 | Audit | Sealed `AuditEvent` (31 variants in V00.71, +4 vs. V00.70: `CredentialVerification{Succeeded,Failed}`, `CredentialRehashed`, `CredentialStatusChanged`) | Shipped / V00.71 |
-| Audit | `StoreBackedSecurityAuditService` over `AuditEventStore` | Shipped / V00.70 |
+| Audit | `StoreBackedJSentinelAuditService` over `AuditEventStore` | Shipped / V00.70 |
 | Audit | `RingBufferAuditSink` + `LoggingAuditSink` + `CompositeAuditService` | Shipped |
 | Audit | `CredentialAuditPublisher` (sink-failure-tolerant) + `InternalAuditEventType` (differentiated internal failure codes vs. generic `PublicFailureType`) | Shipped / V00.71 |
 | Documentation | `Konzept-V00.72.00.md` + `Implementierungsplan-V00.72.00.md` | Shipped / V00.72 |
 | Documentation | `docs/dx/5-minute-setup-vaadin.md` / `…-rest.md` / `…-standalone.md` | Shipped / V00.72 |
-| Documentation | `docs/dx/before-after-spi-files.md` (manual SPI files vs `@SecurityAutoService`) | Shipped / V00.72 |
-| Documentation | `docs/dx/decision-table.md` (`SecuredProxy` vs `@Secured` vs `SecuredUi` vs `@SecurityAutoService` vs adapter bootstrap facades) | Shipped / V00.72 |
-| V00.73 | Promote `@ExperimentalSecurityApi` DX types to stable | Planned |
+| Documentation | `docs/dx/before-after-spi-files.md` (manual SPI files vs `@JSentinelAutoService`) | Shipped / V00.72 |
+| Documentation | `docs/dx/decision-table.md` (`SecuredProxy` vs `@Secured` vs `SecuredUi` vs `@JSentinelAutoService` vs adapter bootstrap facades) | Shipped / V00.72 |
+| V00.73 | Promote `@ExperimentalJSentinelApi` DX types to stable | Planned |
 | V00.73 | Wrapper-index *writer* in `security-processor` (`META-INF/security-for-flow/generated-wrappers.idx`) | Planned |
 | V00.73 | `SecuredUi.requiresPolicy(...)` over `PolicyRegistry` | Planned |
-| V00.73 | `CommonSecurityBootstrap` sub-builders (`audit / sessions / policies / roles / credentials`) wired end-to-end into `SecurityServiceResolver` | Planned |
+| V00.73 | `CommonJSentinelBootstrap` sub-builders (`audit / sessions / policies / roles / credentials`) wired end-to-end into `JSentinelServiceResolver` | Planned |
 | V00.75 | Security event bus | New concept |
 | V00.75 | Dedicated module `security-events` | Planned |
 | V00.75 | REST/SSE bridge | Planned |
@@ -203,8 +203,8 @@ Timestamp: 2026-06-08_18-07-27 Europe/Berlin (state after V00.72.00 release)
 | V00.80 | OpenTelemetry export | Planned |
 | V00.80 | Webhook export | Planned |
 | V00.80 | SIEM export | Planned |
-| V00.80 | Monitoring / metrics / health | Partially in V00.71 (`CredentialSecurityMetrics` SPI); export adapters Planned |
-| V00.80 | Fail-closed strict mode | Delivered in V00.72 (`SecurityBootstrapMode.STRICT` + `SecurityBootstrapException`) |
+| V00.80 | Monitoring / metrics / health | Partially in V00.71 (`CredentialJSentinelMetrics` SPI); export adapters Planned |
+| V00.80 | Fail-closed strict mode | Delivered in V00.72 (`JSentinelBootstrapMode.STRICT` + `JSentinelBootstrapException`) |
 | V00.80 | Supply-chain / release hardening | Partially in V00.71 (CycloneDX SBOM per module, FIPS profile docs, SBOM verification expectations) |
 | V00.80 | CSRF / web-adapter hardening | Planned |
 | V00.80 | Privacy / retention | Planned |

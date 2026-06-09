@@ -17,9 +17,9 @@
 package com.svenruppert.vaadin.security.demo.standalone;
 
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
-import com.svenruppert.vaadin.security.autoservice.api.SecurityAutoService;
+import com.svenruppert.vaadin.security.autoservice.api.JSentinelAutoService;
 
-@SecurityAutoService(AuthenticationService.class)
+@JSentinelAutoService(AuthenticationService.class)
 public final class DemoAuthenticationService
     implements AuthenticationService<Credentials, User> {
 

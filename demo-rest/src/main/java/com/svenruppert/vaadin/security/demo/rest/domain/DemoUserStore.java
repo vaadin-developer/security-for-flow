@@ -19,10 +19,10 @@ package com.svenruppert.vaadin.security.demo.rest.domain;
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.RoleAssigned;
 import com.svenruppert.vaadin.security.audit.RoleRevoked;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.audit.UserCreated;
 import com.svenruppert.vaadin.security.audit.UserDeleted;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.credential.password.CredentialVerificationResult;
 import com.svenruppert.vaadin.security.credential.password.PasswordHashingService;
 import com.svenruppert.vaadin.security.credential.password.RehashDecision;
@@ -194,7 +194,7 @@ public final class DemoUserStore {
   }
 
   private static void audit(AuditEvent event) {
-    SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
+    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
     try {
       sink.publish(event);
     } catch (RuntimeException ignored) {

@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.accountlifecycle;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 
@@ -35,7 +35,7 @@ import java.util.Optional;
  *
  * <p>Implementations must be thread-safe.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public interface PasswordResetTokenStore {
 
   /**

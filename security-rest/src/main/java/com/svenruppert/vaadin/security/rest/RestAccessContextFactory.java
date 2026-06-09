@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.rest;
 
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 
 import java.util.LinkedHashMap;
@@ -39,7 +39,7 @@ public final class RestAccessContextFactory {
    */
   public AccessContext create(
       RestRequest request,
-      Optional<SecuritySubject> subject,
+      Optional<JSentinelSubject> subject,
       String operation,
       Map<String, Object> attributes) {
     Map<String, Object> contextAttributes = new LinkedHashMap<>(

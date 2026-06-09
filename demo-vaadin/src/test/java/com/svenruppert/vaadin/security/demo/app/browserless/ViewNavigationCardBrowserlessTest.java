@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.demo.app.browserless;
 
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.demo.app.security.bootstrap.BootstrapWiring;
 import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectoryProvider;
@@ -90,7 +90,7 @@ class ViewNavigationCardBrowserlessTest extends BrowserlessTest {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
     DemoUserDirectoryProvider.directory().addUser("admin", "admin",
         new MyUser(1L, "Admin",
@@ -100,7 +100,7 @@ class ViewNavigationCardBrowserlessTest extends BrowserlessTest {
 
   @AfterEach
   void tearDown() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
   }
 

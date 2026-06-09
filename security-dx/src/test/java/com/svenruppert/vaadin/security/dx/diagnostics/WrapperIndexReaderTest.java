@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Verifies WrapperIndexReader + SecurityDiagnostics integration. The
+ * Verifies WrapperIndexReader + JSentinelDiagnostics integration. The
  * src/test/resources/META-INF/security-for-flow/generated-wrappers.idx
  * fixture contains one valid entry plus two failure cases.
  */
@@ -26,7 +26,7 @@ class WrapperIndexReaderTest {
 
   @Test
   void inspectsValidWrapperEntry() {
-    SecurityServiceReport report = SecurityDiagnostics.inspect();
+    JSentinelServiceReport report = JSentinelDiagnostics.inspect();
 
     boolean found = report.processorReport().wrappers().stream()
         .anyMatch(w -> w.sourceType() == FixtureSourceType.class
@@ -41,7 +41,7 @@ class WrapperIndexReaderTest {
 
   @Test
   void unknownSourceProducesSecuredWithoutWrapperWarning() {
-    SecurityServiceReport report = SecurityDiagnostics.inspect();
+    JSentinelServiceReport report = JSentinelDiagnostics.inspect();
 
     boolean found = report.warnings().stream()
         .anyMatch(w -> "secured-without-wrapper".equals(w.code())
@@ -51,7 +51,7 @@ class WrapperIndexReaderTest {
 
   @Test
   void mismatchedWrapperFqnProducesSecuredWithoutWrapperWarning() {
-    SecurityServiceReport report = SecurityDiagnostics.inspect();
+    JSentinelServiceReport report = JSentinelDiagnostics.inspect();
 
     boolean found = report.warnings().stream()
         .anyMatch(w -> "secured-without-wrapper".equals(w.code())
@@ -62,7 +62,7 @@ class WrapperIndexReaderTest {
 
   @Test
   void warningsAlsoSurfaceInProcessorReport() {
-    SecurityServiceReport report = SecurityDiagnostics.inspect();
+    JSentinelServiceReport report = JSentinelDiagnostics.inspect();
 
     long processorWarnings = report.processorReport().warnings().stream()
         .filter(w -> "secured-without-wrapper".equals(w.code()))

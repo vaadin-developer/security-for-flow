@@ -38,7 +38,7 @@ import com.svenruppert.vaadin.security.audit.StepUpChallenged;
 import com.svenruppert.vaadin.security.audit.LogoutPerformed;
 import com.svenruppert.vaadin.security.audit.RoleAssigned;
 import com.svenruppert.vaadin.security.audit.RoleRevoked;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.audit.SessionCreated;
 import com.svenruppert.vaadin.security.audit.SessionExpired;
 import com.svenruppert.vaadin.security.audit.SessionInvalidated;
@@ -47,7 +47,7 @@ import com.svenruppert.vaadin.security.audit.TokenRotated;
 import com.svenruppert.vaadin.security.audit.UserCreated;
 import com.svenruppert.vaadin.security.audit.UserDeleted;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPermission;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -109,7 +109,7 @@ public class AuditView extends Composite<VerticalLayout> {
     root.add(new H1("Security audit log"));
     root.add(new Paragraph(
         "In-memory snapshot from the V00.70 AuditEventStore SPI (this "
-            + "demo wires StoreBackedSecurityAuditService over an "
+            + "demo wires StoreBackedJSentinelAuditService over an "
             + "InMemoryAuditEventStore — production deployments swap in "
             + "a persistent store with retention). Visible to subjects "
             + "with the audit:read permission."));
@@ -154,7 +154,7 @@ public class AuditView extends Composite<VerticalLayout> {
   }
 
   private void refresh() {
-    SecurityAuditService audit = SecurityServiceResolver.securityAuditService();
+    JSentinelAuditService audit = JSentinelServiceResolver.securityAuditService();
     Class<? extends AuditEvent> selectedType = typeFilter.getValue();
     String subject = subjectFilter.getValue() == null ? null : subjectFilter.getValue().trim();
     if (subject != null && subject.isEmpty()) {

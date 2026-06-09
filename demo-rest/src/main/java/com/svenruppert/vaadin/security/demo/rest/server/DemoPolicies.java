@@ -35,7 +35,7 @@ import com.svenruppert.vaadin.security.policy.api.SubjectPredicates;
  *   deny otherwise.
  * }</pre>
  * Registered programmatically with
- * {@link com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver#policyRegistry()}
+ * {@link com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver#policyRegistry()}
  * at {@code DemoRestServer} startup.
  */
 public final class DemoPolicies {

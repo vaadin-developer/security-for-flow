@@ -7,7 +7,7 @@
 This release closes the Konzept-V00.70 milestone — all eight phases
 ship: multi-tenant foundation (`TenantId` / `ResourceRef`), 11
 persistence-store SPIs with an Eclipse-Store reference layer,
-store-backed services on top of those SPIs, `SecurityVersion`
+store-backed services on top of those SPIs, `JSentinelVersion`
 drift-detection end-to-end in Vaadin / REST / standalone, the
 Policy + Method-Security annotation processor, hierarchy-aware
 permissions, account-lifecycle services (password reset, email
@@ -22,10 +22,10 @@ reactor modules** (`security-persistence-testkit`,
 `security-processor`/`security-test` are now first-class members
 of the 13-module reactor) and **27 sealed `AuditEvent` variants**
 (up from 16), all covered by `AuditQuery`, `LoggingAuditSink` and
-the new `StoreBackedSecurityAuditService`.
+the new `StoreBackedJSentinelAuditService`.
 
 No breaking API change for code that already used the 00.60
-contracts. New SPIs are opt-in and marked `@ExperimentalSecurityApi`
+contracts. New SPIs are opt-in and marked `@ExperimentalJSentinelApi`
 while the V00.70 surface settles. Two non-breaking POM moves
 (`pitest-test-classes` typo fix in the parent POM, new dependency
 on `org.eclipse.store:storage-embedded:4.1.0` for the optional
@@ -54,18 +54,18 @@ persistence module) are noted in the migration section.
   the library's persistence semantics. `security-persistence-eclipsestore`
   is the Eclipse-Store reference impl, validated by the same 95+
   contract suite as the in-memory defaults.
-- **SecurityVersion drift detection end-to-end** —
-  `SecurityVersionStore`, `SecurityVersionCheck`, sealed
-  `SecurityVersionStatus(Current | Drifted)`,
-  `SecurityVersionEnforcer` with sealed
+- **JSentinelVersion drift detection end-to-end** —
+  `JSentinelVersionStore`, `JSentinelVersionCheck`, sealed
+  `JSentinelVersionStatus(Current | Drifted)`,
+  `JSentinelVersionEnforcer` with sealed
   `EnforcementOutcome(Continue | SessionStale)`, the
   `SessionStale` audit event, plus Vaadin
-  `SecurityVersionEnforcerListener` (`@ListenerPriority(MAX_VALUE)`,
+  `JSentinelVersionEnforcerListener` (`@ListenerPriority(MAX_VALUE)`,
   reroutes drifted sessions to the login view) and REST
-  `RestSecurityVersionFilter` (`401 + WWW-Authenticate: SessionStale`
+  `RestJSentinelVersionFilter` (`401 + WWW-Authenticate: SessionStale`
   per RFC 7235). Automatic snapshot capture in `LoginView` when
-  `SecurityVersionStore` + `SubjectIdResolver` are both wired.
-- **Six store-backed services** — `StoreBackedSecurityAuditService`,
+  `JSentinelVersionStore` + `SubjectIdResolver` are both wired.
+- **Six store-backed services** — `StoreBackedJSentinelAuditService`,
   `StoreBackedLoginAttemptPolicy`, `StoreBackedSubjectSessionRegistry`,
   `StoreBackedRoleAuthorizationService<U>`,
   `StoreBackedRememberMeService`, `StoreBackedBootstrapStateService`
@@ -75,10 +75,10 @@ persistence module) are noted in the migration section.
   `SecuredAnnotationProcessor` generates `<Type>Secured` subclasses
   for `@Secured` concrete classes. Side-by-side with the runtime
   `SecuredProxy.wrap(Interface, impl)` path; both route through
-  `SecurityEnforcer`.
+  `JSentinelEnforcer`.
 - **Account-lifecycle stack** — `PasswordResetService` +
   `EmailVerificationService` over the Phase-2c stores, with a
-  `SecurityNotificationSender` SPI (`LoggingNotificationSender`
+  `JSentinelNotificationSender` SPI (`LoggingNotificationSender`
   default) so apps can plug in mail / SMS / log transports.
 - **API keys + rotating refresh tokens** —
   `ApiKeyAuthenticationService` over `ApiKeyStore`, `TokenService`
@@ -101,9 +101,9 @@ persistence module) are noted in the migration section.
 - **`SessionManagementView`** — reusable admin Composite that
   renders every `SessionRecord` from `SessionStore.findAll()`
   with a per-row Revoke button.
-- **`OpenApiSecurityMetadataGenerator`** — extracts the five
+- **`OpenApiJSentinelMetadataGenerator`** — extracts the five
   framework `@Requires…` annotations from a REST handler class
-  and produces a JSON-free `HandlerSecurityMetadata` tree apps
+  and produces a JSON-free `HandlerJSentinelMetadata` tree apps
   merge into their own OpenAPI builder.
 - **27 sealed `AuditEvent` variants** — `SessionStale`,
   `PasswordResetRequested`, `PasswordResetCompleted`,
@@ -118,11 +118,11 @@ persistence module) are noted in the migration section.
 
 | Module | Artifact | Purpose |
 |---|---|---|
-| `security-core` | `security-core` | Generic, framework-neutral security concepts and decision logic. Owns every SPI contract, all 11 persistence-store interfaces, the SecurityVersion stack, and the account-lifecycle / token / rate-limit services |
+| `security-core` | `security-core` | Generic, framework-neutral security concepts and decision logic. Owns every SPI contract, all 11 persistence-store interfaces, the JSentinelVersion stack, and the account-lifecycle / token / rate-limit services |
 | `security-vaadin` | `security-vaadin` | Vaadin Flow adapter — view/navigation security, Phase-4c enforcement listener, Phase-8 `SecuredButton` / `SecuredRouterLink` / `SecuredMenuItem` / `SessionManagementView` |
-| `security-rest` | `security-rest` | Framework-light REST adapter — Phase-4c `RestSecurityVersionFilter`, Phase-8d `OpenApiSecurityMetadataGenerator` |
+| `security-rest` | `security-rest` | Framework-light REST adapter — Phase-4c `RestJSentinelVersionFilter`, Phase-8d `OpenApiJSentinelMetadataGenerator` |
 | `security-standalone` | `security-standalone` | Plain-Java / desktop / CLI adapter |
-| `security-test` | `security-test` | Reusable test fixtures (`FakeAuthenticationService`, `FakeAuthorizationService`, `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5 `SecurityTestExtension`) |
+| `security-test` | `security-test` | Reusable test fixtures (`FakeAuthenticationService`, `FakeAuthorizationService`, `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5 `JSentinelTestExtension`) |
 | `security-processor` | `security-processor` | Compile-time annotation processor for `@Secured` concrete classes |
 | `security-persistence-testkit` | `security-persistence-testkit` | **NEW** — Contract test suites (`@Test default` interfaces) for every persistence-store SPI; persistence-tech-agnostic |
 | `security-persistence-eclipsestore` | `security-persistence-eclipsestore` | **NEW** — Eclipse-Store (`org.eclipse.store:storage-embedded:4.1.0`) reference impl of every persistence-store SPI |
@@ -150,7 +150,7 @@ embed the suites at test scope.
 | `ResourceRef(resourceType, resourceId, tenant)` | core/policy/resource | Tenant-aware resource handle for policy evaluation |
 | `ResourceAccessContext(accessContext, resourceRef)` | core/policy/resource | Composite for policy evaluators that need both subject and resource |
 
-### Persistence-store SPIs (Phase 2 — `@ExperimentalSecurityApi`)
+### Persistence-store SPIs (Phase 2 — `@ExperimentalJSentinelApi`)
 
 Every store has an `InMemory*Store` default in `security-core` and
 an Eclipse-Store reference impl in
@@ -171,21 +171,21 @@ same `security-persistence-testkit` contract.
 | `RefreshTokenStore` | `RefreshTokenRecord` (hash-only, rotating via `markReplaced`) | core/authentication |
 | `RateLimitStore` | event timestamps under `RateLimitKey(tenant, scope)` | core/ratelimiting |
 
-### SecurityVersion drift detection (Phase 4 — `@ExperimentalSecurityApi`)
+### JSentinelVersion drift detection (Phase 4 — `@ExperimentalJSentinelApi`)
 
 | Type | Module |
 |---|---|
-| `SecurityVersion(long value)` + `SecurityVersionKey(tenant, subjectId)` | core/session |
-| `SecurityVersionStore` SPI, `InMemorySecurityVersionStore` default | core/session |
-| `SecurityVersionCheck` (pure helper) | core/session |
-| sealed `SecurityVersionStatus = Current(at) \| Drifted(snapshot, current)` | core/session |
-| `SecurityVersionEnforcer` (publishes `SessionStale` audit) | core/session |
+| `JSentinelVersion(long value)` + `JSentinelVersionKey(tenant, subjectId)` | core/session |
+| `JSentinelVersionStore` SPI, `InMemoryJSentinelVersionStore` default | core/session |
+| `JSentinelVersionCheck` (pure helper) | core/session |
+| sealed `JSentinelVersionStatus = Current(at) \| Drifted(snapshot, current)` | core/session |
+| `JSentinelVersionEnforcer` (publishes `SessionStale` audit) | core/session |
 | sealed `EnforcementOutcome = Continue \| SessionStale(status)` | core/session |
-| `VaadinSecurityVersionContext` + `SecurityVersionEnforcerListener` (`@ListenerPriority(MAX_VALUE)`) | vaadin/session/vaadin |
-| `RestSecurityVersionContext` + `RestSecurityVersionFilter` | rest |
+| `VaadinJSentinelVersionContext` + `JSentinelVersionEnforcerListener` (`@ListenerPriority(MAX_VALUE)`) | vaadin/session/vaadin |
+| `RestJSentinelVersionContext` + `RestJSentinelVersionFilter` | rest |
 
-`LoginView.captureSecurityVersionSnapshot()` runs automatically
-after a successful login when both `SecurityVersionStore` and
+`LoginView.captureJSentinelVersionSnapshot()` runs automatically
+after a successful login when both `JSentinelVersionStore` and
 `SubjectIdResolver` are SPI-wired; absent either, the capture is
 a strict no-op.
 
@@ -193,8 +193,8 @@ a strict no-op.
 
 | Type | Module |
 |---|---|
-| `SecurityNotificationSender` SPI, `LoggingNotificationSender` default | core/accountlifecycle |
-| `SecurityNotification(kind, subjectId, tenant, timestamp, attributes)` + `Kind(PASSWORD_RESET_REQUESTED, PASSWORD_RESET_COMPLETED, EMAIL_VERIFICATION_REQUESTED, EMAIL_VERIFIED)` | core/accountlifecycle |
+| `JSentinelNotificationSender` SPI, `LoggingNotificationSender` default | core/accountlifecycle |
+| `JSentinelNotification(kind, subjectId, tenant, timestamp, attributes)` + `Kind(PASSWORD_RESET_REQUESTED, PASSWORD_RESET_COMPLETED, EMAIL_VERIFICATION_REQUESTED, EMAIL_VERIFIED)` | core/accountlifecycle |
 | `PasswordResetService` (request / validate / consume; single-use; tenant-scoped; emits audit + notification on each step) | core/accountlifecycle |
 | `EmailVerificationService` (same shape, carries verified email on the record) | core/accountlifecycle |
 
@@ -223,9 +223,9 @@ a strict no-op.
 | `SecuredMenuItem.bind(MenuItem, …)` binding helper | vaadin/components |
 | `SessionManagementView` (subclass with `@Route` + `@RequiresPermission`) | vaadin/components |
 | `SubjectIdResolver<U>` SPI — Vaadin `LoginView` automatic snapshot capture | core/authorization/api |
-| `SecurityRequirement` (sealed `Scheme(PERMISSION \| ROLE \| POLICY)` × `Operator(ALL \| ANY)`) | rest/openapi |
-| `HandlerSecurityMetadata` (class-level + per-method) | rest/openapi |
-| `OpenApiSecurityMetadataGenerator.generate(Class<?>)` | rest/openapi |
+| `JSentinelRequirement` (sealed `Scheme(PERMISSION \| ROLE \| POLICY)` × `Operator(ALL \| ANY)`) | rest/openapi |
+| `HandlerJSentinelMetadata` (class-level + per-method) | rest/openapi |
+| `OpenApiJSentinelMetadataGenerator.generate(Class<?>)` | rest/openapi |
 
 ### Audit-event additions
 
@@ -246,9 +246,9 @@ notification path so they cannot block the security flow.
 
 | Service | Module | Backing store |
 |---|---|---|
-| `StoreBackedSecurityAuditService` | core/audit | `AuditEventStore` |
+| `StoreBackedJSentinelAuditService` | core/audit | `AuditEventStore` |
 | `StoreBackedLoginAttemptPolicy` | core/bruteforce | `LoginAttemptStore` (flat lockout) |
-| `StoreBackedSubjectSessionRegistry` | core/logout | `SessionStore` + optional `SecurityVersionStore` for snapshot capture |
+| `StoreBackedSubjectSessionRegistry` | core/logout | `SessionStore` + optional `JSentinelVersionStore` for snapshot capture |
 | `StoreBackedRoleAuthorizationService<U>` | core/authorization/api/roles | `RoleAssignmentStore` |
 | `StoreBackedRememberMeService` | core/authentication | `RememberMeTokenStore` + `PasswordHasher` |
 | `StoreBackedBootstrapStateService` | core/bootstrap | `BootstrapStateStore` (idempotent `markCompleted`) |
@@ -259,7 +259,7 @@ notification path so they cannot block the security flow.
 
 `security-processor` produces `<Type>Secured` subclasses for
 `@Secured` concrete classes at compile time. The generated wrapper
-inserts `SecurityEnforcer.require…(…)` ahead of `super.<method>(…)`
+inserts `JSentinelEnforcer.require…(…)` ahead of `super.<method>(…)`
 for every annotated method. Built on
 `com.svenruppert:proxybuilder:00.11.00` with the separate
 `proxybuilder-annotations` module; the generated wrapper carries
@@ -268,7 +268,7 @@ for every annotated method. Built on
 per method.
 
 Runtime + compile-time enforcement paths share the same
-`SecurityEnforcer`, so a permission rule applies identically
+`JSentinelEnforcer`, so a permission rule applies identically
 regardless of which path expressed it. `demo-standalone` exercises
 both side by side (`LibraryService` via `SecuredProxy.wrap(...)`,
 `MemberDirectory` via the processor-generated `MemberDirectorySecured`).
@@ -301,7 +301,7 @@ the parent POM's `pitest-test-classes` is now `com.svenruppert.*`
    wider surface is the relevant number from 00.60 onwards.
 
 \** `security-vaadin` 90 % (00.60) → 79 % (00.70) reflects the
-   Phase-4c `SecurityVersionEnforcerListener` and the Phase-8
+   Phase-4c `JSentinelVersionEnforcerListener` and the Phase-8
    `SecuredButton` / `SecuredRouterLink` / `SecuredMenuItem` /
    `SessionManagementView` landing. The gap is dominated by
    `VoidMethodCallMutator` survivors on component-construction

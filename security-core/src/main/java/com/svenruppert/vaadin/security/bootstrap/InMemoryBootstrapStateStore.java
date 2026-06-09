@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.bootstrap;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 
 import java.util.Optional;
@@ -28,7 +28,7 @@ import static java.util.Objects.requireNonNull;
  * In-memory {@link BootstrapStateStore} backed by a
  * {@link ConcurrentHashMap} keyed on {@link TenantId}.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class InMemoryBootstrapStateStore implements BootstrapStateStore {
 
   private final ConcurrentHashMap<TenantId, BootstrapState> states =

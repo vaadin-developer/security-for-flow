@@ -10,10 +10,10 @@
  */
 package com.svenruppert.vaadin.security.starter.profile;
 
-import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapMode;
 
 /** Production profile — mode PRODUCTION; missing SPIs warn but do not throw. */
-public final class ProductionDefaults implements VaadinSecurityStarter {
+public final class ProductionDefaults implements VaadinJSentinelStarter {
 
   static final ProductionDefaults INSTANCE = new ProductionDefaults();
 
@@ -21,7 +21,7 @@ public final class ProductionDefaults implements VaadinSecurityStarter {
   }
 
   @Override
-  public SecurityBootstrapMode preferredMode() {
-    return SecurityBootstrapMode.PRODUCTION;
+  public JSentinelBootstrapMode preferredMode() {
+    return JSentinelBootstrapMode.PRODUCTION;
   }
 }

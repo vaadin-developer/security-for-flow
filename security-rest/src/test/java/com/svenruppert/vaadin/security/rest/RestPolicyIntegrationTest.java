@@ -17,8 +17,8 @@
 package com.svenruppert.vaadin.security.rest;
 
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPolicy;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 import com.svenruppert.vaadin.security.policy.api.Policy;
 import com.svenruppert.vaadin.security.policy.api.PolicyDecision;
@@ -53,7 +53,7 @@ class RestPolicyIntegrationTest {
 
   @BeforeEach
   void setUp() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     registry = new InMemoryPolicyRegistry();
     registry.register(Policy.named("test.policy")
         .allowIf(SubjectPredicates.hasRole("ADMIN"))
@@ -62,12 +62,12 @@ class RestPolicyIntegrationTest {
     registry.register(Policy.named("test.step-up")
         .stepUpRequiredIf(c -> true, PolicyDecision.StepUpMethod.MFA, "needs mfa")
         .build());
-    SecurityServiceResolver.setPolicyRegistry(registry);
+    JSentinelServiceResolver.setPolicyRegistry(registry);
   }
 
   @AfterEach
   void tearDown() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
   }
 
   @Test
@@ -133,7 +133,7 @@ class RestPolicyIntegrationTest {
   @Test
   @DisplayName("missing policy registration is forbidden (no throw)")
   void missingPolicyRegistrationForbidden() throws NoSuchMethodException {
-    SecurityServiceResolver.setPolicyRegistry(new InMemoryPolicyRegistry());
+    JSentinelServiceResolver.setPolicyRegistry(new InMemoryPolicyRegistry());
     RecordingResponse response = new RecordingResponse();
     AtomicBoolean executed = new AtomicBoolean();
     RestAuthorizationFilter filter = new RestAuthorizationFilter(
@@ -184,8 +184,8 @@ class RestPolicyIntegrationTest {
         "DELETE", "/api/documents/42", Map.of(), Map.of());
   }
 
-  private static SecuritySubject subject(Set<RoleName> roles) {
-    return new SecuritySubject("u1", "User", roles, Set.of());
+  private static JSentinelSubject subject(Set<RoleName> roles) {
+    return new JSentinelSubject("u1", "User", roles, Set.of());
   }
 
   static final class HandlerFixture {

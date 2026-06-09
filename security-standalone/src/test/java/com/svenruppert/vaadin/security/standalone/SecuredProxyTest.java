@@ -19,11 +19,11 @@ package com.svenruppert.vaadin.security.standalone;
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPermission;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresRole;
-import com.svenruppert.vaadin.security.authorization.annotations.SecurityAnnotation;
+import com.svenruppert.vaadin.security.authorization.annotations.JSentinelAnnotation;
 import com.svenruppert.vaadin.security.authorization.api.AccessDeniedException;
 import com.svenruppert.vaadin.security.authorization.api.AccessEvaluator;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.authorization.api.permissions.HasPermissions;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
@@ -59,7 +59,7 @@ class SecuredTest {
 
   @BeforeEach
   void setUp() throws Exception {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     installService("AUTHENTICATION_SERVICE_REF", new StubAuth());
     installService("AUTHORIZATION_SERVICE_REF", new StubAuthz());
     SubjectStores.reset();
@@ -68,12 +68,12 @@ class SecuredTest {
   }
 
   /**
-   * SecurityServiceResolver has no public setter for the auth/authz
+   * JSentinelServiceResolver has no public setter for the auth/authz
    * services — they are normally SPI-loaded. Reflectively install the
    * stubs into the resolver's AtomicReference fields.
    */
   private static void installService(String fieldName, Object service) throws Exception {
-    java.lang.reflect.Field f = SecurityServiceResolver.class.getDeclaredField(fieldName);
+    java.lang.reflect.Field f = JSentinelServiceResolver.class.getDeclaredField(fieldName);
     f.setAccessible(true);
     @SuppressWarnings("unchecked")
     java.util.concurrent.atomic.AtomicReference<Object> ref =
@@ -83,7 +83,7 @@ class SecuredTest {
 
   @AfterEach
   void tearDown() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     SubjectStores.reset();
     InMemoryStore.clear();
   }
@@ -350,7 +350,7 @@ class SecuredTest {
   // SecuredProxy.run().
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.METHOD, ElementType.TYPE})
-  @SecurityAnnotation(StepUpDemandingEvaluator.class)
+  @JSentinelAnnotation(StepUpDemandingEvaluator.class)
   public @interface DemandsStepUp { }
 
   public static class StepUpDemandingEvaluator
@@ -376,7 +376,7 @@ class SecuredTest {
   // (the SettableEvaluator returns whatever the test stages in `next`).
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.METHOD, ElementType.TYPE})
-  @SecurityAnnotation(SettableEvaluator.class)
+  @JSentinelAnnotation(SettableEvaluator.class)
   public @interface CustomCheck { }
 
   public static class SettableEvaluator implements AccessEvaluator<CustomCheck> {

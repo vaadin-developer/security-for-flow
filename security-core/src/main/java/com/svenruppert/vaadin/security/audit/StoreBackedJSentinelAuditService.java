@@ -1,0 +1,105 @@
+/**
+ * Copyright © 2017 Sven Ruppert (sven.ruppert@gmail.com)
+ *
+ * Licensed under the EUPL, Version 1.2 or - as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence"); You may not use this work except in
+ * compliance with the Licence. You may obtain a copy of the Licence at:
+ *
+ * https://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the Licence is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
+ */
+package com.svenruppert.vaadin.security.audit;
+
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
+import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.util.Objects.requireNonNull;
+
+/**
+ * {@link JSentinelAuditService} that persists events through an
+ * {@link AuditEventStore} (Phase 2). Complementary to
+ * {@link CompositeAuditService}, which writes to a
+ * {@link RingBufferAuditSink} and any extra {@link AuditSink}s but
+ * never persists.
+ * <p>
+ * The service is bound to one {@link TenantId} at construction time —
+ * single-tenant applications use the no-argument constructor and the
+ * resolved tenant defaults to {@link TenantId#DEFAULT}. Multi-tenant
+ * applications instantiate one service per tenant or wrap this class
+ * with a tenant-resolving facade.
+ *
+ * <p>Failures propagating from the underlying store are swallowed in
+ * {@link #publish(AuditEvent)} so audit failure cannot break the
+ * security flow that emitted the event. {@link #query(AuditQuery)}
+ * does propagate them — read-side failures are an explicit caller
+ * concern.
+ */
+@ExperimentalJSentinelApi
+public final class StoreBackedJSentinelAuditService implements JSentinelAuditService {
+
+  private final AuditEventStore store;
+  private final TenantId tenant;
+
+  /**
+   * Builds a service that operates against {@link TenantId#DEFAULT}.
+   *
+   * @param store backing store; must not be {@code null}
+   */
+  public StoreBackedJSentinelAuditService(AuditEventStore store) {
+    this(store, TenantId.DEFAULT);
+  }
+
+  /**
+   * Builds a service that operates against the supplied tenant.
+   *
+   * @param store  backing store; must not be {@code null}
+   * @param tenant tenant scope for every published / queried event;
+   *               {@code null} becomes {@link TenantId#DEFAULT}
+   */
+  public StoreBackedJSentinelAuditService(AuditEventStore store, TenantId tenant) {
+    this.store = requireNonNull(store, "store must not be null");
+    this.tenant = tenant == null ? TenantId.DEFAULT : tenant;
+  }
+
+  @Override
+  public void publish(AuditEvent event) {
+    if (event == null) {
+      return;
+    }
+    try {
+      store.append(tenant, event);
+    } catch (RuntimeException ignored) {
+      // Audit failure must never break the security flow.
+    }
+  }
+
+  @Override
+  public List<AuditEvent> query(AuditQuery query) {
+    requireNonNull(query, "query must not be null");
+    List<AuditEnvelope> envelopes = store.query(tenant, query);
+    List<AuditEvent> events = new ArrayList<>(envelopes.size());
+    for (AuditEnvelope envelope : envelopes) {
+      events.add(envelope.event());
+    }
+    return List.copyOf(events);
+  }
+
+  /**
+   * Returns the tenant this service is bound to. Test seam / debug
+   * accessor.
+   *
+   * @return tenant scope
+   */
+  public TenantId tenant() {
+    return tenant;
+  }
+}

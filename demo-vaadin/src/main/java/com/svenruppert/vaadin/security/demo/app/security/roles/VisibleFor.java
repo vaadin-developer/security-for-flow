@@ -16,13 +16,13 @@
  */
 package com.svenruppert.vaadin.security.demo.app.security.roles;
 
-import com.svenruppert.vaadin.security.authorization.annotations.SecurityAnnotation;
+import com.svenruppert.vaadin.security.authorization.annotations.JSentinelAnnotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @Retention(RetentionPolicy.RUNTIME)
-@SecurityAnnotation(MyRoleAccessEvaluator.class)
+@JSentinelAnnotation(MyRoleAccessEvaluator.class)
 public @interface VisibleFor {
   AuthorizationRole[] value();
 }

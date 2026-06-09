@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * {@link SecurityAuditService} that fans every published event out to:
+ * {@link JSentinelAuditService} that fans every published event out to:
  * <ul>
  *   <li>a primary {@link RingBufferAuditSink} used as the query backend, and</li>
  *   <li>zero or more additional {@link AuditSink}s (logging, file, SIEM, …).</li>
@@ -33,7 +33,7 @@ import java.util.Objects;
  * Queries always read from the ring buffer. Applications that need a
  * different query backend can wrap this class.
  */
-public final class CompositeAuditService implements SecurityAuditService {
+public final class CompositeAuditService implements JSentinelAuditService {
 
   private final RingBufferAuditSink ringBuffer;
   private final List<AuditSink> extraSinks;

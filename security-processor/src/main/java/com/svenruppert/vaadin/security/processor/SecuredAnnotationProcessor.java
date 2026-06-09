@@ -53,26 +53,26 @@ import java.util.stream.Collectors;
  * {@link Secured @Secured}-annotated concrete class. The wrapper
  * inherits from the original, overrides every public, non-final,
  * non-static method, and inserts a
- * {@link com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer SecurityEnforcer}
+ * {@link com.svenruppert.vaadin.security.authorization.api.JSentinelEnforcer JSentinelEnforcer}
  * pre-check ahead of the {@code super.<method>(...)} delegate when the
  * method (or the class) carries one of the method-security annotations.
  *
  * <p>Annotation mapping:
  * <ul>
  *   <li>{@link RequiresPermission} (1 value)  →
- *       {@link com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer#requirePermission(String)}</li>
+ *       {@link com.svenruppert.vaadin.security.authorization.api.JSentinelEnforcer#requirePermission(String)}</li>
  *   <li>{@link RequiresPermission} (n values) →
- *       {@link com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer#requireAllPermissions(String...)}</li>
+ *       {@link com.svenruppert.vaadin.security.authorization.api.JSentinelEnforcer#requireAllPermissions(String...)}</li>
  *   <li>{@link RequiresAllPermissions} →
- *       {@link com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer#requireAllPermissions(String...)}</li>
+ *       {@link com.svenruppert.vaadin.security.authorization.api.JSentinelEnforcer#requireAllPermissions(String...)}</li>
  *   <li>{@link RequiresAnyPermission} →
- *       {@link com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer#requireAnyPermission(String...)}</li>
+ *       {@link com.svenruppert.vaadin.security.authorization.api.JSentinelEnforcer#requireAnyPermission(String...)}</li>
  *   <li>{@link RequiresRole} (1 value)  →
- *       {@link com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer#requireRole(String)}</li>
+ *       {@link com.svenruppert.vaadin.security.authorization.api.JSentinelEnforcer#requireRole(String)}</li>
  *   <li>{@link RequiresRole} (n values) →
- *       {@link com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer#requireAnyRole(String...)}</li>
+ *       {@link com.svenruppert.vaadin.security.authorization.api.JSentinelEnforcer#requireAnyRole(String...)}</li>
  *   <li>{@link RequiresPolicy} →
- *       {@link com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer#requirePolicy(String)}</li>
+ *       {@link com.svenruppert.vaadin.security.authorization.api.JSentinelEnforcer#requirePolicy(String)}</li>
  * </ul>
  *
  * <p>Method-level annotations take precedence over class-level
@@ -95,7 +95,7 @@ public final class SecuredAnnotationProcessor
     extends BasicStaticProxyAnnotationProcessor<Secured> {
 
   private static final ClassName ENFORCER = ClassName.get(
-      "com.svenruppert.vaadin.security.authorization.api", "SecurityEnforcer");
+      "com.svenruppert.vaadin.security.authorization.api", "JSentinelEnforcer");
 
   // V00.73: wrapper-index writer state. Must stay in sync with the
   // package-private com.svenruppert.vaadin.security.dx.diagnostics.WrapperIndexFormat
@@ -140,7 +140,7 @@ public final class SecuredAnnotationProcessor
 
   @Override
   protected void addClassLevelSpecs(TypeElement typeElement, RoundEnvironment roundEnv) {
-    // SecurityEnforcer is a static facade — no instance field or
+    // JSentinelEnforcer is a static facade — no instance field or
     // builder method is added to the generated wrapper. The hook is
     // used to capture the FQN of the class being processed so that
     // index entries can be attributed to it later.

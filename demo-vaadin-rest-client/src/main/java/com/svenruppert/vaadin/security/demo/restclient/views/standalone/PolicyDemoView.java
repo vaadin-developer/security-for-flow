@@ -20,7 +20,7 @@ import com.svenruppert.vaadin.security.authorization.annotations.RequiresPolicy;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 import com.svenruppert.vaadin.security.demo.restclient.backend.RemoteUser;
-import com.svenruppert.vaadin.security.demo.restclient.security.ClientSecurityContext;
+import com.svenruppert.vaadin.security.demo.restclient.security.ClientJSentinelContext;
 import com.svenruppert.vaadin.security.demo.restclient.security.DemoPolicyInitListener;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.Div;
@@ -37,7 +37,7 @@ import com.vaadin.flow.router.Route;
  * <p>The demo policy {@code documents.editor-or-admin} is registered
  * at service init by {@link DemoPolicyInitListener}. The framework's
  * {@code AuthorizationListener} resolves the annotation, looks up the
- * policy through {@code SecurityServiceResolver.policyRegistry()}, and
+ * policy through {@code JSentinelServiceResolver.policyRegistry()}, and
  * reroutes anyone who does not satisfy the rule. Users that reach this
  * view passed the policy.
  */
@@ -80,7 +80,7 @@ public class PolicyDemoView extends Composite<Div> {
   }
 
   private static Paragraph currentUserSummary() {
-    RemoteUser user = ClientSecurityContext.user().orElse(null);
+    RemoteUser user = ClientJSentinelContext.user().orElse(null);
     if (user == null) {
       return new Paragraph(
           "(no cached user) — this should not happen on a protected route.");

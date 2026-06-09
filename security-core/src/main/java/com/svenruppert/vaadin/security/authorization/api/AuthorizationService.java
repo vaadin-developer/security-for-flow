@@ -54,7 +54,7 @@ public interface AuthorizationService<U> {
    * @return the permissions for this subject
    * @see PermissionAuthorizationService
    */
-  @ExperimentalSecurityApi("Permission-based authorization is experimental. "
+  @ExperimentalJSentinelApi("Permission-based authorization is experimental. "
       + "Override this method or implement PermissionAuthorizationService.")
   default HasPermissions permissionsFor(U subject) {
     return List::of;

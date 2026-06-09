@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.policy.impl;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.policy.api.ResourceRef;
 import com.svenruppert.vaadin.security.policy.spi.ResourceResolver;
 import com.svenruppert.vaadin.security.policy.spi.ResourceResolverRegistry;
@@ -35,11 +35,11 @@ import static java.util.Objects.requireNonNull;
  * the previous entry.
  *
  * <p>This is the default implementation returned by
- * {@code SecurityServiceResolver.resourceResolverRegistry()} when no
+ * {@code JSentinelServiceResolver.resourceResolverRegistry()} when no
  * SPI override is registered. Applications register their domain
  * resolvers into the cached instance at startup.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class InMemoryResourceResolverRegistry implements ResourceResolverRegistry {
 
   private final ConcurrentMap<String, ResourceResolver<?>> resolvers = new ConcurrentHashMap<>();

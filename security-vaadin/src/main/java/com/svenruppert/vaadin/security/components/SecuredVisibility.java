@@ -16,9 +16,9 @@
  */
 package com.svenruppert.vaadin.security.components;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.PermissionGuard;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.authorization.api.permissions.HasPermissions;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
@@ -72,7 +72,7 @@ import static java.util.Objects.requireNonNull;
  * the helper denies the affordance. UI components must never grant
  * by default when authentication is unknown.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class SecuredVisibility {
 
   private SecuredVisibility() {
@@ -171,7 +171,7 @@ public final class SecuredVisibility {
     requireNonNull(target, "target must not be null");
     requireNonNull(requirement, "requirement must not be null");
     requireNonNull(mode, "mode must not be null");
-    apply(target, requirement, mode, () -> currentSecurityView());
+    apply(target, requirement, mode, () -> currentJSentinelView());
   }
 
   /**
@@ -187,12 +187,12 @@ public final class SecuredVisibility {
   public static void apply(Target target,
                            Requirement requirement,
                            SecuredVisibilityMode mode,
-                           Supplier<Optional<SecurityView>> viewSupplier) {
+                           Supplier<Optional<JSentinelView>> viewSupplier) {
     requireNonNull(target, "target must not be null");
     requireNonNull(requirement, "requirement must not be null");
     requireNonNull(mode, "mode must not be null");
     requireNonNull(viewSupplier, "viewSupplier must not be null");
-    Optional<SecurityView> view = viewSupplier.get();
+    Optional<JSentinelView> view = viewSupplier.get();
     boolean allowed = view.map(v -> isAllowed(requirement, v.roles(), v.permissions()))
         .orElse(requirement.isEmpty());
     if (allowed) {
@@ -219,9 +219,9 @@ public final class SecuredVisibility {
    * @param roles       caller's role view; non-null
    * @param permissions caller's permission view; non-null
    */
-  public record SecurityView(HasRoles roles, HasPermissions permissions) {
+  public record JSentinelView(HasRoles roles, HasPermissions permissions) {
     /** Validates the components. */
-    public SecurityView {
+    public JSentinelView {
       requireNonNull(roles, "roles must not be null");
       requireNonNull(permissions, "permissions must not be null");
     }
@@ -236,9 +236,9 @@ public final class SecuredVisibility {
    * @return current security view, if resolvable
    */
   @SuppressWarnings({"rawtypes", "unchecked"})
-  public static Optional<SecurityView> currentSecurityView() {
+  public static Optional<JSentinelView> currentJSentinelView() {
     try {
-      Class subjectType = SecurityServiceResolver
+      Class subjectType = JSentinelServiceResolver
           .<Object, Object>findAuthenticationService()
           .map(s -> (Class) s.subjectType())
           .orElse(null);
@@ -252,14 +252,14 @@ public final class SecuredVisibility {
       }
       Object subject = subjectOpt.get();
       Optional<AuthorizationService<Object>> authzOpt =
-          SecurityServiceResolver.findAuthorizationService();
+          JSentinelServiceResolver.findAuthorizationService();
       if (authzOpt.isEmpty()) {
         return Optional.empty();
       }
       AuthorizationService<Object> authz = authzOpt.get();
       HasRoles roles = () -> List.copyOf(authz.rolesFor(subject).roleNames());
       HasPermissions permissions = () -> List.copyOf(authz.permissionsFor(subject).permissionNames());
-      return Optional.of(new SecurityView(roles, permissions));
+      return Optional.of(new JSentinelView(roles, permissions));
     } catch (RuntimeException ignored) {
       return Optional.empty();
     }

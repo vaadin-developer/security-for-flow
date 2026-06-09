@@ -20,7 +20,7 @@ import com.svenruppert.vaadin.security.authorization.annotations.RequiresPermiss
 import com.svenruppert.vaadin.security.demo.restclient.backend.BackendClientProvider;
 import com.svenruppert.vaadin.security.demo.restclient.backend.BackendException;
 import com.svenruppert.vaadin.security.demo.restclient.backend.RemoteUserEntry;
-import com.svenruppert.vaadin.security.demo.restclient.security.ClientSecurityContext;
+import com.svenruppert.vaadin.security.demo.restclient.security.ClientJSentinelContext;
 import com.svenruppert.vaadin.security.demo.restclient.views.MainView;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.UI;
@@ -131,7 +131,7 @@ public class AdminRolesView extends Composite<VerticalLayout> {
   }
 
   private void performDelete(String username) {
-    String token = ClientSecurityContext.token().orElse(null);
+    String token = ClientJSentinelContext.token().orElse(null);
     if (token == null) {
       warn("Not authenticated.");
       return;
@@ -194,7 +194,7 @@ public class AdminRolesView extends Composite<VerticalLayout> {
 
   private void performCreate(String username, String password, String displayName,
                              String role, Dialog dialog) {
-    String token = ClientSecurityContext.token().orElse(null);
+    String token = ClientJSentinelContext.token().orElse(null);
     if (token == null) {
       warn("Not authenticated.");
       return;
@@ -238,7 +238,7 @@ public class AdminRolesView extends Composite<VerticalLayout> {
   }
 
   private void apply(String username, String newRole) {
-    String token = ClientSecurityContext.token().orElse(null);
+    String token = ClientJSentinelContext.token().orElse(null);
     if (token == null) {
       warn("Not authenticated.");
       return;
@@ -259,7 +259,7 @@ public class AdminRolesView extends Composite<VerticalLayout> {
   }
 
   private void refresh() {
-    String token = ClientSecurityContext.token().orElse(null);
+    String token = ClientJSentinelContext.token().orElse(null);
     if (token == null) {
       grid.setItems(List.of());
       return;

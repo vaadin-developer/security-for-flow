@@ -17,7 +17,7 @@ import com.svenruppert.vaadin.security.authorization.api.roles.RoleHierarchy;
  *
  * <p><strong>V00.73 status:</strong> single-method typed surface —
  * {@link #hierarchy(RoleHierarchy)} wires
- * {@code SecurityServiceResolver.setRoleHierarchy(...)}.
+ * {@code JSentinelServiceResolver.setRoleHierarchy(...)}.
  *
  * <p>V00.73 intentionally exposes only {@code hierarchy(...)} in the
  * fluent surface. The {@code RolePermissionMapping} type has no

@@ -18,8 +18,8 @@ package com.svenruppert.vaadin.security.bootstrap;
 
 import com.svenruppert.vaadin.security.audit.BootstrapAdminCreated;
 import com.svenruppert.vaadin.security.audit.BootstrapTokenRejected;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.credential.password.PasswordHashResult;
 import com.svenruppert.vaadin.security.credential.password.PasswordHashingService;
 
@@ -162,7 +162,7 @@ public final class InitialAdminBootstrapService {
   }
 
   private void auditAdminCreated(String username) {
-    SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
+    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
     try {
       sink.publish(new BootstrapAdminCreated(Instant.now(clock), username, null));
     } catch (RuntimeException ignored) {
@@ -171,7 +171,7 @@ public final class InitialAdminBootstrapService {
   }
 
   private void auditTokenRejected(String reason) {
-    SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
+    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
     try {
       sink.publish(new BootstrapTokenRejected(Instant.now(clock), reason, null));
     } catch (RuntimeException ignored) {

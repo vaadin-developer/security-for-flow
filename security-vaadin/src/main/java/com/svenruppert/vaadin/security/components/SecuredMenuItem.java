@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.components;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 
@@ -51,18 +51,18 @@ import static java.util.Objects.requireNonNull;
  * <p>This is a UI affordance only — the actual delete handler must
  * still server-side-guard the operation.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class SecuredMenuItem {
 
   private final MenuItem menuItem;
   private final SecuredVisibility.Requirement requirement;
   private final SecuredVisibilityMode mode;
-  private final Supplier<Optional<SecuredVisibility.SecurityView>> viewSupplier;
+  private final Supplier<Optional<SecuredVisibility.JSentinelView>> viewSupplier;
 
   private SecuredMenuItem(MenuItem menuItem,
                           SecuredVisibility.Requirement requirement,
                           SecuredVisibilityMode mode,
-                          Supplier<Optional<SecuredVisibility.SecurityView>> viewSupplier) {
+                          Supplier<Optional<SecuredVisibility.JSentinelView>> viewSupplier) {
     this.menuItem = requireNonNull(menuItem, "menuItem must not be null");
     this.requirement = requireNonNull(requirement, "requirement must not be null");
     this.mode = requireNonNull(mode, "mode must not be null");
@@ -82,7 +82,7 @@ public final class SecuredMenuItem {
   public static SecuredMenuItem bind(MenuItem menuItem,
                                      SecuredVisibility.Requirement requirement) {
     return new SecuredMenuItem(menuItem, requirement, SecuredVisibilityMode.HIDE,
-        SecuredVisibility::currentSecurityView);
+        SecuredVisibility::currentJSentinelView);
   }
 
   /**
@@ -97,7 +97,7 @@ public final class SecuredMenuItem {
                                      SecuredVisibility.Requirement requirement,
                                      SecuredVisibilityMode mode) {
     return new SecuredMenuItem(menuItem, requirement, mode,
-        SecuredVisibility::currentSecurityView);
+        SecuredVisibility::currentJSentinelView);
   }
 
   /**
@@ -112,7 +112,7 @@ public final class SecuredMenuItem {
   public static SecuredMenuItem bind(MenuItem menuItem,
                                      SecuredVisibility.Requirement requirement,
                                      SecuredVisibilityMode mode,
-                                     Supplier<Optional<SecuredVisibility.SecurityView>> viewSupplier) {
+                                     Supplier<Optional<SecuredVisibility.JSentinelView>> viewSupplier) {
     return new SecuredMenuItem(menuItem, requirement, mode, viewSupplier);
   }
 

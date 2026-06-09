@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.audit;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 
 import java.time.Instant;
@@ -39,7 +39,7 @@ import java.util.List;
  * and {@code query} calls happen on every request that produces an
  * audit event.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public interface AuditEventStore {
 
   /**

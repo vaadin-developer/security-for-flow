@@ -17,21 +17,21 @@
 package com.svenruppert.vaadin.security.authorization;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.audit.SessionInvalidated;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectIdResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
-import com.svenruppert.vaadin.security.session.SecurityVersion;
-import com.svenruppert.vaadin.security.session.SecurityVersionKey;
-import com.svenruppert.vaadin.security.session.SecurityVersionStore;
+import com.svenruppert.vaadin.security.session.JSentinelVersion;
+import com.svenruppert.vaadin.security.session.JSentinelVersionKey;
+import com.svenruppert.vaadin.security.session.JSentinelVersionStore;
 import com.svenruppert.vaadin.security.session.SessionContext;
 import com.svenruppert.vaadin.security.session.SessionDecision;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
-import com.svenruppert.vaadin.security.session.vaadin.VaadinSecurityVersionContext;
+import com.svenruppert.vaadin.security.session.vaadin.VaadinJSentinelVersionContext;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
@@ -185,7 +185,7 @@ public abstract class LoginView
     if (isValid) {
       logger().info("Login was accepted .. {}", LocalDateTime.now());
       notifyOnLogin();
-      captureSecurityVersionSnapshot();
+      captureJSentinelVersionSnapshot();
       navigateToApp();
     } else {
       logger().warn("Login was not accepted .. {}", LocalDateTime.now());
@@ -196,9 +196,9 @@ public abstract class LoginView
 
   /**
    * Phase 4c-Followup: best-effort capture of the
-   * {@link SecurityVersion} snapshot into
-   * {@link VaadinSecurityVersionContext} so the
-   * {@code SecurityVersionEnforcerListener} can detect drift on
+   * {@link JSentinelVersion} snapshot into
+   * {@link VaadinJSentinelVersionContext} so the
+   * {@code JSentinelVersionEnforcerListener} can detect drift on
    * subsequent requests.
    * <p>
    * Fires after {@link #notifyOnLogin()} so any session rotation
@@ -206,7 +206,7 @@ public abstract class LoginView
    * matches the new servlet session. The capture is a strict
    * three-way no-op when any prerequisite is missing:
    * <ol>
-   *   <li>No SPI-registered {@link SecurityVersionStore} (Phase 4a
+   *   <li>No SPI-registered {@link JSentinelVersionStore} (Phase 4a
    *       not wired) — skip.</li>
    *   <li>No SPI-registered {@link SubjectIdResolver} — the
    *       framework cannot derive a {@link SubjectId} from the
@@ -214,18 +214,18 @@ public abstract class LoginView
    *   <li>No active Vaadin session / no current subject — skip.</li>
    * </ol>
    * Any exception thrown by the resolver, the store, or
-   * {@link VaadinSecurityVersionContext#record} is swallowed —
+   * {@link VaadinJSentinelVersionContext#record} is swallowed —
    * snapshot capture must never block the login flow.
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
-  private void captureSecurityVersionSnapshot() {
+  private void captureJSentinelVersionSnapshot() {
     try {
-      Optional<SecurityVersionStore> storeOpt = SecurityServiceResolver.findSecurityVersionStore();
+      Optional<JSentinelVersionStore> storeOpt = JSentinelServiceResolver.findJSentinelVersionStore();
       if (storeOpt.isEmpty()) {
         return;
       }
       Optional<SubjectIdResolver<Object>> resolverOpt =
-          SecurityServiceResolver.findSubjectIdResolver();
+          JSentinelServiceResolver.findSubjectIdResolver();
       if (resolverOpt.isEmpty()) {
         return;
       }
@@ -240,13 +240,13 @@ public abstract class LoginView
       SubjectIdResolver<Object> resolver = resolverOpt.get();
       SubjectId subjectId = resolver.resolve(subject);
       TenantId tenant = resolver.tenantFor(subject);
-      SecurityVersion snapshot = storeOpt.get()
-          .current(new SecurityVersionKey(tenant, subjectId));
+      JSentinelVersion snapshot = storeOpt.get()
+          .current(new JSentinelVersionKey(tenant, subjectId));
       WrappedSession wrapped = session.getSession();
       String sessionId = wrapped == null ? null : wrapped.getId();
-      VaadinSecurityVersionContext.record(session, subjectId, tenant, snapshot, sessionId);
+      VaadinJSentinelVersionContext.record(session, subjectId, tenant, snapshot, sessionId);
     } catch (RuntimeException captureFailure) {
-      logger().warn("SecurityVersion snapshot capture failed: {}", captureFailure.toString());
+      logger().warn("JSentinelVersion snapshot capture failed: {}", captureFailure.toString());
     }
   }
 
@@ -273,7 +273,7 @@ public abstract class LoginView
    */
   private void notifyOnLogin() {
     try {
-      SessionPolicy<Object> policy = SecurityServiceResolver.sessionPolicy();
+      SessionPolicy<Object> policy = JSentinelServiceResolver.sessionPolicy();
       Optional<SessionContext<Object>> contextOpt = buildSessionContext();
       if (contextOpt.isEmpty()) {
         return;
@@ -315,7 +315,7 @@ public abstract class LoginView
 
   private void auditRotation(SessionContext<Object> context, String oldSessionId, String reason) {
     try {
-      SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
+      JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
       sink.publish(new SessionInvalidated(
           Instant.now(),
           subjectIdOf(context),
@@ -359,7 +359,7 @@ public abstract class LoginView
 
   private static Optional<Object> currentSubject() {
     try {
-      Class<?> subjectType = SecurityServiceResolver
+      Class<?> subjectType = JSentinelServiceResolver
           .<Object, Object>authenticationService()
           .subjectType();
       if (subjectType == null) {

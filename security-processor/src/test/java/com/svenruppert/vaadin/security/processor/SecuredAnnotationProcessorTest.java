@@ -58,7 +58,7 @@ class SecuredAnnotationProcessorTest {
     assertThat(result)
         .generatedSourceFile("demo.DocServiceSecured")
         .contentsAsUtf8String()
-        .contains("SecurityEnforcer.requirePermission(\"doc:delete\")");
+        .contains("JSentinelEnforcer.requirePermission(\"doc:delete\")");
     assertThat(result)
         .generatedSourceFile("demo.DocServiceSecured")
         .contentsAsUtf8String()
@@ -86,7 +86,7 @@ class SecuredAnnotationProcessorTest {
     assertThat(result)
         .generatedSourceFile("demo.ReportServiceSecured")
         .contentsAsUtf8String()
-        .contains("SecurityEnforcer.requireAllPermissions(\"report:read\", \"report:export\")");
+        .contains("JSentinelEnforcer.requireAllPermissions(\"report:read\", \"report:export\")");
   }
 
   @Test
@@ -110,7 +110,7 @@ class SecuredAnnotationProcessorTest {
     assertThat(result)
         .generatedSourceFile("demo.AnyServiceSecured")
         .contentsAsUtf8String()
-        .contains("SecurityEnforcer.requireAnyPermission(\"a\", \"b\")");
+        .contains("JSentinelEnforcer.requireAnyPermission(\"a\", \"b\")");
   }
 
   @Test
@@ -134,7 +134,7 @@ class SecuredAnnotationProcessorTest {
     assertThat(result)
         .generatedSourceFile("demo.AllServiceSecured")
         .contentsAsUtf8String()
-        .contains("SecurityEnforcer.requireAllPermissions(\"x\", \"y\")");
+        .contains("JSentinelEnforcer.requireAllPermissions(\"x\", \"y\")");
   }
 
   @Test
@@ -158,7 +158,7 @@ class SecuredAnnotationProcessorTest {
     assertThat(result)
         .generatedSourceFile("demo.AdminServiceSecured")
         .contentsAsUtf8String()
-        .contains("SecurityEnforcer.requireRole(\"ADMIN\")");
+        .contains("JSentinelEnforcer.requireRole(\"ADMIN\")");
   }
 
   @Test
@@ -182,7 +182,7 @@ class SecuredAnnotationProcessorTest {
     assertThat(result)
         .generatedSourceFile("demo.MultiRoleServiceSecured")
         .contentsAsUtf8String()
-        .contains("SecurityEnforcer.requireAnyRole(\"ADMIN\", \"EDITOR\")");
+        .contains("JSentinelEnforcer.requireAnyRole(\"ADMIN\", \"EDITOR\")");
   }
 
   @Test
@@ -206,7 +206,7 @@ class SecuredAnnotationProcessorTest {
     assertThat(result)
         .generatedSourceFile("demo.PolicyServiceSecured")
         .contentsAsUtf8String()
-        .contains("SecurityEnforcer.requirePolicy(\"doc.owner-or-admin\")");
+        .contains("JSentinelEnforcer.requirePolicy(\"doc.owner-or-admin\")");
   }
 
   @Test
@@ -240,7 +240,7 @@ class SecuredAnnotationProcessorTest {
     int guardedIdx = generated.indexOf("super.guarded()");
     int unguardedIdx = generated.indexOf("super.unguarded(input)");
     String unguardedSlice = generated.substring(guardedIdx, unguardedIdx);
-    if (unguardedSlice.lastIndexOf("SecurityEnforcer.")
+    if (unguardedSlice.lastIndexOf("JSentinelEnforcer.")
         > unguardedSlice.lastIndexOf("super.guarded()")) {
       throw new AssertionError(
           "enforcer call leaked into the unguarded() method; full source:\n" + generated);
@@ -268,7 +268,7 @@ class SecuredAnnotationProcessorTest {
     assertThat(result).succeeded();
     String generated = generatedFileContent(result, "demo.ClassGuardedServiceSecured");
     long requireRoleCalls = generated.lines()
-        .filter(l -> l.contains("SecurityEnforcer.requireRole(\"ADMIN\")"))
+        .filter(l -> l.contains("JSentinelEnforcer.requireRole(\"ADMIN\")"))
         .count();
     if (requireRoleCalls != 2) {
       throw new AssertionError("expected 2 requireRole calls (one per method), got "

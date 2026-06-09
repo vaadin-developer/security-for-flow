@@ -9,16 +9,16 @@ Pull Request.
 | Phase | Status |
 |---|---|
 | 1 — Foundation: Tenant & Resource | ✓ abgeschlossen — `TenantId(value)` mit `DEFAULT`, `ResourceRef(resourceType, resourceId, tenant)` (Zwei-arg-Overload nutzt `TenantId.DEFAULT`, source-backward-compat), `ResourceAccessContext(accessContext, resourceRef)` als Composite. Tenant-Aware-Keys/Records aus Phase 2/4/7 folgen in ihrer jeweiligen Phase. |
-| 2 — Persistence API | ✓ abgeschlossen — alle 11 Store-Interfaces + Records + In-Memory-Defaults + Smoke-Tests. 2a: AuditEventStore + AuditEnvelope, SessionStore + SessionRecord/SessionId/SessionStatus/SecurityVersion, LoginAttemptStore + LoginAttemptKey. 2b: RoleAssignmentStore + RoleAssignmentKey, BootstrapStateStore + BootstrapState. 2c: RememberMeTokenStore + Record (`authentication/`), PasswordResetTokenStore + Record und EmailVerificationTokenStore + Record (`accountlifecycle/`). 2d: ApiKeyStore + ApiKeyRecord, RefreshTokenStore + RefreshTokenRecord (`authentication/`), RateLimitStore + RateLimitKey (`ratelimiting/`). |
-| 3 — Contract Testkit + Eclipse Store | ✓ abgeschlossen. 3a: `security-persistence-testkit` mit 11 Contract-Interfaces via `@Test default`-Methoden (95 InMemory-Adapter-Tests grün). 3b: `security-persistence-eclipsestore` auf `org.eclipse.store:storage-embedded:4.1.0` mit package-private `EclipseStoreSecurityRoot`, `EclipseStoreSecurityStorage`-AutoCloseable-Lifecycle (`openAt(Path)`/`close()`), 11 `EclipseStore*Store`-Impls (ReentrantReadWriteLock + Manager.store()) und `EclipseStoreContractTestBase` mit `@TempDir`-Lifecycle. **Beide Default-Impls bestehen die identische 95-Test-Suite** (Exit-Kriterium). Kein öffentlicher Typ heisst `SecurityRoot`. |
-| 4 — Store-backed Services + SecurityVersion | ✓ (4a: `SecurityVersionStore` + `SecurityVersionKey` in `session/`, In-Memory-Default mit atomic-compute, `SecurityVersionStoreContract` im testkit (9 Cases), `EclipseStoreSecurityVersionStore` + Root-Erweiterung, `EclipseStoreSecurityStorage.securityVersionStore()`-Accessor — beide Default-Impls passen 9 Contract-Cases bit-for-bit. 4b: alle sechs Store-backed Services in security-core — `StoreBackedSecurityAuditService` (7 Tests), `StoreBackedLoginAttemptPolicy` (7), `StoreBackedSubjectSessionRegistry` (7), `StoreBackedRoleAuthorizationService` (6), `StoreBackedRememberMeService` (8), `StoreBackedBootstrapStateService` (7). 4c: `SecurityVersionCheck` + `SecurityVersionStatus` (Sealed `Current`/`Drifted`, 7 Tests), `SecurityVersionEnforcer` mit `SessionStale`-Audit-Event und Sealed `EnforcementOutcome` (6 Tests). `StoreBackedSubjectSessionRegistry` mit optionalem `SecurityVersionStore` erweitert (Snapshot wird beim Register aus dem Store gelesen, 2 zusätzliche Tests). Vaadin-Adapter: `VaadinSecurityVersionContext` (Session-Attribute-Träger, 7 Tests) + `SecurityVersionEnforcerListener` (`@ListenerPriority(Integer.MAX_VALUE)`, BeforeEnter, Reroute zur LoginView auf Drift, 4 Tests). REST-Adapter: `RestSecurityVersionContext` + `RestSubjectResolver.resolveSecurityVersionContext`-Default-Methode + `RestSecurityVersionFilter` (401 + `WWW-Authenticate: SessionStale`, 5 Tests). `LogoutScope.AllSessionsOfSubject` Integration-Test (`SubjectClearingLogoutAllSessionsIntegrationTest`, 2 Tests) zeigt, dass `SubjectClearingLogoutService` + `StoreBackedSubjectSessionRegistry` jede persistierte Session des Subjects sauber entfernt. Phase-4c-Exit-Test `RoleRefreshExitTest` zeigt den ganzen Flow End-to-End: Admin entzieht Rolle → `versionStore.increment(...)` → nächster Request derselben Session liefert `SessionStale` + Audit; nach Re-Login ist die neue Session wieder `Continue`. Test-Totals: security-core 869, security-vaadin 131, security-rest 63 — alle grün. **Hinweis**: REST-Apps liefern den Snapshot weiterhin per eigener `RestSubjectResolver.resolveSecurityVersionContext`-Implementierung. Für Vaadin wurde im 4c-Followup die automatische Capture-Integration in `LoginView.validate()` nachgezogen: ein neuer `SubjectIdResolver<U>`-SPI in `security-core/authorization/api/` + zwei `SecurityServiceResolver`-Accessoren (`findSecurityVersionStore` / `findSubjectIdResolver` plus die `setXxx`-Gegenstücke, 5 Tests). `LoginView.captureSecurityVersionSnapshot()` läuft nach `notifyOnLogin()`, ist ein No-Op wenn entweder SPI fehlt, kein Subject im Store ist oder die Session nicht gebunden ist, und schluckt jede Exception (Login-Flow wird nie blockiert). 6 Tests in `LoginViewSecurityVersionCaptureTest`. Apps mit beiden SPIs erhalten Drift-Enforcement End-to-End ohne eigenen Glue-Code: Snapshot wird beim Login geschrieben, Listener vergleicht beim nächsten Request, Drift triggert Reroute.) |
+| 2 — Persistence API | ✓ abgeschlossen — alle 11 Store-Interfaces + Records + In-Memory-Defaults + Smoke-Tests. 2a: AuditEventStore + AuditEnvelope, SessionStore + SessionRecord/SessionId/SessionStatus/JSentinelVersion, LoginAttemptStore + LoginAttemptKey. 2b: RoleAssignmentStore + RoleAssignmentKey, BootstrapStateStore + BootstrapState. 2c: RememberMeTokenStore + Record (`authentication/`), PasswordResetTokenStore + Record und EmailVerificationTokenStore + Record (`accountlifecycle/`). 2d: ApiKeyStore + ApiKeyRecord, RefreshTokenStore + RefreshTokenRecord (`authentication/`), RateLimitStore + RateLimitKey (`ratelimiting/`). |
+| 3 — Contract Testkit + Eclipse Store | ✓ abgeschlossen. 3a: `security-persistence-testkit` mit 11 Contract-Interfaces via `@Test default`-Methoden (95 InMemory-Adapter-Tests grün). 3b: `security-persistence-eclipsestore` auf `org.eclipse.store:storage-embedded:4.1.0` mit package-private `EclipseStoreJSentinelRoot`, `EclipseStoreJSentinelStorage`-AutoCloseable-Lifecycle (`openAt(Path)`/`close()`), 11 `EclipseStore*Store`-Impls (ReentrantReadWriteLock + Manager.store()) und `EclipseStoreContractTestBase` mit `@TempDir`-Lifecycle. **Beide Default-Impls bestehen die identische 95-Test-Suite** (Exit-Kriterium). Kein öffentlicher Typ heisst `JSentinelRoot`. |
+| 4 — Store-backed Services + JSentinelVersion | ✓ (4a: `JSentinelVersionStore` + `JSentinelVersionKey` in `session/`, In-Memory-Default mit atomic-compute, `JSentinelVersionStoreContract` im testkit (9 Cases), `EclipseStoreJSentinelVersionStore` + Root-Erweiterung, `EclipseStoreJSentinelStorage.securityVersionStore()`-Accessor — beide Default-Impls passen 9 Contract-Cases bit-for-bit. 4b: alle sechs Store-backed Services in security-core — `StoreBackedJSentinelAuditService` (7 Tests), `StoreBackedLoginAttemptPolicy` (7), `StoreBackedSubjectSessionRegistry` (7), `StoreBackedRoleAuthorizationService` (6), `StoreBackedRememberMeService` (8), `StoreBackedBootstrapStateService` (7). 4c: `JSentinelVersionCheck` + `JSentinelVersionStatus` (Sealed `Current`/`Drifted`, 7 Tests), `JSentinelVersionEnforcer` mit `SessionStale`-Audit-Event und Sealed `EnforcementOutcome` (6 Tests). `StoreBackedSubjectSessionRegistry` mit optionalem `JSentinelVersionStore` erweitert (Snapshot wird beim Register aus dem Store gelesen, 2 zusätzliche Tests). Vaadin-Adapter: `VaadinJSentinelVersionContext` (Session-Attribute-Träger, 7 Tests) + `JSentinelVersionEnforcerListener` (`@ListenerPriority(Integer.MAX_VALUE)`, BeforeEnter, Reroute zur LoginView auf Drift, 4 Tests). REST-Adapter: `RestJSentinelVersionContext` + `RestSubjectResolver.resolveJSentinelVersionContext`-Default-Methode + `RestJSentinelVersionFilter` (401 + `WWW-Authenticate: SessionStale`, 5 Tests). `LogoutScope.AllSessionsOfSubject` Integration-Test (`SubjectClearingLogoutAllSessionsIntegrationTest`, 2 Tests) zeigt, dass `SubjectClearingLogoutService` + `StoreBackedSubjectSessionRegistry` jede persistierte Session des Subjects sauber entfernt. Phase-4c-Exit-Test `RoleRefreshExitTest` zeigt den ganzen Flow End-to-End: Admin entzieht Rolle → `versionStore.increment(...)` → nächster Request derselben Session liefert `SessionStale` + Audit; nach Re-Login ist die neue Session wieder `Continue`. Test-Totals: security-core 869, security-vaadin 131, security-rest 63 — alle grün. **Hinweis**: REST-Apps liefern den Snapshot weiterhin per eigener `RestSubjectResolver.resolveJSentinelVersionContext`-Implementierung. Für Vaadin wurde im 4c-Followup die automatische Capture-Integration in `LoginView.validate()` nachgezogen: ein neuer `SubjectIdResolver<U>`-SPI in `security-core/authorization/api/` + zwei `JSentinelServiceResolver`-Accessoren (`findJSentinelVersionStore` / `findSubjectIdResolver` plus die `setXxx`-Gegenstücke, 5 Tests). `LoginView.captureJSentinelVersionSnapshot()` läuft nach `notifyOnLogin()`, ist ein No-Op wenn entweder SPI fehlt, kein Subject im Store ist oder die Session nicht gebunden ist, und schluckt jede Exception (Login-Flow wird nie blockiert). 6 Tests in `LoginViewJSentinelVersionCaptureTest`. Apps mit beiden SPIs erhalten Drift-Enforcement End-to-End ohne eigenen Glue-Code: Snapshot wird beim Login geschrieben, Listener vergleicht beim nächsten Request, Drift triggert Reroute.) |
 | 5a — Policy API | ✓ abgeschlossen (Working Tree) |
-| 5b — SecurityEnforcer extrahieren | ✓ abgeschlossen — Klasse `com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer` mit Generic + Explicit API; `SecuredProxy` (umbenannt von `Secured`) delegiert darauf |
+| 5b — JSentinelEnforcer extrahieren | ✓ abgeschlossen — Klasse `com.svenruppert.vaadin.security.authorization.api.JSentinelEnforcer` mit Generic + Explicit API; `SecuredProxy` (umbenannt von `Secured`) delegiert darauf |
 | 5c — `security-processor`-Modul + `SecuredAnnotationProcessor` | ✓ abgeschlossen — Modul angelegt, Processor implementiert, 11 compile-testing-Tests grün, proxybuilder **00.11.00** (mit separatem `proxybuilder-annotations`-Modul) als Dependency. Generierte Wrapper tragen `@GeneratedByProxyBuilder(processor, sourceClass, proxyBuilderVersion, ...)` RUNTIME-reflectable + `@DelegatesTo("Foo#bar(java.lang.String)")` pro Methode. |
 | 5d — Demo-Integration in `demo-standalone` | ✓ abgeschlossen — `MemberDirectory` (konkrete Klasse mit `@Secured`) ergänzt; `DemoApp` zeigt beide Pfade nebeneinander; 8 neue Tests grün |
 | 6 — Autorisierungs-Ergonomie | ✓ abgeschlossen — `RoleHierarchy`/`NoopRoleHierarchy`/`StaticRoleHierarchy` SPIs vorhanden, `@RequiresAnyPermission`/`@RequiresAllPermissions` + Evaluatoren vorhanden, `RolePermissionResolver.permissionsForRoles(roles, mapping, hierarchy)` als hierarchy-aware Overload (PIT-Coverage 93 % auf `permissions/`-Paket) |
-| 7 — Account Lifecycle + Tokens + Rate-Limiting | ✓ (7a: `SecurityNotification`-Record + `SecurityNotification.Kind`-Enum (4 Werte) + `SecurityNotificationSender`-SPI + `LoggingNotificationSender`-Default (5 Tests). Vier neue `AuditEvent`-Varianten: `PasswordResetRequested`, `PasswordResetCompleted`, `EmailVerificationRequested`, `EmailVerified`. `PasswordResetService` über `PasswordResetTokenStore` + `PasswordHasher` (8 Tests): hash-only, single-use, tenant-scoped, emittiert Audit + Notification, Audit-/Notification-Failures werden geschluckt. `EmailVerificationService` (7 Tests) — gleiche Lifecycle-Form aber trägt die `email`-Adresse auf dem Record. 7b: drei neue `AuditEvent`-Varianten `ApiKeyUsed`, `ApiKeyDenied`, `TokenRotated`. `ApiKeyAuthenticationService` über `ApiKeyStore` + `PasswordHasher` (8 Tests) — hash-only Lookup, lifecycle-Verifikation (`Unknown`/`ForeignTenant`/`Revoked`/`Expired`), markiert `lastUsedAt` bei Erfolg. `TokenService` über `RefreshTokenStore` (10 Tests) — `issue`/`rotate`/`revoke`/`revokeAll`/`purgeExpired`; access tokens sind opake Random-Strings ohne Storage (Apps wählen ihre eigene Verifizierungsstrategie, JWT oder Session-Cache), refresh tokens rotieren mit chain-link via `markReplaced`; emittiert `TokenRotated` auf erfolgreichem Rotate; refuses bei Replay/Revoke/Expired/ForeignTenant. 7c: `RateLimitExceeded`-AuditEvent. `RateLimitPolicy`-SPI (separat von `LoginAttemptPolicy`). Sealed `RateLimitDecision(Allowed | Throttled)`. `InMemoryRateLimitPolicy` (9 Tests) — sliding-window über `RateLimitStore`, eventbasiert, throttled requests werden nicht gezählt, audit-Event surfaced `subjectId` automatisch wenn der Scope mit `"subject:"` beginnt; `reset` cancelt den Throttle bei erfolgreicher Auth, `purgeOldEvents` als retention-sweep. AuditEvent jetzt 23 Varianten; `AuditQuery.subjectIdOf` + `LoggingAuditSink`-Switch enthalten alle neuen Cases. Test-Totals: security-core 921, security-vaadin 137, security-rest 63, security-standalone 30 — alle grün. **Nicht enthalten**: `ApiKeyResolver`-Bridge in `security-rest` — Apps verdrahten `ApiKeyAuthenticationService` direkt in ihren `RestSubjectResolver`, da REST-Resolver-Auswahl projektspezifisch ist (Bearer vs. API-Key vs. Mixed). Wird als Adapter-Glue im `demo-rest` gezeigt sobald Phase 7 in eine Demo wandert.) |
-| 8 — Vaadin-UI + Test-Fixtures + OpenAPI | ✓ (8b: `SecuredVisibility`-Helper + `SecuredVisibilityMode`-Enum (HIDE/DISABLE) als zentraler Decision-Point (10 Tests). `SecuredButton` (default DISABLE, 7 Tests), `SecuredRouterLink` (default HIDE, 6 Tests; Router-explicit-Konstruktor für headless tests), `SecuredMenuItem` als Binding-Helper für vom Parent-MenuBar erzeugte `MenuItem`s (6 Tests). Alle drei Komponenten haben `refresh()` für nachträgliche Re-Checks nach Berechtigungs-Änderung. SPI-Lookup via `findAuthenticationService/SubjectStore/AuthorizationService` — bei fehlendem SPI: Affordance verweigert (no-default-allow). 8a: `SessionManagementView` als reusable Composite in `security-vaadin/components/` — Grid über alle `SessionRecord`s (Tenant/Subject/SessionId/Status/Created/LastActivity/Version/Action), per-Row Revoke-Button via injizierten `Consumer<SessionRecord>`, `refresh()` re-reads den Store, REVOKED/EXPIRED-Rows zeigen disabled Revoke-Button. `SessionStore.findAll()` als neue Default-Methode (returns empty), in `InMemorySessionStore` + `EclipseStoreSessionStore` überschrieben. 6 browserless Tests. Apps subclassen, annotieren mit `@Route`/`@RequiresPermission`. 8c: Test-Fixtures (`security-test`-Modul, schon vor Phase 8 vorgezogen). 8d: `OpenApiSecurityMetadataGenerator` in `security-rest/openapi/` — extrahiert die fünf framework-supplied `@Requires…`-Annotationen aus Handler-Klassen (RequiresPermission, RequiresAllPermissions, RequiresAnyPermission, RequiresRole, RequiresPolicy) und produziert eine `HandlerSecurityMetadata`-Tree (class-level + per-method `SecurityRequirement`s mit Sealed `Scheme`/`Operator`-Enums) — JSON-frei, Apps mergen das Ergebnis in ihren eigenen OpenAPI-Build (8 Tests). Custom @SecurityAnnotation-Annotationen werden bewusst nicht exportiert (App-spezifische Semantik). Test-Totals nach Phase 8: security-core 921, security-vaadin 172, security-rest 71, security-standalone 30, security-persistence-eclipsestore 104 — alle grün.) |
+| 7 — Account Lifecycle + Tokens + Rate-Limiting | ✓ (7a: `JSentinelNotification`-Record + `JSentinelNotification.Kind`-Enum (4 Werte) + `JSentinelNotificationSender`-SPI + `LoggingNotificationSender`-Default (5 Tests). Vier neue `AuditEvent`-Varianten: `PasswordResetRequested`, `PasswordResetCompleted`, `EmailVerificationRequested`, `EmailVerified`. `PasswordResetService` über `PasswordResetTokenStore` + `PasswordHasher` (8 Tests): hash-only, single-use, tenant-scoped, emittiert Audit + Notification, Audit-/Notification-Failures werden geschluckt. `EmailVerificationService` (7 Tests) — gleiche Lifecycle-Form aber trägt die `email`-Adresse auf dem Record. 7b: drei neue `AuditEvent`-Varianten `ApiKeyUsed`, `ApiKeyDenied`, `TokenRotated`. `ApiKeyAuthenticationService` über `ApiKeyStore` + `PasswordHasher` (8 Tests) — hash-only Lookup, lifecycle-Verifikation (`Unknown`/`ForeignTenant`/`Revoked`/`Expired`), markiert `lastUsedAt` bei Erfolg. `TokenService` über `RefreshTokenStore` (10 Tests) — `issue`/`rotate`/`revoke`/`revokeAll`/`purgeExpired`; access tokens sind opake Random-Strings ohne Storage (Apps wählen ihre eigene Verifizierungsstrategie, JWT oder Session-Cache), refresh tokens rotieren mit chain-link via `markReplaced`; emittiert `TokenRotated` auf erfolgreichem Rotate; refuses bei Replay/Revoke/Expired/ForeignTenant. 7c: `RateLimitExceeded`-AuditEvent. `RateLimitPolicy`-SPI (separat von `LoginAttemptPolicy`). Sealed `RateLimitDecision(Allowed | Throttled)`. `InMemoryRateLimitPolicy` (9 Tests) — sliding-window über `RateLimitStore`, eventbasiert, throttled requests werden nicht gezählt, audit-Event surfaced `subjectId` automatisch wenn der Scope mit `"subject:"` beginnt; `reset` cancelt den Throttle bei erfolgreicher Auth, `purgeOldEvents` als retention-sweep. AuditEvent jetzt 23 Varianten; `AuditQuery.subjectIdOf` + `LoggingAuditSink`-Switch enthalten alle neuen Cases. Test-Totals: security-core 921, security-vaadin 137, security-rest 63, security-standalone 30 — alle grün. **Nicht enthalten**: `ApiKeyResolver`-Bridge in `security-rest` — Apps verdrahten `ApiKeyAuthenticationService` direkt in ihren `RestSubjectResolver`, da REST-Resolver-Auswahl projektspezifisch ist (Bearer vs. API-Key vs. Mixed). Wird als Adapter-Glue im `demo-rest` gezeigt sobald Phase 7 in eine Demo wandert.) |
+| 8 — Vaadin-UI + Test-Fixtures + OpenAPI | ✓ (8b: `SecuredVisibility`-Helper + `SecuredVisibilityMode`-Enum (HIDE/DISABLE) als zentraler Decision-Point (10 Tests). `SecuredButton` (default DISABLE, 7 Tests), `SecuredRouterLink` (default HIDE, 6 Tests; Router-explicit-Konstruktor für headless tests), `SecuredMenuItem` als Binding-Helper für vom Parent-MenuBar erzeugte `MenuItem`s (6 Tests). Alle drei Komponenten haben `refresh()` für nachträgliche Re-Checks nach Berechtigungs-Änderung. SPI-Lookup via `findAuthenticationService/SubjectStore/AuthorizationService` — bei fehlendem SPI: Affordance verweigert (no-default-allow). 8a: `SessionManagementView` als reusable Composite in `security-vaadin/components/` — Grid über alle `SessionRecord`s (Tenant/Subject/SessionId/Status/Created/LastActivity/Version/Action), per-Row Revoke-Button via injizierten `Consumer<SessionRecord>`, `refresh()` re-reads den Store, REVOKED/EXPIRED-Rows zeigen disabled Revoke-Button. `SessionStore.findAll()` als neue Default-Methode (returns empty), in `InMemorySessionStore` + `EclipseStoreSessionStore` überschrieben. 6 browserless Tests. Apps subclassen, annotieren mit `@Route`/`@RequiresPermission`. 8c: Test-Fixtures (`security-test`-Modul, schon vor Phase 8 vorgezogen). 8d: `OpenApiJSentinelMetadataGenerator` in `security-rest/openapi/` — extrahiert die fünf framework-supplied `@Requires…`-Annotationen aus Handler-Klassen (RequiresPermission, RequiresAllPermissions, RequiresAnyPermission, RequiresRole, RequiresPolicy) und produziert eine `HandlerJSentinelMetadata`-Tree (class-level + per-method `JSentinelRequirement`s mit Sealed `Scheme`/`Operator`-Enums) — JSON-frei, Apps mergen das Ergebnis in ihren eigenen OpenAPI-Build (8 Tests). Custom @JSentinelAnnotation-Annotationen werden bewusst nicht exportiert (App-spezifische Semantik). Test-Totals nach Phase 8: security-core 921, security-vaadin 172, security-rest 71, security-standalone 30, security-persistence-eclipsestore 104 — alle grün.) |
 
 Aktueller Reactor: 13 Module (`security-core`, `security-vaadin`,
 `security-rest`, `security-standalone`, `security-test`,
@@ -45,7 +45,7 @@ Processing** gewaehlt. Begruendung:
 
 JDK-Dynamic-Proxy-Pfad (`Secured.wrap(Interface, impl)` aus
 `security-standalone`) bleibt unveraendert erhalten. Beide Wege rufen
-denselben `SecurityEnforcer` auf — eine Logik, zwei Generierungs-Wege.
+denselben `JSentinelEnforcer` auf — eine Logik, zwei Generierungs-Wege.
 
 ### Annotation-Processor-Basis: proxybuilder als Code-Donor
 
@@ -97,7 +97,7 @@ Resultat gegen `00.10.00` (alle P1-Sicherheits-Punkte erledigt).
 | 1 | Foundation: Tenant & Resource | – | PR-1 |
 | 2 | Persistence API (Store-Interfaces) | Phase 1 | PR-2 |
 | 3 | Contract Testkit + Eclipse Store | Phase 2 | PR-3 |
-| 4 | Store-backed Services + SecurityVersion | Phase 2 | PR-4 |
+| 4 | Store-backed Services + JSentinelVersion | Phase 2 | PR-4 |
 | 5 | Policy API + Method Security | Phase 1 | PR-5 (3 Sub-PRs) |
 | 6 | Autorisierungs-Ergonomie | Phase 5 | PR-6 |
 | 7 | Account Lifecycle + Tokens + Rate-Limiting | Phase 2 + 4 | PR-7 (3 Sub-PRs) |
@@ -150,7 +150,7 @@ Records:
 - `LoginAttemptKey(TenantId, String userId, String ip)`
 - `RoleAssignmentKey(TenantId, SubjectId)`
 - `SessionRecord(SessionId, SubjectId, TenantId, Instant createdAt,
-  Instant lastActivityAt, SecurityVersion securityVersionAtLogin,
+  Instant lastActivityAt, JSentinelVersion securityVersionAtLogin,
   SessionStatus status)`
 - `RememberMeTokenRecord`
 - `AuditEnvelope`
@@ -180,7 +180,7 @@ In-Memory-Default-Impl je Store fuer Tests und Demos.
 
 `security-persistence-eclipsestore`:
 
-- `EclipseStoreSecurityRoot` als **package-private** Implementierungs-Detail.
+- `EclipseStoreJSentinelRoot` als **package-private** Implementierungs-Detail.
 - `StorageManager`-Lifecycle-Klasse.
 - Je eine `EclipseStore*Store`-Klasse pro Store-Interface aus Phase 2.
 
@@ -189,26 +189,26 @@ In-Memory-Default-Impl je Store fuer Tests und Demos.
 - Beide Default-Impls (in-memory + Eclipse Store) bestehen die identischen
   Contract-Tests.
 - `security-core` enthaelt **keine** Eclipse-Store-Dependency.
-- Kein oeffentlicher Typ heisst `SecurityRoot`.
+- Kein oeffentlicher Typ heisst `JSentinelRoot`.
 
-## Phase 4 — Store-backed Services + SecurityVersion
+## Phase 4 — Store-backed Services + JSentinelVersion
 
 **Modul:** `security-core` (Service-Glue), nutzt Stores aus Phase 2/3.
 
 **Liefergegenstaende:**
 
-- `StoreBackedSecurityAuditService` ✓ (security-core; tenant-gebunden; publish() schluckt Store-Fehler, query/queryAll/clear leiten an `AuditEventStore` durch; 7 Tests)
+- `StoreBackedJSentinelAuditService` ✓ (security-core; tenant-gebunden; publish() schluckt Store-Fehler, query/queryAll/clear leiten an `AuditEventStore` durch; 7 Tests)
 - `StoreBackedLoginAttemptPolicy` ✓ (security-core; flaches Lockout-Modell gegen `LoginAttemptStore`; `Clock`-basiert; normalisiert username/clientAddress; progressive Backoff bleibt InMemory-Variante; 7 Tests)
-- `StoreBackedSubjectSessionRegistry` ✓ (security-core; persistiert (subject, sessionId) als `SessionRecord` mit `SecurityVersion.INITIAL` + `ACTIVE`; `sessionsOf` filtert auf aktive Records; tenant-gebunden; 7 Tests)
+- `StoreBackedSubjectSessionRegistry` ✓ (security-core; persistiert (subject, sessionId) als `SessionRecord` mit `JSentinelVersion.INITIAL` + `ACTIVE`; `sessionsOf` filtert auf aktive Records; tenant-gebunden; 7 Tests)
 - `StoreBackedRoleAuthorizationService<U>` ✓ (security-core; generischer `AuthorizationService<U>` gegen `RoleAssignmentStore`; Konstruktor nimmt `Function<U, SubjectId>` + optional `Function<U, TenantId>`; Snapshot-Semantik; 6 Tests)
 - `StoreBackedRememberMeService` ✓ (security-core; neue Klasse ueber `RememberMeTokenStore` + `PasswordHasher`; `issue` liefert Plain-Token genau einmal zurueck, persistiert nur den Hash; `validate` ist tenant-scoped und purged abgelaufene Treffer; `revoke`/`revokeAll`/`purgeExpired`; 8 Tests)
 - `StoreBackedBootstrapStateService` ✓ (security-core; neue Klasse ueber `BootstrapStateStore`; tenant-scoped; `markCompleted` idempotent — bewahrt das urspruengliche `adminCreatedAt`; `BootstrapMode.DISABLED` shortcuttet `bootstrapRequired`; 7 Tests)
 
 Plus:
 
-- `SecurityVersion(long value)` Record pro `(SubjectId, TenantId)`.
+- `JSentinelVersion(long value)` Record pro `(SubjectId, TenantId)`.
 - `SessionRecord.securityVersionAtLogin` wird beim Login gesetzt.
-- `SecurityVersionCheck`-Interceptor in `security-vaadin` und
+- `JSentinelVersionCheck`-Interceptor in `security-vaadin` und
   `security-rest`, der pro Request die Session-Version gegen die
   aktuelle Subject-Version prueft.
 - `LogoutScope.AllSessionsOfSubject` jetzt store-backed.
@@ -220,14 +220,14 @@ Plus:
   `security-core/src/test/java/com/svenruppert/vaadin/security/session/`,
   zeigt den Flow End-to-End: Capture beim Login →
   `roleStore.revokeRole` + `versionStore.increment` →
-  `SecurityVersionEnforcer.enforce` liefert
+  `JSentinelVersionEnforcer.enforce` liefert
   `EnforcementOutcome.SessionStale` mit publiziertem
   `SessionStale`-Audit-Event; nach Re-Login ist die neue Session
   wieder `Continue`).
 - ✓ Bestehende `SubjectSessionRegistry`-Tests grün — Phase-4c hat die
-  Registry um optionalen `SecurityVersionStore` erweitert; alle alten
+  Registry um optionalen `JSentinelVersionStore` erweitert; alle alten
   Aufrufer (2-arg / 3-arg-Konstruktor) verhalten sich unverändert
-  und Lookups via `findById` zeigen `SecurityVersion.INITIAL` wie
+  und Lookups via `findById` zeigen `JSentinelVersion.INITIAL` wie
   zuvor.
 
 ## Phase 5 — Policy API + Method Security
@@ -246,18 +246,18 @@ Anforderungen P0–P3 gegen den 00.10.00-Release pruefen.
 - Sealed `PolicyDecision = Allowed | Denied | StepUpRequired`.
 - `SubjectPredicates`, `ResourcePredicates` als statische Helfer.
 - `@RequiresPolicy("policy-name")` als neue Annotation,
-  via `@SecurityAnnotation` gebunden.
+  via `@JSentinelAnnotation` gebunden.
 - `RequiresPolicyEvaluator` haengt sich in den bestehenden
-  `SecurityAnnotationScanner`.
+  `JSentinelAnnotationScanner`.
 - Audit-Event `PolicyEvaluated(name, decision, reason)` mit
   menschenlesbarer Begruendung.
 
-### Phase 5b — SecurityEnforcer extrahieren
+### Phase 5b — JSentinelEnforcer extrahieren
 
-- `SecurityEnforcer` in `security-core` als zentrale Runtime-Komponente
+- `JSentinelEnforcer` in `security-core` als zentrale Runtime-Komponente
   fuer Permission-/Rollen-/Policy-Checks.
 - Bestehende `Secured.wrap`-Logik aus `security-standalone` ruft jetzt
-  den `SecurityEnforcer` an Stelle inline-Checks auf.
+  den `JSentinelEnforcer` an Stelle inline-Checks auf.
 - Damit: **eine** Enforcement-Logik, die spaeter sowohl vom
   JDK-Dynamic-Proxy als auch vom Annotation Processor genutzt wird.
 
@@ -336,7 +336,7 @@ Anforderungen P0–P3 gegen den 00.10.00-Release pruefen.
 
 - `PasswordResetService` + `PasswordResetTokenStore` (aus Phase 2).
 - `EmailVerificationService` + `EmailVerificationTokenStore`.
-- `SecurityNotificationSender`-SPI (kein Mail-Versand im Core,
+- `JSentinelNotificationSender`-SPI (kein Mail-Versand im Core,
   Default-Impl: `LoggingNotificationSender`).
 - Tokens nur als Hash gespeichert; TTL + single-use.
 - Audit-Events: `PasswordResetRequested`, `PasswordResetCompleted`,
@@ -397,12 +397,12 @@ neu `security-openapi` (oder als Add-on in `security-rest`).
 ### Phase 8c — security-test
 
 - `FakeAuthenticationService`, `InMemoryTokenService`.
-- `SecurityTestExtension` (JUnit 5).
+- `JSentinelTestExtension` (JUnit 5).
 - `SubjectFixtures.user(...).withRole(...).withTenant(...)`.
 
 ### Phase 8d — OpenAPI-Metadaten
 
-- `OpenApiSecurityMetadataGenerator`.
+- `OpenApiJSentinelMetadataGenerator`.
 - Liest `@RequiresPermission`/`@RequiresRole`/`@RequiresPolicy` aus
   REST-Handlern.
 - Exportiert OpenAPI-`security`-Sektionen.
@@ -432,7 +432,7 @@ Pro Phase begleitend zu pflegen:
 2. **PR-2** Phase 2 (Store-API + In-Memory-Defaults).
 3. **PR-3** Phase 3 (Testkit + Eclipse-Store-Modul) — kann nach PR-2
    parallel zu PR-4 starten.
-4. **PR-4** Phase 4 (Store-backed Services + SecurityVersion).
+4. **PR-4** Phase 4 (Store-backed Services + JSentinelVersion).
 5. **PR-5** Phase 5 (Policy API + Method Security) — unabhaengig, kann
    parallel zu PR-3/PR-4 entwickelt werden, ggf. in 3 Sub-PRs.
    `com.svenruppert:proxybuilder:00.10.00` ist auf Maven Central
@@ -464,7 +464,7 @@ demo-vaadin-rest-client
 
 ## Risiken und offene Punkte
 
-- **SecurityVersion-Propagation** in `security-rest`: ohne zentralen
+- **JSentinelVersion-Propagation** in `security-rest`: ohne zentralen
   Filter wird der Check pro Endpoint vergessen. Loesung: Integration in
   `RestAuthorizationFilter`, statt Caller-Pflicht.
 - **Eclipse-Store-Lifecycle im Test**: `StorageManager` muss pro Test
@@ -488,7 +488,7 @@ demo-vaadin-rest-client
 ## Akzeptanzkriterien (gespiegelt aus Konzept)
 
 - `security-core` enthaelt keine Eclipse-Store-Abhaengigkeit.
-- Kein oeffentlicher API-Typ heisst `SecurityRoot`.
+- Kein oeffentlicher API-Typ heisst `JSentinelRoot`.
 - Eclipse-Store-Root-Klassen liegen ausschliesslich im
   Eclipse-Store-Modul (package-private).
 - Store-Interfaces sind klein und fachlich geschnitten.

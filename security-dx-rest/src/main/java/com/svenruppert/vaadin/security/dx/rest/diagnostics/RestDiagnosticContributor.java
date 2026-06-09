@@ -10,7 +10,7 @@
  */
 package com.svenruppert.vaadin.security.dx.rest.diagnostics;
 
-import com.svenruppert.vaadin.security.autoservice.api.SecurityAutoService;
+import com.svenruppert.vaadin.security.autoservice.api.JSentinelAutoService;
 import com.svenruppert.vaadin.security.dx.diagnostics.DiagnosticContributor;
 import com.svenruppert.vaadin.security.dx.diagnostics.DiagnosticReportBuilder;
 import com.svenruppert.vaadin.security.dx.diagnostics.DuplicateService;
@@ -27,7 +27,7 @@ import java.util.ServiceLoader;
  *
  * @since 00.72.00
  */
-@SecurityAutoService(DiagnosticContributor.class)
+@JSentinelAutoService(DiagnosticContributor.class)
 public final class RestDiagnosticContributor implements DiagnosticContributor {
 
   public RestDiagnosticContributor() {
@@ -48,7 +48,7 @@ public final class RestDiagnosticContributor implements DiagnosticContributor {
       builder.addMissing(new MissingRecommendedService(
           RestSubjectResolver.class,
           "No RestSubjectResolver registered.",
-          "Register a RestSubjectResolver via @SecurityAutoService(RestSubjectResolver.class) "
+          "Register a RestSubjectResolver via @JSentinelAutoService(RestSubjectResolver.class) "
               + "or RestSecurity.bootstrap().subjectResolver(...)."));
     } else if (impls.size() > 1) {
       builder.addDuplicate(new DuplicateService(RestSubjectResolver.class, impls));

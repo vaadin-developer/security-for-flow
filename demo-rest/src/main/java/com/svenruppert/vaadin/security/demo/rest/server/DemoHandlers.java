@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.demo.rest.server;
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.LoginSucceeded;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresAnyPermission;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPermission;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPolicy;
@@ -41,8 +41,8 @@ import com.svenruppert.vaadin.security.credential.compromised.LocalBlocklistComp
 import com.svenruppert.vaadin.security.credential.compromised.NoOpCompromisedPasswordChecker;
 import com.svenruppert.vaadin.security.credential.secret.SecretValue;
 import com.svenruppert.vaadin.security.logout.LogoutScope;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;
@@ -71,10 +71,10 @@ import com.svenruppert.vaadin.security.ratelimiting.RateLimitDecision;
 import com.svenruppert.vaadin.security.ratelimiting.RateLimitKey;
 import com.svenruppert.vaadin.security.ratelimiting.RateLimitPolicy;
 import com.svenruppert.dependencies.core.net.HttpStatus;
-import com.svenruppert.vaadin.security.session.InMemorySecurityVersionStore;
-import com.svenruppert.vaadin.security.session.SecurityVersion;
-import com.svenruppert.vaadin.security.session.SecurityVersionKey;
-import com.svenruppert.vaadin.security.session.SecurityVersionStore;
+import com.svenruppert.vaadin.security.session.InMemoryJSentinelVersionStore;
+import com.svenruppert.vaadin.security.session.JSentinelVersion;
+import com.svenruppert.vaadin.security.session.JSentinelVersionKey;
+import com.svenruppert.vaadin.security.session.JSentinelVersionStore;
 
 import java.time.Duration;
 
@@ -108,7 +108,7 @@ public final class DemoHandlers {
   private final AbuseDetectionService abuseDetection;
   private final CompromisedPasswordChecker compromisedChecker;
   private final CompromisedPasswordPolicy compromisedPolicy;
-  private final SecurityVersionStore securityVersionStore;
+  private final JSentinelVersionStore securityVersionStore;
   private final PasswordResetService passwordResetService;
   private final RateLimitPolicy loginRateLimit;
   private final ApiKeyStore apiKeyStore;
@@ -148,9 +148,9 @@ public final class DemoHandlers {
 
   /**
    * Wires {@code DemoHandlers} with a shared
-   * {@link SecurityVersionStore} so role mutations bump versions
+   * {@link JSentinelVersionStore} so role mutations bump versions
    * against the same instance that the
-   * {@link com.svenruppert.vaadin.security.rest.RestSecurityVersionFilter}
+   * {@link com.svenruppert.vaadin.security.rest.RestJSentinelVersionFilter}
    * checks against.
    */
   public DemoHandlers(
@@ -160,14 +160,14 @@ public final class DemoHandlers {
       DemoOperationRegistry registry,
       DemoSubjectResolver subjectResolver,
       LoginAttemptPolicy loginAttemptPolicy,
-      SecurityVersionStore securityVersionStore) {
+      JSentinelVersionStore securityVersionStore) {
     this(userStore, tokenStore, documents, registry, subjectResolver,
         loginAttemptPolicy, securityVersionStore, null);
   }
 
   /**
    * Wires {@code DemoHandlers} with both the shared
-   * {@link SecurityVersionStore} <em>and</em> the Phase-7a
+   * {@link JSentinelVersionStore} <em>and</em> the Phase-7a
    * {@link PasswordResetService}. Pass {@code null} for
    * {@code passwordResetService} to leave the password-reset
    * endpoints disabled (they will return 503).
@@ -179,7 +179,7 @@ public final class DemoHandlers {
       DemoOperationRegistry registry,
       DemoSubjectResolver subjectResolver,
       LoginAttemptPolicy loginAttemptPolicy,
-      SecurityVersionStore securityVersionStore,
+      JSentinelVersionStore securityVersionStore,
       PasswordResetService passwordResetService) {
     this(userStore, tokenStore, documents, registry, subjectResolver,
         loginAttemptPolicy,
@@ -203,7 +203,7 @@ public final class DemoHandlers {
       DemoOperationRegistry registry,
       DemoSubjectResolver subjectResolver,
       LoginAttemptPolicy loginAttemptPolicy,
-      SecurityVersionStore securityVersionStore,
+      JSentinelVersionStore securityVersionStore,
       PasswordResetService passwordResetService,
       RateLimitPolicy loginRateLimit) {
     this(userStore, tokenStore, documents, registry, subjectResolver,
@@ -232,7 +232,7 @@ public final class DemoHandlers {
       DemoOperationRegistry registry,
       DemoSubjectResolver subjectResolver,
       LoginAttemptPolicy loginAttemptPolicy,
-      SecurityVersionStore securityVersionStore,
+      JSentinelVersionStore securityVersionStore,
       PasswordResetService passwordResetService,
       RateLimitPolicy loginRateLimit,
       ApiKeyStore apiKeyStore,
@@ -253,7 +253,7 @@ public final class DemoHandlers {
       DemoOperationRegistry registry,
       DemoSubjectResolver subjectResolver,
       LoginAttemptPolicy loginAttemptPolicy,
-      SecurityVersionStore securityVersionStore,
+      JSentinelVersionStore securityVersionStore,
       PasswordResetService passwordResetService,
       RateLimitPolicy loginRateLimit,
       ApiKeyStore apiKeyStore,
@@ -284,7 +284,7 @@ public final class DemoHandlers {
       CompromisedPasswordPolicy compromisedPolicy) {
     this(userStore, tokenStore, documents, registry, subjectResolver,
         loginAttemptPolicy, abuseDetection, compromisedChecker, compromisedPolicy,
-        new InMemorySecurityVersionStore());
+        new InMemoryJSentinelVersionStore());
   }
 
   public DemoHandlers(
@@ -297,7 +297,7 @@ public final class DemoHandlers {
       AbuseDetectionService abuseDetection,
       CompromisedPasswordChecker compromisedChecker,
       CompromisedPasswordPolicy compromisedPolicy,
-      SecurityVersionStore securityVersionStore) {
+      JSentinelVersionStore securityVersionStore) {
     this(userStore, tokenStore, documents, registry, subjectResolver,
         loginAttemptPolicy, abuseDetection, compromisedChecker,
         compromisedPolicy, securityVersionStore, null);
@@ -313,7 +313,7 @@ public final class DemoHandlers {
       AbuseDetectionService abuseDetection,
       CompromisedPasswordChecker compromisedChecker,
       CompromisedPasswordPolicy compromisedPolicy,
-      SecurityVersionStore securityVersionStore,
+      JSentinelVersionStore securityVersionStore,
       PasswordResetService passwordResetService) {
     this(userStore, tokenStore, documents, registry, subjectResolver,
         loginAttemptPolicy, abuseDetection, compromisedChecker,
@@ -331,7 +331,7 @@ public final class DemoHandlers {
       AbuseDetectionService abuseDetection,
       CompromisedPasswordChecker compromisedChecker,
       CompromisedPasswordPolicy compromisedPolicy,
-      SecurityVersionStore securityVersionStore,
+      JSentinelVersionStore securityVersionStore,
       PasswordResetService passwordResetService,
       RateLimitPolicy loginRateLimit,
       ApiKeyStore apiKeyStore,
@@ -356,7 +356,7 @@ public final class DemoHandlers {
   }
 
   /** Test seam — exposes the wired store so integration tests can bump. */
-  public SecurityVersionStore securityVersionStore() {
+  public JSentinelVersionStore securityVersionStore() {
     return securityVersionStore;
   }
 
@@ -415,10 +415,10 @@ public final class DemoHandlers {
   /**
    * Demo-grade abuse detector. Defaults to the V00.71 in-memory
    * sliding-window service, sharing audit through the resolved
-   * {@link SecurityAuditService}.
+   * {@link JSentinelAuditService}.
    */
   private static AbuseDetectionService defaultAbuseDetection() {
-    SecurityAuditService audit = SecurityServiceResolver.securityAuditService();
+    JSentinelAuditService audit = JSentinelServiceResolver.securityAuditService();
     return new InMemoryAbuseDetectionService(
         AbuseLimitsPolicy.defaults(), audit);
   }
@@ -508,11 +508,11 @@ public final class DemoHandlers {
     loginAttemptPolicy.recordSuccess(attempt);
     abuseDetection.recordOutcome(abuseContext, AttemptOutcome.SUCCESS);
     DemoUser u = user.get();
-    SecurityVersion snapshot = securityVersionStore.current(
-        new SecurityVersionKey(TenantId.DEFAULT, SubjectId.of(u.username())));
+    JSentinelVersion snapshot = securityVersionStore.current(
+        new JSentinelVersionKey(TenantId.DEFAULT, SubjectId.of(u.username())));
     String token = tokenStore.issue(u, snapshot);
     auditLoginSucceeded(u.username(), clientAddress, token);
-    SecuritySubject subject = subjectResolver
+    JSentinelSubject subject = subjectResolver
         .resolveSubject(withAuth(request, token))
         .orElseThrow();
     Map<String, Object> payload = new LinkedHashMap<>();
@@ -526,7 +526,7 @@ public final class DemoHandlers {
   }
 
   private static void auditLoginSucceeded(String username, String clientAddress, String token) {
-    SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
+    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
     try {
       sink.publish(new LoginSucceeded(
           Instant.now(Clock.systemUTC()), username, clientAddress, token));
@@ -536,7 +536,7 @@ public final class DemoHandlers {
   }
 
   public void me(RestRequest request, RestResponse response) {
-    SecuritySubject subject = subjectResolver.resolveSubject(request).orElseThrow();
+    JSentinelSubject subject = subjectResolver.resolveSubject(request).orElseThrow();
     Map<String, Object> payload = new LinkedHashMap<>();
     payload.put("subjectId", subject.subjectId());
     payload.put("displayName", subject.displayName());
@@ -548,7 +548,7 @@ public final class DemoHandlers {
   }
 
   public void operations(RestRequest request, RestResponse response) {
-    SecuritySubject subject = subjectResolver.resolveSubject(request).orElseThrow();
+    JSentinelSubject subject = subjectResolver.resolveSubject(request).orElseThrow();
     List<Map<String, Object>> ops = registry.visibleFor(subject).stream()
         .map(DemoHandlers::descriptorToJson)
         .toList();
@@ -560,7 +560,7 @@ public final class DemoHandlers {
     Optional<String> token = DemoSubjectResolver.extractToken(request);
     Optional<DemoUser> user = token.flatMap(tokenStore::resolve);
     token.ifPresent(tokenStore::revoke);
-    user.ifPresent(u -> SecurityServiceResolver.logoutService()
+    user.ifPresent(u -> JSentinelServiceResolver.logoutService()
         .logout(SubjectId.of(u.username()), LogoutScope.CurrentSession));
     response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(Map.of("status", "logged-out")));
@@ -776,7 +776,7 @@ public final class DemoHandlers {
    * password-reset token for a known subject. Demo-only: returns
    * the token in the JSON response so integration tests can pick
    * it up; production wiring would never echo the token and rely
-   * on {@link com.svenruppert.vaadin.security.accountlifecycle.SecurityNotificationSender}
+   * on {@link com.svenruppert.vaadin.security.accountlifecycle.JSentinelNotificationSender}
    * to deliver it out-of-band.
    * <p>
    * Unauthenticated endpoint (anyone can request a reset for any
@@ -998,7 +998,7 @@ public final class DemoHandlers {
       return;
     }
     if (changed) {
-      bumpSecurityVersion(username);
+      bumpJSentinelVersion(username);
     }
     Map<String, Object> payload = new LinkedHashMap<>(userToJson(updated.get()));
     payload.put("changed", changed);
@@ -1007,13 +1007,13 @@ public final class DemoHandlers {
   }
 
   /**
-   * Bumps {@code username}'s {@link SecurityVersion} so any
+   * Bumps {@code username}'s {@link JSentinelVersion} so any
    * already-issued tokens drift on the next request and
-   * {@link com.svenruppert.vaadin.security.rest.RestSecurityVersionFilter}
+   * {@link com.svenruppert.vaadin.security.rest.RestJSentinelVersionFilter}
    * refuses them with {@code 401 + WWW-Authenticate: SessionStale}.
    */
-  private void bumpSecurityVersion(String username) {
-    securityVersionStore.increment(new SecurityVersionKey(
+  private void bumpJSentinelVersion(String username) {
+    securityVersionStore.increment(new JSentinelVersionKey(
         TenantId.DEFAULT, SubjectId.of(username)));
   }
 
@@ -1106,7 +1106,7 @@ public final class DemoHandlers {
       writeError(response, HttpStatus.NOT_FOUND);
       return;
     }
-    bumpSecurityVersion(username);
+    bumpJSentinelVersion(username);
     response.status(HttpStatus.NO_CONTENT.code());
     response.body("");
   }
@@ -1134,7 +1134,7 @@ public final class DemoHandlers {
         subjectParam,
         null, null, 0);
 
-    List<AuditEvent> all = SecurityServiceResolver.securityAuditService().query(query);
+    List<AuditEvent> all = JSentinelServiceResolver.securityAuditService().query(query);
     List<AuditEvent> filtered = typeParam == null || typeParam.isBlank()
         ? all
         : all.stream()

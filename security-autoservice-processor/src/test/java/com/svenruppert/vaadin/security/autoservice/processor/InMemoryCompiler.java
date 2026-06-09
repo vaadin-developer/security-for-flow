@@ -34,7 +34,7 @@ import java.util.Map;
 /**
  * Tiny harness around the JDK in-memory {@link JavaCompiler} used by the
  * processor tests. Compiles a set of named source files with the
- * {@link SecurityAutoServiceProcessor} attached and captures the resulting
+ * {@link JSentinelAutoServiceProcessor} attached and captures the resulting
  * generated resources plus all compiler diagnostics.
  */
 final class InMemoryCompiler {
@@ -77,7 +77,7 @@ final class InMemoryCompiler {
 
     JavaCompiler.CompilationTask task = javac.getTask(
         null, fm, collector, List.of("-proc:full"), null, compilationUnits);
-    task.setProcessors(List.of(new SecurityAutoServiceProcessor()));
+    task.setProcessors(List.of(new JSentinelAutoServiceProcessor()));
     boolean ok = task.call();
     fm.close();
     return new Result(ok, collector.getDiagnostics(), resources);

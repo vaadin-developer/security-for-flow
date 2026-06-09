@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CredentialMetricEventTest {
 
   /** Real in-test recorder — not a mock; a full sink implementation. */
-  private static final class RecordingMetrics implements CredentialSecurityMetrics {
+  private static final class RecordingMetrics implements CredentialJSentinelMetrics {
     final List<CredentialMetricEvent> events = new ArrayList<>();
 
     @Override
@@ -52,7 +52,7 @@ class CredentialMetricEventTest {
   @Test
   @DisplayName("NoOp sink swallows every event without throwing")
   void noOpDoesNotFail() {
-    CredentialSecurityMetrics metrics = NoOpCredentialSecurityMetrics.INSTANCE;
+    CredentialJSentinelMetrics metrics = NoOpCredentialJSentinelMetrics.INSTANCE;
     metrics.publish(new CredentialMetricEvent.HashDuration(
         "PBKDF2WithHmacSHA256", "pbkdf2-jdk", 1, 12_345L, false));
     metrics.publish(new CredentialMetricEvent.VerifyDuration(
@@ -139,7 +139,7 @@ class CredentialMetricEventTest {
   }
 
   @Test
-  @DisplayName("RecordingMetrics is a real CredentialSecurityMetrics — events appear in order")
+  @DisplayName("RecordingMetrics is a real CredentialJSentinelMetrics — events appear in order")
   void recordingMetricsAppendsInOrder() {
     RecordingMetrics metrics = new RecordingMetrics();
     metrics.publish(new CredentialMetricEvent.RehashRequested(

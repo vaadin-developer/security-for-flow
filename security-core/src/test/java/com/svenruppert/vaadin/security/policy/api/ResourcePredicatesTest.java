@@ -16,8 +16,8 @@
  */
 package com.svenruppert.vaadin.security.policy.api;
 
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 import com.svenruppert.vaadin.security.policy.impl.InMemoryResourceResolverRegistry;
 import com.svenruppert.vaadin.security.policy.spi.ResourceResolver;
@@ -41,14 +41,14 @@ class ResourcePredicatesTest {
 
   @BeforeEach
   void setUp() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     registry = new InMemoryResourceResolverRegistry();
-    SecurityServiceResolver.setResourceResolverRegistry(registry);
+    JSentinelServiceResolver.setResourceResolverRegistry(registry);
   }
 
   @AfterEach
   void tearDown() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
   }
 
   // ── ownerMatchesSubject ───────────────────────────────────────
@@ -201,15 +201,15 @@ class ResourcePredicatesTest {
 
   // ── Fixtures ──────────────────────────────────────────────────
 
-  private static PolicyContext ctx(SecuritySubject subject, ResourceRef ref) {
+  private static PolicyContext ctx(JSentinelSubject subject, ResourceRef ref) {
     AccessContext accessContext = new AccessContext(
         subject == null ? Optional.empty() : Optional.of(subject),
         "rest-endpoint", "/x", "read", Map.of());
     return new PolicyContext(accessContext, "test.policy", ref);
   }
 
-  private static SecuritySubject subjectWithId(String id) {
-    return new SecuritySubject(id, id, Set.of(), Set.of());
+  private static JSentinelSubject subjectWithId(String id) {
+    return new JSentinelSubject(id, id, Set.of(), Set.of());
   }
 
   private static ResourceResolver<Map<String, Object>> documentResolverWith(

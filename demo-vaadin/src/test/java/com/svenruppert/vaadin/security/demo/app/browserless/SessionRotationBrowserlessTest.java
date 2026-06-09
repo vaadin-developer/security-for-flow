@@ -18,7 +18,7 @@ package com.svenruppert.vaadin.security.demo.app.browserless;
 
 import com.svenruppert.vaadin.security.audit.SessionInvalidated;
 import com.svenruppert.vaadin.security.authorization.LoginView;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptContext;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptDecision;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
@@ -73,25 +73,25 @@ class SessionRotationBrowserlessTest extends BrowserlessTest {
     System.setProperty("security.bootstrap.mode", "DISABLED");
     resetBootstrapWiringSingleton();
 
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
     DemoUserDirectoryProvider.directory().addUser("admin", "admin",
         new MyUser(1L, "Admin",
             EnumSet.of(AuthorizationRole.ADMIN, AuthorizationRole.USER)));
 
     // Bypass brute-force checks — credentials must be accepted.
-    SecurityServiceResolver.setLoginAttemptPolicy(new AllowingPolicy());
+    JSentinelServiceResolver.setLoginAttemptPolicy(new AllowingPolicy());
 
     // Custom SessionPolicy: capture the onLogin context, return Invalidate
     // so the LoginView triggers the B3 rotation path.
-    SecurityServiceResolver.setSessionPolicy(new RotatingSessionPolicy(capturedOnLoginContext));
+    JSentinelServiceResolver.setSessionPolicy(new RotatingSessionPolicy(capturedOnLoginContext));
 
-    SecurityServiceResolver.setSecurityAuditService(audit);
+    JSentinelServiceResolver.setJSentinelAuditService(audit);
   }
 
   @AfterEach
   void tearDown() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
   }
 

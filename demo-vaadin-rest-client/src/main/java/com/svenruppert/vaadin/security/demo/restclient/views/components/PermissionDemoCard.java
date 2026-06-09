@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.demo.restclient.views.components;
 import com.svenruppert.vaadin.security.authorization.api.AccessDeniedException;
 import com.svenruppert.vaadin.security.authorization.api.PermissionGuard;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
-import com.svenruppert.vaadin.security.demo.restclient.security.ClientSecurityContext;
+import com.svenruppert.vaadin.security.demo.restclient.security.ClientJSentinelContext;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -87,7 +87,7 @@ public class PermissionDemoCard extends Composite<VerticalLayout> {
   }
 
   private static void addIfAllowed(HorizontalLayout row, PermissionName perm, String label) {
-    boolean allowed = ClientSecurityContext.user()
+    boolean allowed = ClientJSentinelContext.user()
         .map(u -> PermissionGuard.hasPermission(u, perm))
         .orElse(false);
     if (allowed) {
@@ -100,7 +100,7 @@ public class PermissionDemoCard extends Composite<VerticalLayout> {
 
   private static Button buildGuardedButton(PermissionName perm, String label) {
     Button button = new Button(label + " (" + perm.value() + ")", e -> {
-      var subject = ClientSecurityContext.user().orElse(null);
+      var subject = ClientJSentinelContext.user().orElse(null);
       try {
         PermissionGuard.requirePermission(subject, perm);
         success(perm);

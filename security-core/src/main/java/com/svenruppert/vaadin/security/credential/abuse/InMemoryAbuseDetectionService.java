@@ -23,7 +23,7 @@
 package com.svenruppert.vaadin.security.credential.abuse;
 
 import com.svenruppert.vaadin.security.audit.RateLimitExceeded;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 
 import java.time.Duration;
@@ -61,12 +61,12 @@ public final class InMemoryAbuseDetectionService implements AbuseDetectionServic
       AbuseDimension.GLOBAL);
 
   private final AbuseLimitsPolicy policy;
-  private final SecurityAuditService auditService;
+  private final JSentinelAuditService auditService;
   private final ConcurrentHashMap<String, Deque<Instant>> counters =
       new ConcurrentHashMap<>();
 
   public InMemoryAbuseDetectionService(
-      AbuseLimitsPolicy policy, SecurityAuditService auditService) {
+      AbuseLimitsPolicy policy, JSentinelAuditService auditService) {
     this.policy = Objects.requireNonNull(policy, "policy");
     this.auditService = Objects.requireNonNull(auditService, "auditService");
   }

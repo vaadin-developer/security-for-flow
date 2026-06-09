@@ -8,12 +8,12 @@ the fluent bootstrap surface for production use:
 1. **Sub-builder wiring** — the five recorded-only sub-builders
    (`.audit`, `.sessions`, `.policies`, `.roles`, `.credentials`)
    leave the placeholder state and become real typed surfaces wired
-   through the existing `SecurityServiceResolver` setters (where
+   through the existing `JSentinelServiceResolver` setters (where
    they exist) and through DX-state / adapter consumption (where
    no resolver setter applies).
 2. **Wrapper-index writer** — `security-processor` now emits
    `META-INF/security-for-flow/generated-wrappers.idx`, completing
-   the V00.72 reader path. `SecurityDiagnostics.inspect()` shows
+   the V00.72 reader path. `JSentinelDiagnostics.inspect()` shows
    every generated wrapper from compile-time.
 3. **`SecuredUi.requiresPolicy(...)`** — was a build-time
    `UnsupportedOperationException` in V00.72; V00.73 evaluates the
@@ -33,13 +33,13 @@ the fluent bootstrap surface for production use:
 |---|---|---|
 | `security-dx` | `AuditState`, `SessionState`, `RoleState`, `CredentialState`, `PolicyState` | Sub-aggregates split out of `BootstrapState` (Konzept §5) |
 | `security-dx` | `AuditBootstrapImpl`, `SessionBootstrapImpl`, `RoleBootstrapImpl`, `CredentialBootstrapImpl`, `PolicyBootstrapImpl` | Real V00.73 implementations replacing the V00.72 Recording* placeholders |
-| `security-dx` | `TeeingSecurityAuditService` | Internal helper for `audit(...)` mixed setups (Konzept §6.2) |
+| `security-dx` | `TeeingJSentinelAuditService` | Internal helper for `audit(...)` mixed setups (Konzept §6.2) |
 | `security-dx` | `WrapperIndexFormat` | Package-private constants shared with `security-processor` |
 | `security-dx-vaadin` | `SessionManagementContext`, `SessionManagementRoute` | Adapter-owned `@Route` for the V00.70 `SessionManagementView` Composite |
 | `security-dx-vaadin` | `SecureRouteDiscovery` | New SPI (returns `Stream<String>` of policy names) |
 | `security-vaadin-starter` | `VaadinRouterSecureRouteDiscovery` | Default `SecureRouteDiscovery` impl (reads `RouteConfiguration.forApplicationScope()`) |
 | `security-vaadin-starter` | `PolicyVisibility` (package-private) | Backs `SecuredUi.requiresPolicy(...)` |
-| `security-vaadin-starter` | `VaadinSecurityBootstrap.discoverSecureRoutes(...)` overloads | Opt-in for the discovery hook |
+| `security-vaadin-starter` | `VaadinJSentinelBootstrap.discoverSecureRoutes(...)` overloads | Opt-in for the discovery hook |
 
 ## Adapter symmetry (Konzept §4.1)
 
@@ -61,7 +61,7 @@ classes.
 These three codes existed as warnings in V00.72 and now break the
 bootstrap in `STRICT` mode. A V00.72 app with `mode(STRICT)` and any
 of these warnings ran with the diagnostic visible; from V00.73 the
-same configuration throws `SecurityBootstrapException`. Consumers
+same configuration throws `JSentinelBootstrapException`. Consumers
 upgrading to V00.73 with `mode(STRICT)` must clean these first.
 
 | Code | V00.72 behaviour | V00.73 STRICT |
@@ -73,7 +73,7 @@ upgrading to V00.73 with `mode(STRICT)` must clean these first.
 ### New V00.73 validation codes (additive, not breaking)
 
 These codes only fire when the new sub-builder methods are used.
-V00.72 consumers that keep their direct `SecurityServiceResolver.setXxx(...)`
+V00.72 consumers that keep their direct `JSentinelServiceResolver.setXxx(...)`
 calls are not affected.
 
 | Code | Trigger | STRICT |
@@ -96,51 +96,51 @@ calls are not affected.
 ## Stable-API audit (P14 — Konzept §12)
 
 V00.73 promotes **every** public DX type to stable. The
-`@ExperimentalSecurityApi` annotation is removed from 40 types across
+`@ExperimentalJSentinelApi` annotation is removed from 40 types across
 six modules (`security-dx`, `security-dx-vaadin`, `security-dx-rest`,
 `security-dx-standalone`, `security-vaadin-starter`, plus
-`@SecurityAutoService` in `security-autoservice-annotations`).
+`@JSentinelAutoService` in `security-autoservice-annotations`).
 
 The promotion accepts the following SemVer commitments:
 
 - **Interfaces grow only via `default` methods.** The V00.75 sixth
   sub-builder (`.eventBus(...)` per Konzept §17) and any future
-  additions to `CommonSecurityBootstrap<B>` or the five sub-builders
+  additions to `CommonJSentinelBootstrap<B>` or the five sub-builders
   ship as default methods with sensible no-op or fail-closed
   behaviour. This keeps existing implementations source- and
   binary-compatible.
-- **Records and enums are additive only.** `SecurityRuntime`,
-  `SecurityBootstrapMode`, `RegisteredSecurityService`,
-  `SecurityBootstrapWarning`, `Severity`, `SecurityServiceReport`,
+- **Records and enums are additive only.** `JSentinelRuntime`,
+  `JSentinelBootstrapMode`, `RegisteredJSentinelService`,
+  `JSentinelBootstrapWarning`, `Severity`, `JSentinelServiceReport`,
   `DiscoveredService`, `MissingRecommendedService`, `DuplicateService`,
-  `ServiceWarning`, `GeneratedSecurityWrapper`, `ProcessorWarning`,
-  `SecurityProcessorReport` — none of these records receive component
+  `ServiceWarning`, `GeneratedJSentinelWrapper`, `ProcessorWarning`,
+  `JSentinelProcessorReport` — none of these records receive component
   removals; new components are introduced through a successor type
   with a documented deprecation cycle on the previous one.
 - **Annotation surfaces stay backwards compatible.**
-  `@SecurityAutoService` and `@SecureRoute` may gain new methods only
+  `@JSentinelAutoService` and `@SecureRoute` may gain new methods only
   via `default` element values.
 - **The `internal/` package types** (`BootstrapState`,
-  `AbstractSecurityBootstrap`, state aggregates) carry no annotation
+  `AbstractJSentinelBootstrap`, state aggregates) carry no annotation
   either — the package name `internal/` is the API contract; consumers
   importing from there do so at their own risk.
 
 | Module | Types promoted | Notes |
 |---|---:|---|
-| `security-dx` (bootstrap) | 6 | `CommonSecurityBootstrap`, `AuditBootstrap`, `SessionBootstrap`, `PolicyBootstrap`, `RoleBootstrap`, `CredentialBootstrap` |
-| `security-dx` (runtime) | 6 | `SecurityRuntime`, `SecurityBootstrapMode`, `Severity`, `RegisteredSecurityService`, `SecurityBootstrapWarning`, `SecurityBootstrapException` |
-| `security-dx` (diagnostics) | 11 | `SecurityDiagnostics`, `SecurityServiceReport`, `SecurityProcessorReport`, `GeneratedSecurityWrapper`, `ProcessorWarning`, `DiscoveredService`, `MissingRecommendedService`, `DuplicateService`, `ServiceWarning`, `DiagnosticContributor`, `DiagnosticReportBuilder` |
-| `security-dx-vaadin` | 4 | `VaadinSecurity`, `VaadinSecurityBootstrap`, `SecureRouteDiscovery`, `SessionManagementRoute` |
-| `security-dx-rest` | 6 | `RestSecurity`, `RestSecurityBootstrap`, `RestDecisionMapper`, `DefaultRestDecisionMapper`, `RestErrorBodyStrategy`, `DefaultRestErrorBodyStrategy` |
-| `security-dx-standalone` | 2 | `StandaloneSecurity`, `StandaloneSecurityBootstrap` |
-| `security-vaadin-starter` | 6 | `SecuredUi`, `VaadinSecurityStarter`, `DevelopmentDefaults`, `ProductionDefaults`, `StrictDefaults`, `VaadinRouterSecureRouteDiscovery` |
-| `security-autoservice-annotations` | 1 | `@SecurityAutoService` (SOURCE retention; promotion is documentation-only) |
+| `security-dx` (bootstrap) | 6 | `CommonJSentinelBootstrap`, `AuditBootstrap`, `SessionBootstrap`, `PolicyBootstrap`, `RoleBootstrap`, `CredentialBootstrap` |
+| `security-dx` (runtime) | 6 | `JSentinelRuntime`, `JSentinelBootstrapMode`, `Severity`, `RegisteredJSentinelService`, `JSentinelBootstrapWarning`, `JSentinelBootstrapException` |
+| `security-dx` (diagnostics) | 11 | `JSentinelDiagnostics`, `JSentinelServiceReport`, `JSentinelProcessorReport`, `GeneratedJSentinelWrapper`, `ProcessorWarning`, `DiscoveredService`, `MissingRecommendedService`, `DuplicateService`, `ServiceWarning`, `DiagnosticContributor`, `DiagnosticReportBuilder` |
+| `security-dx-vaadin` | 4 | `VaadinSecurity`, `VaadinJSentinelBootstrap`, `SecureRouteDiscovery`, `SessionManagementRoute` |
+| `security-dx-rest` | 6 | `RestSecurity`, `RestJSentinelBootstrap`, `RestDecisionMapper`, `DefaultRestDecisionMapper`, `RestErrorBodyStrategy`, `DefaultRestErrorBodyStrategy` |
+| `security-dx-standalone` | 2 | `StandaloneSecurity`, `StandaloneJSentinelBootstrap` |
+| `security-vaadin-starter` | 6 | `SecuredUi`, `VaadinJSentinelStarter`, `DevelopmentDefaults`, `ProductionDefaults`, `StrictDefaults`, `VaadinRouterSecureRouteDiscovery` |
+| `security-autoservice-annotations` | 1 | `@JSentinelAutoService` (SOURCE retention; promotion is documentation-only) |
 | **Total** | **42** | |
 
 Adapter `DiagnosticContributor` implementations (`VaadinDiagnosticContributor`,
 `RestDiagnosticContributor`, `StandaloneDiagnosticContributor`) were
 not annotated in V00.72; they are implementation classes registered via
-`@SecurityAutoService` and inherit stability from their SPI.
+`@JSentinelAutoService` and inherit stability from their SPI.
 
 Operational consequence: V00.74 may not remove or change any of the
 above types' public method signatures, record components, enum
@@ -161,13 +161,13 @@ implementations.
   populated at install-time.
 - `.audit(...)` `.credentialEvents(boolean)` flag is recorded but has
   no behavioural effect in V00.73 — `CredentialAuditPublisher`
-  routes through `SecurityServiceResolver.findSecurityAuditService()`
+  routes through `JSentinelServiceResolver.findJSentinelAuditService()`
   unconditionally. The flag is preserved so V00.75 can wire per-channel
   filtering without changing the API shape.
 - `RolePermissionMapping` is intentionally NOT exposed through
   `RoleBootstrap` (Konzept §9). V00.71 has no resolver setter for it.
 - `SessionStore` is intentionally NOT registered through a global
-  `SecurityServiceResolver` setter (Konzept §7). The configured
+  `JSentinelServiceResolver` setter (Konzept §7). The configured
   store stays in DX state and is consumed by adapter-DX code
   (Vaadin: `SessionManagementContext` / `SessionManagementRoute`).
 - Mutation-coverage (PIT) was re-run for the six modules touched in
@@ -177,7 +177,7 @@ implementations.
 ## Compatibility
 
 V00.73 is additive over V00.72. Existing direct
-`SecurityServiceResolver.setXxx(...)` setup paths continue to work
+`JSentinelServiceResolver.setXxx(...)` setup paths continue to work
 unchanged. The only behaviour change is the STRICT-mode promotion of
 the three V00.72 warnings listed in the breaking-change section
 above. Consumers running V00.72 in `COMMUNITY_DEFAULTS`,

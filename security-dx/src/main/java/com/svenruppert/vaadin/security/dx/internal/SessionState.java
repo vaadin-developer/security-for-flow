@@ -11,7 +11,7 @@
 package com.svenruppert.vaadin.security.dx.internal;
 
 import com.svenruppert.vaadin.security.authorization.api.SubjectIdResolver;
-import com.svenruppert.vaadin.security.session.SecurityVersionStore;
+import com.svenruppert.vaadin.security.session.JSentinelVersionStore;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
 import com.svenruppert.vaadin.security.session.SessionStore;
 
@@ -30,7 +30,7 @@ import java.time.Duration;
 public final class SessionState {
 
   private SessionStore sessionStore;
-  private SecurityVersionStore securityVersionStore;
+  private JSentinelVersionStore securityVersionStore;
   private SubjectIdResolver<?> subjectIdResolver;
   private Duration idleTimeout;
   private Duration absoluteLifetime;
@@ -46,11 +46,11 @@ public final class SessionState {
     this.sessionStore = store;
   }
 
-  public SecurityVersionStore securityVersionStore() {
+  public JSentinelVersionStore securityVersionStore() {
     return securityVersionStore;
   }
 
-  public void securityVersionStore(SecurityVersionStore store) {
+  public void securityVersionStore(JSentinelVersionStore store) {
     this.securityVersionStore = store;
   }
 

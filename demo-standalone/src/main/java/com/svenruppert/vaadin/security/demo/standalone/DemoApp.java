@@ -17,9 +17,9 @@
 package com.svenruppert.vaadin.security.demo.standalone;
 
 import com.svenruppert.vaadin.security.authorization.api.AccessDeniedException;
-import com.svenruppert.vaadin.security.dx.diagnostics.SecurityDiagnostics;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime;
+import com.svenruppert.vaadin.security.dx.diagnostics.JSentinelDiagnostics;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapMode;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelRuntime;
 import com.svenruppert.vaadin.security.dx.standalone.bootstrap.StandaloneSecurity;
 import com.svenruppert.vaadin.security.standalone.SecuredProxy;
 import com.svenruppert.vaadin.security.standalone.StandaloneLoginFlow;
@@ -44,7 +44,7 @@ import java.nio.charset.StandardCharsets;
  *       {@code @Secured}; the {@code security-processor} module
  *       emits a {@code MemberDirectorySecured} subclass during
  *       compilation, the demo instantiates that subclass, and every
- *       guarded method calls into {@code SecurityEnforcer} before
+ *       guarded method calls into {@code JSentinelEnforcer} before
  *       delegating to {@code super}.</li>
  * </ul>
  *
@@ -79,30 +79,30 @@ public final class DemoApp {
     this.library = SecuredProxy.wrap(LibraryService.class, new InMemoryLibraryService());
     // Compile-time path: annotation-processor-generated subclass on a
     // concrete class. Instantiating MemberDirectorySecured wires every
-    // guarded method through SecurityEnforcer.
+    // guarded method through JSentinelEnforcer.
     this.members = new MemberDirectorySecured();
   }
 
   public static void main(String[] args) throws Exception {
     // V00.72 fluent bootstrap. The AuthN/AuthZ services are discovered
-    // through @SecurityAutoService and pulled here so the bootstrap can
-    // wire them explicitly into SecurityServiceResolver and produce a
-    // SecurityRuntime that lists every active service.
+    // through @JSentinelAutoService and pulled here so the bootstrap can
+    // wire them explicitly into JSentinelServiceResolver and produce a
+    // JSentinelRuntime that lists every active service.
     var authn = ServiceLoader.load(
             com.svenruppert.vaadin.security.authentication.AuthenticationService.class)
         .findFirst().orElseThrow(() -> new IllegalStateException(
-            "No AuthenticationService registered (expected DemoAuthenticationService via @SecurityAutoService)"));
+            "No AuthenticationService registered (expected DemoAuthenticationService via @JSentinelAutoService)"));
     var authz = ServiceLoader.load(
             com.svenruppert.vaadin.security.authorization.api.AuthorizationService.class)
         .findFirst().orElseThrow(() -> new IllegalStateException(
-            "No AuthorizationService registered (expected DemoAuthorizationService via @SecurityAutoService)"));
+            "No AuthorizationService registered (expected DemoAuthorizationService via @JSentinelAutoService)"));
 
     // V00.73 fluent bootstrap. The .audit(...) sub-builder adds an
     // in-memory RingBuffer + a LoggingAuditSink so the CLI demo's
     // diagnose command can show audit events end-to-end without any
     // additional wiring on the consumer side.
-    SecurityRuntime runtime = StandaloneSecurity.bootstrap()
-        .mode(SecurityBootstrapMode.DEVELOPMENT)
+    JSentinelRuntime runtime = StandaloneSecurity.bootstrap()
+        .mode(JSentinelBootstrapMode.DEVELOPMENT)
         .authentication(authn)
         .authorization(authz)
         .audit(a -> a.ringBuffer(256).logging())
@@ -110,13 +110,13 @@ public final class DemoApp {
     System.out.println(runtime.log());
 
     // Inspect the broader diagnostics surface (DiagnosticContributor SPI).
-    var report = SecurityDiagnostics.inspect();
+    var report = JSentinelDiagnostics.inspect();
     var processorReport = report.processorReport();
     boolean hasProcessorEntries = !processorReport.wrappers().isEmpty()
         || !processorReport.warnings().isEmpty();
     if (!report.missing().isEmpty() || !report.duplicates().isEmpty()
         || !report.warnings().isEmpty() || hasProcessorEntries) {
-      System.out.println("--- SecurityDiagnostics ---");
+      System.out.println("--- JSentinelDiagnostics ---");
       report.missing().forEach(m -> System.out.println("  missing: " + m.spi().getSimpleName() + " — " + m.reason()));
       report.duplicates().forEach(d -> System.out.println("  duplicate: " + d.spi().getSimpleName()));
       report.warnings().forEach(w -> System.out.println("  " + w.code() + ": " + w.message()));

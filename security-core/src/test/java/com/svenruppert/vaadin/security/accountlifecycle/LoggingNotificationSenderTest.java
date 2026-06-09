@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisplayName("LoggingNotificationSender + SecurityNotification")
+@DisplayName("LoggingNotificationSender + JSentinelNotification")
 class LoggingNotificationSenderTest {
 
   @Test
@@ -45,8 +45,8 @@ class LoggingNotificationSenderTest {
     logger.addHandler(handler);
 
     LoggingNotificationSender sender = new LoggingNotificationSender(logger);
-    sender.send(new SecurityNotification(
-        SecurityNotification.Kind.PASSWORD_RESET_REQUESTED,
+    sender.send(new JSentinelNotification(
+        JSentinelNotification.Kind.PASSWORD_RESET_REQUESTED,
         new SubjectId("alice"),
         TenantId.DEFAULT,
         Instant.parse("2026-01-01T00:00:00Z"),
@@ -79,26 +79,26 @@ class LoggingNotificationSenderTest {
       @Override public void close() {}
     });
 
-    new LoggingNotificationSender(logger).send(new SecurityNotification(
-        SecurityNotification.Kind.EMAIL_VERIFIED,
+    new LoggingNotificationSender(logger).send(new JSentinelNotification(
+        JSentinelNotification.Kind.EMAIL_VERIFIED,
         new SubjectId("alice"), null, Instant.now(), Map.of()));
   }
 
   @Test
-  @DisplayName("SecurityNotification rejects null components (except attributes which become empty)")
+  @DisplayName("JSentinelNotification rejects null components (except attributes which become empty)")
   void notificationInvariants() {
     Instant now = Instant.now();
     assertThrows(NullPointerException.class,
-        () -> new SecurityNotification(null, new SubjectId("a"), TenantId.DEFAULT, now, Map.of()));
+        () -> new JSentinelNotification(null, new SubjectId("a"), TenantId.DEFAULT, now, Map.of()));
     assertThrows(NullPointerException.class,
-        () -> new SecurityNotification(SecurityNotification.Kind.EMAIL_VERIFIED,
+        () -> new JSentinelNotification(JSentinelNotification.Kind.EMAIL_VERIFIED,
             null, TenantId.DEFAULT, now, Map.of()));
     assertThrows(NullPointerException.class,
-        () -> new SecurityNotification(SecurityNotification.Kind.EMAIL_VERIFIED,
+        () -> new JSentinelNotification(JSentinelNotification.Kind.EMAIL_VERIFIED,
             new SubjectId("a"), TenantId.DEFAULT, null, Map.of()));
 
-    SecurityNotification n = new SecurityNotification(
-        SecurityNotification.Kind.EMAIL_VERIFIED,
+    JSentinelNotification n = new JSentinelNotification(
+        JSentinelNotification.Kind.EMAIL_VERIFIED,
         new SubjectId("a"), null /* → DEFAULT */, now, null /* → empty map */);
     assertEquals(TenantId.DEFAULT, n.tenant());
     assertTrue(n.attributes().isEmpty());

@@ -25,7 +25,7 @@
   <name>Security DX – Standalone Adapter</name>
   <description>
     V00.72 Standalone-specific fluent bootstrap: StandaloneSecurity.bootstrap()
-    facade and the StandaloneSecurityBootstrap builder. Hosts the
+    facade and the StandaloneJSentinelBootstrap builder. Hosts the
     StandaloneDiagnosticContributor (added in Prompt 014c).
   </description>
 

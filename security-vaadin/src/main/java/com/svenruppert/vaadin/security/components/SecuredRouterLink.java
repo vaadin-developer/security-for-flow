@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.components;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.router.Router;
@@ -38,12 +38,12 @@ import static java.util.Objects.requireNonNull;
  * {@code AuthorizationListener} pipeline. This component is a UI
  * affordance — a hidden link is not a security boundary.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public class SecuredRouterLink extends RouterLink {
 
   private final SecuredVisibility.Requirement requirement;
   private final SecuredVisibilityMode mode;
-  private final Supplier<Optional<SecuredVisibility.SecurityView>> viewSupplier;
+  private final Supplier<Optional<SecuredVisibility.JSentinelView>> viewSupplier;
 
   /**
    * Builds a secured router link with {@link SecuredVisibilityMode#HIDE}
@@ -57,7 +57,7 @@ public class SecuredRouterLink extends RouterLink {
                            Class<? extends Component> navigationTarget,
                            SecuredVisibility.Requirement requirement) {
     this(text, navigationTarget, requirement, SecuredVisibilityMode.HIDE,
-        SecuredVisibility::currentSecurityView);
+        SecuredVisibility::currentJSentinelView);
   }
 
   /**
@@ -74,7 +74,7 @@ public class SecuredRouterLink extends RouterLink {
                            SecuredVisibility.Requirement requirement,
                            SecuredVisibilityMode mode) {
     this(text, navigationTarget, requirement, mode,
-        SecuredVisibility::currentSecurityView);
+        SecuredVisibility::currentJSentinelView);
   }
 
   /**
@@ -90,7 +90,7 @@ public class SecuredRouterLink extends RouterLink {
                            Class<? extends Component> navigationTarget,
                            SecuredVisibility.Requirement requirement,
                            SecuredVisibilityMode mode,
-                           Supplier<Optional<SecuredVisibility.SecurityView>> viewSupplier) {
+                           Supplier<Optional<SecuredVisibility.JSentinelView>> viewSupplier) {
     super(
         requireNonNull(text, "text must not be null"),
         requireNonNull(navigationTarget, "navigationTarget must not be null"));
@@ -117,7 +117,7 @@ public class SecuredRouterLink extends RouterLink {
                            Class<? extends Component> navigationTarget,
                            SecuredVisibility.Requirement requirement,
                            SecuredVisibilityMode mode,
-                           Supplier<Optional<SecuredVisibility.SecurityView>> viewSupplier) {
+                           Supplier<Optional<SecuredVisibility.JSentinelView>> viewSupplier) {
     super(
         requireNonNull(router, "router must not be null"),
         requireNonNull(text, "text must not be null"),

@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.logout;
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.LogoutPerformed;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.authorization.api.InMemorySubjectStore;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.session.InMemorySessionStore;
@@ -121,7 +121,7 @@ class SubjectClearingLogoutAllSessionsIntegrationTest {
     assertEquals(LogoutScope.AllSessionsOfSubject, lp.scope());
   }
 
-  private static final class CollectingAuditService implements SecurityAuditService {
+  private static final class CollectingAuditService implements JSentinelAuditService {
     final List<AuditEvent> published = new ArrayList<>();
     @Override public void publish(AuditEvent event) { published.add(event); }
     @Override public List<AuditEvent> query(AuditQuery query) { return List.copyOf(published); }

@@ -18,11 +18,11 @@ package com.svenruppert.vaadin.security.session.vaadin;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.vaadin.security.audit.SessionExpired;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.authorization.LoginListener;
 import com.svenruppert.vaadin.security.authorization.LoginListeners;
 import com.svenruppert.vaadin.security.authorization.LoginView;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStore;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.session.SessionMetadata;
@@ -138,7 +138,7 @@ public class SessionLifetimeListener
         .orElse(createdAt);
 
     SessionMetadata metadata = new SessionMetadata(subjectId, createdAt, lastActivity);
-    SessionPolicy<Object> policy = SecurityServiceResolver.sessionPolicy();
+    SessionPolicy<Object> policy = JSentinelServiceResolver.sessionPolicy();
     SessionPolicyDecision decision = policy.evaluate(metadata);
 
     switch (decision) {
@@ -170,7 +170,7 @@ public class SessionLifetimeListener
 
   private static Class<?> resolveSubjectType() {
     try {
-      return SecurityServiceResolver.<Object, Object>authenticationService().subjectType();
+      return JSentinelServiceResolver.<Object, Object>authenticationService().subjectType();
     } catch (RuntimeException ignored) {
       return null;
     }
@@ -217,7 +217,7 @@ public class SessionLifetimeListener
   }
 
   private static void audit(String subjectId, String reasonLabel) {
-    SecurityAuditService sink = SecurityServiceResolver.securityAuditService();
+    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
     try {
       sink.publish(new SessionExpired(
           Instant.now(), subjectId == null ? "" : subjectId, null, reasonLabel));

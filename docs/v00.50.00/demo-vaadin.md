@@ -201,7 +201,7 @@ Result: the next request comes in with a fresh session and lands on
 - **No REST boundary.** Every check happens in the same JVM. For the
   two-tier picture see [`demo-vaadin-rest-client.md`](demo-vaadin-rest-client.md).
 - **No audit log.** Login, logout, access-denied events are not
-  captured (`SecurityAuditService` is § 2 in `Konzept-V00.60.00.md`,
+  captured (`JSentinelAuditService` is § 2 in `Konzept-V00.60.00.md`,
   not yet implemented).
 - **No brute-force throttling** on login.
 - **No session policy** (timeout, inactivity, rotation) — only the

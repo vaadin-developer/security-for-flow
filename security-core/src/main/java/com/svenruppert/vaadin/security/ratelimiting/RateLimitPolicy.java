@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.ratelimiting;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 /**
  * Pluggable rate-limiting decision point — separate from
@@ -38,7 +38,7 @@ import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi
  *
  * <p>Implementations must be thread-safe.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 @FunctionalInterface
 public interface RateLimitPolicy {
 

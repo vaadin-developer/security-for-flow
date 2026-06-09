@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.ratelimiting;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 import java.time.Instant;
 
@@ -49,7 +49,7 @@ import java.time.Instant;
  * <p>Implementations must be thread-safe; concurrent recordEvent
  * and countSince happen on every protected endpoint.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public interface RateLimitStore {
 
   /**

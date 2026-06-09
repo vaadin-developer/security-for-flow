@@ -17,7 +17,7 @@
 package com.svenruppert.vaadin.security.policy.api;
 
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 import static java.util.Objects.requireNonNull;
 
@@ -39,7 +39,7 @@ import static java.util.Objects.requireNonNull;
  * constant; new adapter code should switch on the typed
  * {@link AuthorizationDecision.StepUpRequired} variant directly.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class PolicyDecisions {
 
   /**

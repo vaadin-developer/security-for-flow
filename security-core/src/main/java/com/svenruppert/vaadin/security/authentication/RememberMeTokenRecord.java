@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.authentication;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 
@@ -46,7 +46,7 @@ import static java.util.Objects.requireNonNull;
  * @param expiresAt  absolute expiry; must be strictly after
  *                   {@code createdAt}
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public record RememberMeTokenRecord(
     String tokenHash,
     TenantId tenant,

@@ -31,7 +31,7 @@ Library modules do not define project-specific permissions. Concrete roles,
 permissions, and business operations belong to consuming applications or demo
 modules.
 
-`security-core` provides generic types such as `SecuritySubject`, `RoleName`,
+`security-core` provides generic types such as `JSentinelSubject`, `RoleName`,
 `PermissionName`, `AccessContext`, `AuthorizationDecision`, evaluator
 contracts, plus the reusable building blocks listed below. It has no
 Vaadin, Servlet, REST framework, demo, or application dependencies.
@@ -105,7 +105,7 @@ REST security is driven by annotations on handler methods or handler classes.
 
 The REST adapter:
 
-1. Resolves a `SecuritySubject` from the request via `RestSubjectResolver`
+1. Resolves a `JSentinelSubject` from the request via `RestSubjectResolver`
    (`BearerTokenExtractor` makes this a one-liner for token-based setups).
 2. Scans the secured method or class for a security annotation.
 3. Creates an adapter-neutral `AccessContext`.

@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.session;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 /**
  * Lifecycle state of a {@code SessionRecord}.
@@ -36,7 +36,7 @@ import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi
  * again — re-authentication produces a new {@code SessionRecord} with
  * a fresh {@code SessionId}.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public enum SessionStatus {
 
   /** Session is open and admissible. */

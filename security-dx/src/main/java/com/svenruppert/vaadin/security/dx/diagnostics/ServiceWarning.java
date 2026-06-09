@@ -14,7 +14,7 @@ package com.svenruppert.vaadin.security.dx.diagnostics;
 import java.util.Objects;
 
 /**
- * A diagnostic warning surfaced through {@link SecurityServiceReport}.
+ * A diagnostic warning surfaced through {@link JSentinelServiceReport}.
  *
  * @since 00.72.00
  */

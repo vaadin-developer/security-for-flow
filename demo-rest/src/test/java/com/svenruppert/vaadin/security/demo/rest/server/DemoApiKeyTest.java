@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *       scopes — only an admin may call it.</li>
  *   <li>The {@code X-Api-Key} header on a subsequent request feeds
  *       {@link com.svenruppert.vaadin.security.authentication.ApiKeyAuthenticationService}
- *       and the resolved {@code SecuritySubject} carries the key's
+ *       and the resolved {@code JSentinelSubject} carries the key's
  *       scopes as its permission set (no role inheritance).</li>
  *   <li>{@code POST /api/admin/api-keys/revoke} flips the record
  *       and the same {@code X-Api-Key} is refused on the next

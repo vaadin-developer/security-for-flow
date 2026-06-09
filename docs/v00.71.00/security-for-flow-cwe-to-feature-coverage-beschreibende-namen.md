@@ -928,7 +928,7 @@ Hinweis: „Abdeckung“ bedeutet hier **Risikoreduktion/Mitigation**. Eine CWE 
 
 - Verarbeitung über `SecretValue`, `char[]` und `byte[]` statt `String`  
   _Epic: Eingabehygiene und sichere Behandlung; Modul: `security-core`_
-- Audit über `SecurityAuditService`  
+- Audit über `JSentinelAuditService`  
   _Epic: Integration in den bestehenden Sicherheits-Workflow; Modul: `security-core`_
 - Messpunkte für Dauer je `hash` und `verify`  
   _Epic: Beobachtbarkeit, Betrieb und KDF-Ressourcensteuerung; Modul: `security-core`_
@@ -1076,7 +1076,7 @@ Hinweis: „Abdeckung“ bedeutet hier **Risikoreduktion/Mitigation**. Eine CWE 
 
 - Explizite Ergebnisobjekte statt Boolean-Rückgaben  
   _Epic: Core-Hashing-Fundament; Modul: `security-core`_
-- Audit über `SecurityAuditService`  
+- Audit über `JSentinelAuditService`  
   _Epic: Integration in den bestehenden Sicherheits-Workflow; Modul: `security-core`_
 - Interne Fehlerklassifikation  
   _Epic: Integration in den bestehenden Sicherheits-Workflow; Modul: `security-core`_

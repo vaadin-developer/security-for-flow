@@ -1,4 +1,4 @@
-# Konzept V00.72.00: Developer Experience – Fluent Bootstrap, SecurityAutoService, Vaadin Starter
+# Konzept V00.72.00: Developer Experience – Fluent Bootstrap, JSentinelAutoService, Vaadin Starter
 
 Version: `00.72.00`
 Quellstand: `Konzept-DX-Fluent-Bootstrap-AutoService-Starter.md`
@@ -24,8 +24,8 @@ vier zusammenhaengende DX-Bausteine zugaenglich gemacht wird:
    `StandaloneSecurity.bootstrap()`), der Authentication, Authorization,
    Audit, Sessions, Policies, Roles und Credentials in einem
    zusammenhaengenden Aufrufpfad konfiguriert und ein diagnostisches
-   `SecurityRuntime`-Objekt zurueckliefert.
-2. **`@SecurityAutoService`** – eine eigene, dependency-freie Annotation
+   `JSentinelRuntime`-Objekt zurueckliefert.
+2. **`@JSentinelAutoService`** – eine eigene, dependency-freie Annotation
    plus Annotation Processor, der `META-INF/services`-Dateien automatisch
    erzeugt. Keine externe Google-/AutoService-Abhaengigkeit.
 3. **`security-vaadin-starter`** – ein deklarativer Layer ueber den
@@ -38,7 +38,7 @@ vier zusammenhaengende DX-Bausteine zugaenglich gemacht wird:
 
 Der Kern (`security-core`) erhaelt **keine neue Runtime-Abhaengigkeit**.
 Alle DX-Bausteine sind additiv: bestehende manuelle `META-INF/services`-Dateien,
-direkte `SecurityServiceResolver`-Zugriffe und manuell verdrahtete Demos
+direkte `JSentinelServiceResolver`-Zugriffe und manuell verdrahtete Demos
 bleiben kompatibel.
 
 ---
@@ -76,23 +76,23 @@ Adoption-Version**, kein neues Feature-Set.
 ### 3.1 In Scope
 
 - Fluent Bootstrap API fuer Vaadin, REST und Standalone.
-- `SecurityRuntime`-Ergebnisobjekt mit aktiven Services und Warnungen.
-- `SecurityBootstrapMode` (`COMMUNITY_DEFAULTS`, `DEVELOPMENT`,
+- `JSentinelRuntime`-Ergebnisobjekt mit aktiven Services und Warnungen.
+- `JSentinelBootstrapMode` (`COMMUNITY_DEFAULTS`, `DEVELOPMENT`,
   `PRODUCTION`, `STRICT`).
-- `@SecurityAutoService`-Annotation und Annotation Processor.
+- `@JSentinelAutoService`-Annotation und Annotation Processor.
 - Generierung von `META-INF/services`-Dateien fuer registrierte SPIs.
-- Diagnose-API `SecurityDiagnostics.inspect()` mit
-  `SecurityServiceReport`.
+- Diagnose-API `JSentinelDiagnostics.inspect()` mit
+  `JSentinelServiceReport`.
 - Erkennung doppelter, fehlender und konkurrierender SPI-Implementierungen.
 - `security-vaadin-starter` mit `SecuredUi`-Buildern, optionaler
   `@SecureRoute`-Annotation und Default-Profilen.
 - Integration der `security-processor`-/proxybuilder-Generierung in die
-  Diagnose-API (`GeneratedSecurityWrapper`, `SecurityProcessorReport`).
+  Diagnose-API (`GeneratedJSentinelWrapper`, `JSentinelProcessorReport`).
 - Umstellung aller Demos (`demo-vaadin`, `demo-rest`, `demo-vaadin-rest-client`,
   `demo-standalone`) auf den DX-Layer.
 - Dokumentation: "5-Minute Setup", "Before / After", Entscheidungstabelle
   zwischen `SecuredProxy`, `@Secured`/`<Type>Secured`, `SecuredUi`,
-  `SecurityAutoService` und Fluent Bootstrap.
+  `JSentinelAutoService` und Fluent Bootstrap.
 - Akzeptanzkriterium: eine neue Vaadin-Demo laesst sich **ohne manuelle
   `META-INF/services`-Datei fuer die in V00.72 abgedeckten SPIs** starten.
 
@@ -102,10 +102,10 @@ Adoption-Version**, kein neues Feature-Set.
   `V00.80`).
 - Kein Security Event Bus, keine signierten Envelopes, keine SSE-Bridge
   (`V00.75`).
-- Kein Ersatz fuer `SecurityServiceResolver` oder den bestehenden
+- Kein Ersatz fuer `JSentinelServiceResolver` oder den bestehenden
   ServiceLoader-Pfad.
 - Kein eigenes Dependency-Injection-Framework.
-- Keine Pflicht zu `@SecurityAutoService` – manuelle SPI-Registrierung
+- Keine Pflicht zu `@JSentinelAutoService` – manuelle SPI-Registrierung
   bleibt vollwertig.
 - Keine harte Abhaengigkeit auf Spring, CDI oder ein anderes DI-Framework.
 - Keine neuen Krypto-Provider und keine Veraenderung der V00.71-
@@ -121,7 +121,7 @@ Adoption-Version**, kein neues Feature-Set.
 
 1. **Additiv, nicht ersetzend.**
    Alle Bausteine sind optional. Bestehende `META-INF/services`-Dateien,
-   manuelle Bootstrap-Klassen und direkte `SecurityServiceResolver`-Aufrufe
+   manuelle Bootstrap-Klassen und direkte `JSentinelServiceResolver`-Aufrufe
    bleiben gueltig.
 
 2. **Kein neuer Runtime-Dependency-Eintrag im Kern.**
@@ -134,20 +134,20 @@ Adoption-Version**, kein neues Feature-Set.
    Fehler werden bevorzugt zum Compile-Zeitpunkt (AutoService Processor,
    security-processor), spaetestens beim `install()` der Fluent API
    sichtbar. Es gibt keine versteckten Defaults: jeder Default wird im
-   `SecurityRuntime`-Ergebnisobjekt aufgelistet.
+   `JSentinelRuntime`-Ergebnisobjekt aufgelistet.
 
 4. **Adapter-Symmetrie.**
    `VaadinSecurity.bootstrap()`, `RestSecurity.bootstrap()` und
    `StandaloneSecurity.bootstrap()` teilen eine
-   `CommonSecurityBootstrap<B>`-Basis in `security-dx`. Jede Facade
+   `CommonJSentinelBootstrap<B>`-Basis in `security-dx`. Jede Facade
    lebt in ihrem eigenen Adapter-DX-Modul. Adapter-spezifische
    Erweiterungen (z. B. `loginRoute`, `stepUpRoute`, `securedComponents`)
    bleiben auf den jeweiligen Builder beschraenkt.
 
 5. **Diagnose als First-Class-Output.**
-   `install()` gibt `SecurityRuntime` zurueck.
-   `SecurityDiagnostics.inspect()` liefert jederzeit einen
-   `SecurityServiceReport`. Diagnose ist nicht optional, sondern Teil der
+   `install()` gibt `JSentinelRuntime` zurueck.
+   `JSentinelDiagnostics.inspect()` liefert jederzeit einen
+   `JSentinelServiceReport`. Diagnose ist nicht optional, sondern Teil der
    normalen API-Oberflaeche.
 
 6. **Open Core bleibt sauber.**
@@ -158,12 +158,12 @@ Adoption-Version**, kein neues Feature-Set.
 7. **proxybuilder bleibt fokussiert.**
    `proxybuilder` ist ein Compile-Time-Werkzeug fuer Method Security.
    Es wird nicht fuer SPI-Registrierung oder Bootstrap-Builder
-   missbraucht. Diese Aufgaben loesen `@SecurityAutoService` und die
+   missbraucht. Diese Aufgaben loesen `@JSentinelAutoService` und die
    Adapter-Facades (`VaadinSecurity` / `RestSecurity` /
    `StandaloneSecurity`).
 
 8. **STRICT bricht laut, DEVELOPMENT spricht viel.**
-   `SecurityBootstrapMode.STRICT` lehnt fehlende kritische SPIs als
+   `JSentinelBootstrapMode.STRICT` lehnt fehlende kritische SPIs als
    Fehler ab. `DEVELOPMENT` aktiviert sichere In-Memory-Defaults und
    liefert die vollstaendige Diagnose. `PRODUCTION` ist die geforderte
    Default-Betriebsart fuer den Starter.
@@ -180,11 +180,11 @@ auch wirklich referenzieren duerfen.
 
 | Modul | Aufgabe | Runtime-Dep | Rolle |
 |---|---|:---:|---|
-| `security-dx` | gemeinsame Fluent-API-Basis, `SecurityRuntime`, Modi, `SecurityDiagnostics`, SPI-Discovery, Duplicate/Missing-Service-Erkennung, `SecurityProcessorReport` | `security-core` | Pflichtmodul der DX-Schicht |
-| `security-dx-vaadin` | `VaadinSecurity.bootstrap()`-Facade, `VaadinSecurityBootstrap`, Vaadin-Defaults, Vaadin-`DiagnosticContributor` | `security-core`, `security-vaadin`, `security-dx` | Vaadin-Bootstrap-Modul |
-| `security-dx-rest` | `RestSecurity.bootstrap()`-Facade, `RestSecurityBootstrap`, REST-Defaults, REST-`DiagnosticContributor` | `security-core`, `security-rest`, `security-dx` | REST-Bootstrap-Modul |
-| `security-dx-standalone` | `StandaloneSecurity.bootstrap()`-Facade, `StandaloneSecurityBootstrap`, `ThreadLocalSubjectStore`-Integration, Standalone-`DiagnosticContributor` | `security-core`, `security-standalone`, `security-dx` | Standalone-Bootstrap-Modul |
-| `security-autoservice-annotations` | nur `@SecurityAutoService` (SOURCE-Retention) | – | optional, aber empfohlen |
+| `security-dx` | gemeinsame Fluent-API-Basis, `JSentinelRuntime`, Modi, `JSentinelDiagnostics`, SPI-Discovery, Duplicate/Missing-Service-Erkennung, `JSentinelProcessorReport` | `security-core` | Pflichtmodul der DX-Schicht |
+| `security-dx-vaadin` | `VaadinSecurity.bootstrap()`-Facade, `VaadinJSentinelBootstrap`, Vaadin-Defaults, Vaadin-`DiagnosticContributor` | `security-core`, `security-vaadin`, `security-dx` | Vaadin-Bootstrap-Modul |
+| `security-dx-rest` | `RestSecurity.bootstrap()`-Facade, `RestJSentinelBootstrap`, REST-Defaults, REST-`DiagnosticContributor` | `security-core`, `security-rest`, `security-dx` | REST-Bootstrap-Modul |
+| `security-dx-standalone` | `StandaloneSecurity.bootstrap()`-Facade, `StandaloneJSentinelBootstrap`, `ThreadLocalSubjectStore`-Integration, Standalone-`DiagnosticContributor` | `security-core`, `security-standalone`, `security-dx` | Standalone-Bootstrap-Modul |
+| `security-autoservice-annotations` | nur `@JSentinelAutoService` (SOURCE-Retention) | – | optional, aber empfohlen |
 | `security-autoservice-processor` | Annotation Processor, erzeugt `META-INF/services/*` | nur Annotation-Processing-API des JDK | nur als `annotationProcessorPath` |
 | `security-vaadin-starter` | `SecuredUi`, `@SecureRoute`, Vaadin-Default-Profile, automatische Listener-Registrierung | `security-core`, `security-vaadin`, `security-dx`, `security-dx-vaadin`, `security-autoservice-annotations` | optional, aber stark empfohlen fuer Vaadin-Projekte |
 | `security-processor` *(bestehend)* | proxybuilder-basierte Generierung `<Type>Secured`, Compile-Time-Diagnose | `proxybuilder`, `proxybuilder-annotations` | bleibt unveraendert in Funktion, wird im DX-Konzept als Compile-Time-Pfad sichtbar gemacht |
@@ -262,7 +262,7 @@ Verboten:
 ### 6.1 Problem
 
 Aktuell ist die Verdrahtung ueber ServiceLoader und
-`SecurityServiceResolver` funktional, aber fragmentiert. Neue Anwender
+`JSentinelServiceResolver` funktional, aber fragmentiert. Neue Anwender
 muessen wissen, welche SPIs existieren, welche Defaults sinnvoll sind,
 welche Services zusammenpassen und welche Reihenfolge fuer Tests und
 Demos relevant ist.
@@ -270,7 +270,7 @@ Demos relevant ist.
 ### 6.2 Einstiegspunkt
 
 Jeder Adapter-DX-Modul bringt **eine eigene Adapter-Facade** mit. Es gibt
-**keine zentrale `SecurityBootstrap`-Klasse** in `security-dx`. Die
+**keine zentrale `JSentinelBootstrap`-Klasse** in `security-dx`. Die
 Facade-Klassen heissen nach dem Schema `<Adapter>Security` und stellen
 eine einzige statische Factory `bootstrap()` bereit:
 
@@ -279,7 +279,7 @@ eine einzige statische Factory `bootstrap()` bereit:
 package com.svenruppert.vaadin.security.dx.vaadin.bootstrap;
 
 public final class VaadinSecurity {
-  public static VaadinSecurityBootstrap bootstrap();
+  public static VaadinJSentinelBootstrap bootstrap();
 }
 ```
 
@@ -288,7 +288,7 @@ public final class VaadinSecurity {
 package com.svenruppert.vaadin.security.dx.rest.bootstrap;
 
 public final class RestSecurity {
-  public static RestSecurityBootstrap bootstrap();
+  public static RestJSentinelBootstrap bootstrap();
 }
 ```
 
@@ -297,26 +297,26 @@ public final class RestSecurity {
 package com.svenruppert.vaadin.security.dx.standalone.bootstrap;
 
 public final class StandaloneSecurity {
-  public static StandaloneSecurityBootstrap bootstrap();
+  public static StandaloneJSentinelBootstrap bootstrap();
 }
 ```
 
-Gemeinsame Typen (`CommonSecurityBootstrap`, `SecurityRuntime`,
-`SecurityBootstrapMode`, Warnungen, `SecurityDiagnostics` und der
+Gemeinsame Typen (`CommonJSentinelBootstrap`, `JSentinelRuntime`,
+`JSentinelBootstrapMode`, Warnungen, `JSentinelDiagnostics` und der
 `DiagnosticContributor`-SPI) leben weiterhin in `security-dx`.
 
 **Warum drei Facade-Klassen mit unterschiedlichen Namen statt einer
-zentralen `SecurityBootstrap`?**
+zentralen `JSentinelBootstrap`?**
 
 - **Backend-for-Frontend ohne Schmerzen.** Eine Anwendung mit Vaadin-UI
   und REST-API darf `VaadinSecurity.bootstrap()` **und**
   `RestSecurity.bootstrap()` im selben Source-File importieren. Eine
-  zentrale `SecurityBootstrap`-Klasse mit `forVaadin()` / `forRest()` /
+  zentrale `JSentinelBootstrap`-Klasse mit `forVaadin()` / `forRest()` /
   `forStandalone()` muesste in `security-dx` liegen und dort Vaadin-,
   REST- und Standalone-Typen importieren – das bricht die in §5.2
   fixierte Layering-Regel.
 - **Kein Split-Package-Konflikt.** Wenn zwei Adapter-DX-Module dieselbe
-  Klasse `SecurityBootstrap` in unterschiedlichen Packages mitliefern,
+  Klasse `JSentinelBootstrap` in unterschiedlichen Packages mitliefern,
   wird die IDE-Auto-Import-Erfahrung unzuverlaessig. Distinkte
   Klassennamen sind dagegen eindeutig.
 - **Erweiterbar.** Spaetere Module (`security-dx-eventbus` fuer V00.75,
@@ -327,7 +327,7 @@ zentralen `SecurityBootstrap`?**
 ### 6.3 Gemeinsame Builder-Basis
 
 ```java
-public interface CommonSecurityBootstrap<B> {
+public interface CommonJSentinelBootstrap<B> {
   B authentication(AuthenticationService<?, ?> service);
   B authorization(AuthorizationService<?> service);
   B audit(Consumer<AuditBootstrap> config);
@@ -335,35 +335,35 @@ public interface CommonSecurityBootstrap<B> {
   B policies(Consumer<PolicyBootstrap> config);
   B roles(Consumer<RoleBootstrap> config);
   B credentials(Consumer<CredentialBootstrap> config);
-  B mode(SecurityBootstrapMode mode);
-  SecurityRuntime install();
+  B mode(JSentinelBootstrapMode mode);
+  JSentinelRuntime install();
 }
 ```
 
 ### 6.4 Vaadin-spezifische Erweiterungen
 
 ```java
-public interface VaadinSecurityBootstrap
-    extends CommonSecurityBootstrap<VaadinSecurityBootstrap> {
+public interface VaadinJSentinelBootstrap
+    extends CommonJSentinelBootstrap<VaadinJSentinelBootstrap> {
 
-  VaadinSecurityBootstrap subjectType(Class<?> subjectType);
-  VaadinSecurityBootstrap loginRoute(String route);
-  VaadinSecurityBootstrap stepUpRoute(String route);
-  VaadinSecurityBootstrap securedComponents();
-  VaadinSecurityBootstrap sessionManagementView();
-  VaadinSecurityBootstrap starter();
-  VaadinSecurityBootstrap starter(Consumer<VaadinSecurityStarter> config);
-  VaadinSecurityBootstrap use(VaadinSecurityStarter profile);
+  VaadinJSentinelBootstrap subjectType(Class<?> subjectType);
+  VaadinJSentinelBootstrap loginRoute(String route);
+  VaadinJSentinelBootstrap stepUpRoute(String route);
+  VaadinJSentinelBootstrap securedComponents();
+  VaadinJSentinelBootstrap sessionManagementView();
+  VaadinJSentinelBootstrap starter();
+  VaadinJSentinelBootstrap starter(Consumer<VaadinJSentinelStarter> config);
+  VaadinJSentinelBootstrap use(VaadinJSentinelStarter profile);
 }
 ```
 
 ### 6.5 Ergebnisobjekt
 
 ```java
-public record SecurityRuntime(
-    List<RegisteredSecurityService> services,
-    List<SecurityBootstrapWarning> warnings,
-    SecurityBootstrapMode mode
+public record JSentinelRuntime(
+    List<RegisteredJSentinelService> services,
+    List<JSentinelBootstrapWarning> warnings,
+    JSentinelBootstrapMode mode
 ) {}
 ```
 
@@ -374,7 +374,7 @@ Ergebnis beim Start loggen oder einer Diagnose-Ansicht zugaenglich machen.
 ### 6.6 Modi
 
 ```java
-public enum SecurityBootstrapMode {
+public enum JSentinelBootstrapMode {
   COMMUNITY_DEFAULTS,
   DEVELOPMENT,
   PRODUCTION,
@@ -389,13 +389,13 @@ public enum SecurityBootstrapMode {
 - `PRODUCTION`: alle kritischen SPIs muessen gesetzt sein; Warnungen
   werden geloggt.
 - `STRICT`: jede fehlende kritische SPI fuehrt zu
-  `SecurityBootstrapException`.
+  `JSentinelBootstrapException`.
 
 ### 6.7 Beispiel
 
 ```java
 VaadinSecurity.bootstrap()
-    .mode(SecurityBootstrapMode.PRODUCTION)
+    .mode(JSentinelBootstrapMode.PRODUCTION)
     .subjectType(User.class)
     .authentication(authn)
     .authorization(authz)
@@ -410,13 +410,13 @@ VaadinSecurity.bootstrap()
     .starter(starter -> starter
         .securedComponents()
         .sessionManagementView()
-        .openApiSecurityMetadata())
+        .openApiJSentinelMetadata())
     .install();
 ```
 
 ---
 
-## 7. Baustein 2: `@SecurityAutoService`
+## 7. Baustein 2: `@JSentinelAutoService`
 
 ### 7.1 Problem
 
@@ -429,7 +429,7 @@ Implementierungen ohne Diagnose.
 ```java
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
-public @interface SecurityAutoService {
+public @interface JSentinelAutoService {
   Class<?>[] value();
 }
 ```
@@ -477,7 +477,7 @@ Lebt in `security-autoservice-processor`, wird **nur** als
 ### 7.5 Beispiel
 
 ```java
-@SecurityAutoService(AuthenticationService.class)
+@JSentinelAutoService(AuthenticationService.class)
 public final class DemoAuthenticationService
     implements AuthenticationService<Credentials, DemoUser> {
 }
@@ -492,8 +492,8 @@ META-INF/services/com.svenruppert.vaadin.security.authentication.AuthenticationS
 Mehrere SPIs gleichzeitig:
 
 ```java
-@SecurityAutoService({AuthenticationService.class, LoginListener.class})
-public final class MySecurityServices
+@JSentinelAutoService({AuthenticationService.class, LoginListener.class})
+public final class MyJSentinelServices
     implements AuthenticationService<Login, User>, LoginListener<User> {
 }
 ```
@@ -505,18 +505,18 @@ public final class MySecurityServices
 ### 8.1 Discovery-API
 
 ```java
-public final class SecurityDiagnostics {
-  public static SecurityServiceReport inspect();
+public final class JSentinelDiagnostics {
+  public static JSentinelServiceReport inspect();
 }
 ```
 
 ```java
-public record SecurityServiceReport(
+public record JSentinelServiceReport(
     List<DiscoveredService>       discovered,
     List<MissingRecommendedService> missing,
     List<DuplicateService>        duplicates,
     List<ServiceWarning>          warnings,
-    SecurityProcessorReport       processorReport
+    JSentinelProcessorReport       processorReport
 ) {}
 ```
 
@@ -525,7 +525,7 @@ public record SecurityServiceReport(
 - keine `AuthenticationService`-Implementierung gefunden,
 - mehrere `AuthenticationService`-Implementierungen ohne Auswahl,
 - `AuthorizationService` fehlt,
-- `SubjectIdResolver` fehlt, obwohl `SecurityVersionStore` aktiv ist,
+- `SubjectIdResolver` fehlt, obwohl `JSentinelVersionStore` aktiv ist,
 - `SessionStore` fehlt, obwohl `SessionManagementView` aktiviert ist,
 - Step-Up-Route gesetzt, aber Route nicht vorhanden,
 - `@SecureRoute` referenziert unbekannte Policy,
@@ -537,8 +537,8 @@ public record SecurityServiceReport(
 ```text
 Security bootstrap diagnostics:
  - mode = DEVELOPMENT
- - AuthenticationService: DemoAuthenticationService (via @SecurityAutoService)
- - AuthorizationService:  DemoAuthorizationService  (via @SecurityAutoService)
+ - AuthenticationService: DemoAuthenticationService (via @JSentinelAutoService)
+ - AuthorizationService:  DemoAuthorizationService  (via @JSentinelAutoService)
  - SubjectStore:          VaadinSessionSubjectStore (default)
  - Policy registry:       DemoPolicies (12 policies)
  - Credentials:           PasswordHashingService(modern) + InMemoryCredentialStore
@@ -553,11 +553,11 @@ Security processor diagnostics:
 
 ```text
 Security bootstrap failed (mode=STRICT):
- - SecurityVersionStore configured, but no SubjectIdResolver was found.
+ - JSentinelVersionStore configured, but no SubjectIdResolver was found.
  - SessionManagementView enabled, but no SessionStore was configured.
 
 Suggested fix:
- - Register SubjectIdResolver via @SecurityAutoService
+ - Register SubjectIdResolver via @JSentinelAutoService
    or VaadinSecurity.bootstrap().subjectIdResolver(...)
  - Add .sessions(s -> s.storeBacked(sessionStore))
 ```
@@ -565,7 +565,7 @@ Suggested fix:
 ### 8.5 Adapter-spezifische Beitraege: `DiagnosticContributor`-SPI
 
 `security-dx` darf keine Adapter-Typen kennen (siehe §5.2). Damit
-`SecurityDiagnostics.inspect()` trotzdem Adapter-spezifische SPIs wie
+`JSentinelDiagnostics.inspect()` trotzdem Adapter-spezifische SPIs wie
 `RestSubjectResolver`, Vaadin-Route-Konsistenz oder den Standalone-
 `SubjectStore` analysieren kann, fuehrt `security-dx` einen offenen
 SPI ein:
@@ -603,7 +603,7 @@ Regeln:
 
 - **Auffindung ueber `ServiceLoader`.** Jedes Adapter-DX-Modul liefert
   genau einen `DiagnosticContributor` mit, registriert via
-  `@SecurityAutoService(DiagnosticContributor.class)`.
+  `@JSentinelAutoService(DiagnosticContributor.class)`.
 - **Keine I/O, keine Netzwerk-Zugriffe, kein Klassenpfad-Scan** in
   `contribute(...)`. Erlaubt sind Lookups ueber `ServiceLoader` und
   ueber den bereits aufgebauten `DiagnosticReportBuilder`.
@@ -611,7 +611,7 @@ Regeln:
   geloggt und als `ServiceWarning` mit Code
   `diagnostics/contributor-failure` und der `id()` des Contributors
   auf den Report gehaengt. Andere Contributors laufen weiter.
-- **Determinismus.** `SecurityDiagnostics.inspect()` fuehrt
+- **Determinismus.** `JSentinelDiagnostics.inspect()` fuehrt
   Contributors in sortierter Reihenfolge ihrer `id()` aus, damit
   Reports zwischen Builds vergleichbar bleiben.
 - **Keine Adapter-Querreferenzen.** Ein `DiagnosticContributor` darf
@@ -623,7 +623,7 @@ Beispiele:
 
 ```java
 // in security-dx-rest
-@SecurityAutoService(DiagnosticContributor.class)
+@JSentinelAutoService(DiagnosticContributor.class)
 public final class RestDiagnosticContributor implements DiagnosticContributor {
   @Override public String id() { return "rest"; }
   @Override public void contribute(DiagnosticReportBuilder b) {
@@ -633,7 +633,7 @@ public final class RestDiagnosticContributor implements DiagnosticContributor {
       b.addMissing(new MissingRecommendedService(
           RestSubjectResolver.class,
           "No RestSubjectResolver registered.",
-          "Register a RestSubjectResolver via @SecurityAutoService(RestSubjectResolver.class)."));
+          "Register a RestSubjectResolver via @JSentinelAutoService(RestSubjectResolver.class)."));
     }
   }
 }
@@ -641,7 +641,7 @@ public final class RestDiagnosticContributor implements DiagnosticContributor {
 
 ```java
 // in security-dx-vaadin
-@SecurityAutoService(DiagnosticContributor.class)
+@JSentinelAutoService(DiagnosticContributor.class)
 public final class VaadinDiagnosticContributor implements DiagnosticContributor {
   @Override public String id() { return "vaadin"; }
   @Override public void contribute(DiagnosticReportBuilder b) {
@@ -653,7 +653,7 @@ public final class VaadinDiagnosticContributor implements DiagnosticContributor 
 
 So bleibt `security-dx` strikt auf `security-core` begrenzt und die
 Adapter-spezifischen Erkenntnisse landen trotzdem in **einem**
-gemeinsamen `SecurityServiceReport`.
+gemeinsamen `JSentinelServiceReport`.
 
 ---
 
@@ -711,16 +711,16 @@ Die Builder wickeln die vorhandenen `SecuredButton`,
 ### 9.4 Profile
 
 ```java
-VaadinSecurityStarter.developmentDefaults();
-VaadinSecurityStarter.productionDefaults();
-VaadinSecurityStarter.strictDefaults();
+VaadinJSentinelStarter.developmentDefaults();
+VaadinJSentinelStarter.productionDefaults();
+VaadinJSentinelStarter.strictDefaults();
 ```
 
 Verwendung in der Fluent API:
 
 ```java
 VaadinSecurity.bootstrap()
-    .use(VaadinSecurityStarter.productionDefaults())
+    .use(VaadinJSentinelStarter.productionDefaults())
     .authentication(authn)
     .authorization(authz)
     .install();
@@ -735,19 +735,19 @@ VaadinSecurity.bootstrap()
 `security-processor` existiert bereits und generiert ueber
 `proxybuilder` `<Type>Secured`-Wrapper fuer `@Secured`-Klassen. Im
 Wrapper werden Methoden mit Security-Annotationen vor dem `super`-Aufruf
-ueber `SecurityEnforcer` abgesichert.
+ueber `JSentinelEnforcer` abgesichert.
 
 ### 10.2 Was V00.72 hinzufuegt
 
 `V00.72.00` aendert die Funktionalitaet von `security-processor` nicht.
 Aenderungen liegen nur in **Sichtbarkeit, Dokumentation und Diagnose**:
 
-- `SecurityDiagnostics` liest die proxybuilder-Metadaten
+- `JSentinelDiagnostics` liest die proxybuilder-Metadaten
   (`@GeneratedByProxyBuilder`, `@DelegatesTo`) und liefert
-  `GeneratedSecurityWrapper`-Eintraege:
+  `GeneratedJSentinelWrapper`-Eintraege:
 
   ```java
-  public record GeneratedSecurityWrapper(
+  public record GeneratedJSentinelWrapper(
       Class<?> sourceType,
       Class<?> generatedType,
       String   processor,
@@ -756,7 +756,7 @@ Aenderungen liegen nur in **Sichtbarkeit, Dokumentation und Diagnose**:
   ) {}
   ```
 
-- `SecurityProcessorReport` haengt am `SecurityServiceReport` und
+- `JSentinelProcessorReport` haengt am `JSentinelServiceReport` und
   dokumentiert alle erkannten Wrapper.
 - Diagnose meldet `@Secured`-Klassen ohne sichtbaren `<Type>Secured`-
   Wrapper als Warnung, mit konkretem Fix-Vorschlag (Maven-Snippet fuer
@@ -770,7 +770,7 @@ Aenderungen liegen nur in **Sichtbarkeit, Dokumentation und Diagnose**:
 | Interface vorhanden | `SecuredProxy.wrap(...)` oder explizite Service-Verdrahtung |
 | Konkrete Klasse ohne Interface | `@Secured` + generierter `<Type>Secured`-Wrapper |
 | Vaadin-Komponente / Button / Link | `SecuredUi.*` Builder oder bestehende `Secured*`-Komponenten |
-| ServiceLoader-Konfiguration | `@SecurityAutoService` oder Fluent Bootstrap |
+| ServiceLoader-Konfiguration | `@JSentinelAutoService` oder Fluent Bootstrap |
 | Produktives Setup | Fluent Bootstrap + Diagnostics + ggf. generated wrappers |
 
 ### 10.4 Grenze
@@ -778,19 +778,19 @@ Aenderungen liegen nur in **Sichtbarkeit, Dokumentation und Diagnose**:
 `proxybuilder` wird nicht fuer Bootstrap-Builder oder SPI-Registrierung
 verwendet. Diese Aufgaben loesen die Adapter-Facades
 (`VaadinSecurity` / `RestSecurity` / `StandaloneSecurity`) und
-`@SecurityAutoService` mit normalem Java-Code.
+`@JSentinelAutoService` mit normalem Java-Code.
 
 ---
 
 ## 11. Validierung und Fehlermeldungen
 
 Die DX-Schicht muss diese Faelle aktiv erkennen und melden – beim
-`install()`, in `SecurityDiagnostics.inspect()` oder als Compiler-Diagnostic:
+`install()`, in `JSentinelDiagnostics.inspect()` oder als Compiler-Diagnostic:
 
 1. fehlende kritische SPI (Authentication, Authorization),
 2. doppelte SPI ohne explizite Auswahl,
 3. abhaengige Konfiguration ohne Voraussetzung (z. B.
-   `SecurityVersionStore` ohne `SubjectIdResolver`),
+   `JSentinelVersionStore` ohne `SubjectIdResolver`),
 4. aktivierter Starter-Baustein ohne benoetigten Store
    (`SessionManagementView` ohne `SessionStore`),
 5. Step-Up-Route konfiguriert, aber Route nicht registriert,
@@ -799,9 +799,9 @@ Die DX-Schicht muss diese Faelle aktiv erkennen und melden – beim
 8. `final` / `private` / `static` Methode mit Security-Annotation in
    `@Secured`-Klasse (Compile-Error in `security-processor`).
 
-Im Modus `STRICT` werden 1–6 zu `SecurityBootstrapException`. In
+Im Modus `STRICT` werden 1–6 zu `JSentinelBootstrapException`. In
 `DEVELOPMENT` und `PRODUCTION` werden 1–6 als Warnung im
-`SecurityRuntime`-Ergebnis gelistet.
+`JSentinelRuntime`-Ergebnis gelistet.
 
 ---
 
@@ -817,7 +817,7 @@ Im Modus `STRICT` werden 1–6 zu `SecurityBootstrapException`. In
   `StandaloneSecurity.bootstrap()` mit
   Authentication, Authorization, Audit und Session Defaults in den
   jeweiligen Adapter-DX-Modulen bereitstellen.
-- `SecurityDiagnostics.inspect()` mit ServiceLoader-Status.
+- `JSentinelDiagnostics.inspect()` mit ServiceLoader-Status.
 - Bestehende `META-INF/services`-Dateien bleiben unveraendert.
 
 ### Phase 2 – AutoService
@@ -838,7 +838,7 @@ Im Modus `STRICT` werden 1–6 zu `SecurityBootstrapException`. In
 
 ### Phase 4 – Diagnose-Integration der Compile-Time-Wrapper
 
-- `SecurityProcessorReport` in `SecurityDiagnostics` einhaengen.
+- `JSentinelProcessorReport` in `JSentinelDiagnostics` einhaengen.
 - `@Secured`-Klassen ohne Wrapper als Warnung melden.
 
 ### Phase 5 – Demos umstellen
@@ -850,14 +850,14 @@ Im Modus `STRICT` werden 1–6 zu `SecurityBootstrapException`. In
 
 Ziel: alle Demos starten **ohne** manuell gepflegte
 `META-INF/services`-Dateien fuer die SPIs, die in V00.72 durch
-`@SecurityAutoService` abgedeckt werden. Bestehende Dateien bleiben
+`@JSentinelAutoService` abgedeckt werden. Bestehende Dateien bleiben
 kompatibel; nicht migrierte oder bewusst manuell konfigurierte SPIs
 werden dokumentiert.
 
 ### Phase 6 – Dokumentation
 
 - "5-Minute Setup" fuer Vaadin, REST, Standalone.
-- "Before / After" – manuelle SPI-Datei vs. `@SecurityAutoService`.
+- "Before / After" – manuelle SPI-Datei vs. `@JSentinelAutoService`.
 - "Runtime Proxy vs. generated `<Type>Secured` Wrapper".
 - Eintrag im `RELEASE-NOTES-00.72.00.md`.
 
@@ -867,25 +867,25 @@ werden dokumentiert.
 
 - Eine neue Vaadin-Demo laesst sich ohne manuelle `META-INF/services`-
   Dateien fuer die in V00.72 abgedeckten SPIs starten.
-- `@SecurityAutoService` erzeugt korrekte ServiceLoader-Dateien fuer
+- `@JSentinelAutoService` erzeugt korrekte ServiceLoader-Dateien fuer
   zentrale SPIs (Authentication, Authorization, LoginListener,
   SubjectIdResolver, evaluator-spezifische Custom-Annotationen).
 - Bestehende manuelle ServiceLoader-Registrierung bleibt kompatibel.
 - Fluent Bootstrap kann Authentication, Authorization, Audit, Sessions,
   Policies, Roles und Credentials konfigurieren und liefert ein
-  vollstaendiges `SecurityRuntime`-Ergebnisobjekt.
-- `SecurityBootstrapMode.STRICT` lehnt fehlende kritische SPIs als
-  `SecurityBootstrapException` ab.
-- `SecurityDiagnostics.inspect()` meldet fehlende, doppelte und
+  vollstaendiges `JSentinelRuntime`-Ergebnisobjekt.
+- `JSentinelBootstrapMode.STRICT` lehnt fehlende kritische SPIs als
+  `JSentinelBootstrapException` ab.
+- `JSentinelDiagnostics.inspect()` meldet fehlende, doppelte und
   proxybuilder-bezogene Probleme.
 - `security-vaadin-starter` aktiviert die vorhandenen Vaadin Listener
   und secured UI-Komponenten mit sinnvollen Defaults.
 - `security-processor` bleibt unveraendert der empfohlene Compile-Time-
   Pfad fuer konkrete `@Secured`-Klassen ohne Interface.
-- `SecurityDiagnostics` erkennt vorhandene proxybuilder-generierte
+- `JSentinelDiagnostics` erkennt vorhandene proxybuilder-generierte
   Wrapper und meldet fehlende Wrapper als Warnung.
 - Die Dokumentation erklaert die Entscheidung zwischen `SecuredProxy`,
-  `@Secured`/`<Type>Secured`, `SecuredUi`, `@SecurityAutoService` und
+  `@Secured`/`<Type>Secured`, `SecuredUi`, `@JSentinelAutoService` und
   Fluent Bootstrap.
 - Alle bestehenden Tests fuer Core, Vaadin, REST, Standalone und
   Processor bleiben gruen.
@@ -893,7 +893,7 @@ werden dokumentiert.
   neue DX-Module starten mit eigenem PIT-Profil und einer ersten
   Baseline in `RELEASE-NOTES-00.72.00.md`.
 - Die Demos zeigen beide Wege: explizite Bootstrap API und
-  `@SecurityAutoService`.
+  `@JSentinelAutoService`.
 
 ---
 
@@ -902,18 +902,18 @@ werden dokumentiert.
 | Risiko | Gegenmassnahme |
 |---|---|
 | Zu viel Magie | Diagnose-Report ist Teil jedes `install()`-Aufrufs; jeder Default wird explizit gelistet |
-| Versteckte Defaults | `SecurityRuntime.services()` listet alle aktiven Services |
+| Versteckte Defaults | `JSentinelRuntime.services()` listet alle aktiven Services |
 | AutoService-Processor faellt in den Runtime-Classpath | Processor nur als `annotationProcessorPath`; Annotations-Modul mit `RetentionPolicy.SOURCE` |
 | Konflikt mit bestehendem ServiceLoader | Manuelle Registrierung bleibt voll funktionsfaehig |
 | Vaadin-Starter wird monolithisch | Starter ist reiner Convenience-Layer ueber bestehenden Komponenten, keine eigene Listener-Logik |
 | `proxybuilder` wird fuer falsche Aufgaben verwendet | Im Konzept klar auf Method Security begrenzt, Entscheidungstabelle in der Doku |
-| Anwender instanziieren `@Secured`-Originalklasse statt Wrapper | `SecurityDiagnostics` warnt und nennt Fix |
+| Anwender instanziieren `@Secured`-Originalklasse statt Wrapper | `JSentinelDiagnostics` warnt und nennt Fix |
 | Annotation-Processor-Konfiguration fehlt | Starter-Dokumentation und Diagnose-Warnung |
 | Adapter-Typen leaken in `security-dx` | Adapter-spezifische Builder liegen in `security-dx-vaadin`, `security-dx-rest` und `security-dx-standalone` |
 | Neue Module erhoehen Maven-/Publikationskomplexitaet | Skeleton-Prompts frieren Reactor-Reihenfolge, Maven Coordinates und Dependency-Management ein, bevor Logik implementiert wird |
 | Wiederverwendbare Test-Fixtures fehlen | Eigener `security-test`-Pruefschritt vor den Adapter-Buildern; keine ad-hoc Mocks in Builder-Tests |
 | Enterprise-Typen leaken in Community-API | Strikte Modulgrenzen, Review der oeffentlichen API in `security-dx` und Adapter-DX-Modulen |
-| Externe `auto-service`-Lib wird versehentlich eingezogen | Eigene `@SecurityAutoService` ohne Marker-Kompatibilitaet; Bauanweisung explizit |
+| Externe `auto-service`-Lib wird versehentlich eingezogen | Eigene `@JSentinelAutoService` ohne Marker-Kompatibilitaet; Bauanweisung explizit |
 
 ---
 
@@ -933,7 +933,7 @@ werden dokumentiert.
   Diagnose-Beitraege des Event-Bus laufen ueber denselben
   `DiagnosticContributor`-SPI (siehe §8.5).
 - **V00.80** (MFA, OIDC, Hardening) erweitert die Bootstrap-API ueber
-  optionale Profile (`HighSecurityDefaults`, `OidcDefaults`). Auch hier
+  optionale Profile (`HighJSentinelDefaults`, `OidcDefaults`). Auch hier
   ist die V00.72-Modulstruktur so geschnitten, dass diese Erweiterungen
   als neue Module gleicher Form (`security-mfa-starter`,
   `security-oidc-starter`) eingefuegt werden koennen. Eigene Facades
@@ -952,12 +952,12 @@ DX-Erweiterungen**.
    `security-dx-rest` und `security-dx-standalone` anlegen, inklusive
    Reactor-Wiring, Maven Coordinates und Package-Struktur.
 2. Reusable DX-Test-Fixtures in `security-test` pruefen oder ergaenzen.
-3. Gemeinsame Result-Objekte, Modi, `CommonSecurityBootstrap` und
+3. Gemeinsame Result-Objekte, Modi, `CommonJSentinelBootstrap` und
    Diagnosegrundlage in `security-dx` implementieren.
 4. In den Adapter-DX-Modulen die typsicheren Facades
    `VaadinSecurity.bootstrap()`, `RestSecurity.bootstrap()` und
    `StandaloneSecurity.bootstrap()` implementieren.
-5. `SecurityDiagnostics.inspect()` fuer ServiceLoader-Status bauen
+5. `JSentinelDiagnostics.inspect()` fuer ServiceLoader-Status bauen
    (Missing / Duplicate / Discovered).
 6. `security-autoservice-annotations` und
    `security-autoservice-processor` anlegen; Smoke-Test ueber eine
@@ -966,7 +966,7 @@ DX-Erweiterungen**.
    entfernen.
 8. `security-vaadin-starter` mit `SecuredUi.button()` und
    `SecuredUi.link()` starten; `@SecureRoute` minimal abbilden.
-9. proxybuilder-/`security-processor`-Diagnose in `SecurityDiagnostics`
+9. proxybuilder-/`security-processor`-Diagnose in `JSentinelDiagnostics`
    aufnehmen.
 10. Dokumentation: "Before / After" fuer manuelle SPI-Dateien.
 11. Dokumentation: "Runtime Proxy vs. generated `<Type>Secured` Wrapper".

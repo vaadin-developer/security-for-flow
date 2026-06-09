@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.session;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 
@@ -37,7 +37,7 @@ import static java.util.Objects.requireNonNull;
  * Thread-safety: a {@link ReentrantReadWriteLock} serialises writes
  * and lets queries proceed in parallel.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class InMemorySessionStore implements SessionStore {
 
   private final Map<SessionId, SessionRecord> sessions = new LinkedHashMap<>();

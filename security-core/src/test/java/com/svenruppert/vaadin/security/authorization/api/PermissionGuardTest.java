@@ -31,9 +31,9 @@ class PermissionGuardTest {
   private final PermissionName perm = new PermissionName("document:delete");
   private final RoleName role = new RoleName("ROLE_ADMIN");
 
-  private final SecuritySubject withPermAndRole = new SecuritySubject(
+  private final JSentinelSubject withPermAndRole = new JSentinelSubject(
       "u1", "User", Set.of(role), Set.of(perm));
-  private final SecuritySubject withoutPerm = new SecuritySubject(
+  private final JSentinelSubject withoutPerm = new JSentinelSubject(
       "u2", "Other", Set.of(), Set.of());
 
   @Test

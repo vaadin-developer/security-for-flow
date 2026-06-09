@@ -20,7 +20,7 @@ import com.svenruppert.vaadin.security.audit.SessionExpired;
 import com.svenruppert.vaadin.security.authorization.LoginListener;
 import com.svenruppert.vaadin.security.authorization.LoginListeners;
 import com.svenruppert.vaadin.security.authorization.LoginView;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.test.InMemorySubjectStore;
 import com.svenruppert.vaadin.security.test.RecordingAuditSink;
@@ -67,15 +67,15 @@ class SessionLifetimeListenerTest {
 
   @BeforeEach
   void resetState() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     LoginListeners.reset();
-    SecurityServiceResolver.setSecurityAuditService(audit);
+    JSentinelServiceResolver.setJSentinelAuditService(audit);
     CurrentInstance.clearAll();
   }
 
   @AfterEach
   void cleanUp() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     LoginListeners.reset();
     CurrentInstance.clearAll();
   }
@@ -99,7 +99,7 @@ class SessionLifetimeListenerTest {
     InMemoryVaadinSession session = bindSession(T0);
     SubjectStores.setSubjectStore(new InMemorySubjectStore());
     SubjectStores.subjectStore().setCurrentSubject("alice", String.class);
-    SecurityServiceResolver.setSessionPolicy(new AlwaysActive<String>());
+    JSentinelServiceResolver.setSessionPolicy(new AlwaysActive<String>());
 
     Instant later = T0.plusSeconds(30);
     SessionLifetimeListener listener = new SessionLifetimeListener(
@@ -120,7 +120,7 @@ class SessionLifetimeListenerTest {
     SubjectStores.setSubjectStore(new InMemorySubjectStore());
     SubjectStores.subjectStore().setCurrentSubject("alice", String.class);
     LoginListeners.setLoginListener(new TestLoginListener());
-    SecurityServiceResolver.setSessionPolicy(
+    JSentinelServiceResolver.setSessionPolicy(
         new AlwaysDecide<String>(SessionPolicyDecision.idleTimeout()));
 
     SessionLifetimeListener listener = new SessionLifetimeListener(
@@ -146,7 +146,7 @@ class SessionLifetimeListenerTest {
     SubjectStores.setSubjectStore(new InMemorySubjectStore());
     SubjectStores.subjectStore().setCurrentSubject("alice", String.class);
     LoginListeners.setLoginListener(new TestLoginListener());
-    SecurityServiceResolver.setSessionPolicy(
+    JSentinelServiceResolver.setSessionPolicy(
         new AlwaysDecide<String>(SessionPolicyDecision.absoluteLifetimeExceeded()));
 
     SessionLifetimeListener listener = new SessionLifetimeListener(

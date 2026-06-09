@@ -16,7 +16,7 @@ package com.svenruppert.vaadin.security.dx.diagnostics;
  * <p>
  * Adapter-DX modules ({@code security-dx-vaadin} / {@code -rest} /
  * {@code -standalone}) ship one implementation each, registered via
- * {@code @SecurityAutoService(DiagnosticContributor.class)} (or a
+ * {@code @JSentinelAutoService(DiagnosticContributor.class)} (or a
  * manual {@code META-INF/services/...} entry). The diagnostics engine
  * discovers them through {@code ServiceLoader} and invokes them in
  * sorted {@link #id()} order so reports are reproducible.

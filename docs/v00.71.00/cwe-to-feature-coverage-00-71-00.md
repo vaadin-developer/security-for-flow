@@ -930,7 +930,7 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 
 - Processing via `SecretValue`, `char[]`, and `byte[]` instead of `String` (`PWH-E1`, Version `00.71.00`)  
   _Epic: Input Hygiene and Secure Handling; Module: `security-core`_
-- Audit via `SecurityAuditService` (`PWH-G3`, Version `00.71.00`)  
+- Audit via `JSentinelAuditService` (`PWH-G3`, Version `00.71.00`)  
   _Epic: Integration into the Existing Security Workflow; Module: `security-core`_
 - Measurement points for duration per `hash` and `verify` (`PWH-H1`, Version `00.71.00`)  
   _Epic: Observability, Operations, and KDF Resource Control; Module: `security-core`_
@@ -1078,7 +1078,7 @@ Note: ‘coverage’ here means **risk reduction/mitigation**. A CWE is usually 
 
 - Explicit result objects instead of Boolean return values (`PWH-A10`, Version `00.71.00`)  
   _Epic: Core Hashing Foundation; Module: `security-core`_
-- Audit via `SecurityAuditService` (`PWH-G3`, Version `00.71.00`)  
+- Audit via `JSentinelAuditService` (`PWH-G3`, Version `00.71.00`)  
   _Epic: Integration into the Existing Security Workflow; Module: `security-core`_
 - Internal error classification (`PWH-G5`, Version `00.71.00`)  
   _Epic: Integration into the Existing Security Workflow; Module: `security-core`_

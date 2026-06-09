@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.ratelimiting;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 import java.time.Instant;
 import java.util.Iterator;
@@ -41,7 +41,7 @@ import static java.util.Objects.requireNonNull;
  * {@link #purgeOlderThan(Instant)}; without periodic purges the
  * deques would grow unboundedly under sustained traffic.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class InMemoryRateLimitStore implements RateLimitStore {
 
   private final Map<RateLimitKey, ConcurrentLinkedDeque<Instant>> buckets =

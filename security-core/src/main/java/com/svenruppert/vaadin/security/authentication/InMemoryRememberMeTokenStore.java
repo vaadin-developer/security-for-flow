@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.authentication;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 
@@ -30,7 +30,7 @@ import static java.util.Objects.requireNonNull;
  * In-memory {@link RememberMeTokenStore} backed by a
  * {@link ConcurrentHashMap} keyed on the token hash.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class InMemoryRememberMeTokenStore implements RememberMeTokenStore {
 
   private final ConcurrentHashMap<String, RememberMeTokenRecord> tokens = new ConcurrentHashMap<>();

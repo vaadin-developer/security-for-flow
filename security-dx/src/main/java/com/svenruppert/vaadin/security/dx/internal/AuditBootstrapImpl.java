@@ -11,7 +11,7 @@
 package com.svenruppert.vaadin.security.dx.internal;
 
 import com.svenruppert.vaadin.security.audit.AuditEventStore;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.dx.bootstrap.AuditBootstrap;
 
 import java.util.Objects;
@@ -20,10 +20,10 @@ import java.util.Objects;
  * Real V00.73 implementation of {@link AuditBootstrap}. Records every
  * selection into the {@link AuditState} held by {@link BootstrapState};
  * {@code install()} consumes the state and wires a single
- * {@link SecurityAuditService} via {@code SecurityServiceResolver}.
+ * {@link JSentinelAuditService} via {@code JSentinelServiceResolver}.
  *
  * <p>Package-private; instances are created exclusively by
- * {@link AbstractSecurityBootstrap}.
+ * {@link AbstractJSentinelBootstrap}.
  *
  * @since 00.73.00
  */
@@ -36,7 +36,7 @@ final class AuditBootstrapImpl implements AuditBootstrap {
   }
 
   @Override
-  public AuditBootstrap securityAuditService(SecurityAuditService service) {
+  public AuditBootstrap securityAuditService(JSentinelAuditService service) {
     state.directService(Objects.requireNonNull(service, "service"));
     return this;
   }

@@ -16,8 +16,8 @@
  */
 package com.svenruppert.vaadin.security.policy.api;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 
@@ -56,7 +56,7 @@ import static java.util.Objects.requireNonNull;
  * @param accessContext adapter-neutral access context; must not be {@code null}
  * @param resourceRef   concrete domain resource the request targets; must not be {@code null}
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public record ResourceAccessContext(
     AccessContext accessContext,
     ResourceRef resourceRef
@@ -79,7 +79,7 @@ public record ResourceAccessContext(
    *
    * @return authenticated subject, if any
    */
-  public Optional<SecuritySubject> subject() {
+  public Optional<JSentinelSubject> subject() {
     return accessContext.subject();
   }
 

@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.session;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 /**
  * Strongly-typed identifier of an authenticated session.
@@ -29,7 +29,7 @@ import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi
  *
  * @param value non-blank session identifier
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public record SessionId(String value) {
 
   /**

@@ -10,10 +10,10 @@
  */
 package com.svenruppert.vaadin.security.starter.profile;
 
-import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapMode;
 
-/** Strict profile — mode STRICT; missing critical SPIs raise SecurityBootstrapException. */
-public final class StrictDefaults implements VaadinSecurityStarter {
+/** Strict profile — mode STRICT; missing critical SPIs raise JSentinelBootstrapException. */
+public final class StrictDefaults implements VaadinJSentinelStarter {
 
   static final StrictDefaults INSTANCE = new StrictDefaults();
 
@@ -21,7 +21,7 @@ public final class StrictDefaults implements VaadinSecurityStarter {
   }
 
   @Override
-  public SecurityBootstrapMode preferredMode() {
-    return SecurityBootstrapMode.STRICT;
+  public JSentinelBootstrapMode preferredMode() {
+    return JSentinelBootstrapMode.STRICT;
   }
 }

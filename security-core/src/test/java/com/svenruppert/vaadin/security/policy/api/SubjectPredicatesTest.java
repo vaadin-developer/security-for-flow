@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.policy.api;
 
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
@@ -40,7 +40,7 @@ class SubjectPredicatesTest {
   }
 
   private static PolicyContext ctxWith(Set<RoleName> roles, Set<PermissionName> perms) {
-    SecuritySubject subject = new SecuritySubject("u-1", "u-1", roles, perms);
+    JSentinelSubject subject = new JSentinelSubject("u-1", "u-1", roles, perms);
     return new PolicyContext(
         new AccessContext(Optional.of(subject), "rest-endpoint", "/x", "read", Map.of()),
         "test.policy");

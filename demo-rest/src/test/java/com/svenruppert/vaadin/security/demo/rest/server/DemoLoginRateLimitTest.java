@@ -16,8 +16,8 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.server;
 
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.bruteforce.NoopLoginAttemptPolicy;
 import com.svenruppert.vaadin.security.credential.password.PasswordHashingServices;
@@ -29,7 +29,7 @@ import com.svenruppert.vaadin.security.ratelimiting.InMemoryRateLimitStore;
 import com.svenruppert.vaadin.security.ratelimiting.RateLimitDecision;
 import com.svenruppert.vaadin.security.ratelimiting.RateLimitKey;
 import com.svenruppert.vaadin.security.ratelimiting.RateLimitPolicy;
-import com.svenruppert.vaadin.security.session.InMemorySecurityVersionStore;
+import com.svenruppert.vaadin.security.session.InMemoryJSentinelVersionStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -61,8 +61,8 @@ class DemoLoginRateLimitTest {
 
   @BeforeEach
   void setUp() {
-    SecurityServiceResolver.resetAll();
-    SecurityAuditService audit = SecurityServiceResolver.securityAuditService();
+    JSentinelServiceResolver.resetAll();
+    JSentinelAuditService audit = JSentinelServiceResolver.securityAuditService();
     DemoTokenStore tokens = new DemoTokenStore();
     DemoUserStore users = new DemoUserStore(
         PasswordHashingServices.defaults(), false);
@@ -75,7 +75,7 @@ class DemoLoginRateLimitTest {
     handlers = new DemoHandlers(
         users, tokens, documents, registry, resolver,
         NoopLoginAttemptPolicy.INSTANCE,
-        new InMemorySecurityVersionStore(),
+        new InMemoryJSentinelVersionStore(),
         null,
         policy);
   }

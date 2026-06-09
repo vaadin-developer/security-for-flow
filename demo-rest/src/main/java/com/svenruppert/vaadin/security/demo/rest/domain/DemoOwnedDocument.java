@@ -25,7 +25,7 @@ package com.svenruppert.vaadin.security.demo.rest.domain;
  * @param id      stable id
  * @param title   human-readable title
  * @param ownerId subjectId of the owner (matches
- *                {@code SecuritySubject.subjectId()})
+ *                {@code JSentinelSubject.subjectId()})
  */
 public record DemoOwnedDocument(long id, String title, String ownerId) {
 }

@@ -20,7 +20,7 @@ import java.time.Instant;
 import java.util.Set;
 
 /**
- * Filter passed to {@code SecurityAuditService.query(...)}. All fields are
+ * Filter passed to {@code JSentinelAuditService.query(...)}. All fields are
  * optional — a {@link #all()} query returns every retained event.
  * <p>
  * Filters compose with AND semantics: an event must match every non-empty

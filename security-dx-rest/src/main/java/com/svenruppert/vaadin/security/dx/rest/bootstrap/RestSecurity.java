@@ -21,7 +21,7 @@ public final class RestSecurity {
   private RestSecurity() {
   }
 
-  public static RestSecurityBootstrap bootstrap() {
-    return new RestSecurityBootstrapImpl();
+  public static RestJSentinelBootstrap bootstrap() {
+    return new RestJSentinelBootstrapImpl();
   }
 }

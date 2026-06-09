@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.test;
 
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 import com.svenruppert.vaadin.security.policy.api.ResourceRef;
 
@@ -64,7 +64,7 @@ public final class AccessContexts {
    * @param subject subject to bind
    * @return access context
    */
-  public static AccessContext withSubject(SecuritySubject subject) {
+  public static AccessContext withSubject(JSentinelSubject subject) {
     return new AccessContext(
         Optional.of(subject),
         DEFAULT_RESOURCE_TYPE, DEFAULT_RESOURCE_NAME, DEFAULT_OPERATION,
@@ -82,7 +82,7 @@ public final class AccessContexts {
    * @return access context
    */
   public static AccessContext withSubjectAndResource(
-      SecuritySubject subject, ResourceRef ref) {
+      JSentinelSubject subject, ResourceRef ref) {
     return new AccessContext(
         Optional.of(subject),
         DEFAULT_RESOURCE_TYPE, DEFAULT_RESOURCE_NAME, DEFAULT_OPERATION,

@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.policy.api;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 import static java.util.Objects.requireNonNull;
 
@@ -34,7 +34,7 @@ import static java.util.Objects.requireNonNull;
  * sealed hierarchy from day one so later step-up support is additive,
  * not a breaking change.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public sealed interface PolicyDecision
     permits PolicyDecision.Allowed,
             PolicyDecision.Denied,

@@ -18,7 +18,7 @@ package com.svenruppert.vaadin.security.authorization;
 
 import com.svenruppert.vaadin.security.authorization.navigation.NavigationAccessDecision;
 import com.svenruppert.vaadin.security.authorization.navigation.NavigationAccessDecisionService;
-import com.svenruppert.vaadin.security.authorization.navigation.NavigationSecurityContext;
+import com.svenruppert.vaadin.security.authorization.navigation.NavigationJSentinelContext;
 import com.vaadin.flow.component.Component;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -117,7 +117,7 @@ class LoginListenersCacheTest {
   @SuppressWarnings("unused")
   private static void unusedImportPin() {
     new NavigationAccessDecisionService();
-    new NavigationSecurityContext(Object.class, true, true, true);
+    new NavigationJSentinelContext(Object.class, true, true, true);
     NavigationAccessDecision.allowed();
   }
 }

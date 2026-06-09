@@ -16,12 +16,12 @@
 - ✅ **security-test** als eigenes 5. Reactor-Modul (Phase-8-Vorzug):
   `FakeAuthenticationService`, `FakeAuthorizationService`,
   `InMemorySubjectStore` (umgezogen aus security-vaadin/test),
-  `RecordingAuditSink`, `AccessContexts`, `SecuritySubjects`,
-  `SyntheticAnnotations`, `SecurityTestExtension` — jeweils mit
+  `RecordingAuditSink`, `AccessContexts`, `JSentinelSubjects`,
+  `SyntheticAnnotations`, `JSentinelTestExtension` — jeweils mit
   begleitenden Tests.
 - ✅ **Step-Up Authentication**: `AuthorizationDecision.StepUpRequired`,
   `StepUpChallenged`-Audit-Event, REST 401 + `WWW-Authenticate: StepUp`,
-  Vaadin-Reroute auf `SecurityServiceResolver.stepUpRouteName()`,
+  Vaadin-Reroute auf `JSentinelServiceResolver.stepUpRouteName()`,
   Standalone-`AccessDeniedException`. Demo-Views in
   `demo-vaadin-rest-client`.
 - ✅ **Resource Policies**: `ResourceRef`, `ResourcePredicates`,
@@ -30,12 +30,12 @@
 - ✅ **Role-Hierarchy**: `RoleHierarchy`-SPI, `NoopRoleHierarchy`,
   `StaticRoleHierarchy`, `RoleMatcher.containsAnyImplied(...)`,
   `RequiresRoleEvaluator` honoriert die Hierarchie ueber
-  `SecurityServiceResolver.roleHierarchy()`.
+  `JSentinelServiceResolver.roleHierarchy()`.
 - ✅ **Any/All-Permission-Annotationen**: `@RequiresAnyPermission`,
   `@RequiresAllPermissions` + Evaluatoren + Tests.
 - ✅ **Phase 5 (Method Security via Annotation Processor)** vollstaendig:
   - 5a Policy-API (Working Tree)
-  - 5b `SecurityEnforcer` als zentrale Enforcement-Komponente
+  - 5b `JSentinelEnforcer` als zentrale Enforcement-Komponente
     (`requirePermission` / `requireAllPermissions` /
     `requireAnyPermission` / `requireRole` / `requireAnyRole` /
     `requirePolicy` + Generic `enforce(Method, Class)`)
@@ -48,13 +48,13 @@
     (`LibraryService` via `SecuredProxy.wrap`, `MemberDirectory` via
     processor-generierter `MemberDirectorySecured`). 8 neue Tests.
 - ✅ **`Secured` → `SecuredProxy`** umbenannt (via `git mv`), Logik in
-  `SecurityEnforcer` extrahiert.
+  `JSentinelEnforcer` extrahiert.
 
 ## Erledigt seit 00.51.00
 
-- ✅ `SecurityAuditService`-SPI: `SecurityAuditEvent`,
-  `SecurityAuditEventType`, `NoopSecurityAuditService`,
-  `LoggingSecurityAuditService`, Resolver-Accessors.
+- ✅ `JSentinelAuditService`-SPI: `JSentinelAuditEvent`,
+  `JSentinelAuditEventType`, `NoopJSentinelAuditService`,
+  `LoggingJSentinelAuditService`, Resolver-Accessors.
 - ✅ Audit-Hooks in `VaadinLogoutService` (`LOGOUT`),
   `RestAuthorizationFilter` (`ACCESS_GRANTED` / `ACCESS_DENIED`),
   `AuthorizationListener` (`ACCESS_GRANTED` / `ACCESS_DENIED`).
@@ -64,7 +64,7 @@
 - ✅ `PasswordHash`-Record + erweitertes `PasswordHasher`-SPI
   (`hashTo` / `verify(PasswordHash)` / `needsRehash` /
   `parse` / `serialize`), `Pbkdf2PasswordHasher`-Implementation.
-- ✅ `LoggingSecurityAuditService` über `META-INF/services` in allen
+- ✅ `LoggingJSentinelAuditService` über `META-INF/services` in allen
   drei Demos registriert.
 - ✅ **Konzept § 3 — `LoginAttemptPolicy`**:
   - SPI in `com.svenruppert.vaadin.security.bruteforce`.
@@ -190,7 +190,7 @@
   User → keine Änderung. Test-Seam `storedPasswordHash(name)`
   in beiden Stores.
 
-### `PasswordHasher` im `SecurityServiceResolver` registrieren ✅
+### `PasswordHasher` im `JSentinelServiceResolver` registrieren ✅
 
 - ✅ `passwordHashingService()` / `findPasswordHashingService()` /
   `setPasswordHashingService(...)` ergänzt. `passwordHashingService()`
@@ -200,7 +200,7 @@
   `resetAll()` mit aufgeräumt.
 - ✅ Demos nutzen den Resolver: `DemoRestServer` und
   `InMemoryDemoUserDirectory` rufen
-  `SecurityServiceResolver.passwordHashingService()` statt
+  `JSentinelServiceResolver.passwordHashingService()` statt
   direktem `new Pbkdf2PasswordHasher()`. Tests behalten
   bewusst den direkten Konstruktor für deterministische
   Unit-Tests.
@@ -223,7 +223,7 @@
   `VaadinLogoutGateway`, `DefaultVaadinLogoutGateway`) →
   `com.svenruppert.vaadin.security.logout.vaadin`.
 
-#### `SecurityServiceResolver`-Lücken
+#### `JSentinelServiceResolver`-Lücken
 
 - ✅ `passwordHashingService()` (Pbkdf2-Default).
 - ✅ `logoutService()` mit `NoopLogoutService.INSTANCE`-Fallback.
@@ -285,7 +285,7 @@
 #### `PermissionDemoCard` auf `ActionAuthorizationService` umstellen ✅
 
 - ✅ `demo-vaadin/.../views/components/PermissionDemoCard.java`
-  benutzt jetzt `SecurityServiceResolver.actionAuthorizationService()`
+  benutzt jetzt `JSentinelServiceResolver.actionAuthorizationService()`
   mit `ActionPermission`.
 - ✅ `DemoActionAuthorizationService` (no-arg, SPI-registriert) wrappt
   `StaticActionAuthorizationService<MyUser>`; SPI in
@@ -297,7 +297,7 @@
 #### Demos auf `passwordHashingService()`-Resolver ✅
 
 - ✅ `DemoRestServer` und `InMemoryDemoUserDirectory` nutzen jetzt
-  `SecurityServiceResolver.passwordHashingService()` statt
+  `JSentinelServiceResolver.passwordHashingService()` statt
   `new Pbkdf2PasswordHasher()` direkt. Tests behalten den direkten
   Konstruktor — sinnvoll für deterministische Unit-Tests.
 
@@ -317,13 +317,13 @@
   (CurrentSession löscht `SubjectStore`, AllSessionsOfSubject räumt
   Registry leer, Audit + Listener-Fan-out je Session).
 - ✅ `LogoutListener`-Fanout (CopyOnWriteArrayList, swallowt
-  Listener-Fehler) + `SecurityServiceResolver.logoutService()` /
+  Listener-Fehler) + `JSentinelServiceResolver.logoutService()` /
   `setLogoutService(...)` mit `NoopLogoutService.INSTANCE`-Fallback.
 - ✅ `DemoTokenStore` mit Per-User-Index, implementiert
   `SubjectSessionRegistry`; `issue`/`revoke` halten den Index aktuell.
 - ✅ `POST /api/logout` → resolved `SubjectId` aus dem Token, revoked
   den eigenen Token und delegiert für Audit/Fan-out an
-  `SecurityServiceResolver.logoutService()`. Service ist in
+  `JSentinelServiceResolver.logoutService()`. Service ist in
   `DemoRestServer.start(...)` mit Token-revokendem Listener
   registriert.
 - ✅ Vaadin `MainView` (demo-vaadin und demo-vaadin-rest-client)
@@ -332,7 +332,7 @@
 - ✅ Neue Tests: `SubjectIdTest`,
   `InMemorySubjectSessionRegistryTest`, neuformulierter
   `SubjectClearingLogoutServiceTest` (7 Cases), erweiterter
-  `SecurityServiceResolverTest` (4 Logout-Cases), neuer
+  `JSentinelServiceResolverTest` (4 Logout-Cases), neuer
   `VaadinLogoutServiceTest` (7 Cases) und
   `DemoTokenStoreLogoutTest` (3 Cases). Reactor grün (8 Module,
   alle Tests grün, demo-rest 35/35).
@@ -367,9 +367,9 @@ Reactor-grün vor dem nächsten Schritt.
 
 **4B — Service-Rewrite + Emit-Site-Migration + Type-Deletion ✅**
 
-- ✅ `SecurityAuditService` neu: `publish(AuditEvent)` +
-  `query(AuditQuery)`. `record(SecurityAuditEvent)` weg.
-- ✅ `NoopSecurityAuditService` auf neue API umgestellt
+- ✅ `JSentinelAuditService` neu: `publish(AuditEvent)` +
+  `query(AuditQuery)`. `record(JSentinelAuditEvent)` weg.
+- ✅ `NoopJSentinelAuditService` auf neue API umgestellt
   (`query` returns `List.of()`).
 - ✅ `CompositeAuditService` (`RingBuffer` + zusätzliche
   Sinks; query gegen Ring-Buffer).
@@ -386,14 +386,14 @@ Reactor-grün vor dem nächsten Schritt.
   `SessionExpired`; `RestAuthenticationFilter` +
   `RestAuthorizationFilter` → `AccessGranted` / `AccessDenied`
   / `SessionExpired`.
-- ✅ `SecurityAuditEvent`, `SecurityAuditEventType`,
-  `LoggingSecurityAuditService` ersatzlos entfernt; alle SPI-Files
+- ✅ `JSentinelAuditEvent`, `JSentinelAuditEventType`,
+  `LoggingJSentinelAuditService` ersatzlos entfernt; alle SPI-Files
   in den 3 Demos auf `DefaultCompositeAuditService` umgestellt.
 - ✅ Tests: 3 obsolete Test-Files entfernt
-  (`SecurityAuditEventTest`,
-  `LoggingSecurityAuditServiceTest`, alter
-  `NoopSecurityAuditServiceTest`); 5 Tests auf neue API
-  migriert; neuer `NoopSecurityAuditServiceTest`.
+  (`JSentinelAuditEventTest`,
+  `LoggingJSentinelAuditServiceTest`, alter
+  `NoopJSentinelAuditServiceTest`); 5 Tests auf neue API
+  migriert; neuer `NoopJSentinelAuditServiceTest`.
 
 **4C — Neue Events ✅**
 
@@ -520,7 +520,7 @@ Reactor-grün vor dem nächsten Schritt.
     „Audit log" → embedded `AuditView`).
   - demo-vaadin-rest-client `MainView` zeigt die gleichen
     zwei Tabs, gated über einen `hasPermission(String)`-Helper
-    gegen `ClientSecurityContext.user().permissions()`.
+    gegen `ClientJSentinelContext.user().permissions()`.
 - ✅ Grid-Höhen-Fix in allen vier Admin/Audit-Views: Root-
   `VerticalLayout` mit `setSizeFull()` + `setFlexGrow(1, grid)`,
   Grid `setPageSize(50)`. Grids füllen jetzt den AppLayout-Content-
@@ -560,7 +560,7 @@ Reactor-grün vor dem nächsten Schritt.
     sealed `LoginResult = Success | Rejected | LockedOut`) und
     `Secured.wrap(Interface, impl)` + `Secured.requireAllowed(
     Class, methodName)` (JDK-Dynamic-Proxy auf Basis von
-    `SecurityAnnotationScanner`; Reroute → `AccessDeniedException`,
+    `JSentinelAnnotationScanner`; Reroute → `AccessDeniedException`,
     Object-Methoden bypassen, `InvocationTargetException` wird
     unwrapped).
   - Neues Modul `demo-standalone` als interaktive Library-CLI
@@ -571,7 +571,7 @@ Reactor-grün vor dem nächsten Schritt.
   - Tests: 29 in `security-standalone`
     (`ThreadLocalSubjectStoreTest`, `StandaloneLoginFlowTest`,
     `SecuredTest`) + 26 in `demo-standalone`
-    (`DemoAppCliTest`, `DemoStandaloneSecurityTest` und drei
+    (`DemoAppCliTest`, `DemoStandaloneJSentinelTest` und drei
     kleine Klassen-Tests).
   - Mutation-Coverage: `security-standalone` 98 % (44/45),
     `demo-standalone` 86 % (54/63).

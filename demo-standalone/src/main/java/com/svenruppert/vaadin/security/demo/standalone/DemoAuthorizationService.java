@@ -17,7 +17,7 @@
 package com.svenruppert.vaadin.security.demo.standalone;
 
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
-import com.svenruppert.vaadin.security.autoservice.api.SecurityAutoService;
+import com.svenruppert.vaadin.security.autoservice.api.JSentinelAutoService;
 import com.svenruppert.vaadin.security.authorization.api.permissions.HasPermissions;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.permissions.RolePermissionResolver;
@@ -40,7 +40,7 @@ import static com.svenruppert.vaadin.security.demo.standalone.Permission.MEMBER_
 import static com.svenruppert.vaadin.security.demo.standalone.Permission.MEMBER_LIST;
 import static com.svenruppert.vaadin.security.demo.standalone.Permission.MEMBER_REMOVE;
 
-@SecurityAutoService(AuthorizationService.class)
+@JSentinelAutoService(AuthorizationService.class)
 public final class DemoAuthorizationService implements AuthorizationService<User> {
 
   private static final StaticRolePermissionMapping ROLE_PERMISSIONS =

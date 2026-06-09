@@ -18,7 +18,7 @@ package com.svenruppert.vaadin.security.authentication;
 
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.audit.TokenRotated;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
@@ -258,7 +258,7 @@ class TokenServiceTest {
   @DisplayName("audit failures are swallowed during rotation")
   void auditFailuresSwallowed() {
     InMemoryRefreshTokenStore store = new InMemoryRefreshTokenStore();
-    SecurityAuditService throwing = new SecurityAuditService() {
+    JSentinelAuditService throwing = new JSentinelAuditService() {
       @Override public void publish(AuditEvent event) { throw new RuntimeException("boom"); }
       @Override public List<AuditEvent> query(AuditQuery query) { return List.of(); }
     };
@@ -319,7 +319,7 @@ class TokenServiceTest {
     assertNotEquals(pair.accessToken(), pair.refreshToken());
   }
 
-  private static final class CollectingAuditService implements SecurityAuditService {
+  private static final class CollectingAuditService implements JSentinelAuditService {
     final List<AuditEvent> published = new ArrayList<>();
     @Override public void publish(AuditEvent event) { published.add(event); }
     @Override public List<AuditEvent> query(AuditQuery query) { return List.copyOf(published); }

@@ -20,13 +20,13 @@ import com.svenruppert.vaadin.security.audit.AccessDenied;
 import com.svenruppert.vaadin.security.audit.AccessGranted;
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.audit.SessionExpired;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPermission;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
-import com.svenruppert.vaadin.security.authorization.impl.SecurityAnnotationScanner;
+import com.svenruppert.vaadin.security.authorization.impl.JSentinelAnnotationScanner;
 import com.svenruppert.vaadin.security.session.SessionContext;
 import com.svenruppert.vaadin.security.session.SessionDecision;
 import com.svenruppert.vaadin.security.session.SessionMetadata;
@@ -70,7 +70,7 @@ class RestFilterAuditTest {
 
   @AfterEach
   void resetResolver() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
   }
 
   // ── RestAuthorizationFilter — authorization-decision audits ────
@@ -85,7 +85,7 @@ class RestFilterAuditTest {
 
     AccessGranted event = single(AccessGranted.class);
     assertEquals("u1", event.subjectId(),
-        "AccessGranted must carry the subject id from the resolved SecuritySubject");
+        "AccessGranted must carry the subject id from the resolved JSentinelSubject");
     assertEquals("/api/documents/42", event.route(),
         "AccessGranted must carry the request path as the route");
   }
@@ -156,7 +156,7 @@ class RestFilterAuditTest {
   @Test
   @DisplayName("IdleTimeout session-policy decision publishes SessionExpired(reason='IdleTimeout')")
   void authzFilter_idleTimeout_publishesSessionExpired() throws Exception {
-    SecurityServiceResolver.setSessionPolicy(new AlwaysDecide<>(
+    JSentinelServiceResolver.setSessionPolicy(new AlwaysDecide<>(
         new SessionPolicyDecision.IdleTimeout()));
 
     RecordingResponse response = new RecordingResponse();
@@ -168,13 +168,13 @@ class RestFilterAuditTest {
     SessionExpired event = single(SessionExpired.class);
     assertEquals("IdleTimeout", event.reason());
     assertEquals("u-idle", event.subjectId(),
-        "subjectId must come from the SessionMetadata, not the SecuritySubject");
+        "subjectId must come from the SessionMetadata, not the JSentinelSubject");
   }
 
   @Test
   @DisplayName("AbsoluteLifetimeExceeded session-policy decision publishes SessionExpired(reason='AbsoluteLifetimeExceeded')")
   void authzFilter_absoluteLifetime_publishesSessionExpired() throws Exception {
-    SecurityServiceResolver.setSessionPolicy(new AlwaysDecide<>(
+    JSentinelServiceResolver.setSessionPolicy(new AlwaysDecide<>(
         new SessionPolicyDecision.AbsoluteLifetimeExceeded()));
 
     RestAuthorizationFilter filter = filterFor(new MetadataAwareResolver("u-abs"));
@@ -188,7 +188,7 @@ class RestFilterAuditTest {
   @Test
   @DisplayName("Active session-policy decision lets authorization run and publishes AccessGranted (no SessionExpired)")
   void authzFilter_active_runsAuthorization() throws Exception {
-    SecurityServiceResolver.setSessionPolicy(new AlwaysDecide<>(SessionPolicyDecision.active()));
+    JSentinelServiceResolver.setSessionPolicy(new AlwaysDecide<>(SessionPolicyDecision.active()));
 
     RecordingResponse response = new RecordingResponse();
     RestAuthorizationFilter filter = filterFor(new MetadataAwareResolver("u-active"));
@@ -205,13 +205,13 @@ class RestFilterAuditTest {
   @Test
   @DisplayName("A throwing audit sink does not break the authorization decision")
   void throwingSinkDoesNotBlockAuthorization() throws Exception {
-    SecurityAuditService boom = new SecurityAuditService() {
+    JSentinelAuditService boom = new JSentinelAuditService() {
       @Override public void publish(AuditEvent event) { throw new RuntimeException("boom"); }
       @Override public List<AuditEvent> query(AuditQuery q) { return List.of(); }
     };
     RestAuthorizationFilter filter = new RestAuthorizationFilter(
         request -> Optional.of(subject("u1", Set.of(new PermissionName("document:delete")))),
-        new SecurityAnnotationScanner(),
+        new JSentinelAnnotationScanner(),
         new RestAccessContextFactory(),
         new HttpStatusDecisionMapper(),
         boom);
@@ -228,8 +228,8 @@ class RestFilterAuditTest {
   @Test
   @DisplayName("RestAuthenticationFilter: IdleTimeout publishes SessionExpired('IdleTimeout')")
   void authFilter_idleTimeout_publishesSessionExpired() {
-    SecurityServiceResolver.setSecurityAuditService(audit);
-    SecurityServiceResolver.setSessionPolicy(new AlwaysDecide<>(
+    JSentinelServiceResolver.setJSentinelAuditService(audit);
+    JSentinelServiceResolver.setSessionPolicy(new AlwaysDecide<>(
         new SessionPolicyDecision.IdleTimeout()));
 
     RestAuthenticationFilter filter = new RestAuthenticationFilter(new MetadataAwareResolver("u-idle"));
@@ -245,8 +245,8 @@ class RestFilterAuditTest {
   @Test
   @DisplayName("RestAuthenticationFilter: AbsoluteLifetimeExceeded publishes SessionExpired('AbsoluteLifetimeExceeded')")
   void authFilter_absoluteLifetime_publishesSessionExpired() {
-    SecurityServiceResolver.setSecurityAuditService(audit);
-    SecurityServiceResolver.setSessionPolicy(new AlwaysDecide<>(
+    JSentinelServiceResolver.setJSentinelAuditService(audit);
+    JSentinelServiceResolver.setSessionPolicy(new AlwaysDecide<>(
         new SessionPolicyDecision.AbsoluteLifetimeExceeded()));
 
     RestAuthenticationFilter filter = new RestAuthenticationFilter(new MetadataAwareResolver("u-abs"));
@@ -259,11 +259,11 @@ class RestFilterAuditTest {
   @Test
   @DisplayName("RestAuthenticationFilter: a throwing audit sink does not break the 401 response")
   void authFilter_throwingSinkDoesNotBlock() {
-    SecurityServiceResolver.setSecurityAuditService(new SecurityAuditService() {
+    JSentinelServiceResolver.setJSentinelAuditService(new JSentinelAuditService() {
       @Override public void publish(AuditEvent event) { throw new RuntimeException("boom"); }
       @Override public List<AuditEvent> query(AuditQuery q) { return List.of(); }
     });
-    SecurityServiceResolver.setSessionPolicy(new AlwaysDecide<>(
+    JSentinelServiceResolver.setSessionPolicy(new AlwaysDecide<>(
         new SessionPolicyDecision.IdleTimeout()));
 
     RestAuthenticationFilter filter = new RestAuthenticationFilter(new MetadataAwareResolver("u-x"));
@@ -279,7 +279,7 @@ class RestFilterAuditTest {
   private RestAuthorizationFilter filterFor(RestSubjectResolver resolver) {
     return new RestAuthorizationFilter(
         resolver,
-        new SecurityAnnotationScanner(),
+        new JSentinelAnnotationScanner(),
         new RestAccessContextFactory(),
         new HttpStatusDecisionMapper(),
         audit);
@@ -293,8 +293,8 @@ class RestFilterAuditTest {
     return new SimpleRestRequest("DELETE", "/api/documents/42", Map.of(), Map.of());
   }
 
-  private static SecuritySubject subject(String id, Set<PermissionName> permissions) {
-    return new SecuritySubject(id, "User", Set.of(), permissions);
+  private static JSentinelSubject subject(String id, Set<PermissionName> permissions) {
+    return new JSentinelSubject(id, "User", Set.of(), permissions);
   }
 
   private static RestHandler noopHandler() {
@@ -330,7 +330,7 @@ class RestFilterAuditTest {
 
   @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
   @java.lang.annotation.Target(java.lang.annotation.ElementType.METHOD)
-  @com.svenruppert.vaadin.security.authorization.annotations.SecurityAnnotation(
+  @com.svenruppert.vaadin.security.authorization.annotations.JSentinelAnnotation(
       StepUpDemandingEvaluator.class)
   public @interface DemandsStepUp { }
 
@@ -357,9 +357,9 @@ class RestFilterAuditTest {
     }
 
     @Override
-    public Optional<SecuritySubject> resolveSubject(RestRequest request) {
+    public Optional<JSentinelSubject> resolveSubject(RestRequest request) {
       String id = subjectId == null ? "anonymous" : subjectId;
-      return Optional.of(new SecuritySubject(id, "User", Set.of(),
+      return Optional.of(new JSentinelSubject(id, "User", Set.of(),
           Set.of(new PermissionName("document:delete"))));
     }
 

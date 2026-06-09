@@ -102,7 +102,7 @@ class SubjectStoresTest {
   @DisplayName("multiple SubjectStore implementations fail explicitly")
   void multipleSubjectStores_throwWithMessage() {
     var ex = assertThrows(IllegalStateException.class,
-        () -> SecurityServiceResolver.requireSingleService(
+        () -> JSentinelServiceResolver.requireSingleService(
             SubjectStore.class,
             java.util.List.of(new FirstSubjectStore(), new SecondSubjectStore())));
 

@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.demo.app;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 
@@ -36,7 +36,7 @@ public interface MySessionAccessor {
     final List<AuthorizationRole> roles = asList(authorizationRoles);
     final Optional<MyUser> currentSubject = SubjectStores.subjectStore().currentSubject(MyUser.class);
     final AuthorizationService<MyUser> authorizationService =
-        SecurityServiceResolver.authorizationService();
+        JSentinelServiceResolver.authorizationService();
     return currentSubject.isPresent() && authorizationService.rolesFor(currentSubject.get())
                                                             .roleNames()
                                                             .stream()

@@ -35,7 +35,7 @@ import com.vaadin.flow.router.Route;
  * it unconditionally returns {@code StepUpRequired(MFA)}. The
  * Vaadin {@code AuthorizationListener} reroutes the navigation to
  * the route returned by
- * {@code SecurityServiceResolver.stepUpRouteName()} — i.e. to
+ * {@code JSentinelServiceResolver.stepUpRouteName()} — i.e. to
  * {@link StepUpChallengeView}. A user navigating to this URL will
  * never actually see this view; they always land on the challenge
  * page instead.

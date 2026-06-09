@@ -14,14 +14,14 @@ Vorarbeit, die alle nachfolgenden Phasen mittragen.
 Fünf inhaltlich klar trennbare Blöcke (eigenes Test-Modul, Step-Up,
 Resource Policies, Role Hierarchy, Method Security via Annotation
 Processor inkl. Demo-Integration), zusammen mit der SPI-Verdrahtung
-in `SecurityServiceResolver`, einer Parent-POM-Anhebung und einem
+in `JSentinelServiceResolver`, einer Parent-POM-Anhebung und einem
 Dokumentations-Refresh für die V00.70-/V00.80-Konzepte. Der Reactor
 hat damit 12 Module.
 
 — security-test als eigenes Modul (PR-1 Kandidat) —————————————————————
 
 Neues 5. Library-Modul `security-test` (Artefakt `security-test`,
-Scope `compile`, weil `SecurityTestExtension` JUnit-Lifecycle-Interfaces
+Scope `compile`, weil `JSentinelTestExtension` JUnit-Lifecycle-Interfaces
 implementiert). Es bündelt die Test-Bausteine, die bisher dupliziert in
 `security-vaadin/src/test`, `security-rest/src/test`, `demo-vaadin`
 und `demo-rest` lagen:
@@ -34,9 +34,9 @@ und `demo-rest` lagen:
   in `security-test/src/main`, alte Datei entfällt)
 - `RecordingAuditSink` — fängt `AuditEvent`-Sequenzen für
   Assertion-freundliches Replay
-- `AccessContexts`, `SecuritySubjects`, `SyntheticAnnotations`
+- `AccessContexts`, `JSentinelSubjects`, `SyntheticAnnotations`
   — Builder / Fluent-Factories für die häufigsten Test-Inputs
-- `SecurityTestExtension` — JUnit-5-`AfterEach`-Hook, der den
+- `JSentinelTestExtension` — JUnit-5-`AfterEach`-Hook, der den
   `SubjectStore` zwischen Tests zurücksetzt
 - 8 begleitende Tests, einer pro neuer Klasse
 
@@ -68,7 +68,7 @@ Adapter-Verdrahtung:
   (RFC 7235); `RestHeaders` erhält die Konstante, neuer Test
   `HttpStatusDecisionMapperTest` hält das Verhalten fest
 - `AuthorizationListener` (security-vaadin) reroutet auf den durch
-  `SecurityServiceResolver.stepUpRouteName()` aufgelösten Route-Namen
+  `JSentinelServiceResolver.stepUpRouteName()` aufgelösten Route-Namen
   (Default `"step-up"`, Konstante `DEFAULT_STEP_UP_ROUTE_NAME`)
 - `Secured` (security-standalone) wirft `AccessDeniedException` —
   Standalone hat kein Navigationskonzept, daher Step-Up als Exception
@@ -96,7 +96,7 @@ Neue `ResourceRef`-basierte Erweiterung der Policy-API:
 - `policy/spi/ResourceResolverRegistry` — Registrierung mehrerer
   Resolver
 - `policy/impl/InMemoryResourceResolverRegistry` — Default-Impl
-- 3 zugehörige Tests + `SecurityServiceResolverResourceTest`
+- 3 zugehörige Tests + `JSentinelServiceResolverResourceTest`
 
 `PolicyContext`, `PolicyDecisions` und `RequiresPolicyEvaluator`
 kennen die Resource-Achse; bestehende Policy-Tests sind angepasst.
@@ -115,11 +115,11 @@ Rollen-Hierarchie als optionale SPI:
 - `roles/StaticRoleHierarchy` — deklarative Map-basierte Impl
 - `RoleMatcher.containsAnyImplied(...)` nutzt die Hierarchie
 - `RequiresRoleEvaluator` / `RoleBasedAccessEvaluator` konsultieren
-  `SecurityServiceResolver.roleHierarchy()`
+  `JSentinelServiceResolver.roleHierarchy()`
 - Tests: `NoopRoleHierarchyTest`, `StaticRoleHierarchyTest`,
   `RoleMatcherContainsAnyImpliedTest`,
   `RequiresRoleEvaluatorWithHierarchyTest`,
-  `SecurityServiceResolverRoleHierarchyTest`
+  `JSentinelServiceResolverRoleHierarchyTest`
 
 Any-/All-Permission-Annotationen:
 
@@ -128,9 +128,9 @@ Any-/All-Permission-Annotationen:
 - `PermissionMatcher.containsAny(...)` ergänzt
 - Tests pro neuer Klasse
 
-— SecurityServiceResolver-Erweiterungen ———————————————————————————————
+— JSentinelServiceResolver-Erweiterungen ———————————————————————————————
 
-`SecurityServiceResolver` bekommt drei neue, in sich abgeschlossene
+`JSentinelServiceResolver` bekommt drei neue, in sich abgeschlossene
 Akzessoren (jeweils mit SPI-Lookup, cached fallback, `find…`-Optional):
 
 - `resourceResolverRegistry()` / `findResourceResolverRegistry()`
@@ -153,7 +153,7 @@ Neues 6. Library-Modul **security-processor**:
 - `SecuredAnnotationProcessor extends BasicStaticProxyAnnotationProcessor<Secured>`.
   Generiert pro `@Secured`-annotierter konkreter Klasse einen
   `<Type>Secured`-Wrapper, der jede Methode mit Method-Security-
-  Annotation durch `SecurityEnforcer.require…(…)` + `super.<method>(…)`
+  Annotation durch `JSentinelEnforcer.require…(…)` + `super.<method>(…)`
   ersetzt. Method-Level gewinnt ueber Class-Level.
 - Annotation-Mapping: `@RequiresPermission` (1 Wert →
   `requirePermission`, n Werte → `requireAllPermissions`),
@@ -176,8 +176,8 @@ Neues 6. Library-Modul **security-processor**:
 `security-core` Erweiterungen:
 
 - `@Secured` (TYPE-Target, `RetentionPolicy.SOURCE`) — Compile-Time-
-  Trigger, kein `@SecurityAnnotation`-Binding (keine Runtime-Logik).
-- `SecurityEnforcer` als zentrale Enforcement-Komponente. Generic
+  Trigger, kein `@JSentinelAnnotation`-Binding (keine Runtime-Logik).
+- `JSentinelEnforcer` als zentrale Enforcement-Komponente. Generic
   `enforce(AnnotatedElement, Class, String)` fuer den Dynamic-Proxy-
   Pfad, Explicit-API (`requirePermission` / `requireAllPermissions` /
   `requireAnyPermission` / `requireRole` / `requireAnyRole` /
@@ -188,11 +188,11 @@ Neues 6. Library-Modul **security-processor**:
 
 - `Secured.java` → `SecuredProxy.java` umbenannt (via `git mv`); die
   Enforcement-Logik (Scanner-Lookup, AccessContext-Bau, Decision-
-  Handling) ist nach `SecurityEnforcer` in security-core gewandert.
+  Handling) ist nach `JSentinelEnforcer` in security-core gewandert.
   `SecuredProxy.wrap(...)` ruft jetzt nur noch
-  `SecurityEnforcer.enforce(method, declaringClass)` auf.
+  `JSentinelEnforcer.enforce(method, declaringClass)` auf.
 - Test-Klassen aktualisiert (`SecuredProxyTest`, 17 Tests, alle gruen);
-  Step-Up-Message-Format an die neue `SecurityEnforcer`-Variante
+  Step-Up-Message-Format an die neue `JSentinelEnforcer`-Variante
   angepasst (`"Step-up required: method=…, reason=…"` statt
   `"StepUpRequired:…:…"`).
 
@@ -217,9 +217,9 @@ Neues 6. Library-Modul **security-processor**:
   `<annotationProcessorPaths>` ein (nicht als Compile-Dep) und ergaenzt
   `security-test` als Test-Scope-Dep.
 
-— SecurityServiceResolver-Erweiterungen ———————————————————————————————
+— JSentinelServiceResolver-Erweiterungen ———————————————————————————————
 
-`SecurityServiceResolver` bekommt drei neue, in sich abgeschlossene
+`JSentinelServiceResolver` bekommt drei neue, in sich abgeschlossene
 Akzessoren (jeweils mit SPI-Lookup, cached fallback, `find…`-Optional):
 
 - `resourceResolverRegistry()` / `findResourceResolverRegistry()`
@@ -254,7 +254,7 @@ Neue Konzept-/Plan-Dokumente:
   `restarbeiten.md`, `README.md` — aktualisiert auf den
   V00.70-Foundation-Stand: 12 Module, Method-Security-Doppelpfad
   (`SecuredProxy` runtime + `<Type>Secured` compile-time),
-  `SecurityEnforcer` zentral, neue Annotationen
+  `JSentinelEnforcer` zentral, neue Annotationen
   (`@Secured`, `@RequiresAny/AllPermissions`, `@RequiresPolicy`).
 
 — Build-Status ————————————————————————————————————————————————————————

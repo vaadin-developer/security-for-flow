@@ -25,7 +25,7 @@
   <name>Security DX</name>
   <description>
     V00.72 developer-experience core: common fluent-bootstrap contracts,
-    SecurityRuntime, diagnostics (SecurityDiagnostics + DiagnosticContributor SPI).
+    JSentinelRuntime, diagnostics (JSentinelDiagnostics + DiagnosticContributor SPI).
     Adapter-specific bootstrap facades live in security-dx-vaadin / -rest /
     -standalone.
   </description>
@@ -44,7 +44,7 @@
       <scope>test</scope>
     </dependency>
     <!--
-      V00.73 P6: AbstractSecurityBootstrap.applyCredentialConfiguration
+      V00.73 P6: AbstractJSentinelBootstrap.applyCredentialConfiguration
       probes BouncyCastleHashingServices.modern() reflectively. The
       probe must be tested against the real classpath with bc present;
       hence security-crypto-bc as a test-scope dependency only.

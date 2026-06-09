@@ -25,7 +25,7 @@ package com.svenruppert.vaadin.security.credential.password.audit;
 import com.svenruppert.vaadin.security.audit.CredentialRehashed;
 import com.svenruppert.vaadin.security.audit.CredentialVerificationFailed;
 import com.svenruppert.vaadin.security.audit.CredentialVerificationSucceeded;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.credential.password.CredentialVerificationResult;
 import com.svenruppert.vaadin.security.credential.password.RehashDecision;
 import com.svenruppert.vaadin.security.credential.password.RehashReason;
@@ -37,7 +37,7 @@ import java.util.Objects;
 /**
  * Translates {@link CredentialVerificationResult}s into the new
  * credential audit events and pushes them through
- * {@link SecurityAuditService}.
+ * {@link JSentinelAuditService}.
  *
  * <p>The publisher <strong>never propagates</strong> audit-sink
  * exceptions to the caller (CWE-778 / CWE-693): publishing is
@@ -47,15 +47,15 @@ import java.util.Objects;
  */
 public final class CredentialAuditPublisher {
 
-  private final SecurityAuditService auditService;
+  private final JSentinelAuditService auditService;
   private final Clock clock;
 
-  public CredentialAuditPublisher(SecurityAuditService auditService) {
+  public CredentialAuditPublisher(JSentinelAuditService auditService) {
     this(auditService, Clock.systemUTC());
   }
 
   public CredentialAuditPublisher(
-      SecurityAuditService auditService, Clock clock) {
+      JSentinelAuditService auditService, Clock clock) {
     this.auditService = Objects.requireNonNull(auditService, "auditService");
     this.clock = Objects.requireNonNull(clock, "clock");
   }

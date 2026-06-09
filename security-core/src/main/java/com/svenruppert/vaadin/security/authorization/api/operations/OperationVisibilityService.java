@@ -16,13 +16,13 @@
  */
 package com.svenruppert.vaadin.security.authorization.api.operations;
 
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 
 import java.util.List;
 import java.util.Objects;
 
 /**
- * Filters {@link SecuredOperationDescriptor}s against a {@link SecuritySubject}.
+ * Filters {@link SecuredOperationDescriptor}s against a {@link JSentinelSubject}.
  * <p>
  * An operation is visible when the subject has all required roles AND all
  * required permissions. Empty role/permission sets are treated as
@@ -36,14 +36,14 @@ public final class OperationVisibilityService {
     this.registry = Objects.requireNonNull(registry, "registry");
   }
 
-  public List<SecuredOperationDescriptor> visibleFor(SecuritySubject subject) {
+  public List<SecuredOperationDescriptor> visibleFor(JSentinelSubject subject) {
     if (subject == null) return List.of();
     return registry.all().stream()
         .filter(op -> isAllowed(subject, op))
         .toList();
   }
 
-  static boolean isAllowed(SecuritySubject subject, SecuredOperationDescriptor op) {
+  static boolean isAllowed(JSentinelSubject subject, SecuredOperationDescriptor op) {
     if (!subject.roles().containsAll(op.requiredRoles())) return false;
     return subject.permissions().containsAll(op.requiredPermissions());
   }

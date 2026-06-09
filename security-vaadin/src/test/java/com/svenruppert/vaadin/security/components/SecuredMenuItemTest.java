@@ -41,11 +41,11 @@ class SecuredMenuItemTest {
 
   private static final RoleName ADMIN = new RoleName("ADMIN");
 
-  private static Optional<SecuredVisibility.SecurityView> view(Set<RoleName> roles,
+  private static Optional<SecuredVisibility.JSentinelView> view(Set<RoleName> roles,
                                                                Set<PermissionName> perms) {
     HasRoles r = () -> List.copyOf(roles);
     HasPermissions p = () -> List.copyOf(perms);
-    return Optional.of(new SecuredVisibility.SecurityView(r, p));
+    return Optional.of(new SecuredVisibility.JSentinelView(r, p));
   }
 
   private static MenuItem freshItem() {
@@ -93,7 +93,7 @@ class SecuredMenuItemTest {
   @DisplayName("refresh() recomputes against the current view")
   void refreshRecomputes() {
     MenuItem item = freshItem();
-    AtomicReference<Optional<SecuredVisibility.SecurityView>> ref =
+    AtomicReference<Optional<SecuredVisibility.JSentinelView>> ref =
         new AtomicReference<>(view(Set.of(), Set.of()));
     SecuredMenuItem secured = SecuredMenuItem.bind(item,
         SecuredVisibility.Requirement.role(ADMIN),

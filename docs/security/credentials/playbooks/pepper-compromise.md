@@ -30,7 +30,7 @@ operator-supplied HSM-backed implementation must (see
   start returning a structured failure or throwing — verifications
   using the old key will fall back to the dummy KDF and audit as
   `CredentialVerificationFailed` with the matching internal type.
-- Confirm `SecurityAuditService` is forwarding events to your
+- Confirm `JSentinelAuditService` is forwarding events to your
   long-term audit sink. Pepper-compromise response writes a
   significant audit volume; the runbook is unusable without it.
 

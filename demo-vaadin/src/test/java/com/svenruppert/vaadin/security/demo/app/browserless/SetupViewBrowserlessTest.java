@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.demo.app.browserless;
 
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.demo.app.security.bootstrap.BootstrapWiring;
 import com.svenruppert.vaadin.security.demo.app.security.model.DemoUserDirectoryProvider;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
@@ -74,7 +74,7 @@ class SetupViewBrowserlessTest extends BrowserlessTest {
     System.setProperty("security.bootstrap.token.file", tokenFile.toString());
     resetBootstrapWiringSingleton();
 
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
   }
 
@@ -84,7 +84,7 @@ class SetupViewBrowserlessTest extends BrowserlessTest {
     System.clearProperty("security.bootstrap.token.file");
     System.clearProperty("security.bootstrap.mode");
     resetBootstrapWiringSingleton();
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
   }
 

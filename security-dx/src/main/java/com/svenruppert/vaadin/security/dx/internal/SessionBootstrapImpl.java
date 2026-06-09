@@ -12,7 +12,7 @@ package com.svenruppert.vaadin.security.dx.internal;
 
 import com.svenruppert.vaadin.security.authorization.api.SubjectIdResolver;
 import com.svenruppert.vaadin.security.dx.bootstrap.SessionBootstrap;
-import com.svenruppert.vaadin.security.session.SecurityVersionStore;
+import com.svenruppert.vaadin.security.session.JSentinelVersionStore;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
 import com.svenruppert.vaadin.security.session.SessionStore;
 
@@ -23,7 +23,7 @@ import java.util.Objects;
  * Real V00.73 implementation of {@link SessionBootstrap}. Records
  * every selection into the {@link SessionState} held by
  * {@link BootstrapState}; {@code install()} consumes the state and
- * wires the appropriate {@code SecurityServiceResolver} setters.
+ * wires the appropriate {@code JSentinelServiceResolver} setters.
  *
  * <p>{@link #storeBacked(SessionStore)} accepts {@code null} so the
  * install-time validator can emit the stable
@@ -47,7 +47,7 @@ final class SessionBootstrapImpl implements SessionBootstrap {
   }
 
   @Override
-  public SessionBootstrap securityVersion(SecurityVersionStore store) {
+  public SessionBootstrap securityVersion(JSentinelVersionStore store) {
     state.securityVersionStore(Objects.requireNonNull(store, "store"));
     return this;
   }

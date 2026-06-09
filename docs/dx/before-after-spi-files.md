@@ -1,7 +1,7 @@
-# Before / After — manual `META-INF/services` vs `@SecurityAutoService`
+# Before / After — manual `META-INF/services` vs `@JSentinelAutoService`
 
 A concrete diff from `demo-standalone` introduced in V00.72/014.
-The `@SecurityAutoService` annotation, the processor and the
+The `@JSentinelAutoService` annotation, the processor and the
 `META-INF/services/...` emission are unchanged in V00.73.
 
 ## Before
@@ -27,11 +27,11 @@ com.svenruppert.vaadin.security.demo.standalone.DemoAuthorizationService
 The two files above are deleted. The two classes carry an annotation:
 
 ```java
-@SecurityAutoService(AuthenticationService.class)
+@JSentinelAutoService(AuthenticationService.class)
 public final class DemoAuthenticationService
     implements AuthenticationService<Credentials, User> { /* ... */ }
 
-@SecurityAutoService(AuthorizationService.class)
+@JSentinelAutoService(AuthorizationService.class)
 public final class DemoAuthorizationService
     implements AuthorizationService<User> { /* ... */ }
 ```

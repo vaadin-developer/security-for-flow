@@ -17,7 +17,7 @@
 package com.svenruppert.vaadin.security.authorization;
 
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresRole;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.authorization.api.SubjectStores;
 import com.svenruppert.vaadin.security.test.InMemorySubjectStore;
 import com.vaadin.flow.component.Component;
@@ -54,7 +54,7 @@ class LoginListenerBeforeEnterTest {
 
   @BeforeEach
   void setUp() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     LoginListeners.reset();
     SubjectStores.reset();
     SubjectStores.setSubjectStore(store);
@@ -65,7 +65,7 @@ class LoginListenerBeforeEnterTest {
 
   @AfterEach
   void tearDown() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     LoginListeners.reset();
     SubjectStores.reset();
     CurrentInstance.clearAll();

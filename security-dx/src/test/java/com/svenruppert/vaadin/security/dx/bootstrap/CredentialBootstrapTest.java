@@ -12,14 +12,14 @@ package com.svenruppert.vaadin.security.dx.bootstrap;
 
 import com.svenruppert.vaadin.security.authentication.PasswordHasher;
 import com.svenruppert.vaadin.security.authentication.Pbkdf2PasswordHasher;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.credential.password.PasswordHashingService;
 import com.svenruppert.vaadin.security.credential.password.PasswordHashingServices;
-import com.svenruppert.vaadin.security.dx.internal.AbstractSecurityBootstrap;
-import com.svenruppert.vaadin.security.dx.runtime.RegisteredSecurityService;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapWarning;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityRuntime;
+import com.svenruppert.vaadin.security.dx.internal.AbstractJSentinelBootstrap;
+import com.svenruppert.vaadin.security.dx.runtime.RegisteredJSentinelService;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapMode;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapWarning;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelRuntime;
 import com.svenruppert.vaadin.security.dx.runtime.Severity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,20 +41,20 @@ class CredentialBootstrapTest {
   @BeforeEach
   @AfterEach
   void resetResolver() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
   }
 
   @Test
   @DisplayName(".passwordHasher(...) registers via legacy resolver setter")
   void passwordHasherWiresLegacyResolver() {
-    // SecurityServiceResolver.findPasswordHashingService() treats
+    // JSentinelServiceResolver.findPasswordHashingService() treats
     // Pbkdf2PasswordHasher as the default fallback and returns empty.
     // Use a non-PBKDF2 stub to verify the registration.
     PasswordHasher hasher = new RecordingPasswordHasher();
-    SecurityRuntime runtime = new TestBootstrap()
+    JSentinelRuntime runtime = new TestBootstrap()
         .credentials(c -> c.passwordHasher(hasher))
         .install();
-    assertSame(hasher, SecurityServiceResolver.findPasswordHashingService().orElseThrow());
+    assertSame(hasher, JSentinelServiceResolver.findPasswordHashingService().orElseThrow());
     assertTrue(runtime.services().stream()
         .anyMatch(s -> PasswordHasher.class.equals(s.spi())));
   }
@@ -71,19 +71,19 @@ class CredentialBootstrapTest {
   @DisplayName(".hashing(...) appears in runtime but is NOT passed to the legacy setter")
   void hashingServiceNotWiredThroughLegacy() {
     PasswordHashingService pipeline = PasswordHashingServices.defaults();
-    SecurityRuntime runtime = new TestBootstrap()
+    JSentinelRuntime runtime = new TestBootstrap()
         .credentials(c -> c.hashing(pipeline))
         .install();
     assertTrue(runtime.services().stream()
         .anyMatch(s -> PasswordHashingService.class.equals(s.spi())));
-    assertFalse(SecurityServiceResolver.findPasswordHashingService().isPresent(),
+    assertFalse(JSentinelServiceResolver.findPasswordHashingService().isPresent(),
         "V00.71 PasswordHashingService must never be stuffed into the legacy PasswordHasher setter");
   }
 
   @Test
   @DisplayName(".pbkdf2Defaults() sets BOTH the legacy hasher and the V00.71 pipeline")
   void pbkdf2DefaultsSetsBothWorlds() {
-    SecurityRuntime runtime = new TestBootstrap()
+    JSentinelRuntime runtime = new TestBootstrap()
         .credentials(c -> c.pbkdf2Defaults())
         .install();
     // findPasswordHashingService() returns empty for Pbkdf2 (treated as
@@ -101,7 +101,7 @@ class CredentialBootstrapTest {
   void modernUsesBouncyCastleWhenAvailable() {
     // security-crypto-bc IS on the test classpath via the security-dx
     // test dependency tree, so this verifies the happy path.
-    SecurityRuntime runtime = new TestBootstrap()
+    JSentinelRuntime runtime = new TestBootstrap()
         .credentials(c -> c.modern())
         .install();
     boolean pipelinePresent = runtime.services().stream()
@@ -112,7 +112,7 @@ class CredentialBootstrapTest {
   @Test
   @DisplayName(".credentialStore(...) without .hashing(...) is fine; only change/reset trigger missing-hashing")
   void credentialStoreAloneIsOk() {
-    SecurityRuntime runtime = new TestBootstrap()
+    JSentinelRuntime runtime = new TestBootstrap()
         .credentials(c -> c.credentialStore(
             new com.svenruppert.vaadin.security.credential.store.InMemoryCredentialStore()))
         .install();
@@ -139,21 +139,21 @@ class CredentialBootstrapTest {
   // ── adapter test double ──────────────────────────────────────────
 
   private static final class TestBootstrap
-      extends AbstractSecurityBootstrap<TestBootstrap> {
+      extends AbstractJSentinelBootstrap<TestBootstrap> {
     @Override
-    public SecurityRuntime install() {
-      List<RegisteredSecurityService> services = new ArrayList<>();
-      List<SecurityBootstrapWarning> warnings = new ArrayList<>();
+    public JSentinelRuntime install() {
+      List<RegisteredJSentinelService> services = new ArrayList<>();
+      List<JSentinelBootstrapWarning> warnings = new ArrayList<>();
       applyAuditConfiguration(services, warnings);
       applySessionConfiguration(AdapterKind.VAADIN, services, warnings);
       applyRoleConfiguration(services, warnings);
       applyCredentialConfiguration(services, warnings);
-      SecurityBootstrapMode mode = state.mode();
-      if (mode == SecurityBootstrapMode.STRICT
+      JSentinelBootstrapMode mode = state.mode();
+      if (mode == JSentinelBootstrapMode.STRICT
           && warnings.stream().anyMatch(w -> w.severity() == Severity.ERROR)) {
-        throw new SecurityBootstrapException(warnings);
+        throw new JSentinelBootstrapException(warnings);
       }
-      return new SecurityRuntime(services, warnings, mode);
+      return new JSentinelRuntime(services, warnings, mode);
     }
   }
 }

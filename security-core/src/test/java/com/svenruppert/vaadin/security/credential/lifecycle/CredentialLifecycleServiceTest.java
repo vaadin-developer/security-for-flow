@@ -25,7 +25,7 @@ package com.svenruppert.vaadin.security.credential.lifecycle;
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.CredentialStatusChanged;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.credential.store.CredentialRecord;
 import com.svenruppert.vaadin.security.credential.store.CredentialStatus;
 import com.svenruppert.vaadin.security.credential.store.CredentialUpdateResult;
@@ -51,7 +51,7 @@ class CredentialLifecycleServiceTest {
   private static final Instant T0 = Instant.parse("2026-06-01T12:00:00Z");
   private static final Clock FIXED = Clock.fixed(T0, ZoneOffset.UTC);
 
-  private static final class RecordingAuditService implements SecurityAuditService {
+  private static final class RecordingAuditService implements JSentinelAuditService {
     final List<AuditEvent> events = new ArrayList<>();
 
     @Override
@@ -65,7 +65,7 @@ class CredentialLifecycleServiceTest {
     }
   }
 
-  private static final class FailingAuditService implements SecurityAuditService {
+  private static final class FailingAuditService implements JSentinelAuditService {
     @Override
     public void publish(AuditEvent event) {
       throw new RuntimeException("sink unavailable");

@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.ratelimiting;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 
 /**
@@ -40,7 +40,7 @@ import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
  * @param tenant tenant scope; {@code null} becomes {@link TenantId#DEFAULT}
  * @param scope  non-blank dimension string
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public record RateLimitKey(TenantId tenant, String scope) {
 
   /**

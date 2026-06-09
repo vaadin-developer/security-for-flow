@@ -16,9 +16,9 @@
  */
 package com.svenruppert.vaadin.security.demo.rest.server;
 
-import com.svenruppert.vaadin.security.rest.openapi.HandlerSecurityMetadata;
-import com.svenruppert.vaadin.security.rest.openapi.OpenApiSecurityMetadataGenerator;
-import com.svenruppert.vaadin.security.rest.openapi.SecurityRequirement;
+import com.svenruppert.vaadin.security.rest.openapi.HandlerJSentinelMetadata;
+import com.svenruppert.vaadin.security.rest.openapi.OpenApiJSentinelMetadataGenerator;
+import com.svenruppert.vaadin.security.rest.openapi.JSentinelRequirement;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Verifies that the V00.70 Phase-8d
- * {@link OpenApiSecurityMetadataGenerator} extracts the same set of
+ * {@link OpenApiJSentinelMetadataGenerator} extracts the same set of
  * {@code @RequiresPermission} annotations that
  * {@code DemoHttpRouter} dispatches against — a regression net for
  * any future re-shuffling of permissions on demo handlers.
@@ -42,16 +42,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * surface the {@code security:[{permissions:[...]}]} blocks on each
  * operation.
  */
-@DisplayName("OpenApiSecurityMetadataGenerator — DemoHandlers extraction")
+@DisplayName("OpenApiJSentinelMetadataGenerator — DemoHandlers extraction")
 class DemoHandlersOpenApiMetadataTest {
 
-  private static final OpenApiSecurityMetadataGenerator GENERATOR =
-      new OpenApiSecurityMetadataGenerator();
+  private static final OpenApiJSentinelMetadataGenerator GENERATOR =
+      new OpenApiJSentinelMetadataGenerator();
 
   @Test
   @DisplayName("metadata reports the demo handler class name + non-empty methods map")
   void classNameAndShape() {
-    HandlerSecurityMetadata metadata = GENERATOR.generate(DemoHandlers.class);
+    HandlerJSentinelMetadata metadata = GENERATOR.generate(DemoHandlers.class);
 
     assertEquals(DemoHandlers.class.getName(), metadata.handlerClassName());
     assertTrue(metadata.classLevel().isEmpty(),
@@ -63,8 +63,8 @@ class DemoHandlersOpenApiMetadataTest {
   @Test
   @DisplayName("each @RequiresPermission handler shows up as a single PERMISSION/ALL requirement")
   void permissionPerHandlerIsExtracted() {
-    HandlerSecurityMetadata metadata = GENERATOR.generate(DemoHandlers.class);
-    Map<String, List<SecurityRequirement>> methods = metadata.methods();
+    HandlerJSentinelMetadata metadata = GENERATOR.generate(DemoHandlers.class);
+    Map<String, List<JSentinelRequirement>> methods = metadata.methods();
 
     assertSinglePermission(methods, "listDocuments", "document:read");
     assertSinglePermission(methods, "createDocument", "document:create");
@@ -80,8 +80,8 @@ class DemoHandlersOpenApiMetadataTest {
   @Test
   @DisplayName("unprotected handlers carry no requirement entry")
   void unprotectedHandlersAreAbsent() {
-    HandlerSecurityMetadata metadata = GENERATOR.generate(DemoHandlers.class);
-    Map<String, List<SecurityRequirement>> methods = metadata.methods();
+    HandlerJSentinelMetadata metadata = GENERATOR.generate(DemoHandlers.class);
+    Map<String, List<JSentinelRequirement>> methods = metadata.methods();
 
     // login / me / operations / logout are authenticated-only or public — no @Requires*.
     assertFalse(methods.containsKey("login"),
@@ -92,18 +92,18 @@ class DemoHandlersOpenApiMetadataTest {
   }
 
   private static void assertSinglePermission(
-      Map<String, List<SecurityRequirement>> methods,
+      Map<String, List<JSentinelRequirement>> methods,
       String methodName,
       String expectedPermission) {
-    List<SecurityRequirement> reqs = methods.get(methodName);
+    List<JSentinelRequirement> reqs = methods.get(methodName);
     assertTrue(reqs != null && !reqs.isEmpty(),
-        methodName + " must surface at least one SecurityRequirement");
+        methodName + " must surface at least one JSentinelRequirement");
     assertEquals(1, reqs.size(),
         methodName + " carries exactly one @Requires* — got " + reqs);
-    SecurityRequirement requirement = reqs.get(0);
-    assertEquals(SecurityRequirement.Scheme.PERMISSION, requirement.scheme(),
+    JSentinelRequirement requirement = reqs.get(0);
+    assertEquals(JSentinelRequirement.Scheme.PERMISSION, requirement.scheme(),
         methodName + " requirement scheme");
-    assertEquals(SecurityRequirement.Operator.ALL, requirement.operator(),
+    assertEquals(JSentinelRequirement.Operator.ALL, requirement.operator(),
         methodName + " requirement operator");
     assertEquals(List.of(expectedPermission), requirement.values(),
         methodName + " requirement values");

@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.components;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.session.SessionRecord;
 import com.svenruppert.vaadin.security.session.SessionStatus;
 import com.svenruppert.vaadin.security.session.SessionStore;
@@ -62,7 +62,7 @@ import static java.util.Objects.requireNonNull;
  * polling timer via {@code UI.setPollInterval(...)} and call
  * {@code refresh()} from a {@code PollEvent} listener.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public class SessionManagementView extends Composite<VerticalLayout> {
 
   private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ISO_INSTANT;

@@ -23,7 +23,7 @@
 package com.svenruppert.vaadin.security.credential.emergency;
 
 import com.svenruppert.vaadin.security.audit.CredentialStatusChanged;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.credential.store.CredentialRecord;
 import com.svenruppert.vaadin.security.credential.store.CredentialStatus;
 import com.svenruppert.vaadin.security.credential.store.CredentialStore;
@@ -57,12 +57,12 @@ import java.util.Optional;
 public final class MassCredentialStatusChange {
 
   private final CredentialStore store;
-  private final SecurityAuditService audit;
+  private final JSentinelAuditService audit;
   private final Clock clock;
 
   public MassCredentialStatusChange(
       CredentialStore store,
-      SecurityAuditService audit,
+      JSentinelAuditService audit,
       Clock clock) {
     this.store = Objects.requireNonNull(store, "store");
     this.audit = Objects.requireNonNull(audit, "audit");

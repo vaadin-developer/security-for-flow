@@ -22,7 +22,7 @@ import com.svenruppert.vaadin.security.demo.rest.shared.DemoEndpoints;
 import com.svenruppert.vaadin.security.policy.api.ResourceRef;
 import com.svenruppert.vaadin.security.rest.RestAuthenticationFilter;
 import com.svenruppert.vaadin.security.rest.RestAuthorizationFilter;
-import com.svenruppert.vaadin.security.rest.RestSecurityVersionFilter;
+import com.svenruppert.vaadin.security.rest.RestJSentinelVersionFilter;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -47,7 +47,7 @@ public final class DemoHttpRouter implements HttpHandler {
   private final DemoBootstrapHandlers bootstrapHandlers;
   private final RestAuthorizationFilter filter;
   private final RestAuthenticationFilter authenticationFilter;
-  private final RestSecurityVersionFilter versionFilter;
+  private final RestJSentinelVersionFilter versionFilter;
 
   private final Method listDocumentsMethod;
   private final Method createDocumentMethod;
@@ -74,7 +74,7 @@ public final class DemoHttpRouter implements HttpHandler {
       DemoHandlers handlers,
       DemoBootstrapHandlers bootstrapHandlers,
       DemoSubjectResolver subjectResolver,
-      RestSecurityVersionFilter versionFilter) {
+      RestJSentinelVersionFilter versionFilter) {
     this.handlers = handlers;
     this.bootstrapHandlers = bootstrapHandlers;
     this.filter = new RestAuthorizationFilter(subjectResolver);

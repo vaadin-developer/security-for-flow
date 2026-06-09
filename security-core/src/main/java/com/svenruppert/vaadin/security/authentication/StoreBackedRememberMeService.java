@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.authentication;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 
@@ -50,7 +50,7 @@ import static java.util.Objects.requireNonNull;
  * {@code tokenSource} constructor argument if a different format
  * is required by the carrier (cookie, header, query parameter).
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class StoreBackedRememberMeService {
 
   /** Default token entropy in bytes (256 bits). */

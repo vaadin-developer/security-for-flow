@@ -12,13 +12,13 @@ package com.svenruppert.vaadin.security.dx.internal;
 
 import com.svenruppert.vaadin.security.authentication.AuthenticationService;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationService;
-import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapMode;
 
 /**
  * Mutable aggregate of accumulated configuration during a fluent
  * bootstrap call. Reset to a fresh instance per bootstrap call.
  * <p>
- * <strong>Internal API.</strong> Used by {@link AbstractSecurityBootstrap}
+ * <strong>Internal API.</strong> Used by {@link AbstractJSentinelBootstrap}
  * and adapter-DX module subclasses; not part of the V00.72 public surface.
  *
  * @since 00.72.00
@@ -27,7 +27,7 @@ public final class BootstrapState {
 
   private AuthenticationService<?, ?> authenticationService;
   private AuthorizationService<?> authorizationService;
-  private SecurityBootstrapMode mode = SecurityBootstrapMode.COMMUNITY_DEFAULTS;
+  private JSentinelBootstrapMode mode = JSentinelBootstrapMode.COMMUNITY_DEFAULTS;
 
   private boolean auditConfigured;
   private boolean sessionsConfigured;
@@ -82,11 +82,11 @@ public final class BootstrapState {
     this.authorizationService = service;
   }
 
-  public SecurityBootstrapMode mode() {
+  public JSentinelBootstrapMode mode() {
     return mode;
   }
 
-  public void mode(SecurityBootstrapMode mode) {
+  public void mode(JSentinelBootstrapMode mode) {
     if (mode != null) {
       this.mode = mode;
     }

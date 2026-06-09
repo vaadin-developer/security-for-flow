@@ -6,7 +6,7 @@ Timestamp: 2026-05-31_22-00-34 Europe/Berlin (state after V00.70.00 release)
 |---|---|---|
 | Core Security | Authentication | Shipped |
 | Core Security | Authorization via roles and permissions | Shipped |
-| Core Security | `SecurityEnforcer` as central enforcement point | Shipped |
+| Core Security | `JSentinelEnforcer` as central enforcement point | Shipped |
 | Core Security | Method security via annotations | Shipped |
 | Core Security | Annotation processor for security wrappers | Shipped |
 | Core Security | Dynamic-proxy security | Shipped |
@@ -25,9 +25,9 @@ Timestamp: 2026-05-31_22-00-34 Europe/Berlin (state after V00.70.00 release)
 | Sessions | Session revocation (`SessionManagementView` with per-row Revoke) | Shipped / V00.70 |
 | Sessions | Role refresh during an active session | V00.70 core feature |
 | Sessions | Security-version store (Phase 2) | Shipped |
-| Sessions | SecurityVersion drift detection (Phase 4c, end-to-end Vaadin + REST + Standalone) | Shipped / V00.70 |
+| Sessions | JSentinelVersion drift detection (Phase 4c, end-to-end Vaadin + REST + Standalone) | Shipped / V00.70 |
 | Sessions | `SessionStale` audit event + `WWW-Authenticate: SessionStale` (RFC 7235) | Shipped / V00.70 |
-| Sessions | Automatic SecurityVersion snapshot capture in `LoginView` | Shipped / V00.70 |
+| Sessions | Automatic JSentinelVersion snapshot capture in `LoginView` | Shipped / V00.70 |
 | Tenants | `TenantId` as the foundation | Shipped / V00.70 |
 | Tenants | Tenant-aware store keys / records (all 11 Phase-2 stores) | Shipped / V00.70 |
 | Tenants | Tenant-aware role persistence (`RoleAssignmentKey(tenant, subjectId)`) | Shipped / V00.70 |
@@ -52,7 +52,7 @@ Timestamp: 2026-05-31_22-00-34 Europe/Berlin (state after V00.70.00 release)
 | Account Lifecycle | `PasswordResetService` (request / validate / consume; single-use; tenant-scoped) | Shipped / V00.70 |
 | Account Lifecycle | Email-verification store | Shipped |
 | Account Lifecycle | `EmailVerificationService` (request / validate / consume; carries verified email) | Shipped / V00.70 |
-| Account Lifecycle | `SecurityNotificationSender` SPI + `LoggingNotificationSender` default | Shipped / V00.70 |
+| Account Lifecycle | `JSentinelNotificationSender` SPI + `LoggingNotificationSender` default | Shipped / V00.70 |
 | Tokens | Remember-me tokens | Store shipped |
 | Tokens | Store-backed remember-me service | Shipped |
 | Tokens | API-key persistence (hash-only, scoped) | Shipped |
@@ -67,15 +67,15 @@ Timestamp: 2026-05-31_22-00-34 Europe/Berlin (state after V00.70.00 release)
 | Vaadin | Vaadin security adapter | Shipped |
 | Vaadin | Login / logout integration | Shipped |
 | Vaadin | Navigation security | Shipped |
-| Vaadin | Step-up route integration (`AuthorizationDecision.StepUpRequired` + `SecurityServiceResolver.stepUpRouteName()`) | Shipped / V00.70 |
+| Vaadin | Step-up route integration (`AuthorizationDecision.StepUpRequired` + `JSentinelServiceResolver.stepUpRouteName()`) | Shipped / V00.70 |
 | Vaadin | `SessionManagementView` (reusable Composite with grid + per-row Revoke) | Shipped / V00.70 |
 | Vaadin | `SecuredButton` / `SecuredRouterLink` / `SecuredMenuItem` / `SecuredVisibility(HIDE \| DISABLE)` (Phase 8a/8b) | Shipped / V00.70 |
-| Vaadin | `SecurityVersionEnforcerListener` (`@ListenerPriority(MAX_VALUE)`) | Shipped / V00.70 |
+| Vaadin | `JSentinelVersionEnforcerListener` (`@ListenerPriority(MAX_VALUE)`) | Shipped / V00.70 |
 | REST | REST security adapter | Shipped |
 | REST | REST security filter / 401 / 403 handling | Shipped |
 | REST | REST step-up via `401 + WWW-Authenticate: StepUp method="<m>"` (RFC 7235) | Shipped / V00.70 |
-| REST | `RestSecurityVersionFilter` (drift → `401 + WWW-Authenticate: SessionStale`) | Shipped / V00.70 |
-| REST | `OpenApiSecurityMetadataGenerator` + `HandlerSecurityMetadata` (Phase 8d) | Shipped / V00.70 |
+| REST | `RestJSentinelVersionFilter` (drift → `401 + WWW-Authenticate: SessionStale`) | Shipped / V00.70 |
+| REST | `OpenApiJSentinelMetadataGenerator` + `HandlerJSentinelMetadata` (Phase 8d) | Shipped / V00.70 |
 | Standalone | Standalone security adapter | Shipped |
 | Demo | Vaadin demo | Shipped |
 | Demo | REST demo | Shipped |
@@ -87,7 +87,7 @@ Timestamp: 2026-05-31_22-00-34 Europe/Berlin (state after V00.70.00 release)
 | Testing | Mutation testing setup (`pitest-test-classes=com.svenruppert.*`) | Shipped / V00.70 (typo fix vs. V00.60) |
 | Testing | PIT coverage on library modules (core 86 %, vaadin 79 %, rest 95 %, standalone 97 %, processor 82 %, eclipsestore 70 %) | Shipped / V00.70 |
 | Audit | Sealed `AuditEvent` (27 variants in V00.70, +11 vs. V00.60) | Shipped / V00.70 |
-| Audit | `StoreBackedSecurityAuditService` over `AuditEventStore` | Shipped / V00.70 |
+| Audit | `StoreBackedJSentinelAuditService` over `AuditEventStore` | Shipped / V00.70 |
 | Audit | `RingBufferAuditSink` + `LoggingAuditSink` + `CompositeAuditService` | Shipped |
 | V00.75 | Security event bus | New concept |
 | V00.75 | Dedicated module `security-events` | Planned |

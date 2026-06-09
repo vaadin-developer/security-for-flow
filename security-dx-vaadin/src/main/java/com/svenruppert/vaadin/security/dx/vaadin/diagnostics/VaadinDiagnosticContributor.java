@@ -10,15 +10,15 @@
  */
 package com.svenruppert.vaadin.security.dx.vaadin.diagnostics;
 
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.autoservice.api.SecurityAutoService;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.vaadin.security.autoservice.api.JSentinelAutoService;
 import com.svenruppert.vaadin.security.dx.diagnostics.DiagnosticContributor;
 import com.svenruppert.vaadin.security.dx.diagnostics.DiagnosticReportBuilder;
 import com.svenruppert.vaadin.security.dx.diagnostics.ServiceWarning;
 
 /**
  * Vaadin-side {@link DiagnosticContributor}. Adds Vaadin-specific
- * findings to {@code SecurityDiagnostics.inspect()}.
+ * findings to {@code JSentinelDiagnostics.inspect()}.
  * <p>
  * Rules:
  * <ul>
@@ -33,7 +33,7 @@ import com.svenruppert.vaadin.security.dx.diagnostics.ServiceWarning;
  *
  * @since 00.72.00
  */
-@SecurityAutoService(DiagnosticContributor.class)
+@JSentinelAutoService(DiagnosticContributor.class)
 public final class VaadinDiagnosticContributor implements DiagnosticContributor {
 
   /** ServiceLoader requires a public no-arg constructor. */
@@ -48,7 +48,7 @@ public final class VaadinDiagnosticContributor implements DiagnosticContributor 
   @Override
   public void contribute(DiagnosticReportBuilder builder) {
     try {
-      String stepUp = SecurityServiceResolver.stepUpRouteName();
+      String stepUp = JSentinelServiceResolver.stepUpRouteName();
       if (stepUp == null || stepUp.isBlank()) {
         builder.addWarning(new ServiceWarning(
             "vaadin/step-up-route-blank",
@@ -59,7 +59,7 @@ public final class VaadinDiagnosticContributor implements DiagnosticContributor 
       builder.addWarning(new ServiceWarning(
           "vaadin/rule-failed",
           "step-up-route check failed: " + e.getClass().getSimpleName() + ": " + e.getMessage(),
-          "Inspect SecurityServiceResolver state."));
+          "Inspect JSentinelServiceResolver state."));
     }
   }
 }

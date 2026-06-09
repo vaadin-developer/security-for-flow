@@ -11,7 +11,7 @@
 package com.svenruppert.vaadin.security.dx.bootstrap;
 
 import com.svenruppert.vaadin.security.authorization.api.SubjectIdResolver;
-import com.svenruppert.vaadin.security.session.SecurityVersionStore;
+import com.svenruppert.vaadin.security.session.JSentinelVersionStore;
 import com.svenruppert.vaadin.security.session.SessionPolicy;
 import com.svenruppert.vaadin.security.session.SessionStore;
 
@@ -21,7 +21,7 @@ import java.time.Duration;
  * Session sub-builder of the fluent bootstrap.
  *
  * <p><strong>V00.73 status:</strong> typed surface — most methods
- * are wired through existing {@code SecurityServiceResolver}
+ * are wired through existing {@code JSentinelServiceResolver}
  * setters. The exception is {@link #storeBacked(SessionStore)}:
  * no global {@code setSessionStore(...)} exists in the V00.71
  * resolver, so the store stays in DX state and is consumed by
@@ -41,7 +41,7 @@ import java.time.Duration;
  *
  * <p>{@link #subjectIdResolver(SubjectIdResolver)} lives here
  * because V00.70/V00.71 use {@code SubjectIdResolver} only for
- * {@code SecurityVersion} drift detection — a session concept
+ * {@code JSentinelVersion} drift detection — a session concept
  * (Konzept §7.3).
  *
  * @since 00.72.00
@@ -50,7 +50,7 @@ public interface SessionBootstrap {
 
   SessionBootstrap storeBacked(SessionStore store);
 
-  SessionBootstrap securityVersion(SecurityVersionStore store);
+  SessionBootstrap securityVersion(JSentinelVersionStore store);
 
   SessionBootstrap subjectIdResolver(SubjectIdResolver<?> resolver);
 

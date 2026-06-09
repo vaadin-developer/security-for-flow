@@ -17,7 +17,7 @@
 package com.svenruppert.vaadin.security.authorization;
 
 import com.svenruppert.vaadin.security.audit.SessionInvalidated;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.session.SessionContext;
 import com.svenruppert.vaadin.security.session.SessionDecision;
 import com.svenruppert.vaadin.security.session.SessionMetadata;
@@ -65,9 +65,9 @@ class LoginViewPolicyOrderingTest extends BrowserlessTest {
 
   @BeforeEach
   void wire() {
-    SecurityServiceResolver.resetAll();
-    SecurityServiceResolver.setSessionPolicy(sessionPolicy);
-    SecurityServiceResolver.setSecurityAuditService(audit);
+    JSentinelServiceResolver.resetAll();
+    JSentinelServiceResolver.setSessionPolicy(sessionPolicy);
+    JSentinelServiceResolver.setJSentinelAuditService(audit);
     calls.clear();
     OrderingLoginView.acceptCredentials = true;
     OrderingLoginView.callLog = calls;
@@ -75,7 +75,7 @@ class LoginViewPolicyOrderingTest extends BrowserlessTest {
 
   @AfterEach
   void cleanUp() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     OrderingLoginView.callLog = null;
   }
 

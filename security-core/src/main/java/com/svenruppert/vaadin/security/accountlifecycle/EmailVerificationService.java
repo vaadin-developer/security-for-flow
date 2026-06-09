@@ -18,9 +18,9 @@ package com.svenruppert.vaadin.security.accountlifecycle;
 
 import com.svenruppert.vaadin.security.audit.EmailVerificationRequested;
 import com.svenruppert.vaadin.security.audit.EmailVerified;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.authentication.PasswordHasher;
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 
@@ -47,7 +47,7 @@ import static java.util.Objects.requireNonNull;
  *       — generates a plain token, persists only its hash with
  *       the email it confirms, emits
  *       {@link EmailVerificationRequested}, hands the plain token
- *       to the {@link SecurityNotificationSender}.</li>
+ *       to the {@link JSentinelNotificationSender}.</li>
  *   <li>{@link #validate(String) validate(plain)} — looks the
  *       token up; returns the record only when live, in this
  *       tenant, not consumed, not expired.</li>
@@ -57,7 +57,7 @@ import static java.util.Objects.requireNonNull;
  *
  * <p>Bound to one {@link TenantId} at construction.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class EmailVerificationService {
 
   /** Default token entropy in bytes (256 bits). */
@@ -65,8 +65,8 @@ public final class EmailVerificationService {
 
   private final EmailVerificationTokenStore store;
   private final PasswordHasher hasher;
-  private final SecurityAuditService auditService;
-  private final SecurityNotificationSender notificationSender;
+  private final JSentinelAuditService auditService;
+  private final JSentinelNotificationSender notificationSender;
   private final TenantId tenant;
   private final Clock clock;
   private final Supplier<String> tokenSource;
@@ -82,8 +82,8 @@ public final class EmailVerificationService {
    */
   public EmailVerificationService(EmailVerificationTokenStore store,
                                   PasswordHasher hasher,
-                                  SecurityAuditService auditService,
-                                  SecurityNotificationSender notificationSender) {
+                                  JSentinelAuditService auditService,
+                                  JSentinelNotificationSender notificationSender) {
     this(store, hasher, auditService, notificationSender,
         TenantId.DEFAULT, Clock.systemUTC(), defaultTokenSource());
   }
@@ -102,8 +102,8 @@ public final class EmailVerificationService {
    */
   public EmailVerificationService(EmailVerificationTokenStore store,
                                   PasswordHasher hasher,
-                                  SecurityAuditService auditService,
-                                  SecurityNotificationSender notificationSender,
+                                  JSentinelAuditService auditService,
+                                  JSentinelNotificationSender notificationSender,
                                   TenantId tenant,
                                   Clock clock,
                                   Supplier<String> tokenSource) {
@@ -144,7 +144,7 @@ public final class EmailVerificationService {
         hash, tenant, subjectId, email, now, now.plus(ttl), Optional.empty());
     store.save(record);
     publishRequested(now, subjectId, email, hash);
-    notify(SecurityNotification.Kind.EMAIL_VERIFICATION_REQUESTED,
+    notify(JSentinelNotification.Kind.EMAIL_VERIFICATION_REQUESTED,
         subjectId, now,
         Map.of(
             "tokenPlain", plain,
@@ -183,7 +183,7 @@ public final class EmailVerificationService {
 
   /**
    * Marks the token consumed exactly once, emits {@link EmailVerified}
-   * and a {@link SecurityNotification.Kind#EMAIL_VERIFIED}
+   * and a {@link JSentinelNotification.Kind#EMAIL_VERIFIED}
    * notification.
    *
    * @param plainToken plain token; null/blank yields empty
@@ -201,7 +201,7 @@ public final class EmailVerificationService {
       return Optional.empty();
     }
     publishVerified(now, record.subjectId(), record.email(), record.tokenHash());
-    notify(SecurityNotification.Kind.EMAIL_VERIFIED,
+    notify(JSentinelNotification.Kind.EMAIL_VERIFIED,
         record.subjectId(), now,
         Map.of("email", record.email()));
     return Optional.of(record.withConsumedAt(now));
@@ -245,12 +245,12 @@ public final class EmailVerificationService {
     }
   }
 
-  private void notify(SecurityNotification.Kind kind,
+  private void notify(JSentinelNotification.Kind kind,
                       SubjectId subjectId,
                       Instant at,
                       Map<String, String> attributes) {
     try {
-      notificationSender.send(new SecurityNotification(
+      notificationSender.send(new JSentinelNotification(
           kind, subjectId, tenant, at, attributes));
     } catch (RuntimeException ignored) {
       // senders must not block the flow

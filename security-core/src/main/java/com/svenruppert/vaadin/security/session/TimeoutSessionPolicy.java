@@ -20,8 +20,8 @@ import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.SessionCreated;
 import com.svenruppert.vaadin.security.audit.SessionExpired;
 import com.svenruppert.vaadin.security.audit.SessionInvalidated;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -110,7 +110,7 @@ public final class TimeoutSessionPolicy<U> implements SessionPolicy<U> {
 
   private final Config config;
   private final Clock clock;
-  private final SecurityAuditService auditService;
+  private final JSentinelAuditService auditService;
 
   public TimeoutSessionPolicy() {
     this(Config.defaults(), Clock.systemUTC(), null);
@@ -120,9 +120,9 @@ public final class TimeoutSessionPolicy<U> implements SessionPolicy<U> {
    * @param config       thresholds and post-login behaviour
    * @param clock        time source — fixed clocks make testing deterministic
    * @param auditService audit sink, or {@code null} to resolve from
-   *                     {@link SecurityServiceResolver} on each event
+   *                     {@link JSentinelServiceResolver} on each event
    */
-  public TimeoutSessionPolicy(Config config, Clock clock, SecurityAuditService auditService) {
+  public TimeoutSessionPolicy(Config config, Clock clock, JSentinelAuditService auditService) {
     this.config = Objects.requireNonNull(config, "config");
     this.clock = Objects.requireNonNull(clock, "clock");
     this.auditService = auditService;
@@ -204,9 +204,9 @@ public final class TimeoutSessionPolicy<U> implements SessionPolicy<U> {
   }
 
   private void publish(AuditEvent event) {
-    SecurityAuditService sink = auditService != null
+    JSentinelAuditService sink = auditService != null
         ? auditService
-        : SecurityServiceResolver.securityAuditService();
+        : JSentinelServiceResolver.securityAuditService();
     try {
       sink.publish(event);
     } catch (RuntimeException auditFailure) {

@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.demo.rest.server;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 import com.svenruppert.vaadin.security.logout.SubjectSessionRegistry;
 import com.svenruppert.vaadin.security.demo.rest.domain.DemoUser;
-import com.svenruppert.vaadin.security.session.SecurityVersion;
+import com.svenruppert.vaadin.security.session.JSentinelVersion;
 
 import java.security.SecureRandom;
 import java.time.Clock;
@@ -55,14 +55,14 @@ public final class DemoTokenStore implements SubjectSessionRegistry {
 
   /**
    * Per-token user + lifetime metadata. The {@code snapshot}
-   * captures the {@link SecurityVersion} of the user's
+   * captures the {@link JSentinelVersion} of the user's
    * authority at issuance time so the V00.70 Phase 4c drift
    * filter can detect changes that happened after login.
    */
   public record Metadata(DemoUser user,
                          Instant createdAt,
                          Instant lastActivityAt,
-                         SecurityVersion snapshot) {
+                         JSentinelVersion snapshot) {
   }
 
   private final ConcurrentMap<String, Metadata> tokens = new ConcurrentHashMap<>();
@@ -83,17 +83,17 @@ public final class DemoTokenStore implements SubjectSessionRegistry {
   /**
    * Issues a token with the user's authority {@code snapshot}
    * captured at issuance time. The snapshot is what
-   * {@link com.svenruppert.vaadin.security.rest.RestSecurityVersionFilter}
-   * compares against the current {@code SecurityVersionStore}
+   * {@link com.svenruppert.vaadin.security.rest.RestJSentinelVersionFilter}
+   * compares against the current {@code JSentinelVersionStore}
    * value to detect drift.
    */
-  public String issue(DemoUser user, SecurityVersion snapshot) {
+  public String issue(DemoUser user, JSentinelVersion snapshot) {
     byte[] bytes = new byte[16];
     random.nextBytes(bytes);
     String token = HexFormat.of().formatHex(bytes);
     Instant now = Instant.now(clock);
     tokens.put(token, new Metadata(user, now, now,
-        snapshot == null ? SecurityVersion.INITIAL : snapshot));
+        snapshot == null ? JSentinelVersion.INITIAL : snapshot));
     sessionsByUser
         .computeIfAbsent(SubjectId.of(user.username()), k -> ConcurrentHashMap.newKeySet())
         .add(token);
@@ -102,11 +102,11 @@ public final class DemoTokenStore implements SubjectSessionRegistry {
 
   /**
    * Convenience overload that issues with
-   * {@link SecurityVersion#INITIAL}. Kept for tests and demo
+   * {@link JSentinelVersion#INITIAL}. Kept for tests and demo
    * code paths that don't need drift detection wired.
    */
   public String issue(DemoUser user) {
-    return issue(user, SecurityVersion.INITIAL);
+    return issue(user, JSentinelVersion.INITIAL);
   }
 
   public Optional<DemoUser> resolve(String token) {

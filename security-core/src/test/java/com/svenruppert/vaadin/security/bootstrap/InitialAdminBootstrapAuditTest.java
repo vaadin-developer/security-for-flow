@@ -22,8 +22,8 @@ import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.BootstrapAdminCreated;
 import com.svenruppert.vaadin.security.audit.BootstrapTokenRejected;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -50,14 +50,14 @@ class InitialAdminBootstrapAuditTest {
 
   @BeforeEach
   void wireAudit() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     audit = new RecordingAudit();
-    SecurityServiceResolver.setSecurityAuditService(audit);
+    JSentinelServiceResolver.setJSentinelAuditService(audit);
   }
 
   @AfterEach
   void clearAudit() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
   }
 
   @Test
@@ -158,7 +158,7 @@ class InitialAdminBootstrapAuditTest {
 
   // ── Fixtures ──────────────────────────────────────────────────
 
-  private static final class RecordingAudit implements SecurityAuditService {
+  private static final class RecordingAudit implements JSentinelAuditService {
     final List<AuditEvent> events = new ArrayList<>();
 
     @Override public void publish(AuditEvent event) {

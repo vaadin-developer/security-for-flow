@@ -26,7 +26,7 @@ import com.svenruppert.vaadin.security.logout.vaadin.VaadinLogoutService;
 import com.svenruppert.vaadin.security.demo.restclient.backend.BackendClientProvider;
 import com.svenruppert.vaadin.security.demo.restclient.backend.BackendException;
 import com.svenruppert.vaadin.security.demo.restclient.backend.RemoteUser;
-import com.svenruppert.vaadin.security.demo.restclient.security.ClientSecurityContext;
+import com.svenruppert.vaadin.security.demo.restclient.security.ClientJSentinelContext;
 import com.svenruppert.vaadin.security.demo.restclient.views.components.BackendOperationCard;
 import com.svenruppert.vaadin.security.demo.restclient.views.components.PermissionDemoCard;
 import com.svenruppert.vaadin.security.demo.restclient.views.standalone.AdminRolesView;
@@ -150,13 +150,13 @@ public class MainView extends AppLayout {
   }
 
   private static boolean hasPermission(String permissionValue) {
-    return ClientSecurityContext.user()
+    return ClientJSentinelContext.user()
         .map(u -> u.permissions().stream().anyMatch(p -> permissionValue.equals(p.value())))
         .orElse(false);
   }
 
   private Component welcomeContent() {
-    RemoteUser user = ClientSecurityContext.user().orElse(null);
+    RemoteUser user = ClientJSentinelContext.user().orElse(null);
     String name = user == null ? "Guest" : user.displayName();
     String roles = user == null ? "(none)"
         : user.roles().stream().map(r -> r.value()).sorted().toList().toString();
@@ -183,7 +183,7 @@ public class MainView extends AppLayout {
   }
 
   private void logout() {
-    String token = ClientSecurityContext.token().orElse(null);
+    String token = ClientJSentinelContext.token().orElse(null);
     if (token != null) {
       try {
         BackendClientProvider.client().logout(token);

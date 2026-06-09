@@ -28,7 +28,7 @@ import static java.lang.annotation.ElementType.TYPE;
  * auto-generated {@code <Type>Secured} wrapper subclass shall be emitted
  * during compilation. The generated wrapper overrides every public,
  * non-final, non-static method of the original and inserts a
- * {@link com.svenruppert.vaadin.security.authorization.api.SecurityEnforcer}
+ * {@link com.svenruppert.vaadin.security.authorization.api.JSentinelEnforcer}
  * call ahead of the {@code super.<method>(...)} delegate when the method
  * (or the class) carries one of the method-security annotations:
  *
@@ -41,7 +41,7 @@ import static java.lang.annotation.ElementType.TYPE;
  * </ul>
  *
  * <p>This annotation itself does <strong>not</strong> trigger
- * runtime enforcement and carries no {@link SecurityAnnotation}
+ * runtime enforcement and carries no {@link JSentinelAnnotation}
  * meta-binding. It is consumed at compile time only — retention is
  * {@link RetentionPolicy#SOURCE} so the marker does not appear in
  * the class file.

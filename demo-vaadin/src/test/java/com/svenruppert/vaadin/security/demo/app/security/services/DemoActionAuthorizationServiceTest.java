@@ -18,7 +18,7 @@ package com.svenruppert.vaadin.security.demo.app.security.services;
 
 import com.svenruppert.vaadin.security.action.ActionPermission;
 import com.svenruppert.vaadin.security.authorization.api.AccessDeniedException;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.vaadin.security.demo.app.security.model.MyUser;
 import com.svenruppert.vaadin.security.demo.app.security.permissions.DemoPermission;
 import com.svenruppert.vaadin.security.demo.app.security.roles.AuthorizationRole;
@@ -50,13 +50,13 @@ class DemoActionAuthorizationServiceTest {
 
   @BeforeEach
   void wire() {
-    SecurityServiceResolver.resetAll();
-    SecurityServiceResolver.setSecurityAuditService(audit);
+    JSentinelServiceResolver.resetAll();
+    JSentinelServiceResolver.setJSentinelAuditService(audit);
   }
 
   @AfterEach
   void reset() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
   }
 
   @Test

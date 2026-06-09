@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.policy.api;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +52,7 @@ import static java.util.Objects.requireNonNull;
  * <p>Builder is not thread-safe; build the policy once at registration
  * time, then evaluate the built {@link Policy} concurrently.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class PolicyBuilder {
 
   static final String GENERIC_DEFAULT_DENY_REASON = "policy denied";

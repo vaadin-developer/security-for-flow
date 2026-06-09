@@ -18,7 +18,7 @@ package com.svenruppert.vaadin.security.authorization.api.permissions;
 
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresAllPermissions;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 class RequiresAllPermissionsEvaluatorTest {
 
-  private static AccessContext ctxWithSubject(SecuritySubject subject) {
+  private static AccessContext ctxWithSubject(JSentinelSubject subject) {
     return new AccessContext(
         Optional.of(subject), "rest-endpoint", "/x", "read", Map.of());
   }
@@ -43,11 +43,11 @@ class RequiresAllPermissionsEvaluatorTest {
         Optional.empty(), "rest-endpoint", "/x", "read", Map.of());
   }
 
-  private static SecuritySubject subjectWith(String... permissions) {
+  private static JSentinelSubject subjectWith(String... permissions) {
     Set<PermissionName> perms = java.util.Arrays.stream(permissions)
         .map(PermissionName::new)
         .collect(java.util.stream.Collectors.toUnmodifiableSet());
-    return new SecuritySubject("u-1", "u-1", Set.of(), perms);
+    return new JSentinelSubject("u-1", "u-1", Set.of(), perms);
   }
 
   private static RequiresAllPermissions annotationFor(String... values) {

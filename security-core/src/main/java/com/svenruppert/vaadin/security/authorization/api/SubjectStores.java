@@ -45,7 +45,7 @@ public final class SubjectStores {
       return cached;
     }
 
-    SubjectStore loaded = SecurityServiceResolver.requireSingleService(
+    SubjectStore loaded = JSentinelServiceResolver.requireSingleService(
         SubjectStore.class,
         ServiceLoader.load(SubjectStore.class));
 
@@ -64,7 +64,7 @@ public final class SubjectStores {
       return Optional.of(cached);
     }
 
-    Optional<SubjectStore> loaded = SecurityServiceResolver.findSingleService(
+    Optional<SubjectStore> loaded = JSentinelServiceResolver.findSingleService(
         SubjectStore.class,
         ServiceLoader.load(SubjectStore.class));
     loaded.ifPresent(store -> SUBJECT_STORE_REF.compareAndSet(null, store));

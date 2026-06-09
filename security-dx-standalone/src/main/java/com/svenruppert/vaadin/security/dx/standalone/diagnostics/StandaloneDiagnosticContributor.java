@@ -10,7 +10,7 @@
  */
 package com.svenruppert.vaadin.security.dx.standalone.diagnostics;
 
-import com.svenruppert.vaadin.security.autoservice.api.SecurityAutoService;
+import com.svenruppert.vaadin.security.autoservice.api.JSentinelAutoService;
 import com.svenruppert.vaadin.security.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.vaadin.security.dx.diagnostics.DiagnosticContributor;
 import com.svenruppert.vaadin.security.dx.diagnostics.DiagnosticReportBuilder;
@@ -24,7 +24,7 @@ import java.util.ServiceLoader;
  *
  * @since 00.72.00
  */
-@SecurityAutoService(DiagnosticContributor.class)
+@JSentinelAutoService(DiagnosticContributor.class)
 public final class StandaloneDiagnosticContributor implements DiagnosticContributor {
 
   public StandaloneDiagnosticContributor() {
@@ -42,7 +42,7 @@ public final class StandaloneDiagnosticContributor implements DiagnosticContribu
       builder.addMissing(new MissingRecommendedService(
           LoginAttemptPolicy.class,
           "No LoginAttemptPolicy registered for standalone bootstrap.",
-          "Register a LoginAttemptPolicy via @SecurityAutoService(LoginAttemptPolicy.class) "
+          "Register a LoginAttemptPolicy via @JSentinelAutoService(LoginAttemptPolicy.class) "
               + "or StandaloneSecurity.bootstrap().loginAttemptPolicy(...)."));
     }
   }

@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.session;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import com.svenruppert.vaadin.security.logout.SubjectId;
 
@@ -34,8 +34,8 @@ import static java.util.Objects.requireNonNull;
  * "revoke all sessions of alice after a password change").
  *
  * <p>The {@code securityVersionAtLogin} component is the
- * {@link SecurityVersion} of the subject at the moment this session
- * was opened. A planned {@code SecurityVersionCheck} interceptor
+ * {@link JSentinelVersion} of the subject at the moment this session
+ * was opened. A planned {@code JSentinelVersionCheck} interceptor
  * (Phase 4 of the V00.70 roadmap) compares this value to the
  * subject's <em>current</em> security version on every request: a
  * mismatch means the subject's authority has changed since login,
@@ -56,14 +56,14 @@ import static java.util.Objects.requireNonNull;
  * @param securityVersionAtLogin  subject security version at login; non-null
  * @param status                  current lifecycle state; non-null
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public record SessionRecord(
     SessionId sessionId,
     SubjectId subjectId,
     TenantId tenant,
     Instant createdAt,
     Instant lastActivityAt,
-    SecurityVersion securityVersionAtLogin,
+    JSentinelVersion securityVersionAtLogin,
     SessionStatus status
 ) {
 

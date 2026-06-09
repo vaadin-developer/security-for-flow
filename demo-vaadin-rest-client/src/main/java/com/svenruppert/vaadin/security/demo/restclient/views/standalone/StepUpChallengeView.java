@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.demo.restclient.views.standalone;
 
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
@@ -27,9 +27,9 @@ import com.vaadin.flow.router.Route;
 /**
  * Landing route that the {@code AuthorizationListener} reroutes to
  * when a policy emits {@code StepUpRequired}. The route name matches
- * the default {@link SecurityServiceResolver#DEFAULT_STEP_UP_ROUTE_NAME}
+ * the default {@link JSentinelServiceResolver#DEFAULT_STEP_UP_ROUTE_NAME}
  * — change it at startup via
- * {@code SecurityServiceResolver.setStepUpRouteName("custom-route")}
+ * {@code JSentinelServiceResolver.setStepUpRouteName("custom-route")}
  * and register the matching view under that route.
  *
  * <p>The view itself is a placeholder: a real MFA / re-auth flow
@@ -40,7 +40,7 @@ import com.vaadin.flow.router.Route;
 @Route(StepUpChallengeView.NAV)
 public class StepUpChallengeView extends Composite<Div> {
 
-  /** Route name; matches {@link SecurityServiceResolver#DEFAULT_STEP_UP_ROUTE_NAME}. */
+  /** Route name; matches {@link JSentinelServiceResolver#DEFAULT_STEP_UP_ROUTE_NAME}. */
   public static final String NAV = "step-up";
 
   public StepUpChallengeView() {

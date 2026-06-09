@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.demo.restclient.security;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationEvaluator;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleMatcher;
-import com.svenruppert.vaadin.security.autoservice.api.SecurityAutoService;
+import com.svenruppert.vaadin.security.autoservice.api.JSentinelAutoService;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
 
@@ -28,7 +28,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /** Evaluator for the project-specific {@link VisibleForRoles} annotation. */
-@SecurityAutoService(AuthorizationEvaluator.class)
+@JSentinelAutoService(AuthorizationEvaluator.class)
 public final class ProjectRoleAccessEvaluator implements AuthorizationEvaluator<VisibleForRoles> {
 
   @Override

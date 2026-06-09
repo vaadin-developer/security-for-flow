@@ -16,11 +16,11 @@
  */
 package com.svenruppert.vaadin.security.logout;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
-import com.svenruppert.vaadin.security.session.SecurityVersion;
-import com.svenruppert.vaadin.security.session.SecurityVersionKey;
-import com.svenruppert.vaadin.security.session.SecurityVersionStore;
+import com.svenruppert.vaadin.security.session.JSentinelVersion;
+import com.svenruppert.vaadin.security.session.JSentinelVersionKey;
+import com.svenruppert.vaadin.security.session.JSentinelVersionStore;
 import com.svenruppert.vaadin.security.session.SessionId;
 import com.svenruppert.vaadin.security.session.SessionRecord;
 import com.svenruppert.vaadin.security.session.SessionStatus;
@@ -44,8 +44,8 @@ import static java.util.Objects.requireNonNull;
  * adapter fills the missing fields with sensible defaults at
  * {@link #register(SubjectId, String) register} time:
  * timestamps from the supplied clock,
- * {@link SecurityVersion#INITIAL} (or the subject's current
- * value when a {@link SecurityVersionStore} is supplied), status
+ * {@link JSentinelVersion#INITIAL} (or the subject's current
+ * value when a {@link JSentinelVersionStore} is supplied), status
  * {@link SessionStatus#ACTIVE}. Calling
  * {@link #register(SubjectId, String) register} again for an
  * existing session id refreshes the {@code lastActivityAt} via
@@ -55,26 +55,26 @@ import static java.util.Objects.requireNonNull;
  * <p>Bound to one {@link TenantId} at construction. Multi-tenant
  * deployments instantiate one registry per tenant.
  *
- * <p>For Phase 4c (SecurityVersionCheck-driven session refresh),
- * pass a {@link SecurityVersionStore} so each fresh session
+ * <p>For Phase 4c (JSentinelVersionCheck-driven session refresh),
+ * pass a {@link JSentinelVersionStore} so each fresh session
  * captures the subject's current security version as its
  * {@link SessionRecord#securityVersionAtLogin() snapshot}.
  * Without one, every snapshot defaults to
- * {@link SecurityVersion#INITIAL} — fine for adapters that don't
+ * {@link JSentinelVersion#INITIAL} — fine for adapters that don't
  * enforce drift but useless for the Vaadin/REST drift interceptors.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 public final class StoreBackedSubjectSessionRegistry implements SubjectSessionRegistry {
 
   private final SessionStore store;
   private final TenantId tenant;
   private final Clock clock;
-  private final SecurityVersionStore versionStore;
+  private final JSentinelVersionStore versionStore;
 
   /**
    * Builds a registry bound to {@link TenantId#DEFAULT} using a
    * system clock and no version-store integration — every new
-   * session is recorded with {@link SecurityVersion#INITIAL}.
+   * session is recorded with {@link JSentinelVersion#INITIAL}.
    *
    * @param store backing session store; non-null
    */
@@ -105,14 +105,14 @@ public final class StoreBackedSubjectSessionRegistry implements SubjectSessionRe
    * @param clock        time source; non-null
    * @param versionStore optional version store consulted at
    *                     register-time to capture the subject's
-   *                     current {@link SecurityVersion} as the
+   *                     current {@link JSentinelVersion} as the
    *                     session snapshot; {@code null} falls back
-   *                     to {@link SecurityVersion#INITIAL}
+   *                     to {@link JSentinelVersion#INITIAL}
    */
   public StoreBackedSubjectSessionRegistry(SessionStore store,
                                            TenantId tenant,
                                            Clock clock,
-                                           SecurityVersionStore versionStore) {
+                                           JSentinelVersionStore versionStore) {
     this.store = requireNonNull(store, "store must not be null");
     this.tenant = tenant == null ? TenantId.DEFAULT : tenant;
     this.clock = requireNonNull(clock, "clock must not be null");
@@ -132,11 +132,11 @@ public final class StoreBackedSubjectSessionRegistry implements SubjectSessionRe
     store.save(record);
   }
 
-  private SecurityVersion snapshotVersionFor(SubjectId subjectId) {
+  private JSentinelVersion snapshotVersionFor(SubjectId subjectId) {
     if (versionStore == null) {
-      return SecurityVersion.INITIAL;
+      return JSentinelVersion.INITIAL;
     }
-    return versionStore.current(new SecurityVersionKey(tenant, subjectId));
+    return versionStore.current(new JSentinelVersionKey(tenant, subjectId));
   }
 
   @Override

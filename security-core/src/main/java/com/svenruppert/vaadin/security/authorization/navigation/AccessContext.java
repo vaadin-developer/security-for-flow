@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.authorization.navigation;
 
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -34,7 +34,7 @@ import static java.util.Objects.requireNonNull;
  * @param attributes   adapter-provided contextual attributes
  */
 public record AccessContext(
-    Optional<SecuritySubject> subject,
+    Optional<JSentinelSubject> subject,
     String resourceType,
     String resourceName,
     String operation,

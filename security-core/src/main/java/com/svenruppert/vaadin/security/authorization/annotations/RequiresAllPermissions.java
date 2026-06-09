@@ -16,7 +16,7 @@
  */
 package com.svenruppert.vaadin.security.authorization.annotations;
 
-import com.svenruppert.vaadin.security.authorization.api.ExperimentalSecurityApi;
+import com.svenruppert.vaadin.security.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.vaadin.security.authorization.api.permissions.RequiresAllPermissionsEvaluator;
 
 import java.lang.annotation.Retention;
@@ -37,10 +37,10 @@ import static java.lang.annotation.ElementType.TYPE;
  * means "a AND b" or "a OR b". When the rule should be OR, use
  * {@link RequiresAnyPermission} instead.
  */
-@ExperimentalSecurityApi
+@ExperimentalJSentinelApi
 @Retention(RetentionPolicy.RUNTIME)
 @Target({TYPE, METHOD})
-@SecurityAnnotation(RequiresAllPermissionsEvaluator.class)
+@JSentinelAnnotation(RequiresAllPermissionsEvaluator.class)
 public @interface RequiresAllPermissions {
 
   /**

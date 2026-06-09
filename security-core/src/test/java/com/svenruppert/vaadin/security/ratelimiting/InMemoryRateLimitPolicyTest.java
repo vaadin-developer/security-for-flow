@@ -19,7 +19,7 @@ package com.svenruppert.vaadin.security.ratelimiting;
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.RateLimitExceeded;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -165,7 +165,7 @@ class InMemoryRateLimitPolicyTest {
   @DisplayName("audit failures do not block the decision")
   void auditFailureSwallowed() {
     InMemoryRateLimitStore store = new InMemoryRateLimitStore();
-    SecurityAuditService throwing = new SecurityAuditService() {
+    JSentinelAuditService throwing = new JSentinelAuditService() {
       @Override public void publish(AuditEvent event) { throw new RuntimeException("boom"); }
       @Override public List<AuditEvent> query(AuditQuery query) { return List.of(); }
     };
@@ -240,7 +240,7 @@ class InMemoryRateLimitPolicyTest {
     assertTrue(t.retryAfter().isZero());
   }
 
-  private static final class CollectingAuditService implements SecurityAuditService {
+  private static final class CollectingAuditService implements JSentinelAuditService {
     final List<AuditEvent> published = new ArrayList<>();
     @Override public void publish(AuditEvent event) { published.add(event); }
     @Override public List<AuditEvent> query(AuditQuery query) { return List.copyOf(published); }

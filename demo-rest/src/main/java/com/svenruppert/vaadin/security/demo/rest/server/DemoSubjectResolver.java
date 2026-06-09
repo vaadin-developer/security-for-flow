@@ -18,7 +18,7 @@ package com.svenruppert.vaadin.security.demo.rest.server;
 
 import com.svenruppert.vaadin.security.authentication.ApiKeyAuthenticationService;
 import com.svenruppert.vaadin.security.authentication.ApiKeyRecord;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 import com.svenruppert.vaadin.security.authorization.api.tenant.TenantId;
@@ -28,7 +28,7 @@ import com.svenruppert.vaadin.security.logout.SubjectId;
 import com.svenruppert.vaadin.security.rest.BearerTokenExtractor;
 import com.svenruppert.vaadin.security.rest.RestHeaders;
 import com.svenruppert.vaadin.security.rest.RestRequest;
-import com.svenruppert.vaadin.security.rest.RestSecurityVersionContext;
+import com.svenruppert.vaadin.security.rest.RestJSentinelVersionContext;
 import com.svenruppert.vaadin.security.rest.RestSubjectResolver;
 import com.svenruppert.vaadin.security.session.SessionMetadata;
 
@@ -72,19 +72,19 @@ public final class DemoSubjectResolver implements RestSubjectResolver {
   }
 
   @Override
-  public Optional<SecuritySubject> resolveSubject(RestRequest request) {
+  public Optional<JSentinelSubject> resolveSubject(RestRequest request) {
     // V00.70 Phase-7b API-key path takes precedence — a request that
     // ships an X-Api-Key uses the scopes recorded on the key as its
     // entire authorization surface (no role inheritance from any
     // session token).
-    Optional<SecuritySubject> apiKeySubject = resolveApiKeySubject(request);
+    Optional<JSentinelSubject> apiKeySubject = resolveApiKeySubject(request);
     if (apiKeySubject.isPresent()) {
       return apiKeySubject;
     }
     return extractToken(request).flatMap(tokens::resolve).map(this::toSubject);
   }
 
-  private Optional<SecuritySubject> resolveApiKeySubject(RestRequest request) {
+  private Optional<JSentinelSubject> resolveApiKeySubject(RestRequest request) {
     if (apiKeyAuth == null) {
       return Optional.empty();
     }
@@ -96,8 +96,8 @@ public final class DemoSubjectResolver implements RestSubjectResolver {
         .map(DemoSubjectResolver::toApiKeySubject);
   }
 
-  private static SecuritySubject toApiKeySubject(ApiKeyRecord record) {
-    return new SecuritySubject(
+  private static JSentinelSubject toApiKeySubject(ApiKeyRecord record) {
+    return new JSentinelSubject(
         record.subjectId().value(),
         record.name(),
         Set.of(),
@@ -105,13 +105,13 @@ public final class DemoSubjectResolver implements RestSubjectResolver {
   }
 
   @Override
-  public Optional<RestSecurityVersionContext> resolveSecurityVersionContext(RestRequest request) {
+  public Optional<RestJSentinelVersionContext> resolveJSentinelVersionContext(RestRequest request) {
     Optional<String> token = extractToken(request);
     if (token.isEmpty()) {
       return Optional.empty();
     }
     return tokens.resolveMetadata(token.get())
-        .map(metadata -> new RestSecurityVersionContext(
+        .map(metadata -> new RestJSentinelVersionContext(
             SubjectId.of(metadata.user().username()),
             TenantId.DEFAULT,
             metadata.snapshot(),
@@ -143,10 +143,10 @@ public final class DemoSubjectResolver implements RestSubjectResolver {
     return BEARER.extract(request);
   }
 
-  private SecuritySubject toSubject(DemoUser user) {
+  private JSentinelSubject toSubject(DemoUser user) {
     RoleName roleName = user.role().roleName();
     Set<PermissionName> permissions = mapping.permissionsFor(roleName);
-    return new SecuritySubject(
+    return new JSentinelSubject(
         user.username(),
         user.displayName(),
         Set.of(roleName),

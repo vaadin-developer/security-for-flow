@@ -1,7 +1,7 @@
 # 5-Minute Setup — Vaadin
 
 Goal: a Vaadin Flow application that uses `security-for-flow` V00.73 with
-the fluent bootstrap, `@SecurityAutoService` and the Vaadin starter.
+the fluent bootstrap, `@JSentinelAutoService` and the Vaadin starter.
 V00.73 closes the two V00.72 carve-outs — the `.audit(...)` /
 `.sessions(...)` / `.policies(...)` / `.roles(...)` / `.credentials(...)`
 sub-builders are real, and `SecuredUi.requiresPolicy(...)` /
@@ -51,13 +51,13 @@ sub-builders are real, and `SecuredUi.requiresPolicy(...)` /
 ## 2. Annotate your SPI implementations
 
 ```java
-import com.svenruppert.vaadin.security.autoservice.api.SecurityAutoService;
+import com.svenruppert.vaadin.security.autoservice.api.JSentinelAutoService;
 
-@SecurityAutoService(AuthenticationService.class)
+@JSentinelAutoService(AuthenticationService.class)
 public final class MyAuthenticationService
     implements AuthenticationService<Credentials, MyUser> { /* ... */ }
 
-@SecurityAutoService(AuthorizationService.class)
+@JSentinelAutoService(AuthorizationService.class)
 public final class MyAuthorizationService
     implements AuthorizationService<MyUser> { /* ... */ }
 ```
@@ -68,12 +68,12 @@ public final class MyAuthorizationService
 import com.svenruppert.vaadin.security.dx.vaadin.bootstrap.VaadinSecurity;
 import com.svenruppert.vaadin.security.policy.api.Policy;
 import com.svenruppert.vaadin.security.policy.api.SubjectPredicates;
-import com.svenruppert.vaadin.security.starter.profile.VaadinSecurityStarter;
+import com.svenruppert.vaadin.security.starter.profile.VaadinJSentinelStarter;
 
-public final class SecurityInit {
+public final class JSentinelInit {
   public static void install() {
     var runtime = VaadinSecurity.bootstrap()
-        .use(VaadinSecurityStarter.developmentDefaults())
+        .use(VaadinJSentinelStarter.developmentDefaults())
         .subjectType(MyUser.class)
         .policies(p -> p
             .register(Policy.named("documents.editor-or-admin")
@@ -111,7 +111,7 @@ failure (`secure-route/unknown-policy`).
 ## 5. Done
 
 `runtime.log()` prints every registered service and any diagnostic
-warning. Switch to `VaadinSecurityStarter.productionDefaults()` (or
+warning. Switch to `VaadinJSentinelStarter.productionDefaults()` (or
 `.strictDefaults()`) when going to production. STRICT now breaks on the
 three V00.72-to-V00.73 promoted codes
 (`secure-route/unknown-policy`,

@@ -10,10 +10,10 @@
  */
 package com.svenruppert.vaadin.security.starter.profile;
 
-import com.svenruppert.vaadin.security.dx.runtime.SecurityBootstrapMode;
+import com.svenruppert.vaadin.security.dx.runtime.JSentinelBootstrapMode;
 
 /** Development profile — verbose diagnostics, DEVELOPMENT mode default. */
-public final class DevelopmentDefaults implements VaadinSecurityStarter {
+public final class DevelopmentDefaults implements VaadinJSentinelStarter {
 
   static final DevelopmentDefaults INSTANCE = new DevelopmentDefaults();
 
@@ -21,7 +21,7 @@ public final class DevelopmentDefaults implements VaadinSecurityStarter {
   }
 
   @Override
-  public SecurityBootstrapMode preferredMode() {
-    return SecurityBootstrapMode.DEVELOPMENT;
+  public JSentinelBootstrapMode preferredMode() {
+    return JSentinelBootstrapMode.DEVELOPMENT;
   }
 }

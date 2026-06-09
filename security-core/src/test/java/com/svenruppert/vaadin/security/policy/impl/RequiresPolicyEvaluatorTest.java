@@ -19,11 +19,11 @@ package com.svenruppert.vaadin.security.policy.impl;
 import com.svenruppert.vaadin.security.audit.AuditEvent;
 import com.svenruppert.vaadin.security.audit.AuditQuery;
 import com.svenruppert.vaadin.security.audit.PolicyEvaluated;
-import com.svenruppert.vaadin.security.audit.SecurityAuditService;
+import com.svenruppert.vaadin.security.audit.JSentinelAuditService;
 import com.svenruppert.vaadin.security.authorization.annotations.RequiresPolicy;
 import com.svenruppert.vaadin.security.authorization.api.AuthorizationDecision;
-import com.svenruppert.vaadin.security.authorization.api.SecurityServiceResolver;
-import com.svenruppert.vaadin.security.authorization.api.SecuritySubject;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.vaadin.security.authorization.api.JSentinelSubject;
 import com.svenruppert.vaadin.security.authorization.api.permissions.PermissionName;
 import com.svenruppert.vaadin.security.authorization.api.roles.RoleName;
 import com.svenruppert.vaadin.security.authorization.navigation.AccessContext;
@@ -56,19 +56,19 @@ class RequiresPolicyEvaluatorTest {
 
   @BeforeEach
   void setUp() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
     registry = new InMemoryPolicyRegistry();
-    SecurityServiceResolver.setPolicyRegistry(registry);
+    JSentinelServiceResolver.setPolicyRegistry(registry);
     auditSink = new RecordingAuditSink();
-    SecurityServiceResolver.setSecurityAuditService(auditSink);
+    JSentinelServiceResolver.setJSentinelAuditService(auditSink);
   }
 
   @AfterEach
   void tearDown() {
-    SecurityServiceResolver.resetAll();
+    JSentinelServiceResolver.resetAll();
   }
 
-  private static AccessContext ctxWithSubject(SecuritySubject subject) {
+  private static AccessContext ctxWithSubject(JSentinelSubject subject) {
     return new AccessContext(
         Optional.of(subject), "rest-endpoint", "/documents", "read", Map.of());
   }
@@ -100,7 +100,7 @@ class RequiresPolicyEvaluatorTest {
         .deny("must be ADMIN")
         .build());
 
-    SecuritySubject admin = new SecuritySubject(
+    JSentinelSubject admin = new JSentinelSubject(
         "u-admin", "admin", Set.of(new RoleName("ADMIN")), Set.of());
 
     AuthorizationDecision decision = new RequiresPolicyEvaluator()
@@ -121,7 +121,7 @@ class RequiresPolicyEvaluatorTest {
         .deny("must be ADMIN")
         .build());
 
-    SecuritySubject user = new SecuritySubject(
+    JSentinelSubject user = new JSentinelSubject(
         "u-user", "user", Set.of(new RoleName("USER")), Set.of());
 
     AuthorizationDecision decision = new RequiresPolicyEvaluator()
@@ -151,7 +151,7 @@ class RequiresPolicyEvaluatorTest {
     assertInstanceOf(AuthorizationDecision.Forbidden.class, decision);
 
     PolicyEvaluated audit = auditSink.singlePolicyEvent();
-    // SecuritySubject is absent, subjectId reflects that.
+    // JSentinelSubject is absent, subjectId reflects that.
     assertNull(audit.subjectId());
   }
 
@@ -177,7 +177,7 @@ class RequiresPolicyEvaluatorTest {
     registry.register(Policy.named("p")
         .stepUpRequiredIf(c -> true, PolicyDecision.StepUpMethod.MFA, "needs mfa")
         .build());
-    SecuritySubject user = new SecuritySubject(
+    JSentinelSubject user = new JSentinelSubject(
         "u-1", "u-1", Set.of(), Set.of(new PermissionName("any")));
 
     AuthorizationDecision decision = new RequiresPolicyEvaluator()
@@ -199,7 +199,7 @@ class RequiresPolicyEvaluatorTest {
     com.svenruppert.vaadin.security.policy.api.ResourceRef expectedRef =
         new com.svenruppert.vaadin.security.policy.api.ResourceRef("document", "42");
     AccessContext ctx = new AccessContext(
-        Optional.of(new SecuritySubject("u-1", "u-1", Set.of(), Set.of())),
+        Optional.of(new JSentinelSubject("u-1", "u-1", Set.of(), Set.of())),
         "rest-endpoint",
         "/documents/42",
         "read",
@@ -253,10 +253,10 @@ class RequiresPolicyEvaluatorTest {
   @Test
   @DisplayName("audit sink that throws does not break the evaluator")
   void auditFailureIsSwallowed() {
-    SecurityServiceResolver.setSecurityAuditService(new ThrowingAuditSink());
+    JSentinelServiceResolver.setJSentinelAuditService(new ThrowingAuditSink());
     registry.register(Policy.named("p").allowIf(c -> true).build());
 
-    SecuritySubject anyone = new SecuritySubject(
+    JSentinelSubject anyone = new JSentinelSubject(
         "u-1", "u-1", Set.of(), Set.of());
 
     AuthorizationDecision decision = new RequiresPolicyEvaluator()
@@ -265,7 +265,7 @@ class RequiresPolicyEvaluatorTest {
     assertInstanceOf(AuthorizationDecision.Granted.class, decision);
   }
 
-  private static final class RecordingAuditSink implements SecurityAuditService {
+  private static final class RecordingAuditSink implements JSentinelAuditService {
     private final List<AuditEvent> events = new ArrayList<>();
 
     @Override
@@ -291,7 +291,7 @@ class RequiresPolicyEvaluatorTest {
     }
   }
 
-  private static final class ThrowingAuditSink implements SecurityAuditService {
+  private static final class ThrowingAuditSink implements JSentinelAuditService {
     @Override
     public void publish(AuditEvent event) {
       throw new RuntimeException("boom");

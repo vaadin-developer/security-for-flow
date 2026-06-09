@@ -15,11 +15,11 @@ the library.
 
 | Module | Artifact | Description |
 |---|---|---|
-| `security-core` | `security-core` | Generic, framework-neutral security concepts and decision logic. Owns every SPI contract, all 11 persistence-store interfaces (Phase 2), the SecurityVersion drift-detection stack (Phase 4), and the account-lifecycle / token / rate-limit services (Phase 7) |
+| `security-core` | `security-core` | Generic, framework-neutral security concepts and decision logic. Owns every SPI contract, all 11 persistence-store interfaces (Phase 2), the JSentinelVersion drift-detection stack (Phase 4), and the account-lifecycle / token / rate-limit services (Phase 7) |
 | `security-vaadin` | `security-vaadin` | Vaadin Flow adapter — view and navigation security; ships the Phase-8 `SecuredButton` / `SecuredRouterLink` / `SecuredMenuItem` / `SessionManagementView` building blocks |
-| `security-rest` | `security-rest` | Framework-light REST adapter — request and handler security; ships the Phase-4c `RestSecurityVersionFilter` and the Phase-8d `OpenApiSecurityMetadataGenerator` |
+| `security-rest` | `security-rest` | Framework-light REST adapter — request and handler security; ships the Phase-4c `RestJSentinelVersionFilter` and the Phase-8d `OpenApiJSentinelMetadataGenerator` |
 | `security-standalone` | `security-standalone` | Plain-Java / desktop / CLI adapter — ThreadLocal subject + dynamic-proxy method-level enforcement |
-| `security-test` | `security-test` | Reusable test fixtures: `FakeAuthenticationService`, `FakeAuthorizationService`, `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5 `SecurityTestExtension`. Pull in as `<scope>test</scope>` |
+| `security-test` | `security-test` | Reusable test fixtures: `FakeAuthenticationService`, `FakeAuthorizationService`, `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5 `JSentinelTestExtension`. Pull in as `<scope>test</scope>` |
 | `security-processor` | `security-processor` | Compile-time annotation processor: generates `<Type>Secured` subclasses for `@Secured`-annotated concrete classes. Wire as `<annotationProcessorPath>`, not as a regular dependency |
 | `security-persistence-testkit` | `security-persistence-testkit` | Contract test suites for every persistence-store SPI in `security-core` — `@Test default`-method interfaces a custom store adapter implements to be vetted against the library's persistence contract. Persistence-tech-agnostic |
 | `security-persistence-eclipsestore` | `security-persistence-eclipsestore` | Eclipse-Store (`org.eclipse.store:storage-embedded`) reference impl of every persistence-store SPI; passes the same 95+ contract suite as the in-memory defaults. Drop-in for apps that want durable persistence |
@@ -153,17 +153,17 @@ side:
 - **Runtime / dynamic-proxy** — book commands (`list`, `borrow`,
   `return`, `add`, `remove`) run through
   `SecuredProxy.wrap(LibraryService.class, …)`. `LibraryService` is
-  an interface; the JDK proxy calls into `SecurityEnforcer` on every
+  an interface; the JDK proxy calls into `JSentinelEnforcer` on every
   invocation.
 - **Compile-time / annotation processor** — member commands
   (`members`, `invite`, `remove-member`, `reset-members`) operate on
   `MemberDirectory`, a concrete class annotated with `@Secured`. The
   `security-processor` annotation processor generates
   `MemberDirectorySecured` at compile time; each guarded method
-  inserts a `SecurityEnforcer.require…(…)` call ahead of
+  inserts a `JSentinelEnforcer.require…(…)` call ahead of
   `super.<method>(…)`.
 
-Both paths share the same `SecurityEnforcer`, so the rules are
+Both paths share the same `JSentinelEnforcer`, so the rules are
 identical. Rejections surface as `DENIED — …` lines in the terminal.
 
 ### Tests
@@ -293,11 +293,11 @@ public class MyAuthorizationService implements AuthorizationService<MyUser> {
 
 Register in `META-INF/services/com.svenruppert.vaadin.security.authorization.api.AuthorizationService`.
 
-### 4. Define a restriction annotation with `@SecurityAnnotation`
+### 4. Define a restriction annotation with `@JSentinelAnnotation`
 
 ```java
 @Retention(RUNTIME)
-@SecurityAnnotation(MyRoleAccessEvaluator.class)
+@JSentinelAnnotation(MyRoleAccessEvaluator.class)
 public @interface VisibleFor {
   MyRole[] value();
 }
@@ -408,7 +408,7 @@ public final class MyRestSubjectResolver implements RestSubjectResolver {
   private static final BearerTokenExtractor BEARER = new BearerTokenExtractor();
 
   @Override
-  public Optional<SecuritySubject> resolveSubject(RestRequest request) {
+  public Optional<JSentinelSubject> resolveSubject(RestRequest request) {
     return BEARER.extract(request)        // case-insensitive Bearer parser
         .flatMap(myTokenStore::resolve)
         .map(this::toSubject);
@@ -489,7 +489,7 @@ decisions.
 To secure plain-Java code — desktop, CLI, daemon — pick whichever of
 the two paths fits your service shape and drive the login lifecycle
 with `StandaloneLoginFlow`. There is no listener, no filter chain, no
-navigation phase; both paths land in the same `SecurityEnforcer` as
+navigation phase; both paths land in the same `JSentinelEnforcer` as
 the Vaadin and REST adapters.
 
 - **Interface available** → wrap once with
@@ -531,7 +531,7 @@ secured.removeBook("x");         // throws AccessDeniedException for non-ADMIN
 
 `SecuredProxy.wrap(...)` returns a JDK dynamic-proxy implementing the
 interface. Every call scans the method (then the declaring class) for a
-`@SecurityAnnotation`-meta-annotated annotation, runs the matching
+`@JSentinelAnnotation`-meta-annotated annotation, runs the matching
 evaluator, and either delegates to the real implementation or throws
 `AccessDeniedException`. `Object` methods bypass enforcement.
 
@@ -561,7 +561,7 @@ public class MemberDirectory {
 
 // Compile produces MemberDirectorySecured automatically.
 MemberDirectory members = new MemberDirectorySecured();
-members.listMembers();           // SecurityEnforcer.requirePermission("member:list") first
+members.listMembers();           // JSentinelEnforcer.requirePermission("member:list") first
 ```
 
 Wire the processor as an `<annotationProcessorPath>` in the consuming
@@ -586,7 +586,7 @@ The flow consults `LoginAttemptPolicy.beforeAttempt(...)` first, then
 calls the SPI-registered `AuthenticationService.checkCredentials` /
 `loadSubject`, binds the subject through the active `SubjectStore`,
 records success/failure on the policy, and publishes `LoginSucceeded` /
-`LoginFailed` to the `SecurityAuditService`. `flow.logout()` clears the
+`LoginFailed` to the `JSentinelAuditService`. `flow.logout()` clears the
 SubjectStore for the current thread.
 
 ### 4. SubjectStore — ThreadLocal by default
@@ -608,23 +608,23 @@ on via `switch`:
 |---|---|---|
 | `AuthorizationDecision` | `security-core` | `Granted` / `Unauthenticated(reason)` / `Forbidden(reason)` / `StepUpRequired(reason, method)` |
 | `AccessDecision` | `security-core` | Vaadin-oriented (legacy): `Granted` / `Reroute(target, asForward)` / `RerouteToError(type, message)` / `RerouteWithParameter(s)` |
-| `SecurityVersionStatus` | `security-core/session` | `Current(at)` / `Drifted(snapshot, current)` — Phase 4c drift verdict |
-| `SecurityVersionEnforcer.EnforcementOutcome` | `security-core/session` | `Continue` / `SessionStale(status)` — adapter-neutral request verdict for drift |
+| `JSentinelVersionStatus` | `security-core/session` | `Current(at)` / `Drifted(snapshot, current)` — Phase 4c drift verdict |
+| `JSentinelVersionEnforcer.EnforcementOutcome` | `security-core/session` | `Continue` / `SessionStale(status)` — adapter-neutral request verdict for drift |
 | `RateLimitDecision` | `security-core/ratelimiting` | `Allowed(eventsInWindow, limit, window)` / `Throttled(eventsInWindow, limit, window, retryAfter)` |
 | `LoginAttemptDecision`, `SessionDecision`, `SessionPolicyDecision`, `NavigationAccessDecision`, `LoginResult<U>`, `InitialAdminCreationResult` | various | further sealed verdicts for login throttling, session lifetime, navigation, standalone login, bootstrap |
 
 Adapters map these to framework-specific behavior:
 
 - `security-vaadin` → navigation: continue, reroute to login, reroute
-  to step-up, or reroute to error. `SecurityVersionEnforcerListener`
+  to step-up, or reroute to error. `JSentinelVersionEnforcerListener`
   reroutes drifted sessions to the configured login view.
 - `security-rest` → HTTP status: `200`/handler, `401`, `403`, or
   `401 + WWW-Authenticate: StepUp` / `SessionStale` (RFC 7235).
 
 ## Annotation-Driven Protection
 
-`SecurityAnnotationScanner` scans classes, methods, or any `AnnotatedElement`
-for restriction annotations meta-annotated with `@SecurityAnnotation`. Both
+`JSentinelAnnotationScanner` scans classes, methods, or any `AnnotatedElement`
+for restriction annotations meta-annotated with `@JSentinelAnnotation`. Both
 adapters use the same scanner.
 
 Generic annotations (in `security-core`):
@@ -643,14 +643,14 @@ Project-specific annotations are encouraged for Vaadin views (e.g. `@VisibleFor`
 
 For non-navigation enforcement (CLI services, REST handlers, plain-Java
 classes) the framework offers two paths, both routed through the same
-`SecurityEnforcer` in `security-core`:
+`JSentinelEnforcer` in `security-core`:
 
 | Path | Target | Wiring | When to choose |
 |---|---|---|---|
 | Runtime / JDK Dynamic Proxy | Java **interface** | `SecuredProxy.wrap(MyService.class, impl)` (in `security-standalone`) | The service has a clean interface; you're happy paying a per-call reflection check. Works for callbacks / lambdas via `SecuredProxy.requireAllowed(Class, methodName)`. |
 | Compile-time / Annotation Processor | **Concrete class** annotated with `@Secured` | `<annotationProcessorPath>` for `security-processor`; instantiate the generated `<Type>Secured` subclass | The class has no interface, or you want a stable stacktrace / no per-call reflection. Method-security annotations on `final`, `private` or `static` methods raise compile errors. Underlying generator: `com.svenruppert:proxybuilder:00.11.00` + `proxybuilder-annotations:00.11.00`. |
 
-Both paths land in the same `SecurityEnforcer.require…(…)` helpers,
+Both paths land in the same `JSentinelEnforcer.require…(…)` helpers,
 so a permission rule applies identically regardless of which path
 expressed it. `demo-standalone` exercises both side by side
 (`LibraryService` via `SecuredProxy.wrap`, `MemberDirectory` via
@@ -662,21 +662,21 @@ expressed it. `demo-standalone` exercises both side by side
 
 | Type | Module / package | Purpose |
 |---|---|---|
-| `SecurityServiceResolver` | `security-core/.../authorization/api` | Central SPI cache. Strict accessors throw `IllegalStateException`; `find…()` returns `Optional`; `set…(…)` is a programmatic test seam. Covers Authentication / Authorization / Audit / Action / LoginAttempt / Session / PasswordHasher / Logout / RoleHierarchy / ResourceResolver / SecurityVersionStore / SubjectIdResolver / Step-Up route. |
-| `SecurityEnforcer` | `security-core/.../authorization/api` | Central enforcement entry point. Generic `enforce(Method, Class)` for the runtime/dynamic-proxy path; explicit `requirePermission` / `requireAllPermissions` / `requireAnyPermission` / `requireRole` / `requireAnyRole` / `requirePolicy` for the compile-time/annotation-processor path. Throws `AccessDeniedException` on deny. |
-| `SecuredProxy` | `security-standalone` | `SecuredProxy.wrap(Interface, impl)` returns a JDK dynamic proxy that routes every call through `SecurityEnforcer.enforce(method, declaringClass)`. `requireAllowed(Class, methodName)` is the single-shot variant for callbacks / lambdas. |
-| `SecuredAnnotationProcessor` | `security-processor` | Compile-time annotation processor. For each `@Secured` concrete class it emits `<Type>Secured extends <Type>` and rewrites every annotated method as `SecurityEnforcer.require…(…)` + `super.<method>(…)`. Built on `com.svenruppert:proxybuilder:00.11.00` (+ `proxybuilder-annotations:00.11.00`). |
+| `JSentinelServiceResolver` | `security-core/.../authorization/api` | Central SPI cache. Strict accessors throw `IllegalStateException`; `find…()` returns `Optional`; `set…(…)` is a programmatic test seam. Covers Authentication / Authorization / Audit / Action / LoginAttempt / Session / PasswordHasher / Logout / RoleHierarchy / ResourceResolver / JSentinelVersionStore / SubjectIdResolver / Step-Up route. |
+| `JSentinelEnforcer` | `security-core/.../authorization/api` | Central enforcement entry point. Generic `enforce(Method, Class)` for the runtime/dynamic-proxy path; explicit `requirePermission` / `requireAllPermissions` / `requireAnyPermission` / `requireRole` / `requireAnyRole` / `requirePolicy` for the compile-time/annotation-processor path. Throws `AccessDeniedException` on deny. |
+| `SecuredProxy` | `security-standalone` | `SecuredProxy.wrap(Interface, impl)` returns a JDK dynamic proxy that routes every call through `JSentinelEnforcer.enforce(method, declaringClass)`. `requireAllowed(Class, methodName)` is the single-shot variant for callbacks / lambdas. |
+| `SecuredAnnotationProcessor` | `security-processor` | Compile-time annotation processor. For each `@Secured` concrete class it emits `<Type>Secured extends <Type>` and rewrites every annotated method as `JSentinelEnforcer.require…(…)` + `super.<method>(…)`. Built on `com.svenruppert:proxybuilder:00.11.00` (+ `proxybuilder-annotations:00.11.00`). |
 | `PermissionGuard` | `security-core/.../authorization/api` | Stateless `hasPermission` / `requirePermission` (and role variants) on any `HasPermissions`/`HasRoles`. |
-| `SubjectIdResolver<U>` | `security-core/.../authorization/api` | Phase 4c-Followup. Maps a typed user to `SubjectId` (+ optional `TenantId`). Apps register to unlock Vaadin's automatic SecurityVersion-snapshot capture in `LoginView`. |
+| `SubjectIdResolver<U>` | `security-core/.../authorization/api` | Phase 4c-Followup. Maps a typed user to `SubjectId` (+ optional `TenantId`). Apps register to unlock Vaadin's automatic JSentinelVersion-snapshot capture in `LoginView`. |
 
 ### Audit pipeline
 
 | Type | Module / package | Purpose |
 |---|---|---|
-| `SecurityAuditService` + sealed `AuditEvent` (27 record variants) | `security-core/.../audit` | Typed publish/query audit pipeline. Variants: `LoginSucceeded`, `LoginFailed`, `LogoutPerformed`, `AccessGranted`, `AccessDenied`, `ActionDenied`, `BruteForceLimitReached`, `SessionCreated`, `SessionExpired`, `SessionInvalidated`, `SessionStale`, `RoleAssigned`, `RoleRevoked`, `UserCreated`, `UserDeleted`, `BootstrapAdminCreated`, `BootstrapTokenRejected`, `PolicyEvaluated`, `StepUpChallenged`, `PasswordResetRequested`, `PasswordResetCompleted`, `EmailVerificationRequested`, `EmailVerified`, `ApiKeyUsed`, `ApiKeyDenied`, `TokenRotated`, `RateLimitExceeded`. |
+| `JSentinelAuditService` + sealed `AuditEvent` (27 record variants) | `security-core/.../audit` | Typed publish/query audit pipeline. Variants: `LoginSucceeded`, `LoginFailed`, `LogoutPerformed`, `AccessGranted`, `AccessDenied`, `ActionDenied`, `BruteForceLimitReached`, `SessionCreated`, `SessionExpired`, `SessionInvalidated`, `SessionStale`, `RoleAssigned`, `RoleRevoked`, `UserCreated`, `UserDeleted`, `BootstrapAdminCreated`, `BootstrapTokenRejected`, `PolicyEvaluated`, `StepUpChallenged`, `PasswordResetRequested`, `PasswordResetCompleted`, `EmailVerificationRequested`, `EmailVerified`, `ApiKeyUsed`, `ApiKeyDenied`, `TokenRotated`, `RateLimitExceeded`. |
 | `AuditEventStore` + `InMemoryAuditEventStore` | `security-core/.../audit` | Persistence SPI for audit events (Phase 2). Eclipse-Store impl available. |
 | `RingBufferAuditSink`, `LoggingAuditSink`, `CompositeAuditService`, `DefaultCompositeAuditService` | `security-core/.../audit` | Default sinks; the RingBuffer backs the Vaadin `/audit`-route and the REST `GET /api/audit` endpoint. |
-| `StoreBackedSecurityAuditService` | `security-core/.../audit` | `SecurityAuditService` over `AuditEventStore` (Phase 4b). Tenant-scoped, swallows store failures so audit cannot break the security flow. |
+| `StoreBackedJSentinelAuditService` | `security-core/.../audit` | `JSentinelAuditService` over `AuditEventStore` (Phase 4b). Tenant-scoped, swallows store failures so audit cannot break the security flow. |
 
 ### Authentication, sessions, drift detection
 
@@ -686,8 +686,8 @@ expressed it. `demo-standalone` exercises both side by side
 | `PasswordHasher`, `PasswordHash`, `Pbkdf2PasswordHasher` | `security-core/.../authentication` | Hash + verify + `needsRehash` (drift detection). |
 | `LoginAttemptPolicy` + `InMemoryLoginAttemptPolicy` + `StoreBackedLoginAttemptPolicy` | `security-core/.../bruteforce` | Login throttling. `LoginAttemptDecision = Allowed \| LockedOut(Duration, int)`. Store-backed variant uses `LoginAttemptStore` (Phase 4b). |
 | `SessionPolicy<U>` + `TimeoutSessionPolicy` | `security-core/.../session` | Idle/absolute lifetime checks. |
-| `SessionStore`, `SessionRecord`, `SecurityVersion`, `SecurityVersionKey`, `SecurityVersionStore` | `security-core/.../session` | Persistent session records + monotonic per-subject security version (Phase 2 + 4a). `SessionStore.findAll()` lists every session for an admin view. |
-| `SecurityVersionCheck`, sealed `SecurityVersionStatus`, `SecurityVersionEnforcer`, sealed `EnforcementOutcome` | `security-core/.../session` | Phase 4c drift detection. Adapter-neutral check + enforcer; publishes `SessionStale` audit on drift. |
+| `SessionStore`, `SessionRecord`, `JSentinelVersion`, `JSentinelVersionKey`, `JSentinelVersionStore` | `security-core/.../session` | Persistent session records + monotonic per-subject security version (Phase 2 + 4a). `SessionStore.findAll()` lists every session for an admin view. |
+| `JSentinelVersionCheck`, sealed `JSentinelVersionStatus`, `JSentinelVersionEnforcer`, sealed `EnforcementOutcome` | `security-core/.../session` | Phase 4c drift detection. Adapter-neutral check + enforcer; publishes `SessionStale` audit on drift. |
 | `LogoutService`, `SubjectClearingLogoutService`, `SubjectSessionRegistry` + `StoreBackedSubjectSessionRegistry` | `security-core/.../logout` | `logout(SubjectId, LogoutScope)` SPI with multi-session logout via store-backed registry. Vaadin-side: `VaadinLogoutService` rotates HTTP session. |
 | `StandaloneLoginFlow`, `LoginResult` | `security-standalone` | CLI/Desktop login driver — consults policy, calls `AuthenticationService`, binds subject, audits. |
 | `RememberMeTokenStore` + `StoreBackedRememberMeService` | `security-core/.../authentication` | Phase 2c + 4b. Hash-only persistent-login tokens, tenant-scoped issue/validate/revoke. |
@@ -700,7 +700,7 @@ expressed it. `demo-standalone` exercises both side by side
 |---|---|---|
 | `PasswordResetTokenStore`, `PasswordResetTokenRecord`, `PasswordResetService` | `security-core/.../accountlifecycle` | Phase 2c + 7a. Single-use hash-only reset tokens; tenant-scoped `request` / `validate` / `consume`. |
 | `EmailVerificationTokenStore`, `EmailVerificationTokenRecord`, `EmailVerificationService` | `security-core/.../accountlifecycle` | Phase 2c + 7a. Same lifecycle as password reset, carries the verified email on the record. |
-| `SecurityNotificationSender` + `LoggingNotificationSender`, `SecurityNotification` + `Kind` enum | `security-core/.../accountlifecycle` | Phase 7a. Notification dispatcher — apps plug in mail / SMS / log transport. Default sender logs `NOTIFY type=…` lines. |
+| `JSentinelNotificationSender` + `LoggingNotificationSender`, `JSentinelNotification` + `Kind` enum | `security-core/.../accountlifecycle` | Phase 7a. Notification dispatcher — apps plug in mail / SMS / log transport. Default sender logs `NOTIFY type=…` lines. |
 | `BootstrapStateStore` + `StoreBackedBootstrapStateService` | `security-core/.../bootstrap` | Phase 2b + 4b. Tenant-scoped "is the system bootstrapped?" state with idempotent `markCompleted`. |
 
 ### Authorization model + role hierarchy
@@ -724,8 +724,8 @@ expressed it. `demo-standalone` exercises both side by side
 
 | Type | Module / package | Purpose |
 |---|---|---|
-| `LoginView`, `LoginListener<U>`, `AuthorizationListener`, `SessionLifetimeListener`, `VaadinLogoutService` | `security-vaadin` | Annotation-driven view protection + Vaadin session/lifecycle integration. `LoginView.captureSecurityVersionSnapshot()` automatically records the Phase-4c snapshot when `SecurityVersionStore` and `SubjectIdResolver` are wired. |
-| `VaadinSecurityVersionContext`, `SecurityVersionEnforcerListener` | `security-vaadin/session/vaadin` | Phase 4c. Per-VaadinSession snapshot carrier + `@ListenerPriority(Integer.MAX_VALUE)` BeforeEnterListener that reroutes drifted sessions to the configured login view. |
+| `LoginView`, `LoginListener<U>`, `AuthorizationListener`, `SessionLifetimeListener`, `VaadinLogoutService` | `security-vaadin` | Annotation-driven view protection + Vaadin session/lifecycle integration. `LoginView.captureJSentinelVersionSnapshot()` automatically records the Phase-4c snapshot when `JSentinelVersionStore` and `SubjectIdResolver` are wired. |
+| `VaadinJSentinelVersionContext`, `JSentinelVersionEnforcerListener` | `security-vaadin/session/vaadin` | Phase 4c. Per-VaadinSession snapshot carrier + `@ListenerPriority(Integer.MAX_VALUE)` BeforeEnterListener that reroutes drifted sessions to the configured login view. |
 | `SecuredButton`, `SecuredRouterLink`, `SecuredMenuItem`, `SecuredVisibility`, `SecuredVisibilityMode`, `SessionManagementView` | `security-vaadin/components` | Phase 8a/8b. Permission-aware UI components (HIDE vs DISABLE on denial) and a reusable session-management Composite. |
 
 ### REST adapter
@@ -736,8 +736,8 @@ expressed it. `demo-standalone` exercises both side by side
 | `RestAuthenticationFilter`, `RestAuthorizationFilter` | `security-rest` | 401/403 filters; the authorization filter additionally consults `SessionPolicy.evaluate(...)` when subject-resolved metadata is available. |
 | `BodyRestRequest` | `security-rest` | Body-capable `RestRequest`. |
 | `BootstrapRestStatusMapper` | `security-rest` | `InitialAdminCreationResult` → HTTP status code + stable error code. |
-| `RestSecurityVersionContext`, `RestSecurityVersionFilter` | `security-rest` | Phase 4c. Drift filter that returns `401 + WWW-Authenticate: SessionStale` (RFC 7235) on a stale session. |
-| `OpenApiSecurityMetadataGenerator`, `SecurityRequirement`, `HandlerSecurityMetadata` | `security-rest/openapi` | Phase 8d. Extracts the five framework `@Requires…`-annotations from a handler class as a JSON-free structured tree apps merge into their own OpenAPI builder. |
+| `RestJSentinelVersionContext`, `RestJSentinelVersionFilter` | `security-rest` | Phase 4c. Drift filter that returns `401 + WWW-Authenticate: SessionStale` (RFC 7235) on a stale session. |
+| `OpenApiJSentinelMetadataGenerator`, `JSentinelRequirement`, `HandlerJSentinelMetadata` | `security-rest/openapi` | Phase 8d. Extracts the five framework `@Requires…`-annotations from a handler class as a JSON-free structured tree apps merge into their own OpenAPI builder. |
 
 ### Bootstrap
 
@@ -754,14 +754,14 @@ expressed it. `demo-standalone` exercises both side by side
 
 ## Stable vs. Experimental API
 
-**Stable**: role-based access, REST adapter contracts, `SecuritySubject`,
+**Stable**: role-based access, REST adapter contracts, `JSentinelSubject`,
 `AccessContext`, `AuthorizationDecision`, scanner.
 
-**Experimental** (marked with `@ExperimentalSecurityApi`): permission-based
+**Experimental** (marked with `@ExperimentalJSentinelApi`): permission-based
 access types — `PermissionBasedAccessEvaluator`, `PermissionName`,
 `HasPermissions`, `PermissionAuthorizationService`. The newer V00.70 stacks
 ship under the same flag: persistence-store SPIs and `Store*`-backed
-services (Phase 2/4/7), the SecurityVersion drift-detection types,
+services (Phase 2/4/7), the JSentinelVersion drift-detection types,
 the account-lifecycle services, the OpenAPI metadata generator,
 the Phase-8 secured Vaadin components, `TenantId` / `ResourceRef` /
 `SubjectIdResolver`. May change in incompatible ways in future releases.
@@ -806,11 +806,11 @@ full inventory + migration notes; the phase summary:
 1. Tenant + resource model (`TenantId`, `ResourceRef`, `ResourceAccessContext`).
 2. Persistence-store SPIs — 11 hash-only / single-use stores in `security-core`.
 3. Contract testkit + Eclipse-Store reference impls in their own modules.
-4. Store-backed services (`StoreBacked*`) + `SecurityVersion` drift detection end-to-end in Vaadin + REST + standalone, with automatic snapshot capture in `LoginView`.
+4. Store-backed services (`StoreBacked*`) + `JSentinelVersion` drift detection end-to-end in Vaadin + REST + standalone, with automatic snapshot capture in `LoginView`.
 5. Policy API + method-security annotation processor.
 6. Authorization ergonomy — `RoleHierarchy`, `@RequiresAnyPermission`, `@RequiresAllPermissions`, hierarchy-aware permission merge.
 7. Account lifecycle (`PasswordResetService`, `EmailVerificationService`), API-key & rotating refresh-token services, sliding-window `RateLimitPolicy`.
-8. `SecuredButton` / `SecuredRouterLink` / `SecuredMenuItem`, `SessionManagementView`, `OpenApiSecurityMetadataGenerator`.
+8. `SecuredButton` / `SecuredRouterLink` / `SecuredMenuItem`, `SessionManagementView`, `OpenApiJSentinelMetadataGenerator`.
 
 `Konzept-V00.75.00.md` and `Konzept-V00.80.00.md` outline the next
 layers. Demo glue for the new V00.70 building blocks (V00.70-style
