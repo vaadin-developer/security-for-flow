@@ -10,9 +10,14 @@
  */
 package com.svenruppert.jsentinel.dx.internal;
 
+import com.svenruppert.jsentinel.authentication.ApiKeyAuthenticationService;
 import com.svenruppert.jsentinel.authentication.AuthenticationService;
+import com.svenruppert.jsentinel.authentication.TokenService;
 import com.svenruppert.jsentinel.authorization.api.AuthorizationService;
+import com.svenruppert.jsentinel.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.jsentinel.dx.runtime.JSentinelBootstrapMode;
+import com.svenruppert.jsentinel.logout.LogoutService;
+import com.svenruppert.jsentinel.ratelimiting.RateLimitPolicy;
 
 /**
  * Mutable aggregate of accumulated configuration during a fluent
@@ -34,6 +39,13 @@ public final class BootstrapState {
   private boolean policiesConfigured;
   private boolean rolesConfigured;
   private boolean credentialsConfigured;
+
+  // V00.74: direct-set services on CommonJSentinelBootstrap
+  private LogoutService logoutService;
+  private LoginAttemptPolicy loginAttemptPolicy;
+  private RateLimitPolicy rateLimitPolicy;
+  private ApiKeyAuthenticationService apiKeyAuthenticationService;
+  private TokenService tokenService;
 
   private final AuditState auditState = new AuditState();
   private final SessionState sessionState = new SessionState();
@@ -130,5 +142,47 @@ public final class BootstrapState {
 
   public void markCredentialsConfigured() {
     this.credentialsConfigured = true;
+  }
+
+  // V00.74 accessors
+
+  public LogoutService logoutService() {
+    return logoutService;
+  }
+
+  public void logoutService(LogoutService service) {
+    this.logoutService = service;
+  }
+
+  public LoginAttemptPolicy loginAttemptPolicy() {
+    return loginAttemptPolicy;
+  }
+
+  public void loginAttemptPolicy(LoginAttemptPolicy policy) {
+    this.loginAttemptPolicy = policy;
+  }
+
+  public RateLimitPolicy rateLimitPolicy() {
+    return rateLimitPolicy;
+  }
+
+  public void rateLimitPolicy(RateLimitPolicy policy) {
+    this.rateLimitPolicy = policy;
+  }
+
+  public ApiKeyAuthenticationService apiKeyAuthenticationService() {
+    return apiKeyAuthenticationService;
+  }
+
+  public void apiKeyAuthenticationService(ApiKeyAuthenticationService service) {
+    this.apiKeyAuthenticationService = service;
+  }
+
+  public TokenService tokenService() {
+    return tokenService;
+  }
+
+  public void tokenService(TokenService service) {
+    this.tokenService = service;
   }
 }

@@ -38,7 +38,6 @@ final class StandaloneJSentinelBootstrapImpl
     implements StandaloneJSentinelBootstrap {
 
   private SubjectStore subjectStore;
-  private LoginAttemptPolicy loginAttemptPolicy;
   private boolean installed;
 
   @Override
@@ -47,10 +46,20 @@ final class StandaloneJSentinelBootstrapImpl
     return this;
   }
 
+  /**
+   * Legacy V00.73 entry point — kept for source-backwards-compat.
+   * Delegates to {@link #bruteForce(LoginAttemptPolicy)} introduced
+   * in V00.74 on {@code CommonJSentinelBootstrap}.
+   *
+   * @param policy non-null login-attempt policy
+   * @return this builder
+   * @deprecated since 00.74.00 — use {@link #bruteForce(LoginAttemptPolicy)}
+   *             instead. Both methods point at the same wiring.
+   */
+  @Deprecated(since = "00.74.00")
   @Override
   public StandaloneJSentinelBootstrap loginAttemptPolicy(LoginAttemptPolicy policy) {
-    this.loginAttemptPolicy = Objects.requireNonNull(policy, "policy");
-    return this;
+    return bruteForce(policy);
   }
 
   @Override
@@ -102,11 +111,11 @@ final class StandaloneJSentinelBootstrapImpl
         subjectStoreDefaulted ? "bootstrap-default" : "bootstrap-explicit",
         subjectStoreDefaulted));
 
-    if (loginAttemptPolicy != null) {
-      JSentinelServiceResolver.setLoginAttemptPolicy(loginAttemptPolicy);
-      services.add(new RegisteredJSentinelService(
-          LoginAttemptPolicy.class, loginAttemptPolicy.getClass(), "bootstrap-explicit", false));
-    }
+    // V00.74: apply direct-set services from CommonJSentinelBootstrap
+    // (logout / bruteForce / rateLimit / apiKeys / refreshTokens).
+    // The legacy .loginAttemptPolicy(...) builder method on
+    // StandaloneJSentinelBootstrap delegates to .bruteForce(...).
+    applyDirectServiceConfiguration(services, warnings);
 
     // V00.73: apply audit sub-builder state (no-op when .audit(...) wasn't called).
     applyAuditConfiguration(services, warnings);

@@ -16,14 +16,19 @@ import com.svenruppert.jsentinel.audit.LoggingAuditSink;
 import com.svenruppert.jsentinel.audit.RingBufferAuditSink;
 import com.svenruppert.jsentinel.audit.JSentinelAuditService;
 import com.svenruppert.jsentinel.audit.StoreBackedJSentinelAuditService;
+import com.svenruppert.jsentinel.authentication.ApiKeyAuthenticationService;
 import com.svenruppert.jsentinel.authentication.AuthenticationService;
 import com.svenruppert.jsentinel.authentication.PasswordHasher;
 import com.svenruppert.jsentinel.authentication.Pbkdf2PasswordHasher;
+import com.svenruppert.jsentinel.authentication.TokenService;
 import com.svenruppert.jsentinel.authorization.api.AuthorizationService;
 import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.jsentinel.authorization.api.SubjectIdResolver;
 import com.svenruppert.jsentinel.authorization.api.roles.RoleHierarchy;
+import com.svenruppert.jsentinel.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.jsentinel.credential.change.PasswordChangeService;
+import com.svenruppert.jsentinel.logout.LogoutService;
+import com.svenruppert.jsentinel.ratelimiting.RateLimitPolicy;
 import com.svenruppert.jsentinel.credential.password.PasswordHashingService;
 import com.svenruppert.jsentinel.credential.password.PasswordHashingServices;
 import com.svenruppert.jsentinel.credential.password.pepper.PepperService;
@@ -127,6 +132,36 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
     Objects.requireNonNull(config, "config")
         .accept(new CredentialBootstrapImpl(state.credentialState()));
     state.markCredentialsConfigured();
+    return self();
+  }
+
+  @Override
+  public B logout(LogoutService service) {
+    state.logoutService(Objects.requireNonNull(service, "service"));
+    return self();
+  }
+
+  @Override
+  public B bruteForce(LoginAttemptPolicy policy) {
+    state.loginAttemptPolicy(Objects.requireNonNull(policy, "policy"));
+    return self();
+  }
+
+  @Override
+  public B rateLimit(RateLimitPolicy policy) {
+    state.rateLimitPolicy(Objects.requireNonNull(policy, "policy"));
+    return self();
+  }
+
+  @Override
+  public B apiKeys(ApiKeyAuthenticationService service) {
+    state.apiKeyAuthenticationService(Objects.requireNonNull(service, "service"));
+    return self();
+  }
+
+  @Override
+  public B refreshTokens(TokenService service) {
+    state.tokenService(Objects.requireNonNull(service, "service"));
     return self();
   }
 
@@ -661,6 +696,60 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
     }
     for (ResourceResolver<?> resolver : policies.resolvers()) {
       activeResourceRegistry.register(resolver);
+    }
+  }
+
+  /**
+   * V00.74: applies the direct-set services configured via the new
+   * top-level methods on {@link CommonJSentinelBootstrap}.
+   *
+   * <p>Two categories:
+   * <ul>
+   *   <li><strong>Resolver-wired</strong> — {@link LogoutService} via
+   *       {@link JSentinelServiceResolver#setLogoutService},
+   *       {@link LoginAttemptPolicy} via
+   *       {@link JSentinelServiceResolver#setLoginAttemptPolicy}.</li>
+   *   <li><strong>DX-state only</strong> — {@link RateLimitPolicy},
+   *       {@link ApiKeyAuthenticationService}, {@link TokenService}.
+   *       These types have no global resolver setter; they are
+   *       reported in {@link JSentinelRuntime#services()} so consumers
+   *       can see what the bootstrap configured, but the bootstrap
+   *       does not touch any global singleton for them. Adapter-DX
+   *       modules that need them can read them from
+   *       {@link BootstrapState}.</li>
+   * </ul>
+   */
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  protected final void applyDirectServiceConfiguration(
+      List<RegisteredJSentinelService> services,
+      List<JSentinelBootstrapWarning> warnings) {
+    if (state.logoutService() != null) {
+      LogoutService raw = state.logoutService();
+      JSentinelServiceResolver.setLogoutService(raw);
+      services.add(new RegisteredJSentinelService(
+          LogoutService.class, raw.getClass(), "bootstrap-explicit", false));
+    }
+    if (state.loginAttemptPolicy() != null) {
+      JSentinelServiceResolver.setLoginAttemptPolicy(state.loginAttemptPolicy());
+      services.add(new RegisteredJSentinelService(
+          LoginAttemptPolicy.class, state.loginAttemptPolicy().getClass(),
+          "bootstrap-explicit", false));
+    }
+    if (state.rateLimitPolicy() != null) {
+      services.add(new RegisteredJSentinelService(
+          RateLimitPolicy.class, state.rateLimitPolicy().getClass(),
+          "bootstrap-explicit", false));
+    }
+    if (state.apiKeyAuthenticationService() != null) {
+      services.add(new RegisteredJSentinelService(
+          ApiKeyAuthenticationService.class,
+          state.apiKeyAuthenticationService().getClass(),
+          "bootstrap-explicit", false));
+    }
+    if (state.tokenService() != null) {
+      services.add(new RegisteredJSentinelService(
+          TokenService.class, state.tokenService().getClass(),
+          "bootstrap-explicit", false));
     }
   }
 

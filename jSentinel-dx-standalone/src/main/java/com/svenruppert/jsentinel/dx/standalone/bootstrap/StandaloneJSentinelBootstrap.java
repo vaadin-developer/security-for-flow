@@ -25,5 +25,13 @@ public interface StandaloneJSentinelBootstrap
 
   StandaloneJSentinelBootstrap subjectStore(SubjectStore store);
 
+  /**
+   * @deprecated since 00.74.00 — use
+   *             {@link CommonJSentinelBootstrap#bruteForce(LoginAttemptPolicy)}
+   *             instead. The two methods are wired identically; the
+   *             standalone-specific method is kept for source-backwards
+   *             compatibility.
+   */
+  @Deprecated(since = "00.74.00")
   StandaloneJSentinelBootstrap loginAttemptPolicy(LoginAttemptPolicy policy);
 }

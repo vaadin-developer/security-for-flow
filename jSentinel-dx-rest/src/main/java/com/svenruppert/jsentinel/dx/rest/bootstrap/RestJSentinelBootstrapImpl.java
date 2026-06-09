@@ -133,6 +133,9 @@ final class RestJSentinelBootstrapImpl
         errorBodiesDefaulted ? "bootstrap-default" : "bootstrap-explicit",
         errorBodiesDefaulted));
 
+    // V00.74: apply direct-set services from CommonJSentinelBootstrap
+    // (logout / bruteForce / rateLimit / apiKeys / refreshTokens).
+    applyDirectServiceConfiguration(services, warnings);
     // V00.73: apply audit sub-builder state (no-op when .audit(...) wasn't called).
     applyAuditConfiguration(services, warnings);
     // V00.73: apply sessions sub-builder state. REST consumes Policy/Version/Resolver;
