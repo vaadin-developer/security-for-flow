@@ -22,7 +22,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>jSentinel-autoservice-processor</artifactId>
-  <name>Security AutoService Processor</name>
+  <name>jSentinel AutoService Processor</name>
   <description>
     V00.72 annotation processor that generates META-INF/services
     descriptors from @JSentinelAutoService annotations at compile time.

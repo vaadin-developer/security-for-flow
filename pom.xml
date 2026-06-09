@@ -28,7 +28,7 @@
     <version>00.73.00</version>
     <packaging>pom</packaging>
 
-    <name>Security for Vaadin</name>
+    <name>jSentinel — Security for Vaadin Flow</name>
     <description>A Core Java Security Framework for Vaadin</description>
     <inceptionYear>2018</inceptionYear>
     <organization>

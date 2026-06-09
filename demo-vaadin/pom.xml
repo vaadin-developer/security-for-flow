@@ -23,7 +23,7 @@
 
     <artifactId>demo-vaadin</artifactId>
     <packaging>war</packaging>
-    <name>Security for Vaadin - Vaadin Demo</name>
+    <name>jSentinel - Vaadin Demo</name>
     <description>Demo application for Vaadin view security, roles, permissions, and UI integration.</description>
 
     <properties>
@@ -91,7 +91,7 @@
             <version>2.21</version>
         </dependency>
         <!--
-          Annotations module shipped by security-processor's underlying
+          Annotations module shipped by jSentinel-processor's underlying
           proxybuilder. The processor emits @GeneratedByProxyBuilder and
           @DelegatesTo into every generated wrapper class; consumers of
           the processor need the annotation types on their compile
@@ -129,7 +129,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <!--
-                      Wire security-processor as a compile-time annotation
+                      Wire jSentinel-processor as a compile-time annotation
                       processor. The processor expands @Secured-annotated
                       classes into a <Type>Secured subclass that routes
                       every guarded method through JSentinelEnforcer before

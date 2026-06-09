@@ -22,7 +22,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>jSentinel-persistence-testkit</artifactId>
-  <name>Security Persistence Testkit</name>
+  <name>jSentinel Persistence Testkit</name>
   <description>
     JUnit-5 contract interfaces that every concrete implementation of
     the Phase-2 persistence stores must satisfy. Consumers (the
@@ -42,7 +42,7 @@
     <!--
       JUnit Jupiter API at compile scope so contract interfaces can
       declare @Test default methods. Mirrors the approach already used
-      by security-test for its lifecycle extension.
+      by jSentinel-test for its lifecycle extension.
     -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>

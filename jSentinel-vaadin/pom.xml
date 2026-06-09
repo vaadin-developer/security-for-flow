@@ -22,8 +22,8 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>jSentinel-vaadin</artifactId>
-  <name>Security Vaadin Adapter</name>
-  <description>Vaadin Flow adapter for the security-core module.</description>
+  <name>jSentinel Vaadin Adapter</name>
+  <description>Vaadin Flow adapter for the jSentinel-core module.</description>
 
   <dependencies>
     <dependency>

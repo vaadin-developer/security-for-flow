@@ -22,7 +22,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>jSentinel-processor</artifactId>
-  <name>Security Annotation Processor</name>
+  <name>jSentinel Annotation Processor</name>
   <description>
     Compile-time annotation processor that generates a Secured wrapper
     subclass for each @Secured-annotated concrete class. The generated
@@ -31,7 +31,7 @@
     annotation (@RequiresRole, @RequiresPermission, @RequiresAnyPermission,
     @RequiresAllPermissions, @RequiresPolicy).
 
-    Runtime sibling: SecuredProxy in security-standalone for the
+    Runtime sibling: SecuredProxy in jSentinel-standalone for the
     JDK-dynamic-proxy path on interfaces.
   </description>
 
@@ -54,7 +54,7 @@
     <!--
       The annotation module ships the @GeneratedByProxyBuilder marker
       that proxybuilder emits into every generated wrapper class.
-      Consumers of security-processor (via <annotationProcessorPaths>)
+      Consumers of jSentinel-processor (via <annotationProcessorPaths>)
       pull this dependency through their own compile-classpath; the
       processor needs it at processing time so JavaPoet can resolve
       the annotation type.

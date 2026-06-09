@@ -22,11 +22,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>jSentinel-autoservice-annotations</artifactId>
-  <name>Security AutoService Annotations</name>
+  <name>jSentinel AutoService Annotations</name>
   <description>
     V00.72 @JSentinelAutoService annotation — SOURCE retention, no
     runtime trace, zero project-internal dependencies. Consumed at
-    compile time by security-autoservice-processor.
+    compile time by jSentinel-autoservice-processor.
   </description>
 
   <dependencies>

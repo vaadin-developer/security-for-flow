@@ -22,14 +22,14 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>jSentinel-persistence-eclipsestore</artifactId>
-  <name>Security Persistence — Eclipse Store</name>
+  <name>jSentinel Persistence — Eclipse Store</name>
   <description>
     Eclipse-Store-backed implementations of every Phase-2 persistence
     store (AuditEvent, Session, LoginAttempt, RoleAssignment,
     BootstrapState, RememberMe / PasswordReset / EmailVerification
     tokens, ApiKey, RefreshToken, RateLimit). Each implementation is
     verified bit-for-bit against the contract shipped by
-    security-persistence-testkit. The runtime root object
+    jSentinel-persistence-testkit. The runtime root object
     (EclipseStoreJSentinelRoot) is package-private — applications
     consume the stores through their existing Phase-2 SPIs and
     control the lifecycle through the public

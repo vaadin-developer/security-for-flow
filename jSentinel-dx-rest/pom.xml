@@ -22,7 +22,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>jSentinel-dx-rest</artifactId>
-  <name>Security DX – REST Adapter</name>
+  <name>jSentinel DX – REST Adapter</name>
   <description>
     V00.72 REST-specific fluent bootstrap: RestSecurity.bootstrap()
     facade and the RestJSentinelBootstrap builder. Hosts the

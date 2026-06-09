@@ -23,7 +23,7 @@
 
   <artifactId>demo-vaadin-rest-client</artifactId>
   <packaging>war</packaging>
-  <name>Security for Vaadin - Vaadin REST-Client demo</name>
+  <name>jSentinel - Vaadin REST-Client demo</name>
   <description>
     Vaadin Flow demo where the demo-rest server is the authoritative
     source for users, roles and permissions; the Vaadin UI authenticates

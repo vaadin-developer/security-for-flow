@@ -22,7 +22,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>jSentinel-standalone</artifactId>
-  <name>Security Standalone Adapter</name>
+  <name>jSentinel Standalone Adapter</name>
   <description>Framework-free adapter for plain Java / desktop / CLI applications.</description>
 
   <dependencies>

@@ -22,7 +22,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>demo-rest-shared</artifactId>
-  <name>Security for Vaadin - REST Demo shared</name>
+  <name>jSentinel - REST Demo shared</name>
   <description>
     Transport-level constants and helpers shared between the demo-rest
     server and any client (CLI, Vaadin REST client). Demo-only.

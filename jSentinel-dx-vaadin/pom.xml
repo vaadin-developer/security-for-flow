@@ -22,7 +22,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>jSentinel-dx-vaadin</artifactId>
-  <name>Security DX – Vaadin Adapter</name>
+  <name>jSentinel DX – Vaadin Adapter</name>
   <description>
     V00.72 Vaadin-specific fluent bootstrap: VaadinSecurity.bootstrap()
     facade and the VaadinJSentinelBootstrap builder. Hosts the

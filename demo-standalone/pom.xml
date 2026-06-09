@@ -22,7 +22,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>demo-standalone</artifactId>
-  <name>Security for Vaadin - Standalone Demo</name>
+  <name>jSentinel - Standalone Demo</name>
   <description>Demo CLI application showing how a plain Java program consumes the standalone security adapter.</description>
 
   <properties>
@@ -42,7 +42,7 @@
       <version>${project.version}</version>
     </dependency>
     <!--
-      Annotations module shipped by security-processor's underlying
+      Annotations module shipped by jSentinel-processor's underlying
       proxybuilder. The processor emits @GeneratedByProxyBuilder into
       every wrapper class; consumers of the processor need the
       annotation type on their compile classpath even though
@@ -99,7 +99,7 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
           <!--
-            Wire security-processor as a compile-time annotation
+            Wire jSentinel-processor as a compile-time annotation
             processor. The processor expands @Secured-annotated classes
             into a <Type>Secured subclass that routes every guarded
             method through JSentinelEnforcer before the super-call.

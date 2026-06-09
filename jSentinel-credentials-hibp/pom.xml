@@ -22,11 +22,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>jSentinel-credentials-hibp</artifactId>
-  <name>Security Credentials — HIBP (HaveIBeenPwned) Opt-In</name>
+  <name>jSentinel Credentials — HIBP (HaveIBeenPwned) Opt-In</name>
   <description>
     Optional Phase-5 extension that adds a HaveIBeenPwned-style online
     compromised-password checker on top of the V00.71 SPI from
-    security-core. The checker uses the k-anonymity range API: only
+    jSentinel-core. The checker uses the k-anonymity range API: only
     the first five hex chars of the candidate's SHA-1 digest leave the
     process, never the plaintext password (CWE-359). The implementation
     relies on JDK HttpClient only — no additional runtime dependencies.

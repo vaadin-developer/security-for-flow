@@ -22,10 +22,10 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>jSentinel-test</artifactId>
-  <name>Security Test Fixtures</name>
+  <name>jSentinel Test Fixtures</name>
   <description>
     Reusable test fixtures, fakes, recording sinks, and a JUnit 5
-    extension for projects that depend on security-core. Consumers add
+    extension for projects that depend on jSentinel-core. Consumers add
     this artifact as a test-scope dependency.
   </description>
 

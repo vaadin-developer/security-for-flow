@@ -22,12 +22,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>jSentinel-crypto-bc</artifactId>
-  <name>Security Crypto — BouncyCastle</name>
+  <name>jSentinel Crypto — BouncyCastle</name>
   <description>
     Optional Phase-1b extension that adds memory-hard and bcrypt-style
     password hashing providers backed by BouncyCastle (Argon2id,
     bcrypt, scrypt) on top of the V00.71 PasswordHashProvider SPI from
-    security-core. Strictly opt-in: applications that do not depend on
+    jSentinel-core. Strictly opt-in: applications that do not depend on
     this module never pull in bcprov. Loading the module also does not
     touch the global JCA provider order — every algorithm is invoked
     through the BouncyCastle low-level Bouncy Castle Crypto APIs.

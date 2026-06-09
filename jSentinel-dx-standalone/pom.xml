@@ -22,7 +22,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>jSentinel-dx-standalone</artifactId>
-  <name>Security DX – Standalone Adapter</name>
+  <name>jSentinel DX – Standalone Adapter</name>
   <description>
     V00.72 Standalone-specific fluent bootstrap: StandaloneSecurity.bootstrap()
     facade and the StandaloneJSentinelBootstrap builder. Hosts the

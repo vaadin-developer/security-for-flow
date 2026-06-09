@@ -22,7 +22,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>jSentinel-vaadin-starter</artifactId>
-  <name>Security Vaadin Starter</name>
+  <name>jSentinel Vaadin Starter</name>
   <description>
     V00.72 declarative UI security layer over the Vaadin Secured*
     components: SecuredUi.button / link / menuItem, @SecureRoute, and
