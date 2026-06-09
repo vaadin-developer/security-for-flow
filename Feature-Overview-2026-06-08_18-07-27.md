@@ -26,7 +26,7 @@ Timestamp: 2026-06-08_18-07-27 Europe/Berlin (state after V00.72.00 release)
 | Diagnostics | `JSentinelServiceReport` + `JSentinelWarning` with stable codes + severity | Shipped / V00.72 |
 | Diagnostics | `DiagnosticContributor` SPI (adapter-DX modules contribute without polluting `security-dx` with adapter types) | Shipped / V00.72 |
 | Diagnostics | `VaadinDiagnosticContributor` / `RestDiagnosticContributor` / `StandaloneDiagnosticContributor` (registered via `@JSentinelAutoService`) | Shipped / V00.72 |
-| Diagnostics | `JSentinelProcessorReport` + `WrapperIndexReader` (reads `META-INF/security-for-flow/generated-wrappers.idx`) | Reader Shipped / V00.72 — writer in `security-processor` staged for V00.73 |
+| Diagnostics | `JSentinelProcessorReport` + `WrapperIndexReader` (reads `META-INF/jsentinel/generated-wrappers.idx`) | Reader Shipped / V00.72 — writer in `security-processor` staged for V00.73 |
 | Diagnostics | `secured-without-wrapper` warning (`PRODUCTION` records; `STRICT` raises) | Shipped / V00.72 (fires once V00.73 writer ships) |
 | AutoService | `@JSentinelAutoService(Class<?>... value)` — `RetentionPolicy.SOURCE`, no runtime trace | Shipped / V00.72 |
 | AutoService | `security-autoservice-processor` — JDK annotation-processing API only, no external `auto-service` | Shipped / V00.72 |
@@ -171,7 +171,7 @@ Timestamp: 2026-06-08_18-07-27 Europe/Berlin (state after V00.72.00 release)
 | Documentation | `docs/dx/before-after-spi-files.md` (manual SPI files vs `@JSentinelAutoService`) | Shipped / V00.72 |
 | Documentation | `docs/dx/decision-table.md` (`SecuredProxy` vs `@Secured` vs `SecuredUi` vs `@JSentinelAutoService` vs adapter bootstrap facades) | Shipped / V00.72 |
 | V00.73 | Promote `@ExperimentalJSentinelApi` DX types to stable | Planned |
-| V00.73 | Wrapper-index *writer* in `security-processor` (`META-INF/security-for-flow/generated-wrappers.idx`) | Planned |
+| V00.73 | Wrapper-index *writer* in `security-processor` (`META-INF/jsentinel/generated-wrappers.idx`) | Planned |
 | V00.73 | `SecuredUi.requiresPolicy(...)` over `PolicyRegistry` | Planned |
 | V00.73 | `CommonJSentinelBootstrap` sub-builders (`audit / sessions / policies / roles / credentials`) wired end-to-end into `JSentinelServiceResolver` | Planned |
 | V00.75 | Security event bus | New concept |

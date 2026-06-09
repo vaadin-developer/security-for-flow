@@ -12,7 +12,7 @@ the fluent bootstrap surface for production use:
    they exist) and through DX-state / adapter consumption (where
    no resolver setter applies).
 2. **Wrapper-index writer** — `security-processor` now emits
-   `META-INF/security-for-flow/generated-wrappers.idx`, completing
+   `META-INF/jsentinel/generated-wrappers.idx`, completing
    the V00.72 reader path. `JSentinelDiagnostics.inspect()` shows
    every generated wrapper from compile-time.
 3. **`SecuredUi.requiresPolicy(...)`** — was a build-time

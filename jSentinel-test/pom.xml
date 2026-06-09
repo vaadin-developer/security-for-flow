@@ -21,24 +21,42 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>demo-rest-shared</artifactId>
-  <name>Security for Vaadin - REST Demo shared</name>
+  <artifactId>jSentinel-test</artifactId>
+  <name>Security Test Fixtures</name>
   <description>
-    Transport-level constants and helpers shared between the demo-rest
-    server and any client (CLI, Vaadin REST client). Demo-only.
+    Reusable test fixtures, fakes, recording sinks, and a JUnit 5
+    extension for projects that depend on security-core. Consumers add
+    this artifact as a test-scope dependency.
   </description>
 
-  <properties>
-    <!--
-      Library-style demo module: do NOT push to a remote repository, but
-      DO install into the local ~/.m2 so demo-rest and
-      demo-vaadin-rest-client can resolve it outside of a reactor build.
-    -->
-    <maven.deploy.skip>true</maven.deploy.skip>
-    <gpg.skip>true</gpg.skip>
-  </properties>
-
   <dependencies>
+    <dependency>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!--
+      JUnit Jupiter API is compile-scope here (not test-scope) because
+      JSentinelTestExtension implements JUnit lifecycle interfaces. The
+      aggregator artifact org.junit.jupiter:junit-jupiter pulls
+      jupiter-api only as a runtime dep, so we depend on jupiter-api
+      directly and inherit the version from the parent POM's
+      dependencyManagement.
+    -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>${junit-jupiter.version}</version>
+      <!--
+        Override the grandparent's test-scope pin: this module needs
+        the Jupiter API at compile time for JSentinelTestExtension.
+      -->
+      <scope>compile</scope>
+    </dependency>
+    <!--
+      Aggregator artifact pulled in test-scope so the module's own
+      tests still find the full Jupiter surface (Test, BeforeEach, …).
+    -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
@@ -48,11 +66,6 @@
 
   <build>
     <plugins>
-      <!--
-        deploy is suppressed via the maven.deploy.skip property above —
-        no separate plugin block needed. install runs normally so the
-        artifact lands in ~/.m2 for non-reactor consumers.
-      -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>license-maven-plugin</artifactId>

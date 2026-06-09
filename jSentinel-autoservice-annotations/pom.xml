@@ -21,22 +21,13 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>demo-rest-shared</artifactId>
-  <name>Security for Vaadin - REST Demo shared</name>
+  <artifactId>jSentinel-autoservice-annotations</artifactId>
+  <name>Security AutoService Annotations</name>
   <description>
-    Transport-level constants and helpers shared between the demo-rest
-    server and any client (CLI, Vaadin REST client). Demo-only.
+    V00.72 @JSentinelAutoService annotation — SOURCE retention, no
+    runtime trace, zero project-internal dependencies. Consumed at
+    compile time by security-autoservice-processor.
   </description>
-
-  <properties>
-    <!--
-      Library-style demo module: do NOT push to a remote repository, but
-      DO install into the local ~/.m2 so demo-rest and
-      demo-vaadin-rest-client can resolve it outside of a reactor build.
-    -->
-    <maven.deploy.skip>true</maven.deploy.skip>
-    <gpg.skip>true</gpg.skip>
-  </properties>
 
   <dependencies>
     <dependency>
@@ -48,11 +39,6 @@
 
   <build>
     <plugins>
-      <!--
-        deploy is suppressed via the maven.deploy.skip property above —
-        no separate plugin block needed. install runs normally so the
-        artifact lands in ~/.m2 for non-reactor consumers.
-      -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>license-maven-plugin</artifactId>
@@ -63,6 +49,32 @@
           </execution>
         </executions>
       </plugin>
+
+      <!-- V00.72 invariant: no external auto-service library. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>ban-external-autoservice</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <excludes>
+                    <exclude>com.google.auto.service:*</exclude>
+                  </excludes>
+                </bannedDependencies>
+              </rules>
+              <fail>true</fail>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
+
 </project>

@@ -69,7 +69,7 @@ one with `.subjectStore(...)` if you have background workers.
 Method-level security on a concrete class without an interface uses the
 compile-time `<Type>Secured` wrapper (`@Secured` + `security-processor`).
 V00.73 completes the wrapper-index pipeline: `security-processor` now
-writes `META-INF/security-for-flow/generated-wrappers.idx` after each
+writes `META-INF/jsentinel/generated-wrappers.idx` after each
 compile (the V00.72 reader path was already in place). One line per
 generated wrapper, format
 `sourceFqn:generatedFqn:processor:proxyBuilderVer:method1,method2,...`.

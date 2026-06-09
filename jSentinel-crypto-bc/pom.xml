@@ -21,48 +21,38 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>demo-rest-shared</artifactId>
-  <name>Security for Vaadin - REST Demo shared</name>
+  <artifactId>jSentinel-crypto-bc</artifactId>
+  <name>Security Crypto — BouncyCastle</name>
   <description>
-    Transport-level constants and helpers shared between the demo-rest
-    server and any client (CLI, Vaadin REST client). Demo-only.
+    Optional Phase-1b extension that adds memory-hard and bcrypt-style
+    password hashing providers backed by BouncyCastle (Argon2id,
+    bcrypt, scrypt) on top of the V00.71 PasswordHashProvider SPI from
+    security-core. Strictly opt-in: applications that do not depend on
+    this module never pull in bcprov. Loading the module also does not
+    touch the global JCA provider order — every algorithm is invoked
+    through the BouncyCastle low-level Bouncy Castle Crypto APIs.
   </description>
 
   <properties>
-    <!--
-      Library-style demo module: do NOT push to a remote repository, but
-      DO install into the local ~/.m2 so demo-rest and
-      demo-vaadin-rest-client can resolve it outside of a reactor build.
-    -->
-    <maven.deploy.skip>true</maven.deploy.skip>
-    <gpg.skip>true</gpg.skip>
+    <bouncycastle.version>1.78.1</bouncycastle.version>
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk18on</artifactId>
+      <version>${bouncycastle.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
-
-  <build>
-    <plugins>
-      <!--
-        deploy is suppressed via the maven.deploy.skip property above —
-        no separate plugin block needed. install runs normally so the
-        artifact lands in ~/.m2 for non-reactor consumers.
-      -->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>license-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>first</id>
-            <phase>none</phase>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
 </project>

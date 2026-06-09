@@ -15,8 +15,8 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
-    <groupId>com.svenruppert</groupId>
-    <artifactId>security-for-flow-parent</artifactId>
+    <groupId>com.svenruppert.jsentinel</groupId>
+    <artifactId>jSentinel-parent</artifactId>
     <version>00.73.00</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -32,13 +32,13 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>security-core</artifactId>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>security-standalone</artifactId>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-standalone</artifactId>
       <version>${project.version}</version>
     </dependency>
     <!--
@@ -60,8 +60,8 @@
       The processor is wired under annotationProcessorPaths below.
     -->
     <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>security-autoservice-annotations</artifactId>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-autoservice-annotations</artifactId>
       <version>${project.version}</version>
     </dependency>
     <!--
@@ -71,13 +71,13 @@
       diagnostics line at startup.
     -->
     <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>security-dx</artifactId>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-dx</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>security-dx-standalone</artifactId>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-dx-standalone</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -86,8 +86,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>security-test</artifactId>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-test</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
@@ -106,20 +106,20 @@
           -->
           <annotationProcessorPaths>
             <path>
-              <groupId>com.svenruppert</groupId>
-              <artifactId>security-processor</artifactId>
+              <groupId>com.svenruppert.jsentinel</groupId>
+              <artifactId>jSentinel-processor</artifactId>
               <version>${project.version}</version>
             </path>
             <path>
-              <groupId>com.svenruppert</groupId>
-              <artifactId>security-autoservice-processor</artifactId>
+              <groupId>com.svenruppert.jsentinel</groupId>
+              <artifactId>jSentinel-autoservice-processor</artifactId>
               <version>${project.version}</version>
             </path>
             <!-- Processor reads the @JSentinelAutoService annotation class
                  reflectively; make sure it is on the processor path too. -->
             <path>
-              <groupId>com.svenruppert</groupId>
-              <artifactId>security-autoservice-annotations</artifactId>
+              <groupId>com.svenruppert.jsentinel</groupId>
+              <artifactId>jSentinel-autoservice-annotations</artifactId>
               <version>${project.version}</version>
             </path>
           </annotationProcessorPaths>

@@ -23,7 +23,8 @@
         <version>06.02.01</version>
     </parent>
 
-    <artifactId>security-for-flow-parent</artifactId>
+    <groupId>com.svenruppert.jsentinel</groupId>
+    <artifactId>jSentinel-parent</artifactId>
     <version>00.73.00</version>
     <packaging>pom</packaging>
 
@@ -71,23 +72,23 @@
     </licenses>
 
     <modules>
-        <module>security-core</module>
-        <module>security-vaadin</module>
-        <module>security-rest</module>
-        <module>security-standalone</module>
-        <module>security-test</module>
-        <module>security-processor</module>
-        <module>security-persistence-testkit</module>
-        <module>security-persistence-eclipsestore</module>
-        <module>security-crypto-bc</module>
-        <module>security-credentials-hibp</module>
-        <module>security-autoservice-annotations</module>
-        <module>security-autoservice-processor</module>
-        <module>security-dx</module>
-        <module>security-dx-vaadin</module>
-        <module>security-dx-rest</module>
-        <module>security-dx-standalone</module>
-        <module>security-vaadin-starter</module>
+        <module>jSentinel-core</module>
+        <module>jSentinel-vaadin</module>
+        <module>jSentinel-rest</module>
+        <module>jSentinel-standalone</module>
+        <module>jSentinel-test</module>
+        <module>jSentinel-processor</module>
+        <module>jSentinel-persistence-testkit</module>
+        <module>jSentinel-persistence-eclipsestore</module>
+        <module>jSentinel-crypto-bc</module>
+        <module>jSentinel-credentials-hibp</module>
+        <module>jSentinel-autoservice-annotations</module>
+        <module>jSentinel-autoservice-processor</module>
+        <module>jSentinel-dx</module>
+        <module>jSentinel-dx-vaadin</module>
+        <module>jSentinel-dx-rest</module>
+        <module>jSentinel-dx-standalone</module>
+        <module>jSentinel-vaadin-starter</module>
         <module>demo-rest-shared</module>
         <module>demo-vaadin</module>
         <module>demo-rest</module>

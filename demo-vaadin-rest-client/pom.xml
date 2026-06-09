@@ -15,8 +15,8 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
-    <groupId>com.svenruppert</groupId>
-    <artifactId>security-for-flow-parent</artifactId>
+    <groupId>com.svenruppert.jsentinel</groupId>
+    <artifactId>jSentinel-parent</artifactId>
     <version>00.73.00</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -38,18 +38,18 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>security-core</artifactId>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>security-autoservice-annotations</artifactId>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-autoservice-annotations</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>security-vaadin</artifactId>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-vaadin</artifactId>
       <version>${project.version}</version>
     </dependency>
     <!--
@@ -58,23 +58,23 @@
       JSentinelRuntime.
     -->
     <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>security-dx</artifactId>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-dx</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>security-dx-vaadin</artifactId>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-dx-vaadin</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>security-vaadin-starter</artifactId>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-vaadin-starter</artifactId>
       <version>${project.version}</version>
     </dependency>
     <!-- Transport-only — endpoint constants and tiny JSON helper -->
     <dependency>
-      <groupId>com.svenruppert</groupId>
+      <groupId>com.svenruppert.jsentinel</groupId>
       <artifactId>demo-rest-shared</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -110,7 +110,7 @@
     <!-- Test-scope dependency on demo-rest so the backend-client test can
          start an in-process DemoRestServer. NOT a runtime dependency. -->
     <dependency>
-      <groupId>com.svenruppert</groupId>
+      <groupId>com.svenruppert.jsentinel</groupId>
       <artifactId>demo-rest</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
@@ -130,13 +130,13 @@
         <configuration>
           <annotationProcessorPaths>
             <path>
-              <groupId>com.svenruppert</groupId>
-              <artifactId>security-autoservice-processor</artifactId>
+              <groupId>com.svenruppert.jsentinel</groupId>
+              <artifactId>jSentinel-autoservice-processor</artifactId>
               <version>${project.version}</version>
             </path>
             <path>
-              <groupId>com.svenruppert</groupId>
-              <artifactId>security-autoservice-annotations</artifactId>
+              <groupId>com.svenruppert.jsentinel</groupId>
+              <artifactId>jSentinel-autoservice-annotations</artifactId>
               <version>${project.version}</version>
             </path>
           </annotationProcessorPaths>

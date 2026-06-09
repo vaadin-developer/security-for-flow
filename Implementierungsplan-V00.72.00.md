@@ -825,7 +825,7 @@ transitive dependency of the published starter artifact.
 
 **Implement:**
 
-- Extend `security-processor` so it writes `META-INF/security-for-flow/generated-wrappers.idx` during compilation.
+- Extend `security-processor` so it writes `META-INF/jsentinel/generated-wrappers.idx` during compilation.
 - Each index entry contains the source type, generated wrapper type, processor id, proxybuilder version and delegated method names.
 - `JSentinelDiagnostics` reads all visible `generated-wrappers.idx` resources via the context class loader.
 - For each indexed generated wrapper, load metadata defensively and verify `@GeneratedByProxyBuilder` / `@DelegatesTo` reflectively when available.
@@ -845,7 +845,7 @@ transitive dependency of the published starter artifact.
 
 **Implement:**
 
-- Read `META-INF/security-for-flow/generated-wrappers.idx`.
+- Read `META-INF/jsentinel/generated-wrappers.idx`.
 - For each indexed source type, look up the expected wrapper FQN (`<Type>Secured`) and the indexed generated wrapper type.
 - If the index entry is present but the wrapper class is absent or inconsistent, append a `ProcessorWarning` with code `secured-without-wrapper` and the documented suggested fix.
 - If the annotation processor is not configured at all, no index exists; diagnostics must not perform a broad classpath scan by default. Documentation explains that missing processor configuration is caught by build setup checks and optional explicit diagnostics, not by default startup scanning.
@@ -1077,7 +1077,7 @@ Recommended review rules:
 
 ### Phase 4 acceptance
 
-- `JSentinelProcessorReport` exposes every index-visible `<Type>Secured` wrapper from `META-INF/security-for-flow/generated-wrappers.idx`.
+- `JSentinelProcessorReport` exposes every index-visible `<Type>Secured` wrapper from `META-INF/jsentinel/generated-wrappers.idx`.
 - `@Secured` classes without a generated wrapper produce a warning in `PRODUCTION` and an exception in `STRICT`.
 - `proxybuilder` generation semantics stay unchanged; `security-processor` only adds the metadata index needed by diagnostics.
 
@@ -1102,7 +1102,7 @@ Recommended review rules:
 | Vaadin starter becomes monolithic | hard to evolve | starter is a thin convenience layer over existing `Secured*` components; no listener logic of its own |
 | `@SecureRoute` semantics ambiguous when combining roles + permissions + policy | wrong access decisions | semantics fixed in Konzept §9.2 and tested in Prompt 018; deviation requires a dedicated PR |
 | `proxybuilder` misused for SPI registration | abuse of compile-time tooling | Konzept §10.4 / decision table explicitly forbid it; no DX prompt depends on `proxybuilder` outside Phase 4 |
-| Broad classpath scanning is slow or unreliable | startup regression, missing wrappers | `security-processor` writes `META-INF/security-for-flow/generated-wrappers.idx`; diagnostics read the index instead of scanning broadly |
+| Broad classpath scanning is slow or unreliable | startup regression, missing wrappers | `security-processor` writes `META-INF/jsentinel/generated-wrappers.idx`; diagnostics read the index instead of scanning broadly |
 | Shared DX module leaks adapter dependencies | broken layering | adapter-specific builders live in `security-dx-vaadin`, `security-dx-rest` and `security-dx-standalone` |
 | Seven new modules increase reactor and publication complexity | broken builds, wrong Maven coordinates, confusing consumer setup | skeleton PRs must update reactor order, dependencyManagement, module documentation and release notes together; coordinates are frozen before builder implementation starts |
 | Missing reusable test fixtures cause ad-hoc mocks in DX tests | brittle tests, inconsistent behaviour | Prompt 003a establishes or verifies `security-test` fixtures before adapter builder prompts |

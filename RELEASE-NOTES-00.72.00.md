@@ -64,7 +64,7 @@ blocks. `security-core` stays exactly where V00.71 left it.
     `strictDefaults()`).
   - **Phase 4 — Processor diagnostics integration (prompts 020 –
     022).** `JSentinelProcessorReport` surfaces every wrapper from
-    `META-INF/security-for-flow/generated-wrappers.idx` in
+    `META-INF/jsentinel/generated-wrappers.idx` in
     `JSentinelDiagnostics.inspect()`. Missing-wrapper warning fires for
     `@Secured` classes without a generated `<Type>Secured`. The
     reader is in place; the writer in `security-processor` is staged
@@ -204,7 +204,7 @@ promotes them to stable.
   additional findings without polluting `security-dx` with adapter
   types.
 - `JSentinelProcessorReport` + `WrapperIndexReader` — parses
-  `META-INF/security-for-flow/generated-wrappers.idx` and surfaces
+  `META-INF/jsentinel/generated-wrappers.idx` and surfaces
   every `<Type>Secured` wrapper in the diagnostics report; raises a
   `secured-without-wrapper` warning when a `@Secured` class has no
   matching index entry.
@@ -294,7 +294,7 @@ promotes them to stable.
 
 - `JSentinelProcessorReport` — exposed via
   `JSentinelServiceReport.processorReport()`. Lists every wrapper from
-  `META-INF/security-for-flow/generated-wrappers.idx`.
+  `META-INF/jsentinel/generated-wrappers.idx`.
 - `WrapperIndexReader` — reads the index file from the classpath.
   Tolerates absent / empty index without erroring.
 - `secured-without-wrapper` warning — fires when a `@Secured` class

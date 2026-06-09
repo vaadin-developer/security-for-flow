@@ -20,7 +20,7 @@ Status: Architektur- und Umsetzungskonzept
 
 Begleitend werden zwei kleinere V00.72-Carve-outs nachgezogen:
 
-3. **Wrapper-Index-Writer.** `security-processor` schreibt die in V00.72 nur lesbare `META-INF/security-for-flow/generated-wrappers.idx`. Damit funktioniert die `JSentinelDiagnostics`-Wrapper-Erkennung end-to-end.
+3. **Wrapper-Index-Writer.** `security-processor` schreibt die in V00.72 nur lesbare `META-INF/jsentinel/generated-wrappers.idx`. Damit funktioniert die `JSentinelDiagnostics`-Wrapper-Erkennung end-to-end.
 4. **`SecuredUi.requiresPolicy(...)`.** Der V00.72-Builder warf bei diesem Aufruf `UnsupportedOperationException`. V00.73 verdrahtet ihn gegen `PolicyRegistry`.
 
 Der Kern (`security-core`) bekommt keinen neuen Runtime-Dependency-Eintrag. `security-processor` erhält additive Metadaten-Ausgabe; die proxybuilder-Generierungs-Semantik bleibt unverändert.
@@ -50,7 +50,7 @@ V00.75 (Security Event Bus) und V00.80 (MFA, OIDC, Hardening) bauen darauf auf.
 - **`SecuredUi.requiresPolicy(...)`** integriert mit `PolicyRegistry`.
 - **`@SecureRoute(policy=...)`** integriert mit `PolicyRegistry` (V00.72 schlug Forbidden vor; V00.73 evaluiert echt).
 - **`SecureRouteDiscovery`-SPI** in `security-vaadin-starter` als opt-in (`.discoverSecureRoutes(true)` auf `VaadinJSentinelBootstrap`). Default-Implementierung `VaadinRouterSecureRouteDiscovery` in `security-dx-vaadin` scannt `RouteConfiguration.getAvailableRoutes()`. Ohne Opt-in bleibt das V00.72-Runtime-Verhalten unverändert. Siehe §8.5.
-- **`security-processor`-Wrapper-Index-Writer**: `META-INF/security-for-flow/generated-wrappers.idx` wird beim Compile-Time-Wrapper-Generieren emittiert.
+- **`security-processor`-Wrapper-Index-Writer**: `META-INF/jsentinel/generated-wrappers.idx` wird beim Compile-Time-Wrapper-Generieren emittiert.
 - **Gezielte Stable-API-Promotion**: Entfernen von `@ExperimentalJSentinelApi` nur nach Typ-Audit und nur für Typen, deren Semantik nach V00.73 stabil ist.
 - **`security-dx-test`-Modul nur dann, wenn während der Implementierung ein konkreter Cross-Module-Reuse-Fall auftritt.** Bis dahin: DX-typisierte Test-Helpers leben in `security-dx/src/test/java/.../testsupport/` und werden über Maven-Test-Jar (`<scope>test</scope>` + `<classifier>tests</classifier>`) für andere V00.72/V00.73-Module zugänglich gemacht. Erst wenn eine Demo oder ein externer Konsument diese Helper braucht, rechtfertigt das ein eigenes Modul.
 - **STRICT-Mode-Regeln** für die neuen Sub-Builder (z. B. `STRICT` + `.sessions(s -> s.storeBacked(null))` → `JSentinelBootstrapException`).
@@ -456,7 +456,7 @@ V00.72 hat den `WrapperIndexReader` in `security-dx` geliefert; der entsprechend
 `SecuredAnnotationProcessor` schreibt nach erfolgreicher Wrapper-Generierung eine Index-Zeile pro `@Secured`-Klasse:
 
 ```text
-META-INF/security-for-flow/generated-wrappers.idx
+META-INF/jsentinel/generated-wrappers.idx
 ```
 
 Format wie V00.72 definiert:

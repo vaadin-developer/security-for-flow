@@ -19,7 +19,7 @@
 - **`@Secured` + `<Type>Secured`** — production hot path, no interface,
   zero per-call reflection. Catches `final` / `private` / `static`
   guarded methods at compile time. V00.73 also writes the wrapper-index
-  at `META-INF/security-for-flow/generated-wrappers.idx`, surfaced
+  at `META-INF/jsentinel/generated-wrappers.idx`, surfaced
   through `JSentinelDiagnostics.inspect()`.
 - **`SecuredUi.*`** — declarative Vaadin UI. Hides / disables on a
   denied subject without imperative `if`-trees. V00.73 makes

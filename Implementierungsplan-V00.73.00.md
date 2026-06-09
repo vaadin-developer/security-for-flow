@@ -89,7 +89,7 @@ Every implementation prompt must obey these rules:
 | `security-dx-rest` | Consumes common audit/session/policy/role/credential state where applicable |
 | `security-dx-standalone` | Consumes common state; `.sessions(...)` produces INFO `standalone/sessions-not-applicable` |
 | `security-vaadin-starter` | `SecuredUi.requiresPolicy(...)`, `@SecureRoute(policy=...)` |
-| `security-processor` | Writes `META-INF/security-for-flow/generated-wrappers.idx` |
+| `security-processor` | Writes `META-INF/jsentinel/generated-wrappers.idx` |
 
 `security-dx-test` is not created in V00.73 by default. Shared DX test helpers stay under `security-dx/src/test/java/.../testsupport/` and may be exposed through a test-jar only if a real cross-module test need appears.
 

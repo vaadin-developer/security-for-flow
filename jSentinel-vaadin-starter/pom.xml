@@ -21,20 +21,13 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>demo-rest</artifactId>
-  <name>Security for Vaadin - REST Demo</name>
-  <description>Demo application for REST security, permissions, protected handlers, and HTTP status mapping.</description>
-
-  <properties>
-    <!--
-      demo-rest is consumed as a test-scope dependency by
-      demo-vaadin-rest-client (HttpDemoBackendClientTest spins up an
-      in-process DemoRestServer). It must therefore land in the local
-      ~/.m2 — install must NOT be skipped. Remote deploy stays off.
-    -->
-    <maven.deploy.skip>true</maven.deploy.skip>
-    <gpg.skip>true</gpg.skip>
-  </properties>
+  <artifactId>jSentinel-vaadin-starter</artifactId>
+  <name>Security Vaadin Starter</name>
+  <description>
+    V00.72 declarative UI security layer over the Vaadin Secured*
+    components: SecuredUi.button / link / menuItem, @SecureRoute, and
+    starter profiles (development / production / strict).
+  </description>
 
   <dependencies>
     <dependency>
@@ -44,14 +37,9 @@
     </dependency>
     <dependency>
       <groupId>com.svenruppert.jsentinel</groupId>
-      <artifactId>jSentinel-rest</artifactId>
+      <artifactId>jSentinel-vaadin</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <!--
-      V00.72 fluent bootstrap. DemoRestServer.main() calls
-      RestSecurity.bootstrap() and prints the JSentinelRuntime.log()
-      banner before the server starts serving requests.
-    -->
     <dependency>
       <groupId>com.svenruppert.jsentinel</groupId>
       <artifactId>jSentinel-dx</artifactId>
@@ -59,23 +47,20 @@
     </dependency>
     <dependency>
       <groupId>com.svenruppert.jsentinel</groupId>
-      <artifactId>jSentinel-dx-rest</artifactId>
+      <artifactId>jSentinel-dx-vaadin</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.svenruppert.jsentinel</groupId>
-      <artifactId>demo-rest-shared</artifactId>
+      <artifactId>jSentinel-autoservice-annotations</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <!--
-      com.svenruppert:core supplies HasLogger and HttpStatus — used by
-      DemoHandlers (and the demo tests) to wire status-code constants
-      and structured logging without rolling our own enum. Version is
-      managed by the dependencies parent.
-    -->
+
     <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>core</artifactId>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-test</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -86,14 +71,6 @@
 
   <build>
     <plugins>
-      <!-- deploy is suppressed via the maven.deploy.skip property above. -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-deploy-plugin</artifactId>
-        <configuration>
-          <skip>true</skip>
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>license-maven-plugin</artifactId>
@@ -104,14 +81,7 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>3.5.0</version>
-        <configuration>
-          <mainClass>com.svenruppert.jsentinel.demo.rest.server.DemoRestServer</mainClass>
-        </configuration>
-      </plugin>
     </plugins>
   </build>
+
 </project>
