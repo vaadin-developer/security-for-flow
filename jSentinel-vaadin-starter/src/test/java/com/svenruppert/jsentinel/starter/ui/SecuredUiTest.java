@@ -72,4 +72,43 @@ class SecuredUiTest {
     assertThrows(IllegalStateException.class,
         () -> SecuredUi.link().to(com.vaadin.flow.component.html.Div.class).build());
   }
+
+  // ── V00.74 generic component builder ─────────────────────────────
+
+  @Test
+  void componentNullRejected() {
+    assertThrows(NullPointerException.class,
+        () -> SecuredUi.component(null));
+  }
+
+  @Test
+  void componentRequiresRequirement() {
+    // Building a real Vaadin Component without Jackson on the test
+    // classpath fails — but the builder discipline-checks fire
+    // BEFORE construction. We pass a never-constructed dummy via
+    // generics and assert that .bind() rejects "no requirement set".
+    com.vaadin.flow.component.html.Div div = new com.vaadin.flow.component.html.Div();
+    assertThrows(IllegalStateException.class,
+        () -> SecuredUi.component(div).bind());
+  }
+
+  @Test
+  void componentEnforcesMutualExclusion() {
+    com.vaadin.flow.component.html.Div div = new com.vaadin.flow.component.html.Div();
+    assertThrows(IllegalStateException.class,
+        () -> SecuredUi.component(div)
+            .requiresRole("ROLE_USER")
+            .requiresPolicy("doc.policy"));
+  }
+
+  @Test
+  void componentBindReturnsTheSameInstance() {
+    com.vaadin.flow.component.html.Div div = new com.vaadin.flow.component.html.Div();
+    com.vaadin.flow.component.html.Div bound = SecuredUi.component(div)
+        .requiresRole("ROLE_USER")
+        .hideWhenDenied()
+        .bind();
+    org.junit.jupiter.api.Assertions.assertSame(div, bound,
+        "bind() must return the same component for chaining");
+  }
 }

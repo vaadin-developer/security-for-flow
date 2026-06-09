@@ -70,6 +70,30 @@ public final class SecuredUi {
     return new SecuredMenuItemBuilder(parent, label);
   }
 
+  /**
+   * V00.74: generic builder that secures any Vaadin {@link Component}.
+   * Use this for {@code FormLayout}, {@code Details}, {@code Tab},
+   * {@code Dialog}, {@code Notification} or anything else with a
+   * {@code setVisible} / {@code setEnabled} surface.
+   *
+   * <p>Returns the underlying component from {@code bind()} so the
+   * builder fits cleanly into layout-construction chains:
+   *
+   * <pre>
+   *   FormLayout form = new FormLayout();
+   *   layout.add(SecuredUi.component(form).requiresRole("ADMIN").bind());
+   * </pre>
+   *
+   * @param component non-null Vaadin component
+   * @param <C>       concrete component type — preserved through bind()
+   * @return secured-component builder
+   * @since 00.74.00
+   */
+  public static <C extends Component> SecuredComponentBuilder<C> component(C component) {
+    return new SecuredComponentBuilder<>(component);
+  }
+
+
   /** Common configuration shared by the three builders. */
   abstract static class AbstractSecuredUiBuilder<B extends AbstractSecuredUiBuilder<B>> {
     Set<RoleName> roles;
@@ -268,6 +292,93 @@ public final class SecuredUi {
       }
       SecuredMenuItem.bind(item, requirement(), modeOrDefault(SecuredVisibilityMode.HIDE));
       return item;
+    }
+  }
+
+  // ---- Generic Component (V00.74) -----------------------------------------
+
+  /**
+   * Generic secured-component builder. Use for {@code FormLayout},
+   * {@code Details}, {@code Tab}, {@code Dialog}, {@code Notification}
+   * — any Vaadin {@link Component}. The component is returned from
+   * {@link #bind()} so the builder fits into layout-construction
+   * chains.
+   *
+   * <p>If the component implements {@link com.vaadin.flow.component.HasEnabled}
+   * (most do), {@code disableWhenDenied()} flips
+   * {@code setEnabled(false)}. Otherwise the disabled-mode falls back
+   * to hide.
+   *
+   * @param <C> concrete component type — preserved through {@code bind()}
+   *
+   * @since 00.74.00
+   */
+  public static final class SecuredComponentBuilder<C extends Component>
+      extends AbstractSecuredUiBuilder<SecuredComponentBuilder<C>> {
+
+    private final C component;
+
+    SecuredComponentBuilder(C component) {
+      this.component = Objects.requireNonNull(component, "component");
+    }
+
+    /**
+     * Wires the visibility/enabled-state on this component and
+     * returns the component back for chaining into layouts.
+     */
+    public C bind() {
+      markUsed();
+      if (isPolicyMode()) {
+        PolicyVisibility.install(component, policyName(),
+            modeOrDefault(SecuredVisibilityMode.HIDE));
+        return component;
+      }
+      SecuredVisibility.Target target = new ComponentTarget(component);
+      SecuredVisibility.apply(target, requirement(),
+          modeOrDefault(SecuredVisibilityMode.HIDE));
+      return component;
+    }
+  }
+
+  /**
+   * Adapts an arbitrary Vaadin {@link Component} to the
+   * {@link SecuredVisibility.Target} contract. Visibility goes
+   * through {@code Component.setVisible}; enabled-state goes through
+   * {@code HasEnabled.setEnabled} where the component supports it,
+   * otherwise falls back to visibility.
+   */
+  private static final class ComponentTarget implements SecuredVisibility.Target {
+    private final Component component;
+
+    ComponentTarget(Component component) {
+      this.component = component;
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+      component.setVisible(visible);
+    }
+
+    @Override
+    public boolean isVisible() {
+      return component.isVisible();
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+      if (component instanceof com.vaadin.flow.component.HasEnabled he) {
+        he.setEnabled(enabled);
+      } else {
+        component.setVisible(enabled);
+      }
+    }
+
+    @Override
+    public boolean isEnabled() {
+      if (component instanceof com.vaadin.flow.component.HasEnabled he) {
+        return he.isEnabled();
+      }
+      return component.isVisible();
     }
   }
 }
