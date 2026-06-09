@@ -27,6 +27,7 @@ import com.svenruppert.jsentinel.standalone.ThreadLocalSubjectStore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * Package-private implementation of {@link StandaloneJSentinelBootstrap}.
@@ -38,6 +39,8 @@ final class StandaloneJSentinelBootstrapImpl
     implements StandaloneJSentinelBootstrap {
 
   private SubjectStore subjectStore;
+  private ThreadPropagationStrategy threadPropagation;
+  private InteractiveLoginConfiguration interactiveLogin;
   private boolean installed;
 
   @Override
@@ -60,6 +63,26 @@ final class StandaloneJSentinelBootstrapImpl
   @Override
   public StandaloneJSentinelBootstrap loginAttemptPolicy(LoginAttemptPolicy policy) {
     return bruteForce(policy);
+  }
+
+  @Override
+  public StandaloneJSentinelBootstrap threadPropagation(
+      Consumer<ThreadPropagationBuilder> consumer) {
+    Objects.requireNonNull(consumer, "consumer");
+    ThreadPropagationBuilder builder = new ThreadPropagationBuilder();
+    consumer.accept(builder);
+    this.threadPropagation = builder.toStrategy();
+    return this;
+  }
+
+  @Override
+  public StandaloneJSentinelBootstrap interactiveLogin(
+      Consumer<InteractiveLoginBuilder> consumer) {
+    Objects.requireNonNull(consumer, "consumer");
+    InteractiveLoginBuilder builder = new InteractiveLoginBuilder();
+    consumer.accept(builder);
+    this.interactiveLogin = builder.toConfiguration();
+    return this;
   }
 
   @Override
@@ -127,6 +150,24 @@ final class StandaloneJSentinelBootstrapImpl
     applyCredentialConfiguration(services, warnings);
     // V00.73: apply policies sub-builder state.
     applyPolicyConfiguration(services, warnings);
+
+    // V00.74 (A2.3): publish thread-propagation strategy.
+    if (threadPropagation != null) {
+      StandaloneThreadPropagationContext.publish(threadPropagation);
+      services.add(new RegisteredJSentinelService(
+          StandaloneThreadPropagationContext.class,
+          ThreadPropagationStrategy.class,
+          "bootstrap-thread-propagation=" + threadPropagation.mode(),
+          false));
+    }
+    // V00.74 (A2.3): publish interactive-login configuration.
+    if (interactiveLogin != null) {
+      StandaloneInteractiveLoginContext.publish(interactiveLogin);
+      services.add(new RegisteredJSentinelService(
+          StandaloneInteractiveLoginContext.class,
+          InteractiveLoginConfiguration.class,
+          "bootstrap-interactive-login", false));
+    }
 
     JSentinelBootstrapMode mode = state.mode();
     if (mode == JSentinelBootstrapMode.STRICT && warningsContainError(warnings)) {

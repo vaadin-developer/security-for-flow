@@ -14,6 +14,8 @@ import com.svenruppert.jsentinel.authorization.api.SubjectStore;
 import com.svenruppert.jsentinel.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.jsentinel.dx.bootstrap.CommonJSentinelBootstrap;
 
+import java.util.function.Consumer;
+
 /**
  * Standalone-specific fluent bootstrap. Entry point:
  * {@link StandaloneSecurity#bootstrap()}.
@@ -34,4 +36,31 @@ public interface StandaloneJSentinelBootstrap
    */
   @Deprecated(since = "00.74.00")
   StandaloneJSentinelBootstrap loginAttemptPolicy(LoginAttemptPolicy policy);
+
+  /**
+   * V00.74: Configures the thread-propagation strategy. The
+   * published {@link ThreadPropagationStrategy} is consumed by
+   * {@link StandaloneThreadPropagationContext#wrap(java.util.concurrent.Executor)}
+   * so submitted tasks inherit the submitter's subject on the
+   * worker thread (when {@code INHERIT_ON_SUBMIT} is selected).
+   *
+   * @param consumer non-null consumer that configures the
+   *                 {@link ThreadPropagationBuilder}
+   * @return this builder
+   * @since 00.74.00
+   */
+  StandaloneJSentinelBootstrap threadPropagation(Consumer<ThreadPropagationBuilder> consumer);
+
+  /**
+   * V00.74: Configures the interactive (CLI / desktop) login
+   * pattern. The published {@link InteractiveLoginConfiguration}
+   * is consumed by the application's login loop — the library
+   * does not run the loop itself.
+   *
+   * @param consumer non-null consumer that configures the
+   *                 {@link InteractiveLoginBuilder}
+   * @return this builder
+   * @since 00.74.00
+   */
+  StandaloneJSentinelBootstrap interactiveLogin(Consumer<InteractiveLoginBuilder> consumer);
 }
