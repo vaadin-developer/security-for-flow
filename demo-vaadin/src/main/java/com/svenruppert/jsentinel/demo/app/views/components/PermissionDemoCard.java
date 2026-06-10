@@ -24,6 +24,7 @@ import com.svenruppert.jsentinel.authorization.api.SubjectStores;
 import com.svenruppert.jsentinel.components.SecuredButton;
 import com.svenruppert.jsentinel.components.SecuredVisibility.Requirement;
 import com.svenruppert.jsentinel.components.SecuredVisibilityMode;
+import com.svenruppert.jsentinel.demo.app.security.bootstrap.BootstrapServiceInitListener;
 import com.svenruppert.jsentinel.demo.app.security.model.MyUser;
 import com.svenruppert.jsentinel.demo.app.security.permissions.DemoPermission;
 import com.svenruppert.jsentinel.starter.ui.SecuredUi;
@@ -95,8 +96,9 @@ public class PermissionDemoCard extends Composite<VerticalLayout> {
         "Same outcome as Pattern C, but assembled through the starter's "
             + "SecuredUi.button(...) fluent builder. No explicit "
             + "Requirement construction, no separate addClickListener call. "
-            + "The trailing button uses .requiresPolicy(\"demo.admin-or-edit\") "
-            + "to demonstrate the V00.73 PolicyRegistry path — the policy is "
+            + "The trailing button uses .requiresPolicy("
+            + "BootstrapServiceInitListener.POLICY_ADMIN_OR_EDIT) to "
+            + "demonstrate the V00.73 PolicyRegistry path — the policy is "
             + "registered in BootstrapServiceInitListener via "
             + "JSentinelPolicies.anyRoleOrPermission(...)."));
     root.add(buildSecuredUiButtonRow());
@@ -147,8 +149,9 @@ public class PermissionDemoCard extends Composite<VerticalLayout> {
     row.add(buildSecuredUiButton(DemoPermission.DEMO_VIEW, "View something"));
     row.add(buildSecuredUiButton(DemoPermission.DEMO_EDIT, "Edit something"));
     row.add(buildSecuredUiButton(DemoPermission.DEMO_ADMIN, "Admin operation"));
-    Button policyButton = SecuredUi.button("Policy — demo.admin-or-edit")
-        .requiresPolicy("demo.admin-or-edit")
+    Button policyButton = SecuredUi.button(
+            "Policy — " + BootstrapServiceInitListener.POLICY_ADMIN_OR_EDIT)
+        .requiresPolicy(BootstrapServiceInitListener.POLICY_ADMIN_OR_EDIT)
         .disableWhenDenied()
         .onClick(event -> policySuccess())
         .build();
@@ -169,7 +172,8 @@ public class PermissionDemoCard extends Composite<VerticalLayout> {
 
   private static void policySuccess() {
     Notification notification = Notification.show(
-        "OK — policy 'demo.admin-or-edit' granted.", 2500, Notification.Position.BOTTOM_END);
+        "OK — policy '" + BootstrapServiceInitListener.POLICY_ADMIN_OR_EDIT + "' granted.",
+        2500, Notification.Position.BOTTOM_END);
     notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
   }
 

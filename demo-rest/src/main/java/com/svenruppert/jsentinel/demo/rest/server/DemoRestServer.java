@@ -16,6 +16,7 @@
  */
 package com.svenruppert.jsentinel.demo.rest.server;
 
+import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.jsentinel.accountlifecycle.InMemoryPasswordResetTokenStore;
 import com.svenruppert.jsentinel.accountlifecycle.LoggingNotificationSender;
 import com.svenruppert.jsentinel.accountlifecycle.PasswordResetService;
@@ -213,7 +214,7 @@ public final class DemoRestServer {
                 .register(DemoPolicies.documentOwnerOrAdmin())
                 .resourceResolver(new DemoOwnedDocumentResolver(ownedDocumentStore)))
             .install();
-    System.out.println(runtime.log());
+    HasLogger.staticLogger().info("{}", runtime.log());
 
     JSentinelVersionEnforcer versionEnforcer = new JSentinelVersionEnforcer(
         versionStore, JSentinelServiceResolver.securityAuditService());

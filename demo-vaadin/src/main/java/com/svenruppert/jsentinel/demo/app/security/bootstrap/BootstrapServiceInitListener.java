@@ -16,19 +16,21 @@
  */
 package com.svenruppert.jsentinel.demo.app.security.bootstrap;
 
+import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.jsentinel.authentication.AuthenticationService;
 import com.svenruppert.jsentinel.authorization.api.AuthorizationService;
 import com.svenruppert.jsentinel.credential.password.PasswordHashingServices;
+import com.svenruppert.jsentinel.demo.app.security.permissions.DemoPermission;
+import com.svenruppert.jsentinel.demo.app.security.roles.AuthorizationRole;
 import com.svenruppert.jsentinel.dx.runtime.JSentinelRuntime;
 import com.svenruppert.jsentinel.dx.vaadin.bootstrap.VaadinSecurity;
 import com.svenruppert.jsentinel.policy.api.JSentinelPolicies;
 import com.svenruppert.jsentinel.starter.profile.VaadinJSentinelStarter;
-
-import java.util.Set;
 import com.vaadin.flow.server.ServiceInitEvent;
 import com.vaadin.flow.server.VaadinServiceInitListener;
 
 import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -43,7 +45,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * and printing the resulting {@link JSentinelRuntime#log()} so the operator
  * sees which services are active at startup.
  */
-public class BootstrapServiceInitListener implements VaadinServiceInitListener {
+public class BootstrapServiceInitListener implements VaadinServiceInitListener, HasLogger {
+
+  /**
+   * Name of the demo policy registered through the V00.73 sub-builder so
+   * the {@code PermissionDemoCard}'s Pattern D
+   * {@code SecuredUi.button(...).requiresPolicy(...)} entry has a real
+   * policy to evaluate against. Exposed as a constant so the card can
+   * reference it instead of duplicating the string literal.
+   */
+  public static final String POLICY_ADMIN_OR_EDIT = "demo.admin-or-edit";
 
   private static final AtomicBoolean DX_BOOTSTRAP_DONE = new AtomicBoolean();
 
@@ -81,9 +92,14 @@ public class BootstrapServiceInitListener implements VaadinServiceInitListener {
         // Pattern D "SecuredUi.button(...).requiresPolicy(...)" entry has a
         // real policy to evaluate against. anyRoleOrPermission() is the
         // simplest pre-built shape: allow if ADMIN or holding demo:edit.
+        // Role + permission strings are derived from the project's enums
+        // so a rename in either AuthorizationRole or DemoPermission lands
+        // here as a compile error, not as a silent runtime miss.
         .policies(p -> p.register(JSentinelPolicies.anyRoleOrPermission(
-            "demo.admin-or-edit", Set.of("ADMIN"), Set.of("demo:edit"))))
+            POLICY_ADMIN_OR_EDIT,
+            Set.of(AuthorizationRole.ADMIN.name()),
+            Set.of(DemoPermission.DEMO_EDIT.permissionName().value()))))
         .install();
-    System.out.println(runtime.log());
+    HasLogger.staticLogger().info("{}", runtime.log());
   }
 }

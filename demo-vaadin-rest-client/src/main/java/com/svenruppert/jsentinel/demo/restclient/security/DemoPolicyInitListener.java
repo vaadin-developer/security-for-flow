@@ -16,6 +16,7 @@
  */
 package com.svenruppert.jsentinel.demo.restclient.security;
 
+import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.jsentinel.authentication.AuthenticationService;
 import com.svenruppert.jsentinel.authorization.api.AuthorizationService;
 import com.svenruppert.jsentinel.demo.restclient.security.resource.DemoDocumentResolver;
@@ -52,7 +53,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * and the document resource resolver — all inline through the fluent
  * surface, no direct {@code JSentinelServiceResolver} calls.
  */
-public final class DemoPolicyInitListener implements VaadinServiceInitListener {
+public final class DemoPolicyInitListener implements VaadinServiceInitListener, HasLogger {
 
   /** Name of the role-or-permission demo policy. */
   public static final String POLICY_EDITOR_OR_ADMIN = "documents.editor-or-admin";
@@ -110,6 +111,6 @@ public final class DemoPolicyInitListener implements VaadinServiceInitListener {
                 .build()))
         .install();
 
-    System.out.println(runtime.log());
+    logger().info("{}", runtime.log());
   }
 }

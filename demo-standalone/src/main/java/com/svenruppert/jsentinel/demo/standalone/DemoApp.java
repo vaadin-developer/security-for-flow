@@ -16,6 +16,7 @@
  */
 package com.svenruppert.jsentinel.demo.standalone;
 
+import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.jsentinel.authorization.api.AccessDeniedException;
 import com.svenruppert.jsentinel.dx.diagnostics.JSentinelDiagnostics;
 import com.svenruppert.jsentinel.dx.runtime.JSentinelBootstrapMode;
@@ -107,7 +108,11 @@ public final class DemoApp {
         .authorization(authz)
         .audit(a -> a.ringBuffer(256).logging())
         .install();
-    System.out.println(runtime.log());
+    // Startup banner goes through the framework's SLF4J pipeline so the
+    // operator can route it like every other log line. The interactive
+    // CLI prompts below stay on System.out because they're the program's
+    // user interface, not a log stream.
+    HasLogger.staticLogger().info("{}", runtime.log());
 
     // Inspect the broader diagnostics surface (DiagnosticContributor SPI).
     var report = JSentinelDiagnostics.inspect();
