@@ -89,11 +89,9 @@ public final class DemoSubjectResolver implements RestSubjectResolver {
       return Optional.empty();
     }
     Optional<String> headerValue = RestHeaders.first(request, API_KEY_HEADER);
-    if (headerValue.isEmpty()) {
-      return Optional.empty();
-    }
-    return apiKeyAuth.authenticate(headerValue.get())
-        .map(DemoSubjectResolver::toApiKeySubject);
+    return headerValue
+        .flatMap(s -> apiKeyAuth.authenticate(s)
+        .map(DemoSubjectResolver::toApiKeySubject));
   }
 
   private static JSentinelSubject toApiKeySubject(ApiKeyRecord record) {
@@ -107,15 +105,13 @@ public final class DemoSubjectResolver implements RestSubjectResolver {
   @Override
   public Optional<RestJSentinelVersionContext> resolveJSentinelVersionContext(RestRequest request) {
     Optional<String> token = extractToken(request);
-    if (token.isEmpty()) {
-      return Optional.empty();
-    }
-    return tokens.resolveMetadata(token.get())
+    return token
+        .flatMap(s -> tokens.resolveMetadata(s)
         .map(metadata -> new RestJSentinelVersionContext(
             SubjectId.of(metadata.user().username()),
             TenantId.DEFAULT,
             metadata.snapshot(),
-            token.get()));
+            s)));
   }
 
   @Override

@@ -30,6 +30,7 @@ import com.svenruppert.jsentinel.bootstrap.FileBootstrapTokenStore;
 import com.svenruppert.jsentinel.bootstrap.InMemoryBootstrapTokenStore;
 import com.svenruppert.jsentinel.bootstrap.InitialAdminBootstrapService;
 import com.svenruppert.jsentinel.bootstrap.MinimumLengthPasswordPolicy;
+import com.svenruppert.jsentinel.credential.password.PasswordHashingServices;
 import com.svenruppert.jsentinel.demo.app.security.model.DemoUserDirectory;
 import com.svenruppert.jsentinel.demo.app.security.model.DemoUserDirectoryProvider;
 
@@ -101,7 +102,7 @@ public final class BootstrapWiring {
         state, tokenStore, new BootstrapTokenGenerator(), output, config);
     InitialAdminBootstrapService service = new InitialAdminBootstrapService(
         state, tokenStore, adminStore,
-        com.svenruppert.jsentinel.credential.password.PasswordHashingServices.defaults(),
+        PasswordHashingServices.defaults(),
         new MinimumLengthPasswordPolicy(8),
         config.tokenValidity(), java.time.Clock.systemUTC());
     return new BootstrapWiring(state, service);

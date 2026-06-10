@@ -26,8 +26,12 @@ import com.svenruppert.jsentinel.authentication.InMemoryApiKeyStore;
 import com.svenruppert.jsentinel.authentication.InMemoryRefreshTokenStore;
 import com.svenruppert.jsentinel.authentication.TokenService;
 import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.jsentinel.bruteforce.LoginAttemptConfiguration;
 import com.svenruppert.jsentinel.credential.password.PasswordHashingService;
 import com.svenruppert.jsentinel.credential.password.PasswordHashingServices;
+import com.svenruppert.jsentinel.dx.rest.bootstrap.RestSecurity;
+import com.svenruppert.jsentinel.dx.runtime.JSentinelBootstrapMode;
+import com.svenruppert.jsentinel.dx.runtime.JSentinelRuntime;
 import com.svenruppert.jsentinel.ratelimiting.InMemoryRateLimitPolicy;
 import com.svenruppert.jsentinel.ratelimiting.InMemoryRateLimitStore;
 import com.svenruppert.jsentinel.ratelimiting.RateLimitPolicy;
@@ -61,6 +65,7 @@ import com.svenruppert.jsentinel.policy.impl.InMemoryResourceResolverRegistry;
 import com.svenruppert.jsentinel.policy.spi.PolicyRegistry;
 import com.svenruppert.jsentinel.policy.spi.ResourceResolverRegistry;
 import com.svenruppert.jsentinel.rest.RestJSentinelVersionFilter;
+import com.svenruppert.jsentinel.rest.RestSubjectResolver;
 import com.svenruppert.jsentinel.session.InMemoryJSentinelVersionStore;
 import com.svenruppert.jsentinel.session.JSentinelVersionEnforcer;
 import com.svenruppert.jsentinel.session.JSentinelVersionStore;
@@ -84,14 +89,14 @@ public final class DemoRestServer {
 
   private final HttpServer httpServer;
   private final int port;
-  private final com.svenruppert.jsentinel.rest.RestSubjectResolver subjectResolver;
+  private final RestSubjectResolver subjectResolver;
 
   private DemoRestServer(HttpServer httpServer, int port) {
     this(httpServer, port, null);
   }
 
   private DemoRestServer(HttpServer httpServer, int port,
-                         com.svenruppert.jsentinel.rest.RestSubjectResolver subjectResolver) {
+                         RestSubjectResolver subjectResolver) {
     this.httpServer = httpServer;
     this.port = port;
     this.subjectResolver = subjectResolver;
@@ -101,7 +106,7 @@ public final class DemoRestServer {
     return start(port, DemoBootstrapEnvironment.fromEnvironment(),
         new InMemoryLoginAttemptPolicy(),
         new InMemoryLoginAttemptPolicy(
-            com.svenruppert.jsentinel.bruteforce.LoginAttemptConfiguration.strictBootstrap(),
+            LoginAttemptConfiguration.strictBootstrap(),
             java.time.Clock.systemUTC(),
             null));
   }
@@ -110,7 +115,7 @@ public final class DemoRestServer {
     return start(port, bootstrapConfig,
         new InMemoryLoginAttemptPolicy(),
         new InMemoryLoginAttemptPolicy(
-            com.svenruppert.jsentinel.bruteforce.LoginAttemptConfiguration.strictBootstrap(),
+            LoginAttemptConfiguration.strictBootstrap(),
             java.time.Clock.systemUTC(),
             null));
   }
@@ -120,7 +125,7 @@ public final class DemoRestServer {
                                      LoginAttemptPolicy loginAttemptPolicy) throws IOException {
     return start(port, bootstrapConfig, loginAttemptPolicy,
         new InMemoryLoginAttemptPolicy(
-            com.svenruppert.jsentinel.bruteforce.LoginAttemptConfiguration.strictBootstrap(),
+            LoginAttemptConfiguration.strictBootstrap(),
             java.time.Clock.systemUTC(),
             null));
   }
@@ -202,9 +207,9 @@ public final class DemoRestServer {
     // leave those references pointing at the previous instance. Demos
     // that have full control over construction order — like demo-vaadin
     // and demo-standalone — can use .audit(...) freely.
-    com.svenruppert.jsentinel.dx.runtime.JSentinelRuntime runtime =
-        com.svenruppert.jsentinel.dx.rest.bootstrap.RestSecurity.bootstrap()
-            .mode(com.svenruppert.jsentinel.dx.runtime.JSentinelBootstrapMode.DEVELOPMENT)
+    JSentinelRuntime runtime =
+        RestSecurity.bootstrap()
+            .mode(JSentinelBootstrapMode.DEVELOPMENT)
             .subjectResolver(resolver)
             .credentials(c -> c.hashing(hashingService))
             .sessions(s -> s.securityVersion(versionStore))
@@ -309,7 +314,7 @@ public final class DemoRestServer {
   }
 
   /** @return the server's RestSubjectResolver — for V00.72 bootstrap wiring */
-  public com.svenruppert.jsentinel.rest.RestSubjectResolver subjectResolver() {
+  public RestSubjectResolver subjectResolver() {
     return this.subjectResolver;
   }
 }

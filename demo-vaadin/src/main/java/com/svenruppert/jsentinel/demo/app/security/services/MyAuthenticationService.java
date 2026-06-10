@@ -32,6 +32,7 @@ import com.svenruppert.jsentinel.demo.app.security.model.MyUser;
 import com.vaadin.flow.server.VaadinRequest;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 
 @JSentinelAutoService(AuthenticationService.class)
@@ -49,9 +50,9 @@ public class MyAuthenticationService
         credentials.username(), currentClientAddress(), null);
 
     LoginAttemptDecision decision = policy.beforeAttempt(attempt);
-    if (decision instanceof LoginAttemptDecision.LockedOut lockout) {
+    if (decision instanceof LoginAttemptDecision.LockedOut(Duration remaining, int failedAttempts)) {
       logger().warn("Login throttled for username={} (remaining={}s, failedAttempts={})",
-          credentials.username(), lockout.remaining().toSeconds(), lockout.failedAttempts());
+                    credentials.username(), remaining.toSeconds(), failedAttempts);
       return false;
     }
 
