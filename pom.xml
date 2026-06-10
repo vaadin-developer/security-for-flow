@@ -380,6 +380,26 @@
                     <outputName>CycloneDX-SBom</outputName>
                 </configuration>
             </plugin>
+            <!-- jSentinel-branded Javadoc: applies the project's theme skin
+                 (build/javadoc/jsentinel.css) on top of the stock JDK
+                 stylesheet at generation time, so every generated /
+                 published -javadoc.jar renders in the jSentinel design with
+                 the built-in JDK Light/Dark/System toggle driving the
+                 lime palette. -->
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <javadocDirectory>${maven.multiModuleProjectDirectory}/build/javadoc</javadocDirectory>
+                    <addStylesheets>
+                        <addStylesheet>jsentinel.css</addStylesheet>
+                    </addStylesheets>
+                    <doctitle>Sentinel for Java — ${project.version} API</doctitle>
+                    <windowtitle>Sentinel for Java ${project.version} API</windowtitle>
+                    <top><![CDATA[<div style="background:#15161a;padding:.4em .9em;font:600 13px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif"><a href="https://jsentinel.eu/" style="color:#a3e635;text-decoration:none">&#8592; jsentinel.eu</a> <span style="color:#9aa0aa">&middot; Sentinel for Java API</span></div>]]></top>
+                    <bottom><![CDATA[Sentinel for Java &middot; ${project.version} &middot; EUPL&nbsp;1.2 &middot; <a href="https://jsentinel.eu/">jsentinel.eu</a>]]></bottom>
+                    <notimestamp>true</notimestamp>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <reporting>

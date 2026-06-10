@@ -27,13 +27,17 @@
 #
 # Usage:
 #   ./scripts/clean-bundle-for-central.sh             # version from pom.xml
-#   ./scripts/clean-bundle-for-central.sh 00.72.00    # explicit version
+#   ./scripts/clean-bundle-for-central.sh 00.73.00    # explicit version
 
 set -euo pipefail
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 M2_REPO="${HOME}/.m2/repository"
-GROUP_PATH="com/svenruppert"
+# V00.73 jSentinel rebrand: groupId moved from com.svenruppert to
+# com.svenruppert.jsentinel for every reactor artefact (external
+# com.svenruppert:* deps keep their groupId — those are not produced
+# here).
+GROUP_PATH="com/svenruppert/jsentinel"
 
 # Library modules that should appear on Maven Central. The demo modules
 # (demo-vaadin, demo-rest, demo-vaadin-rest-client, demo-standalone,
@@ -47,29 +51,31 @@ GROUP_PATH="com/svenruppert"
 #   V00.72 additions (7): dx, dx-vaadin, dx-rest, dx-standalone,
 #                         autoservice-annotations, autoservice-processor,
 #                         vaadin-starter
+#   V00.73 rename: all artefacts now use the jSentinel- prefix; parent
+#                  is jSentinel-parent (was security-for-flow-parent).
 #
-# Note on security-autoservice-processor: published even though consumers
-# wire it via <annotationProcessorPath> rather than as a runtime dep.
-# Central still needs the jar so the path can be resolved.
+# Note on jSentinel-autoservice-processor: published even though
+# consumers wire it via <annotationProcessorPath> rather than as a
+# runtime dep. Central still needs the jar so the path can be resolved.
 MODULES=(
-    "security-for-flow-parent"
-    "security-core"
-    "security-test"
-    "security-vaadin"
-    "security-rest"
-    "security-standalone"
-    "security-processor"
-    "security-persistence-testkit"
-    "security-persistence-eclipsestore"
-    "security-crypto-bc"
-    "security-credentials-hibp"
-    "security-dx"
-    "security-dx-vaadin"
-    "security-dx-rest"
-    "security-dx-standalone"
-    "security-autoservice-annotations"
-    "security-autoservice-processor"
-    "security-vaadin-starter"
+    "jSentinel-parent"
+    "jSentinel-core"
+    "jSentinel-test"
+    "jSentinel-vaadin"
+    "jSentinel-rest"
+    "jSentinel-standalone"
+    "jSentinel-processor"
+    "jSentinel-persistence-testkit"
+    "jSentinel-persistence-eclipsestore"
+    "jSentinel-crypto-bc"
+    "jSentinel-credentials-hibp"
+    "jSentinel-dx"
+    "jSentinel-dx-vaadin"
+    "jSentinel-dx-rest"
+    "jSentinel-dx-standalone"
+    "jSentinel-autoservice-annotations"
+    "jSentinel-autoservice-processor"
+    "jSentinel-vaadin-starter"
 )
 
 if [ $# -ge 1 ]; then
@@ -171,5 +177,5 @@ Next steps:
     curl --request POST \\
       --user "\$CENTRAL_USER:\$CENTRAL_PASSWORD" \\
       --form bundle=@$BUNDLE \\
-      'https://central.sonatype.com/api/v1/publisher/upload?name=security-for-flow-V${VERSION}&publishingType=USER_MANAGED'
+      'https://central.sonatype.com/api/v1/publisher/upload?name=jSentinel-V${VERSION}&publishingType=USER_MANAGED'
 EOF
