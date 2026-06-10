@@ -25,6 +25,7 @@ import com.svenruppert.jsentinel.demo.app.views.components.PermissionDemoCard;
 import com.svenruppert.jsentinel.demo.app.views.components.ViewNavigationCard;
 import com.svenruppert.jsentinel.demo.app.views.workspaces.*;
 import com.svenruppert.jsentinel.logout.SubjectId;
+import com.svenruppert.jsentinel.starter.ui.SecuredUi;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
@@ -73,6 +74,13 @@ public class MainView
 
     // ── Drawer ────────────────────────────────────────────────────
     addToDrawer(createMainMenu());
+    // V00.72 starter showcase: a SecuredUi.link(...) shortcut block sits
+    // below the Tabs. The tabs above use manual isCurrentUserAuthorizedFor
+    // checks; the entries below use the declarative SecuredUi builder so
+    // drawer items disappear automatically when the subject lacks the
+    // requirement. Visual demonstration that SecuredUi extends past page
+    // content into the navigation surface.
+    addToDrawer(createSecuredQuickLinks());
 
     // ── Default content ───────────────────────────────────────────
     setContent(createWelcomeContent());
@@ -144,6 +152,41 @@ public class MainView
     Tab tab = new Tab(VaadinIcon.HOME.create(), new Span("Home"));
     tab2Workspace.put(tab, createWelcomeContent());
     return tab;
+  }
+
+  // ── V00.72 SecuredUi-based drawer shortcuts ────────────────────
+
+  private VerticalLayout createSecuredQuickLinks() {
+    VerticalLayout block = new VerticalLayout();
+    block.setSpacing(false);
+    block.getThemeList().add("spacing-xs");
+    block.addClassName("nav-secured-quicklinks");
+    block.add(new Span("Direct routes (SecuredUi)"));
+    block.add(SecuredUi.link()
+        .to(AdminRolesView.class)
+        .text("/admin/roles")
+        .requiresPermission("admin:roles")
+        .hideWhenDenied()
+        .build());
+    block.add(SecuredUi.link()
+        .to(AdminSessionsView.class)
+        .text("/admin/sessions")
+        .requiresPermission("admin:sessions")
+        .hideWhenDenied()
+        .build());
+    block.add(SecuredUi.link()
+        .to(AuditView.class)
+        .text("/audit")
+        .requiresPermission("audit:read")
+        .hideWhenDenied()
+        .build());
+    block.add(SecuredUi.link()
+        .to(SecureRouteDemoView.class)
+        .text("/secure-route-demo")
+        .requiresRole("ADMIN", "NERD")
+        .hideWhenDenied()
+        .build());
+    return block;
   }
 
 

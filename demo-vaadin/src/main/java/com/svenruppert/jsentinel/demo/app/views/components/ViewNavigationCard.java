@@ -26,6 +26,8 @@ import com.svenruppert.jsentinel.demo.app.views.AdminView;
 import com.svenruppert.jsentinel.demo.app.views.AuditView;
 import com.svenruppert.jsentinel.demo.app.views.NerdView;
 import com.svenruppert.jsentinel.demo.app.views.PublicView;
+import com.svenruppert.jsentinel.demo.app.views.SecureRouteDemoView;
+import com.svenruppert.jsentinel.starter.ui.SecuredUi;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.H4;
@@ -84,5 +86,42 @@ public class ViewNavigationCard extends Composite<VerticalLayout> {
         Requirement.permission(DemoPermission.AUDIT_READ.permissionName()),
         SecuredVisibilityMode.DISABLE));
     root.add(securedLinks);
+
+    root.add(new H4("Pattern D — V00.72 SecuredUi.link (max comfort)"));
+    root.add(new Paragraph(
+        "Same destinations as the Phase-8a block above, but assembled "
+            + "through the starter's SecuredUi.link(...) fluent builder — "
+            + "no explicit Requirement construction, no SecuredVisibilityMode "
+            + "constant in the constructor. Mode is selected through "
+            + ".hideWhenDenied() / .disableWhenDenied(). The trailing link "
+            + "navigates to /secure-route-demo (annotated with @SecureRoute) "
+            + "and shows the role-based requirement form."));
+    HorizontalLayout securedUiLinks = new HorizontalLayout();
+    securedUiLinks.setSpacing(true);
+    securedUiLinks.add(SecuredUi.link()
+        .to(AdminRolesView.class)
+        .text("/admin/roles · SecuredUi HIDE")
+        .requiresPermission(DemoPermission.ADMIN_ROLES.permissionName().value())
+        .hideWhenDenied()
+        .build());
+    securedUiLinks.add(SecuredUi.link()
+        .to(AdminSessionsView.class)
+        .text("/admin/sessions · SecuredUi HIDE")
+        .requiresPermission(DemoPermission.ADMIN_SESSIONS.permissionName().value())
+        .hideWhenDenied()
+        .build());
+    securedUiLinks.add(SecuredUi.link()
+        .to(AuditView.class)
+        .text("/audit · SecuredUi DISABLE")
+        .requiresPermission(DemoPermission.AUDIT_READ.permissionName().value())
+        .disableWhenDenied()
+        .build());
+    securedUiLinks.add(SecuredUi.link()
+        .to(SecureRouteDemoView.class)
+        .text("/secure-route-demo · SecuredUi DISABLE (ADMIN, NERD)")
+        .requiresRole("ADMIN", "NERD")
+        .disableWhenDenied()
+        .build());
+    root.add(securedUiLinks);
   }
 }

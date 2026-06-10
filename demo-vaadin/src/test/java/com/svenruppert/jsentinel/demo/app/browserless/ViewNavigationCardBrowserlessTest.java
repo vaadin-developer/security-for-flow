@@ -28,6 +28,7 @@ import com.svenruppert.jsentinel.demo.app.views.AdminView;
 import com.svenruppert.jsentinel.demo.app.views.AuditView;
 import com.svenruppert.jsentinel.demo.app.views.NerdView;
 import com.svenruppert.jsentinel.demo.app.views.PublicView;
+import com.svenruppert.jsentinel.demo.app.views.SecureRouteDemoView;
 import com.svenruppert.jsentinel.demo.app.views.components.ViewNavigationCard;
 import com.vaadin.browserless.BrowserlessTest;
 import com.vaadin.flow.component.Composite;
@@ -69,6 +70,19 @@ class ViewNavigationCardBrowserlessTest extends BrowserlessTest {
       "/admin/roles (HIDE)", AdminRolesView.class,
       "/admin/sessions (HIDE)", AdminSessionsView.class,
       "/audit (DISABLE)", AuditView.class);
+
+  /**
+   * V00.72 SecuredUi.link(...) entries rendered by the Pattern D row.
+   * Same target classes as Phase-8a — the comparison value is in the
+   * fluent builder versus the explicit Requirement constructor. The
+   * trailing entry uses role-mode + a route protected by
+   * {@code @SecureRoute} (V00.72 starter).
+   */
+  private static final Map<String, Class<?>> EXPECTED_SECURED_UI_LINKS = Map.of(
+      "/admin/roles · SecuredUi HIDE", AdminRolesView.class,
+      "/admin/sessions · SecuredUi HIDE", AdminSessionsView.class,
+      "/audit · SecuredUi DISABLE", AuditView.class,
+      "/secure-route-demo · SecuredUi DISABLE (ADMIN, NERD)", SecureRouteDemoView.class);
 
   /**
    * BrowserlessTest's superclass annotates {@code initVaadinEnvironment()}
@@ -135,10 +149,13 @@ class ViewNavigationCardBrowserlessTest extends BrowserlessTest {
 
     navigate(ViewNavigationCardFixture.class);
 
-    int expectedTotal = EXPECTED_PLAIN_LINKS.size() + EXPECTED_SECURED_LINKS.size();
+    int expectedTotal = EXPECTED_PLAIN_LINKS.size()
+        + EXPECTED_SECURED_LINKS.size()
+        + EXPECTED_SECURED_UI_LINKS.size();
     List<RouterLink> links = $view(RouterLink.class).all();
     assertEquals(expectedTotal, links.size(),
-        "card must render " + expectedTotal + " RouterLinks (5 plain + 3 Phase-8a); got: " + links.size());
+        "card must render " + expectedTotal + " RouterLinks "
+            + "(5 plain + 3 Phase-8a + 4 SecuredUi); got: " + links.size());
 
     List<String> texts = links.stream().map(RouterLink::getText).toList();
     for (String expectedLabel : EXPECTED_PLAIN_LINKS.keySet()) {
@@ -148,6 +165,10 @@ class ViewNavigationCardBrowserlessTest extends BrowserlessTest {
     for (String expectedLabel : EXPECTED_SECURED_LINKS.keySet()) {
       assertTrue(texts.contains(expectedLabel),
           "missing SecuredRouterLink labelled '" + expectedLabel + "'; got: " + texts);
+    }
+    for (String expectedLabel : EXPECTED_SECURED_UI_LINKS.keySet()) {
+      assertTrue(texts.contains(expectedLabel),
+          "missing SecuredUi link labelled '" + expectedLabel + "'; got: " + texts);
     }
   }
 
@@ -173,6 +194,16 @@ class ViewNavigationCardBrowserlessTest extends BrowserlessTest {
     // DISABLE-mode SecuredRouterLink stays in the layout (just disabled).
     assertTrue(texts.contains("/audit (DISABLE)"),
         "DISABLE-mode SecuredRouterLink must stay rendered even without permission");
+    // Pattern D — same semantics, fluent builder. HIDE entries disappear,
+    // DISABLE entries stay rendered.
+    assertFalse(texts.contains("/admin/roles · SecuredUi HIDE"),
+        "HIDE-mode SecuredUi.link must disappear when subject lacks permission");
+    assertFalse(texts.contains("/admin/sessions · SecuredUi HIDE"),
+        "HIDE-mode SecuredUi.link must disappear when subject lacks permission");
+    assertTrue(texts.contains("/audit · SecuredUi DISABLE"),
+        "DISABLE-mode SecuredUi.link must stay rendered even without permission");
+    assertTrue(texts.contains("/secure-route-demo · SecuredUi DISABLE (ADMIN, NERD)"),
+        "DISABLE-mode SecuredUi.link (role-based) must stay rendered even without subject");
   }
 
   private static MyUser adminUser() {

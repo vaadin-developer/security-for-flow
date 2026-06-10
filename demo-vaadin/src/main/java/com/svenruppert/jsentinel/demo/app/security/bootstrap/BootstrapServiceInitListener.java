@@ -21,7 +21,10 @@ import com.svenruppert.jsentinel.authorization.api.AuthorizationService;
 import com.svenruppert.jsentinel.credential.password.PasswordHashingServices;
 import com.svenruppert.jsentinel.dx.runtime.JSentinelRuntime;
 import com.svenruppert.jsentinel.dx.vaadin.bootstrap.VaadinSecurity;
+import com.svenruppert.jsentinel.policy.api.JSentinelPolicies;
 import com.svenruppert.jsentinel.starter.profile.VaadinJSentinelStarter;
+
+import java.util.Set;
 import com.vaadin.flow.server.ServiceInitEvent;
 import com.vaadin.flow.server.VaadinServiceInitListener;
 
@@ -74,6 +77,12 @@ public class BootstrapServiceInitListener implements VaadinServiceInitListener {
         .stepUpRoute("step-up")
         .audit(a -> a.ringBuffer(256).logging())
         .credentials(c -> c.hashing(PasswordHashingServices.defaults()))
+        // V00.73 + V00.74: register a Policy so the PermissionDemoCard's
+        // Pattern D "SecuredUi.button(...).requiresPolicy(...)" entry has a
+        // real policy to evaluate against. anyRoleOrPermission() is the
+        // simplest pre-built shape: allow if ADMIN or holding demo:edit.
+        .policies(p -> p.register(JSentinelPolicies.anyRoleOrPermission(
+            "demo.admin-or-edit", Set.of("ADMIN"), Set.of("demo:edit"))))
         .install();
     System.out.println(runtime.log());
   }

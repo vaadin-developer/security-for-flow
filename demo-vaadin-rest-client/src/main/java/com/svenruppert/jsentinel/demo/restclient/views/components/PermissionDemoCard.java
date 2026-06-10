@@ -20,9 +20,12 @@ import com.svenruppert.jsentinel.authorization.api.AccessDeniedException;
 import com.svenruppert.jsentinel.authorization.api.PermissionGuard;
 import com.svenruppert.jsentinel.authorization.api.permissions.PermissionName;
 import com.svenruppert.jsentinel.demo.restclient.security.ClientJSentinelContext;
+import com.svenruppert.jsentinel.demo.restclient.security.DemoPolicyInitListener;
+import com.svenruppert.jsentinel.starter.ui.SecuredUi;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
@@ -63,6 +66,26 @@ public class PermissionDemoCard extends Composite<VerticalLayout> {
             + "to the backend (see BackendOperationCard), where the server "
             + "is authoritative."));
     root.add(enforcementRow());
+
+    root.add(new H4("Pattern C — V00.72 SecuredUi.button (max comfort)"));
+    root.add(new Paragraph(
+        "Buttons assembled through the starter's SecuredUi.button(...) "
+            + "fluent builder — no PermissionGuard call, no manual "
+            + "isAllowed plumbing. The visibility wiring reads the current "
+            + "subject from the V00.73 VaadinSessionSubjectStore that "
+            + "BackedLoginListener populates on login. The trailing button "
+            + "uses .requiresPolicy(\"documents.editor-or-admin\") to "
+            + "evaluate the policy registered in DemoPolicyInitListener."));
+    root.add(securedUiButtonRow());
+
+    root.add(new H4("Pattern D — V00.74 SecuredUi.component (any Vaadin component)"));
+    root.add(new Paragraph(
+        "SecuredUi.button / link / menuItem cover the three classic "
+            + "secured surfaces, but the V00.74 SecuredUi.component(...) "
+            + "generic builder secures any Vaadin component — FormLayout, "
+            + "Details, Dialog, Tab. The Details block below is only "
+            + "visible to subjects holding admin:access."));
+    root.add(buildAdminDetailsBlock());
   }
 
   private static HorizontalLayout visibilityRow() {
@@ -122,5 +145,56 @@ public class PermissionDemoCard extends Composite<VerticalLayout> {
     Notification n = Notification.show("Local guard denied — missing '" + p.value() + "'",
         3000, Notification.Position.BOTTOM_END);
     n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+  }
+
+  private static HorizontalLayout securedUiButtonRow() {
+    HorizontalLayout row = new HorizontalLayout();
+    row.add(buildSecuredUiButton(DOC_READ, "Read"));
+    row.add(buildSecuredUiButton(DOC_CREATE, "Create"));
+    row.add(buildSecuredUiButton(DOC_DELETE, "Delete"));
+    row.add(buildSecuredUiButton(ADMIN_ACCESS, "Admin"));
+    Button policy = SecuredUi.button("Policy — " + DemoPolicyInitListener.POLICY_EDITOR_OR_ADMIN)
+        .requiresPolicy(DemoPolicyInitListener.POLICY_EDITOR_OR_ADMIN)
+        .disableWhenDenied()
+        .onClick(e -> policySuccess())
+        .build();
+    policy.addThemeVariants(ButtonVariant.LUMO_CONTRAST, ButtonVariant.LUMO_SMALL);
+    row.add(policy);
+    return row;
+  }
+
+  private static Button buildSecuredUiButton(PermissionName perm, String label) {
+    Button button = SecuredUi.button(label + " (" + perm.value() + ")")
+        .requiresPermission(perm.value())
+        .disableWhenDenied()
+        .onClick(e -> success(perm))
+        .build();
+    button.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SMALL);
+    return button;
+  }
+
+  private static void policySuccess() {
+    Notification n = Notification.show(
+        "Policy '" + DemoPolicyInitListener.POLICY_EDITOR_OR_ADMIN + "' granted.",
+        2500, Notification.Position.BOTTOM_END);
+    n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+  }
+
+  private static Details buildAdminDetailsBlock() {
+    VerticalLayout body = new VerticalLayout(
+        new Paragraph(
+            "Administrators see this entire Details block. The wrapper "
+                + "is a vanilla com.vaadin.flow.component.details.Details; "
+                + "SecuredUi.component(...) attaches the requirement and "
+                + "the hideWhenDenied() visibility wiring without any "
+                + "subclass."),
+        new Span("This text would never reach a non-admin's browser."));
+    body.setSpacing(false);
+    body.getThemeList().add("spacing-xs");
+    Details details = new Details("Admin-only diagnostics (admin:access)", body);
+    return SecuredUi.component(details)
+        .requiresPermission(ADMIN_ACCESS.value())
+        .hideWhenDenied()
+        .bind();
   }
 }

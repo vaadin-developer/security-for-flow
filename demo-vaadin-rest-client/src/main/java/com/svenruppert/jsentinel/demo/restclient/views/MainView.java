@@ -36,7 +36,9 @@ import com.svenruppert.jsentinel.demo.restclient.views.standalone.DocumentsView;
 import com.svenruppert.jsentinel.demo.restclient.views.standalone.NerdView;
 import com.svenruppert.jsentinel.demo.restclient.views.standalone.PolicyDemoView;
 import com.svenruppert.jsentinel.demo.restclient.views.standalone.ResourcePolicyDemoView;
+import com.svenruppert.jsentinel.demo.restclient.views.standalone.SecureRouteDemoView;
 import com.svenruppert.jsentinel.demo.restclient.views.standalone.StepUpDemoView;
+import com.svenruppert.jsentinel.starter.ui.SecuredUi;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
@@ -87,6 +89,13 @@ public class MainView extends AppLayout {
     addToNavbar(new DrawerToggle(), title);
     addToNavbar(true, logoutBtn);
     addToDrawer(buildMenu());
+    // V00.72 starter showcase: SecuredUi.link(...) drawer shortcuts.
+    // The tabs above use manual hasPermission(...) gating; the entries
+    // below use the declarative SecuredUi builder so drawer items
+    // disappear automatically when the cached subject lacks the
+    // requirement. Visual proof that SecuredUi extends past page
+    // content into the navigation surface.
+    addToDrawer(createSecuredQuickLinks());
     setContent(welcomeContent());
   }
 
@@ -141,12 +150,52 @@ public class MainView extends AppLayout {
             new RouterLink("/admin/roles — @RequiresPermission(\"admin:roles\")", AdminRolesView.class),
             new RouterLink("/policy-demo — @RequiresPolicy(\"documents.editor-or-admin\")", PolicyDemoView.class),
             new RouterLink("/resource-policy-demo — Policy + ResourcePredicates per click", ResourcePolicyDemoView.class),
-            new RouterLink("/step-up-demo — @RequiresPolicy emits StepUpRequired → /step-up reroute", StepUpDemoView.class)
+            new RouterLink("/step-up-demo — @RequiresPolicy emits StepUpRequired → /step-up reroute", StepUpDemoView.class),
+            new RouterLink("/secure-route-demo — V00.72 @SecureRoute (role + permission + policy in one)", SecureRouteDemoView.class)
         )));
     tabs.add(links);
 
     tabs.addSelectedChangeListener(event -> setContent(tab2Content.get(event.getSelectedTab())));
     return tabs;
+  }
+
+  private VerticalLayout createSecuredQuickLinks() {
+    VerticalLayout block = new VerticalLayout();
+    block.setSpacing(false);
+    block.getThemeList().add("spacing-xs");
+    block.addClassName("nav-secured-quicklinks");
+    block.add(new Span("Direct routes (SecuredUi)"));
+    block.add(SecuredUi.link()
+        .to(DocumentsView.class)
+        .text("/documents")
+        .requiresPermission("document:read")
+        .hideWhenDenied()
+        .build());
+    block.add(SecuredUi.link()
+        .to(AdminStatusView.class)
+        .text("/admin")
+        .requiresRole("ROLE_ADMIN")
+        .hideWhenDenied()
+        .build());
+    block.add(SecuredUi.link()
+        .to(AdminRolesView.class)
+        .text("/admin/roles")
+        .requiresPermission("admin:roles")
+        .hideWhenDenied()
+        .build());
+    block.add(SecuredUi.link()
+        .to(AuditView.class)
+        .text("/audit")
+        .requiresPermission("audit:read")
+        .hideWhenDenied()
+        .build());
+    block.add(SecuredUi.link()
+        .to(SecureRouteDemoView.class)
+        .text("/secure-route-demo")
+        .requiresPolicy("documents.editor-or-admin")
+        .disableWhenDenied()
+        .build());
+    return block;
   }
 
   private static boolean hasPermission(String permissionValue) {
