@@ -89,6 +89,7 @@
         <module>jSentinel-dx-rest</module>
         <module>jSentinel-dx-standalone</module>
         <module>jSentinel-vaadin-starter</module>
+        <module>jSentinel-propagation</module>
         <module>demo-rest-shared</module>
         <module>demo-vaadin</module>
         <module>demo-rest</module>
