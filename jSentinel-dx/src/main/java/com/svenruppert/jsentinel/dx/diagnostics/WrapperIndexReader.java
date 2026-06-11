@@ -103,13 +103,15 @@ final class WrapperIndexReader {
                                 Set<String> seenKeys,
                                 ClassLoader cl,
                                 String sourceUrl) {
-    // sourceFqn:generatedFqn:processor:proxyBuilderVersion:method1,method2,...
-    String[] parts = line.split(WrapperIndexFormat.FIELD_SEPARATOR, 5);
+    // sourceFqn:generatedFqn:processor:proxyBuilderVersion:method1,method2,...[:kind]
+    // V00.74 added the optional sixth field `kind` (`secured` / `propagating`).
+    // V00.73 lines without the sixth field default to SECURED.
+    String[] parts = line.split(WrapperIndexFormat.FIELD_SEPARATOR, 6);
     if (parts.length < 5) {
       warnings.add(new ProcessorWarning(
           "processor/index-malformed",
           "Malformed index line in " + sourceUrl + ": " + line,
-          "Each entry must have 5 colon-separated fields."));
+          "Each entry must have at least 5 colon-separated fields."));
       return;
     }
     String sourceFqn = parts[0].trim();
@@ -120,6 +122,7 @@ final class WrapperIndexReader {
         ? Collections.emptyList()
         : new ArrayList<>(Arrays.asList(parts[4].split(WrapperIndexFormat.METHOD_SEPARATOR)));
     methods.replaceAll(String::trim);
+    GeneratedJSentinelWrapper.Kind kind = parseKind(parts, sourceUrl, line, warnings);
 
     String key = sourceFqn + "|" + generatedFqn;
     if (!seenKeys.add(key)) {
@@ -132,7 +135,7 @@ final class WrapperIndexReader {
     if (sourceType == null) {
       warnings.add(new ProcessorWarning(
           "secured-without-wrapper",
-          "Indexed @Secured source type not loadable: " + sourceFqn,
+          "Indexed source type not loadable: " + sourceFqn,
           fixSnippet()));
       return;
     }
@@ -145,7 +148,9 @@ final class WrapperIndexReader {
       return;
     }
 
-    String expectedWrapperFqn = sourceFqn + "Secured";
+    String expectedSuffix = kind == GeneratedJSentinelWrapper.Kind.PROPAGATING
+        ? "Propagating" : "Secured";
+    String expectedWrapperFqn = sourceFqn + expectedSuffix;
     if (!expectedWrapperFqn.equals(generatedFqn)) {
       warnings.add(new ProcessorWarning(
           "secured-without-wrapper",
@@ -155,7 +160,28 @@ final class WrapperIndexReader {
     }
 
     wrappers.add(new GeneratedJSentinelWrapper(
-        sourceType, generatedType, processor, version, methods));
+        sourceType, generatedType, processor, version, methods, kind));
+  }
+
+  private static GeneratedJSentinelWrapper.Kind parseKind(String[] parts,
+                                                          String sourceUrl,
+                                                          String line,
+                                                          List<ProcessorWarning> warnings) {
+    if (parts.length < 6 || parts[5] == null || parts[5].isBlank()) {
+      return GeneratedJSentinelWrapper.Kind.SECURED;
+    }
+    String raw = parts[5].trim();
+    if (WrapperIndexFormat.KIND_PROPAGATING.equals(raw)) {
+      return GeneratedJSentinelWrapper.Kind.PROPAGATING;
+    }
+    if (WrapperIndexFormat.KIND_SECURED.equals(raw)) {
+      return GeneratedJSentinelWrapper.Kind.SECURED;
+    }
+    warnings.add(new ProcessorWarning(
+        "processor/index-malformed",
+        "Unknown wrapper kind '" + raw + "' in " + sourceUrl + ": " + line,
+        "Use 'secured' or 'propagating' as the sixth field; defaulting to SECURED."));
+    return GeneratedJSentinelWrapper.Kind.SECURED;
   }
 
   private static Class<?> loadOrNull(ClassLoader cl, String fqn, List<ProcessorWarning> warnings) {

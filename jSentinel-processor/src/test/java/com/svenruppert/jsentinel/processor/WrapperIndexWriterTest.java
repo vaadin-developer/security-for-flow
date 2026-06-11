@@ -66,7 +66,7 @@ class WrapperIndexWriterTest {
 
     List<String> rows = dataRows(content);
     assertEquals(1, rows.size(), "exactly one data row expected");
-    assertEquals("demo.DocService:demo.DocServiceSecured:proxybuilder:00.11.00:delete",
+    assertEquals("demo.DocService:demo.DocServiceSecured:proxybuilder:00.11.00:delete:secured",
         rows.get(0));
   }
 
@@ -166,8 +166,10 @@ class WrapperIndexWriterTest {
     List<String> rows = dataRows(readIndex(result));
     assertEquals(1, rows.size());
     // method list is in position 5; guarded only
-    String[] parts = rows.get(0).split(":", 5);
+    // V00.74: the sixth :kind suffix is now present; split with limit 6.
+    String[] parts = rows.get(0).split(":", 6);
     assertEquals("guarded", parts[4]);
+    assertEquals("secured", parts[5]);
   }
 
   // ── helpers ──────────────────────────────────────────────────────

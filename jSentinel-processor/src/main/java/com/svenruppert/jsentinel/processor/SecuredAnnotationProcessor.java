@@ -109,6 +109,8 @@ public final class SecuredAnnotationProcessor
   private static final String INDEX_METHOD_SEPARATOR = ",";
   private static final String INDEX_PROCESSOR_ID = "proxybuilder";
   private static final String INDEX_PROXYBUILDER_VERSION = "00.11.00";
+  // V00.74: optional sixth field — wrapper kind.
+  private static final String INDEX_KIND_SECURED = "secured";
 
   /**
    * Per-source-FQN list of guarded method names collected during this
@@ -295,6 +297,9 @@ public final class SecuredAnnotationProcessor
           w.write(INDEX_PROXYBUILDER_VERSION);
           w.write(INDEX_FIELD_SEPARATOR);
           w.write(methods);
+          // V00.74 sixth field — wrapper kind.
+          w.write(INDEX_FIELD_SEPARATOR);
+          w.write(INDEX_KIND_SECURED);
           w.write("\n");
         }
       }
@@ -318,7 +323,7 @@ public final class SecuredAnnotationProcessor
           if (line.isBlank() || line.startsWith("#")) {
             continue;
           }
-          String[] parts = line.split(INDEX_FIELD_SEPARATOR, 5);
+          String[] parts = line.split(INDEX_FIELD_SEPARATOR, 6);
           if (parts.length < 5) {
             continue;
           }

@@ -35,6 +35,12 @@ final class WrapperIndexFormat {
   /** Separator between method names in the fifth field. */
   static final String METHOD_SEPARATOR = ",";
 
+  /** V00.74: optional sixth field — wrapper kind. */
+  static final String KIND_SECURED = "secured";
+
+  /** V00.74: optional sixth field — wrapper kind. */
+  static final String KIND_PROPAGATING = "propagating";
+
   private WrapperIndexFormat() {
     throw new AssertionError("no instances");
   }

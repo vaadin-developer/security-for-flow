@@ -25,7 +25,20 @@ public record GeneratedJSentinelWrapper(
     Class<?> generatedType,
     String processor,
     String proxyBuilderVersion,
-    List<String> delegatedMethods) {
+    List<String> delegatedMethods,
+    Kind kind) {
+
+  /**
+   * V00.74 — distinguishes the two wrapper families.
+   *
+   * <p>{@link #SECURED}: @Secured method-security wrapper from
+   * {@code jSentinel-processor}.<br>
+   * {@link #PROPAGATING}: @PropagateToken token-propagation wrapper
+   * from {@code jSentinel-propagation-processor}.
+   *
+   * @since 00.74.00
+   */
+  public enum Kind { SECURED, PROPAGATING }
 
   public GeneratedJSentinelWrapper {
     Objects.requireNonNull(sourceType, "sourceType");
@@ -33,6 +46,20 @@ public record GeneratedJSentinelWrapper(
     Objects.requireNonNull(processor, "processor");
     Objects.requireNonNull(proxyBuilderVersion, "proxyBuilderVersion");
     Objects.requireNonNull(delegatedMethods, "delegatedMethods");
+    Objects.requireNonNull(kind, "kind");
     delegatedMethods = List.copyOf(delegatedMethods);
+  }
+
+  /**
+   * Backwards-compatible constructor — V00.73 callers that don't yet
+   * supply the kind default to {@link Kind#SECURED}.
+   */
+  public GeneratedJSentinelWrapper(Class<?> sourceType,
+                                    Class<?> generatedType,
+                                    String processor,
+                                    String proxyBuilderVersion,
+                                    List<String> delegatedMethods) {
+    this(sourceType, generatedType, processor, proxyBuilderVersion,
+        delegatedMethods, Kind.SECURED);
   }
 }

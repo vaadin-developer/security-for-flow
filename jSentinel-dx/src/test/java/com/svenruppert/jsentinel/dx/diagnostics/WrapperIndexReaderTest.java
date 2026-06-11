@@ -10,6 +10,8 @@
  */
 package com.svenruppert.jsentinel.dx.diagnostics;
 
+import com.svenruppert.jsentinel.dx.diagnostics.fixture.FixturePropagatingSource;
+import com.svenruppert.jsentinel.dx.diagnostics.fixture.FixturePropagatingSourcePropagating;
 import com.svenruppert.jsentinel.dx.diagnostics.fixture.FixtureSourceType;
 import com.svenruppert.jsentinel.dx.diagnostics.fixture.FixtureSourceTypeSecured;
 import org.junit.jupiter.api.Test;
@@ -75,5 +77,31 @@ class WrapperIndexReaderTest {
   void resourcePathConstantIsStable() {
     assertEquals("META-INF/jsentinel/generated-wrappers.idx",
         WrapperIndexReader.internalsForTesting().get("path"));
+  }
+
+  @Test
+  void v0073ShapedEntryDefaultsToSecuredKind() {
+    JSentinelServiceReport report = JSentinelDiagnostics.inspect();
+
+    boolean found = report.processorReport().wrappers().stream()
+        .anyMatch(w -> w.sourceType() == FixtureSourceType.class
+            && w.generatedType() == FixtureSourceTypeSecured.class
+            && w.kind() == GeneratedJSentinelWrapper.Kind.SECURED);
+
+    assertTrue(found, "5-field V00.73 line must parse with kind=SECURED");
+  }
+
+  @Test
+  void v0074PropagatingKindIsRecognised() {
+    JSentinelServiceReport report = JSentinelDiagnostics.inspect();
+
+    boolean found = report.processorReport().wrappers().stream()
+        .anyMatch(w -> w.sourceType() == FixturePropagatingSource.class
+            && w.generatedType() == FixturePropagatingSourcePropagating.class
+            && w.kind() == GeneratedJSentinelWrapper.Kind.PROPAGATING
+            && w.delegatedMethods().contains("load"));
+
+    assertTrue(found, "V00.74 :propagating line must yield kind=PROPAGATING; got: "
+        + report.processorReport().wrappers());
   }
 }
