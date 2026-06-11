@@ -12,6 +12,7 @@ package com.svenruppert.jsentinel.credential.propagation;
 
 import com.svenruppert.jsentinel.annotations.PropagateToken;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
+import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
 
 import java.util.Optional;
 
@@ -44,4 +45,46 @@ public interface PropagateTokenAdvisor {
   Optional<HeaderValue> adviseFor(PropagateToken annotation,
                                   OutboundCall call,
                                   TokenCredentialStore store);
+
+  /**
+   * Stateless default advisor: looks up the strategy by
+   * {@link PropagateToken#strategy()} via
+   * {@link JSentinelServiceResolver#findOutboundTokenStrategy(String)},
+   * calls its {@code resolve} with the store's current credential, and
+   * — when {@link PropagateToken#header()} is non-empty — overrides the
+   * strategy's chosen header name.
+   *
+   * <p>An unregistered strategy returns {@link Optional#empty()}; the
+   * advisor never raises. {@code STRICT}-mode diagnostics surface the
+   * {@code propagation/unknown-strategy} code separately (V00.74 Prompt
+   * 018) so this call stays side-effect-free.
+   */
+  final class Default implements PropagateTokenAdvisor {
+
+    /** Shared singleton; advisor is stateless. */
+    public static final Default INSTANCE = new Default();
+
+    private Default() {
+    }
+
+    @Override
+    public Optional<HeaderValue> adviseFor(PropagateToken annotation,
+                                          OutboundCall call,
+                                          TokenCredentialStore store) {
+      Optional<OutboundTokenStrategy> strategy =
+          JSentinelServiceResolver.findOutboundTokenStrategy(annotation.strategy());
+      if (strategy.isEmpty()) {
+        return Optional.empty();
+      }
+      Optional<HeaderValue> result = strategy.get().resolve(call, store.current());
+      if (result.isEmpty()) {
+        return result;
+      }
+      String overrideName = annotation.header();
+      if (overrideName.isEmpty() || overrideName.equals(result.get().name())) {
+        return result;
+      }
+      return Optional.of(new HeaderValue(overrideName, result.get().value()));
+    }
+  }
 }
