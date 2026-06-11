@@ -27,7 +27,7 @@
 #
 # Usage:
 #   ./scripts/clean-bundle-for-central.sh             # version from pom.xml
-#   ./scripts/clean-bundle-for-central.sh 00.73.00    # explicit version
+#   ./scripts/clean-bundle-for-central.sh 00.74.00    # explicit version
 
 set -euo pipefail
 
@@ -53,6 +53,9 @@ GROUP_PATH="com/svenruppert/jsentinel"
 #                         vaadin-starter
 #   V00.73 rename: all artefacts now use the jSentinel- prefix; parent
 #                  is jSentinel-parent (was security-for-flow-parent).
+#   V00.74 additions (3): propagation, propagation-processor,
+#                         propagation-oidc — declarative token-forwarding
+#                         surface (Konzept-V00.74).
 #
 # Note on jSentinel-autoservice-processor: published even though
 # consumers wire it via <annotationProcessorPath> rather than as a
@@ -76,6 +79,9 @@ MODULES=(
     "jSentinel-autoservice-annotations"
     "jSentinel-autoservice-processor"
     "jSentinel-vaadin-starter"
+    "jSentinel-propagation"
+    "jSentinel-propagation-processor"
+    "jSentinel-propagation-oidc"
 )
 
 if [ $# -ge 1 ]; then

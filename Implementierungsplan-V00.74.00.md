@@ -1179,41 +1179,33 @@ migration (`demo-vaadin-rest-client`).
 ## 18. Implementation Status
 
 Live status of every prompt landed on `develop`. Updated
-2026-06-10.
+2026-06-11.
 
 Legend: ✓ done (signed commit on `develop`) · ⧗ in progress · · pending.
 
-| Nr.  | Prompt                                                                | Status | Commit     |
-|-----:|-----------------------------------------------------------------------|:------:|------------|
-| 001  | `TokenCredential` sealed hierarchy                                    |   ·    | (pending)  |
-| 002  | `TokenCredentialStore` SPI + `InMemoryTokenCredentialStore`           |   ·    | (pending)  |
-| 003  | `OutboundTokenStrategy` SPI + `OutboundCall` + `HeaderValue`          |   ·    | (pending)  |
-| 004  | `PassThroughStrategy`                                                 |   ·    | (pending)  |
-| 005a | Vaadin default store                                                  |   ·    | (pending)  |
-| 005b | REST default store + `RestTokenCredentialFilter`                      |   ·    | (pending)  |
-| 005c | Standalone default store + `bindToken`                                |   ·    | (pending)  |
-| 006  | `ThreadSafeTokenCredentialStore` marker + Phase-1 smoke               |   ·    | (pending)  |
-| 007  | `@PropagateToken` annotation                                          |   ·    | (pending)  |
-| 008  | `PropagateTokenAdvisor` + `Default`                                   |   ·    | (pending)  |
-| 009  | `OutboundHeaderContext` + interceptor pattern                         |   ·    | (pending)  |
-| 010  | `jSentinel-propagation` module skeleton                               |   ·    | (pending)  |
-| 011  | `PropagatingProxy.wrap(...)` runtime path                             |   ·    | (pending)  |
-| 012  | `jSentinel-propagation-processor` module skeleton                     |   ·    | (pending)  |
-| 013  | Compile-time `<Type>Propagating` generation                           |   ·    | (pending)  |
-| 014  | Wrapper-index `kind` column + V00.73 reader compat test               |   ·    | (pending)  |
-| 015  | `PropagationBootstrap` + `PropagationState`                           |   ·    | (pending)  |
-| 016  | `.propagation(...)` on `CommonJSentinelBootstrap<B>`                  |   ·    | (pending)  |
-| 017a | `jSentinel-dx-vaadin` consumes propagation state                      |   ·    | (pending)  |
-| 017b | `jSentinel-dx-rest` consumes propagation state                        |   ·    | (pending)  |
-| 017c | `jSentinel-dx-standalone` consumes propagation state                  |   ·    | (pending)  |
-| 018  | `PropagationDiagnosticContributor`                                    |   ·    | (pending)  |
-| 019  | STRICT validation tests for every §13.2 code                          |   ·    | (pending)  |
-| 020  | `jSentinel-propagation-oidc` module skeleton + Enforcer JOSE ban      |   ·    | (pending)  |
-| 021  | `TokenExchangeStrategy` (RFC 8693) + `InMemoryTokenExchangeCache`     |   ·    | (pending)  |
-| 022  | `ClientCredentialsStrategy` (RFC 6749 §4.4)                           |   ·    | (pending)  |
-| 023  | `StubTokenEndpoint` + integration tests                               |   ·    | (pending)  |
-| 024  | `demo-vaadin-rest-client` inbound-token capture                       |   ·    | (pending)  |
-| 025  | `demo-vaadin-rest-client` view migration to `@PropagateToken`         |   ·    | (pending)  |
-| 026  | `.propagation(...)` in 5-Minute-Setup docs                            |   ·    | (pending)  |
-| 027  | `RELEASE-NOTES-00.74.00.md`                                           |   ·    | (pending)  |
-| 028  | PIT baseline + V00.71/V00.73 regression check                         |   ·    | (pending)  |
+| Nr.       | Prompt                                                                | Status | Commit     |
+|----------:|-----------------------------------------------------------------------|:------:|------------|
+| 001       | `TokenCredential` sealed hierarchy                                    |   ✓    | `36d4ea2`  |
+| 002       | `TokenCredentialStore` SPI + `InMemoryTokenCredentialStore`           |   ✓    | `e6b535e`  |
+| 003       | `OutboundTokenStrategy` SPI + `OutboundCall` + `HeaderValue`          |   ✓    | `86a6e82`  |
+| 004       | `PassThroughStrategy`                                                 |   ✓    | `88177c0`  |
+| 005a      | Vaadin default store                                                  |   ✓    | `1e37c32`  |
+| 005b      | REST default store + `RestTokenCredentialFilter`                      |   ✓    | `c4279bf`  |
+| 005c      | Standalone default store + `bindToken`                                |   ✓    | `42a43bc`  |
+| 006       | `ThreadSafeTokenCredentialStore` marker + Phase-1 smoke               |   ✓    | `0044ea9`  |
+| 007       | `@PropagateToken` annotation                                          |   ✓    | `7e30023`  |
+| 008       | `PropagateTokenAdvisor` + `Default`                                   |   ✓    | `3d438e4`  |
+| 009       | `OutboundHeaderContext` + interceptor pattern                         |   ✓    | `3cef1f1`  |
+| 010       | `jSentinel-propagation` module skeleton                               |   ✓    | `6ddb5bb`  |
+| 011       | `PropagatingProxy.wrap(...)` runtime path                             |   ✓    | `f4feafd`  |
+| 012       | `jSentinel-propagation-processor` module skeleton                     |   ✓    | `0839108`  |
+| 013       | Compile-time `<Type>Propagating` generation                           |   ✓    | `cdcbdf9`  |
+| 014       | Wrapper-index `kind` column + V00.73 reader compat test               |   ✓    | `246f3c4`  |
+| 015       | `PropagationBootstrap` + `PropagationState`                           |   ✓    | `040c5f2`  |
+| 016       | `.propagation(...)` on `CommonJSentinelBootstrap<B>`                  |   ✓    | `b166c06`  |
+| 017a/b/c  | adapter-DX install consumes propagation state (consolidated)          |   ✓    | `9b448dc`  |
+| 018       | `PropagationDiagnosticContributor`                                    |   ✓    | `bad2e9a`  |
+| 019       | STRICT validation tests for every §13.2 code                          |   ✓    | `05a4e92`  |
+| 020-023   | `jSentinel-propagation-oidc` opt-in module (consolidated)             |   ✓    | `6a5c091`  |
+| 024-025   | `demo-vaadin-rest-client` opts into propagation (consolidated)        |   ✓    | `80ee557`  |
+| 026-028   | RELEASE-NOTES + 5-Minute Setup snippets + PIT note (consolidated)     |   ✓    | `2341c14`  |
