@@ -136,6 +136,15 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
   }
 
   @Override
+  public B propagation(
+      Consumer<com.svenruppert.jsentinel.dx.bootstrap.PropagationBootstrap> config) {
+    Objects.requireNonNull(config, "config")
+        .accept(new RecordingPropagationBootstrap(state.propagationState()));
+    state.markPropagationConfigured();
+    return self();
+  }
+
+  @Override
   public B logout(LogoutService service) {
     state.logoutService(Objects.requireNonNull(service, "service"));
     return self();

@@ -39,6 +39,7 @@ public final class BootstrapState {
   private boolean policiesConfigured;
   private boolean rolesConfigured;
   private boolean credentialsConfigured;
+  private boolean propagationConfigured;
 
   // V00.74: direct-set services on CommonJSentinelBootstrap
   private LogoutService logoutService;
@@ -52,6 +53,7 @@ public final class BootstrapState {
   private final RoleState roleState = new RoleState();
   private final CredentialState credentialState = new CredentialState();
   private final PolicyState policyState = new PolicyState();
+  private final PropagationState propagationState = new PropagationState();
 
   /** @return the typed audit sub-aggregate (V00.73) */
   public AuditState auditState() {
@@ -142,6 +144,21 @@ public final class BootstrapState {
 
   public void markCredentialsConfigured() {
     this.credentialsConfigured = true;
+  }
+
+  /** V00.74 — typed propagation sub-aggregate. */
+  public PropagationState propagationState() {
+    return propagationState;
+  }
+
+  /** V00.74 — true if {@code .propagation(...)} was called. */
+  public boolean propagationConfigured() {
+    return propagationConfigured;
+  }
+
+  /** V00.74 — call after consuming {@code .propagation(...)}. */
+  public void markPropagationConfigured() {
+    this.propagationConfigured = true;
   }
 
   // V00.74 accessors

@@ -52,6 +52,18 @@ public interface CommonJSentinelBootstrap<B extends CommonJSentinelBootstrap<B>>
   B credentials(Consumer<CredentialBootstrap> config);
 
   /**
+   * V00.74: declarative token-propagation sub-builder. The Konzept §10
+   * sub-builder shape — adapter-symmetric (Vaadin / REST / Standalone
+   * each install the recorded state in their {@code install()} pass).
+   *
+   * @param config non-null lambda recording into a
+   *               {@link PropagationBootstrap}
+   * @return this builder
+   * @since 00.74.00
+   */
+  B propagation(Consumer<PropagationBootstrap> config);
+
+  /**
    * V00.74: registers a logout service. Wired through
    * {@code JSentinelServiceResolver.setLogoutService(...)} by
    * {@code install()}.
