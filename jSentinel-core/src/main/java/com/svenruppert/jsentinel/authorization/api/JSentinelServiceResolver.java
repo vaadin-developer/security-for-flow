@@ -29,6 +29,8 @@ import com.svenruppert.jsentinel.authorization.api.roles.NoopRoleHierarchy;
 import com.svenruppert.jsentinel.authorization.api.roles.RoleHierarchy;
 import com.svenruppert.jsentinel.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.jsentinel.bruteforce.NoopLoginAttemptPolicy;
+import com.svenruppert.jsentinel.credential.propagation.OutboundTokenStrategy;
+import com.svenruppert.jsentinel.credential.propagation.TokenCredentialStore;
 import com.svenruppert.jsentinel.policy.impl.InMemoryPolicyRegistry;
 import com.svenruppert.jsentinel.policy.impl.InMemoryResourceResolverRegistry;
 import com.svenruppert.jsentinel.policy.spi.PolicyRegistry;
@@ -93,6 +95,12 @@ public final class JSentinelServiceResolver {
       new AtomicReference<>();
   private static final AtomicReference<String> STEP_UP_ROUTE_NAME_REF =
       new AtomicReference<>();
+  // V00.74: token-propagation surface. Store cached via SPI; strategies
+  // registered explicitly through the .propagation(...) sub-builder.
+  private static final AtomicReference<TokenCredentialStore> TOKEN_CREDENTIAL_STORE_REF =
+      new AtomicReference<>();
+  private static final java.util.concurrent.ConcurrentMap<String, OutboundTokenStrategy>
+      OUTBOUND_STRATEGIES = new java.util.concurrent.ConcurrentHashMap<>();
 
   /** Default route name an adapter reroutes to when a policy demands step-up. */
   public static final String DEFAULT_STEP_UP_ROUTE_NAME = "step-up";
@@ -882,6 +890,84 @@ public final class JSentinelServiceResolver {
    * Intended for testing scenarios where SPI registrations change
    * between runs.
    */
+  /**
+   * V00.74 — resolve the {@link TokenCredentialStore}.
+   *
+   * <p>SPI-discovered + cached. Override via
+   * {@link #setTokenCredentialStore(TokenCredentialStore)} or via the
+   * {@code .propagation(p -> p.credentialStore(...))} bootstrap
+   * sub-builder.
+   *
+   * @return the active store
+   * @throws IllegalStateException if no SPI implementation is registered
+   */
+  @ExperimentalJSentinelApi
+  public static TokenCredentialStore tokenCredentialStore() {
+    TokenCredentialStore cached = TOKEN_CREDENTIAL_STORE_REF.get();
+    if (cached != null) return cached;
+    TokenCredentialStore resolved = findSingleService(
+        TokenCredentialStore.class, ServiceLoader.load(TokenCredentialStore.class))
+        .orElseThrow(() -> missingService(TokenCredentialStore.class));
+    TOKEN_CREDENTIAL_STORE_REF.compareAndSet(null, resolved);
+    return TOKEN_CREDENTIAL_STORE_REF.get();
+  }
+
+  /**
+   * V00.74 — optional lookup of the {@link TokenCredentialStore}.
+   *
+   * @return the resolved store, or empty if none registered
+   */
+  @ExperimentalJSentinelApi
+  public static Optional<TokenCredentialStore> findTokenCredentialStore() {
+    TokenCredentialStore cached = TOKEN_CREDENTIAL_STORE_REF.get();
+    if (cached != null) return Optional.of(cached);
+    Optional<TokenCredentialStore> resolved = findSingleService(
+        TokenCredentialStore.class, ServiceLoader.load(TokenCredentialStore.class));
+    resolved.ifPresent(s -> TOKEN_CREDENTIAL_STORE_REF.compareAndSet(null, s));
+    return resolved;
+  }
+
+  /**
+   * V00.74 — explicitly install a {@link TokenCredentialStore}.
+   * Overrides any SPI-discovered or previously-cached value. Used by
+   * the {@code .propagation(...)} bootstrap sub-builder.
+   *
+   * @param store the store, or {@code null} to reset
+   */
+  @ExperimentalJSentinelApi
+  public static void setTokenCredentialStore(TokenCredentialStore store) {
+    TOKEN_CREDENTIAL_STORE_REF.set(store);
+  }
+
+  /**
+   * V00.74 — register an {@link OutboundTokenStrategy} under a name.
+   * Used by the {@code .propagation(p -> p.strategy(name, ...))} bootstrap
+   * sub-builder.
+   *
+   * @param name     the lookup key
+   * @param strategy the strategy
+   */
+  @ExperimentalJSentinelApi
+  public static void registerOutboundTokenStrategy(String name, OutboundTokenStrategy strategy) {
+    java.util.Objects.requireNonNull(name, "name");
+    java.util.Objects.requireNonNull(strategy, "strategy");
+    OUTBOUND_STRATEGIES.put(name, strategy);
+  }
+
+  /**
+   * V00.74 — look up an {@link OutboundTokenStrategy} by name.
+   * Returns {@link Optional#empty()} when the name is not registered;
+   * STRICT-mode diagnostics raise on missing strategies elsewhere, not
+   * here, so the advisor stays side-effect-free.
+   *
+   * @param name the lookup key
+   * @return the strategy, or empty
+   */
+  @ExperimentalJSentinelApi
+  public static Optional<OutboundTokenStrategy> findOutboundTokenStrategy(String name) {
+    return Optional.ofNullable(OUTBOUND_STRATEGIES.get(name));
+  }
+
   public static void resetAll() {
     AUTHENTICATION_SERVICE_REF.set(null);
     AUTHORIZATION_SERVICE_REF.set(null);
@@ -897,6 +983,8 @@ public final class JSentinelServiceResolver {
     SECURITY_VERSION_STORE_REF.set(null);
     SUBJECT_ID_RESOLVER_REF.set(null);
     STEP_UP_ROUTE_NAME_REF.set(null);
+    TOKEN_CREDENTIAL_STORE_REF.set(null);
+    OUTBOUND_STRATEGIES.clear();
     SubjectStores.reset();
   }
 

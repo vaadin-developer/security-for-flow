@@ -25,6 +25,7 @@ import com.svenruppert.jsentinel.authorization.api.SubjectStores;
 import com.svenruppert.jsentinel.bruteforce.LoginAttemptContext;
 import com.svenruppert.jsentinel.bruteforce.LoginAttemptDecision;
 import com.svenruppert.jsentinel.bruteforce.LoginAttemptPolicy;
+import com.svenruppert.jsentinel.credential.propagation.TokenCredential;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -123,6 +124,28 @@ public final class StandaloneLoginFlow<T, U> {
    */
   public void logout() {
     SubjectStores.subjectStore().deleteCurrentSubject(authenticationService.subjectType());
+    // V00.74: clear the propagation slot so a subsequent thread (or a
+    // re-login in the same thread) starts without a stale credential.
+    // Best-effort: the SPI store may not be registered in setups that
+    // do not opt into V00.74 propagation.
+    JSentinelServiceResolver.findTokenCredentialStore()
+        .ifPresent(com.svenruppert.jsentinel.credential.propagation.TokenCredentialStore::clear);
+  }
+
+  /**
+   * V00.74 — bind a {@link TokenCredential} for the current thread so
+   * {@code @PropagateToken}-annotated wrappers can forward it to
+   * downstream HTTP calls. Convenience for the standalone / CLI demo
+   * pattern (after a successful login, the caller has the token at
+   * hand and binds it here).
+   *
+   * <p>Looks up the SPI-resolved
+   * {@code TokenCredentialStore} (see Konzept §6.3).
+   *
+   * @param credential the credential to bind; non-null
+   */
+  public void bindToken(TokenCredential credential) {
+    JSentinelServiceResolver.tokenCredentialStore().bind(credential);
   }
 
   private Instant now() {
