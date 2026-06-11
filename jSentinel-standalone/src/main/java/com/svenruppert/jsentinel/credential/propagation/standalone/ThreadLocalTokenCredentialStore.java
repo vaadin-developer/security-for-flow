@@ -11,6 +11,7 @@
 package com.svenruppert.jsentinel.credential.propagation.standalone;
 
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
+import com.svenruppert.jsentinel.credential.propagation.ThreadSafeTokenCredentialStore;
 import com.svenruppert.jsentinel.credential.propagation.TokenCredential;
 import com.svenruppert.jsentinel.credential.propagation.TokenCredentialStore;
 
@@ -33,7 +34,8 @@ import java.util.Optional;
  * @since 00.74.00
  */
 @ExperimentalJSentinelApi
-public final class ThreadLocalTokenCredentialStore implements TokenCredentialStore {
+public final class ThreadLocalTokenCredentialStore
+    implements TokenCredentialStore, ThreadSafeTokenCredentialStore {
 
   private static final ThreadLocal<TokenCredential> SLOT = new ThreadLocal<>();
 
