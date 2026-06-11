@@ -109,6 +109,12 @@ public final class DemoPolicyInitListener implements VaadinServiceInitListener, 
                 .stepUpRequiredIf(ctx -> true, PolicyDecision.StepUpMethod.MFA,
                     "MFA challenge required for sensitive operations")
                 .build()))
+        // V00.74: declarative token propagation. PassThrough is the
+        // simplest default — every @PropagateToken-annotated call
+        // forwards the cached Bearer to the downstream backend.
+        // Token-exchange / client-credentials strategies ship in the
+        // optional jSentinel-propagation-oidc module.
+        .propagation(p -> p.passThrough())
         .install();
 
     logger().info("{}", runtime.log());

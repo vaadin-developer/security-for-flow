@@ -216,12 +216,21 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
           "bootstrap-explicit",
           false));
     } else {
-      JSentinelServiceResolver.findTokenCredentialStore().ifPresent(spi ->
-          services.add(new RegisteredJSentinelService(
-              com.svenruppert.jsentinel.credential.propagation.TokenCredentialStore.class,
-              spi.getClass(),
-              "spi-default",
-              true)));
+      // SPI default — best-effort. Demos that bring two adapter
+      // modules (e.g. Vaadin starter + in-process REST backend) will
+      // see multiple SPI providers; rather than abort the bootstrap
+      // we silently skip the auto-default and let the consumer choose
+      // explicitly via .propagation(p -> p.credentialStore(...)).
+      try {
+        JSentinelServiceResolver.findTokenCredentialStore().ifPresent(spi ->
+            services.add(new RegisteredJSentinelService(
+                com.svenruppert.jsentinel.credential.propagation.TokenCredentialStore.class,
+                spi.getClass(),
+                "spi-default",
+                true)));
+      } catch (IllegalStateException multipleSpi) {
+        // Multiple SPI providers — leave the store unset.
+      }
     }
 
     // Default strategy under "default" + "pass-through" alias when
