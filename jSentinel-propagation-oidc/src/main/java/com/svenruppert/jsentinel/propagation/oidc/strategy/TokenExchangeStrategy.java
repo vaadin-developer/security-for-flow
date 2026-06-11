@@ -1,0 +1,143 @@
+/**
+ * Copyright © 2017 Sven Ruppert (sven.ruppert@gmail.com)
+ *
+ * Licensed under the EUPL, Version 1.2 or - as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence"); You may not use this work except in
+ * compliance with the Licence. You may obtain a copy of the Licence at:
+ *
+ * https://joinup.ec.europa.eu/software/page/eupl
+ */
+package com.svenruppert.jsentinel.propagation.oidc.strategy;
+
+import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
+import com.svenruppert.jsentinel.credential.propagation.HeaderValue;
+import com.svenruppert.jsentinel.credential.propagation.OutboundCall;
+import com.svenruppert.jsentinel.credential.propagation.OutboundTokenStrategy;
+import com.svenruppert.jsentinel.credential.propagation.TokenCredential;
+import com.svenruppert.jsentinel.propagation.oidc.cache.InMemoryTokenExchangeCache;
+import com.svenruppert.jsentinel.propagation.oidc.cache.TokenExchangeCache;
+import com.svenruppert.jsentinel.propagation.oidc.http.JsonResponse;
+
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Optional;
+
+/**
+ * RFC 8693 OAuth 2.0 Token Exchange strategy. Exchanges the inbound
+ * bearer token for a token minted for the downstream audience.
+ *
+ * <p>HTTPS-only by default; the constructor accepts plain
+ * {@code http://localhost} when the system property
+ * {@code jsentinel.dev=true} is set (development carve-out).
+ *
+ * <p>Hard-fails on 4xx / 5xx via {@link JSentinelPropagationException}
+ * — there is no silent fallback to the no-header path.
+ *
+ * @since 00.74.00
+ */
+@ExperimentalJSentinelApi
+public final class TokenExchangeStrategy implements OutboundTokenStrategy {
+
+  /** Stable lookup key. */
+  public static final String NAME = "exchange";
+
+  private final URI tokenEndpoint;
+  private final String clientId;
+  private final String clientSecret;
+  private final HttpClient http;
+  private final TokenExchangeCache cache;
+
+  /** Convenience: default {@link HttpClient} + {@link InMemoryTokenExchangeCache}. */
+  public TokenExchangeStrategy(URI tokenEndpoint, String clientId, String clientSecret) {
+    this(tokenEndpoint, clientId, clientSecret, HttpClient.newHttpClient(),
+        new InMemoryTokenExchangeCache());
+  }
+
+  public TokenExchangeStrategy(URI tokenEndpoint, String clientId, String clientSecret,
+                               HttpClient http, TokenExchangeCache cache) {
+    if (tokenEndpoint == null) throw new IllegalArgumentException("tokenEndpoint");
+    validateHttps(tokenEndpoint);
+    this.tokenEndpoint = tokenEndpoint;
+    this.clientId = clientId;
+    this.clientSecret = clientSecret;
+    this.http = http;
+    this.cache = cache;
+  }
+
+  private static void validateHttps(URI endpoint) {
+    String scheme = endpoint.getScheme();
+    if ("https".equalsIgnoreCase(scheme)) return;
+    boolean devMode = Boolean.getBoolean("jsentinel.dev");
+    boolean localhost = "localhost".equalsIgnoreCase(endpoint.getHost())
+        || "127.0.0.1".equals(endpoint.getHost());
+    if (devMode && localhost && "http".equalsIgnoreCase(scheme)) return;
+    throw new IllegalArgumentException(
+        "propagation/endpoint-not-https: token endpoint must use https:// "
+            + "(got: " + endpoint + "). Use http://localhost only with -Djsentinel.dev=true.");
+  }
+
+  @Override
+  public String name() {
+    return NAME;
+  }
+
+  @Override
+  public Optional<HeaderValue> resolve(OutboundCall call, Optional<TokenCredential> inbound) {
+    if (inbound.isEmpty()) return Optional.empty();
+    String subject = inbound.get().value();
+    String key = subject + "|" + call.declaredAudience();
+    Optional<TokenExchangeCache.CachedEntry> cached = cache.get(key);
+    if (cached.isPresent()) {
+      return Optional.of(new HeaderValue("Authorization", "Bearer " + cached.get().accessToken()));
+    }
+    String body = formBody(subject, call.declaredAudience());
+    HttpRequest request = HttpRequest.newBuilder(tokenEndpoint)
+        .POST(HttpRequest.BodyPublishers.ofString(body))
+        .header("Content-Type", "application/x-www-form-urlencoded")
+        .timeout(Duration.ofSeconds(10))
+        .build();
+    HttpResponse<String> response;
+    try {
+      response = http.send(request, HttpResponse.BodyHandlers.ofString());
+    } catch (Exception e) {
+      throw new JSentinelPropagationException(0,
+          "Token endpoint call failed: " + e.getMessage(), e);
+    }
+    if (response.statusCode() < 200 || response.statusCode() >= 300) {
+      throw new JSentinelPropagationException(response.statusCode(),
+          "Token endpoint returned HTTP " + response.statusCode() + ": " + response.body());
+    }
+    String accessToken = JsonResponse.accessToken(response.body())
+        .orElseThrow(() -> new JSentinelPropagationException(response.statusCode(),
+            "Token endpoint response missing access_token"));
+    long expiresIn = JsonResponse.expiresIn(response.body()).orElse(60L);
+    cache.put(key, new TokenExchangeCache.CachedEntry(
+        accessToken, Instant.now().plusSeconds(expiresIn)));
+    return Optional.of(new HeaderValue("Authorization", "Bearer " + accessToken));
+  }
+
+  private String formBody(String subject, String audience) {
+    StringBuilder sb = new StringBuilder();
+    append(sb, "grant_type", "urn:ietf:params:oauth:grant-type:token-exchange");
+    append(sb, "subject_token", subject);
+    append(sb, "subject_token_type", "urn:ietf:params:oauth:token-type:access_token");
+    if (!audience.isEmpty()) append(sb, "audience", audience);
+    if (clientId != null) append(sb, "client_id", clientId);
+    if (clientSecret != null) append(sb, "client_secret", clientSecret);
+    return sb.toString();
+  }
+
+  private static void append(StringBuilder sb, String name, String value) {
+    if (sb.length() > 0) sb.append('&');
+    sb.append(URLEncoder.encode(name, StandardCharsets.UTF_8))
+      .append('=')
+      .append(URLEncoder.encode(value, StandardCharsets.UTF_8));
+  }
+}

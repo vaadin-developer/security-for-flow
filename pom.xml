@@ -91,6 +91,7 @@
         <module>jSentinel-vaadin-starter</module>
         <module>jSentinel-propagation</module>
         <module>jSentinel-propagation-processor</module>
+        <module>jSentinel-propagation-oidc</module>
         <module>demo-rest-shared</module>
         <module>demo-vaadin</module>
         <module>demo-rest</module>
