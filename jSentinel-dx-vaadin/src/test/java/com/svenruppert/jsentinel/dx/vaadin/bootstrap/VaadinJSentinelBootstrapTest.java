@@ -55,7 +55,8 @@ class VaadinJSentinelBootstrapTest {
 
     assertEquals(JSentinelBootstrapMode.COMMUNITY_DEFAULTS, runtime.mode());
     // V00.73: authn + authz + auto-wired VaadinSessionSubjectStore
-    assertEquals(3, runtime.services().size());
+    // V00.74: + auto-wired VaadinSessionTokenCredentialStore (SPI default)
+    assertEquals(4, runtime.services().size());
     // V00.73: warnings may include INFO secure-route/discovery-disabled;
     // assert "no ERROR warnings" instead of "no warnings at all".
     assertTrue(runtime.warnings().stream()

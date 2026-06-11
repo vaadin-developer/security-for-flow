@@ -150,6 +150,8 @@ final class StandaloneJSentinelBootstrapImpl
     applyCredentialConfiguration(services, warnings);
     // V00.73: apply policies sub-builder state.
     applyPolicyConfiguration(services, warnings);
+    // V00.74: apply propagation sub-builder state.
+    applyPropagationConfiguration(services, warnings);
 
     // V00.74 (A2.3): publish thread-propagation strategy.
     if (threadPropagation != null) {

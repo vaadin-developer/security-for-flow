@@ -168,6 +168,8 @@ final class RestJSentinelBootstrapImpl
     applyCredentialConfiguration(services, warnings);
     // V00.73: apply policies sub-builder state.
     applyPolicyConfiguration(services, warnings);
+    // V00.74: apply propagation sub-builder state.
+    applyPropagationConfiguration(services, warnings);
 
     // V00.74 (A2.2): publish CORS configuration when configured.
     if (corsConfiguration != null) {

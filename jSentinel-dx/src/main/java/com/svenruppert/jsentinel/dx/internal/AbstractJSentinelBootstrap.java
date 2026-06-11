@@ -193,6 +193,63 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
   }
 
   /**
+   * V00.74 — consume the {@link PropagationState} accumulated by
+   * {@code .propagation(...)}. Registers the chosen credential store
+   * (or the SPI default), the named strategies and the default
+   * strategy via {@link JSentinelServiceResolver}. Surfaces every
+   * registration in {@code services} so {@link JSentinelRuntime} lists
+   * them.
+   *
+   * <p>Called by each adapter's {@code install()}.
+   */
+  protected final void applyPropagationConfiguration(
+      List<RegisteredJSentinelService> services,
+      List<JSentinelBootstrapWarning> warnings) {
+    com.svenruppert.jsentinel.dx.internal.PropagationState propagation = state.propagationState();
+
+    // Credential store: explicit chain wins over SPI default.
+    if (propagation.credentialStore() != null) {
+      JSentinelServiceResolver.setTokenCredentialStore(propagation.credentialStore());
+      services.add(new RegisteredJSentinelService(
+          com.svenruppert.jsentinel.credential.propagation.TokenCredentialStore.class,
+          propagation.credentialStore().getClass(),
+          "bootstrap-explicit",
+          false));
+    } else {
+      JSentinelServiceResolver.findTokenCredentialStore().ifPresent(spi ->
+          services.add(new RegisteredJSentinelService(
+              com.svenruppert.jsentinel.credential.propagation.TokenCredentialStore.class,
+              spi.getClass(),
+              "spi-default",
+              true)));
+    }
+
+    // Default strategy under "default" + "pass-through" alias when
+    // .passThrough() was set explicitly.
+    if (propagation.defaultStrategy() != null) {
+      JSentinelServiceResolver.registerOutboundTokenStrategy(
+          "default", propagation.defaultStrategy());
+      JSentinelServiceResolver.registerOutboundTokenStrategy(
+          propagation.defaultStrategy().name(), propagation.defaultStrategy());
+      services.add(new RegisteredJSentinelService(
+          com.svenruppert.jsentinel.credential.propagation.OutboundTokenStrategy.class,
+          propagation.defaultStrategy().getClass(),
+          "bootstrap-default-strategy",
+          false));
+    }
+
+    // Named strategies.
+    propagation.namedStrategies().forEach((name, strategy) -> {
+      JSentinelServiceResolver.registerOutboundTokenStrategy(name, strategy);
+      services.add(new RegisteredJSentinelService(
+          com.svenruppert.jsentinel.credential.propagation.OutboundTokenStrategy.class,
+          strategy.getClass(),
+          "bootstrap-strategy:" + name,
+          false));
+    });
+  }
+
+  /**
    * Consumes the {@link AuditState} accumulated by {@code .audit(...)}
    * calls, applies the validation rules from Konzept §6.4, builds the
    * resulting {@link JSentinelAuditService} (Konzept §6.2), registers
