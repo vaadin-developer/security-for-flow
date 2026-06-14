@@ -41,8 +41,8 @@ GROUP_PATH="com/svenruppert/jsentinel"
 
 # Library modules that should appear on Maven Central. The demo modules
 # (demo-vaadin, demo-rest, demo-vaadin-rest-client, demo-standalone,
-# demo-rest-shared) are deliberately excluded — they are reference
-# implementations, not publishable artefacts.
+# demo-rest-shared, demo-jsentinel-vaadin) are deliberately excluded —
+# they are reference implementations, not publishable artefacts.
 #
 # Module list per release line:
 #   V00.70 baseline (9): parent, core, test, vaadin, rest, standalone,
