@@ -580,6 +580,103 @@ Vorkonfigurierte Bundles für Standards:
 
 ---
 
+## L. Framework-Feedback aus V00.74-Anwendung
+
+Drei Befunde aus dem Einsatz von `jsentinel-vaadin` /
+`jsentinel-vaadin-persistence` / `jsentinel-vaadin-hardening` auf
+`core-vaadin-project-template` (siehe Framework-Feedback-Notiz vom
+2026-06-12). Triage und Release-Targets unten.
+
+### L1. EclipseStore App-Persistenz hat keinen Erweiterungs-Slot
+
+**Status: V00.74.20-Kandidat — Konzept liegt vor**
+
+`EclipseStoreJSentinelStorage` exposed Framework-eigene Sub-Stores;
+der EclipseStore-Root ist `EclipseStoreJSentinelRoot`
+(package-private). App-spezifische Daten (z. B. `UserDirectory`)
+müssen einen zweiten EclipseStore parallel hochfahren — separater
+Storage-Pfad, separater Shutdown-Hook.
+
+Aktueller Skill-Workaround (`users.ser` per JDK-`ObjectOutputStream`)
+verletzt `serialization-policy.md` und ist nicht haltbar.
+
+**Entscheidung:** Option B (Storage-Pair-Pattern) — eine Factory
+öffnet beide Storages mit linked Lifecycle. Saubere Trennung
+zwischen Framework-Root und App-Root; Framework-Migrationen
+korrumpieren App-Daten nicht. Volle Begründung in
+`Konzept-V00.74.20.md`.
+
+**Wert:** App-Persistenz-Skills (wie `jsentinel-vaadin-persistence`)
+können ihre App-Daten konsistent neben den Framework-Stores halten,
+ohne Schmuddel-Workarounds oder doppelte Lifecycle-Pflege im
+App-Code.
+
+**Aufwand:** ~3 Tage (Factory + StoragePair + linked Lifecycle +
+Tests + Skill-Update).
+
+### L2. `InitialAdminBootstrapService` verschluckt Exceptions
+
+**Status: V00.74.10-Kandidat**
+
+```java
+try {
+  administratorStore.createAdministrator(new NewAdministrator(...));
+} catch (RuntimeException e) {
+  return new InitialAdminCreationResult.InternalError(
+      "could not persist administrator");
+}
+```
+
+Die ursprüngliche `RuntimeException` (samt Stacktrace) wird komplett
+verschluckt. Konkret hat das in der Feedback-Session eine
+`java.io.NotSerializableException` versteckt — sichtbar erst nach
+App-side-Logging.
+
+Lift in V00.74.10:
+
+- `LOG.warn("...", e)` mit Stacktrace (`HasLogger`-Disziplin).
+- `InternalError`-Record um `Throwable cause` erweitern.
+- Konsistente Behandlung in `RoleAssignmentService`,
+  `PasswordResetTokenService`, `EmailVerificationTokenService`,
+  `RememberMeTokenService` (alle haben dasselbe
+  Catch-and-swallow-Muster).
+
+**Wert:** versteckte Bugs werden sichtbar; App-Entwickler stecken
+nicht in derselben Sackgasse wie das Template-Projekt heute.
+
+**Aufwand:** ~0,5 Tage (5 Services × 1–2 Zeilen + Tests).
+
+### L3. `PasswordPolicy` exposed keine `minLength()`
+
+**Status: V00.74.10-Kandidat**
+
+Klartext-Min-Länge wird via `MinimumLengthPasswordPolicy` an
+`InitialAdminBootstrapService` übergeben. App-Entwickler muss die
+Min-Länge an drei Stellen synchron halten:
+
+1. `new MinimumLengthPasswordPolicy(N)` im App-Bootstrap.
+2. Helper-Text in der `SetupView` ("Minimum N characters.").
+3. Optional: Client-Side Pre-Check für UX vor Backend-Roundtrip.
+
+Lift in V00.74.10:
+
+```java
+public interface PasswordPolicy {
+  PasswordPolicyResult validate(char[] password);
+  default OptionalInt minLength() { return OptionalInt.empty(); }
+}
+```
+
+`MinimumLengthPasswordPolicy` overridet, andere Impls bekommen den
+`empty()`-Default. Single Source of Truth für UI-Hints.
+
+**Wert:** UI-Hint und Server-Policy können nicht mehr divergieren.
+Abwärtskompatibel via Interface-Default.
+
+**Aufwand:** ~0,5 Tage (1 default method + 1 override + Tests).
+
+---
+
 ## V00.74 — Konsolidierte Empfehlung
 
 Aus DX-Sicht würde V00.74 zu **dem Release, das die Builder-Surface

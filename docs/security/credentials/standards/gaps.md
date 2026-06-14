@@ -29,6 +29,7 @@ document.
 | NIST 8.1.5 | Verifier impersonation resistance                                       | Deferred | V00.80 (TBD)   |
 | Konzept V00.71 §10 | Optional foreign hash import for brownfield migration            | Deferred | V00.71 Prompt 036 (still open) |
 | Konzept V00.71 §3 | Password strength estimator implementation (zxcvbn-style)         | Deferred | TBD — no committed version |
+| V00.74 Framework Feedback §1 | App-side persistence has no extension slot in `EclipseStoreJSentinelStorage`; consumers run a parallel `EmbeddedStorageManager` with hand-managed lifecycle (or, in current skill scaffolding, fall back to JDK `ObjectOutputStream` on a `.ser` file — the latter is rejected by `serialization-policy.md`) | Deferred | V00.74.20 — Storage-Pair (Option B), see `Konzept-V00.74.20.md` |
 
 ## Operator-only items
 
@@ -69,6 +70,8 @@ Even within scope, V00.71.00 has known limitations:
 | Rate limiting | `InMemoryAbuseDetectionService` does not survive a JVM restart         | Persist counters via a custom `AbuseDetectionService` impl. |
 | Password history | History compares re-derived hashes per attempt; bounded cost via `retainLast` | Tune `retainLast`; disable for low-assurance services. |
 | HIBP module | Optional; requires outbound HTTPS                                        | Air-gapped deployments use local blocklist only.   |
+| Error reporting | `InitialAdminBootstrapService.createInitialAdmin(...)` swallows the underlying `RuntimeException`; same Catch-and-generic-Error pattern is repeated in `RoleAssignmentService`, `PasswordResetTokenService`, `EmailVerificationTokenService`, `RememberMeTokenService` | Reported in V00.74 Framework Feedback §2; lift in V00.74.10 via `Result`-extension with `Throwable cause` + `HasLogger`-discipline WARN log. |
+| UI hint surface | `PasswordPolicy` has no length / attribute getter; consumers duplicate the minimum length in UI helper text + server policy | Reported in V00.74 Framework Feedback §3; lift in V00.74.10 via `default OptionalInt minLength()` on `PasswordPolicy`. |
 
 ## Tracking
 
