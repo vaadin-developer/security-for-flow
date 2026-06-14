@@ -14,20 +14,31 @@
 ## 1. Purpose
 
 V00.74.20 turns the **Storage-Pair design** from `Konzept-V00.74.20.md`
-into shipping code. The release answers V00.74 Framework Feedback §1:
-`EclipseStoreJSentinelStorage` has no extension slot for app-side
-persistence, and the three persistence skills
+into shipping code AND folds in the three V00.74.10 cleanup items that
+were ehrlich verschoben on Phase 3 of that release.
+
+**Headline feature — Storage-Pair.** The release answers V00.74
+Framework Feedback §1: `EclipseStoreJSentinelStorage` has no extension
+slot for app-side persistence, and the three persistence skills
 (`jsentinel-vaadin-persistence`, `jsentinel-rest-persistence`,
 `jsentinel-standalone-persistence`) build a parallel
-`EmbeddedStorageManager` by hand.
+`EmbeddedStorageManager` by hand. V00.74.20 lifts that pattern from
+skill-level to framework-level via a new `JSentinelStorageFactory`
+that returns a paired `(EclipseStoreJSentinelStorage framework,
+EmbeddedStorageManager app)` with linked lifecycle and a documented
+directory layout.
 
-V00.74.20 lifts that pattern from skill-level to framework-level via
-a new `JSentinelStorageFactory` that returns a paired
-`(EclipseStoreJSentinelStorage framework, EmbeddedStorageManager app)`
-with linked lifecycle and a documented directory layout.
+**V00.74.10 cleanup folded in.** The 10 `demo-jsentinel-*` modules
+were rendered at `00.73.00` and need a coordinated bump; the
+`HealthView` demo deferred from V00.74.10 lands here; the
+mutation-coverage quick wins identified at V00.74.10 release time
+(`jSentinel-dx-standalone` 63 → ≥ 65 %, `jSentinel-autoservice-processor`
+52 → ≥ 65 %) are picked up. The larger mutation gaps
+(`jSentinel-dx-vaadin`, `jSentinel-vaadin-starter`) remain documented
+backlog — they are not in V00.74.20 scope.
 
-The plan turns the six phases from Konzept §13 into 15 sequential
-prompts.
+The plan turns the seven phases (Storage-Pair §13 of the Konzept plus
+the new Cleanup phase) into 18 sequential prompts.
 
 V00.74.20 is **additive over V00.74.10**. No public API changes its
 form. Existing `EclipseStoreJSentinelStorage.openAt(Path)` callers
@@ -81,6 +92,29 @@ are byte-compatible.
 - **PIT regression**: `jSentinel-persistence-eclipsestore` ≥ 70 %
   (hold the V00.74.10 baseline despite added surface area).
 
+#### V00.74.10 cleanup (folded into this release)
+
+- **Coordinated demo-pom bump.** The 10 `demo-jsentinel-*` modules
+  rendered by the Claude Code skills carry a parent-pom version of
+  `00.73.00`. They get bumped to `00.74.20-SNAPSHOT` together with
+  the rest of the reactor. This unblocks anything that wants to use
+  V00.74.10+ surface area in those demos.
+- **`HealthView` demo in `demo-jsentinel-vaadin-hardening`.**
+  Renders `runtime.summary()` + `runtime.healthCheck()` +
+  prettified `runtime.toJson()` — the deferred Prompt 014 from
+  V00.74.10. Requires the demo-pom bump above to compile.
+- **`JSentinelBootstrapInitListener.currentRuntime()`** static
+  accessor on the hardening demo's bootstrap listener so the new
+  view can pull the live snapshot.
+- **Mutation-coverage quick wins** for the two modules whose
+  V00.74.10 gap was small:
+  - `jSentinel-dx-standalone` (measured 63 % → target ≥ 65 %).
+  - `jSentinel-autoservice-processor` (measured 52 % → target ≥ 65 %).
+
+  Test discipline: no mocks. Real `JSentinelServiceResolver` wiring;
+  real `BootstrapInitListener`-style chains; the existing
+  `jSentinel-test` `SecurityTestExtension`.
+
 ### Non-Scope
 
 - **No new module.** All new types live in
@@ -99,8 +133,18 @@ are byte-compatible.
   consumers and for the three persistence skills.
 - **No promotion to stable** of any V00.74.20 type. All new public
   types ship `@ExperimentalJSentinelApi`.
-- **No mutation-coverage lift** beyond the
-  `jSentinel-persistence-eclipsestore` hold-the-line target.
+- **No mutation-coverage lift** on
+  `jSentinel-persistence-eclipsestore` beyond holding the V00.74.10
+  baseline.
+- **No mutation-coverage lift** on `jSentinel-dx-vaadin` or
+  `jSentinel-vaadin-starter`. The V00.74.10 measurement put them at
+  53 % and 38 % against aspirational 75 % targets; closing those
+  gaps is non-trivial (vaadin-starter alone reports 85 uncovered
+  mutations out of 159) and stays a backlog item past V00.74.20.
+- **No coordinated bump** for the older five demo modules
+  (`demo-vaadin`, `demo-rest`, `demo-vaadin-rest-client`,
+  `demo-standalone`, `demo-rest-shared`) — they already track the
+  reactor version since the V00.73 rebrand.
 
 ### Explicit non-targets that stay outside V00.74.20
 
@@ -194,16 +238,17 @@ jSentinel-persistence-eclipsestore   (existing graph)
 
 | Milestone | Prompt range | Goal |
 |---|---|---|
-| M0 — Version bump | 000 | All pom.xml files carry `00.74.20-SNAPSHOT` |
+| M0 — Version bump | 000 | All 32 pom.xml files (parent + 21 submodules + 10 demos + 5 older demos) carry `00.74.20-SNAPSHOT`; the 10 `demo-jsentinel-*` modules make the bigger jump from `00.73.00` |
 | M1 — Public API skeleton | 001-003 | `StorageLayout`, `JSentinelStoragePair`, `JSentinelStorageFactory` compile and are unit-tested for construction validation |
 | M2 — Implementation | 004-005 | Factory opens both storages end-to-end; existing `EclipseStoreJSentinelStorage.openAt(Path)` shares the new init pipeline |
 | M3 — Linked-Lifecycle | 006-007 | Two-phase close with `addSuppressed`; negative-path tests |
 | M4 — Skill updates | 008-010 | All three persistence skills render the factory pattern |
 | M5 — Demo + Doku | 011-013 | One demo exercises both storages; 5-minute-setups + serialization-policy.md addendum land |
-| M6 — Release | 014-015 | `RELEASE-NOTES-00.74.20.md`, PIT regression, tag |
+| **M6 — V00.74.10 cleanup** | **014-016** | `HealthView` demo wired into `demo-jsentinel-vaadin-hardening`; mutation-coverage quick wins (`jSentinel-dx-standalone` ≥ 65 %, `jSentinel-autoservice-processor` ≥ 65 %) |
+| M7 — Release | 017-018 | `RELEASE-NOTES-00.74.20.md`, PIT regression, tag `v00.74.20` |
 
-M1 → M2 → M3 is sequential. M4 (three skill branches) and M5 (docs)
-can parallelize once M3 is green. M6 closes.
+M1 → M2 → M3 is sequential. M4 (three skill branches), M5 (docs)
+and M6 (cleanup) can parallelize once M3 is green. M7 closes.
 
 ---
 
@@ -211,25 +256,40 @@ can parallelize once M3 is green. M6 closes.
 
 ### 6.1 Prompt 000 - Bump every pom.xml to `00.74.20-SNAPSHOT`
 
-**Files to edit:** every `pom.xml` carrying the project version
-(currently 26 files at `00.74.10`).
+**Files to edit:** every `pom.xml` carrying the project version. Two
+groups, because the reactor currently has two version states:
+
+1. **22 modules at `00.74.10`** (parent + 21 library/legacy demo
+   submodules after the V00.74.10 release).
+2. **10 `demo-jsentinel-*` modules at `00.73.00`** (skill-rendered
+   demos that have been parking on the V00.73 version since they
+   were added in commit `b5fcce6e`).
+
+Both groups go to `00.74.20-SNAPSHOT` in this one step.
 
 **Command:**
 
 ```bash
+# Group 1 — modules already at 00.74.10
 find . -name "pom.xml" -not -path "*/target/*" \
   -exec sed -i '' 's|<version>00.74.10</version>|<version>00.74.20-SNAPSHOT</version>|g' {} +
+
+# Group 2 — demo-jsentinel-* still at 00.73.00
+find ./demo-jsentinel-* -name "pom.xml" -not -path "*/target/*" \
+  -exec sed -i '' 's|<version>00.73.00</version>|<version>00.74.20-SNAPSHOT</version>|g' {} +
 ```
 
-(The exact source-version string depends on whether V00.74.10 has
-already cut its release — `00.74.10` for the released tag,
-`00.74.10-SNAPSHOT` if still in development.)
+(The exact source-version string of Group 1 depends on whether
+V00.74.10 has already cut its release — `00.74.10` for the released
+tag, `00.74.10-SNAPSHOT` if still in development.)
 
 **Acceptance:**
 
-- 0 residual occurrences of the previous version in `pom.xml`.
-- 26 occurrences of `00.74.20-SNAPSHOT`.
-- `./mvnw clean install` is green on the full reactor.
+- 0 residual `<version>00.74.10</version>` or `<version>00.73.00</version>`
+  occurrences across the reactor's pom.xml files.
+- 32 occurrences of `<version>00.74.20-SNAPSHOT</version>`.
+- `./mvnw clean install` is green on the full reactor, including all
+  10 `demo-jsentinel-*` modules.
 - `clean-bundle-for-central.sh` reads `00.74.20` dynamically (no
   script change needed).
 
@@ -671,9 +731,116 @@ accurately for V00.74.20.
 
 ---
 
-## 12. Phase 6 - Release
+## 12. Phase 6 - V00.74.10 cleanup
 
-### 12.1 Prompt 014 - `RELEASE-NOTES-00.74.20.md`
+Three V00.74.10 items that were ehrlich verschoben on Phase 3 of that
+release land here. All three are independent of the Storage-Pair work
+and of each other — they can run in parallel branches once Phase 0
+(the demo-pom bump) is on `develop`.
+
+### 12.1 Prompt 014 - `HealthView` demo + bootstrap listener accessor
+
+**Why this needs Phase 0:** the previous attempt at V00.74.10 release
+time failed because the 10 demo modules carry parent-pom `00.73.00`
+and cannot resolve the V00.74.10 `Health` / `HealthStatus` /
+`HealthFinding` types. After Phase 0, the bump is in.
+
+**Files to edit:**
+
+- `demo-jsentinel-vaadin-hardening/.../security/bootstrap/JSentinelBootstrapInitListener.java`
+  — add a `private static volatile JSentinelRuntime runtime;` field
+  populated at the end of `serviceInit(...)`, plus a public
+  `static JSentinelRuntime currentRuntime()` accessor. The local
+  variable in `serviceInit` is renamed (e.g. to `bootstrapped`) so
+  the field assignment and the existing `runtime.log()` call read
+  cleanly.
+
+**File to add:**
+
+- `demo-jsentinel-vaadin-hardening/.../views/admin/HealthView.java`
+  - `@Route(value = "admin/health", layout = MainLayout.class)`
+  - `@RequiresPermission("admin:roles")` (matches the existing admin
+    page permission set — no new permission introduced).
+  - Renders four blocks:
+    1. `runtime.summary()` as a one-line monospace banner.
+    2. Health badges (`overall` colour-coded; `registeredServices`;
+       `inspectedAt` ISO instant).
+    3. `Grid<HealthFinding>` with Severity / Code / Message columns.
+    4. `<pre>`-block with a prettified `runtime.toJson()` (small
+       in-class pretty-printer; the framework's own `JsonEncoder` is
+       intentionally compact-only).
+  - "Refresh" button re-reads
+    `JSentinelBootstrapInitListener.currentRuntime()` so a future
+    runtime swap is visible without a page reload.
+
+**Checkstyle discipline** (lessons captured from the V00.74.10
+attempt):
+
+- Static fields are `lowerCamelCase` per the project's checkstyle
+  rule (no `RUNTIME` constants on the listener).
+- Every `switch` over an enum carries a `default` arm even when the
+  cases are exhaustive — the checkstyle rule does not understand
+  pattern-match exhaustiveness.
+
+**Tests:**
+
+- Vaadin's `browserless-test-junit6` (V00.74.20 brings Vaadin 25.1) —
+  one test that:
+  - Boots the listener manually, asserts `currentRuntime()` returns
+    non-null.
+  - Constructs `HealthView`, asserts the summary banner contains
+    `OK`, the JSON block parses (via Jackson in test scope only),
+    and the Health badge shows `HEALTHY`.
+
+**Acceptance:**
+
+- `./mvnw -pl :demo-jsentinel-vaadin-hardening test` is green.
+- `./mvnw -pl :demo-jsentinel-vaadin-hardening jetty:run` boots,
+  login → navigate to `/admin/health` → all four blocks render.
+- No `grep` hit for the literal `00.73.00` in the demo's pom.
+
+### 12.2 Prompt 015 - Mutation-lift `jSentinel-dx-standalone` (63 % → ≥ 65 %)
+
+**Approach:** run PIT, open `target/pit-reports/index.html`, identify
+the largest-bucket surviving mutants, write targeted real-classpath
+tests until the score crosses 65 %.
+
+**Test discipline carries through from V00.74.10 §3 invariants:**
+
+- No mocks. Real `JSentinelServiceResolver` setups, real
+  `BootstrapInitListener`-style chains, real
+  `SecurityTestExtension`.
+- Maven Enforcer rule on the module bans `mockito-*`, `easymock`,
+  `powermock-*` on every scope. (If the rule already exists from
+  the V00.74.10 prep work, leave it alone; otherwise add it now.)
+
+**Acceptance:**
+
+- `./mvnw -pl :jSentinel-dx-standalone org.pitest:pitest-maven:mutationCoverage`
+  reports ≥ 65 % mutation score.
+- Existing tests stay green.
+- Enforcer rule is active.
+
+### 12.3 Prompt 016 - Mutation-lift `jSentinel-autoservice-processor` (52 % → ≥ 65 %)
+
+**Same approach as Prompt 015 against the autoservice processor.**
+The V00.74.10 measurement showed this module needs roughly eight
+extra kills — a couple of focused tests against the
+file-merging logic of the V00.73 wrapper-index writer typically
+covers the surviving-mutant clusters.
+
+**Acceptance:**
+
+- `./mvnw -pl :jSentinel-autoservice-processor org.pitest:pitest-maven:mutationCoverage`
+  reports ≥ 65 % mutation score.
+- Existing tests stay green.
+- Enforcer rule (no mocks) is active.
+
+---
+
+## 13. Phase 7 - Release
+
+### 13.1 Prompt 017 - `RELEASE-NOTES-00.74.20.md`
 
 **File to add:** `RELEASE-NOTES-00.74.20.md`. Structure mirrors
 `RELEASE-NOTES-00.74.10.md` — one headline change plus the
@@ -693,16 +860,23 @@ standard sections.
    layout, no encryption, no backup).
 5. **Skill migrations** — the three skills now ship the
    factory-based pattern.
-6. **Acceptance summary** — checked list mirroring
-   §13 of this plan.
-7. **PIT baseline** — `jSentinel-persistence-eclipsestore` hold
-   at 70 %.
-8. **Roadmap** — V00.75 (Event Bus) may add an app-storage hook
+6. **V00.74.10 cleanup** — `HealthView` admin demo + mutation-coverage
+   quick wins on `jSentinel-dx-standalone` and
+   `jSentinel-autoservice-processor`. Demo-pom bump explained
+   alongside (the V00.74.10 release shipped without these because the
+   10 `demo-jsentinel-*` modules tracked `00.73.00` at the time).
+7. **Acceptance summary** — checked list mirroring
+   §14 of this plan.
+8. **PIT baseline** — measured V00.74.20 numbers for every module
+   (`jSentinel-persistence-eclipsestore` ≥ 70 %; the two lift modules
+   at their new V00.74.20 scores; every other module non-regressed
+   from V00.74.10).
+9. **Roadmap** — V00.75 (Event Bus) may add an app-storage hook
    for event persistence; V00.76 (JWT) unchanged.
 
 **Acceptance:** RELEASE-NOTES exists and renders cleanly.
 
-### 12.2 Prompt 015 - PIT regression + tag
+### 13.2 Prompt 018 - PIT regression + tag
 
 **Run:** `./mvnw org.pitest:pitest-maven:mutationCoverage` across
 the reactor.
@@ -711,7 +885,12 @@ the reactor.
 
 - `jSentinel-persistence-eclipsestore` ≥ 70 % (hold V00.74.10
   baseline despite the added surface).
-- Every other module's PIT score is unchanged from V00.74.10.
+- `jSentinel-dx-standalone` ≥ 65 % (Phase-6 lift target).
+- `jSentinel-autoservice-processor` ≥ 65 % (Phase-6 lift target).
+- Every other module's PIT score is unchanged from V00.74.10
+  (`jSentinel-dx-vaadin` and `jSentinel-vaadin-starter` hold at
+  the measured V00.74.10 baselines; their larger gaps stay
+  backlog).
 - No new module has a TBD baseline.
 
 **Tag:** `v00.74.20`. Cut the release bundle via
@@ -726,7 +905,7 @@ needed (version is read from `pom.xml`).
 
 ---
 
-## 13. Dependency Graph
+## 14. Dependency Graph
 
 ```
 Phase 0 (Prompt 000)
@@ -739,24 +918,31 @@ Phase 3 (Prompts 006 → 007)
        ↓
        ├──→ Phase 4 (Prompts 008, 009, 010 — parallel)
        ├──→ Phase 5 (Prompts 011, 012, 013 — parallel after 008/009/010 merge)
+       ├──→ Phase 6 (Prompts 014, 015, 016 — independent of 4 and 5;
+       │              all three parallel branches; needs Phase 0 only)
        ↓
-Phase 6 (Prompt 014 → 015)
+Phase 7 (Prompt 017 → 018)
 ```
 
 Phase 1 is sequential (each prompt's skeleton feeds the next).
 Phase 2 is sequential (Prompt 005 needs the refactor from 004).
 Phase 3 is sequential. Phase 4's three skill prompts are
 independent and can parallelize. Phase 5 is doc work, runs after
-the skills land so the docs match.
+the skills land so the docs match. Phase 6's three prompts are
+independent of each other and only need Phase 0 (the demo-pom bump)
+landed.
 
 ---
 
-## 14. Acceptance Criteria
+## 15. Acceptance Criteria
 
 ### Phase 0 acceptance
 
-- All 26 pom.xml carry `00.74.20-SNAPSHOT`.
-- Full reactor `./mvnw clean install` green.
+- All 32 pom.xml carry `00.74.20-SNAPSHOT` (parent + 21 submodules +
+  10 demo-jsentinel-* + 5 older demos including parent's own version).
+- Zero residual occurrences of `00.74.10` or `00.73.00` in pom.xml.
+- Full reactor `./mvnw clean install` green, including the 10
+  `demo-jsentinel-*` modules.
 
 ### Phase 1 acceptance
 
@@ -796,16 +982,29 @@ the skills land so the docs match.
 - `decision-table.md` gains the new row.
 - `serialization-policy.md` carries the addendum.
 
-### Phase 6 acceptance
+### Phase 6 acceptance (V00.74.10 cleanup)
 
-- `RELEASE-NOTES-00.74.20.md` is complete.
+- `HealthView` route accessible at `/admin/health` (admin-permission
+  guarded); renders summary, health badges, findings grid and
+  prettified JSON; "Refresh" button re-reads
+  `JSentinelBootstrapInitListener.currentRuntime()`.
+- `./mvnw -pl :demo-jsentinel-vaadin-hardening test` is green.
+- `jSentinel-dx-standalone` PIT ≥ 65 %.
+- `jSentinel-autoservice-processor` PIT ≥ 65 %.
+- Maven Enforcer rule (no mocks) is active on both lifted modules.
+
+### Phase 7 acceptance (release)
+
+- `RELEASE-NOTES-00.74.20.md` covers Storage-Pair (headline) + the
+  three V00.74.10 cleanup items (HealthView demo, two PIT lifts).
 - Full reactor PIT pass; `jSentinel-persistence-eclipsestore`
-  ≥ 70 %.
+  ≥ 70 %; the two lift modules at or above their V00.74.20 targets;
+  every other module non-regressed from V00.74.10.
 - Tag `v00.74.20` set; Central bundle produced.
 
 ---
 
-## 15. Risks and mitigations
+## 16. Risks and mitigations
 
 | Risk | Mitigation |
 |---|---|
@@ -819,10 +1018,14 @@ the skills land so the docs match.
 | PIT regression on `jSentinel-persistence-eclipsestore` | New code has dedicated tests; PIT score is checked in Phase 6 |
 | Eclipse-Store 4.1.0 `EmbeddedStorage.start(...)` API surprise | Use the same call shape the existing `EclipseStoreJSentinelStorage` uses; refactor in Prompt 004 keeps the call site singular |
 | File-lock conflict in concurrent open from same JVM | Documented in Prompt 004 acceptance via `openAtSamePathTwice_secondFails()` |
+| Demo-pom bump misses one module → reactor build fails halfway | Phase 0 acceptance scans for `00.73.00` AND `00.74.10` residuals across the whole tree before Phase 1 starts |
+| `HealthView` re-introduces the Checkstyle regressions seen in the V00.74.10 attempt (uppercase static, switch-without-default) | Prompt 014 names both rules explicitly; review checklist includes a `./mvnw -pl :demo-jsentinel-vaadin-hardening compile` run before merge |
+| Mutation-lift slips into mocks for convenience | Maven Enforcer rule on both lift modules blocks `mockito-*`, `easymock`, `powermock-*` on every scope; pipeline asserts |
+| Mutation-lift gap is larger than V00.74.10 measurement suggested | The two large gaps (`jSentinel-dx-vaadin`, `jSentinel-vaadin-starter`) are explicitly out-of-scope per §2 Non-Scope; only the two small gaps land in V00.74.20 |
 
 ---
 
-## 16. Relation to other releases
+## 17. Relation to other releases
 
 - **V00.70** — Eclipse Store sub-stores untouched. V00.74.20
   reuses the existing 11 sub-stores 1:1.
@@ -843,9 +1046,12 @@ the skills land so the docs match.
 
 ---
 
-## 17. Recommended execution order
+## 18. Recommended execution order
 
-1. **Phase 0** (version bump) — one commit.
+1. **Phase 0** (version bump) — one commit. Both the legacy-`00.74.10`
+   modules and the `00.73.00`-pinned `demo-jsentinel-*` modules
+   land on `00.74.20-SNAPSHOT` in the same commit; the reactor builds
+   green at the end of this single step.
 2. **Phase 1 sequential** — Prompts 001 → 002 → 003.
 3. **Phase 2 sequential** — Prompts 004 → 005. Merge to `develop`.
 4. **Phase 3 sequential** — Prompts 006 → 007. Merge to `develop`.
@@ -853,14 +1059,18 @@ the skills land so the docs match.
    branches; reviewer rotates. Merge as a coordinated set.
 6. **Phase 5 sequential after Phase 4** — Prompts 011 → 012 →
    013.
-7. **Phase 6 sequential** — Prompt 014 (release notes) → Prompt
-   015 (PIT + tag).
-8. **Cut the release bundle** via
+7. **Phase 6 parallel** — Prompts 014, 015, 016 across three
+   independent branches. Phase 6 needs only Phase 0 landed, so it
+   may even run concurrently with the later Storage-Pair phases if
+   the team has the capacity. Merge each as it goes green.
+8. **Phase 7 sequential** — Prompt 017 (release notes) → Prompt
+   018 (PIT + tag).
+9. **Cut the release bundle** via
    `./scripts/clean-bundle-for-central.sh`.
 
 ---
 
-## 18. Result image
+## 19. Result image
 
 After V00.74.20, a consumer setup that needs both framework- and
 app-side persistence reads:
@@ -898,3 +1108,25 @@ Framework Feedback §1 gap: a single new factory, three new types,
 no new module, no new dependency. The framework's persistence
 story is now consistent with how every shipping persistence skill
 already wants to use it.
+
+### Cleanup follow-through
+
+Alongside the Storage-Pair work the release closes three loose ends
+from the V00.74.10 cycle:
+
+```text
+demo-jsentinel-vaadin-hardening/
+  └── views/admin/HealthView.java   ← new, renders runtime.summary()
+                                      + healthCheck() + toJson()
+
+jSentinel-dx-standalone            PIT 63 % → ≥ 65 %  (mutation lift)
+jSentinel-autoservice-processor    PIT 52 % → ≥ 65 %  (mutation lift)
+
+demo-jsentinel-* (10 modules)       parent-pom 00.73.00 → 00.74.20-SNAPSHOT
+                                    (Phase 0; unblocks all of the above)
+```
+
+The larger mutation gaps (`jSentinel-dx-vaadin` at 53 %,
+`jSentinel-vaadin-starter` at 38 %) are explicitly kept out of
+V00.74.20 scope per §2 Non-Scope. They remain documented backlog
+for a later release.
