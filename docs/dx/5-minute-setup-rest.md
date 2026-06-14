@@ -83,3 +83,35 @@ to `HttpStatusDecisionMapper` and a generic-strings error body strategy.
 `security-version-without-subject-id-resolver`) plus every new V00.73
 sub-builder validation code (`audit/missing-service`,
 `sessions/missing-store`, `credentials/modern-without-bc`, …).
+
+## Programmatic health (V00.74.10)
+
+For a minimal `/health` REST handler, use the V00.74.10 tooling methods
+on the `runtime` returned by `install()` — no JSON library on the
+classpath required, the encoder is internal:
+
+```java
+import com.svenruppert.dependencies.core.net.HttpStatus;
+import com.svenruppert.dependencies.core.net.MediaType;
+
+public final class HealthHandler implements RestHandler {
+  private final JSentinelRuntime runtime;
+  public HealthHandler(JSentinelRuntime runtime) {
+    this.runtime = runtime;
+  }
+  @Override public void handle(RestRequest req, RestResponse resp) {
+    var health = runtime.healthCheck();
+    resp.setStatusCode(health.hasErrors()
+        ? HttpStatus.SERVICE_UNAVAILABLE
+        : HttpStatus.OK);
+    resp.setContentType(MediaType.APPLICATION_JSON);
+    resp.write(runtime.toJson());
+  }
+}
+```
+
+`runtime.summary()` is the single-line companion for boot banners;
+`runtime.toMap()` returns the same data as `toJson()` but as an
+unmodifiable, insertion-ordered `Map<String, Object>` so you can route
+through any serialiser already on your classpath. All four methods
+are marked `@ExperimentalJSentinelApi` until V00.76.

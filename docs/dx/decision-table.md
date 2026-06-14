@@ -11,6 +11,8 @@
 | Real audit / session / policy / role / credential config | V00.73 sub-builders `.audit(...)` / `.sessions(...)` / `.policies(...)` / `.roles(...)` / `.credentials(...)` |
 | Production setup | Adapter facade + `productionDefaults()` profile + `JSentinelDiagnostics.inspect()` for sanity |
 | Catch unknown `@SecureRoute(policy = ...)` at boot | `.discoverSecureRoutes(true)` + `mode(STRICT)` |
+| Programmatic health / monitoring / `/health` endpoint | `runtime.healthCheck()` + `runtime.toJson()` (V00.74.10) |
+| CLI boot banner | `runtime.summary()` (V00.74.10) |
 
 ## When to use
 
@@ -33,6 +35,13 @@
   `.policies(...)` registers into `PolicyRegistry`; `.credentials(...)`
   keeps the legacy `PasswordHasher` resolver path and the V00.71
   `PasswordHashingService` pipeline path separate.
+- **Runtime tooling (V00.74.10)** — `runtime.summary()` for a single-
+  line banner; `runtime.healthCheck()` for a structured `HealthStatus`
+  with `Health.HEALTHY/DEGRADED/FAILED` classification; `runtime.toMap()`
+  for a deterministically-ordered immutable map; `runtime.toJson()` for
+  RFC 8259 output via the internal encoder. Maven Enforcer on
+  `jSentinel-dx` blocks Jackson, Gson and `org.json` on compile/runtime
+  scope so no JSON library leaks onto the DX classpath.
 
 ## When NOT to use
 

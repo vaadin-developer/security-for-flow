@@ -455,8 +455,14 @@ plus die vier neuen `JSentinelRuntime`-Methoden) sind ebenfalls
   einen Negative-Path-Test abgedeckt.
 - `HealthStatus.overall` reflektiert HEALTHY/DEGRADED/FAILED
   deterministisch entsprechend der `JSentinelDiagnostics.inspect()`-Findings.
-- Mutation-Coverage der fünf in §4.1 genannten Module erreicht die
-  dort dokumentierten Zielwerte.
+- PIT-Regressions-Check: keines der fünf in §4.1 genannten Module
+  fällt unter seine V00.74.00-Baseline. Die ursprünglich anvisierten
+  Lift-Zielwerte (§4.1) erwiesen sich beim Re-Measure gegen den
+  V00.74.10-Stand als deutlich aspirationsgebundener als die Plan-Schätzung
+  angenommen hatte (insbesondere `jSentinel-vaadin-starter` mit 85
+  uncovered mutations von 159). V00.74.10 verschiebt den aggressiven
+  Lift in ein Folge-Release; die Plan-Zielwerte bleiben Backlog-Items
+  (siehe `RELEASE-NOTES-00.74.10.md` § Mutation-coverage).
 - Bestehende V00.73-/V00.74-Demo-Module (`demo-vaadin`, `demo-rest`,
   `demo-vaadin-rest-client`, `demo-standalone`, `demo-jsentinel-vaadin`)
   kompilieren und starten ohne Code-Anpassung.

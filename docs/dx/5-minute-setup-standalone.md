@@ -84,3 +84,26 @@ produces an entry for `MemberDirectorySecured`.
 new V00.73 sub-builder validation codes (`audit/missing-service`,
 `credentials/modern-without-bc`, …). `.sessions(...)` on Standalone
 records INFO only and never blocks the bootstrap.
+
+## Programmatic health (V00.74.10)
+
+For CLI boot banners and machine-readable status, use the V00.74.10
+tooling methods on the `runtime` returned by `install()`:
+
+```java
+System.out.println(runtime.summary());
+// → "OK | 8 services | 0 errors | 0 warnings | 2 INFO"
+
+var health = runtime.healthCheck();
+if (health.hasErrors()) {
+  System.err.println("Refusing to start: " + runtime.toJson());
+  System.exit(1);
+}
+```
+
+`healthCheck()` classifies any `ERROR` finding as `FAILED`, any
+`WARNING` (without errors) as `DEGRADED`, and `INFO`-only or empty as
+`HEALTHY` — `INFO` findings intentionally do not degrade. The
+`toJson()` encoder is internal — no Jackson, Gson or `org.json`
+dependency lands on the standalone classpath. All four methods are
+marked `@ExperimentalJSentinelApi` until V00.76.

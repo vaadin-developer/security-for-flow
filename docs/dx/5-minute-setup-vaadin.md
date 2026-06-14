@@ -118,3 +118,31 @@ three V00.72-to-V00.73 promoted codes
 `session-management-view-without-session-store`,
 `security-version-without-subject-id-resolver`) — clean those up before
 flipping the mode.
+
+## 6. Programmatic health (V00.74.10)
+
+For `/health` endpoints, monitoring dashboards or boot banners use the
+V00.74.10 tooling methods on the same `runtime` instance — they expose a
+structured view of the snapshot without parsing `log()`:
+
+```java
+runtime.summary();
+// "OK | 8 services | 0 errors | 1 warnings | 2 INFO"
+
+runtime.healthCheck();
+// HealthStatus(overall=DEGRADED, findings=[...],
+//              registeredServices=8, inspectedAt=...)
+
+runtime.toJson();
+// {"mode":"PRODUCTION","serviceCount":8,"services":[...],
+//  "warningCount":3,"warnings":[...]}
+```
+
+`healthCheck()` classifies any `ERROR` finding as `FAILED`, any
+`WARNING` (without errors) as `DEGRADED`, and `INFO`-only or empty as
+`HEALTHY` — `INFO` findings intentionally do not degrade. The
+`toJson()` encoder is jSentinel's own — Maven Enforcer on
+`jSentinel-dx` blocks Jackson, Gson and `org.json` on compile/runtime
+scope so consumer projects do not inherit a JSON library through the
+DX classpath. All four methods are marked
+`@ExperimentalJSentinelApi` until V00.76 confirms the shape.
