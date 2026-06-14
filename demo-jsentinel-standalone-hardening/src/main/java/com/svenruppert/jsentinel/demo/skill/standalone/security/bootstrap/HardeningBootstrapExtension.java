@@ -1,0 +1,40 @@
+package com.svenruppert.jsentinel.demo.skill.standalone.security.bootstrap;
+
+import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.jsentinel.authorization.api.SubjectIdResolver;
+import com.svenruppert.jsentinel.credential.password.bouncycastle.BouncyCastleHashingServices;
+import com.svenruppert.jsentinel.dx.bootstrap.CredentialBootstrap;
+import com.svenruppert.jsentinel.dx.bootstrap.SessionBootstrap;
+import com.svenruppert.jsentinel.session.JSentinelVersionStore;
+
+import java.util.Optional;
+
+/**
+ * Hardening-layer extension for the standalone CLI. Argon2id +
+ * drift detection. Drift detection in single-session CLIs is
+ * largely latent, but wiring it through {@code
+ * BootstrapBuilder.apply(...)} keeps the surface uniform across all
+ * three adapters.
+ */
+public final class HardeningBootstrapExtension implements BootstrapExtension {
+
+  @Override
+  public void contributeCredentials(CredentialBootstrap c) {
+    c.hashing(BouncyCastleHashingServices.modern());
+  }
+
+  @Override
+  public void contributeSessions(SessionBootstrap s) {
+    Optional<JSentinelVersionStore> versionStore =
+        JSentinelServiceResolver.findJSentinelVersionStore();
+    Optional<SubjectIdResolver<Object>> resolver =
+        JSentinelServiceResolver.findSubjectIdResolver();
+    versionStore.ifPresent(s::securityVersion);
+    resolver.ifPresent(s::subjectIdResolver);
+  }
+
+  @Override
+  public int order() {
+    return 20;
+  }
+}

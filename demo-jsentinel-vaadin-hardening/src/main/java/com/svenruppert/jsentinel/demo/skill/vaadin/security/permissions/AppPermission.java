@@ -1,0 +1,29 @@
+package com.svenruppert.jsentinel.demo.skill.vaadin.security.permissions;
+
+import com.svenruppert.jsentinel.authorization.api.permissions.PermissionName;
+
+/**
+ * Permission catalog. Each entry binds a string id (used in
+ * {@code @RequiresPermission("...")} annotations) to a typed
+ * {@link PermissionName} the AuthorizationService produces from the
+ * subject's roles.
+ *
+ * <p>Add new permissions here, map them to roles in the
+ * {@code MyAuthorizationService} ROLE_PERMISSIONS table.
+ */
+public enum AppPermission {
+  APP_VIEW("app:view"),
+  AUDIT_READ("audit:read"),
+  ADMIN_SESSIONS("admin:sessions"),
+  ADMIN_ROLES("admin:roles");
+
+  private final PermissionName permissionName;
+
+  AppPermission(String value) {
+    this.permissionName = new PermissionName(value);
+  }
+
+  public PermissionName permissionName() {
+    return permissionName;
+  }
+}

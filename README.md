@@ -63,6 +63,219 @@ The four adapter modules (`jSentinel-vaadin`, `jSentinel-rest`,
 storage dependency. `jSentinel-crypto-bc` is the only module that pulls in
 BouncyCastle — it stays opt-in so the core remains JDK-only.
 
+## Claude Code Skills
+
+The repository ships **ten battle-tested Claude Code skills** under
+[`docs/skills/claude/`](docs/skills/claude/) that automate the
+integration of jSentinel into a fresh application. Each skill is a
+SKILL.md (with frontmatter description Claude Code uses for
+auto-discovery) plus a `references/` directory of `.java.tmpl`
+templates that get rendered with project-specific slots.
+
+Every skill listed below was validated against the reactor itself —
+the matching `demo-jsentinel-*` module in this repository is the
+verbatim output of running the skill, and all ten modules compile in
+the standard reactor build.
+
+### The skill matrix
+
+The skills are organised as **three adapters** (Vaadin, REST,
+Standalone/CLI) **× three layers** (basic → persistence → hardening),
+plus one **hybrid** that turns a Vaadin frontend into a REST-backend
+client:
+
+|                    | **Vaadin Flow**                                                          | **REST (JDK HttpServer)**                                            | **Standalone (CLI/desktop)**                                                  |
+| ------------------ | ------------------------------------------------------------------------ | -------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| **Layer 1 — basic**       | [`jsentinel-vaadin`](docs/skills/claude/jsentinel-vaadin/SKILL.md)                       | [`jsentinel-rest`](docs/skills/claude/jsentinel-rest/SKILL.md)                       | [`jsentinel-standalone`](docs/skills/claude/jsentinel-standalone/SKILL.md)                       |
+| **Layer 2 — persistence** | [`jsentinel-vaadin-persistence`](docs/skills/claude/jsentinel-vaadin-persistence/SKILL.md) | [`jsentinel-rest-persistence`](docs/skills/claude/jsentinel-rest-persistence/SKILL.md) | [`jsentinel-standalone-persistence`](docs/skills/claude/jsentinel-standalone-persistence/SKILL.md) |
+| **Layer 3 — hardening**   | [`jsentinel-vaadin-hardening`](docs/skills/claude/jsentinel-vaadin-hardening/SKILL.md)   | [`jsentinel-rest-hardening`](docs/skills/claude/jsentinel-rest-hardening/SKILL.md)   | [`jsentinel-standalone-hardening`](docs/skills/claude/jsentinel-standalone-hardening/SKILL.md)   |
+| **Hybrid**                | [`jsentinel-vaadin-rest-client`](docs/skills/claude/jsentinel-vaadin-rest-client/SKILL.md) — Vaadin frontend delegates auth to a `jsentinel-rest` backend |||
+
+Each cell points at the canonical `SKILL.md`; the `references/`
+sibling holds the templates Claude Code renders into the consumer's
+codebase.
+
+### One sentence per skill
+
+- **`jsentinel-vaadin`** — `VaadinSecurity.bootstrap()` + `@JSentinelAutoService` Authn/Authz + pre-seeded `admin/admin` & `user/user` + `LoginView` + AppLayout `MainLayout` hosting a public `PublicHomeView` and a `@VisibleFor(USER)` `DashboardView` + filterable audit grid + session inventory + role admin. **Also exports** the project-local `BootstrapExtension` SPI plus the `BootstrapBuilder` helper that loads every registered extension via `ServiceLoader` — the seam through which layer 2 and layer 3 plug in additively.
+- **`jsentinel-vaadin-persistence`** — Eclipse-Store-backed audit + session + bootstrap stores, plus the V00.70 token-based first-admin flow (`SetupView` → `InitialAdminBootstrapService`); the plaintext `admin/admin` seed is replaced. **Plugs in** as a `PersistenceBootstrapExtension` (`order=10`) — no overwrite of the layer-1 entry-point listener.
+- **`jsentinel-vaadin-hardening`** — `BouncyCastleHashingServices.modern()` (Argon2id) replaces PBKDF2, optional HIBP password-leak check, and Phase-4c drift detection (`JSentinelVersionEnforcerListener` + `VersionBumper.bump(user)` after every role mutation) — a revoked role reroutes the affected user to login on their next click. **Plugs in** as a `HardeningBootstrapExtension` (`order=20`); composes additively with persistence.
+- **`jsentinel-rest`** — `RestSecurity.bootstrap()` + Bearer-token `TokenStore` + JDK-`HttpServer`-based Router with `POST /api/auth/login` + `whoami` + audit + sessions + users endpoints, gated by `@RequiresPermission` semantics. Same `BootstrapExtension` SPI surface as the Vaadin variant.
+- **`jsentinel-rest-persistence`** — same Eclipse-Store swap as the Vaadin variant, with `POST /api/setup` replacing the Vaadin `SetupView` and a 503 bootstrap-required guard on every other endpoint until the first admin is provisioned. Bootstrap-chain contributions flow through `PersistenceBootstrapExtension`.
+- **`jsentinel-rest-hardening`** — Argon2id + drift detection wired through `RestJSentinelVersionFilter`; revoking a role makes every open Bearer token for that user start returning 401 on the next request. Bootstrap-chain contributions flow through `HardeningBootstrapExtension`.
+- **`jsentinel-standalone`** — `StandaloneSecurity.bootstrap()` + `StandaloneLoginFlow` + `SecuredProxy.wrap(DocumentService.class, impl)` for runtime enforcement on an interface, interactive CLI with `list / create / delete / audit / whoami / quit`. Same `BootstrapExtension` SPI surface.
+- **`jsentinel-standalone-persistence`** — Eclipse-Store persistence + a CLI `setup` prompt that reads the bootstrap token + creates the first admin before the regular login loop unlocks. `PersistenceBootstrapExtension`.
+- **`jsentinel-standalone-hardening`** — Argon2id, HIBP, and drift wiring for the CLI; drift detection is best-effort because CLI lifetimes are short, but the API surface stays uniform across all three adapters. `HardeningBootstrapExtension`.
+- **`jsentinel-vaadin-rest-client`** — small hybrid skill that patches a `jsentinel-vaadin` consumer so its `AuthenticationService` POSTs to `/api/auth/login` and its `AuthorizationService` reads roles from `/api/whoami` on a `jsentinel-rest` backend — server holds the truth, the Vaadin app keeps only the UI shell.
+
+### Side-by-side reference output
+
+The skills are not just documentation — every skill has a
+corresponding `demo-jsentinel-*` module in the reactor that contains
+the verbatim, compilable result of running the skill on a fresh
+module:
+
+```bash
+./mvnw -pl :demo-jsentinel-vaadin,                  \
+           :demo-jsentinel-vaadin-persistence,      \
+           :demo-jsentinel-vaadin-hardening,        \
+           :demo-jsentinel-rest,                    \
+           :demo-jsentinel-rest-persistence,        \
+           :demo-jsentinel-rest-hardening,          \
+           :demo-jsentinel-standalone,              \
+           :demo-jsentinel-standalone-persistence,  \
+           :demo-jsentinel-standalone-hardening,    \
+           :demo-jsentinel-vaadin-rest-client       \
+       -am compile -DskipTests
+```
+
+Every directory matches one cell of the matrix above. The skills
+double as a regression test: a future API rename in `jSentinel-core`
+or `jSentinel-dx-*` that breaks a skill template breaks the
+corresponding demo module in the next reactor build.
+
+### How composition works
+
+Layer 1 ships a project-local SPI (`BootstrapExtension`) plus a
+helper (`BootstrapBuilder`) that the entry-point listener
+(`JSentinelBootstrapInitListener` / `RestServer.start()` /
+`Main.main()`) delegates to:
+
+```java
+// Layer 1: BootstrapExtension.java — project-local SPI
+public interface BootstrapExtension {
+  default void contributeAudit(AuditBootstrap a) {}
+  default void contributeSessions(SessionBootstrap s) {}
+  default void contributeCredentials(CredentialBootstrap c) {}
+  default int order() { return 0; }
+}
+
+// Layer 1: entry-point listener — never re-rendered by later layers
+JSentinelRuntime runtime = BootstrapBuilder.apply(
+    VaadinSecurity.bootstrap()
+        .use(VaadinJSentinelStarter.developmentDefaults())
+        .authentication(authn)
+        .authorization(authz)
+        .loginRoute("login")
+).install();
+```
+
+`BootstrapBuilder.apply(...)` loads every registered
+`BootstrapExtension` via `ServiceLoader`, sorts by `order()`, and
+invokes the three `contribute*` hooks **inside a single**
+`.audit(...) / .sessions(...) / .credentials(...)` call on the
+fluent chain. Layer 2 and layer 3 each ship one extension class plus
+a one-line entry in `META-INF/services/<base>.security.bootstrap.BootstrapExtension`
+— neither rewrites the entry-point listener:
+
+```java
+// Layer 2: PersistenceBootstrapExtension (order=10)
+public final class PersistenceBootstrapExtension implements BootstrapExtension {
+  static {                                                  // eager open
+    STORAGE = JSentinelStorageProvider.storage();
+    BootstrapWiring.instance();                             // print token
+  }
+  @Override public void contributeAudit(AuditBootstrap a) {
+    a.storeBacked(STORAGE.auditEventStore()).logging();
+  }
+  @Override public void contributeSessions(SessionBootstrap s) {
+    s.storeBacked(STORAGE.sessionStore());
+  }
+  @Override public int order() { return 10; }
+}
+
+// Layer 3: HardeningBootstrapExtension (order=20)
+public final class HardeningBootstrapExtension implements BootstrapExtension {
+  @Override public void contributeCredentials(CredentialBootstrap c) {
+    c.hashing(BouncyCastleHashingServices.modern());
+  }
+  @Override public void contributeSessions(SessionBootstrap s) {
+    JSentinelServiceResolver.findJSentinelVersionStore().ifPresent(s::securityVersion);
+    JSentinelServiceResolver.findSubjectIdResolver().ifPresent(s::subjectIdResolver);
+  }
+  @Override public int order() { return 20; }
+}
+```
+
+The same `.sessions(...)` sub-builder is configured twice within one
+`.sessions(...)` call (`storeBacked(...)` by persistence,
+`securityVersion(...)` + `subjectIdResolver(...)` by hardening) — both
+contributions land on the same sub-builder and stack. This is what
+makes the order persistence-vs-hardening irrelevant.
+
+Adding a future layer (a hypothetical
+`jsentinel-vaadin-mfa`, a project-local `RateLimitBootstrapExtension`,
+…) means shipping a new `BootstrapExtension` implementation + one
+service-file line. No existing skill changes; no entry-point listener
+rewrite.
+
+### Using a skill
+
+To consume a skill in your own project:
+
+1. Copy the skill directory from
+   `docs/skills/claude/<skill-name>/` into Claude Code's skill
+   location: `~/.claude/skills/<skill-name>/`. Claude Code
+   auto-discovers any directory at this path containing a `SKILL.md`
+   with proper frontmatter.
+2. From within Claude Code, invoke the skill — either via the
+   `/<skill-name>` slash command or by describing your intent
+   ("integrate jSentinel into my Vaadin app", "secure my REST API
+   with admin/user", "add token-based bootstrap to my REST module").
+   Claude Code's auto-discovery matches the description against the
+   SKILL.md frontmatter and triggers the skill.
+3. Claude Code reads the `SKILL.md`, asks for the slots that are
+   missing from your brief (typically: target Maven module, base
+   package, subject type name), renders every `.java.tmpl` /
+   `services-*.tmpl` / `pom-snippet.xml.tmpl` from `references/`
+   with those slots substituted, and writes the rendered files into
+   your project tree at the paths the SKILL.md specifies.
+4. Run `./mvnw -pl <your-module> -am compile` to verify — the same
+   command the reactor runs to validate the matching
+   `demo-jsentinel-*` module.
+
+### Suggested application order
+
+```
+Day 1: jsentinel-<adapter>                  → working login + roles + admin UI
+Day X: jsentinel-<adapter>-persistence      → users / audit / sessions survive restart
+Day Y: jsentinel-<adapter>-hardening        → Argon2id + drift detection + HIBP
+
+For Vaadin+REST hybrids:
+  Backend: jsentinel-rest [+ -persistence + -hardening]
+  Frontend: jsentinel-vaadin + jsentinel-vaadin-rest-client
+```
+
+Layer 1 is the only hard prerequisite — it ships the
+`BootstrapExtension` SPI plus the `BootstrapBuilder` helper that the
+later layers plug into. Once layer 1 is in place, layer 2 and layer
+3 can be applied in **either** order, **only one** of them, or
+**both** — the bootstrap chain composes them additively (see
+"How composition works" above). No "merge manually" caveat, no
+second-writer-wins on the listener file.
+
+| What you need | Skills to run |
+|---|---|
+| In-memory demo for first 5 minutes | layer 1 only |
+| Production-grade auth, in-memory user store | layer 1 + layer 3 |
+| Persistent users, PBKDF2 still acceptable | layer 1 + layer 2 |
+| Full production setup | layer 1 + layer 2 + layer 3 (any order) |
+
+### What the skills deliberately do NOT cover
+
+- **OpenAPI metadata, CORS, refresh tokens, API keys, rate
+  limiting** — V00.72+ features available via the
+  `jSentinel-dx-rest.openApiMetadata(...)` / `.cors(...)` surface
+  but not templated.
+- **Custom `JSentinelSubject` mappers** — beyond the defaults, mapping
+  lives in `JSentinelSubjectMapper` and stays project-specific.
+- **Multi-tenant policies** — the skills are single-tenant; multi-tenant
+  variants are roadmap V00.74+.
+- **Multi-factor authentication** — separate concern.
+- **Refresh-token rotation in the hybrid** — the Vaadin client stores
+  the Bearer token in `VaadinSession`; rotation belongs in the REST
+  backend or a follow-up skill.
+
 ## Quick Start
 
 ### Build

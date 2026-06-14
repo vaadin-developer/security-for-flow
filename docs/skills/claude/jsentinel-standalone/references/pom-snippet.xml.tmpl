@@ -1,0 +1,46 @@
+<!--
+  jSentinel — Standalone / CLI integration.
+-->
+<dependency>
+    <groupId>com.svenruppert.jsentinel</groupId>
+    <artifactId>jSentinel-core</artifactId>
+    <version>${jsentinel.version}</version>
+</dependency>
+<dependency>
+    <groupId>com.svenruppert.jsentinel</groupId>
+    <artifactId>jSentinel-autoservice-annotations</artifactId>
+    <version>${jsentinel.version}</version>
+</dependency>
+<dependency>
+    <groupId>com.svenruppert.jsentinel</groupId>
+    <artifactId>jSentinel-standalone</artifactId>
+    <version>${jsentinel.version}</version>
+</dependency>
+<dependency>
+    <groupId>com.svenruppert.jsentinel</groupId>
+    <artifactId>jSentinel-dx</artifactId>
+    <version>${jsentinel.version}</version>
+</dependency>
+<dependency>
+    <groupId>com.svenruppert.jsentinel</groupId>
+    <artifactId>jSentinel-dx-standalone</artifactId>
+    <version>${jsentinel.version}</version>
+</dependency>
+
+<plugin>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <annotationProcessorPaths>
+            <path>
+                <groupId>com.svenruppert.jsentinel</groupId>
+                <artifactId>jSentinel-autoservice-processor</artifactId>
+                <version>${jsentinel.version}</version>
+            </path>
+            <path>
+                <groupId>com.svenruppert.jsentinel</groupId>
+                <artifactId>jSentinel-autoservice-annotations</artifactId>
+                <version>${jsentinel.version}</version>
+            </path>
+        </annotationProcessorPaths>
+    </configuration>
+</plugin>

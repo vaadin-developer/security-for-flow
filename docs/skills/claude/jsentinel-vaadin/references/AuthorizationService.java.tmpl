@@ -1,0 +1,71 @@
+package {{BASE_PACKAGE}}.security.services;
+
+import com.svenruppert.jsentinel.authorization.api.AuthorizationService;
+import com.svenruppert.jsentinel.authorization.api.permissions.HasPermissions;
+import com.svenruppert.jsentinel.authorization.api.permissions.PermissionName;
+import com.svenruppert.jsentinel.authorization.api.permissions.RolePermissionMapping;
+import com.svenruppert.jsentinel.authorization.api.permissions.RolePermissionResolver;
+import com.svenruppert.jsentinel.authorization.api.permissions.StaticRolePermissionMapping;
+import com.svenruppert.jsentinel.authorization.api.roles.HasRoles;
+import com.svenruppert.jsentinel.authorization.api.roles.RoleName;
+import com.svenruppert.jsentinel.autoservice.api.JSentinelAutoService;
+import {{BASE_PACKAGE}}.security.model.{{SUBJECT_TYPE}};
+import {{BASE_PACKAGE}}.security.roles.AuthorizationRole;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static {{BASE_PACKAGE}}.security.permissions.AppPermission.*;
+
+/**
+ * Role → permission table. SPI-registered via
+ * {@link JSentinelAutoService @JSentinelAutoService}.
+ *
+ * <ul>
+ *   <li>ADMIN: every permission</li>
+ *   <li>USER: just app:view</li>
+ * </ul>
+ *
+ * <p>Subject's effective permission set = union of every role's
+ * permissions (delegated to {@link RolePermissionResolver}).
+ */
+@JSentinelAutoService(AuthorizationService.class)
+public class {{SUBJECT_PREFIX}}AuthorizationService
+    implements AuthorizationService<{{SUBJECT_TYPE}}> {
+
+  private static final RolePermissionMapping ROLE_PERMISSIONS = StaticRolePermissionMapping.builder()
+      .put(roleName(AuthorizationRole.ADMIN), Set.of(
+          APP_VIEW.permissionName(),
+          AUDIT_READ.permissionName(),
+          ADMIN_SESSIONS.permissionName(),
+          ADMIN_ROLES.permissionName()))
+      .put(roleName(AuthorizationRole.USER), Set.of(
+          APP_VIEW.permissionName()))
+      .build();
+
+  @Override
+  public HasRoles rolesFor({{SUBJECT_TYPE}} subject) {
+    Objects.requireNonNull(subject);
+    List<RoleName> roles = subject.roles().stream()
+        .map({{SUBJECT_PREFIX}}AuthorizationService::roleName)
+        .toList();
+    return () -> roles;
+  }
+
+  @Override
+  public HasPermissions permissionsFor({{SUBJECT_TYPE}} subject) {
+    Objects.requireNonNull(subject);
+    Set<RoleName> roles = subject.roles().stream()
+        .map({{SUBJECT_PREFIX}}AuthorizationService::roleName)
+        .collect(Collectors.toSet());
+    Set<PermissionName> permissions =
+        RolePermissionResolver.permissionsForRoles(roles, ROLE_PERMISSIONS);
+    return () -> List.copyOf(permissions);
+  }
+
+  private static RoleName roleName(AuthorizationRole role) {
+    return new RoleName(role.name());
+  }
+}

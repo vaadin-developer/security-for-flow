@@ -1,0 +1,37 @@
+package com.svenruppert.jsentinel.demo.skill.standalone.security.bootstrap;
+
+import com.svenruppert.jsentinel.dx.bootstrap.AuditBootstrap;
+import com.svenruppert.jsentinel.dx.bootstrap.SessionBootstrap;
+import com.svenruppert.jsentinel.persistence.eclipsestore.EclipseStoreJSentinelStorage;
+
+/**
+ * Persistence-layer extension for the standalone CLI. Contributes
+ * Eclipse-Store storeBacked audit + session stores; eagerly opens
+ * the storage backend and triggers
+ * {@link BootstrapWiring#instance()} so the bootstrap token is ready
+ * before the CLI prompts for setup.
+ */
+public final class PersistenceBootstrapExtension implements BootstrapExtension {
+
+  private static final EclipseStoreJSentinelStorage STORAGE;
+
+  static {
+    STORAGE = JSentinelStorageProvider.storage();
+    BootstrapWiring.instance();
+  }
+
+  @Override
+  public void contributeAudit(AuditBootstrap a) {
+    a.storeBacked(STORAGE.auditEventStore()).logging();
+  }
+
+  @Override
+  public void contributeSessions(SessionBootstrap s) {
+    s.storeBacked(STORAGE.sessionStore());
+  }
+
+  @Override
+  public int order() {
+    return 10;
+  }
+}

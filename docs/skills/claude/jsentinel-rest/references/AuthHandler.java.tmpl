@@ -1,0 +1,77 @@
+package {{BASE_PACKAGE}}.handlers;
+
+import com.svenruppert.jsentinel.authentication.AuthenticationService;
+import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.jsentinel.authorization.api.JSentinelSubject;
+import com.sun.net.httpserver.HttpExchange;
+import {{BASE_PACKAGE}}.Json;
+import {{BASE_PACKAGE}}.Router;
+import {{BASE_PACKAGE}}.security.TokenStore;
+import {{BASE_PACKAGE}}.security.model.Credentials;
+import {{BASE_PACKAGE}}.security.model.{{SUBJECT_TYPE}};
+import {{BASE_PACKAGE}}.security.model.UserDirectoryProvider;
+
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * Auth endpoints:
+ * <ul>
+ *   <li>{@code POST /api/auth/login} — body
+ *       {@code {"username":"...","password":"..."}} returns
+ *       {@code {"token":"<uuid>"}}.</li>
+ *   <li>{@code POST /api/auth/logout} — Bearer token revoked.</li>
+ *   <li>{@code GET  /api/whoami} — subject summary as JSON.</li>
+ * </ul>
+ */
+public final class AuthHandler {
+
+  private AuthHandler() {
+  }
+
+  @SuppressWarnings("unchecked")
+  public static void login(HttpExchange exchange, JSentinelSubject ignored) throws IOException {
+    Map<String, String> body = Json.parseFlat(Router.readBody(exchange));
+    String username = body.get("username");
+    String password = body.get("password");
+    Credentials credentials = new Credentials(username, password);
+    AuthenticationService<Credentials, {{SUBJECT_TYPE}}> authn =
+        JSentinelServiceResolver.authenticationService();
+    if (!authn.checkCredentials(credentials)) {
+      Router.respondJson(exchange, 401, Json.encode(Map.of("error", "invalid credentials")));
+      return;
+    }
+    Optional<{{SUBJECT_TYPE}}> user = UserDirectoryProvider.directory().findByCredentials(credentials);
+    if (user.isEmpty()) {
+      Router.respondJson(exchange, 401, Json.encode(Map.of("error", "user not loadable")));
+      return;
+    }
+    String token = TokenStore.INSTANCE.issue(user.get());
+    Router.respondJson(exchange, 200, Json.encode(Map.of(
+        "token", token,
+        "user", user.get().name())));
+  }
+
+  public static void logout(HttpExchange exchange, JSentinelSubject subject) throws IOException {
+    String auth = exchange.getRequestHeaders().getFirst("Authorization");
+    if (auth != null && auth.startsWith("Bearer ")) {
+      TokenStore.INSTANCE.revoke(auth.substring("Bearer ".length()).trim());
+    }
+    Router.respondJson(exchange, 200, "{\"ok\":true}");
+  }
+
+  public static void whoami(HttpExchange exchange, JSentinelSubject subject) throws IOException {
+    if (subject == null) {
+      Router.respondJson(exchange, 401, Json.encode(Map.of("error", "unauthorized")));
+      return;
+    }
+    Map<String, Object> body = new LinkedHashMap<>();
+    body.put("id", subject.subjectId());
+    body.put("displayName", subject.displayName());
+    body.put("roles", subject.roles().stream().map(Object::toString).toList());
+    body.put("permissions", subject.permissions().stream().map(Object::toString).toList());
+    Router.respondJson(exchange, 200, Json.encode(body));
+  }
+}

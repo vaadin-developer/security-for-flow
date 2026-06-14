@@ -1,0 +1,40 @@
+package {{BASE_PACKAGE}}.views.admin;
+
+import com.svenruppert.jsentinel.authorization.annotations.RequiresPermission;
+import com.svenruppert.jsentinel.components.SessionManagementView;
+import com.svenruppert.jsentinel.session.SessionRecord;
+import com.svenruppert.jsentinel.session.SessionStatus;
+import com.vaadin.flow.router.Route;
+import {{BASE_PACKAGE}}.security.services.SessionStoreProvider;
+import {{BASE_PACKAGE}}.views.HomeButton;
+import {{BASE_PACKAGE}}.views.MainLayout;
+
+/**
+ * Admin-only session inventory + revoke. Re-uses the framework's
+ * {@link SessionManagementView} composite — the only project-specific
+ * glue is wiring it to {@link SessionStoreProvider} and to a revoke
+ * callback.
+ *
+ * <p>The constructor adds a Home button at the top of the content
+ * layout via {@link HomeButton#forStandalone(Class)}: the button only
+ * renders when this view is registered as a top-level {@code @Route}.
+ * Once embedded in an {@code AppLayout} the helper returns empty and
+ * the layout's drawer takes over navigation.
+ */
+@Route(value = SessionsView.NAV, layout = MainLayout.class)
+@RequiresPermission("admin:sessions")
+public class SessionsView extends SessionManagementView {
+
+  public static final String NAV = "admin/sessions";
+
+  public SessionsView() {
+    super(SessionStoreProvider.sessionStore(), SessionsView::revoke);
+    HomeButton.forStandalone(getClass())
+        .ifPresent(home -> getContent().addComponentAsFirst(home));
+  }
+
+  private static void revoke(SessionRecord record) {
+    SessionStoreProvider.sessionStore()
+        .save(record.withStatus(SessionStatus.REVOKED));
+  }
+}

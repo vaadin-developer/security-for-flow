@@ -1,0 +1,15 @@
+<!--
+  jSentinel hardening — V00.71 production features.
+  Add both deps if {{HIBP_ENABLED}}=true; only the first one otherwise.
+-->
+<dependency>
+    <groupId>com.svenruppert.jsentinel</groupId>
+    <artifactId>jSentinel-crypto-bc</artifactId>
+    <version>${jsentinel.version}</version>
+</dependency>
+<!-- {{HIBP_ENABLED}} == true ? include : skip -->
+<dependency>
+    <groupId>com.svenruppert.jsentinel</groupId>
+    <artifactId>jSentinel-credentials-hibp</artifactId>
+    <version>${jsentinel.version}</version>
+</dependency>

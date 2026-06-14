@@ -1,0 +1,29 @@
+<!--
+  jSentinel persistence layer — Eclipse-Store backend.
+  Adds ONE dependency. Eclipse-Store transitives come from the parent.
+-->
+<dependency>
+    <groupId>com.svenruppert.jsentinel</groupId>
+    <artifactId>jSentinel-persistence-eclipsestore</artifactId>
+    <version>${jsentinel.version}</version>
+</dependency>
+
+<!--
+  Surefire — redirect app storage during tests so no run ever creates
+  the repo-rooted {{STORAGE_DIR}} tree. mvn clean wipes it. PIT
+  workers can no longer corrupt each other's Eclipse-Store state
+  because each forked JVM gets the same target/-rooted path that
+  dies with the build directory.
+
+  Merge into the existing <plugin> block for maven-surefire-plugin;
+  if no <configuration> exists yet, add the full block below.
+-->
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-surefire-plugin</artifactId>
+    <configuration>
+        <systemPropertyVariables>
+            <app.storage.dir>${project.build.directory}/test-data</app.storage.dir>
+        </systemPropertyVariables>
+    </configuration>
+</plugin>

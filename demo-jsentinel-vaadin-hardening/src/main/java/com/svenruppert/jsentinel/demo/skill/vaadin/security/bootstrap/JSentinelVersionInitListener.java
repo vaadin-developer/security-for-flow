@@ -1,0 +1,55 @@
+package com.svenruppert.jsentinel.demo.skill.vaadin.security.bootstrap;
+
+import com.svenruppert.dependencies.core.logger.HasLogger;
+import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.jsentinel.session.JSentinelVersionEnforcer;
+import com.svenruppert.jsentinel.session.JSentinelVersionStore;
+import com.svenruppert.jsentinel.session.vaadin.JSentinelVersionEnforcerListener;
+import com.vaadin.flow.server.ServiceInitEvent;
+import com.vaadin.flow.server.UIInitListener;
+import com.vaadin.flow.server.VaadinServiceInitListener;
+import com.vaadin.flow.shared.Registration;
+import com.svenruppert.jsentinel.demo.skill.vaadin.views.MyLoginView;
+
+import java.util.Optional;
+
+/**
+ * Registers {@link JSentinelVersionEnforcerListener} on every UI so
+ * drifted sessions reroute to {@link MyLoginView}.
+ *
+ * <p>The listener only fires when the {@code LoginView} captured a
+ * {@link com.svenruppert.jsentinel.session.JSentinelVersion} snapshot
+ * at login time — which itself requires both an SPI-registered
+ * {@link JSentinelVersionStore} and a
+ * {@link com.svenruppert.jsentinel.authorization.api.SubjectIdResolver}.
+ * Both are registered alongside this listener by the hardening skill.
+ *
+ * <p>Without an SPI-registered store this initialiser logs a warning
+ * and skips registration — the app still runs, but with drift
+ * detection silently disabled.
+ *
+ * <p>Registered via
+ * {@code META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener}.
+ */
+public class JSentinelVersionInitListener
+    implements VaadinServiceInitListener, HasLogger {
+
+  @Override
+  public void serviceInit(ServiceInitEvent event) {
+    Optional<JSentinelVersionStore> storeOpt =
+        JSentinelServiceResolver.findJSentinelVersionStore();
+    if (storeOpt.isEmpty()) {
+      logger().warn("JSentinelVersionStore SPI not registered — "
+          + "Phase 4c drift detection disabled");
+      return;
+    }
+    JSentinelVersionEnforcer enforcer = new JSentinelVersionEnforcer(
+        storeOpt.get(), JSentinelServiceResolver.securityAuditService());
+    event.getSource().addUIInitListener((UIInitListener) uiInitEvent -> {
+      JSentinelVersionEnforcerListener listener =
+          new JSentinelVersionEnforcerListener(enforcer, MyLoginView.class);
+      Registration reg = uiInitEvent.getUI().addBeforeEnterListener(listener);
+      uiInitEvent.getUI().addDetachListener(detach -> reg.remove());
+    });
+  }
+}

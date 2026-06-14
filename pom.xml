@@ -97,6 +97,16 @@
         <module>demo-rest</module>
         <module>demo-vaadin-rest-client</module>
         <module>demo-standalone</module>
+        <module>demo-jsentinel-vaadin</module>
+        <module>demo-jsentinel-vaadin-persistence</module>
+        <module>demo-jsentinel-vaadin-hardening</module>
+        <module>demo-jsentinel-rest</module>
+        <module>demo-jsentinel-rest-persistence</module>
+        <module>demo-jsentinel-rest-hardening</module>
+        <module>demo-jsentinel-standalone</module>
+        <module>demo-jsentinel-standalone-persistence</module>
+        <module>demo-jsentinel-standalone-hardening</module>
+        <module>demo-jsentinel-vaadin-rest-client</module>
     </modules>
 
     <properties>

@@ -1,0 +1,32 @@
+package {{BASE_PACKAGE}}.security.services;
+
+import com.svenruppert.jsentinel.authentication.AuthenticationService;
+import com.svenruppert.jsentinel.autoservice.api.JSentinelAutoService;
+import {{BASE_PACKAGE}}.security.model.Credentials;
+import {{BASE_PACKAGE}}.security.model.{{SUBJECT_TYPE}};
+import {{BASE_PACKAGE}}.security.model.UserDirectoryProvider;
+
+/**
+ * Standalone AuthenticationService — same shape as the Vaadin /
+ * REST skills minus the request-bound client address.
+ */
+@JSentinelAutoService(AuthenticationService.class)
+public class {{SUBJECT_PREFIX}}AuthenticationService
+    implements AuthenticationService<Credentials, {{SUBJECT_TYPE}}> {
+
+  @Override
+  public boolean checkCredentials(Credentials credentials) {
+    return credentials != null
+        && UserDirectoryProvider.directory().checkCredentials(credentials);
+  }
+
+  @Override
+  public {{SUBJECT_TYPE}} loadSubject(Credentials credentials) {
+    return UserDirectoryProvider.directory().findByCredentials(credentials).orElse(null);
+  }
+
+  @Override
+  public Class<{{SUBJECT_TYPE}}> subjectType() {
+    return {{SUBJECT_TYPE}}.class;
+  }
+}

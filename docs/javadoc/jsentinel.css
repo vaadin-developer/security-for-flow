@@ -1,0 +1,169 @@
+
+/* =====================================================================
+   jSentinel brand skin for generated Javadoc (Sentinel for Java).
+   Appended to the stock JDK-26 stylesheet.css — overrides only the CSS
+   custom properties, tracking the standard doclet layout while
+   recolouring it to the site palette.
+
+   JDK-26 Javadoc ships a built-in Light / Dark / System toggle (the gear
+   button, top-right). It applies themes via:
+     - :root                            -> light (default)
+     - :root[data-theme="theme-light"]  -> manual light (wins on OS-dark)
+     - :root[data-theme="theme-dark"]   -> manual dark
+     - @media (prefers-color-scheme: dark) -> OS / System mode
+   We mirror all of those so the toggle drives the jSentinel palette
+   instead of the stock greys.
+   ===================================================================== */
+
+/* ---- Fonts (all themes) ---- */
+:root {
+  --body-font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --block-font-family: var(--body-font-family);
+  --code-font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* ---- Light theme (default + manual "Light") ---- */
+:root,
+:root[data-theme="theme-light"] {
+  --navbar-background-color: #15161a;
+  --navbar-text-color: #ffffff;
+  --subnav-background-color: #eef7d8;
+  --subnav-link-color: #3f6212;
+  --selected-background-color: #a3e635;
+  --selected-text-color: #14210a;
+  --selected-link-color: #3f6212;
+  --title-color: #1a1a1f;
+  --link-color: #3f6212;
+  --link-color-active: #65a30d;
+  --caption-link-color: #3f6212;
+  --table-header-color: #eef7d8;
+  --even-row-color: #fcfdf8;
+  --odd-row-color: #f4f8ea;
+  --border-color: #e2ead2;
+  --table-border-color: #d6e0c4;
+  --code-background-color: #f4f8ea;
+  --member-heading-background-color: #eef7d8;
+  --search-tag-background-color: #d9f99d;
+  --toc-highlight-color: #eef7d8;
+  --toc-hover-color: #f1f7e3;
+}
+
+/* ---- Dark palette — manual "Dark" ---- */
+:root[data-theme="theme-dark"] {
+  --body-background-color: #14151a;
+  --section-background-color: #14151a;
+  --detail-background-color: #14151a;
+  --body-text-color: #e6e6ea;
+  --block-text-color: #e6e6ea;
+  --title-color: #f2f2f5;
+  --code-background-color: #1c1e25;
+  --mark-background-color: #1c1e25;
+  --detail-block-color: #1b1d24;
+  --snippet-background-color: #1c1e25;
+  --pre-background-color: #1c1e25;
+  --navbar-background-color: #0e0f13;
+  --navbar-text-color: #ffffff;
+  --subnav-background-color: #1b2410;
+  --subnav-link-color: #bef264;
+  --member-heading-background-color: #1b2410;
+  --selected-background-color: #a3e635;
+  --selected-text-color: #14210a;
+  --selected-link-color: #14210a;
+  --link-color: #a3e635;
+  --link-color-active: #bef264;
+  --caption-link-color: #bef264;
+  --table-header-color: #1b2410;
+  --even-row-color: #181a20;
+  --odd-row-color: #1d2027;
+  --border-color: #2a2d36;
+  --table-border-color: #2a2d36;
+  --toc-background-color: #15161a;
+  --toc-highlight-color: #1b2410;
+  --toc-hover-color: #1d2027;
+  --search-input-background-color: #1c1e25;
+  --search-input-text-color: #e6e6ea;
+  --search-input-placeholder-color: #8a8f99;
+  --search-tag-background-color: #3f6212;
+  --search-tag-text-color: #ffffff;
+  --button-border-color: #2a2d36;
+  --invalid-tag-background-color: #3a1d1d;
+  --invalid-tag-text-color: #ffd7d7;
+  --icon-filter: invert(0.92) hue-rotate(180deg);
+}
+
+/* ---- "Back to website" link injected into the top navbar ----
+   Added by scripts/javadoc-backlink.js (website post-process only). A lime
+   pill that reads well on the dark navbar in every theme. */
+#jsentinel-home {
+  display: inline-block;
+  margin: 0 .7em 0 0;
+  padding: .12em .75em;
+  border-radius: 999px;
+  background: #a3e635;
+  color: #14210a !important;
+  font-weight: 600;
+  font-size: .92em;
+  line-height: 1.6;
+  text-decoration: none !important;
+  white-space: nowrap;
+}
+#jsentinel-home:hover,
+#jsentinel-home:focus-visible {
+  background: #bef264;
+  color: #14210a !important;
+  outline: none;
+}
+.jsentinel-home-item { display: inline; }
+#jsentinel-home.jsentinel-home-floating {
+  position: fixed;
+  top: .55rem;
+  left: .55rem;
+  z-index: 1000;
+  box-shadow: 0 1px 4px rgba(0,0,0,.35);
+}
+
+/* ---- System mode: same dark palette when the OS is dark and the user
+   has not forced light. Duplicated because @media can't share the block. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="theme-light"]) {
+    --body-background-color: #14151a;
+    --section-background-color: #14151a;
+    --detail-background-color: #14151a;
+    --body-text-color: #e6e6ea;
+    --block-text-color: #e6e6ea;
+    --title-color: #f2f2f5;
+    --code-background-color: #1c1e25;
+    --mark-background-color: #1c1e25;
+    --detail-block-color: #1b1d24;
+    --snippet-background-color: #1c1e25;
+    --pre-background-color: #1c1e25;
+    --navbar-background-color: #0e0f13;
+    --navbar-text-color: #ffffff;
+    --subnav-background-color: #1b2410;
+    --subnav-link-color: #bef264;
+    --member-heading-background-color: #1b2410;
+    --selected-background-color: #a3e635;
+    --selected-text-color: #14210a;
+    --selected-link-color: #14210a;
+    --link-color: #a3e635;
+    --link-color-active: #bef264;
+    --caption-link-color: #bef264;
+    --table-header-color: #1b2410;
+    --even-row-color: #181a20;
+    --odd-row-color: #1d2027;
+    --border-color: #2a2d36;
+    --table-border-color: #2a2d36;
+    --toc-background-color: #15161a;
+    --toc-highlight-color: #1b2410;
+    --toc-hover-color: #1d2027;
+    --search-input-background-color: #1c1e25;
+    --search-input-text-color: #e6e6ea;
+    --search-input-placeholder-color: #8a8f99;
+    --search-tag-background-color: #3f6212;
+    --search-tag-text-color: #ffffff;
+    --button-border-color: #2a2d36;
+    --invalid-tag-background-color: #3a1d1d;
+    --invalid-tag-text-color: #ffd7d7;
+    --icon-filter: invert(0.92) hue-rotate(180deg);
+  }
+}
