@@ -61,6 +61,20 @@
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
+    <!--
+      V00.74.10 Phase 1: Jackson is permitted on TEST scope only — the
+      Phase-1 smoke test (JSentinelRuntimePhase1SmokeTest) uses Jackson as
+      an independent JSON parser to cross-validate JSentinelRuntime.toJson()
+      output against toMap(). The Maven Enforcer rule below blocks Jackson
+      (and any other JSON library) on compile/runtime scope, so the
+      runtime classpath stays JSON-library-free per Konzept §3 invariant 1.
+    -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.18.0</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -72,6 +86,42 @@
           <execution>
             <id>first</id>
             <phase>none</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <!--
+        V00.74.10 Phase 1 — Konzept-V00.74.10 §3 invariant 1: no JSON
+        library on the jSentinel-dx compile/runtime classpath. The
+        in-tree JsonEncoder (com.svenruppert.jsentinel.dx.runtime.internal)
+        is the only JSON code path. Test scope is allowed so the
+        Phase-1 smoke test can use Jackson as an independent parser.
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>ban-json-libraries-on-compile-runtime</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <excludes>
+                    <exclude>com.fasterxml.jackson.core:*</exclude>
+                    <exclude>com.fasterxml.jackson.databind:*</exclude>
+                    <exclude>com.google.code.gson:*</exclude>
+                    <exclude>org.json:json</exclude>
+                  </excludes>
+                  <includes>
+                    <!-- test scope is allowed -->
+                    <include>com.fasterxml.jackson.core:*:*:*:test</include>
+                    <include>com.fasterxml.jackson.databind:*:*:*:test</include>
+                  </includes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
           </execution>
         </executions>
       </plugin>
