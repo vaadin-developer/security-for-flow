@@ -34,7 +34,19 @@
   </description>
 
   <properties>
-    <bouncycastle.version>1.78.1</bouncycastle.version>
+    <!--
+      Pinned at 1.84 — first version that closes both V00.74.10-era
+      Dependabot advisories:
+        * GHSA-p93r-85wp-75v3 / CVE-2026-5598 — Covert timing channel
+          in FrodoEngine (post-quantum KEM). Affected: [1.71, 1.84).
+        * GHSA-c3fc-8qff-9hwx / CVE-2026-0636 — LDAP injection in
+          LDAPStoreHelper. Affected: [1.74, 1.84).
+      Neither code path is exercised by jSentinel-crypto-bc (we only
+      use Argon2id / bcrypt / scrypt low-level primitives), so the
+      real exploitation surface is zero. The bump is the right hygiene
+      step anyway and keeps the SBOM clean.
+    -->
+    <bouncycastle.version>1.84</bouncycastle.version>
   </properties>
 
   <dependencies>
