@@ -38,6 +38,10 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -268,5 +272,46 @@ class EmailVerificationServiceTest {
   private static final class RecordingNotificationSender implements JSentinelNotificationSender {
     final List<JSentinelNotification> received = new ArrayList<>();
     @Override public void send(JSentinelNotification n) { received.add(n); }
+  }
+
+  // ── V00.74.10 / L2 — audit-sink WARN log discipline ─────────────────
+
+  @Test
+  @DisplayName("audit + notification failures surface as WARN log entries (V00.74.10 / L2)")
+  void sinkFailures_logWarning() {
+    PrintStream originalErr = System.err;
+    ByteArrayOutputStream capture = new ByteArrayOutputStream();
+    System.setErr(new PrintStream(capture, true, StandardCharsets.UTF_8));
+    try {
+      InMemoryEmailVerificationTokenStore store = new InMemoryEmailVerificationTokenStore();
+      RuntimeException auditBoom = new RuntimeException("audit-boom");
+      RuntimeException senderBoom = new RuntimeException("sender-boom");
+      JSentinelAuditService throwingAudit = new JSentinelAuditService() {
+        @Override public void publish(AuditEvent event) { throw auditBoom; }
+        @Override public List<AuditEvent> query(AuditQuery query) { return List.of(); }
+      };
+      JSentinelNotificationSender throwingSender = n -> { throw senderBoom; };
+      EmailVerificationService service = new EmailVerificationService(
+          store, new FakeHasher(), throwingAudit, throwingSender,
+          TenantId.DEFAULT, steppingClock(T0, Duration.ofSeconds(1)),
+          sequentialSource("tok-"));
+
+      // request + consume both trigger publish + notify
+      var issued = service.request(ALICE, ALICE_EMAIL, Duration.ofMinutes(15));
+      assertTrue(service.consume(issued.plainToken()).isPresent(),
+          "consume should still succeed despite sink failures (existing contract)");
+
+      String stderr = capture.toString(StandardCharsets.UTF_8);
+      assertTrue(stderr.contains("WARN") && stderr.contains("audit sink failed"),
+          "expected an audit-sink WARN entry. Captured:\n" + stderr);
+      assertTrue(stderr.contains("audit-boom"),
+          "expected the audit-sink sentinel message in the stacktrace. Captured:\n" + stderr);
+      assertTrue(stderr.contains("notification sender failed"),
+          "expected a notification-sender WARN entry. Captured:\n" + stderr);
+      assertTrue(stderr.contains("sender-boom"),
+          "expected the notification-sender sentinel message in the stacktrace. Captured:\n" + stderr);
+    } finally {
+      System.setErr(originalErr);
+    }
   }
 }

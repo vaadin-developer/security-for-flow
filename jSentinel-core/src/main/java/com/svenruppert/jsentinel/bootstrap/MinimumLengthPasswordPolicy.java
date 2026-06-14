@@ -16,6 +16,8 @@
  */
 package com.svenruppert.jsentinel.bootstrap;
 
+import java.util.OptionalInt;
+
 /**
  * Trivial password policy that only enforces a minimum length. Adequate as
  * a default; applications can plug stronger policies in.
@@ -36,5 +38,10 @@ public final class MinimumLengthPasswordPolicy implements PasswordPolicy {
           "Password must be at least " + minLength + " characters long.");
     }
     return PasswordPolicyResult.ok();
+  }
+
+  @Override
+  public OptionalInt minLength() {
+    return OptionalInt.of(minLength);
   }
 }

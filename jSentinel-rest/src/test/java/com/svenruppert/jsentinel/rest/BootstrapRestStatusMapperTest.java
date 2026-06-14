@@ -35,7 +35,7 @@ class BootstrapRestStatusMapperTest {
     assertEquals(403, mapper.statusFor(new InitialAdminCreationResult.InvalidBootstrapToken()));
     assertEquals(400, mapper.statusFor(new InitialAdminCreationResult.PasswordPolicyViolation("too short")));
     assertEquals(400, mapper.statusFor(new InitialAdminCreationResult.InvalidUsername("bad")));
-    assertEquals(500, mapper.statusFor(new InitialAdminCreationResult.InternalError("boom")));
+    assertEquals(500, mapper.statusFor(new InitialAdminCreationResult.InternalError("boom", null)));
   }
 
   @Test
@@ -51,6 +51,6 @@ class BootstrapRestStatusMapperTest {
     assertEquals("invalid_username",
         mapper.errorCodeFor(new InitialAdminCreationResult.InvalidUsername("x")));
     assertEquals("internal_error",
-        mapper.errorCodeFor(new InitialAdminCreationResult.InternalError("x")));
+        mapper.errorCodeFor(new InitialAdminCreationResult.InternalError("x", null)));
   }
 }

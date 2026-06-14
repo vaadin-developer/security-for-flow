@@ -16,6 +16,7 @@
  */
 package com.svenruppert.jsentinel.accountlifecycle;
 
+import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.jsentinel.audit.PasswordResetCompleted;
 import com.svenruppert.jsentinel.audit.PasswordResetRequested;
 import com.svenruppert.jsentinel.audit.JSentinelAuditService;
@@ -63,7 +64,7 @@ import static java.util.Objects.requireNonNull;
  * deployments instantiate one service per tenant.
  */
 @ExperimentalJSentinelApi
-public final class PasswordResetService {
+public final class PasswordResetService implements HasLogger {
 
   /** Default token entropy in bytes (256 bits). */
   public static final int DEFAULT_TOKEN_BYTES = 32;
@@ -246,16 +247,17 @@ public final class PasswordResetService {
   private void publishRequested(Instant at, SubjectId subjectId, String hash) {
     try {
       auditService.publish(new PasswordResetRequested(at, subjectId.value(), hash));
-    } catch (RuntimeException ignored) {
-      // sinks must not block the lifecycle flow
+    } catch (RuntimeException e) {
+      // sinks must not block the lifecycle flow — surface for diagnostics
+      logger().warn("audit sink failed during PasswordResetRequested publish", e);
     }
   }
 
   private void publishCompleted(Instant at, SubjectId subjectId, String hash) {
     try {
       auditService.publish(new PasswordResetCompleted(at, subjectId.value(), hash));
-    } catch (RuntimeException ignored) {
-      // sinks must not block the lifecycle flow
+    } catch (RuntimeException e) {
+      logger().warn("audit sink failed during PasswordResetCompleted publish", e);
     }
   }
 
@@ -266,8 +268,8 @@ public final class PasswordResetService {
     try {
       notificationSender.send(new JSentinelNotification(
           kind, subjectId, tenant, at, attributes));
-    } catch (RuntimeException ignored) {
-      // senders must not block the lifecycle flow
+    } catch (RuntimeException e) {
+      logger().warn("notification sender failed during {} dispatch", kind, e);
     }
   }
 

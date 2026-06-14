@@ -16,6 +16,8 @@
  */
 package com.svenruppert.jsentinel.bootstrap;
 
+import java.util.OptionalInt;
+
 /**
  * Validates a candidate password against the minimum acceptance rules.
  * Applications can plug stronger policies in.
@@ -23,6 +25,24 @@ package com.svenruppert.jsentinel.bootstrap;
 public interface PasswordPolicy {
 
   PasswordPolicyResult validate(char[] password);
+
+  /**
+   * Hint for UI surfaces. Returns the lower bound this policy enforces in
+   * characters, or {@link OptionalInt#empty()} when the policy is not
+   * length-based.
+   * <p>
+   * The framework does not call this method during validation — it is
+   * purely informational for consumer-side UI hints (helper text on a
+   * password field, optional client-side pre-checks). A single source of
+   * truth so the UI hint and the server-side policy cannot drift.
+   *
+   * @return optional minimum length, empty when this policy does not
+   *         enforce a length floor.
+   * @since 00.74.10
+   */
+  default OptionalInt minLength() {
+    return OptionalInt.empty();
+  }
 
   record PasswordPolicyResult(boolean valid, String reason) {
     public static PasswordPolicyResult ok() {

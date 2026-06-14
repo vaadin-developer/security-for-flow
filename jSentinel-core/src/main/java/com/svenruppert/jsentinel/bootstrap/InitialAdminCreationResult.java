@@ -42,6 +42,23 @@ public sealed interface InitialAdminCreationResult
   record InvalidUsername(String reason) implements InitialAdminCreationResult {
   }
 
-  record InternalError(String reason) implements InitialAdminCreationResult {
+  /**
+   * Service-internal failure. {@code reason} is a generic, non-leaking
+   * message safe to surface to end users. {@code cause} carries the
+   * underlying {@link Throwable} for diagnostics; the framework guarantees
+   * it is also written to the service log at WARNING level with the full
+   * stacktrace, so operators can debug even when the consumer drops the
+   * cause silently.
+   *
+   * @apiNote {@code cause} may be {@code null} when no underlying throwable
+   *          exists. It is intentionally not wrapped in
+   *          {@link java.util.Optional} — the sealed-result discipline
+   *          encodes optionality structurally, and a nullable field keeps
+   *          the call-site lean. Consumers should pattern-match on
+   *          {@code InternalError(reason, cause)} and treat
+   *          {@code cause == null} as &quot;no underlying throwable&quot;.
+   * @since 00.74.10
+   */
+  record InternalError(String reason, Throwable cause) implements InitialAdminCreationResult {
   }
 }

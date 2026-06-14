@@ -17,7 +17,7 @@
   <parent>
     <groupId>com.svenruppert.jsentinel</groupId>
     <artifactId>jSentinel-parent</artifactId>
-    <version>00.74.00</version>
+    <version>00.74.10-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -26,6 +26,10 @@
   <description>Core authentication, authorization, and annotation-driven access contracts without Vaadin dependencies.</description>
 
   <dependencies>
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>core</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>

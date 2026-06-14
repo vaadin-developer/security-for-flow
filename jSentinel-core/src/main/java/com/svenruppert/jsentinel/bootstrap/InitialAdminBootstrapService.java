@@ -16,6 +16,7 @@
  */
 package com.svenruppert.jsentinel.bootstrap;
 
+import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.jsentinel.audit.BootstrapAdminCreated;
 import com.svenruppert.jsentinel.audit.BootstrapTokenRejected;
 import com.svenruppert.jsentinel.audit.JSentinelAuditService;
@@ -30,8 +31,6 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -44,10 +43,9 @@ import java.util.regex.Pattern;
  * an administrator. The {@code password} array is wiped before the method
  * returns regardless of outcome.
  */
-public final class InitialAdminBootstrapService {
+public final class InitialAdminBootstrapService implements HasLogger {
 
   private static final Pattern USERNAME = Pattern.compile("[A-Za-z0-9._-]{1,64}");
-  private static final Logger LOGGER = Logger.getLogger(InitialAdminBootstrapService.class.getName());
 
   private final BootstrapStateService stateService;
   private final BootstrapTokenStore tokenStore;
@@ -125,7 +123,9 @@ public final class InitialAdminBootstrapService {
           PasswordHashResult result = passwordHashingService.hash(command.password());
           passwordHash = result.encodedHash();
         } catch (RuntimeException e) {
-          return new InitialAdminCreationResult.InternalError("could not hash password");
+          logger().warn("Initial-admin creation failed while hashing password for user '{}'",
+              command.username(), e);
+          return new InitialAdminCreationResult.InternalError("could not hash password", e);
         }
         try {
           administratorStore.createAdministrator(new NewAdministrator(
@@ -134,7 +134,9 @@ public final class InitialAdminBootstrapService {
               command.email(),
               passwordHash));
         } catch (RuntimeException e) {
-          return new InitialAdminCreationResult.InternalError("could not persist administrator");
+          logger().warn("Initial-admin creation failed while persisting administrator '{}'",
+              command.username(), e);
+          return new InitialAdminCreationResult.InternalError("could not persist administrator", e);
         }
         try {
           tokenStore.invalidate();
@@ -142,12 +144,11 @@ public final class InitialAdminBootstrapService {
           // Setup succeeded but the token store could not be cleaned up.
           // Surface a clear warning (without ever printing the token value)
           // so operators can manually remove the stale token file.
-          LOGGER.log(Level.WARNING,
-              "Bootstrap setup completed for user '" + command.username()
-                  + "' but invalidating the bootstrap token failed. "
+          logger().warn(
+              "Bootstrap setup completed for user '{}' but invalidating the bootstrap token failed. "
                   + "Manual cleanup of the token store is required. "
                   + "(The token value is never logged.)",
-              e);
+              command.username(), e);
           auditAdminCreated(command.username());
           return new InitialAdminCreationResult.Created(command.username());
         }

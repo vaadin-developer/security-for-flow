@@ -39,10 +39,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -300,25 +296,22 @@ class InitialAdminBootstrapServiceTest {
         state, tokens, admins, PasswordHashingServices.defaults(),
         new MinimumLengthPasswordPolicy(8));
 
-    Logger serviceLogger = Logger.getLogger(InitialAdminBootstrapService.class.getName());
-    CapturingHandler captured = new CapturingHandler();
-    serviceLogger.addHandler(captured);
+    PrintStream originalErr = System.err;
+    ByteArrayOutputStream captured = new ByteArrayOutputStream();
+    System.setErr(new PrintStream(captured, true, StandardCharsets.UTF_8));
     try {
       var result = service.createInitialAdmin(
           new CreateInitialAdminCommand(token, "root", OK_PASSWORD.toCharArray(), "Root", null));
       // Setup still succeeds — the admin is in place
       assertInstanceOf(InitialAdminCreationResult.Created.class, result);
     } finally {
-      serviceLogger.removeHandler(captured);
+      System.setErr(originalErr);
     }
-    boolean warned = captured.records.stream()
-        .anyMatch(r -> r.getLevel() == Level.WARNING
-            && r.getMessage().contains("invalidating the bootstrap token failed"));
-    assertTrue(warned, "Expected WARNING about failed token invalidation");
-    // Token value must NEVER appear in any log record
-    boolean leaked = captured.records.stream()
-        .anyMatch(r -> r.getMessage().contains(token));
-    assertFalse(leaked, "Token value must not appear in log output");
+    String stderr = captured.toString(StandardCharsets.UTF_8);
+    assertTrue(stderr.contains("WARN") && stderr.contains("invalidating the bootstrap token failed"),
+        "Expected WARN about failed token invalidation. Captured: " + stderr);
+    // Token value must NEVER appear in any log output
+    assertFalse(stderr.contains(token), "Token value must not appear in log output");
   }
 
   @Test
@@ -388,13 +381,6 @@ class InitialAdminBootstrapServiceTest {
   }
 
   // ── Test fixture ──────────────────────────────────────────────
-
-  static final class CapturingHandler extends Handler {
-    final List<LogRecord> records = new ArrayList<>();
-    @Override public void publish(LogRecord record) { records.add(record); }
-    @Override public void flush() { }
-    @Override public void close() throws SecurityException { }
-  }
 
   static final class FakeAdministratorStore implements AdministratorAccountStore {
     private final List<NewAdministrator> admins = new ArrayList<>();
