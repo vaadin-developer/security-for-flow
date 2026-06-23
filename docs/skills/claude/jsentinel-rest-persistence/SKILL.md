@@ -46,7 +46,7 @@ the Surefire block shipped in `pom-snippet.xml.tmpl`.
 | `BootstrapWiring.java.tmpl` | `security/bootstrap/` | shared (token file via `AppStoragePaths.bootstrapTokenFile()`) |
 | `StoredUser.java.tmpl` | `security/model/` | shared (top-level record, no Serializable) |
 | `UserDirectoryPersistence.java.tmpl` | `security/model/` | shared (pluggable persistence SPI) |
-| `EclipseStoreUserDirectoryPersistence.java.tmpl` | `security/model/` | shared (default impl, own `EmbeddedStorageManager` under `<storage>/users`) |
+| `EclipseStoreUserDirectoryPersistence.java.tmpl` | `security/model/` | shared (default impl; uses the `JSentinelStoragePair`'s app-side `EmbeddedStorageManager`; lifecycle owned by the pair, V00.74.20+) |
 | `InMemoryUserDirectoryPersistence.java.tmpl` | `security/model/` | shared (test seam) |
 | `PersistentUserDirectory.java.tmpl` | `security/model/` (REPLACES `InMemoryUserDirectory`) | shared (takes `UserDirectoryPersistence` + `PasswordHasher` via ctor) |
 | `UserDirectoryProvider.java.tmpl` | OVERWRITE | shared (IODH-lazy; resolves dir via `AppStoragePaths.userDirectoryDir()`) |

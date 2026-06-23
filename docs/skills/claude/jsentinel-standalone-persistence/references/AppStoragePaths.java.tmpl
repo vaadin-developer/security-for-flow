@@ -16,34 +16,26 @@
 
 package {{BASE_PACKAGE}}.security.storage;
 
+import com.svenruppert.jsentinel.persistence.eclipsestore.StorageLayout;
+
 import java.nio.file.Path;
 
 /**
- * Single source of truth for the CLI's on-disk storage paths.
+ * Single source of truth for the application's on-disk storage base.
  *
  * <p>Production runs use {@code {{STORAGE_DIR}}} as the base. Tests,
- * CI runs and any deployment that wants to redirect persistence
- * elsewhere override the base via the JVM system property
+ * CI and any deployment that wants to redirect persistence elsewhere
+ * override the base via the JVM system property
  * {@code -Dapp.storage.dir=/some/path}.
  *
- * <p>Three derived locations:
- * <ul>
- *   <li>{@link #frameworkStorageDir()} — jSentinel framework storage
- *       (audit log + session store).</li>
- *   <li>{@link #userDirectoryDir()} — the application's user
- *       directory (Eclipse-Store-backed).</li>
- *   <li>{@link #bootstrapTokenFile()} — the one-time bootstrap token
- *       written by {@code BootstrapStartup} on first start.</li>
- * </ul>
+ * <p>Since V00.74.20 the entire layout (framework + app) is owned by
+ * a single {@link com.svenruppert.jsentinel.persistence.eclipsestore.JSentinelStoragePair}
+ * opened under {@link #baseDir()}; sub-directories are no longer this
+ * class's concern — {@link StorageLayout#DEFAULT} resolves them to
+ * {@code jsentinel-store/} (framework) and {@code app-store/} (app)
+ * underneath {@link #baseDir()}.
  *
- * <p>For a CLI app the property is typically set on the launcher
- * command line:
- *
- * <pre>
- * java -Dapp.storage.dir=$HOME/.myapp -jar myapp.jar
- * </pre>
- *
- * <p>For tests, configure Surefire with
+ * <p>Wire Surefire so tests fork with
  * {@code app.storage.dir = ${project.build.directory}/test-data}:
  *
  * <pre>
@@ -56,6 +48,10 @@ import java.nio.file.Path;
  *   &lt;/configuration&gt;
  * &lt;/plugin&gt;
  * </pre>
+ *
+ * <p>That way no test run ever creates the repo-rooted
+ * {@code {{STORAGE_DIR}}} directory, and PIT workers cannot corrupt
+ * each other's storage state.
  */
 public final class AppStoragePaths {
 
@@ -68,23 +64,22 @@ public final class AppStoragePaths {
   private AppStoragePaths() {
   }
 
-  /** Base directory for all app-owned storage. */
+  /**
+   * Base directory the storage pair is opened under. The
+   * pair's {@link StorageLayout#DEFAULT} fans this out into a
+   * framework and an app sub-directory.
+   */
   public static Path baseDir() {
     return Path.of(System.getProperty(PROPERTY, DEFAULT));
   }
 
-  /** jSentinel framework storage — audit + session stores. */
-  public static Path frameworkStorageDir() {
-    return baseDir().resolve("jsentinel");
-  }
-
-  /** Application user directory — {@code {{SUBJECT_TYPE}}} map. */
-  public static Path userDirectoryDir() {
-    return baseDir().resolve("app").resolve("users");
-  }
-
-  /** Bootstrap token file written on first start. */
+  /**
+   * Bootstrap-token file. Sits inside the framework sub-directory
+   * so it shares the same lifecycle as the framework storage.
+   */
   public static Path bootstrapTokenFile() {
-    return frameworkStorageDir().resolve("bootstrap.token");
+    return baseDir()
+        .resolve(StorageLayout.DEFAULT.frameworkSubdir())
+        .resolve("bootstrap.token");
   }
 }

@@ -20,7 +20,7 @@ but the entry point that triggers `BootstrapWiring.instance()` is
 | `BootstrapWiring.java.tmpl` | shared (from rest-persistence) |
 | `StoredUser.java.tmpl` | shared (top-level record, no Serializable) |
 | `UserDirectoryPersistence.java.tmpl` | shared (pluggable persistence SPI) |
-| `EclipseStoreUserDirectoryPersistence.java.tmpl` | shared (default impl, own `EmbeddedStorageManager` under `<storage>/users`) |
+| `EclipseStoreUserDirectoryPersistence.java.tmpl` | shared (default impl; uses the `JSentinelStoragePair`'s app-side `EmbeddedStorageManager`; lifecycle owned by the pair, V00.74.20+) |
 | `InMemoryUserDirectoryPersistence.java.tmpl` | shared (test seam) |
 | `PersistentUserDirectory.java.tmpl` | shared (takes `UserDirectoryPersistence` + `PasswordHasher` via ctor) |
 | `UserDirectoryProvider.java.tmpl` | shared (wires `EclipseStoreUserDirectoryPersistence` + shutdown hook) |

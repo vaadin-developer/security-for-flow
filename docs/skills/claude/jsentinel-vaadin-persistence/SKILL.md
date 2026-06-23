@@ -96,9 +96,13 @@ the same file.
    `JSentinelBootstrapInitListener.serviceInit()` (still the layer-1
    listener, unchanged).
 2. `BootstrapBuilder.apply(builder)` loads
-   `PersistenceBootstrapExtension` — its `<clinit>` opens
-   `EclipseStoreJSentinelStorage.openAt({{STORAGE_DIR}})` and calls
-   `BootstrapWiring.instance()`.
+   `PersistenceBootstrapExtension` — its `<clinit>` opens a
+   `JSentinelStoragePair` at `{{STORAGE_DIR}}` via
+   `JSentinelStorageFactory.openAt(...)` (V00.74.20+) and calls
+   `BootstrapWiring.instance()`. The pair holds both the framework
+   storage (`pair.framework()`) and the application's user-directory
+   storage (`pair.app()`); both shut down together via the pair's
+   two-phase `close()`.
 3. `BootstrapStartup.initializeIfRequired(...)` generates a fresh
    token, persists it to `{{BOOTSTRAP_TOKEN_FILE}}`, prints it on
    stdout.

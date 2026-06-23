@@ -1,10 +1,8 @@
 package {{BASE_PACKAGE}}.security.model;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
-import org.eclipse.store.storage.embedded.types.EmbeddedStorage;
 import org.eclipse.store.storage.embedded.types.EmbeddedStorageManager;
 
-import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -13,26 +11,26 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Eclipse-Store-backed {@link UserDirectoryPersistence}.
  *
- * <p>Runs in its own {@link EmbeddedStorageManager} under
- * {@code {{STORAGE_DIR}}/users} — <strong>independent of the
- * jSentinel-framework storage</strong>. Consequence:
+ * <p>Since V00.74.20 the persistence does <strong>not</strong> open
+ * its own {@code EmbeddedStorageManager} — it shares the app-side
+ * manager from the {@code JSentinelStoragePair} that
+ * {@code JSentinelStorageProvider} maintains. The pair's lifecycle
+ * owns the shutdown; this class only owns the root structure and
+ * the read/write methods.
  *
  * <ul>
- *   <li>Corrupting the framework storage doesn't take the app users
- *       with it; reverse also true.</li>
- *   <li>Backups / restores / resets are per-concern. Wipe
- *       {@code {{STORAGE_DIR}}/users} → fresh user set, framework
- *       state intact (and vice versa).</li>
+ *   <li>Pair-owned shutdown: opening / closing the storage is a single
+ *       call to {@code JSentinelStoragePair.close()} (run from one
+ *       JVM shutdown hook). The persistence's {@link #close()} only
+ *       flips a guard flag.</li>
+ *   <li>Single writer per JVM (Eclipse-Store invariant) holds as
+ *       before — the pair instance is the single writer.</li>
  *   <li>Eclipse-Store's own type-mapping handles record-header
- *       evolution — adding / renaming / reordering a
- *       {@link {{SUBJECT_TYPE}}} or {@link StoredUser} field does
- *       not produce {@code InvalidClassException} the way Java
+ *       evolution; adding / renaming / reordering a
+ *       {@link {{SUBJECT_TYPE}}} or {@link StoredUser} field does not
+ *       produce {@code InvalidClassException} the way Java
  *       serialization would.</li>
  * </ul>
- *
- * <p>Single writer per JVM (Eclipse-Store invariant). Multiple
- * instances pointing at the same directory throw on
- * {@link #EclipseStoreUserDirectoryPersistence(Path) construction}.
  */
 public final class EclipseStoreUserDirectoryPersistence
     implements UserDirectoryPersistence, HasLogger {
@@ -49,9 +47,18 @@ public final class EclipseStoreUserDirectoryPersistence
   private final AppUsersRoot root;
   private final AtomicBoolean closed = new AtomicBoolean(false);
 
-  public EclipseStoreUserDirectoryPersistence(Path storageDirectory) {
-    Objects.requireNonNull(storageDirectory, "storageDirectory");
-    this.manager = EmbeddedStorage.start(storageDirectory);
+  /**
+   * Wires the persistence around the app-side
+   * {@link EmbeddedStorageManager} that
+   * {@code JSentinelStorageProvider.app()} returns. The manager must
+   * already have been started by the pair factory; this constructor
+   * does <strong>not</strong> open or shut it down.
+   *
+   * @param manager started Eclipse-Store manager owned by the
+   *                {@code JSentinelStoragePair}
+   */
+  public EclipseStoreUserDirectoryPersistence(EmbeddedStorageManager manager) {
+    this.manager = Objects.requireNonNull(manager, "manager");
     Object existing = manager.root();
     if (existing instanceof AppUsersRoot loaded) {
       this.root = loaded;
@@ -60,8 +67,8 @@ public final class EclipseStoreUserDirectoryPersistence
       manager.setRoot(this.root);
       manager.storeRoot();
     }
-    logger().info("EclipseStoreUserDirectoryPersistence ready at {} ({} user(s) loaded)",
-        storageDirectory, root.byUsername.size());
+    logger().info("EclipseStoreUserDirectoryPersistence ready ({} user(s) loaded)",
+        root.byUsername.size());
   }
 
   @Override
@@ -79,15 +86,14 @@ public final class EclipseStoreUserDirectoryPersistence
     manager.store(root.byUsername);
   }
 
+  /**
+   * Marks this persistence as closed. The manager itself is NOT shut
+   * down here — the {@code JSentinelStoragePair} owns the storage
+   * lifecycle and closes the manager via its own two-phase
+   * shutdown.
+   */
   @Override
   public void close() {
-    if (closed.compareAndSet(false, true)) {
-      try {
-        manager.shutdown();
-      } catch (RuntimeException failure) {
-        logger().warn("EclipseStoreUserDirectoryPersistence shutdown failed: {}",
-            failure.toString());
-      }
-    }
+    closed.compareAndSet(false, true);
   }
 }
