@@ -69,10 +69,26 @@ public final class EclipseStoreJSentinelStorage implements AutoCloseable {
   private final EclipseStoreJSentinelRoot root;
   private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
-  private EclipseStoreJSentinelStorage(EmbeddedStorageManager manager,
-                                      EclipseStoreJSentinelRoot root) {
+  /**
+   * Package-private constructor used by both {@link #openAt(Path)}
+   * and {@link JSentinelStorageFactory}. The constructor owns the
+   * root-loading / root-creating decision so that callers only have
+   * to hand in an already-started {@link EmbeddedStorageManager}.
+   *
+   * @param manager started Eclipse-Store manager; will be adopted by
+   *                this instance (this class then owns its lifecycle)
+   */
+  EclipseStoreJSentinelStorage(EmbeddedStorageManager manager) {
     this.manager = manager;
-    this.root = root;
+    Object existing = manager.root();
+    if (existing instanceof EclipseStoreJSentinelRoot loaded) {
+      this.root = loaded;
+    } else {
+      EclipseStoreJSentinelRoot fresh = new EclipseStoreJSentinelRoot();
+      manager.setRoot(fresh);
+      manager.storeRoot();
+      this.root = fresh;
+    }
   }
 
   /**
@@ -85,17 +101,22 @@ public final class EclipseStoreJSentinelStorage implements AutoCloseable {
    */
   public static EclipseStoreJSentinelStorage openAt(Path storageDirectory) {
     requireNonNull(storageDirectory, "storageDirectory must not be null");
-    EmbeddedStorageManager manager = EmbeddedStorage.start(storageDirectory);
-    Object existing = manager.root();
-    EclipseStoreJSentinelRoot root;
-    if (existing instanceof EclipseStoreJSentinelRoot loaded) {
-      root = loaded;
-    } else {
-      root = new EclipseStoreJSentinelRoot();
-      manager.setRoot(root);
-      manager.storeRoot();
-    }
-    return new EclipseStoreJSentinelStorage(manager, root);
+    EmbeddedStorageManager manager = initStorageManager(storageDirectory);
+    return new EclipseStoreJSentinelStorage(manager);
+  }
+
+  /**
+   * Shared init pipeline — starts the Eclipse-Store
+   * {@link EmbeddedStorageManager} for the supplied directory.
+   * Package-private so {@link JSentinelStorageFactory} can reuse the
+   * same init shape for the framework half of a storage pair without
+   * also triggering the root-bootstrap that the constructor performs.
+   *
+   * @param dir storage directory; will be created if missing
+   * @return a started {@link EmbeddedStorageManager}
+   */
+  static EmbeddedStorageManager initStorageManager(Path dir) {
+    return EmbeddedStorage.start(dir);
   }
 
   /**
