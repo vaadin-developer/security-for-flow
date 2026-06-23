@@ -17,7 +17,10 @@
 package com.svenruppert.jsentinel.persistence.eclipsestore;
 
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
+import org.eclipse.store.storage.embedded.types.EmbeddedStorage;
+import org.eclipse.store.storage.embedded.types.EmbeddedStorageManager;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -91,7 +94,64 @@ public final class JSentinelStorageFactory {
   public static JSentinelStoragePair openAt(Path parent, StorageLayout layout) {
     Objects.requireNonNull(parent, "parent");
     Objects.requireNonNull(layout, "layout");
-    throw new UnsupportedOperationException(
-        "implemented in Prompt 005 (V00.74.20 Phase 2)");
+    ensureParentIsWritableDirectory(parent);
+
+    Path frameworkDir = parent.resolve(layout.frameworkSubdir());
+    Path appDir       = parent.resolve(layout.appSubdir());
+
+    EmbeddedStorageManager frameworkMgr = null;
+    EmbeddedStorageManager appMgr       = null;
+    try {
+      frameworkMgr = EclipseStoreJSentinelStorage.initStorageManager(frameworkDir);
+      appMgr       = EmbeddedStorage.start(appDir);
+      return new JSentinelStoragePair(
+          new EclipseStoreJSentinelStorage(frameworkMgr),
+          appMgr,
+          parent,
+          layout);
+    } catch (RuntimeException openFailure) {
+      // Roll back any half-opened manager. The original failure is the
+      // one consumers care about; secondary shutdown failures get
+      // swallowed by safelyShutdown so they cannot mask the primary.
+      safelyShutdown(appMgr);
+      safelyShutdown(frameworkMgr);
+      throw openFailure;
+    }
+  }
+
+  /**
+   * Validates that {@code parent} either does not yet exist (then the
+   * Eclipse-Store {@code start(dir)} call will create it) or, if it
+   * exists, is a writable directory. Carries the Konzept §6 codes
+   * {@code persistence/storage-pair-parent-not-directory} and
+   * {@code persistence/storage-pair-parent-not-writable} in the
+   * IllegalArgumentException message.
+   */
+  private static void ensureParentIsWritableDirectory(Path parent) {
+    if (!Files.exists(parent)) {
+      return; // EmbeddedStorage.start will create it
+    }
+    if (!Files.isDirectory(parent)) {
+      throw new IllegalArgumentException(
+          "persistence/storage-pair-parent-not-directory: " + parent);
+    }
+    if (!Files.isWritable(parent)) {
+      throw new IllegalArgumentException(
+          "persistence/storage-pair-parent-not-writable: " + parent);
+    }
+  }
+
+  /**
+   * Best-effort shutdown of a possibly-null storage manager during
+   * roll-back. Secondary failures are swallowed because the original
+   * open-failure is what the caller needs to see.
+   */
+  private static void safelyShutdown(EmbeddedStorageManager mgr) {
+    if (mgr == null) return;
+    try {
+      mgr.shutdown();
+    } catch (RuntimeException secondary) {
+      // Swallow — primary openFailure is rethrown by the caller.
+    }
   }
 }
