@@ -206,4 +206,74 @@ class JSentinelAutoServiceProcessorTest {
         .filter(p -> p.startsWith("META-INF/services/"))
         .count());
   }
+
+  // ── V00.74.20 P016 mutation-lift: error-path coverage ──────────────────
+
+  /**
+   * Annotating a class with a non-public SPI must fail compilation
+   * with the {@code autoservice/non-public-spi} diagnostic. The
+   * existing happy-path tests never trigger the
+   * {@code Messager.printMessage(...)} call inside
+   * {@code addSpi(...)} for this branch, so the mutator that drops
+   * the {@code error(...)} call survives. Hitting the branch here
+   * pins that the diagnostic is emitted and compilation fails.
+   */
+  @Test
+  void nonPublicSpi_failsWithDiagnostic() throws IOException {
+    Map<String, String> sources = new LinkedHashMap<>();
+    sources.put("com.example.PackagePrivateApi", """
+        package com.example;
+        interface PackagePrivateApi {}
+        """);
+    sources.put("com.example.Impl", """
+        package com.example;
+        import com.svenruppert.jsentinel.autoservice.api.JSentinelAutoService;
+        @JSentinelAutoService(PackagePrivateApi.class)
+        public final class Impl implements PackagePrivateApi {}
+        """);
+
+    InMemoryCompiler.Result r = InMemoryCompiler.compile(sources);
+    assertFalse(r.success,
+        "compilation must fail when the declared SPI is package-private: " + diagSummary(r));
+    boolean spiNotPublic = r.diagnostics.stream()
+        .anyMatch(d -> d.getKind() == Diagnostic.Kind.ERROR
+            && d.getMessage(null).contains("autoservice/non-public-spi"));
+    assertTrue(spiNotPublic,
+        "expected autoservice/non-public-spi ERROR: " + diagSummary(r));
+  }
+
+  /**
+   * A {@code @JSentinelAutoService} declared as a single-class
+   * annotation (not the {@code {SpiA.class, SpiB.class}} array form)
+   * exercises the {@code raw instanceof TypeMirror} else-branch in
+   * {@code collectSpis(...)} — the existing tests in this class only
+   * use the array form. Without this test the
+   * NegateConditionalsMutator on the {@code instanceof TypeMirror}
+   * branch survives.
+   *
+   * Note: javac normalises {@code @JSentinelAutoService(Api.class)}
+   * to a single-element AnnotationValue list at the AST level, so
+   * exercising the strict single-value path requires an annotation
+   * source that uses the {@code value = …} explicit form.
+   */
+  @Test
+  void singleSpiExplicitValue_pathExercisesSingleTypeMirrorBranch() throws IOException {
+    Map<String, String> sources = new LinkedHashMap<>();
+    sources.put("com.example.Api", """
+        package com.example;
+        public interface Api {}
+        """);
+    sources.put("com.example.Impl", """
+        package com.example;
+        import com.svenruppert.jsentinel.autoservice.api.JSentinelAutoService;
+        @JSentinelAutoService(value = Api.class)
+        public final class Impl implements Api {}
+        """);
+
+    InMemoryCompiler.Result r = InMemoryCompiler.compile(sources);
+    assertTrue(r.success, diagSummary(r));
+    String content = r.resourceAsString("META-INF/services/com.example.Api");
+    assertNotNull(content);
+    assertTrue(content.contains("com.example.Impl"), content);
+  }
 }
