@@ -1,0 +1,44 @@
+/*-
+ * #%L
+ * jSentinel Events — Security Event Bus core
+ * $Id:$
+ * $HeadURL:$
+ * %%
+ * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * %%
+ * Licensed under the EUPL, Version 1.1 or – as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence");
+ *
+ * You may not use this work except in compliance with the Licence.
+ * You may obtain a copy of the Licence at:
+ *
+ * http://ec.europa.eu/idabc/eupl5
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the Licence is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
+ * #L%
+ */
+
+/**
+ * V00.75 concrete {@link com.svenruppert.jsentinel.events.api.JSentinelEvent}
+ * record types (Konzept §215-§294), grouped by category: authentication,
+ * authorization / policy, session, role / tenant, token / device,
+ * rate-limit / abuse, and bus / integrity.
+ *
+ * <p>Each event composes an {@link
+ * com.svenruppert.jsentinel.events.api.EventMetadata} and declares only its
+ * constant {@code eventType()} and {@code category()}. The bus / integrity
+ * events keep short names ({@code ReplayDetectedEvent} rather than the
+ * Konzept's verbose {@code JSentinelEventReplayDetectedEvent}); the package
+ * already scopes them.
+ *
+ * <p>Every public type is annotated {@link
+ * com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi}.
+ *
+ * @since 00.75.00
+ */
+package com.svenruppert.jsentinel.events.types;

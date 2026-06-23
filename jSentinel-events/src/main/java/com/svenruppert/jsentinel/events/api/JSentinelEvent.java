@@ -56,53 +56,73 @@ public interface JSentinelEvent {
   SubjectId SYSTEM_SUBJECT = SubjectId.of("system");
 
   /**
-   * Business identity of this event, stable across re-encoding and
-   * re-delivery.
+   * The variable per-instance metadata (event id, tenant, subject, timestamp,
+   * severity). Concrete events compose an {@link EventMetadata} and let the
+   * default accessors below delegate to it, so each event only has to declare
+   * its constant {@link #eventType()} and {@link #category()}.
    *
-   * @return the non-null event id
+   * @return the non-null metadata
    */
-  EventId eventId();
+  EventMetadata metadata();
 
   /**
    * Typed kind of this event, used by the producer policy and for wire
-   * routing.
+   * routing. Constant per concrete event type.
    *
    * @return the non-null event type
    */
   EventType eventType();
 
   /**
+   * Coarse security-domain classification. Constant per concrete event type.
+   *
+   * @return the non-null category
+   */
+  JSentinelEventCategory category();
+
+  /**
+   * Business identity of this event, stable across re-encoding and
+   * re-delivery.
+   *
+   * @return the non-null event id
+   */
+  default EventId eventId() {
+    return metadata().eventId();
+  }
+
+  /**
    * Mandatory tenant context. Never {@code null}.
    *
    * @return the non-null tenant id
    */
-  TenantId tenantId();
+  default TenantId tenantId() {
+    return metadata().tenantId();
+  }
 
   /**
    * Business or technical subject this event is about.
    *
    * @return the non-null subject id
    */
-  SubjectId subjectId();
+  default SubjectId subjectId() {
+    return metadata().subjectId();
+  }
 
   /**
    * Business timestamp at which the underlying occurrence happened.
    *
    * @return the non-null instant
    */
-  Instant occurredAt();
+  default Instant occurredAt() {
+    return metadata().occurredAt();
+  }
 
   /**
    * Security-relevance level for monitoring and alerting.
    *
    * @return the non-null severity
    */
-  JSentinelEventSeverity severity();
-
-  /**
-   * Coarse security-domain classification.
-   *
-   * @return the non-null category
-   */
-  JSentinelEventCategory category();
+  default JSentinelEventSeverity severity() {
+    return metadata().severity();
+  }
 }
