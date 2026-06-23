@@ -1,0 +1,78 @@
+package com.svenruppert.jsentinel.events.store;
+
+/*-
+ * #%L
+ * jSentinel Events — Security Event Bus core
+ * $Id:$
+ * $HeadURL:$
+ * %%
+ * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * %%
+ * Licensed under the EUPL, Version 1.1 or – as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence");
+ *
+ * You may not use this work except in compliance with the Licence.
+ * You may obtain a copy of the Licence at:
+ *
+ * http://ec.europa.eu/idabc/eupl5
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the Licence is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
+ * #L%
+ */
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.time.Instant;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@DisplayName("InMemoryDeadLetterStore")
+class InMemoryDeadLetterStoreTest {
+
+  private static final Instant AT = Instant.parse("2026-06-24T10:15:30Z");
+
+  @Test
+  @DisplayName("stored dead letters appear in findOpen, oldest first")
+  void storeAndFindOpen() {
+    InMemoryDeadLetterStore store = new InMemoryDeadLetterStore();
+    store.store(JSentinelEventDeadLetter.of(
+        StoreFixtures.envelope("a"), RejectionReason.INVALID_SIGNATURE, AT));
+    store.store(JSentinelEventDeadLetter.of(
+        StoreFixtures.envelope("b"), RejectionReason.REPLAY_DETECTED, AT));
+
+    List<JSentinelEventDeadLetter> open = store.findOpen(10);
+    assertEquals(2, open.size());
+    assertEquals(RejectionReason.INVALID_SIGNATURE, open.get(0).reason());
+    assertEquals(RejectionReason.REPLAY_DETECTED, open.get(1).reason());
+  }
+
+  @Test
+  @DisplayName("markResolved removes a record from findOpen")
+  void markResolved() {
+    InMemoryDeadLetterStore store = new InMemoryDeadLetterStore();
+    JSentinelEventDeadLetter dl = JSentinelEventDeadLetter.of(
+        StoreFixtures.envelope("a"), RejectionReason.SEQUENCE_VIOLATION, AT);
+    store.store(dl);
+    store.markResolved(dl.id());
+    assertTrue(store.findOpen(10).isEmpty());
+  }
+
+  @Test
+  @DisplayName("findOpen honours the limit")
+  void limit() {
+    InMemoryDeadLetterStore store = new InMemoryDeadLetterStore();
+    for (int i = 0; i < 5; i++) {
+      store.store(JSentinelEventDeadLetter.of(
+          StoreFixtures.envelope("e" + i), RejectionReason.EXPIRED, AT));
+    }
+    assertEquals(3, store.findOpen(3).size());
+  }
+}
