@@ -176,4 +176,28 @@ class StandaloneJSentinelBootstrapTest {
     org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
         () -> StandaloneSecurity.bootstrap().interactiveLogin(l -> l.maxAttempts(-1)));
   }
+
+  // ── V00.74.20 P015 mutation-lift: assert resolver state after install() ────
+
+  @Test
+  void install_publishesAuthnAuthzToServiceResolver() {
+    AuthenticationService<String, String> authn = FakeAuthenticationService.forType(String.class);
+    AuthorizationService<String> authz = new FakeAuthorizationService<>();
+
+    JSentinelRuntime runtime = StandaloneSecurity.bootstrap()
+        .authentication(authn)
+        .authorization(authz)
+        .install();
+
+    assertNotNull(runtime);
+    // Kills the VoidMethodCallMutator that drops the
+    // JSentinelServiceResolver.setAuthenticationService(...) call inside
+    // StandaloneJSentinelBootstrapImpl.install() — if the call is gone,
+    // the global resolver returns its empty default and these
+    // assertions fail.
+    assertEquals(authn, JSentinelServiceResolver.authenticationService(),
+        "install() must publish the AuthenticationService to JSentinelServiceResolver");
+    assertEquals(authz, JSentinelServiceResolver.authorizationService(),
+        "install() must publish the AuthorizationService to JSentinelServiceResolver");
+  }
 }
