@@ -290,6 +290,34 @@
                             <fail>true</fail>
                         </configuration>
                     </execution>
+                    <!--
+                      V00.74.20 Phase 3 — Konzept §9 "No-Mocks-Disziplin":
+                      jSentinel tests are written against real
+                      implementations (real EmbeddedStorageManager wrappers,
+                      real subjects, real storage facades). Mocking-framework
+                      tests obscure contract violations and make refactors
+                      brittle. The ban is reactor-wide because the discipline
+                      applies to every module — including consumer demos.
+                    -->
+                    <execution>
+                        <id>ban-mocking-frameworks</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <bannedDependencies>
+                                    <excludes>
+                                        <exclude>org.mockito:*</exclude>
+                                        <exclude>org.easymock:*</exclude>
+                                        <exclude>org.powermock:*</exclude>
+                                        <exclude>net.bytebuddy:byte-buddy-agent</exclude>
+                                    </excludes>
+                                </bannedDependencies>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 
