@@ -107,3 +107,26 @@ if (health.hasErrors()) {
 `toJson()` encoder is internal — no Jackson, Gson or `org.json`
 dependency lands on the standalone classpath. All four methods are
 marked `@ExperimentalJSentinelApi` until V00.76.
+
+## Persistence pair (V00.74.20)
+
+When the CLI / desktop app needs Eclipse-Store persistence (audit log
++ sessions + application data), open a `JSentinelStoragePair` once
+and feed its framework half into the bootstrap:
+
+```java
+JSentinelStoragePair pair = JSentinelStorageFactory.openAt(Path.of("data"));
+Runtime.getRuntime().addShutdownHook(new Thread(pair::close, "jsentinel-pair-close"));
+
+StandaloneSecurity.bootstrap()
+    .audit(a    -> a.storeBacked(pair.framework().auditEventStore()))
+    .sessions(s -> s.storeBacked(pair.framework().sessionStore()))
+    .install();
+
+// pair.app() is your domain-data EmbeddedStorageManager — use it via
+// pair.app().root() / setRoot(…) / store(…).
+```
+
+The pair's two-phase `close()` shuts the app storage down first and
+the framework storage second; the framework close-attempt always
+runs so its lock file is released even if app shutdown throws.

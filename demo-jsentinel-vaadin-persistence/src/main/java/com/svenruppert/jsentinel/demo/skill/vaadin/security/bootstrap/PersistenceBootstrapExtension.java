@@ -27,7 +27,7 @@ public final class PersistenceBootstrapExtension implements BootstrapExtension {
   private static final EclipseStoreJSentinelStorage STORAGE;
 
   static {
-    STORAGE = JSentinelStorageProvider.storage();
+    STORAGE = JSentinelStorageProvider.framework();
     BootstrapWiring.instance();
   }
 

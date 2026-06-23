@@ -201,6 +201,19 @@ operator-visible contract; the persistence layer documentation in
 `docs/security/credentials/playbooks/rollback-boundaries.md` covers
 the rollback semantics.
 
+V00.74.20 closes the V00.74.10-documented gap that prevented
+consumer-side persistence from coexisting with the framework stores
+under one directory. `JSentinelStorageFactory.openAt(...)` returns a
+`JSentinelStoragePair` with a linked-lifecycle framework storage and
+an application-side `EmbeddedStorageManager`. Both use the
+Eclipse-Store binary codec; the JDK `ObjectOutputStream` fallback
+that some consumer code resorted to in V00.74.10 (when a parallel
+`users.ser` file lived next to the framework storage) is now
+obsolete — the pair's app half is a fully-typed Eclipse-Store
+manager and the consumer wires user-directory roots through it via
+`pair.app().setRoot(...)` / `storeRoot()` like any other Eclipse
+Store consumer.
+
 ### Event Bus (V00.75) — signed Canonical JSON or Eclipse Serializer
 
 `Konzept-V00.75.00.md` §"Payload-Serialisierung" makes the explicit

@@ -115,3 +115,26 @@ public final class HealthHandler implements RestHandler {
 unmodifiable, insertion-ordered `Map<String, Object>` so you can route
 through any serialiser already on your classpath. All four methods
 are marked `@ExperimentalJSentinelApi` until V00.76.
+
+## Persistence pair (V00.74.20)
+
+When the REST service should persist audit / sessions / application
+domain data, open a `JSentinelStoragePair` at startup and feed its
+framework half into the bootstrap:
+
+```java
+JSentinelStoragePair pair = JSentinelStorageFactory.openAt(Path.of("data"));
+Runtime.getRuntime().addShutdownHook(new Thread(pair::close, "jsentinel-pair-close"));
+
+RestSecurity.bootstrap()
+    .audit(a    -> a.storeBacked(pair.framework().auditEventStore()))
+    .sessions(s -> s.storeBacked(pair.framework().sessionStore()))
+    .install();
+
+// pair.app() holds the application's own EmbeddedStorageManager —
+// use pair.app().root() / setRoot(…) / store(…) for domain data.
+```
+
+The pair's two-phase `close()` shuts app first, framework second; the
+framework close-attempt always runs so its lock file is released
+even if app shutdown throws.

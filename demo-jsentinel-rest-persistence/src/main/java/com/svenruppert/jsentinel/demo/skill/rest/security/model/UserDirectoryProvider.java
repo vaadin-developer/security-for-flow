@@ -1,20 +1,19 @@
 package com.svenruppert.jsentinel.demo.skill.rest.security.model;
 
-import com.svenruppert.jsentinel.demo.skill.rest.security.storage.AppStoragePaths;
 import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.jsentinel.demo.skill.rest.security.bootstrap.JSentinelStorageProvider;
 
-import java.nio.file.Path;
 import java.util.Objects;
 
 /**
- * Replacement for the layer-1 {@code jsentinel-vaadin} provider.
+ * Replacement for the layer-1 {@code jsentinel-rest} provider.
  *
  * <p>Default wires an {@link EclipseStoreUserDirectoryPersistence}
- * under the path returned by {@link AppStoragePaths#userDirectoryDir()},
- * then injects it into a {@link PersistentUserDirectory}. The
- * Eclipse-Store-backed persistence runs in its own
- * {@code EmbeddedStorageManager} independent of the framework
- * storage.
+ * around the app-side storage manager exposed by
+ * {@link JSentinelStorageProvider#app()}, then injects it into a
+ * {@link PersistentUserDirectory}. The user-directory storage shares
+ * the {@code JSentinelStoragePair}'s lifecycle — no separate manager,
+ * no separate shutdown hook (V00.74.20+).
  *
  * <p>Lazy via the
  * <a href="https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom">
@@ -69,11 +68,10 @@ public final class UserDirectoryProvider {
   }
 
   private static UserDirectory buildDefault() {
-    Path dir = AppStoragePaths.userDirectoryDir();
     UserDirectoryPersistence persistence =
-        new EclipseStoreUserDirectoryPersistence(dir);
-    Runtime.getRuntime().addShutdownHook(new Thread(persistence::close,
-        "user-directory-persistence-shutdown"));
+        new EclipseStoreUserDirectoryPersistence(JSentinelStorageProvider.app());
+    // No shutdown hook here — JSentinelStorageProvider owns the
+    // single shutdown hook that closes the pair.
     return new PersistentUserDirectory(
         persistence,
         JSentinelServiceResolver.passwordHashingService());

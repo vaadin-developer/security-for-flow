@@ -13,6 +13,7 @@
 | Catch unknown `@SecureRoute(policy = ...)` at boot | `.discoverSecureRoutes(true)` + `mode(STRICT)` |
 | Programmatic health / monitoring / `/health` endpoint | `runtime.healthCheck()` + `runtime.toJson()` (V00.74.10) |
 | CLI boot banner | `runtime.summary()` (V00.74.10) |
+| App + framework persistence in one parent dir | `JSentinelStorageFactory.openAt(parent)` returns a `JSentinelStoragePair` with linked-lifecycle two-phase close (V00.74.20) |
 
 ## When to use
 

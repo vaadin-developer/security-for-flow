@@ -146,3 +146,26 @@ runtime.toJson();
 scope so consumer projects do not inherit a JSON library through the
 DX classpath. All four methods are marked
 `@ExperimentalJSentinelApi` until V00.76 confirms the shape.
+
+## 7. Persistence pair (V00.74.20)
+
+When you also want Eclipse-Store persistence (audit log + sessions +
+your own domain data), open a `JSentinelStoragePair` at process start
+and feed its framework half into the bootstrap. The pair manages both
+storages — framework + app — under one parent directory with a single
+two-phase shutdown:
+
+```java
+try (JSentinelStoragePair pair = JSentinelStorageFactory.openAt(Path.of("data"))) {
+  VaadinSecurity.bootstrap()
+      .audit(a    -> a.storeBacked(pair.framework().auditEventStore()))
+      .sessions(s -> s.storeBacked(pair.framework().sessionStore()))
+      .install();
+  // pair.app() is your application's own EmbeddedStorageManager —
+  // use pair.app().root() / setRoot(…) / store(…) for domain data.
+}
+```
+
+The pair's `close()` shuts the app storage down first, the framework
+storage second, and the framework close-attempt always runs (so a
+buggy app shutdown cannot leave the framework's lock file held).

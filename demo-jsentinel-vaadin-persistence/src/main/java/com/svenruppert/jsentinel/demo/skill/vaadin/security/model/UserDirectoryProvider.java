@@ -1,26 +1,25 @@
 package com.svenruppert.jsentinel.demo.skill.vaadin.security.model;
 
 import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.jsentinel.demo.skill.vaadin.security.bootstrap.JSentinelStorageProvider;
 
-import java.nio.file.Path;
 import java.util.Objects;
 
 /**
  * Replacement for the layer-1 {@code jsentinel-vaadin} provider.
  *
  * <p>Default wires an {@link EclipseStoreUserDirectoryPersistence}
- * under {@code ./data/jsentinel-vaadin-persistence/users}, then injects it into a
- * {@link PersistentUserDirectory}. The Eclipse-Store-backed
- * persistence runs in its own {@code EmbeddedStorageManager}
- * independent of the framework storage.
+ * around the app-side storage manager exposed by
+ * {@link JSentinelStorageProvider#app()} and injects it into a
+ * {@link PersistentUserDirectory}. The user-directory storage shares
+ * the {@code JSentinelStoragePair}'s lifecycle — no separate manager,
+ * no separate shutdown hook (V00.74.20+).
  *
  * <p>Test seam: {@link #setDirectory(UserDirectory)} swaps the
  * singleton — pair with {@link InMemoryUserDirectoryPersistence} for
  * stateless tests.
  */
 public final class UserDirectoryProvider {
-
-  public static final Path USERS_STORAGE_DIR = Path.of("./data/jsentinel-vaadin-persistence/users");
 
   private static volatile UserDirectory directory = buildDefault();
 
@@ -43,9 +42,10 @@ public final class UserDirectoryProvider {
 
   private static UserDirectory buildDefault() {
     UserDirectoryPersistence persistence =
-        new EclipseStoreUserDirectoryPersistence(USERS_STORAGE_DIR);
-    Runtime.getRuntime().addShutdownHook(new Thread(persistence::close,
-        "user-directory-persistence-shutdown"));
+        new EclipseStoreUserDirectoryPersistence(JSentinelStorageProvider.app());
+    // No shutdown hook here — JSentinelStorageProvider owns the
+    // single shutdown hook that closes the pair, and the pair's
+    // two-phase close() handles the app manager.
     return new PersistentUserDirectory(
         persistence,
         JSentinelServiceResolver.passwordHashingService());

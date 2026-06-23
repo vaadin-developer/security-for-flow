@@ -15,6 +15,6 @@ public final class SessionStoreProvider {
   }
 
   public static SessionStore sessionStore() {
-    return JSentinelStorageProvider.storage().sessionStore();
+    return JSentinelStorageProvider.framework().sessionStore();
   }
 }
