@@ -23,6 +23,7 @@ import org.eclipse.store.storage.embedded.types.EmbeddedStorageManager;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Entry point for opening a {@link JSentinelStoragePair} — the
@@ -108,7 +109,8 @@ public final class JSentinelStorageFactory {
           new EclipseStoreJSentinelStorage(frameworkMgr),
           appMgr,
           parent,
-          layout);
+          layout,
+          new AtomicBoolean(false));
     } catch (RuntimeException openFailure) {
       // Roll back any half-opened manager. The original failure is the
       // one consumers care about; secondary shutdown failures get

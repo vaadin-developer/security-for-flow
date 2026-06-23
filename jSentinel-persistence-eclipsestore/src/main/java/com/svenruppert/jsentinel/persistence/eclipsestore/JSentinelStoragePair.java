@@ -22,6 +22,7 @@ import org.eclipse.store.storage.embedded.types.EmbeddedStorageManager;
 
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Linked-lifecycle handle around two Eclipse-Store storages opened at
@@ -33,24 +34,56 @@ import java.util.Objects;
  *
  * <p>The pair is opened together via {@link JSentinelStorageFactory}
  * and closed together via {@link #close()}, which runs a two-phase
- * shutdown (app first, framework second) and preserves the Phase-1
- * exception via {@link Throwable#addSuppressed(Throwable)} if Phase 2
- * also fails. See Konzept-V00.74.20 §6 for the validation and audit
- * code catalogue.
+ * shutdown:
  *
- * <p>The Phase-1 / Phase-2 sequence guarantees that the framework
- * storage always gets a close-attempt, even when app shutdown throws.
- * The two-phase implementation lands in Prompt 006; this is the
- * Phase-1 (Public-API) skeleton record.
+ * <ol>
+ *   <li><strong>Phase 1</strong> — shuts the app storage down. A
+ *       failure here is captured but does not abort Phase 2.</li>
+ *   <li><strong>Phase 2</strong> — closes the framework storage. This
+ *       phase <em>always</em> runs, even if Phase 1 failed. If
+ *       Phase 2 also fails while Phase 1 already had, the Phase-2
+ *       exception is added as a suppressed exception to the Phase-1
+ *       throwable.</li>
+ * </ol>
  *
- * @param framework Eclipse-Store-backed framework storage facade
- *                  carrying the 13 Phase-2 stores
- * @param app       Eclipse-Store storage manager holding the
- *                  application's domain data — the consumer accesses
- *                  it directly via {@code app.root()}
- * @param parent    parent directory the pair was opened under
- * @param layout    {@link StorageLayout} that determined the on-disk
- *                  sub-directory names
+ * <p>The invariant — "Phase 2 always runs" — exists so the framework
+ * storage's lock file is released even when the app's shutdown logic
+ * misbehaves. Without it a buggy app could leave the framework data
+ * inaccessible until the JVM exits.
+ *
+ * <p>{@code close()} is <strong>idempotent</strong>: a second call is
+ * a no-op (Konzept §6 code {@code persistence/storage-pair-double-close},
+ * INFO log). The flag-guard exists because consumers may install
+ * close-hooks from multiple lifecycle sources (Vaadin
+ * destroy-listener + JVM shutdown hook) and we cannot assume only one
+ * fires.
+ *
+ * <p>Konzept §6 codes emitted by this class:
+ * <ul>
+ *   <li>{@code persistence/storage-pair-app-shutdown-failed} —
+ *       Phase 1 threw (WARN log + re-throw at end).</li>
+ *   <li>{@code persistence/storage-pair-framework-close-failed} —
+ *       Phase 2 threw (WARN log + addSuppressed if Phase 1 also
+ *       threw, otherwise re-throw).</li>
+ *   <li>{@code persistence/storage-pair-double-close} —
+ *       repeated close() call (INFO log, no-op).</li>
+ * </ul>
+ *
+ * <p>The {@code closedFlag} component is an implementation detail —
+ * the {@link JSentinelStorageFactory} always passes
+ * {@code new AtomicBoolean(false)}. Consumers should not construct
+ * instances by hand.
+ *
+ * @param framework   Eclipse-Store-backed framework storage facade
+ *                    carrying the 13 Phase-2 stores
+ * @param app         Eclipse-Store storage manager holding the
+ *                    application's domain data — the consumer
+ *                    accesses it directly via {@code app.root()}
+ * @param parent      parent directory the pair was opened under
+ * @param layout      {@link StorageLayout} that determined the
+ *                    on-disk sub-directory names
+ * @param closedFlag  internal idempotency guard; do not construct
+ *                    manually — use {@link JSentinelStorageFactory}
  * @since 00.74.20
  */
 @ExperimentalJSentinelApi
@@ -58,7 +91,8 @@ public record JSentinelStoragePair(
     EclipseStoreJSentinelStorage framework,
     EmbeddedStorageManager       app,
     Path                         parent,
-    StorageLayout                layout)
+    StorageLayout                layout,
+    AtomicBoolean                closedFlag)
     implements AutoCloseable, HasLogger {
 
   public JSentinelStoragePair {
@@ -66,18 +100,45 @@ public record JSentinelStoragePair(
     Objects.requireNonNull(app, "app");
     Objects.requireNonNull(parent, "parent");
     Objects.requireNonNull(layout, "layout");
+    Objects.requireNonNull(closedFlag, "closedFlag");
   }
 
   /**
    * Two-phase close: app storage first, framework storage second.
    * Phase 2 always runs even if Phase 1 throws; secondary failures
-   * are added as suppressed exceptions to the primary. Idempotency
-   * (flag-guarded) is added in Prompt 006 together with the real
-   * implementation.
+   * are added as suppressed exceptions to the primary. Second and
+   * subsequent calls are no-ops (Konzept §6
+   * {@code persistence/storage-pair-double-close}, INFO).
    */
   @Override
   public void close() {
-    throw new UnsupportedOperationException(
-        "implemented in Prompt 006 (V00.74.20 Phase 3)");
+    if (!closedFlag.compareAndSet(false, true)) {
+      logger().info(
+          "persistence/storage-pair-double-close: ignoring repeated close on {}",
+          parent);
+      return;
+    }
+    RuntimeException phase1Failure = null;
+    try {
+      app.shutdown();
+    } catch (RuntimeException e) {
+      logger().warn("persistence/storage-pair-app-shutdown-failed at {}",
+          parent, e);
+      phase1Failure = e;
+    }
+    try {
+      framework.close();
+    } catch (RuntimeException e) {
+      logger().warn("persistence/storage-pair-framework-close-failed at {}",
+          parent, e);
+      if (phase1Failure != null) {
+        phase1Failure.addSuppressed(e);
+      } else {
+        throw e;
+      }
+    }
+    if (phase1Failure != null) {
+      throw phase1Failure;
+    }
   }
 }

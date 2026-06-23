@@ -18,13 +18,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Phase-1 skeleton tests — verify constructor null-rejection only.
- * The {@code close()} body is covered in Prompt 007 once Prompt 006
- * has implemented it.
+ * Constructor null-rejection tests. Lifecycle / close()-behaviour
+ * tests live in {@link JSentinelStoragePairLifecycleTest} (Prompt 007).
  */
 class JSentinelStoragePairTest {
 
@@ -49,35 +49,35 @@ class JSentinelStoragePairTest {
   @Test
   void nullFramework_throws() {
     assertThrows(NullPointerException.class,
-        () -> new JSentinelStoragePair(null, app, tempDir, StorageLayout.DEFAULT));
+        () -> new JSentinelStoragePair(null, app, tempDir, StorageLayout.DEFAULT,
+            new AtomicBoolean(false)));
   }
 
   @Test
   void nullApp_throws() {
     assertThrows(NullPointerException.class,
-        () -> new JSentinelStoragePair(framework, null, tempDir, StorageLayout.DEFAULT));
+        () -> new JSentinelStoragePair(framework, null, tempDir, StorageLayout.DEFAULT,
+            new AtomicBoolean(false)));
   }
 
   @Test
   void nullParent_throws() {
     assertThrows(NullPointerException.class,
-        () -> new JSentinelStoragePair(framework, app, null, StorageLayout.DEFAULT));
+        () -> new JSentinelStoragePair(framework, app, null, StorageLayout.DEFAULT,
+            new AtomicBoolean(false)));
   }
 
   @Test
   void nullLayout_throws() {
     assertThrows(NullPointerException.class,
-        () -> new JSentinelStoragePair(framework, app, tempDir, null));
+        () -> new JSentinelStoragePair(framework, app, tempDir, null,
+            new AtomicBoolean(false)));
   }
 
   @Test
-  void closeOnSkeleton_throwsUnsupported() {
-    JSentinelStoragePair pair = new JSentinelStoragePair(
-        framework, app, tempDir, StorageLayout.DEFAULT);
-    UnsupportedOperationException ex = assertThrows(
-        UnsupportedOperationException.class, pair::close);
-    org.junit.jupiter.api.Assertions.assertTrue(
-        ex.getMessage().contains("Prompt 006"),
-        "skeleton placeholder must point at Prompt 006");
+  void nullClosedFlag_throws() {
+    assertThrows(NullPointerException.class,
+        () -> new JSentinelStoragePair(framework, app, tempDir,
+            StorageLayout.DEFAULT, null));
   }
 }
