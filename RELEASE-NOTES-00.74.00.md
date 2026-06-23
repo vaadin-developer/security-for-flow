@@ -167,8 +167,21 @@ Tracking the Konzept §3.2 non-scope explicitly:
   after at least one real demo adoption cycle.
 - **No tenant-specific strategy lookup.** Staged for V00.80 §4.
 - **No mTLS / SAML / WebSocket-frame token rotation.**
-- **No Maven Central deploy** — release stays local, modules land
-  in `~/.m2`.
+
+---
+
+## Deployment
+
+V00.74.00 was deployed to Maven Central under the
+`com.svenruppert.jsentinel` group ID. POM coordinates:
+
+```
+com.svenruppert.jsentinel:jSentinel-core:00.74.00
+```
+
+> An earlier draft of this section stated *"No Maven Central deploy"*.
+> That was a release-time plan that was later revised; the artefacts
+> are on Central. Corrected after V00.74.20 audit (2026-06-23).
 
 ---
 
