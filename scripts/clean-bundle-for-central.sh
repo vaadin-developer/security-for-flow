@@ -103,6 +103,16 @@ STAGING="$REPO_ROOT/target/central-bundle-staging"
 BUNDLE_DIR="$REPO_ROOT/target/central-publishing"
 BUNDLE="$BUNDLE_DIR/central-bundle.zip"
 
+# Minimum acceptable size (bytes) for a -javadoc.jar. An empty javadoc jar
+# (only META-INF/MANIFEST.MF, no rendered HTML) is ~300 B; the smallest real
+# one we ship is ~111 KB (jSentinel-autoservice-annotations). 50 KB sits
+# safely between the two. This guard exists because 00.74.10 shipped EMPTY
+# javadoc jars to Central: the maven-javadoc-plugin's addStylesheet pointed
+# at the .gitignore'd build/javadoc/jsentinel.css, javadoc aborted, and
+# failOnError=false swallowed the error. Fail the bundle here rather than
+# discover it on Central (or worse, after publish — Central is immutable).
+JAVADOC_MIN_BYTES=51200
+
 rm -rf "$STAGING"
 mkdir -p "$STAGING" "$BUNDLE_DIR"
 
@@ -150,6 +160,26 @@ for module in "${MODULES[@]}"; do
         esac
     done
     shopt -u nullglob
+
+    # Guard: every non-parent module must carry a non-empty -javadoc.jar.
+    # jSentinel-parent is pom-packaging — it has no jar/javadoc at all.
+    if [ "$module" != "jSentinel-parent" ]; then
+        jdoc="$dst/$module-$VERSION-javadoc.jar"
+        if [ ! -f "$jdoc" ]; then
+            echo "ERROR: $module $VERSION has no -javadoc.jar." >&2
+            echo "       Expected: $jdoc" >&2
+            exit 1
+        fi
+        jdoc_size=$(stat -f%z "$jdoc" 2>/dev/null || stat -c%s "$jdoc")
+        if [ "$jdoc_size" -lt "$JAVADOC_MIN_BYTES" ]; then
+            echo "ERROR: $module $VERSION -javadoc.jar is only ${jdoc_size} B" \
+                 "(< ${JAVADOC_MIN_BYTES} B threshold) — almost certainly empty." >&2
+            echo "       This is the 00.74.10 regression: check that" >&2
+            echo "       docs/javadoc/jsentinel.css exists and the javadoc tool" >&2
+            echo "       did not abort. Re-run the release build, then re-bundle." >&2
+            exit 1
+        fi
+    fi
 
     module_files=0
     for f in "$dst"/*; do

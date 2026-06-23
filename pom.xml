@@ -394,15 +394,24 @@
                 </configuration>
             </plugin>
             <!-- jSentinel-branded Javadoc: applies the project's theme skin
-                 (build/javadoc/jsentinel.css) on top of the stock JDK
+                 (docs/javadoc/jsentinel.css) on top of the stock JDK
                  stylesheet at generation time, so every generated /
                  published -javadoc.jar renders in the jSentinel design with
                  the built-in JDK Light/Dark/System toggle driving the
-                 lime palette. -->
+                 lime palette.
+
+                 IMPORTANT: javadocDirectory must point at a TRACKED directory.
+                 It used to point at build/javadoc, which is .gitignore'd
+                 (build/), so a `git clean -dfx` or fresh clone left the
+                 stylesheet absent. Combined with failOnError=false below,
+                 the javadoc tool then aborted with "additional stylesheet
+                 file does not exist", the error was swallowed, and the
+                 release shipped EMPTY -javadoc.jar files (regression in
+                 00.74.10). The theme source of truth lives under docs/. -->
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
-                    <javadocDirectory>${maven.multiModuleProjectDirectory}/build/javadoc</javadocDirectory>
+                    <javadocDirectory>${maven.multiModuleProjectDirectory}/docs/javadoc</javadocDirectory>
                     <addStylesheets>
                         <addStylesheet>jsentinel.css</addStylesheet>
                     </addStylesheets>
