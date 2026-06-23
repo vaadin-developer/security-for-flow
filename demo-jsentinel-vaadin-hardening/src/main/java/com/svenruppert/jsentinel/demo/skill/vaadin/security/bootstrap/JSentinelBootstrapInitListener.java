@@ -26,6 +26,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class JSentinelBootstrapInitListener implements VaadinServiceInitListener {
 
   private static final AtomicBoolean DONE = new AtomicBoolean();
+  private static volatile JSentinelRuntime runtime;
+
+  /**
+   * Returns the {@link JSentinelRuntime} captured at the most recent
+   * successful {@code serviceInit(...)}, or {@code null} if the
+   * bootstrap has not yet run (e.g. the first Vaadin request is still
+   * in flight). The {@code HealthView} reads this on every render so a
+   * runtime swap during V00.75-style hot-reload remains observable.
+   *
+   * @return the active runtime snapshot, or {@code null}
+   */
+  public static JSentinelRuntime currentRuntime() {
+    return runtime;
+  }
 
   @Override
   public void serviceInit(ServiceInitEvent event) {
@@ -39,7 +53,7 @@ public class JSentinelBootstrapInitListener implements VaadinServiceInitListener
     if (authn == null || authz == null) {
       return;
     }
-    JSentinelRuntime runtime = BootstrapBuilder.apply(
+    JSentinelRuntime bootstrapped = BootstrapBuilder.apply(
         VaadinSecurity.bootstrap()
             .use(VaadinJSentinelStarter.developmentDefaults())
             .authentication(authn)
@@ -47,6 +61,7 @@ public class JSentinelBootstrapInitListener implements VaadinServiceInitListener
             .loginRoute("login")
             .stepUpRoute("step-up")
     ).install();
-    System.out.println(runtime.log());
+    runtime = bootstrapped;
+    System.out.println(bootstrapped.log());
   }
 }
