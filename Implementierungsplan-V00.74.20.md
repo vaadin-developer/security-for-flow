@@ -1,6 +1,11 @@
 # jSentinel - Implementation Plan V00.74.20
 
-**Target version:** `00.74.20-SNAPSHOT`
+**Status:** ✅ **COMPLETED** — released to Maven Central as `com.svenruppert.jsentinel:*:00.74.20` on 2026-06-23.
+**Deployment ID:** `594cdd77-bb48-439b-bb26-ddcda8cd4c65` (Sonatype Central, USER_MANAGED, published from the `VALIDATED` state via UI promotion).
+**Tag:** `v00.74.20` at commit `105f0860`.
+**Scope shipped:** 17 of 19 prompts in full (000-015, 017-018); prompt 016 partial (mutation-lift on `jSentinel-autoservice-processor` 52 % → 54 %, target ≥ 65 % missed and documented in `RELEASE-NOTES-00.74.20.md`).
+
+**Target version:** `00.74.20`
 **Target project:** `vaadin-developer/security-for-flow`
 **Target branch:** `develop`
 **Language:** Java 26+
@@ -236,19 +241,31 @@ jSentinel-persistence-eclipsestore   (existing graph)
 
 ## 5. Milestones
 
-| Milestone | Prompt range | Goal |
-|---|---|---|
-| M0 — Version bump | 000 | All 32 pom.xml files (parent + 21 submodules + 10 demos + 5 older demos) carry `00.74.20-SNAPSHOT`; the 10 `demo-jsentinel-*` modules make the bigger jump from `00.73.00` |
-| M1 — Public API skeleton | 001-003 | `StorageLayout`, `JSentinelStoragePair`, `JSentinelStorageFactory` compile and are unit-tested for construction validation |
-| M2 — Implementation | 004-005 | Factory opens both storages end-to-end; existing `EclipseStoreJSentinelStorage.openAt(Path)` shares the new init pipeline |
-| M3 — Linked-Lifecycle | 006-007 | Two-phase close with `addSuppressed`; negative-path tests |
-| M4 — Skill updates | 008-010 | All three persistence skills render the factory pattern |
-| M5 — Demo + Doku | 011-013 | One demo exercises both storages; 5-minute-setups + serialization-policy.md addendum land |
-| **M6 — V00.74.10 cleanup** | **014-016** | `HealthView` demo wired into `demo-jsentinel-vaadin-hardening`; mutation-coverage quick wins (`jSentinel-dx-standalone` ≥ 65 %, `jSentinel-autoservice-processor` ≥ 65 %) |
-| M7 — Release | 017-018 | `RELEASE-NOTES-00.74.20.md`, PIT regression, tag `v00.74.20` |
+| Milestone | Prompt range | Goal | Status |
+|---|---|---|---|
+| M0 — Version bump | 000 | All 36 pom.xml files (parent + 21 submodules + 5 older demos + 10 `demo-jsentinel-*` modules; the latter make the bigger jump from `00.73.00`). Plan estimate was 32; reality was 36. | ✅ commit `1a272bb` |
+| M1 — Public API skeleton | 001-003 | `StorageLayout`, `JSentinelStoragePair`, `JSentinelStorageFactory` compile and are unit-tested for construction validation | ✅ commits `fe18fbe`, `6ca3e93`, `04bc731` |
+| M2 — Implementation | 004-005 | Factory opens both storages end-to-end; existing `EclipseStoreJSentinelStorage.openAt(Path)` shares the new init pipeline | ✅ commits `6d62aed`, `c7a7046` |
+| M3 — Linked-Lifecycle | 006-007 | Two-phase close with `addSuppressed`; negative-path tests | ✅ commits `e0e9414`, `9822e7d` |
+| M4 — Skill updates | 008-010 | All three persistence skills render the factory pattern | ✅ commit `aed0380` (consolidated 008-010) |
+| M5 — Demo + Doku | 011-013 | One demo exercises both storages; 5-minute-setups + serialization-policy.md addendum land | ✅ commit `cbaefe6` (consolidated 011-013) |
+| **M6 — V00.74.10 cleanup** | **014-016** | `HealthView` demo wired into `demo-jsentinel-vaadin-hardening`; mutation-coverage quick wins (`jSentinel-dx-standalone` ≥ 65 %, `jSentinel-autoservice-processor` ≥ 65 %) | ⚠ partial: 014 ✅ (`200b9e9`), 015 ✅ (`b00b319`, 63→66 %), 016 ⚠ (`496a241`, 52→54 % — target ≥ 65 % missed, file-merge-test infrastructure carry-over) |
+| M7 — Release | 017-018 | `RELEASE-NOTES-00.74.20.md`, PIT regression, tag `v00.74.20` | ✅ commits `533d24b`, `105f086`; tag `v00.74.20`; Maven Central deployment `594cdd77-bb48-439b-bb26-ddcda8cd4c65` `PUBLISHED` |
 
 M1 → M2 → M3 is sequential. M4 (three skill branches), M5 (docs)
 and M6 (cleanup) can parallelize once M3 is green. M7 closes.
+
+### Out-of-plan items shipped alongside V00.74.20
+
+Three release-hygiene items were not part of the original Konzept §13
+phase list but rode the V00.74.20 train because they were small and
+useful to ship together. All in the V00.74.20 git history:
+
+| Item | Commit | Why folded in |
+|---|---|---|
+| `release(00.74.20): fix javadoc-jar regression from 00.74.10` | `d1fd2e3` | V00.74.10 shipped EMPTY `-javadoc.jar` files to Maven Central (`maven-javadoc-plugin.addStylesheet` pointed at gitignored `build/javadoc/`). Moved to `docs/javadoc/` (tracked) + 50 KB-minimum bundle guard. |
+| `chore(00.74.20): bump bcprov-jdk18on 1.78.1 → 1.84` | `2f76065` | Closes Dependabot #14 (GHSA-c3fc-8qff-9hwx / CVE-2026-0636 LDAP injection) + #15 (GHSA-p93r-85wp-75v3 / CVE-2026-5598 FrodoEngine timing channel). Neither code path exercised in `jSentinel-crypto-bc`; hygiene bump. |
+| `docs(00.74.20): fold V00.74.10 cleanup into V00.74.20 scope` | `2259594` | Konzept + Plan extension that turned 014-016 into the M6 cleanup track. |
 
 ---
 
@@ -1116,17 +1133,55 @@ from the V00.74.10 cycle:
 
 ```text
 demo-jsentinel-vaadin-hardening/
-  └── views/admin/HealthView.java   ← new, renders runtime.summary()
+  └── views/admin/HealthView.java   ✅ renders runtime.summary()
                                       + healthCheck() + toJson()
 
-jSentinel-dx-standalone            PIT 63 % → ≥ 65 %  (mutation lift)
-jSentinel-autoservice-processor    PIT 52 % → ≥ 65 %  (mutation lift)
+jSentinel-dx-standalone            ✅ PIT 63 % → 66 %  (≥ 65 % target hit)
+jSentinel-autoservice-processor    ⚠ PIT 52 % → 54 %   (≥ 65 % target missed
+                                                        — file-merge-test
+                                                        infrastructure
+                                                        carried over)
 
-demo-jsentinel-* (10 modules)       parent-pom 00.73.00 → 00.74.20-SNAPSHOT
-                                    (Phase 0; unblocks all of the above)
+demo-jsentinel-* (10 modules)       ✅ parent-pom 00.73.00 → 00.74.20
+                                    (Phase 0; unblocked all of the above)
 ```
 
 The larger mutation gaps (`jSentinel-dx-vaadin` at 53 %,
 `jSentinel-vaadin-starter` at 38 %) are explicitly kept out of
 V00.74.20 scope per §2 Non-Scope. They remain documented backlog
 for a later release.
+
+---
+
+## 20. Release outcome
+
+Final reactor-PIT measurements at the V00.74.20 tag:
+
+| Module | V00.74.10 baseline | V00.74.20 measured | Target | Status |
+|---|---|---|---|---|
+| `jSentinel-persistence-eclipsestore` | 70 % | **71 %** (247/350) | ≥ 70 % | ✅ held despite the added Storage-Pair surface |
+| `jSentinel-dx-standalone` | 63 % | **66 %** (39/59) | ≥ 65 % | ✅ |
+| `jSentinel-autoservice-processor` | 52 % | **54 %** (35/65) | ≥ 65 % | ⚠ missed — see RELEASE-NOTES § *Why `jSentinel-autoservice-processor` missed target* |
+| Every other module | per V00.71/V00.72/V00.73 | unchanged by construction | hold baseline | ✅ source-unchanged in the rest of the reactor |
+
+Bundle: 8.3 MB, 162 primary files across 21 deployable modules, all
+GPG-signed, all `-javadoc.jar` ≥ 50 KB (the V00.74.10 regression
+guard now in place).
+
+Central deployment validated cleanly (0 errors; 2 warnings on the
+organisation's monthly file-count + release-count limits, enforcement
+beginning 2026-08-11). Final UI-promotion from `VALIDATED` to
+`PUBLISHED` ran the same day.
+
+Backlog explicitly **not** in V00.74.20:
+- `jSentinel-autoservice-processor` mutation-lift to ≥ 65 %
+  (needs a two-round InMemoryCompiler API or a temp-dir
+  integration-style processor test; the V00.74.20 attempt is documented
+  in RELEASE-NOTES).
+- `jSentinel-dx-vaadin` (53 %) and `jSentinel-vaadin-starter` (38 %)
+  mutation-lift toward 75 % — V00.74.10-era stretch goal, structural
+  gaps rather than incremental ones.
+- V00.74.10 deferred items not folded in: full 5-minute-setup expansion
+  for `.propagation(...)` and the `demo-vaadin-rest-client` view-code
+  migration to `@PropagateToken`-annotated interfaces remain V00.75
+  candidates.
