@@ -1,0 +1,151 @@
+package com.svenruppert.jsentinel.events.bus;
+
+/*-
+ * #%L
+ * jSentinel Events — Security Event Bus core
+ * $Id:$
+ * $HeadURL:$
+ * %%
+ * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * %%
+ * Licensed under the EUPL, Version 1.1 or – as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence");
+ *
+ * You may not use this work except in compliance with the Licence.
+ * You may obtain a copy of the Licence at:
+ *
+ * http://ec.europa.eu/idabc/eupl5
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the Licence is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
+ * #L%
+ */
+
+import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
+import com.svenruppert.jsentinel.authorization.api.tenant.TenantId;
+import com.svenruppert.jsentinel.events.api.CorrelationId;
+import com.svenruppert.jsentinel.events.api.EventEnvelopeId;
+import com.svenruppert.jsentinel.events.api.EventProducerId;
+import com.svenruppert.jsentinel.events.api.EventSequence;
+import com.svenruppert.jsentinel.events.api.JSentinelEvent;
+import com.svenruppert.jsentinel.events.api.PayloadHashAlgorithm;
+import com.svenruppert.jsentinel.events.api.SignedJSentinelEventEnvelope;
+import com.svenruppert.jsentinel.events.api.SignedJSentinelEventEnvelopeBuilder;
+import com.svenruppert.jsentinel.events.codec.CanonicalJSentinelEventPayload;
+import com.svenruppert.jsentinel.events.codec.JSentinelEventCanonicalizer;
+import com.svenruppert.jsentinel.events.codec.PayloadCodec;
+import com.svenruppert.jsentinel.events.keys.JSentinelEventSigningKeyProvider;
+import com.svenruppert.jsentinel.events.producer.JSentinelEventProducerPolicy;
+import com.svenruppert.jsentinel.events.replay.JSentinelEventReplayStore;
+import com.svenruppert.jsentinel.events.sequence.JSentinelEventSequenceStore;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Supplier;
+
+/**
+ * The publish pipeline (Konzept §826): turns a {@link JSentinelEvent} into a
+ * signed {@link SignedJSentinelEventEnvelope}. Stages, in order: complete
+ * context, check producer policy, reserve sequence, canonicalize payload,
+ * compute payload hash, build envelope, sign, mark replay store, optionally
+ * append to the envelope store.
+ *
+ * @since 00.75.00
+ */
+@ExperimentalJSentinelApi
+public final class PublishPipeline {
+
+  private final JSentinelEventSigningKeyProvider signingKeyProvider;
+  private final JSentinelEventCanonicalizer canonicalizer;
+  private final PayloadCodec codec;
+  private final PayloadHashAlgorithm hashAlgorithm;
+  private final EventProducerId producerId;
+  private final JSentinelEventSequenceStore sequenceStore;
+  private final JSentinelEventReplayStore replayStore;
+  private final JSentinelEventProducerPolicy producerPolicy;
+  private final Duration ttl;
+  private final Supplier<Instant> clock;
+
+  public PublishPipeline(JSentinelEventSigningKeyProvider signingKeyProvider,
+      JSentinelEventCanonicalizer canonicalizer, PayloadCodec codec,
+      PayloadHashAlgorithm hashAlgorithm, EventProducerId producerId,
+      JSentinelEventSequenceStore sequenceStore, JSentinelEventReplayStore replayStore,
+      JSentinelEventProducerPolicy producerPolicy, Duration ttl, Supplier<Instant> clock) {
+    this.signingKeyProvider = Objects.requireNonNull(signingKeyProvider, "signingKeyProvider");
+    this.canonicalizer = Objects.requireNonNull(canonicalizer, "canonicalizer");
+    this.codec = Objects.requireNonNull(codec, "codec");
+    this.hashAlgorithm = Objects.requireNonNull(hashAlgorithm, "hashAlgorithm");
+    this.producerId = Objects.requireNonNull(producerId, "producerId");
+    this.sequenceStore = Objects.requireNonNull(sequenceStore, "sequenceStore");
+    this.replayStore = Objects.requireNonNull(replayStore, "replayStore");
+    this.producerPolicy = Objects.requireNonNull(producerPolicy, "producerPolicy");
+    this.ttl = Objects.requireNonNull(ttl, "ttl");
+    this.clock = Objects.requireNonNull(clock, "clock");
+  }
+
+  /**
+   * Runs the pipeline and returns the signed envelope.
+   *
+   * @param event the event to wrap
+   * @return the signed envelope
+   * @throws EventPublishException if the producer may not publish this type
+   */
+  public SignedJSentinelEventEnvelope toEnvelope(JSentinelEvent event) {
+    Objects.requireNonNull(event, "event");
+    TenantId tenantId = event.tenantId();
+
+    if (!producerPolicy.mayPublish(producerId, event.eventType(), tenantId)) {
+      throw new EventPublishException("Producer " + producerId.value()
+          + " may not publish " + event.eventType().value()
+          + " for tenant " + tenantId.value());
+    }
+
+    EventSequence sequence = reserveSequence(tenantId);
+
+    CanonicalJSentinelEventPayload payload = canonicalizer.canonicalize(event);
+    byte[] canonicalPayload = codec.encode(payload);
+    String canonicalPayloadHash = PayloadDigest.hash(hashAlgorithm, canonicalPayload);
+
+    Instant now = clock.get();
+    SignedJSentinelEventEnvelopeBuilder builder = SignedJSentinelEventEnvelopeBuilder.create()
+        .envelopeId(EventEnvelopeId.random())
+        .eventId(event.eventId())
+        .eventType(event.eventType())
+        .tenantId(tenantId)
+        .subjectId(event.subjectId())
+        .producerId(producerId)
+        .occurredAt(event.occurredAt())
+        .issuedAt(now)
+        .expiresAt(now.plus(ttl))
+        .correlationId(CorrelationId.random())
+        .sequence(sequence)
+        .keyId(signingKeyProvider.currentKeyId())
+        .signatureAlgorithm(signingKeyProvider.currentAlgorithm().id())
+        .payloadContentType(codec.contentType())
+        .payloadHashAlgorithm(hashAlgorithm)
+        .canonicalPayloadHash(canonicalPayloadHash)
+        .canonicalPayload(canonicalPayload)
+        .signature(new byte[]{0});
+
+    byte[] signatureBase = EnvelopeSignatureBase.compute(builder.build());
+    byte[] signature = signingKeyProvider.currentAlgorithm()
+        .sign(signatureBase, signingKeyProvider.currentSigningKey());
+    SignedJSentinelEventEnvelope envelope = builder.signature(signature).build();
+
+    replayStore.markSeen(envelope.envelopeId(), envelope.expiresAt());
+    return envelope;
+  }
+
+  private EventSequence reserveSequence(TenantId tenantId) {
+    Optional<EventSequence> last = sequenceStore.lastSequence(tenantId, producerId);
+    EventSequence next = last.map(EventSequence::next).orElse(EventSequence.FIRST);
+    sequenceStore.updateSequence(tenantId, producerId, next);
+    return next;
+  }
+}
