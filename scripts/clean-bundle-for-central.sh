@@ -82,6 +82,10 @@ MODULES=(
     "jSentinel-propagation"
     "jSentinel-propagation-processor"
     "jSentinel-propagation-oidc"
+    "jSentinel-events"
+    "jSentinel-events-rest"
+    "jSentinel-events-testkit"
+    "jSentinel-events-persistence-eclipsestore"
 )
 
 if [ $# -ge 1 ]; then
