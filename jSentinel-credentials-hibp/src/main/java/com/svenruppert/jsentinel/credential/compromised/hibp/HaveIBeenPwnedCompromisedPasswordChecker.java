@@ -22,6 +22,7 @@
  */
 package com.svenruppert.jsentinel.credential.compromised.hibp;
 
+import com.svenruppert.dependencies.core.net.MediaType;
 import com.svenruppert.jsentinel.credential.compromised.CompromisedPasswordChecker;
 import com.svenruppert.jsentinel.credential.compromised.CompromisedPasswordResult;
 import com.svenruppert.jsentinel.credential.secret.SecretValue;
@@ -103,7 +104,7 @@ public final class HaveIBeenPwnedCompromisedPasswordChecker
         HttpRequest req = HttpRequest.newBuilder()
             .uri(endpoint.resolve(prefix))
             .timeout(timeout)
-            .header("Accept", "text/plain")
+            .header("Accept", MediaType.TEXT_PLAIN.mime())
             // R022: request padded range responses so a network observer cannot
             // infer the queried bucket size. Padding entries arrive with a count
             // of 0 and are tolerated by scan().
