@@ -33,10 +33,12 @@ import java.util.logging.Logger;
  * scrapers can pivot on the {@link JSentinelNotification.Kind} and
  * the attribute keys without parsing free-form text.
  *
- * <p>Plain token values are written verbatim into the line —
- * acceptable for demo / test contexts but obviously unsafe to
- * point at a production log aggregator. Production deployments
- * register their own transport.
+ * <p>Secret-bearing attribute values (the plaintext reset /
+ * verification token under {@code tokenPlain}, and any key whose name
+ * contains {@code token} / {@code secret} / {@code password}) are
+ * <strong>redacted</strong> to {@code ***} — the shipped default must
+ * never write a single-use token into a log (CWE-532, V00.75.20 R020).
+ * Production deployments register their own transport.
  */
 @ExperimentalJSentinelApi
 public final class LoggingNotificationSender implements JSentinelNotificationSender {
@@ -77,8 +79,18 @@ public final class LoggingNotificationSender implements JSentinelNotificationSen
       String key = entry.getKey();
       String value = entry.getValue();
       if (value == null) continue;
-      sb.append(' ').append(key).append('=').append(value);
+      sb.append(' ').append(key).append('=').append(isSensitive(key) ? "***" : value);
     }
     return sb.toString();
+  }
+
+  /**
+   * @param key an attribute key
+   * @return {@code true} if its value carries a secret (e.g. the plaintext
+   *     {@code tokenPlain}) and must be redacted (CWE-532)
+   */
+  private static boolean isSensitive(String key) {
+    String k = key.toLowerCase(java.util.Locale.ROOT);
+    return k.contains("token") || k.contains("secret") || k.contains("password");
   }
 }

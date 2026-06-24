@@ -66,4 +66,16 @@ public record BootstrapToken(String value, Instant createdAt) {
     Objects.requireNonNull(validity, "validity");
     return now.isAfter(createdAt.plus(validity));
   }
+
+  /**
+   * Redacts the secret {@code value} — the compiler-generated record
+   * {@code toString()} would otherwise print the one-time admin token into any
+   * log or diagnostic that stringifies the token (V00.75.20, R021).
+   *
+   * @return a value-free description
+   */
+  @Override
+  public String toString() {
+    return "BootstrapToken[value=***, createdAt=" + createdAt + "]";
+  }
 }

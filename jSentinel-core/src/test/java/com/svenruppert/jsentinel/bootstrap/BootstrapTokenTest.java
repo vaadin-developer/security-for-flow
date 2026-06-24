@@ -45,6 +45,15 @@ class BootstrapTokenTest {
   }
 
   @Test
+  @DisplayName("toString() redacts the secret value (R021)")
+  void toStringRedactsValue() {
+    BootstrapToken token = new BootstrapToken("super-secret-admin-token", ANCHOR);
+    assertFalse(token.toString().contains("super-secret-admin-token"),
+        "the one-time admin token must never appear in toString()");
+    assertTrue(token.toString().contains("***"));
+  }
+
+  @Test
   @DisplayName("constructor rejects null createdAt")
   void rejectsNullCreatedAt() {
     assertThrows(NullPointerException.class,

@@ -30,6 +30,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -58,8 +59,10 @@ class LoggingNotificationSenderTest {
     assertTrue(line.contains("type=PASSWORD_RESET_REQUESTED"));
     assertTrue(line.contains("subject=alice"));
     assertTrue(line.contains("tenant=default"));
-    assertTrue(line.contains("tokenPlain=abc"));
-    assertTrue(line.contains("expiresAt=2026-01-02T00:00:00Z"));
+    // R020: the plaintext token is redacted, never written verbatim (CWE-532).
+    assertTrue(line.contains("tokenPlain=***"));
+    assertFalse(line.contains("abc"), "the plaintext token must not appear in the log line");
+    assertTrue(line.contains("expiresAt=2026-01-02T00:00:00Z")); // non-secret attr unchanged
   }
 
   @Test
