@@ -786,12 +786,13 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
    *       {@link JSentinelServiceResolver#setLoginAttemptPolicy}.</li>
    *   <li><strong>DX-state only</strong> — {@link RateLimitPolicy},
    *       {@link ApiKeyAuthenticationService}, {@link TokenService}.
-   *       These types have no global resolver setter; they are
-   *       reported in {@link JSentinelRuntime#services()} so consumers
-   *       can see what the bootstrap configured, but the bootstrap
-   *       does not touch any global singleton for them. Adapter-DX
-   *       modules that need them can read them from
-   *       {@link BootstrapState}.</li>
+   *       These types have no global resolver setter; the bootstrap does
+   *       not touch any global singleton for them. They are recorded in
+   *       {@link BootstrapState} for adapter-DX modules to consume, and
+   *       (R029) surfaced as an {@code INFO} warning
+   *       ({@code dx/<feature>-recorded-not-wired}) rather than a
+   *       {@link JSentinelRuntime#services()} entry — a recorded-but-unwired
+   *       feature must not read as an actively-wired service.</li>
    * </ul>
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
@@ -810,21 +811,44 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
           LoginAttemptPolicy.class, state.loginAttemptPolicy().getClass(),
           "bootstrap-explicit", false));
     }
+    // R029: rateLimit / apiKeys / refreshTokens have no global resolver setter,
+    // so the bootstrap cannot wire them. Previously they were added to
+    // services() with source "bootstrap-explicit" — indistinguishable from the
+    // genuinely resolver-wired entries above, falsely reading as "configured
+    // and active". They are recorded in BootstrapState for adapter-DX modules
+    // to consume; surface that honestly as an INFO instead of a fake
+    // registration.
     if (state.rateLimitPolicy() != null) {
-      services.add(new RegisteredJSentinelService(
-          RateLimitPolicy.class, state.rateLimitPolicy().getClass(),
-          "bootstrap-explicit", false));
+      warnings.add(new JSentinelBootstrapWarning(
+          Severity.INFO,
+          "dx/rate-limit-recorded-not-wired",
+          "RateLimitPolicy (" + state.rateLimitPolicy().getClass().getName()
+              + ") was recorded via .rateLimit(...) but has no global resolver "
+              + "wiring; adapter-DX modules read it from the bootstrap state.",
+          "No action needed — consume it in your adapter, or drop the call "
+              + "if nothing reads it."));
     }
     if (state.apiKeyAuthenticationService() != null) {
-      services.add(new RegisteredJSentinelService(
-          ApiKeyAuthenticationService.class,
-          state.apiKeyAuthenticationService().getClass(),
-          "bootstrap-explicit", false));
+      warnings.add(new JSentinelBootstrapWarning(
+          Severity.INFO,
+          "dx/api-keys-recorded-not-wired",
+          "ApiKeyAuthenticationService ("
+              + state.apiKeyAuthenticationService().getClass().getName()
+              + ") was recorded via .apiKeys(...) but has no global resolver "
+              + "wiring; adapter-DX modules read it from the bootstrap state.",
+          "No action needed — consume it in your adapter, or drop the call "
+              + "if nothing reads it."));
     }
     if (state.tokenService() != null) {
-      services.add(new RegisteredJSentinelService(
-          TokenService.class, state.tokenService().getClass(),
-          "bootstrap-explicit", false));
+      warnings.add(new JSentinelBootstrapWarning(
+          Severity.INFO,
+          "dx/refresh-tokens-recorded-not-wired",
+          "TokenService (" + state.tokenService().getClass().getName()
+              + ") was recorded via .refreshTokens(...) but has no global "
+              + "resolver wiring; adapter-DX modules read it from the bootstrap "
+              + "state.",
+          "No action needed — consume it in your adapter, or drop the call "
+              + "if nothing reads it."));
     }
   }
 

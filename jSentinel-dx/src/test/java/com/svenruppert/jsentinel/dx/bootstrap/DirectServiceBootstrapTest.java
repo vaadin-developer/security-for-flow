@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -79,7 +80,7 @@ class DirectServiceBootstrapTest {
   }
 
   @Test
-  @DisplayName(".rateLimit(policy) reports in runtime but does NOT touch resolver")
+  @DisplayName(".rateLimit(policy) is recorded-not-wired: INFO warning, NOT a registered service (R029)")
   void rateLimitDxStateOnly() {
     RateLimitPolicy policy = new InMemoryRateLimitPolicy(
         new InMemoryRateLimitStore(),
@@ -88,14 +89,18 @@ class DirectServiceBootstrapTest {
     JSentinelRuntime runtime = new TestBootstrap()
         .rateLimit(policy)
         .install();
-    assertTrue(runtime.services().stream()
-        .anyMatch(s -> RateLimitPolicy.class.equals(s.spi())
-            && policy.getClass().equals(s.impl())
-            && "bootstrap-explicit".equals(s.source())));
+    // R029: must NOT masquerade as an actively-wired service.
+    assertFalse(runtime.services().stream()
+        .anyMatch(s -> RateLimitPolicy.class.equals(s.spi())),
+        "an unwired DX feature must not appear as a registered service");
+    assertTrue(runtime.warnings().stream()
+        .anyMatch(w -> "dx/rate-limit-recorded-not-wired".equals(w.code())
+            && w.severity() == Severity.INFO),
+        "an unwired DX feature must surface as an explicit INFO");
   }
 
   @Test
-  @DisplayName(".apiKeys(svc) reports in runtime; DX-state only")
+  @DisplayName(".apiKeys(svc) is recorded-not-wired: INFO warning, NOT a registered service (R029)")
   void apiKeysDxStateOnly() {
     ApiKeyStore store = new InMemoryApiKeyStore();
     TokenHasher hasher = new Sha256TokenHasher();
@@ -104,12 +109,15 @@ class DirectServiceBootstrapTest {
     JSentinelRuntime runtime = new TestBootstrap()
         .apiKeys(svc)
         .install();
-    assertTrue(runtime.services().stream()
+    assertFalse(runtime.services().stream()
         .anyMatch(s -> ApiKeyAuthenticationService.class.equals(s.spi())));
+    assertTrue(runtime.warnings().stream()
+        .anyMatch(w -> "dx/api-keys-recorded-not-wired".equals(w.code())
+            && w.severity() == Severity.INFO));
   }
 
   @Test
-  @DisplayName(".refreshTokens(svc) reports in runtime; DX-state only")
+  @DisplayName(".refreshTokens(svc) is recorded-not-wired: INFO warning, NOT a registered service (R029)")
   void refreshTokensDxStateOnly() {
     TokenService svc = new TokenService(
         new InMemoryRefreshTokenStore(),
@@ -118,12 +126,15 @@ class DirectServiceBootstrapTest {
     JSentinelRuntime runtime = new TestBootstrap()
         .refreshTokens(svc)
         .install();
-    assertTrue(runtime.services().stream()
+    assertFalse(runtime.services().stream()
         .anyMatch(s -> TokenService.class.equals(s.spi())));
+    assertTrue(runtime.warnings().stream()
+        .anyMatch(w -> "dx/refresh-tokens-recorded-not-wired".equals(w.code())
+            && w.severity() == Severity.INFO));
   }
 
   @Test
-  @DisplayName("five direct-set services compose without conflict")
+  @DisplayName("resolver-wired services register; recorded-not-wired features surface as INFO (R029)")
   void allFiveTogether() {
     LogoutService logout = new RecordingLogoutService();
     LoginAttemptPolicy bf = new InMemoryLoginAttemptPolicy();
@@ -144,14 +155,24 @@ class DirectServiceBootstrapTest {
         .refreshTokens(ts)
         .install();
 
-    assertEquals(5, runtime.services().stream()
+    // Only the two genuinely resolver-wired services register.
+    assertEquals(2, runtime.services().stream()
         .filter(s -> s.spi() == LogoutService.class
-            || s.spi() == LoginAttemptPolicy.class
-            || s.spi() == RateLimitPolicy.class
+            || s.spi() == LoginAttemptPolicy.class)
+        .count(),
+        "only resolver-wired services (logout + brute-force) must register");
+    assertEquals(0, runtime.services().stream()
+        .filter(s -> s.spi() == RateLimitPolicy.class
             || s.spi() == ApiKeyAuthenticationService.class
             || s.spi() == TokenService.class)
         .count(),
-        "all five direct services must appear in runtime");
+        "recorded-not-wired features must NOT register as services");
+    // The three recorded-not-wired features each surface as an INFO.
+    assertEquals(3, runtime.warnings().stream()
+        .filter(w -> w.severity() == Severity.INFO
+            && w.code().endsWith("-recorded-not-wired"))
+        .count(),
+        "rateLimit / apiKeys / refreshTokens must each surface as an INFO");
   }
 
   @Test
