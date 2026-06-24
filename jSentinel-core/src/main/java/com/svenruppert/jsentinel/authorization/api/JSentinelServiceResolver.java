@@ -55,6 +55,19 @@ import java.util.stream.StreamSupport;
  * Thread-safe: resolved services are cached via {@link AtomicReference} so
  * repeated lookups do not trigger SPI discovery again.
  * <p>
+ * <strong>Process-global mutable setters (V00.75.20 R038).</strong> The
+ * {@code set*(...)} methods below mutate the single process-wide default
+ * context and are therefore visible to the whole JVM. This is intentional and
+ * retained: they are the documented composition surface the DX bootstrap
+ * modules ({@code jSentinel-dx-*}) and application wiring use to register
+ * services from code rather than {@code ServiceLoader}, and the V00.75.10 H5
+ * work already moved the underlying state into {@link JSentinelContext} so the
+ * mutability is encapsulated, not free-floating statics. They are deliberately
+ * <em>not</em> deprecated. Code that must not touch process-global state —
+ * parallel tests, multi-tenant embeddings, isolated harnesses — should build a
+ * private registry via {@link JSentinelContext#createIsolated()} instead of
+ * calling these setters.
+ * <p>
  * Each service has two access patterns:
  * <ul>
  *   <li><b>Strict</b> ({@code authenticationService()}, etc.) — throws
