@@ -123,7 +123,14 @@ public final class InMemoryAbuseDetectionService implements AbuseDetectionServic
         if (outcome == AttemptOutcome.FAILURE) {
           appendEvent(composite, context.at());
         } else {
-          counters.remove(composite);
+          // R014: a success resets the window by clearing the deque IN PLACE.
+          // It must NOT remove the mapping: a concurrent appendEvent that already
+          // holds this deque reference would otherwise add to an orphaned deque
+          // and the failure would be lost — letting attempts slip past blockAt.
+          counters.computeIfPresent(composite, (k, deque) -> {
+            deque.clear();
+            return deque;
+          });
         }
       }
     }
@@ -151,25 +158,32 @@ public final class InMemoryAbuseDetectionService implements AbuseDetectionServic
   }
 
   private int currentCount(String composite, Duration window, Instant now) {
-    Deque<Instant> deque = counters.get(composite);
-    if (deque == null) {
-      return 0;
-    }
     Instant cutoff = now.minus(window);
-    synchronized (deque) {
+    int[] size = {0};
+    // R014: purge expired entries and read the size INSIDE compute, so the deque
+    // is only ever touched while the ConcurrentHashMap holds the per-key bin lock
+    // — the same discipline as appendEvent and the success-reset. No deque is ever
+    // accessed through a reference that a concurrent remove could have orphaned.
+    counters.computeIfPresent(composite, (k, deque) -> {
       while (!deque.isEmpty() && deque.peekFirst().isBefore(cutoff)) {
         deque.pollFirst();
       }
-      return deque.size();
-    }
+      size[0] = deque.size();
+      return deque;
+    });
+    return size[0];
   }
 
   private void appendEvent(String composite, Instant at) {
-    Deque<Instant> deque = counters.computeIfAbsent(
-        composite, k -> new ArrayDeque<>());
-    synchronized (deque) {
-      deque.addLast(at);
-    }
+    // R014: create-or-append in a single atomic compute. The previous
+    // computeIfAbsent + synchronized(deque) left a window in which a concurrent
+    // success-reset could remove the freshly created deque before the add landed,
+    // losing the failure. Doing the add inside compute closes that window.
+    counters.compute(composite, (k, deque) -> {
+      Deque<Instant> d = (deque == null) ? new ArrayDeque<>() : deque;
+      d.addLast(at);
+      return d;
+    });
   }
 
   private static AbuseDecision mapToDecision(

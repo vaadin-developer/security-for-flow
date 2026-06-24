@@ -35,6 +35,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -341,6 +342,84 @@ class InMemoryAbuseDetectionServiceTest {
     AbuseDecision.Block block = assertInstanceOf(
         AbuseDecision.Block.class, decision);
     assertEquals(AbuseDimension.GLOBAL, block.dimension());
+  }
+
+  @Test
+  @DisplayName("Concurrent failure records are never lost — no under-count under contention (R014)")
+  void concurrentFailuresAreAllCounted() throws InterruptedException {
+    // USERNAME failure-only counter, long window, and blockAt set EXACTLY to the
+    // total number of failures recorded. If even one concurrent append is lost the
+    // count stays below the threshold and the decision is Allow instead of Block.
+    int threads = 16;
+    int perThread = 500;
+    int total = threads * perThread;
+    // Limit fields are (window, delayAt, stepUpAt, blockAt, delayLen, blockLen):
+    // only blockAt is set, exactly to the total, so the decision is Block iff
+    // every concurrent failure was counted.
+    AbuseLimitsPolicy policy = AbuseLimitsPolicy.builder()
+        .with(AbuseAttemptType.LOGIN, AbuseDimension.USERNAME,
+            new AbuseLimitsPolicy.Limit(
+                Duration.ofHours(1), 0, 0, total,
+                Duration.ofSeconds(1), Duration.ofMinutes(1)))
+        .build();
+    InMemoryAbuseDetectionService svc = new InMemoryAbuseDetectionService(
+        policy, new RecordingAudit());
+    AbuseAttemptContext ctx = loginAttempt("victim", null, T0);
+
+    CountDownLatch start = new CountDownLatch(1);
+    Thread[] pool = new Thread[threads];
+    for (int i = 0; i < threads; i++) {
+      pool[i] = new Thread(() -> {
+        try {
+          start.await();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          return;
+        }
+        for (int j = 0; j < perThread; j++) {
+          svc.recordOutcome(ctx, AttemptOutcome.FAILURE);
+        }
+      });
+    }
+    for (Thread t : pool) {
+      t.start();
+    }
+    start.countDown();
+    for (Thread t : pool) {
+      t.join();
+    }
+
+    // Exactly `total` failures were recorded — the counter must observe all of
+    // them (blockAt == total → Block iff nothing was lost).
+    assertInstanceOf(AbuseDecision.Block.class, svc.evaluate(ctx),
+        "every concurrent failure append must be counted; a lost update would "
+            + "leave the count below blockAt and bypass the block");
+  }
+
+  @Test
+  @DisplayName("A success-reset clears the counter in place and it remains usable afterwards (R014)")
+  void successResetClearsInPlaceAndCounterStaysUsable() {
+    // Regression guard for the R014 fix: the success path clears the deque in
+    // place instead of removing the map entry, so the counter keeps working for
+    // the same (type, dimension, key) after a reset — re-accumulating to Block.
+    InMemoryAbuseDetectionService svc = new InMemoryAbuseDetectionService(
+        AbuseLimitsPolicy.defaults(), new RecordingAudit());
+    AbuseAttemptContext ctx = loginAttempt("alice", null, T0);
+
+    for (int i = 0; i < 15; i++) {
+      svc.recordOutcome(ctx, AttemptOutcome.FAILURE);
+    }
+    assertInstanceOf(AbuseDecision.Block.class, svc.evaluate(ctx));
+
+    svc.recordOutcome(ctx, AttemptOutcome.SUCCESS);
+    assertSame(AbuseDecision.Allow.INSTANCE, svc.evaluate(ctx));
+
+    // Re-accumulate on the very same key — proves the deque was cleared, not
+    // orphaned/removed in a way that would drop subsequent failures.
+    for (int i = 0; i < 15; i++) {
+      svc.recordOutcome(ctx, AttemptOutcome.FAILURE);
+    }
+    assertInstanceOf(AbuseDecision.Block.class, svc.evaluate(ctx));
   }
 
   @Test
