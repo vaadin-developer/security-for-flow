@@ -118,6 +118,37 @@ class VaadinJSentinelBootstrapTest {
   }
 
   @Test
+  void constraintlessSecureRoute_surfacesNoConstraintsAdvisory() {
+    // R035: a constraint-less @SecureRoute is fail-closed (deny anonymous) but a
+    // missing constraint is often an oversight — the bootstrap must surface a
+    // non-fatal secure-route/no-constraints WARNING when discovery is enabled.
+    FakeAuthenticationService<String, String> authn = FakeAuthenticationService.forType(String.class);
+    FakeAuthorizationService<String> authz = new FakeAuthorizationService<>();
+
+    com.svenruppert.jsentinel.dx.vaadin.routes.SecureRouteDiscovery discovery =
+        new com.svenruppert.jsentinel.dx.vaadin.routes.SecureRouteDiscovery() {
+          @Override public java.util.stream.Stream<String> discoverPolicyNames() {
+            return java.util.stream.Stream.empty();
+          }
+          @Override public java.util.stream.Stream<String> discoverConstraintlessRouteNames() {
+            return java.util.stream.Stream.of("OpenView");
+          }
+        };
+
+    JSentinelRuntime runtime = VaadinSecurity.bootstrap()
+        .authentication(authn)
+        .authorization(authz)
+        .discoverSecureRoutes(discovery)
+        .install();
+
+    assertTrue(runtime.warnings().stream()
+            .anyMatch(w -> "secure-route/no-constraints".equals(w.code())
+                && w.severity() == Severity.WARNING
+                && w.message().contains("OpenView")),
+        "a constraint-less @SecureRoute must surface a secure-route/no-constraints advisory");
+  }
+
+  @Test
   void loginRouteAndStepUpRoutePropagate() {
     FakeAuthenticationService<String, String> authn = FakeAuthenticationService.forType(String.class);
     FakeAuthorizationService<String> authz = new FakeAuthorizationService<>();

@@ -73,10 +73,22 @@ class SecureRouteEvaluatorTest {
   }
 
   @Test
-  void emptyAnnotation_grantsWithoutSubject() {
-    // No roles, no permissions, no policy → all-empty annotation grants
+  void emptyAnnotation_deniesAnonymous() {
+    // R035: a constraint-less @SecureRoute must NOT grant an anonymous visitor —
+    // it means "any authenticated subject", so no subject => Unauthenticated.
     AuthorizationDecision d = evaluator.evaluate(
         ctx(Optional.empty()),
+        ann(new String[]{}, new String[]{}, ""));
+    assertInstanceOf(AuthorizationDecision.Unauthenticated.class, d);
+  }
+
+  @Test
+  void emptyAnnotation_grantsAuthenticatedSubject() {
+    // R035: with a subject bound, a constraint-less @SecureRoute means
+    // "authenticated required" and admits any authenticated user.
+    JSentinelSubject sub = subject(Set.of(), Set.of());
+    AuthorizationDecision d = evaluator.evaluate(
+        ctx(Optional.of(sub)),
         ann(new String[]{}, new String[]{}, ""));
     assertInstanceOf(AuthorizationDecision.Granted.class, d);
   }

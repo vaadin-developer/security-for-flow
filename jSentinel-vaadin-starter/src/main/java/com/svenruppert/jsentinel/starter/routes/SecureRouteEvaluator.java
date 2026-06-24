@@ -44,12 +44,10 @@ public final class SecureRouteEvaluator implements AuthorizationEvaluator<Secure
   public AuthorizationDecision evaluate(AccessContext context, SecureRoute annotation) {
     Optional<JSentinelSubject> maybeSubject = context.subject();
     if (maybeSubject.isEmpty()) {
-      // Treat any check as Unauthenticated when no subject is bound.
-      if (annotation.roles().length == 0
-          && annotation.permissions().length == 0
-          && annotation.policy().isEmpty()) {
-        return new AuthorizationDecision.Granted();
-      }
+      // R035: fail closed. A @SecureRoute always requires authentication —
+      // even a constraint-less one means "any authenticated subject", never
+      // "anyone". Granting an anonymous visitor here would turn annotating a
+      // route to protect it into a no-op (fail-open on a security annotation).
       return new AuthorizationDecision.Unauthenticated(
           "No subject bound; @SecureRoute requires authentication.");
     }

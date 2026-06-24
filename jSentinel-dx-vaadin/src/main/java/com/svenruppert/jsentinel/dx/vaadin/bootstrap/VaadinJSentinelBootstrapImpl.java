@@ -305,6 +305,18 @@ final class VaadinJSentinelBootstrapImpl
                 + policyName + "\")...)), or fix the @SecureRoute annotation."));
       }
     });
+    // R035: a constraint-less @SecureRoute is fail-closed to "any authenticated
+    // subject" (safe), but a missing constraint is often an oversight — surface
+    // it as a non-fatal advisory (WARNING, not STRICT-ERROR, so a deliberate
+    // authenticated-only route is not blocked).
+    discovery.discoverConstraintlessRouteNames().forEach(routeName ->
+        warnings.add(new JSentinelBootstrapWarning(
+            Severity.WARNING,
+            "secure-route/no-constraints",
+            "@SecureRoute on " + routeName + " declares no roles, permissions or "
+                + "policy; it grants any authenticated subject.",
+            "Add roles/permissions/policy to restrict further, or keep it if an "
+                + "authenticated-only route is intended.")));
   }
 
   private static SecureRouteDiscovery tryLoadDefaultDiscovery() {

@@ -39,4 +39,20 @@ public interface SecureRouteDiscovery {
    *         stream is fine.
    */
   Stream<String> discoverPolicyNames();
+
+  /**
+   * Reports navigation targets carrying a constraint-less {@code @SecureRoute()}
+   * (no roles, permissions or policy). Such a route is fail-closed to "any
+   * authenticated subject" (R035) — never anonymous — so it is safe, but a
+   * missing constraint is often an oversight. The bootstrap surfaces each as a
+   * {@code secure-route/no-constraints} advisory.
+   *
+   * @return the simple names of constraint-less {@code @SecureRoute} targets;
+   *         an empty stream is fine. Default implementation returns empty so
+   *         existing (lambda) implementations stay source-compatible.
+   * @since 00.75.20
+   */
+  default Stream<String> discoverConstraintlessRouteNames() {
+    return Stream.empty();
+  }
 }

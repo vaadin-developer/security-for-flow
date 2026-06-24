@@ -48,4 +48,25 @@ public final class VaadinRouterSecureRouteDiscovery implements SecureRouteDiscov
       return Stream.empty();
     }
   }
+
+  @Override
+  public Stream<String> discoverConstraintlessRouteNames() {
+    try {
+      return RouteConfiguration.forApplicationScope()
+          .getAvailableRoutes().stream()
+          .map(RouteData::getNavigationTarget)
+          .filter(c -> c != null && c.isAnnotationPresent(SecureRoute.class))
+          .filter(VaadinRouterSecureRouteDiscovery::isConstraintless)
+          .map(Class::getSimpleName);
+    } catch (RuntimeException ignored) {
+      return Stream.empty();
+    }
+  }
+
+  private static boolean isConstraintless(Class<?> target) {
+    SecureRoute a = target.getAnnotation(SecureRoute.class);
+    return a.roles().length == 0
+        && a.permissions().length == 0
+        && a.policy().isEmpty();
+  }
 }
