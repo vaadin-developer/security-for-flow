@@ -123,8 +123,11 @@ class AuthorizationListenerPolicyTest extends BrowserlessTest {
 
     AccessDenied accessDenied = audit.single(AccessDenied.class);
     assertEquals("PolicyProtectedFixture", accessDenied.route());
-    assertTrue(accessDenied.reason().startsWith("Error:"),
-        "AccessDenied must carry a reason prefixed 'Error:'; got: "
+    // R018: the evaluator's real reason is preserved in the AUDIT channel
+    // (prefixed "Forbidden:…"), while the user-facing error view gets only a
+    // generic "Access denied" message — the reason is no longer leaked there.
+    assertTrue(accessDenied.reason().startsWith("Forbidden"),
+        "AccessDenied audit reason must carry the real Forbidden reason; got: "
             + accessDenied.reason());
 
     PolicyEvaluated policyEvaluated = audit.single(PolicyEvaluated.class);

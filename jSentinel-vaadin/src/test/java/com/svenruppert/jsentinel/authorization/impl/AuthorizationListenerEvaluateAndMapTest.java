@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -87,17 +88,21 @@ class AuthorizationListenerEvaluateAndMapTest {
   }
 
   @Test
-  @DisplayName("evaluate maps AuthorizationEvaluator(Forbidden) to deniedWithError(SecurityException)")
+  @DisplayName("evaluate maps Forbidden to deniedWithError with a GENERIC message — the reason is not leaked (R018)")
   void evaluate_authorizationForbidden() throws Exception {
     AuthorizationEvaluator<Annotation> evaluator =
-        (ctx, ann) -> new AuthorizationDecision.Forbidden("missing permission");
+        (ctx, ann) -> new AuthorizationDecision.Forbidden("missing permission document:42");
 
     Object result = invokeEvaluate(evaluator, ctx(), markerAnnotation());
 
     assertInstanceOf(AccessDecision.RerouteToError.class, result);
     AccessDecision.RerouteToError err = (AccessDecision.RerouteToError) result;
     assertEquals(SecurityException.class, err.type());
-    assertEquals("missing permission", err.message());
+    // R018: the user-facing message must be generic and must NOT echo the
+    // evaluator's internal reason (which could carry ids / policy names / SQL).
+    assertEquals("Access denied", err.message());
+    assertFalse(err.message().contains("document:42"),
+        "the internal reason must never reach the user-facing error view");
   }
 
   @Test
@@ -133,13 +138,15 @@ class AuthorizationListenerEvaluateAndMapTest {
   }
 
   @Test
-  @DisplayName("map(Forbidden) → AccessDecision.RerouteToError carrying the reason")
+  @DisplayName("map(Forbidden) → RerouteToError with a generic message; reason not leaked (R018)")
   void map_forbidden() throws Exception {
-    Object result = invokeMap(new AuthorizationDecision.Forbidden("denied"));
+    Object result = invokeMap(new AuthorizationDecision.Forbidden("denied: subject=alice policy=secret"));
     assertInstanceOf(AccessDecision.RerouteToError.class, result);
     AccessDecision.RerouteToError err = (AccessDecision.RerouteToError) result;
     assertEquals(SecurityException.class, err.type());
-    assertEquals("denied", err.message());
+    assertEquals("Access denied", err.message());
+    assertFalse(err.message().contains("alice"),
+        "the internal reason must never reach the user-facing error view");
   }
 
   @Test

@@ -142,7 +142,7 @@ public class AuthorizationListener
     if (decision instanceof AccessDecision.Granted) {
       event = new AccessGranted(now, subjectId, route);
     } else {
-      String reason = stepUpReasonIfApplicable(evaluated)
+      String reason = originalReasonIfApplicable(evaluated)
           .orElseGet(() -> switch (decision) {
             case AccessDecision.Granted ignored -> "Granted";
             case AccessDecision.Reroute reroute -> "Reroute:" + reroute.target();
@@ -178,20 +178,25 @@ public class AuthorizationListener
   }
 
   /**
-   * When the original {@link AuthorizationDecision} was
-   * {@link AuthorizationDecision.StepUpRequired}, returns the
-   * structured {@code StepUpRequired:<method>[:<reason>]} string so
-   * audit consumers can distinguish a step-up reroute from any other
-   * route forwarding. Returns {@link Optional#empty()} for every
-   * other decision shape so the caller falls back to the existing
-   * {@link AccessDecision}-based reason.
+   * Derives the audit reason from the original {@link AuthorizationDecision}
+   * when the evaluator produced one. For {@code StepUpRequired} this is the
+   * structured {@code StepUpRequired:<method>[:<reason>]} string; for
+   * {@code Forbidden} it is {@code Forbidden[:<reason>]} — the evaluator's
+   * internal reason is preserved <em>here, in the audit channel only</em>, even
+   * though it is deliberately withheld from the user-facing error view (R018).
+   * Returns {@link Optional#empty()} for every other shape (and for legacy
+   * {@link AccessEvaluator}s, which carry no original) so the caller falls back
+   * to the {@link AccessDecision}-based reason.
    */
-  private static Optional<String> stepUpReasonIfApplicable(EvaluatedDecision evaluated) {
-    return evaluated.original()
-        .filter(AuthorizationDecision.StepUpRequired.class::isInstance)
-        .map(AuthorizationDecision.StepUpRequired.class::cast)
-        .map(stepUp -> "StepUpRequired:" + stepUp.method()
-            + (stepUp.reason().isEmpty() ? "" : ":" + stepUp.reason()));
+  private static Optional<String> originalReasonIfApplicable(EvaluatedDecision evaluated) {
+    return evaluated.original().flatMap(original -> switch (original) {
+      case AuthorizationDecision.StepUpRequired stepUp ->
+          Optional.of("StepUpRequired:" + stepUp.method()
+              + (stepUp.reason().isEmpty() ? "" : ":" + stepUp.reason()));
+      case AuthorizationDecision.Forbidden(String reason) ->
+          Optional.of(reason.isEmpty() ? "Forbidden" : "Forbidden:" + reason);
+      default -> Optional.empty();
+    });
   }
 
   @SuppressWarnings("unchecked")
@@ -226,8 +231,12 @@ public class AuthorizationListener
     return switch (decision) {
       case AuthorizationDecision.Granted() -> AccessDecision.granted();
       case AuthorizationDecision.Unauthenticated(String reason) -> AccessDecision.denied("login", false);
-      case AuthorizationDecision.Forbidden(String reason) ->
-          AccessDecision.deniedWithError(SecurityException.class, reason);
+      case AuthorizationDecision.Forbidden(String _) ->
+          // R018: never surface the evaluator's internal reason to the user-facing
+          // error view (it may carry subject ids, policy names, SQL). Use a generic
+          // message, mirroring the REST adapter's generic "Forbidden" body; the real
+          // reason is recorded only in the audit channel (see audit()).
+          AccessDecision.deniedWithError(SecurityException.class, "Access denied");
       case AuthorizationDecision.StepUpRequired stepUp ->
           // Reroute to the configured step-up route — the consuming
           // application registers a Route under that name to render
