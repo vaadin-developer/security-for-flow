@@ -14,6 +14,7 @@ import com.svenruppert.jsentinel.authentication.AuthenticationService;
 import com.svenruppert.jsentinel.authorization.api.AuthorizationService;
 import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.jsentinel.authorization.api.SubjectStore;
+import com.svenruppert.jsentinel.authorization.api.SubjectStores;
 import com.svenruppert.jsentinel.bruteforce.LoginAttemptPolicy;
 import com.svenruppert.jsentinel.dx.bootstrap.JSentinelBootstrapException;
 import com.svenruppert.jsentinel.dx.internal.AbstractJSentinelBootstrap;
@@ -124,7 +125,17 @@ final class StandaloneJSentinelBootstrapImpl
 
     SubjectStore effectiveSubjectStore = subjectStore;
     boolean subjectStoreDefaulted = false;
-    if (effectiveSubjectStore == null) {
+    if (effectiveSubjectStore != null) {
+      // R008: actually wire the caller-provided store. Previously it was only
+      // added to the runtime report while the resolver kept returning the SPI
+      // default (ThreadLocalSubjectStore) — a cross-adapter asymmetry vs Vaadin,
+      // which does call SubjectStores.setSubjectStore(...). Caller wins.
+      SubjectStores.setSubjectStore(effectiveSubjectStore);
+    } else {
+      // No explicit store: fall back to the SPI-registered default
+      // (ThreadLocalSubjectStore ships in jSentinel-standalone). Mirrors
+      // Vaadin's caller-wins-else-default — we do not override an existing
+      // registration when the caller supplied nothing.
       effectiveSubjectStore = new ThreadLocalSubjectStore();
       subjectStoreDefaulted = true;
     }

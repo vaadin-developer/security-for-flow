@@ -14,6 +14,7 @@ import com.svenruppert.jsentinel.authentication.AuthenticationService;
 import com.svenruppert.jsentinel.authorization.api.AuthorizationService;
 import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.jsentinel.authorization.api.SubjectStore;
+import com.svenruppert.jsentinel.authorization.api.SubjectStores;
 import com.svenruppert.jsentinel.dx.runtime.RegisteredJSentinelService;
 import com.svenruppert.jsentinel.dx.runtime.JSentinelRuntime;
 import com.svenruppert.jsentinel.standalone.ThreadLocalSubjectStore;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StandaloneJSentinelBootstrapTest {
@@ -37,6 +39,9 @@ class StandaloneJSentinelBootstrapTest {
     JSentinelServiceResolver.setAuthenticationService((AuthenticationService<?, ?>) null);
     JSentinelServiceResolver.setAuthorizationService((AuthorizationService<?>) null);
     JSentinelServiceResolver.setLoginAttemptPolicy(null);
+    // R008 wires SubjectStores; clear the cached override so each test starts
+    // from the SPI default and overrides don't leak between tests.
+    SubjectStores.reset();
   }
 
   @Test
@@ -69,6 +74,34 @@ class StandaloneJSentinelBootstrapTest {
     assertEquals(InMemorySubjectStore.class, storeEntry.impl());
     assertFalse(storeEntry.defaulted());
     assertEquals("bootstrap-explicit", storeEntry.source());
+  }
+
+  @Test
+  void customSubjectStoreIsTheStoreTheResolverReturns() {
+    // R008: the bug was that the custom store was reported but never wired,
+    // so SubjectStores kept returning the SPI default ThreadLocalSubjectStore.
+    InMemorySubjectStore customStore = new InMemorySubjectStore();
+    StandaloneSecurity.bootstrap()
+        .authentication(FakeAuthenticationService.forType(String.class))
+        .authorization(new FakeAuthorizationService<String>())
+        .subjectStore(customStore)
+        .install();
+
+    assertSame(customStore, SubjectStores.subjectStore(),
+        "the custom store must be the one the resolver returns after install()");
+  }
+
+  @Test
+  void defaultSubjectStoreResolvesToTheSpiThreadLocal() {
+    // No explicit store: the resolver must fall back to the SPI default, not
+    // a leaked override (caller-wins-else-default).
+    StandaloneSecurity.bootstrap()
+        .authentication(FakeAuthenticationService.forType(String.class))
+        .authorization(new FakeAuthorizationService<String>())
+        .install();
+
+    assertEquals(ThreadLocalSubjectStore.class, SubjectStores.subjectStore().getClass(),
+        "without an explicit store the resolver must return the SPI ThreadLocalSubjectStore");
   }
 
   @Test
