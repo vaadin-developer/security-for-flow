@@ -41,6 +41,7 @@ final class EventPublishBodies {
   static final String PAYLOAD_HASH_MISMATCH = "Payload hash mismatch";
   static final String UNKNOWN_KEY = "Unknown key";
   static final String KEY_REVOKED = "Key revoked";
+  static final String KEY_EXPIRED = "Key expired";
   static final String EXPIRED = "Expired";
   static final String REPLAY_DETECTED = "Replay detected";
   static final String SEQUENCE_VIOLATION = "Sequence violation";

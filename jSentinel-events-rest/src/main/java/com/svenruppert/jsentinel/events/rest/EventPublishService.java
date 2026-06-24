@@ -99,6 +99,9 @@ public final class EventPublishService implements HasLogger {
       case JSentinelEventVerificationResult.KeyRevoked ignored ->
           new EventPublishOutcome(HttpStatus.FORBIDDEN.code(),
               EventPublishBodies.KEY_REVOKED);
+      case JSentinelEventVerificationResult.KeyExpired ignored ->
+          new EventPublishOutcome(HttpStatus.FORBIDDEN.code(),
+              EventPublishBodies.KEY_EXPIRED);
       case JSentinelEventVerificationResult.Expired ignored ->
           new EventPublishOutcome(HttpStatus.GONE.code(),
               EventPublishBodies.EXPIRED);
