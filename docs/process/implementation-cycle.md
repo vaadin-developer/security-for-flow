@@ -225,10 +225,13 @@ Disziplin:
   Skill-Entscheidungsmatrix anwenden (z. B. `/result`: genuine
   Präsenz/Absenz ohne Fehler-Story bleibt `Optional`; versiegelte
   Domänen-Resultate *sind* das Result-Pattern).
-- **Bibliotheks-Verfügbarkeit prüfen**: Beispiel V00.75 — `MediaType` fehlt
-  in `com.svenruppert:core:06.02.01` (nur `HttpStatus` vorhanden) → `/mediatype`
-  N/A, Literal mit Inline-Kommentar belassen. `/vaadin-i18n` N/A für
-  Vaadin-freie Module.
+- **Bibliotheks-Verfügbarkeit prüfen — ALLE m2-Versionen scannen, nicht nur
+  die BOM-verwaltete**: Beispiel V00.75 — die BOM-`core:06.02.01` hat `MediaType`
+  noch nicht (nur `HttpStatus`), aber `core:06.02.02` schon. Lösung: im Parent-
+  `dependencyManagement` `core` auf `06.02.02` pinnen (überstimmt die BOM
+  reactor-weit), dann `/mediatype` anwenden. Erst wenn KEINE verfügbare Version
+  den Typ hat, ist der Standard N/A. `/vaadin-i18n` bleibt N/A für Vaadin-freie
+  Module.
 - **Released-Version nicht mutieren**: berührt der Pass funktionale Sourcen
   einer bereits auf Central publizierten Version, **erst** auf die nächste
   Maintenance-Linie bumpen (`VXX.YY.10-SNAPSHOT`), dann fixen — sonst driftet

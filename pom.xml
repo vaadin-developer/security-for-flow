@@ -20,7 +20,7 @@
     <parent>
         <groupId>com.svenruppert</groupId>
         <artifactId>dependencies</artifactId>
-        <version>06.02.01</version>
+        <version>06.02.02</version>
     </parent>
 
     <groupId>com.svenruppert.jsentinel</groupId>
@@ -206,6 +206,17 @@
 
     <dependencyManagement>
         <dependencies>
+            <!--
+              V00.75.10: pin com.svenruppert:core to 06.02.02, overriding the
+              06.02.01 managed by the dependencies BOM. 06.02.02 is the first
+              core release that ships the MediaType enum (skill /mediatype)
+              alongside HttpStatus and HasLogger; 06.02.01 had only HttpStatus.
+            -->
+            <dependency>
+                <groupId>com.svenruppert</groupId>
+                <artifactId>core</artifactId>
+                <version>06.02.02</version>
+            </dependency>
             <dependency>
                 <groupId>com.vaadin</groupId>
                 <artifactId>vaadin-bom</artifactId>
