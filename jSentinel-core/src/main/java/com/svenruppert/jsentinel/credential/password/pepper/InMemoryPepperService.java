@@ -82,8 +82,11 @@ public final class InMemoryPepperService implements PepperService {
     return activeKeyId;
   }
 
+  // R013: resolve()/wipe()/knownKeyCount() are synchronized on this — wipe()
+  // zeroes the key bytes in place and then clears the map, so an unsynchronized
+  // concurrent resolve() could clone a half-zeroed key or hit the map mid-clear.
   @Override
-  public Optional<byte[]> resolve(String keyId) {
+  public synchronized Optional<byte[]> resolve(String keyId) {
     Objects.requireNonNull(keyId, "keyId");
     byte[] key = keysById.get(keyId);
     return Optional.ofNullable(key == null ? null : key.clone());
@@ -94,7 +97,7 @@ public final class InMemoryPepperService implements PepperService {
    * service has no active key and {@link #resolve(String)} returns
    * {@link Optional#empty()} for every input.
    */
-  public void wipe() {
+  public synchronized void wipe() {
     for (byte[] key : keysById.values()) {
       Arrays.fill(key, (byte) 0);
     }
@@ -104,7 +107,7 @@ public final class InMemoryPepperService implements PepperService {
   /**
    * Convenience for tests: returns the number of known key ids.
    */
-  public int knownKeyCount() {
+  public synchronized int knownKeyCount() {
     return keysById.size();
   }
 
