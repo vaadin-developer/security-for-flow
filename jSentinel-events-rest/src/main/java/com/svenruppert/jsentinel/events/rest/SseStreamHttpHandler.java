@@ -82,6 +82,12 @@ public final class SseStreamHttpHandler implements HttpHandler, HasLogger {
     exchange.sendResponseHeaders(HttpStatus.OK.code(), 0);
 
     BoundedQueueSseSubscriber subscriber = new BoundedQueueSseSubscriber();
+    // R042: the broadcaster registration is an AutoCloseable held by this
+    // try-with-resources, so the subscriber is removed on EVERY exit path —
+    // normal completion, client disconnect (IOException from write), interrupt
+    // or any other error — leaving no zombie subscription. The keep-alive write
+    // in streamLive() bounds detection latency to keepAliveSeconds even when no
+    // real events flow.
     try (OutputStream out = exchange.getResponseBody();
          AutoCloseable registration = broadcaster.register(subscriber)) {
       replaySince(resumeCursor(exchange), out);
