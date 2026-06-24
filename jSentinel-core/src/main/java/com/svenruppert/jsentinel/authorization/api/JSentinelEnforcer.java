@@ -339,6 +339,16 @@ public final class JSentinelEnforcer {
         "Unsupported evaluator type: " + evaluator.getClass().getName());
   }
 
+  /**
+   * Routes a core {@link AuthorizationDecision} for the standalone /
+   * annotation-processor enforcement path. This is the standalone row of the
+   * canonical cross-adapter mapping — see {@link AuthorizationDecision} for the
+   * full table (R024). The switch is exhaustive over the sealed type; every
+   * non-{@code Granted} variant becomes an {@link AccessDeniedException}
+   * (standalone has no navigation or HTTP transport), and {@code StepUpRequired}
+   * preserves its {@code method} in the message so callers can distinguish a
+   * step-up requirement from a plain denial.
+   */
   private static void handle(AuthorizationDecision decision) {
     switch (decision) {
       case AuthorizationDecision.Granted ignored -> { /* fall through */ }

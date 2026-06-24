@@ -20,6 +20,13 @@ import com.svenruppert.jsentinel.authorization.api.AuthorizationDecision;
 
 /**
  * Maps semantic authorization decisions to generic HTTP response behavior.
+ * <p>
+ * This is the REST row of the canonical cross-adapter mapping — see
+ * {@link AuthorizationDecision} for the full table (R024). The switch is
+ * exhaustive over the sealed type; {@code StepUpRequired} returns a
+ * {@code 401} with an RFC&nbsp;7235 {@code WWW-Authenticate: StepUp} challenge
+ * rather than a Vaadin reroute or a thrown exception, because HTTP has a
+ * first-class challenge mechanism the other adapters lack.
  */
 public final class HttpStatusDecisionMapper {
 

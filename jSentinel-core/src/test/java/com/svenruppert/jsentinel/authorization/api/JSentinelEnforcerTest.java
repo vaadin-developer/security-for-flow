@@ -420,4 +420,52 @@ class JSentinelEnforcerTest {
         () -> JSentinelEnforcer.enforce(m, MixedClass.class));
     assertTrue(ex.getMessage().contains("nope"));
   }
+
+  // ── handle(AuthorizationDecision) — standalone row of the R024 table ──
+  // The standalone adapter maps every non-Granted variant to an
+  // AccessDeniedException (no navigation, no HTTP transport). These tests pin
+  // the documented per-adapter mapping (see AuthorizationDecision javadoc).
+
+  private static void invokeHandle(AuthorizationDecision decision) throws Throwable {
+    Method m = JSentinelEnforcer.class.getDeclaredMethod("handle", AuthorizationDecision.class);
+    m.setAccessible(true);
+    try {
+      m.invoke(null, decision);
+    } catch (java.lang.reflect.InvocationTargetException ite) {
+      throw ite.getCause();
+    }
+  }
+
+  @Test
+  @DisplayName("handle(Granted) falls through without throwing")
+  void handleGranted() {
+    assertDoesNotThrow(() -> invokeHandle(AuthorizationDecision.granted()));
+  }
+
+  @Test
+  @DisplayName("handle(Unauthenticated) throws AccessDeniedException 'Unauthenticated: …'")
+  void handleUnauthenticated() {
+    AccessDeniedException ex = assertThrows(AccessDeniedException.class,
+        () -> invokeHandle(AuthorizationDecision.unauthenticated("no subject")));
+    assertTrue(ex.getMessage().startsWith("Unauthenticated:"));
+    assertTrue(ex.getMessage().contains("no subject"));
+  }
+
+  @Test
+  @DisplayName("handle(Forbidden) throws AccessDeniedException carrying the reason")
+  void handleForbidden() {
+    AccessDeniedException ex = assertThrows(AccessDeniedException.class,
+        () -> invokeHandle(AuthorizationDecision.forbidden("missing role ADMIN")));
+    assertEquals("missing role ADMIN", ex.getMessage());
+  }
+
+  @Test
+  @DisplayName("handle(StepUpRequired) throws AccessDeniedException preserving method + reason")
+  void handleStepUp() {
+    AccessDeniedException ex = assertThrows(AccessDeniedException.class,
+        () -> invokeHandle(AuthorizationDecision.stepUpRequired("high-value op", "MFA")));
+    assertTrue(ex.getMessage().contains("Step-up required"));
+    assertTrue(ex.getMessage().contains("method=MFA"));
+    assertTrue(ex.getMessage().contains("high-value op"));
+  }
 }

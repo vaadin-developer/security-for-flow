@@ -227,6 +227,15 @@ public class AuthorizationListener
     return evaluateWithOriginal(evaluator, context, annotation).mapped();
   }
 
+  /**
+   * Maps a core {@link AuthorizationDecision} to the Vaadin-navigation
+   * {@link AccessDecision}. This is the Vaadin row of the canonical
+   * cross-adapter mapping — see {@link AuthorizationDecision} for the full
+   * table (R024). The switch is exhaustive over the sealed type;
+   * {@code StepUpRequired} reroutes to the configured step-up route rather
+   * than emitting an HTTP challenge or throwing, because navigation is the
+   * Vaadin-native way to present a step-up screen.
+   */
   private AccessDecision map(AuthorizationDecision decision) {
     return switch (decision) {
       case AuthorizationDecision.Granted() -> AccessDecision.granted();
