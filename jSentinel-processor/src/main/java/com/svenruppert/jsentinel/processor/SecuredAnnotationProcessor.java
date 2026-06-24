@@ -39,6 +39,7 @@ import javax.tools.StandardLocation;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -77,7 +78,9 @@ import java.util.stream.Collectors;
  *
  * <p>Method-level annotations take precedence over class-level
  * annotations; the first match wins (one enforcer call per generated
- * method).
+ * method). At most one security annotation may appear on any single
+ * element — more than one raises a {@code processing/multiple-security-annotations}
+ * compile error (R031), matching the runtime scanner contract.
  *
  * <p>All {@code final}/{@code private}/{@code static} diagnostics for
  * methods or classes carrying security annotations are emitted by the
@@ -96,6 +99,18 @@ public final class SecuredAnnotationProcessor
 
   private static final ClassName ENFORCER = ClassName.get(
       "com.svenruppert.jsentinel.authorization.api", "JSentinelEnforcer");
+
+  /**
+   * The method-security annotations this processor recognises. R031: at most
+   * one may appear on a single element, matching the runtime scanner's
+   * one-annotation-per-element contract.
+   */
+  private static final List<Class<? extends Annotation>> SECURITY_ANNOTATIONS = List.of(
+      RequiresPermission.class,
+      RequiresAllPermissions.class,
+      RequiresAnyPermission.class,
+      RequiresRole.class,
+      RequiresPolicy.class);
 
   // V00.73: wrapper-index writer state. Must stay in sync with the
   // package-private com.svenruppert.jsentinel.dx.diagnostics.WrapperIndexFormat
@@ -148,6 +163,9 @@ public final class SecuredAnnotationProcessor
     // index entries can be attributed to it later.
     currentSourceFqn = typeElement.getQualifiedName().toString();
     indexBySource.computeIfAbsent(currentSourceFqn, k -> new ArrayList<>());
+    // R031: a class carrying more than one security annotation is a configuration
+    // error — the dropped constraint would otherwise be silently unenforced.
+    verifyAtMostOneSecurityAnnotation(typeElement);
   }
 
   @Override
@@ -155,6 +173,10 @@ public final class SecuredAnnotationProcessor
                                                  String methodName,
                                                  TypeElement typeElementTargetClass) {
     CodeBlock.Builder body = CodeBlock.builder();
+
+    // R031: reject a method that carries more than one security annotation
+    // before lowering it, so a dropped constraint cannot go unenforced.
+    verifyAtMostOneSecurityAnnotation(methodElement);
 
     boolean guarded = emitEnforcerCall(body, methodElement);
     if (!guarded) {
@@ -189,6 +211,32 @@ public final class SecuredAnnotationProcessor
    * {@code false} when {@code element} carries none of the recognised
    * method-security annotations
    */
+  /**
+   * Emits a {@code processing/multiple-security-annotations} compile error when
+   * {@code element} carries more than one method-security annotation. The
+   * runtime scanner enforces "at most one annotation per element"; silently
+   * picking the first match here would drop the other constraint without a
+   * trace (R031), so the processor fails the compilation instead.
+   */
+  private void verifyAtMostOneSecurityAnnotation(Element element) {
+    List<String> present = new ArrayList<>();
+    for (Class<? extends Annotation> annotation : SECURITY_ANNOTATIONS) {
+      if (element.getAnnotation(annotation) != null) {
+        present.add("@" + annotation.getSimpleName());
+      }
+    }
+    if (present.size() > 1) {
+      messager.printMessage(Diagnostic.Kind.ERROR,
+          "processing/multiple-security-annotations: " + element.getSimpleName()
+              + " carries " + present.size() + " security annotations ("
+              + String.join(", ", present)
+              + "); at most one is allowed per element (matches the runtime "
+              + "one-annotation-per-element scanner contract). Keep one, or split "
+              + "the logic across separate methods.",
+          element);
+    }
+  }
+
   private boolean emitEnforcerCall(CodeBlock.Builder body, Element element) {
     RequiresPermission rp = element.getAnnotation(RequiresPermission.class);
     if (rp != null) {

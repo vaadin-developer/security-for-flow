@@ -310,6 +310,54 @@ class SecuredAnnotationProcessorTest {
   // ── negative cases (delegated to proxybuilder) ───────────────────
 
   @Test
+  @DisplayName("A method with two security annotations fails with processing/multiple-security-annotations (R031)")
+  void multipleSecurityAnnotationsOnMethodRejected() {
+    JavaFileObject source = JavaFileObjects.forSourceLines(
+        "demo.DoubleAnnotatedService",
+        "package demo;",
+        "import com.svenruppert.jsentinel.authorization.annotations.Secured;",
+        "import com.svenruppert.jsentinel.authorization.annotations.RequiresPermission;",
+        "import com.svenruppert.jsentinel.authorization.annotations.RequiresRole;",
+        "",
+        "@Secured",
+        "public class DoubleAnnotatedService {",
+        "    @RequiresPermission(\"doc:delete\")",
+        "    @RequiresRole(\"ADMIN\")",
+        "    public void delete() {}",
+        "}");
+
+    Compilation result = compile(source);
+
+    assertThat(result).failed();
+    assertThat(result)
+        .hadErrorContaining("processing/multiple-security-annotations");
+  }
+
+  @Test
+  @DisplayName("A class with two security annotations fails with processing/multiple-security-annotations (R031)")
+  void multipleSecurityAnnotationsOnClassRejected() {
+    JavaFileObject source = JavaFileObjects.forSourceLines(
+        "demo.DoubleAnnotatedClass",
+        "package demo;",
+        "import com.svenruppert.jsentinel.authorization.annotations.Secured;",
+        "import com.svenruppert.jsentinel.authorization.annotations.RequiresRole;",
+        "import com.svenruppert.jsentinel.authorization.annotations.RequiresAnyPermission;",
+        "",
+        "@Secured",
+        "@RequiresRole(\"ADMIN\")",
+        "@RequiresAnyPermission({\"a\", \"b\"})",
+        "public class DoubleAnnotatedClass {",
+        "    public void op() {}",
+        "}");
+
+    Compilation result = compile(source);
+
+    assertThat(result).failed();
+    assertThat(result)
+        .hadErrorContaining("processing/multiple-security-annotations");
+  }
+
+  @Test
   @DisplayName("@Secured on a final class produces a compile error")
   void finalClassRejected() {
     JavaFileObject source = JavaFileObjects.forSourceLines(
