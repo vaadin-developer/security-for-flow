@@ -77,16 +77,40 @@ public final class SecuredProxy {
         interfaceType.getClassLoader(),
         new Class<?>[]{interfaceType},
         (proxy, method, args) -> {
+          // R007: handle Object methods on the proxy's own identity rather
+          // than delegating them to the wrapped impl. Delegating breaks the
+          // equals/hashCode contract (proxy.equals(proxy) could be false,
+          // proxy.equals(delegate) true) and leaks the impl's toString —
+          // both make the proxy unusable as a HashMap/HashSet key.
           if (method.getDeclaringClass() == Object.class) {
-            return method.invoke(delegate, args);
+            return switch (method.getName()) {
+              case "equals" -> proxy == (args == null ? null : args[0]);
+              case "hashCode" -> System.identityHashCode(proxy);
+              case "toString" -> "SecuredProxy<" + interfaceType.getName()
+                  + ">@" + Integer.toHexString(System.identityHashCode(proxy));
+              // getClass/notify/wait are final and never reach an
+              // InvocationHandler; any other Object method delegates safely.
+              default -> invokeDelegate(method, delegate, args);
+            };
           }
           JSentinelEnforcer.enforce(method, interfaceType);
-          try {
-            return method.invoke(delegate, args);
-          } catch (InvocationTargetException ite) {
-            throw ite.getCause();
-          }
+          return invokeDelegate(method, delegate, args);
         });
+  }
+
+  /**
+   * Invokes {@code method} on {@code delegate}, unwrapping a reflective
+   * {@link InvocationTargetException} so callers see the real cause instead
+   * of the reflection wrapper (R007 — applied on both the guarded and the
+   * Object-method dispatch paths).
+   */
+  private static Object invokeDelegate(Method method, Object delegate, Object[] args)
+      throws Throwable {
+    try {
+      return method.invoke(delegate, args);
+    } catch (InvocationTargetException ite) {
+      throw ite.getCause();
+    }
   }
 
   /**

@@ -99,6 +99,49 @@ class SecuredTest {
     // through enforcement they would throw AccessDeniedException.
   }
 
+  // ── R007: Object methods resolve on proxy identity, not the delegate ──
+
+  @Test
+  @DisplayName("equals is reflexive and does NOT equal the wrapped delegate (R007)")
+  void equalsIsProxyIdentity() {
+    Service delegate = new ServiceImpl();
+    Service secured = SecuredProxy.wrap(Service.class, delegate);
+    Service other = SecuredProxy.wrap(Service.class, delegate);
+
+    assertEquals(secured, secured, "proxy must equal itself");
+    assertFalse(secured.equals(delegate),
+        "proxy must NOT equal its wrapped delegate (identity, not delegation)");
+    assertFalse(secured.equals(other),
+        "two distinct proxies over the same delegate must not be equal");
+    assertFalse(secured.equals(null), "proxy must not equal null");
+  }
+
+  @Test
+  @DisplayName("hashCode is the proxy's identity hash, usable as a HashMap key (R007)")
+  void usableAsHashMapKey() {
+    Service secured = SecuredProxy.wrap(Service.class, new ServiceImpl());
+    assertEquals(System.identityHashCode(secured), secured.hashCode());
+
+    Map<Service, String> map = new HashMap<>();
+    map.put(secured, "value");
+    assertEquals("value", map.get(secured),
+        "a proxy must round-trip as a HashMap key (identity hashCode + equals)");
+  }
+
+  @Test
+  @DisplayName("toString is the proxy's own, never delegated to the impl (R007)")
+  void toStringNotDelegated() {
+    Service secured = SecuredProxy.wrap(Service.class, new NamedServiceImpl());
+
+    String s = secured.toString();
+    assertFalse(s.contains("IMPL_TOSTRING"),
+        "the delegate's toString must not leak through the proxy");
+    assertTrue(s.contains("SecuredProxy"),
+        "the proxy must report its own toString; got: " + s);
+    assertTrue(s.contains(Service.class.getName()),
+        "the proxy toString should name the secured interface; got: " + s);
+  }
+
   // ── Unannotated method passes through ─────────────────────────
 
   @Test
@@ -321,6 +364,11 @@ class SecuredTest {
     @Override public void sensitiveAction() { /* noop */ }
 
     @Override public String openOperation() { return "open"; }
+  }
+
+  /** Delegate with a recognizable toString to prove the proxy never delegates it (R007). */
+  public static class NamedServiceImpl extends ServiceImpl {
+    @Override public String toString() { return "IMPL_TOSTRING"; }
   }
 
   public static class ThrowingService implements Service {
