@@ -30,6 +30,7 @@ import com.svenruppert.jsentinel.events.api.JSentinelEvent;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.RecordComponent;
+import java.util.Map;
 import java.util.TreeMap;
 
 /**
@@ -69,14 +70,63 @@ public final class RecordReflectionCanonicalizer implements JSentinelEventCanoni
         attributes);
   }
 
-  private static String readComponent(JSentinelEvent event, RecordComponent component) {
+  private static String readComponent(Object record, RecordComponent component) {
+    return render(component.getName(), readAccessor(record, component));
+  }
+
+  private static Object readAccessor(Object record, RecordComponent component) {
     try {
-      Object value = component.getAccessor().invoke(event);
-      return String.valueOf(value);
+      return component.getAccessor().invoke(record);
     } catch (IllegalAccessException | InvocationTargetException e) {
       throw new PayloadCodecException(
           "Cannot read record component " + component.getName()
-              + " of " + event.getClass().getName(), e);
+              + " of " + record.getClass().getName(), e);
     }
+  }
+
+  /**
+   * Renders a single component value to a deterministic string. R016: only
+   * value-typed components whose textual form is stable across JVMs and restarts
+   * are accepted. {@code String.valueOf} on an array / collection / arbitrary
+   * object yields an identity hash ({@code [B@1a2b3c}) or an order-dependent
+   * rendering, which would silently change the signature base and break
+   * verification. Such components are rejected loudly instead.
+   */
+  private static String render(String componentName, Object value) {
+    return switch (value) {
+      case null -> "null";
+      case String s -> s;
+      case Boolean b -> b.toString();
+      case Character c -> c.toString();
+      case Number n -> n.toString();
+      case Enum<?> e -> e.name();
+      case Record r -> renderRecord(r);
+      default -> throw new PayloadCodecException(
+          "record component '" + componentName + "' has non-canonicalizable type "
+              + value.getClass().getName()
+              + " — event record components must be String, Number, Boolean,"
+              + " Character, enum, or a record composed of those (R016)");
+    };
+  }
+
+  /**
+   * Renders a nested value-record deterministically: components sorted by name,
+   * each rendered recursively, as {@code (name=value;…)}.
+   */
+  private static String renderRecord(Record record) {
+    TreeMap<String, String> parts = new TreeMap<>();
+    for (RecordComponent component : record.getClass().getRecordComponents()) {
+      parts.put(component.getName(), readComponent(record, component));
+    }
+    StringBuilder sb = new StringBuilder("(");
+    boolean first = true;
+    for (Map.Entry<String, String> e : parts.entrySet()) {
+      if (!first) {
+        sb.append(';');
+      }
+      first = false;
+      sb.append(e.getKey()).append('=').append(e.getValue());
+    }
+    return sb.append(')').toString();
   }
 }
