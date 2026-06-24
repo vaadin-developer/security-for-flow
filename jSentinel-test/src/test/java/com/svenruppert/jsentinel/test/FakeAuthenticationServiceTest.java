@@ -136,4 +136,48 @@ class FakeAuthenticationServiceTest {
     assertThrows(NullPointerException.class,
         () -> FakeAuthenticationService.withFallback(User.class, null));
   }
+
+  @Test
+  @DisplayName("R040: concurrent register from many threads does not corrupt the registry")
+  void concurrentRegisterIsThreadSafe() throws InterruptedException {
+    FakeAuthenticationService<String, User> auth =
+        FakeAuthenticationService.forType(User.class);
+
+    int threads = 8;
+    int perThread = 500;
+    java.util.concurrent.ExecutorService pool =
+        java.util.concurrent.Executors.newFixedThreadPool(threads);
+    java.util.concurrent.CountDownLatch start = new java.util.concurrent.CountDownLatch(1);
+    try {
+      for (int t = 0; t < threads; t++) {
+        final int base = t * perThread;
+        pool.execute(() -> {
+          try {
+            start.await();
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return;
+          }
+          for (int i = 0; i < perThread; i++) {
+            String key = "k-" + (base + i);
+            auth.register(key, new User(key));
+          }
+        });
+      }
+      start.countDown();
+      pool.shutdown();
+      assertTrue(pool.awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS),
+          "registration threads must finish");
+    } finally {
+      pool.shutdownNow();
+    }
+
+    // Every key registered concurrently must be retrievable (a plain HashMap
+    // would risk lost updates / corrupted buckets under this load).
+    for (int k = 0; k < threads * perThread; k++) {
+      String key = "k-" + k;
+      assertTrue(auth.checkCredentials(key), "missing key after concurrent register: " + key);
+      assertEquals(key, auth.loadSubject(key).id());
+    }
+  }
 }

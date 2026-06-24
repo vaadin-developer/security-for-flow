@@ -18,8 +18,8 @@ package com.svenruppert.jsentinel.test;
 
 import com.svenruppert.jsentinel.authentication.AuthenticationService;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
@@ -46,7 +46,11 @@ import static java.util.Objects.requireNonNull;
 public final class FakeAuthenticationService<C, U> implements AuthenticationService<C, U> {
 
   private final Class<U> subjectType;
-  private final Map<C, U> registry = new HashMap<>();
+  // R040: shipped fixture — back the registry with a thread-safe map so
+  // consumers exercising it from concurrent tests cannot corrupt it. register()
+  // already rejects null credentials/subjects, so ConcurrentHashMap's
+  // no-null-key/value constraint is never hit.
+  private final Map<C, U> registry = new ConcurrentHashMap<>();
   private final Function<C, U> fallbackLoader;
 
   private FakeAuthenticationService(Class<U> subjectType, Function<C, U> fallbackLoader) {
