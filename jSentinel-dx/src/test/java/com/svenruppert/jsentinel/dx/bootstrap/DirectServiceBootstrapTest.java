@@ -15,8 +15,8 @@ import com.svenruppert.jsentinel.authentication.ApiKeyAuthenticationService;
 import com.svenruppert.jsentinel.authentication.ApiKeyStore;
 import com.svenruppert.jsentinel.authentication.InMemoryApiKeyStore;
 import com.svenruppert.jsentinel.authentication.InMemoryRefreshTokenStore;
-import com.svenruppert.jsentinel.authentication.PasswordHasher;
-import com.svenruppert.jsentinel.authentication.Pbkdf2PasswordHasher;
+import com.svenruppert.jsentinel.credential.token.Sha256TokenHasher;
+import com.svenruppert.jsentinel.credential.token.TokenHasher;
 import com.svenruppert.jsentinel.authentication.TokenService;
 import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.jsentinel.bruteforce.InMemoryLoginAttemptPolicy;
@@ -98,7 +98,7 @@ class DirectServiceBootstrapTest {
   @DisplayName(".apiKeys(svc) reports in runtime; DX-state only")
   void apiKeysDxStateOnly() {
     ApiKeyStore store = new InMemoryApiKeyStore();
-    PasswordHasher hasher = new Pbkdf2PasswordHasher();
+    TokenHasher hasher = new Sha256TokenHasher();
     ApiKeyAuthenticationService svc = new ApiKeyAuthenticationService(
         store, hasher, new NoopJSentinelAuditService());
     JSentinelRuntime runtime = new TestBootstrap()
@@ -113,7 +113,7 @@ class DirectServiceBootstrapTest {
   void refreshTokensDxStateOnly() {
     TokenService svc = new TokenService(
         new InMemoryRefreshTokenStore(),
-        new Pbkdf2PasswordHasher(),
+        new Sha256TokenHasher(),
         new NoopJSentinelAuditService());
     JSentinelRuntime runtime = new TestBootstrap()
         .refreshTokens(svc)
@@ -130,7 +130,7 @@ class DirectServiceBootstrapTest {
     RateLimitPolicy rl = new InMemoryRateLimitPolicy(
         new InMemoryRateLimitStore(), new NoopJSentinelAuditService(),
         50, Duration.ofMinutes(1));
-    PasswordHasher hasher = new Pbkdf2PasswordHasher();
+    TokenHasher hasher = new Sha256TokenHasher();
     ApiKeyAuthenticationService ak = new ApiKeyAuthenticationService(
         new InMemoryApiKeyStore(), hasher, new NoopJSentinelAuditService());
     TokenService ts = new TokenService(
