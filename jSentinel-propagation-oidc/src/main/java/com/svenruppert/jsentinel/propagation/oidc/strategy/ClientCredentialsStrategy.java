@@ -18,6 +18,7 @@ import com.svenruppert.jsentinel.credential.propagation.TokenCredential;
 import com.svenruppert.jsentinel.propagation.oidc.cache.InMemoryTokenExchangeCache;
 import com.svenruppert.jsentinel.propagation.oidc.cache.TokenExchangeCache;
 import com.svenruppert.jsentinel.propagation.oidc.http.JsonResponse;
+import com.svenruppert.dependencies.core.logger.HasLogger;
 
 import java.net.URI;
 import java.net.URLEncoder;
@@ -39,7 +40,7 @@ import java.util.Optional;
  * @since 00.74.00
  */
 @ExperimentalJSentinelApi
-public final class ClientCredentialsStrategy implements OutboundTokenStrategy {
+public final class ClientCredentialsStrategy implements OutboundTokenStrategy, HasLogger {
 
   /** Default lookup key. */
   public static final String NAME = "service";
@@ -108,8 +109,14 @@ public final class ClientCredentialsStrategy implements OutboundTokenStrategy {
           "Token endpoint call failed: " + e.getMessage(), e);
     }
     if (response.statusCode() < 200 || response.statusCode() >= 300) {
+      // R010: never put the token-endpoint body in the exception message — OAuth
+      // error bodies carry error_description and on a misconfig can echo grant
+      // material, and this exception propagates into logs. The thrown message
+      // carries only the status code; the body is logged truncated at DEBUG.
+      logger().debug("Token endpoint returned HTTP {} (body truncated): {}",
+          response.statusCode(), truncateBody(response.body()));
       throw new JSentinelPropagationException(response.statusCode(),
-          "Token endpoint returned HTTP " + response.statusCode() + ": " + response.body());
+          "Token endpoint returned HTTP " + response.statusCode());
     }
     String accessToken = JsonResponse.accessToken(response.body())
         .orElseThrow(() -> new JSentinelPropagationException(response.statusCode(),
@@ -118,6 +125,14 @@ public final class ClientCredentialsStrategy implements OutboundTokenStrategy {
     cache.put(key, new TokenExchangeCache.CachedEntry(
         accessToken, Instant.now().plusSeconds(expiresIn)));
     return Optional.of(new HeaderValue("Authorization", "Bearer " + accessToken));
+  }
+
+  /** Caps a diagnostic body so a large/hostile error response can't flood the log. */
+  private static String truncateBody(String body) {
+    if (body == null) {
+      return "";
+    }
+    return body.length() <= 256 ? body : body.substring(0, 256) + "…(truncated)";
   }
 
   private String formBody(OutboundCall call) {

@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DisplayName("TokenExchangeStrategy — integration against StubTokenEndpoint")
@@ -70,6 +71,23 @@ class TokenExchangeStrategyIntegrationTest {
             new OutboundCall("svc", "m", "api", Map.of()),
             Optional.of(new BearerToken("subject"))));
     assertEquals(401, ex.httpStatus());
+  }
+
+  @Test
+  @DisplayName("the token-endpoint error body is NOT leaked in the exception message (R010)")
+  void errorBodyNotLeakedInExceptionMessage() {
+    stub.respondWith(new StubTokenEndpoint.Response(400,
+        "{\"error\":\"invalid_grant\",\"error_description\":\"leaked-secret-xyz\"}"));
+    TokenExchangeStrategy strategy = new TokenExchangeStrategy(
+        stub.tokenEndpoint(), "cid", "csecret",
+        HttpClient.newHttpClient(), new InMemoryTokenExchangeCache());
+    JSentinelPropagationException ex = assertThrows(JSentinelPropagationException.class,
+        () -> strategy.resolve(
+            new OutboundCall("svc", "m", "api", Map.of()),
+            Optional.of(new BearerToken("subject"))));
+    assertEquals(400, ex.httpStatus());
+    assertFalse(ex.getMessage().contains("leaked-secret-xyz"),
+        "the response body must never appear in the propagation exception message");
   }
 
   @Test

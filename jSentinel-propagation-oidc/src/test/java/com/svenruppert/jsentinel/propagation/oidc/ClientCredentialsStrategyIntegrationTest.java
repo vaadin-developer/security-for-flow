@@ -14,6 +14,7 @@ import com.svenruppert.jsentinel.credential.propagation.HeaderValue;
 import com.svenruppert.jsentinel.credential.propagation.OutboundCall;
 import com.svenruppert.jsentinel.propagation.oidc.cache.InMemoryTokenExchangeCache;
 import com.svenruppert.jsentinel.propagation.oidc.strategy.ClientCredentialsStrategy;
+import com.svenruppert.jsentinel.propagation.oidc.strategy.JSentinelPropagationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +27,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DisplayName("ClientCredentialsStrategy — integration against StubTokenEndpoint")
 class ClientCredentialsStrategyIntegrationTest {
@@ -54,5 +57,23 @@ class ClientCredentialsStrategyIntegrationTest {
         new OutboundCall("svc", "m", "api", Map.of()),
         Optional.empty());
     assertEquals(new HeaderValue("Authorization", "Bearer svc-abc"), header.orElseThrow());
+  }
+
+  @Test
+  @DisplayName("the token-endpoint error body is NOT leaked in the exception message (R010)")
+  void errorBodyNotLeakedInExceptionMessage() {
+    stub.respondWith(new StubTokenEndpoint.Response(400,
+        "{\"error\":\"invalid_client\",\"error_description\":\"leaked-secret-xyz\"}"));
+    ClientCredentialsStrategy strategy = new ClientCredentialsStrategy(
+        stub.tokenEndpoint(), "cid", "csecret",
+        HttpClient.newHttpClient(), new InMemoryTokenExchangeCache(),
+        ClientCredentialsStrategy.NAME);
+    JSentinelPropagationException ex = assertThrows(JSentinelPropagationException.class,
+        () -> strategy.resolve(
+            new OutboundCall("svc", "m", "api", Map.of()),
+            Optional.empty()));
+    assertEquals(400, ex.httpStatus());
+    assertFalse(ex.getMessage().contains("leaked-secret-xyz"),
+        "the response body must never appear in the propagation exception message");
   }
 }
