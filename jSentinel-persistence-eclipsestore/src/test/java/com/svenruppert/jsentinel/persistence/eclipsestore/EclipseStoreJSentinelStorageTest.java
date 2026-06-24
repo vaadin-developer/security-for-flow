@@ -15,6 +15,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -46,6 +47,17 @@ class EclipseStoreJSentinelStorageTest {
    * documents that contract and protects the V00.74.20 refactor from
    * silently weakening it.
    */
+  @Test
+  void closeIsIdempotent() {
+    // R033: the Javadoc promises a safe-to-call-twice close(); a second call
+    // must be a no-op, not act on an already-shut manager.
+    EclipseStoreJSentinelStorage storage =
+        EclipseStoreJSentinelStorage.openAt(tempDir);
+    storage.close();
+    assertDoesNotThrow(storage::close,
+        "a second close() must be a no-op, matching the documented contract");
+  }
+
   @Test
   void openAtSamePathTwice_secondFails() {
     try (EclipseStoreJSentinelStorage first =

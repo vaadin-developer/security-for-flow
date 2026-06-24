@@ -68,6 +68,7 @@ public final class EclipseStoreJSentinelStorage implements AutoCloseable {
   private final EmbeddedStorageManager manager;
   private final EclipseStoreJSentinelRoot root;
   private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+  private boolean closed;
 
   /**
    * Package-private constructor used by both {@link #openAt(Path)}
@@ -122,10 +123,24 @@ public final class EclipseStoreJSentinelStorage implements AutoCloseable {
   /**
    * Shuts the underlying {@link EmbeddedStorageManager} down. Safe to
    * call more than once; subsequent calls are no-ops.
+   *
+   * <p>R033: a {@code closed} guard (taken under the write lock, so it is
+   * thread-safe and ordered against in-flight store writes) makes the second
+   * and later calls genuine no-ops, matching this contract — previously a
+   * second call hit an already-shut manager.
    */
   @Override
   public void close() {
-    manager.shutdown();
+    lock.writeLock().lock();
+    try {
+      if (closed) {
+        return;
+      }
+      closed = true;
+      manager.shutdown();
+    } finally {
+      lock.writeLock().unlock();
+    }
   }
 
   // ── package-private accessors used by every store ────────────────
