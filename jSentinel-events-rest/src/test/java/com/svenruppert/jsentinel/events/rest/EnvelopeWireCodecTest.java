@@ -30,7 +30,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("EnvelopeWireCodec")
@@ -43,7 +42,7 @@ class EnvelopeWireCodecTest {
   void roundTrip() {
     SignedJSentinelEventEnvelope env = new EventsRestFixtures().signedEnvelope();
     String json = codec.encode(env);
-    SignedJSentinelEventEnvelope decoded = codec.decode(json);
+    SignedJSentinelEventEnvelope decoded = codec.decode(json).getOrThrow();
     assertEquals(env, decoded);
   }
 
@@ -58,9 +57,9 @@ class EnvelopeWireCodecTest {
   }
 
   @Test
-  @DisplayName("decoding malformed JSON or a missing field throws EventWireException")
+  @DisplayName("decoding malformed JSON or a missing field is a Failure, not a thrown exception")
   void malformed() {
-    assertThrows(EventWireException.class, () -> codec.decode("{"));
-    assertThrows(EventWireException.class, () -> codec.decode("{\"envelopeId\":\"x\"}"));
+    assertTrue(codec.decode("{").isFailure());
+    assertTrue(codec.decode("{\"envelopeId\":\"x\"}").isFailure());
   }
 }

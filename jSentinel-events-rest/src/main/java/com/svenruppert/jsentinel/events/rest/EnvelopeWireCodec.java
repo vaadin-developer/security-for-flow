@@ -25,6 +25,8 @@ package com.svenruppert.jsentinel.events.rest;
  * #L%
  */
 
+import com.svenruppert.functional.result.Result;
+import com.svenruppert.functional.result.functions.CheckedSupplier;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.authorization.api.tenant.TenantId;
 import com.svenruppert.jsentinel.events.api.CausationId;
@@ -92,11 +94,21 @@ public final class EnvelopeWireCodec {
   }
 
   /**
+   * Decodes a wire envelope, capturing any malformed-input failure in the
+   * error channel instead of throwing — the caller (e.g. the publish endpoint)
+   * maps it to a 400 rather than catching an exception.
+   *
    * @param json the JSON wire form
-   * @return the decoded envelope
-   * @throws EventWireException if a required field is missing or malformed
+   * @return the decoded envelope on success, or a short error description on
+   *     malformed / incomplete input
    */
-  public SignedJSentinelEventEnvelope decode(String json) {
+  public Result<SignedJSentinelEventEnvelope, String> decode(String json) {
+    CheckedSupplier<SignedJSentinelEventEnvelope> step = () -> decodeOrThrow(json);
+    return step.get().mapError(t -> t.getClass().getSimpleName()
+        + (t.getMessage() == null ? "" : ": " + t.getMessage()));
+  }
+
+  private SignedJSentinelEventEnvelope decodeOrThrow(String json) {
     Map<String, Object> f = WireJson.parseObject(json);
     SignedJSentinelEventEnvelopeBuilder builder = SignedJSentinelEventEnvelopeBuilder.create()
         .envelopeId(EventEnvelopeId.of(str(f, "envelopeId")))

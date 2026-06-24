@@ -88,6 +88,7 @@ public final class EventPublishHttpHandler implements HttpHandler, HasLogger {
 
   private static void write(HttpExchange exchange, int status, String body) throws IOException {
     byte[] payload = body.getBytes(StandardCharsets.UTF_8);
+    // MediaType enum (skill /mediatype) is absent from core 06.02.01; literal kept.
     exchange.getResponseHeaders().add("Content-Type", "text/plain; charset=utf-8");
     exchange.sendResponseHeaders(status, payload.length == 0 ? -1 : payload.length);
     if (payload.length > 0) {

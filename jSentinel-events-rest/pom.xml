@@ -17,7 +17,7 @@
   <parent>
     <groupId>com.svenruppert.jsentinel</groupId>
     <artifactId>jSentinel-parent</artifactId>
-    <version>00.75.00</version>
+    <version>00.75.10-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -42,6 +42,11 @@
       <groupId>com.svenruppert.jsentinel</groupId>
       <artifactId>jSentinel-rest</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <!-- V00.75.10: typed fallible returns (Result) for the wire codec. -->
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>functional-reactive</artifactId>
     </dependency>
 
     <dependency>

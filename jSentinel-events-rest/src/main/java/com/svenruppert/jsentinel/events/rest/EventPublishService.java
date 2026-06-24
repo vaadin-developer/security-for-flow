@@ -74,14 +74,15 @@ public final class EventPublishService implements HasLogger {
    * @return the outcome to render
    */
   public EventPublishOutcome publish(String body) {
-    SignedJSentinelEventEnvelope envelope;
-    try {
-      envelope = wireCodec.decode(body);
-    } catch (RuntimeException malformed) {
-      logger().warn("events-rest/publish-malformed: {}", malformed.toString());
-      return new EventPublishOutcome(HttpStatus.BAD_REQUEST.code(), "Malformed envelope");
-    }
+    return wireCodec.decode(body).fold(
+        this::verifyAndMap,
+        error -> {
+          logger().warn("events-rest/publish-malformed: {}", error);
+          return new EventPublishOutcome(HttpStatus.BAD_REQUEST.code(), "Malformed envelope");
+        });
+  }
 
+  private EventPublishOutcome verifyAndMap(SignedJSentinelEventEnvelope envelope) {
     JSentinelEventVerificationResult result = consumePipeline.verify(envelope, clock.get());
     return switch (result) {
       case JSentinelEventVerificationResult.Valid v -> accept(v.envelope());

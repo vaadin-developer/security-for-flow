@@ -56,6 +56,11 @@ public final class EventsRestRoutes {
   /** SSE event name for error frames. */
   public static final String ERROR_EVENT_NAME = "security-event-error";
 
-  /** HTTP media type for the SSE stream. */
+  /**
+   * HTTP media type for the SSE stream. Kept as a string literal because the
+   * {@code MediaType} enum (skill {@code /mediatype}) is not present in the
+   * {@code com.svenruppert:core} version this reactor uses (06.02.01 ships
+   * {@code HttpStatus} but not {@code MediaType}).
+   */
   public static final String EVENT_STREAM_MEDIA_TYPE = "text/event-stream";
 }
