@@ -2,7 +2,16 @@
 
 **Geltungsbereich:** `vaadin-developer/security-for-flow` (jSentinel).
 **Stand:** 2026-06-24 (V00.75.00 Security Event Bus released to Maven Central;
-00.75.10 maintenance line open). §3.4 Standards-Compliance-Pass added.
+00.75.10 maintenance line open). §3.4 Standards-Compliance-Pass +
+§3.6 Abarbeitungsreihenfolge (Risiko-zuerst) + §3.7 Final Production-Review
+(Exit-Gate, In-Cycle-Behebung) ergänzt.
+**Zyklus-Modifikation 2026-06-24:** (1) Konzept-Review-Gate vor ClickUp
+(Stufe A.0); (2) Implementierungsplan + Prompts leben **ausschließlich in
+ClickUp**, nicht mehr als Markdown auf Platte (das Konzept bleibt als
+`Konzept-VXX.YY.ZZ.md` am Repo-Root); (3) neuer Produktions-Review-Schritt
+(Security + Refactoring) → Issues als ClickUp-Subtasks mit je einem Prompt
+(§3.5); (4) neues ClickUp-Custom-Field `Bewertung` für die menschliche
+Beschreibung + Einschätzung pro Issue (§5.7).
 
 Dieses Dokument beschreibt den vollständigen Release-Zyklus, wie er
 seit V00.74.10 etabliert ist: vom Öffnen eines neuen Release-Fensters
@@ -18,21 +27,29 @@ Ein jSentinel-Release `VXX.YY.ZZ` durchläuft fünf Stufen:
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│ Stufe A — Konzept + Plan (vor dem Cycle)                         │
-│   - Konzept-VXX.YY.ZZ.md (am Repo-Root, current)                 │
-│   - Implementierungsplan-VXX.YY.ZZ.md (am Repo-Root, current)    │
-│   - Plan zerlegt in Prompts P000..PNNN                           │
-│   - Prompts in ClickUp importiert (Liste                         │
-│     jSentinel-SecurityFramework)                                 │
+│ Stufe A — Konzept + Review + Plan (vor dem Cycle)               │
+│   A.0  Konzept-Review-Gate (seit 2026-06-24):                   │
+│        - Konzept-VXX.YY.ZZ.md existiert am Repo-Root (wie bisher)│
+│        - Konzept auf Inkonsistenzen + Schwachstellen prüfen      │
+│        - notwendige Fragen stellen, Antworten einarbeiten        │
+│        - faktische Fehler selbst korrigieren                     │
+│   A.1  Konzept-Task in ClickUp anlegen (Liste: Concepts)        │
+│        — ERST nachdem das Review-Gate durchlaufen ist            │
+│   A.2  Implementierungsplan + Prompts NUR in ClickUp             │
+│        (Liste: SecurityFramework). KEIN Plan-/Prompt-Markdown    │
+│        auf Platte. Parent-Task + Subtasks P000..PNNN +           │
+│        Deploy-Subtask                                            │
+│   A.3  Produktions-Review #1 (Security + Refactoring) → Issues   │
+│        einzeln als ClickUp-Subtasks mit je einem Prompt +        │
+│        Custom-Field `Bewertung` (§3.5, §5.7)                     │
 └──────────────────────────────────────────────────────────────────┘
                               ↓
 ┌──────────────────────────────────────────────────────────────────┐
 │ Stufe B — Release-Window öffnen                                  │
-│   1. Vorgänger-Konzept + -Plan in docs/v00.XX.YY/ archivieren    │
-│   2. .gitignore-Erweiterung (docs/v00.XX.YY/prompts/)            │
-│   3. Implementierungsplan am Repo-Root committen                 │
-│   4. Phase 0 P000 — Pom-Bump auf -SNAPSHOT                       │
-│   5. Phase 0 P001 — neue Module skeleton (falls Plan vorsieht)   │
+│   1. Vorgänger-Konzept in docs/v00.XX.YY/ archivieren            │
+│      (nur Konzept — Plan/Prompts leben in ClickUp)               │
+│   2. Phase 0 P000 — Pom-Bump auf -SNAPSHOT                       │
+│   3. Phase 0 P001 — neue Module skeleton (falls Plan vorsieht)   │
 │   ClickUp: Parent-Task → in progress; P000, P001 → completed     │
 └──────────────────────────────────────────────────────────────────┘
                               ↓
@@ -46,6 +63,7 @@ Ein jSentinel-Release `VXX.YY.ZZ` durchläuft fünf Stufen:
                               ↓
 ┌──────────────────────────────────────────────────────────────────┐
 │ Stufe D — Release-Abschluss (letzter Prompt)                     │
+│   0. Final Production-Review #2 + Fix (§3.7) — ClickUp [RF<NN>]  │
 │   1. RELEASE-NOTES-VXX.YY.ZZ.md schreiben                        │
 │   2. PIT-Regression über die touched Module                      │
 │   3. Finalize-Commit: -SNAPSHOT abstreifen                       │
@@ -61,7 +79,8 @@ Ein jSentinel-Release `VXX.YY.ZZ` durchläuft fünf Stufen:
 │ Stufe E — Post-Release                                           │
 │   1. Push develop + Tag                                          │
 │   2. GitHub-Release-Page (gh release create --latest)            │
-│   3. Implementierungsplan auf COMPLETED setzen (Plan-Body)       │
+│   3. ClickUp-Parent-Task COMPLETED-Marker setzen (Plan lebt nur  │
+│      in ClickUp — kein Plan-File mehr)                           │
 │   4. ClickUp: Parent → completed; Konzept-Task → deployed        │
 │   5. Feature-Overview-Snapshot                                   │
 └──────────────────────────────────────────────────────────────────┘
@@ -76,23 +95,26 @@ Ein jSentinel-Release `VXX.YY.ZZ` durchläuft fünf Stufen:
 Vorgänger-Release ist released, Maven-Central-Artefakte sind live. Vor
 dem ersten Code-Commit des neuen Cycles:
 
-1. **Vorgänger-Konzept + -Plan archivieren**:
+1. **Vorgänger-Konzept archivieren** (nur das Konzept — seit der
+   Modifikation 2026-06-24 gibt es **kein** Plan-/Prompt-Markdown mehr;
+   der Plan lebt in ClickUp):
    ```bash
    git mv Konzept-V00.XX.YY.md docs/v00.XX.YY/Konzept-V00.XX.YY.md
-   git mv Implementierungsplan-V00.XX.YY.md \
-          docs/v00.XX.YY/Implementierungsplan-V00.XX.YY.md
    ```
-   Konvention: **current cycle bleibt am Repo-Root**, abgeschlossene
-   Cycles wandern unter `docs/v00.XX.YY/`.
-2. **.gitignore erweitern**: Eine neue Zeile `/docs/v00.XX.YY/prompts/`
-   für den abgeschlossenen Cycle (ClickUp-importierte Prompt-Markdowns
-   sind Mirrors, nicht Source-of-Truth) UND eine Zeile für den neuen
-   Cycle, falls noch nicht vorhanden.
-3. **Neuer Implementierungsplan + Konzept** kommen am Repo-Root an:
-   - `Konzept-VXX.YY.ZZ.md` (war meist schon vorab erstellt)
-   - `Implementierungsplan-VXX.YY.ZZ.md` (neu)
+   Konvention: **current-cycle-Konzept bleibt am Repo-Root**, abgeschlossene
+   Konzepte wandern unter `docs/v00.XX.YY/`. Ältere Cycles, deren Plan noch
+   als Datei existierte, behalten ihr archiviertes
+   `Implementierungsplan-V00.XX.YY.md` unter `docs/v00.XX.YY/` (historisch).
+2. **.gitignore**: keine neue `prompts/`-Zeile mehr nötig — Prompts werden
+   nicht mehr als Markdown importiert/gemirrort, sie existieren nur als
+   ClickUp-Subtasks.
+3. **Neues Konzept** kommt am Repo-Root an:
+   - `Konzept-VXX.YY.ZZ.md` (war meist schon vorab erstellt; durchläuft
+     das Review-Gate A.0)
+   - **Kein** `Implementierungsplan-VXX.YY.ZZ.md` — Plan + Prompts werden
+     direkt in ClickUp angelegt (Stufe A.2).
 4. **Commit-Pattern**: `docs(VXX.YY.ZZ): open V00.XX release window`
-   - Beschreibt die drei Moves (Archive / .gitignore / new plan)
+   - Beschreibt die Moves (Konzept-Archive + neues Konzept)
    - Erwähnt die Phase 0-Folge-Commits
 
 ### 2.2 Phase 0 — Pom-Bump (Prompt 000)
@@ -140,14 +162,18 @@ Nach P000 + P001 wechselt der Parent-Task
 
 ## 3. Stufe C — Per-Prompt-Implementierung
 
-Für jeden Prompt P002 bis PNNN-1 (vor dem Release-Notes-Prompt):
+Für jeden Prompt P002 bis PNNN-1 (vor dem Release-Notes-Prompt).
+**Reihenfolge:** nicht nach P/R-Nummer, sondern **Risiko-zuerst** — die
+Stufenleiter dafür steht in §3.6 (aktive Blocker → geplante Härtung/Features →
+Hygiene/Tooling/Docs → Abnahme → Deploy). Die folgende Pro-Prompt-Schleife ist
+die Mechanik *pro* Prompt; §3.6 ist die Reihenfolge *zwischen* den Prompts.
 
 ### 3.1 Pro-Prompt-Schleife
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│ 1. Read prompt details aus dem Implementierungsplan              │
-│    (oder aus dem ClickUp-Subtask, der den Plan-Auszug enthält)   │
+│ 1. Read prompt details aus dem ClickUp-Subtask                   │
+│    (= einzige Source-of-Truth; kein Plan-Markdown mehr)          │
 │                                                                  │
 │ 2. Implementierung                                               │
 │    - Neue Files anlegen (Write)                                  │
@@ -244,6 +270,193 @@ Disziplin:
   der develop-Stand vom immutablen Central-Artefakt ab.
 - **Ergebnis dokumentieren**: pro Standard `applied` / `already-compliant` /
   `N-A (Grund)`; Commit-Prefix `chore`/`refactor`, kein Prompt-Bezug.
+
+### 3.5 Produktions-Review #1 — Entry-Gate (Security + Refactoring)
+
+Seit der Zyklus-Modifikation 2026-06-24 läuft pro Release-Window ein
+**vollständiger Review aller Produktions-Quelltexte** — **ohne die
+Demo-Module** (`demo-*`) — mit zwei Schwerpunkten. Es ist der **erste von
+zwei** Reviews: er prüft den *geerbten* Stand am Cycle-Start; das Gegenstück
+nach dem letzten Feature ist §3.7 (Exit-Gate, mit verpflichtender
+In-Cycle-Behebung).
+
+**a) Security** — Schwachstellen, fehlende Validierung, unsichere
+Defaults, Krypto-Fehlgebrauch, ungekapselte Exceptions auf
+untrusted-Input-Pfaden, Auth-/Authz-Lücken, Logging von Secrets,
+Serialisierung. Severity nach OWASP-Top-10 einordnen, wo zutreffend.
+
+**b) Refactoring-Potential** — Typsicherheit statt Kommentar-Disziplin,
+globaler mutabler Zustand, Duplizierung, zu große Klassen, fehlende
+Abstraktionen, Standing-Rule-Verstöße, die der §3.4-Pass nicht abdeckt.
+
+### 3.5.1 Vorgehen
+
+1. **Scope**: alle `*/src/main/java` der Library-Module; **nicht** die
+   `demo-*`-Module. Geprüft wird der reale Reactor-Stand, nicht das
+   Konzept.
+2. **Befund verifizieren**: jeder Befund wird am Code belegt (Datei +
+   Zeile) und in *Live-Bug* / *latente Falle* / *Architektur-Schuld*
+   eingeordnet — kein Befund ohne Beleg.
+3. **Pro Issue ein ClickUp-Subtask** unter dem Implementation-Plan-Parent,
+   benannt `[VXX.YY.ZZ R<NN>] <kurzform>` (R = Review-Issue, getrennt von
+   den P-Prompts des Konzept-Scopes). Der Subtask-Body enthält **einen
+   umsetzbaren Prompt** (gleiche Form wie ein P-Prompt: Problem → Lösung →
+   Acceptance).
+4. **Custom-Field `Bewertung`** pro Issue setzen (§5.7) — die menschliche
+   Beschreibung + Einschätzung (Severity, Tragweite, Empfehlung). Wo
+   passend zusätzlich `Typ` (Security-Gap / Refactor), `Risikobewertung`
+   (Hoch/Mittel/Niedrig), `OWASP Top-10`, `Modul`.
+5. **Negativ-Befunde benennen**: was geprüft und für unkritisch befunden
+   wurde, wird im Review-Ergebnis kurz erwähnt (keine stille Lücke).
+
+### 3.5.2 Verhältnis zum Konzept-Scope
+
+Die Review-Issues (`R<NN>`) sind **additiv** zum Konzept-Scope
+(`P<NNN>`). Sie können in denselben Release gezogen oder als Backlog auf
+eine Folge-Version gelegt werden — die Entscheidung pro Issue hält das
+`Bewertung`-Feld fest. Der Review selbst läuft **nach** dem Anlegen von
+Konzept-Task + Plan (Stufe A.2), bevor die Per-Prompt-Implementierung
+(Stufe C) der eigentlichen Konzept-Prompts beginnt.
+
+### 3.6 Abarbeitungsreihenfolge der Prompts (Risiko-zuerst)
+
+Sobald Konzept-Prompts (`P<NNN>`) und Review-Issues (`R<NN>`) gemeinsam im
+Plan stehen, stellt sich die Reihenfolge-Frage für Stufe C. Sie wird **nicht**
+nach P/R-Nummer und **nicht** nach „erst Bugs, dann Features" entschieden,
+sondern nach **Risiko/Tragweite**.
+
+#### 3.6.1 Nicht „Bugs vs. Features", sondern Risiko-zuerst
+
+- **Maintenance-/Hardening-Tick** (`VXX.YY.10`-Linie, „no new feature, no new
+  module"): es gibt *keine* Features — alles ist Fix/Härtung. Die Frage „erst
+  Bugs, dann Features" greift nicht; sortiert wird rein nach Risiko.
+- **Feature-Release**: neue SPIs/Module kommen **nach** der Korrektheits-
+  Grundlage, auf der sie aufsetzen — ein Feature, das auf einem fehlerhaften
+  Pfad aufbaut, wird nicht vor dessen Fix gebaut. Also „Feature nach seinem
+  Fundament", nicht „Feature nach allen Bugs".
+
+Das gemeinsame Prinzip beider Fälle:
+
+> aktive Korrektheits-/Security-Blocker → geplante Härtung/Features →
+> Hygiene/Tooling/Docs → Abnahme → Deploy.
+
+#### 3.6.2 Die Stufenleiter
+
+| Stufe | Inhalt | Warum hier |
+|---|---|---|
+| 0 — Guard | `P000` Reactor-Verify auf `-SNAPSHOT` | nichts läuft auf rotem Reactor |
+| 1 — Aktive Blocker | `urgent`-Findings, die *still falsche Sicherheit vorgaukeln* oder Daten zerstören (Auth-Bypass, Replay/Expired durchlässig, Validierung die nichts validiert, Persistenz-Datenverlust) | vor allem anderen — sie täuschen Schutz vor, der nicht existiert |
+| 2 — High Korrektheit/Security | verhaltensändernde Bugs (Secret-Leaks, NPE/Locale-Fallen, unsichere Defaults), nach Datei gebündelt | echte Runtime-Bugs, aber nicht ganz so akut wie Stufe 1 |
+| 3 — Geplante Härtung / Features | Konzept-Blöcke (`H<n>`/`P<NNN>`) bzw. neue Features, die *kein* aktiver Bug sind — Negativtests, Parser-/Transport-Härtung, struktureller Umbau. **Infrastruktur/CI-Gates** (Static-Analysis, neue Build-Profile) ans Ende dieser Stufe | blockieren nichts, solange Bugs offen sind |
+| 4 — Mediums | DX-/Processor-/Transport-Verbesserungen, Robustheits-Pärchen, restliche Mediums je Nummer | Verbesserung ohne akutes Risiko |
+| 5 — Hygiene & Docs | Logging-Refactors, `/java-standards-pass`-Pässe, Doc-Drift, Policy-Floors | ändern kein Verhalten kritischer Pfade |
+| 6 — Abnahme + Deploy | Release-Notes + PIT-Regression, dann Maven-Central | immer zuletzt (Stufe D) |
+
+Faustregel für die Tier-Zuordnung: **Zuerst das, was still falsche Sicherheit
+vorgaukelt** (Tokens validieren nichts, Replay/Expired durchlässig, Persistenz
+verliert Daten), dann das geplante Hardening/Feature, dann Tooling/Hygiene/Docs —
+ein CI-Gate oder ein Logging-Refactor blockiert nichts, solange Blocker offen
+sind. Deploy immer am Ende.
+
+#### 3.6.3 P/R-Overlap — nicht doppelt umsetzen
+
+Deckt ein geplanter Konzept-Block (`H<n>`/`P<NNN>`) denselben Bug ab wie ein
+Review-Issue (`R<NN>`), wird **über den P-Prompt umgesetzt** und das R-Issue
+**per Verweis geschlossen** — beide bleiben im Plan, es gibt **einen** Fix. Der
+Overlap wird im Plan-Parent als Querverweis-Tabelle festgehalten (`R<NN>` →
+`H<n>/P<NNN>`, Stärke: *deckt ab* / *verwandt, koordinieren*). Ein
+„verwandt"-Overlap heißt: gleiche Datei/gleiches Modul, aber distinkter Aspekt
+— gemeinsam reviewen, nicht zusammenlegen.
+
+#### 3.6.4 Innerhalb einer Stufe: nach Datei bündeln, Deps schlagen Gruppierung
+
+- **Datei-Gruppierung vor Nummern-Reihenfolge**: Issues, die dieselbe Datei /
+  Codestelle berühren, landen in einem Commit/PR (ein Edit pro Datei, kein
+  Doppel-Edit). Mehrere `R<NN>`, die z. B. dieselbe Logging-/Audit-Klasse
+  anfassen, werden gebündelt.
+- **Ordering-Dependencies schlagen die Gruppierung**: hängt B an einer von A
+  eingeführten Struktur (klassisch: „erst den prozess-globalen statischen
+  Resolver ablösen, *dann* neue Resolver-Einträge ergänzen"), kommt A zuerst —
+  notfalls über Stufengrenzen.
+- Beide — Gruppierung und Deps — werden als **„Execution order"-Abschnitt im
+  Plan-Parent-Body** dokumentiert (die konkreten Batches gehören dorthin, nicht
+  in diese generische Referenz). Ausnahme zur §5.5-„kein Parent-Append"-Regel:
+  die Execution-order ist Teil des Master-Plans, kein chronologischer Log.
+
+### 3.7 Final Production-Review #2 + Fix (Exit-Gate)
+
+Symmetrisch zum Entry-Review (§3.5) läuft **nach dem letzten Feature/Prompt**
+des Cycle — nach dem Standards-Compliance-Pass (§3.4), **vor** dem
+Release-Abschluss (Stufe D) — ein **zweiter vollständiger Produktions-Review**
+über alle Library-`*/src/main/java` (ohne `demo-*`). Der entscheidende
+Unterschied zum Entry-Review: dessen Befunde *dürfen* auf die nächste Version
+verschoben werden — der Exit-Review ist ein **Behebungs-Gate**: was er auf
+einem in diesem Cycle gelieferten Pfad findet, wird **in diesem Release
+gefixt**, nicht backlogged.
+
+**Zweck:** Regressionen und neue Schwachstellen fangen, die *durch die Arbeit
+dieses Cycle* entstanden sind (neue SPIs, geänderte Pfade, neue Parser-/
+Transport-/Krypto-Oberfläche). Der Entry-Review (§3.5) prüft den geerbten
+Stand; der Exit-Review prüft den **gelieferten** Stand.
+
+#### 3.7.1 Vorgehen
+
+1. **Scope** wie §3.5.1: alle Library-`src/main/java`, **nicht** `demo-*`.
+   Geprüft wird der reale Reactor-Stand *nach* dem letzten Feature-Commit.
+2. **Schwerpunkt auf dem Delta**: zuerst die in diesem Cycle neu/geänderten
+   Klassen (gegen den Release-Start-Stand), dann ein Sweep über die Pfade, die
+   das neue Feature berührt. Jeder Befund wird am Code belegt (Datei + Zeile)
+   und in *Live-Bug* / *latente Falle* / *Architektur-Schuld* eingeordnet.
+3. **Pro Issue ein ClickUp-Subtask** unter dem Plan-Parent, benannt
+   `[VXX.YY.ZZ RF<NN>] <kurzform>` (RF = Review-Final — getrennt von den
+   Entry-`R<NN>` und den Konzept-`P<NNN>`, damit Herkunft und Nummern nicht
+   kollidieren). Body = umsetzbarer Prompt (Problem → Lösung → Acceptance) +
+   Custom-Field `Bewertung` (§5.7).
+4. **In-cycle beheben**: jedes `RF<NN>` wird nach der Risiko-Leiter (§3.6)
+   sofort umgesetzt, getestet, committet (`fix(VXX.YY.ZZ/RF-NN): <kurzform>`)
+   und der Subtask auf `completed` + Completion-Log (§5.4) gesetzt. **Stufe D
+   beginnt erst, wenn alle pflicht-`RF<NN>` completed sind.**
+5. **Echter Blocker → Release hält**: findet der Exit-Review einen
+   urgent-/High-Befund auf einem in diesem Cycle gelieferten Pfad, wird **nicht
+   released**, bis er gefixt ist — kein „ship and patch".
+6. **Negativ-Befunde benennen** (wie §3.5.1): geprüft-und-unkritisch wird im
+   Review-Ergebnis kurz erwähnt und landet zusätzlich im
+   Security-Hygiene-Block der RELEASE-NOTES (§7.1).
+
+#### 3.7.2 Wann ein Exit-Befund verschoben werden darf
+
+Nur wenn **beide** Bedingungen gelten: (a) der Befund liegt *nicht* auf einem in
+diesem Cycle gelieferten/geänderten Pfad (echtes Alt-Erbe) **und** (b) Severity
+≤ Medium. Dann wird er wie ein Entry-`R<NN>` als Backlog auf die nächste Version
+gelegt; die Begründung hält das `Bewertung`-Feld fest. **Alles, was der Cycle
+selbst eingebracht hat, wird vor dem Release gefixt** — dafür ist das Gate da.
+
+#### 3.7.3 ClickUp-Dokumentation
+
+- `RF<NN>`-Subtasks hängen unter demselben
+  `VXX.YY.ZZ — Implementation Plan`-Parent wie `P<NNN>` und `R<NN>`.
+- Status-Fluss wie alle Subtasks: `not started → in progress → completed`
+  (§5.3), Completion-Log pro Subtask (§5.4).
+- **Gate-Anker**: ein Marker-Subtask `[VXX.YY.ZZ] Final Production-Review`
+  (analog zum `Maven Central Deploy`-Subtask) bündelt das Verdikt — Anzahl
+  Befunde, Severity-Verteilung, welche gefixt / welche (regelkonform nach
+  §3.7.2) verschoben wurden — in seinem Completion-Log. Er geht erst auf
+  `completed`, wenn alle pflicht-`RF<NN>` erledigt sind und damit das Tor zu
+  Stufe D offen ist.
+- Der Exit-Review erscheint im RELEASE-NOTES-Acceptance-Block (§7.1) als eigener
+  ✓-Punkt („Final production-review clean / N findings fixed in-cycle").
+
+#### 3.7.4 Verhältnis zu §3.4 und §3.5
+
+| Gate | Wann | Findet | Behebung |
+|---|---|---|---|
+| §3.5 Entry-Review #1 | Stufe A.3 (vor Implementierung) | geerbter Stand | `R<NN>`, Backlog erlaubt |
+| §3.4 Standards-Pass | nach Stufe C | Standing-Rule-Verstöße in neuen/geänderten Src | inline, in-cycle |
+| §3.7 Exit-Review #2 | nach §3.4, vor Stufe D | gelieferter Stand (Cycle-Delta) | `RF<NN>`, **in-cycle Pflicht** |
+
+So steht am Anfang *und* am Ende des Cycle je ein Security-Review inkl.
+Behebung — Entry öffnet den Scope, Exit schließt ihn, bevor das Artefakt nach
+Maven Central immutable wird.
 
 ---
 
@@ -369,7 +582,7 @@ Pro abgeschlossenem Prompt-Subtask:
 ```markdown
 # Implementation Prompt – Bump every pom.xml to 00.75.00-SNAPSHOT
 
-Source: `Implementierungsplan-V00.75.00.md`
+Source: `Konzept-V00.75.00.md` (Plan-Parent in ClickUp)
 Prompt: `000`
 
 * * *
@@ -403,7 +616,7 @@ Stattdessen leben die Per-Phase-Logs in den jeweiligen Subtasks.
 ```markdown
 # Maven Central Deploy
 
-Source: Implementierungsplan-VXX.YY.ZZ.md §<finale Stufe>
+Source: ClickUp Implementation-Plan-Parent, Stufe D (§7)
 Prerequisite: Tag `vXX.YY.ZZ` set + bundle built via
 clean-bundle-for-central.sh
 
@@ -420,6 +633,29 @@ clean-bundle-for-central.sh
   - Artefacts: https://repo1.maven.org/maven2/com/svenruppert/jsentinel/
   - GitHub release: https://github.com/vaadin-developer/security-for-flow/releases/tag/vXX.YY.ZZ
 ```
+
+### 5.7 Custom-Field `Bewertung` (seit 2026-06-24)
+
+Issues aus dem Produktions-Review (§3.5) — und optional jeder Subtask —
+tragen ein ClickUp-Custom-Field **`Bewertung`** (Typ `text`): die
+**menschliche Beschreibung + Einschätzung** des Punktes (Severity,
+Tragweite, Live-Bug vs. latente Falle vs. Architektur-Schuld,
+Empfehlung). Es ergänzt — ersetzt nicht — den Prompt-Body, der die
+*technische* Umsetzungsanweisung enthält.
+
+**API-Limitation**: Der ClickUp-MCP kann **keine Custom-Field-Definition
+anlegen** — nur Werte auf bestehende Felder setzen
+(`clickup_create_task` / `clickup_update_task` → `custom_fields: [{id,
+value}]`). Das Feld `Bewertung` muss daher **einmalig manuell in der
+ClickUp-UI** auf der Liste `jSentinel-SecurityFramework` angelegt werden
+(Typ: Text). Danach wird seine Feld-ID via `clickup_get_custom_fields`
+aufgelöst und pro Issue gesetzt.
+
+Vorhandene, thematisch verwandte Felder auf der Liste (nicht zu
+verwechseln): `Risikoanalyse` (short_text, nur Risiko), `Akzeptanzkriterien`
+(text), `Typ` (Security-Gap / Refactor / …), `Risikobewertung`
+(Hoch/Mittel/Niedrig), `OWASP Top-10`, `Modul`. `Bewertung` ist bewusst
+das eigenständige Freitext-Feld für die Gesamteinschätzung.
 
 ---
 
@@ -636,11 +872,14 @@ gh release create vXX.YY.ZZ \
 Übersicht. URL `https://github.com/vaadin-developer/security-for-flow/releases/tag/vXX.YY.ZZ`
 zurück an Sven melden.
 
-### 8.3 Implementierungsplan auf COMPLETED setzen
+### 8.3 Implementierungsplan auf COMPLETED setzen (ClickUp)
 
-Direkt im Plan-File:
+Seit der Modifikation 2026-06-24 gibt es **kein Plan-File mehr** — der
+Plan lebt im ClickUp-Parent-Task. Der COMPLETED-Marker wird daher **im
+Parent-Task-Body** gesetzt (Ausnahme zur §5.5-„kein Parent-Append"-Regel:
+genau dieser eine Abschluss-Marker ist erlaubt):
 
-1. Status-Banner ganz oben einfügen:
+1. Status-Banner oben in die `markdown_description` des Parent-Tasks:
    ```markdown
    **Status:** ✅ **COMPLETED** — released to Maven Central as
    `com.svenruppert.jsentinel:*:VXX.YY.ZZ` on YYYY-MM-DD.
@@ -648,12 +887,14 @@ Direkt im Plan-File:
    **Tag:** `vXX.YY.ZZ` at commit `<hash>`.
    **Scope shipped:** <N> of <M> prompts (XXX-YYY full; PZZZ partial: <reason>).
    ```
-2. **§5 Milestones-Tabelle** ergänzen um eine Status-Spalte mit
-   Commit-Hashes pro Milestone.
-3. **§-Result-Image** ggf. mit ✅ / ⚠ pro Cleanup-Item ergänzen.
-4. **Neuer §20 Release outcome** mit gemessenen PIT-Zahlen,
-   Bundle-Stats, Backlog-Verweisen.
-5. Commit: `docs(VXX.YY.ZZ): mark Implementierungsplan as completed`.
+2. **Milestones-Block** im Parent-Body um eine Status-Spalte mit
+   Commit-Hashes pro Milestone ergänzen.
+3. **Release-outcome-Block** mit gemessenen PIT-Zahlen, Bundle-Stats,
+   Backlog-Verweisen (inkl. nicht gezogener `R<NN>`-Review-Issues).
+4. Parent-Task-Status → `completed` (§8.4).
+
+(Der gemessene Outcome wandert zusätzlich in `RELEASE-NOTES-VXX.YY.ZZ.md`
+— die Release-Notes bleiben das einzige Markdown-Artefakt am Repo-Root.)
 
 ### 8.4 ClickUp-Wrap-up
 
@@ -681,8 +922,9 @@ Roadmap-Block für die nächsten Konzepte (V00.XX.YY+1, V00.XX+1, …).
 ### 8.6 Nächster Cycle vorbereitet
 
 Damit ist `develop` bereit für den nächsten Cycle. Beim Start des
-nächsten Release-Windows (§2) wandern Plan + Konzept des gerade
-abgeschlossenen Cycle nach `docs/v00.XX.YY/`.
+nächsten Release-Windows (§2) wandert das **Konzept** des gerade
+abgeschlossenen Cycle nach `docs/v00.XX.YY/`. Plan + Prompts bleiben in
+ClickUp (kein File-Archive seit 2026-06-24).
 
 ---
 
@@ -767,8 +1009,9 @@ clickup_update_task({
 
 - Referenz-Releases: V00.74.10 (Maintenance + DX-Tooling),
   V00.74.20 (Storage-Pair + V00.74.10-Cleanup).
-- Konzept- und Implementierungspläne archiviert unter
-  `docs/v00.XX.YY/`.
+- Konzepte archiviert unter `docs/v00.XX.YY/`. Implementierungspläne +
+  Prompts leben seit 2026-06-24 ausschließlich in ClickUp (ältere Cycles
+  behalten ihr historisches `Implementierungsplan-*.md` im Archiv).
 - Globaler Constraint-Satz: `~/.claude/CLAUDE.md` (Repo-übergreifend)
   und Project-Memory unter
   `~/.claude/projects/-Users-svenruppert-Workspaces-vaadin-developer-security-for-flow/memory/`.
