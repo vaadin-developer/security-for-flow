@@ -1,5 +1,13 @@
 # Implementierungsplan V00.75.00
 
+**Status:** ✅ **COMPLETED** — released to Maven Central as
+`com.svenruppert.jsentinel:*:00.75.00` on 2026-06-24.
+**Deployment ID:** `78519f1a-9589-451b-b481-8032ae90ff0d` (USER_MANAGED, published).
+**Tag:** `v00.75.00` at finalize commit `ff318d25`.
+**Scope shipped:** 34 of 35 prompts full (P002–P035); P014 (Eclipse-Serializer
+codec) deferred — version-clash risk with eclipse-store 4.1.0; canonical-JSON
+covers the mandatory default. See §20 for the full outcome.
+
 Source-Konzept: `Konzept-V00.75.00.md`
 Target version: `00.75.00`
 Target branch: `develop`
@@ -362,8 +370,52 @@ PIT regression check vs V00.74.20 baseline. 5-Minute-Setup-Doc
   the test machine.
 - Maven Central deploy of all 4 new modules.
 
-## 20. Status
+## 20. Release outcome (2026-06-24)
 
-Initial draft, 2026-06-23. Tracked in ClickUp list
-`jSentinel-SecurityFramework` (id `901524055126`) under the V00.75
-parent task once import has run.
+Released to Maven Central; deployment `78519f1a-9589-451b-b481-8032ae90ff0d`
+(`jSentinel-V00.75.00`, USER_MANAGED) uploaded HTTP 201 → VALIDATED (0 errors)
+→ published.
+
+### Scope
+
+- **34 of 35 prompts shipped full** (P002–P013, P015–P035). **P014 deferred** —
+  the optional Eclipse-Serializer payload codec: eclipse-store 4.1.0 does not
+  transitively expose the standalone `org.eclipse.serializer` facade and
+  pinning it risks a version clash with the embedded persistence binary. The
+  mandatory interoperable default (canonical-JSON codec) is shipped and
+  satisfies the deterministic-bytes contract. Carry-over documented in
+  `RELEASE-NOTES-00.75.00.md` and the persistence module's `package-info`.
+
+### Phase commits (on `develop`)
+
+| Phase | Prompts | Commit |
+|---|---|---|
+| 0 Reactor setup | 000–001 | `1bc9e5f4`, `ec66c4ea` |
+| 1 Event-Modell + Envelope | 002–004 | `629c83a2` |
+| 2 Event-Typen (34) | 005–008 | `91d8fc8e` |
+| 3 Signaturmodell | 009–011 | `2afd204f` |
+| 4 Payload-Codecs | 012–013 | `0cbb8ead` |
+| 5 Key Management | 015–016 | `33af00fd` |
+| 6 Replay + Sequence | 017–019 | `763f9d6a` |
+| 7 Producer Policy + Store SPIs | 020–022 | `80002baa` |
+| 8 EventBus + Pipelines | 023–026 | `20be52bb` |
+| 9 REST/SSE Bridge | 027–030 | `ddb3fc47` |
+| 10 Eclipse-Store Persistence | 031–032 | `bc1026ac` |
+| 11 Integration | 033–034 | `cbb97468` |
+| 12 Testkit + Notes | 035 | `95ad4304` |
+| Stufe D Finalize | — | `ff318d25` |
+
+### Quality
+
+- Tests: 145 green across the four new modules (events 94, rest 13, testkit 26,
+  persistence 12) — no mocks (real JCA crypto, keytool PKCS12 fixture, real JDK
+  `HttpServer`/`HttpClient`, real Eclipse-Store restart).
+- PIT (`jSentinel-events`): **86 % mutation** (356/416), 88 % line, test
+  strength 89 %. Pre-existing V00.71–V00.74 modules unchanged → no regression.
+
+### Bundle
+
+- `central-bundle.zip` 10 MB, 194 primary files across 25 published modules
+  (incl. the 4 new `jSentinel-events*`), GPG-signed with key `44A7EECD37010CF3`.
+
+Tracked in ClickUp list `jSentinel-SecurityFramework` (id `901524055126`).
