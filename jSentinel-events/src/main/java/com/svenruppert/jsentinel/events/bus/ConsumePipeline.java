@@ -49,11 +49,16 @@ import java.util.Optional;
 
 /**
  * The consume pipeline (Konzept §849-§871): verifies an incoming envelope and
- * returns a differentiated {@link JSentinelEventVerificationResult}. Stages, in
- * order: resolve key, check payload hash, verify signature, check time window,
- * mark replay store, validate + update sequence, check producer policy. An
- * envelope is {@link JSentinelEventVerificationResult.Valid} only when every
- * stage passes.
+ * returns a differentiated {@link JSentinelEventVerificationResult}. Stages run
+ * as read-only gates first — resolve key, check key status, check payload hash,
+ * verify signature, check time window, replay {@code hasSeen}, sequence
+ * decision, producer policy — and only when every gate passes are the two side
+ * effects committed (replay {@code markSeen}, sequence update). An envelope is
+ * {@link JSentinelEventVerificationResult.Valid} only when every gate passes.
+ *
+ * <p>Committing the side effects last (V00.75.10) means an envelope that fails a
+ * later gate never poisons the replay store nor advances the per-producer
+ * sequence.
  *
  * @since 00.75.00
  */
@@ -98,8 +103,17 @@ public final class ConsumePipeline {
     if (publicKey.isEmpty()) {
       return new JSentinelEventVerificationResult.UnknownKey(keyId);
     }
-    if (keyResolver.keyStatus(keyId) == KeyStatus.REVOKED) {
+    KeyStatus keyStatus = keyResolver.keyStatus(keyId);
+    if (keyStatus == KeyStatus.REVOKED) {
       return new JSentinelEventVerificationResult.KeyRevoked(keyId);
+    }
+    if (keyStatus == KeyStatus.EXPIRED) {
+      return new JSentinelEventVerificationResult.KeyExpired(keyId);
+    }
+    if (keyStatus != KeyStatus.ACTIVE && keyStatus != KeyStatus.ACCEPTED_FOR_VERIFICATION) {
+      // Any other status (incl. UNKNOWN reported alongside a resolvable key) is
+      // not usable for verification — fail closed rather than accept.
+      return new JSentinelEventVerificationResult.UnknownKey(keyId);
     }
 
     String recomputedHash = PayloadDigest.hash(envelope.payloadHashAlgorithm(),
@@ -119,10 +133,15 @@ public final class ConsumePipeline {
       return new JSentinelEventVerificationResult.Expired(envelope.expiresAt());
     }
 
-    if (!replayStore.markSeen(envelope.envelopeId(), envelope.expiresAt())) {
+    // Replay: read-only check first, so a genuine duplicate is reported as
+    // ReplayDetected even when a stricter sequence policy would also reject it.
+    if (replayStore.hasSeen(envelope.envelopeId())) {
       return new JSentinelEventVerificationResult.ReplayDetected(envelope.envelopeId());
     }
 
+    // Sequence + producer policy are read-only gates here — decide, but record
+    // no side effect yet (R003: a rejected envelope must neither poison the
+    // replay store nor advance the per-producer sequence).
     TenantId tenantId = envelope.tenantId();
     EventProducerId producerId = envelope.producerId();
     Optional<EventSequence> last = sequenceStore.lastSequence(tenantId, producerId);
@@ -133,12 +152,19 @@ public final class ConsumePipeline {
       return new JSentinelEventVerificationResult.SequenceViolation(
           tenantId, producerId, expected, envelope.sequence());
     }
-    sequenceStore.updateSequence(tenantId, producerId, envelope.sequence());
 
     if (!producerPolicy.mayPublish(producerId, envelope.eventType(), tenantId)) {
       return new JSentinelEventVerificationResult.ProducerNotAllowed(
           producerId, envelope.eventType(), tenantId);
     }
+
+    // Every gate passed — now commit the side effects. markSeen stays atomic to
+    // settle a concurrent duplicate that slipped past the read-only hasSeen
+    // check above.
+    if (!replayStore.markSeen(envelope.envelopeId(), envelope.expiresAt())) {
+      return new JSentinelEventVerificationResult.ReplayDetected(envelope.envelopeId());
+    }
+    sequenceStore.updateSequence(tenantId, producerId, envelope.sequence());
 
     return new JSentinelEventVerificationResult.Valid(envelope);
   }

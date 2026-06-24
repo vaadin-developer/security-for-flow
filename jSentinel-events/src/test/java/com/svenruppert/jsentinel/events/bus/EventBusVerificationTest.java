@@ -28,7 +28,10 @@ package com.svenruppert.jsentinel.events.bus;
 import com.svenruppert.jsentinel.authorization.api.tenant.TenantId;
 import com.svenruppert.jsentinel.events.api.SignedJSentinelEventEnvelope;
 import com.svenruppert.jsentinel.events.keys.InMemoryKeyManagement;
+import com.svenruppert.jsentinel.events.keys.JSentinelEventVerificationKeyResolver;
+import com.svenruppert.jsentinel.events.keys.KeyStatus;
 import com.svenruppert.jsentinel.events.producer.AllowListProducerPolicy;
+import com.svenruppert.jsentinel.events.sequence.SequenceValidator;
 import com.svenruppert.jsentinel.events.sequence.SequenceViolationStrategy;
 import com.svenruppert.jsentinel.events.signature.Ed25519SignatureAlgorithm;
 import com.svenruppert.jsentinel.events.signature.SignatureAlgorithms;
@@ -37,9 +40,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.security.PublicKey;
 import java.time.Instant;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -163,5 +169,72 @@ class EventBusVerificationTest {
         AllowListProducerPolicy.builder().build(), SequenceViolationStrategy.REJECT);
     assertInstanceOf(JSentinelEventVerificationResult.ProducerNotAllowed.class,
         strictConsumer.verify(env, BusFixtures.T0));
+  }
+
+  @Test
+  @DisplayName("an expired signing key is KeyExpired (R004)")
+  void expiredKey() {
+    BusFixtures fx = new BusFixtures();
+    SignedJSentinelEventEnvelope env = fx.publishPipeline().toEnvelope(BusFixtures.event());
+    // Real resolver that knows the bus key but reports it past its window.
+    ConsumePipeline consumer = new ConsumePipeline(
+        new ExpiredKeyResolver(fx.keyManagement), SignatureAlgorithms.defaults(),
+        fx.consumeReplay, fx.consumeSequence, new SequenceValidator(),
+        SequenceViolationStrategy.REJECT, fx.allowAll);
+    assertInstanceOf(JSentinelEventVerificationResult.KeyExpired.class,
+        consumer.verify(env, BusFixtures.T0));
+  }
+
+  @Test
+  @DisplayName("a sequence-violating envelope leaves no replay/sequence side effect (R003)")
+  void rejectedSequenceLeavesNoSideEffect() {
+    BusFixtures fx = new BusFixtures();
+    PublishPipeline publisher = fx.publishPipeline();
+    SignedJSentinelEventEnvelope seq1 = publisher.toEnvelope(BusFixtures.event());
+    publisher.toEnvelope(BusFixtures.event()); // seq2, not delivered
+    SignedJSentinelEventEnvelope seq3 = publisher.toEnvelope(BusFixtures.event());
+
+    ConsumePipeline consumer = fx.consumePipeline();
+    assertTrue(consumer.verify(seq1, BusFixtures.T0).isValid());
+    assertInstanceOf(JSentinelEventVerificationResult.SequenceViolation.class,
+        consumer.verify(seq3, BusFixtures.T0));
+
+    assertFalse(fx.consumeReplay.hasSeen(seq3.envelopeId()),
+        "a rejected envelope must not be recorded in the replay store");
+    assertEquals(1,
+        fx.consumeSequence.lastSequence(TenantId.DEFAULT, BusFixtures.PRODUCER)
+            .orElseThrow().value(),
+        "the sequence must not advance past the last accepted envelope");
+  }
+
+  @Test
+  @DisplayName("a producer-denied envelope leaves no replay/sequence side effect (R003)")
+  void rejectedProducerLeavesNoSideEffect() {
+    BusFixtures fx = new BusFixtures();
+    SignedJSentinelEventEnvelope env = fx.publishPipeline().toEnvelope(BusFixtures.event());
+    ConsumePipeline strictConsumer = fx.consumePipeline(
+        AllowListProducerPolicy.builder().build(), SequenceViolationStrategy.REJECT);
+
+    assertInstanceOf(JSentinelEventVerificationResult.ProducerNotAllowed.class,
+        strictConsumer.verify(env, BusFixtures.T0));
+
+    assertFalse(fx.consumeReplay.hasSeen(env.envelopeId()),
+        "a producer-denied envelope must not be recorded in the replay store");
+    assertTrue(fx.consumeSequence.lastSequence(TenantId.DEFAULT, BusFixtures.PRODUCER).isEmpty(),
+        "a producer-denied envelope must not advance the sequence");
+  }
+
+  /** Real resolver that knows the bus key but reports it EXPIRED — no mock. */
+  private record ExpiredKeyResolver(InMemoryKeyManagement delegate)
+      implements JSentinelEventVerificationKeyResolver {
+    @Override
+    public Optional<PublicKey> resolveVerificationKey(KeyId keyId) {
+      return delegate.resolveVerificationKey(keyId);
+    }
+
+    @Override
+    public KeyStatus keyStatus(KeyId keyId) {
+      return KeyStatus.EXPIRED;
+    }
   }
 }

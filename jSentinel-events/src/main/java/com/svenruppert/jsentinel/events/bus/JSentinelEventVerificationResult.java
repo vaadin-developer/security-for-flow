@@ -68,6 +68,15 @@ public sealed interface JSentinelEventVerificationResult {
   record KeyRevoked(KeyId keyId) implements JSentinelEventVerificationResult {
   }
 
+  /**
+   * The referenced key is past its validity window. Signatures under an expired
+   * key must be rejected just like a revoked one.
+   *
+   * @since 00.75.10
+   */
+  record KeyExpired(KeyId keyId) implements JSentinelEventVerificationResult {
+  }
+
   /** The envelope is past its acceptance window. */
   record Expired(Instant expiresAt) implements JSentinelEventVerificationResult {
   }
