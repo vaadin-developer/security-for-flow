@@ -191,6 +191,18 @@ public final class Argon2idPasswordHashProvider implements PasswordHashProvider 
     byte[] candidate = null;
     byte[] peppered = null;
     try {
+      // R017: defence-in-depth — reject cost parameters above the hard ceilings
+      // BEFORE allocating, so a tampered/corrupt envelope (e.g. m=2_000_000 KiB)
+      // cannot trigger a multi-GB allocation on the verify path (CWE-400/770).
+      // The policy-driven *ParameterValidator only runs on the hash path, not here.
+      if (iterations > Argon2idDefaults.MAX_ITERATIONS
+          || memoryKib > Argon2idDefaults.MAX_MEMORY_KIB
+          || parallelism > Argon2idDefaults.MAX_PARALLELISM
+          || hashLength > Argon2idDefaults.MAX_HASH_LENGTH) {
+        return new ProviderVerificationResult.ProviderError(
+            InternalAuditEventType.VERIFICATION_FAILED_INVALID_PARAMETERS,
+            "argon2id envelope cost parameters exceed safe limits");
+      }
       candidate = deriveKey(password, salt, iterations, memoryKib,
           parallelism, hashLength);
       peppered = PepperApplicator.apply(candidate, pepper);

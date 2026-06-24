@@ -191,6 +191,19 @@ public final class ScryptPasswordHashProvider implements PasswordHashProvider {
     byte[] candidate = null;
     byte[] peppered = null;
     try {
+      // R017: defence-in-depth — reject cost parameters above the hard ceilings
+      // BEFORE allocating. scrypt memory is ~128 * r * N bytes, so a tampered
+      // envelope with N=2^30 or an oversized r would otherwise trigger a multi-GB
+      // allocation on the verify path (CWE-400/770). The policy-driven validator
+      // only runs on the hash path, not here.
+      if (n > ScryptDefaults.MAX_N
+          || r > ScryptDefaults.MAX_R
+          || p > ScryptDefaults.MAX_P
+          || hashLength > ScryptDefaults.MAX_HASH_LENGTH) {
+        return new ProviderVerificationResult.ProviderError(
+            InternalAuditEventType.VERIFICATION_FAILED_INVALID_PARAMETERS,
+            "scrypt envelope cost parameters exceed safe limits");
+      }
       candidate = SCrypt.generate(pwBytes, salt, n, r, p, hashLength);
       peppered = PepperApplicator.apply(candidate, pepper);
       return MessageDigest.isEqual(peppered, expectedDerived)

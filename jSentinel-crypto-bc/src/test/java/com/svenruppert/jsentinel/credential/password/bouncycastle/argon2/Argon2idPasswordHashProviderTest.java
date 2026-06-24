@@ -23,6 +23,7 @@
 package com.svenruppert.jsentinel.credential.password.bouncycastle.argon2;
 
 import com.svenruppert.jsentinel.credential.CredentialType;
+import com.svenruppert.jsentinel.credential.InternalAuditEventType;
 import com.svenruppert.jsentinel.credential.password.PasswordHashResult;
 import com.svenruppert.jsentinel.credential.password.ProviderVerificationResult;
 import com.svenruppert.jsentinel.credential.password.envelope.PasswordHashCodec;
@@ -223,6 +224,33 @@ class Argon2idPasswordHashProviderTest {
     ProviderVerificationResult result = provider.verify(
         "x".toCharArray(), env, Optional.empty());
     assertInstanceOf(ProviderVerificationResult.ProviderError.class, result);
+  }
+
+  @Test
+  @DisplayName("verify rejects an over-ceiling memory parameter before allocating (R017)")
+  void verifyRejectsOverCeilingMemoryBeforeAllocation() {
+    Map<String, String> tampered = new LinkedHashMap<>();
+    tampered.put(Argon2idParameterNames.ITERATIONS, "3");
+    // 2_000_000 KiB (~2 GiB) is well above MAX_MEMORY_KIB (1 GiB). It must be
+    // rejected BEFORE any allocation — the test returning promptly is the proof
+    // (without the guard BouncyCastle would attempt a multi-GB allocation).
+    tampered.put(Argon2idParameterNames.MEMORY_KIB, "2000000");
+    tampered.put(Argon2idParameterNames.PARALLELISM, "1");
+    tampered.put(Argon2idParameterNames.HASH_LENGTH, "32");
+    tampered.put(Argon2idParameterNames.SALT, "AAAAAAAAAAAAAAAAAAAAAA==");
+    PasswordHashEnvelope env = new PasswordHashEnvelope(
+        PasswordHashFormatVersion.V1,
+        CredentialType.PASSWORD,
+        Argon2idParameterNames.ALGORITHM,
+        Argon2idParameterNames.PROVIDER_ID,
+        1, Optional.empty(), tampered, "ZGVyaXZlZA==");
+    ProviderVerificationResult result = provider.verify(
+        "x".toCharArray(), env, Optional.empty());
+    ProviderVerificationResult.ProviderError error = assertInstanceOf(
+        ProviderVerificationResult.ProviderError.class, result);
+    assertEquals(InternalAuditEventType.VERIFICATION_FAILED_INVALID_PARAMETERS,
+        error.internalAuditEventType());
+    assertTrue(error.message().contains("exceed safe limits"));
   }
 
   @Test

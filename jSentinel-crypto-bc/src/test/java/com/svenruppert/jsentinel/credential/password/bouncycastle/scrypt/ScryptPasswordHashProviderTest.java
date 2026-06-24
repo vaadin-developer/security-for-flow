@@ -23,6 +23,7 @@
 package com.svenruppert.jsentinel.credential.password.bouncycastle.scrypt;
 
 import com.svenruppert.jsentinel.credential.CredentialType;
+import com.svenruppert.jsentinel.credential.InternalAuditEventType;
 import com.svenruppert.jsentinel.credential.password.PasswordHashResult;
 import com.svenruppert.jsentinel.credential.password.ProviderVerificationResult;
 import com.svenruppert.jsentinel.credential.password.envelope.PasswordHashCodec;
@@ -204,6 +205,31 @@ class ScryptPasswordHashProviderTest {
         1, Optional.empty(), bad, "ZGVyaXZlZA==");
     assertInstanceOf(ProviderVerificationResult.ProviderError.class,
         provider.verify("x".toCharArray(), env, Optional.empty()));
+  }
+
+  @Test
+  @DisplayName("verify rejects an over-ceiling N parameter before allocating (R017)")
+  void verifyRejectsOverCeilingNBeforeAllocation() {
+    Map<String, String> tampered = new LinkedHashMap<>();
+    // N = 2^30 is far above MAX_N (2^20). scrypt memory ~ 128 * r * N, so without
+    // the guard this would attempt a multi-GB allocation. It must be rejected
+    // BEFORE allocation — the test returning promptly is the proof.
+    tampered.put(ScryptParameterNames.N, Integer.toString(1 << 30));
+    tampered.put(ScryptParameterNames.R, "8");
+    tampered.put(ScryptParameterNames.P, "1");
+    tampered.put(ScryptParameterNames.HASH_LENGTH, "32");
+    tampered.put(ScryptParameterNames.SALT, "AAAAAAAAAAAAAAAAAAAAAA==");
+    PasswordHashEnvelope env = new PasswordHashEnvelope(
+        PasswordHashFormatVersion.V1, CredentialType.PASSWORD,
+        ScryptParameterNames.ALGORITHM, ScryptParameterNames.PROVIDER_ID,
+        1, Optional.empty(), tampered, "ZGVyaXZlZA==");
+    ProviderVerificationResult result = provider.verify(
+        "x".toCharArray(), env, Optional.empty());
+    ProviderVerificationResult.ProviderError error = assertInstanceOf(
+        ProviderVerificationResult.ProviderError.class, result);
+    assertEquals(InternalAuditEventType.VERIFICATION_FAILED_INVALID_PARAMETERS,
+        error.internalAuditEventType());
+    assertTrue(error.message().contains("exceed safe limits"));
   }
 
   @Test
