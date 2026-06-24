@@ -24,6 +24,7 @@ import com.svenruppert.jsentinel.logout.SubjectClearingLogoutService;
 import com.svenruppert.jsentinel.logout.SubjectId;
 import com.svenruppert.jsentinel.logout.SubjectSessionRegistry;
 import com.svenruppert.jsentinel.authorization.api.SubjectStore;
+import com.svenruppert.jsentinel.credential.propagation.TokenCredentialStore;
 import com.svenruppert.jsentinel.session.SessionContext;
 import com.svenruppert.jsentinel.session.SessionPolicy;
 import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
@@ -152,6 +153,7 @@ public final class VaadinLogoutService<U> implements LogoutService {
     coreService.logout(subjectId, scope);
 
     if (scope == LogoutScope.CurrentSession) {
+      clearBoundTokenCredential();
       gateway.redirectTo(targetRoute);
       if (invalidateHttpSessionOnLogout) {
         gateway.invalidateHttpSession();
@@ -181,6 +183,23 @@ public final class VaadinLogoutService<U> implements LogoutService {
    * {@code LOGOUT} audit. Failures are swallowed: a logout must never
    * be blocked because the policy or audit subsystem failed.
    */
+  /**
+   * R026: a {@link LogoutScope#CurrentSession} logout must also drop the bound
+   * {@link TokenCredentialStore} credential (remember-me / propagation token).
+   * Clearing the {@link SubjectStore} alone leaves a token credential in the
+   * session that could silently re-authenticate the "logged-out" user on the
+   * next request. Best-effort: a logout must never be blocked because the token
+   * store is absent or its {@code clear()} failed.
+   */
+  private void clearBoundTokenCredential() {
+    try {
+      JSentinelServiceResolver.findTokenCredentialStore()
+          .ifPresent(TokenCredentialStore::clear);
+    } catch (RuntimeException cleanupFailure) {
+      // never block the logout flow
+    }
+  }
+
   private void notifySessionPolicyOnLogout() {
     try {
       Optional<U> currentSubject = subjectStore.currentSubject(subjectType);

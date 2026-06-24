@@ -20,6 +20,8 @@ import com.svenruppert.jsentinel.logout.InMemorySubjectSessionRegistry;
 import com.svenruppert.jsentinel.logout.LogoutListener;
 import com.svenruppert.jsentinel.logout.LogoutScope;
 import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.jsentinel.credential.propagation.BearerToken;
+import com.svenruppert.jsentinel.credential.propagation.InMemoryTokenCredentialStore;
 import com.svenruppert.jsentinel.logout.SubjectId;
 import com.svenruppert.jsentinel.authorization.api.SubjectStore;
 import com.svenruppert.jsentinel.logout.SubjectSessionRegistry;
@@ -164,6 +166,42 @@ class VaadinLogoutServiceTest {
     service.logout(alice, LogoutScope.CurrentSession);
     assertEquals(1, listener.invocations.size(),
         "after removeListener no further notifications");
+  }
+
+  @Test
+  @DisplayName("CurrentSession clears the bound TokenCredentialStore so it cannot re-authenticate (R026)")
+  void currentSession_clearsBoundTokenCredential() {
+    InMemoryTokenCredentialStore tokenStore = new InMemoryTokenCredentialStore();
+    tokenStore.bind(token());
+    JSentinelServiceResolver.setTokenCredentialStore(tokenStore);
+    assertTrue(tokenStore.current().isPresent(), "precondition: a credential is bound");
+
+    // Even with both invalidate flags false (session kept), the token must go.
+    new VaadinLogoutService<>(new RecordingSubjectStore(), String.class,
+        new RecordingGateway(), "/login", false, false)
+        .logout(alice, LogoutScope.CurrentSession);
+
+    assertTrue(tokenStore.current().isEmpty(),
+        "logout must clear the bound token credential, not only the subject");
+  }
+
+  @Test
+  @DisplayName("AllSessionsOfSubject does NOT clear the current-thread TokenCredentialStore")
+  void allSessions_doesNotClearTokenCredential() {
+    InMemoryTokenCredentialStore tokenStore = new InMemoryTokenCredentialStore();
+    tokenStore.bind(token());
+    JSentinelServiceResolver.setTokenCredentialStore(tokenStore);
+
+    new VaadinLogoutService<>(new RecordingSubjectStore(), String.class,
+        new RecordingGateway(), "/login", true, true)
+        .logout(alice, LogoutScope.AllSessionsOfSubject);
+
+    assertTrue(tokenStore.current().isPresent(),
+        "AllSessionsOfSubject is not a current-thread concern and must not touch it");
+  }
+
+  private static BearerToken token() {
+    return new BearerToken("tok-abc", Optional.empty(), Optional.empty(), Optional.empty());
   }
 
   // ── Fixtures ──────────────────────────────────────────────────
