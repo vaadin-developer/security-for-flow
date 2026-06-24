@@ -210,6 +210,11 @@ und veränderten Sourcen** des Cycle gegen die Workspace-Standing-Rule-Skills.
 Jede Stufe ist ein Slash-Command-Skill; Skill-Invocation = Migrations-
 Aufforderung über das berührte Modul (Memory `feedback_skill_invocation_is_migration`).
 
+> **Ein-Befehl-Form:** `/java-standards-pass` aggregiert die fünf Skills und
+> fährt genau diesen Pass mit der Disziplin unten (Scan zuerst, Entscheidungs-
+> matrix statt mechanisch, alle m2-Versionen prüfen, released Versionen nicht
+> mutieren). Die fünf Einzel-Skills bleiben die Detail-Quelle pro Regel.
+
 | Stufe | Skill | Prüft | Fix |
 |---|---|---|---|
 | 1 | `/haslogger` | hand-rolled Logger / `System.out` / `printStackTrace` | `implements HasLogger` + `logger()` + SLF4J-Platzhalter |
