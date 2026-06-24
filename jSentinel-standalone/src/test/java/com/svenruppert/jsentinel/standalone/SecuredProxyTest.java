@@ -58,27 +58,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SecuredTest {
 
   @BeforeEach
-  void setUp() throws Exception {
+  void setUp() {
     JSentinelServiceResolver.resetAll();
-    installService("AUTHENTICATION_SERVICE_REF", new StubAuth());
-    installService("AUTHORIZATION_SERVICE_REF", new StubAuthz());
+    // V00.75.10 (H5): the resolver's static fields moved into JSentinelContext;
+    // install the stubs through the public setters instead of by reflection.
+    JSentinelServiceResolver.setAuthenticationService(new StubAuth());
+    JSentinelServiceResolver.setAuthorizationService(new StubAuthz());
     SubjectStores.reset();
     InMemoryStore.clear();
     SubjectStores.setSubjectStore(new InMemoryStore());
-  }
-
-  /**
-   * JSentinelServiceResolver has no public setter for the auth/authz
-   * services — they are normally SPI-loaded. Reflectively install the
-   * stubs into the resolver's AtomicReference fields.
-   */
-  private static void installService(String fieldName, Object service) throws Exception {
-    java.lang.reflect.Field f = JSentinelServiceResolver.class.getDeclaredField(fieldName);
-    f.setAccessible(true);
-    @SuppressWarnings("unchecked")
-    java.util.concurrent.atomic.AtomicReference<Object> ref =
-        (java.util.concurrent.atomic.AtomicReference<Object>) f.get(null);
-    ref.set(service);
   }
 
   @AfterEach
