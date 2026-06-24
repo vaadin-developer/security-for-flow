@@ -37,4 +37,18 @@
     <Class name="com.svenruppert.jsentinel.rest.RestJSentinelVersionFilter"/>
     <Bug pattern="NP_NULL_PARAM_DEREF"/>
   </Match>
+  <!--
+    V00.75.20 RF-01 (exit review): MS_EXPOSE_REP on
+    JSentinelServiceResolver.current(). Returning the shared process-wide
+    DEFAULT JSentinelContext is the intended static-facade accessor (V00.75.10
+    H5), documented as the deliberate process-global surface in R038 — not an
+    accidental leak. Latent since H5; surfaced by the exit-review gate (the
+    baseline excludes the instance EI_EXPOSE_REP* but not the static
+    MS_EXPOSE_REP). Scoped to this one method so the rule stays strict elsewhere.
+  -->
+  <Match>
+    <Class name="com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver"/>
+    <Method name="current"/>
+    <Bug pattern="MS_EXPOSE_REP"/>
+  </Match>
 </FindBugsFilter>
