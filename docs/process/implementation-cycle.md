@@ -222,6 +222,7 @@ Aufforderung über das berührte Modul (Memory `feedback_skill_invocation_is_mig
 | 3 | `/mediatype` | Content-Type-String-Literale | `MediaType.X.mime()` / `.withCharsetUtf8()` / `fromMime(...)` |
 | 4 | `/result` | `Optional`-für-Fehler, `throws`/`catch`-and-map, `return null` | `Result<T,E>` via `CheckedSupplier`; echte Präsenz/Absenz bleibt `Optional` |
 | 5 | `/vaadin-i18n` | hartkodierte UI-Strings (nur Vaadin-Module) | `I18n.tr(key, fallback, …)` |
+| 6 | `/extract-constants` | geteilte/Kontrakt-*untypisierte* Literale (Header-/Route-Namen, Error-Bodies, Config-Keys, JSON-Feldnamen, Separatoren, Sentinels) | benannte Konstante mit einem Zuhause; läuft **zuletzt**, defert an #2/#3/#5 |
 
 Disziplin:
 

@@ -49,6 +49,7 @@ class EventPublishServiceTest {
     SignedJSentinelEventEnvelope env = fx.signedEnvelope();
     EventPublishOutcome outcome = service(fx.newConsumePipeline()).publish(wire.encode(env));
     assertEquals(HttpStatus.ACCEPTED.code(), outcome.statusCode());
+    assertEquals(EventPublishBodies.ACCEPTED, outcome.body());
   }
 
   @Test
@@ -57,6 +58,7 @@ class EventPublishServiceTest {
     EventsRestFixtures fx = new EventsRestFixtures();
     EventPublishOutcome outcome = service(fx.newConsumePipeline()).publish("not json");
     assertEquals(HttpStatus.BAD_REQUEST.code(), outcome.statusCode());
+    assertEquals(EventPublishBodies.MALFORMED_ENVELOPE, outcome.body());
   }
 
   @Test
@@ -67,6 +69,8 @@ class EventPublishServiceTest {
     ConsumePipeline consume = fx.newConsumePipeline();
     EventPublishService service = service(consume);
     assertEquals(HttpStatus.ACCEPTED.code(), service.publish(wire.encode(env)).statusCode());
-    assertEquals(HttpStatus.CONFLICT.code(), service.publish(wire.encode(env)).statusCode());
+    EventPublishOutcome replay = service.publish(wire.encode(env));
+    assertEquals(HttpStatus.CONFLICT.code(), replay.statusCode());
+    assertEquals(EventPublishBodies.REPLAY_DETECTED, replay.body());
   }
 }

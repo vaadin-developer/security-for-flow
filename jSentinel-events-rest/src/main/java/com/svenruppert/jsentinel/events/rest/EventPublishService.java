@@ -78,7 +78,8 @@ public final class EventPublishService implements HasLogger {
         this::verifyAndMap,
         error -> {
           logger().warn("events-rest/publish-malformed: {}", error);
-          return new EventPublishOutcome(HttpStatus.BAD_REQUEST.code(), "Malformed envelope");
+          return new EventPublishOutcome(HttpStatus.BAD_REQUEST.code(),
+              EventPublishBodies.MALFORMED_ENVELOPE);
         });
   }
 
@@ -87,21 +88,29 @@ public final class EventPublishService implements HasLogger {
     return switch (result) {
       case JSentinelEventVerificationResult.Valid v -> accept(v.envelope());
       case JSentinelEventVerificationResult.InvalidSignature ignored ->
-          new EventPublishOutcome(HttpStatus.BAD_REQUEST.code(), "Invalid signature");
+          new EventPublishOutcome(HttpStatus.BAD_REQUEST.code(),
+              EventPublishBodies.INVALID_SIGNATURE);
       case JSentinelEventVerificationResult.PayloadHashMismatch ignored ->
-          new EventPublishOutcome(HttpStatus.BAD_REQUEST.code(), "Payload hash mismatch");
+          new EventPublishOutcome(HttpStatus.BAD_REQUEST.code(),
+              EventPublishBodies.PAYLOAD_HASH_MISMATCH);
       case JSentinelEventVerificationResult.UnknownKey ignored ->
-          new EventPublishOutcome(HttpStatus.BAD_REQUEST.code(), "Unknown key");
+          new EventPublishOutcome(HttpStatus.BAD_REQUEST.code(),
+              EventPublishBodies.UNKNOWN_KEY);
       case JSentinelEventVerificationResult.KeyRevoked ignored ->
-          new EventPublishOutcome(HttpStatus.FORBIDDEN.code(), "Key revoked");
+          new EventPublishOutcome(HttpStatus.FORBIDDEN.code(),
+              EventPublishBodies.KEY_REVOKED);
       case JSentinelEventVerificationResult.Expired ignored ->
-          new EventPublishOutcome(HttpStatus.GONE.code(), "Expired");
+          new EventPublishOutcome(HttpStatus.GONE.code(),
+              EventPublishBodies.EXPIRED);
       case JSentinelEventVerificationResult.ReplayDetected ignored ->
-          new EventPublishOutcome(HttpStatus.CONFLICT.code(), "Replay detected");
+          new EventPublishOutcome(HttpStatus.CONFLICT.code(),
+              EventPublishBodies.REPLAY_DETECTED);
       case JSentinelEventVerificationResult.SequenceViolation ignored ->
-          new EventPublishOutcome(HttpStatus.CONFLICT.code(), "Sequence violation");
+          new EventPublishOutcome(HttpStatus.CONFLICT.code(),
+              EventPublishBodies.SEQUENCE_VIOLATION);
       case JSentinelEventVerificationResult.ProducerNotAllowed ignored ->
-          new EventPublishOutcome(HttpStatus.FORBIDDEN.code(), "Producer not allowed");
+          new EventPublishOutcome(HttpStatus.FORBIDDEN.code(),
+              EventPublishBodies.PRODUCER_NOT_ALLOWED);
     };
   }
 
@@ -112,6 +121,6 @@ public final class EventPublishService implements HasLogger {
         broadcaster.broadcast(new StoredEnvelope(cursor, envelope));
       }
     }
-    return new EventPublishOutcome(HttpStatus.ACCEPTED.code(), "Accepted");
+    return new EventPublishOutcome(HttpStatus.ACCEPTED.code(), EventPublishBodies.ACCEPTED);
   }
 }
