@@ -11,6 +11,7 @@
 package com.svenruppert.jsentinel.dx.diagnostics;
 
 import com.svenruppert.jsentinel.authentication.AuthenticationService;
+import com.svenruppert.jsentinel.authorization.api.AuthorizationEvaluator;
 import com.svenruppert.jsentinel.authorization.api.AuthorizationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,23 @@ class JSentinelDiagnosticsTest {
 
     assertEquals(first.missing().size(), second.missing().size());
     assertEquals(first.discovered().size(), second.discovered().size());
+  }
+
+  @Test
+  void inspectEnumeratesProviderTypesWithoutConstructingThem() {
+    // R030: a registered AuthorizationEvaluator whose ctor records a side
+    // effect must NOT be constructed by inspect() — enumeration uses provider
+    // types, never instances.
+    SideEffectRecordingEvaluator.INSTANTIATIONS.set(0);
+
+    JSentinelServiceReport report = JSentinelDiagnostics.inspect();
+
+    assertEquals(0, SideEffectRecordingEvaluator.INSTANTIATIONS.get(),
+        "inspect() must enumerate provider types without running their constructors");
+    assertTrue(report.discovered().stream()
+            .anyMatch(d -> d.spi() == AuthorizationEvaluator.class
+                && d.impl() == SideEffectRecordingEvaluator.class),
+        "the AuthorizationEvaluator impl must still be discovered by class");
   }
 
   @Test

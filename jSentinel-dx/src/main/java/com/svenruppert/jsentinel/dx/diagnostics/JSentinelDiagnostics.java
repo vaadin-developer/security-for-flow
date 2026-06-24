@@ -21,6 +21,7 @@ import com.svenruppert.jsentinel.session.SessionStore;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -144,11 +145,17 @@ public final class JSentinelDiagnostics {
   }
 
   private static List<Class<?>> enumerate(Class<?> spi, ClassLoader cl) {
-    List<Class<?>> impls = new ArrayList<>();
-    for (Object instance : ServiceLoader.load(spi, cl)) {
-      impls.add(instance.getClass());
-    }
-    return impls;
+    // R030: iterating ServiceLoader instantiates every provider (running its
+    // constructor), which violates inspect()'s side-effect-free contract.
+    // stream() + Provider.type() yields the implementation CLASS without
+    // constructing it. Dedupe by class so a class listed more than once under
+    // the same SPI is counted once (only genuinely distinct impls drive the
+    // duplicate-service rule).
+    LinkedHashSet<Class<?>> distinct = new LinkedHashSet<>();
+    ServiceLoader.load(spi, cl).stream()
+        .map(ServiceLoader.Provider::type)
+        .forEach(distinct::add);
+    return new ArrayList<>(distinct);
   }
 
   private static String summarise(List<Class<?>> impls) {
