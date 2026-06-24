@@ -104,9 +104,21 @@ final class HttpExchangeRestRequest implements BodyRestRequest {
    * Percent-decodes a query-string token (UTF-8). {@code +} decodes to a space,
    * {@code %XX} to its byte — so a handler sees {@code "a b"} for {@code "a%20b"}
    * (V00.75.10, H6: the raw {@code split}/{@code substring} left values encoded).
+   *
+   * <p>A malformed escape (a bare {@code %} or non-hex {@code %zz}, e.g.
+   * {@code "50%off"}) makes {@link URLDecoder#decode} throw
+   * {@link IllegalArgumentException}. {@code queryParameters()} sits on the
+   * authorization path (every request resolves query params), so a malformed
+   * token must <strong>not</strong> propagate an exception out of the handler —
+   * we fall back to the raw, undecoded token instead (V00.75.10, exit-review
+   * RF01).
    */
   private static String decode(String raw) {
-    return URLDecoder.decode(raw, StandardCharsets.UTF_8);
+    try {
+      return URLDecoder.decode(raw, StandardCharsets.UTF_8);
+    } catch (IllegalArgumentException malformed) {
+      return raw;
+    }
   }
 
   @Override

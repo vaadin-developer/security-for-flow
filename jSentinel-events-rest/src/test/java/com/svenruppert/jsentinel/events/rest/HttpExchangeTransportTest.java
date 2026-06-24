@@ -60,6 +60,9 @@ class HttpExchangeTransportTest {
     assertEquals("a b", params.get("b"));            // + -> space
     assertEquals("", params.get("c"));               // empty value
     assertEquals("+", params.get("plus"));           // %2B -> literal +, not double-decoded
+    // Note: a malformed escape (bare/incomplete %) cannot arrive here — URI
+    // construction validates %-escapes first — so decode()'s IllegalArgumentException
+    // fallback (RF01) is defensive only and is not separately constructible via URI.
   }
 
   @Test
