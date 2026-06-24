@@ -36,6 +36,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -103,8 +104,21 @@ public final class RestAuthorizationFilter {
         response,
         handler,
         securedElement,
-        request.method().toLowerCase(),
+        operationOf(request),
         Map.of());
+  }
+
+  /**
+   * Derives the operation token from the request method. R006: a malformed
+   * request may carry a {@code null} method (must not NPE before authorization
+   * runs), and the lowercasing uses {@link Locale#ROOT} so the token is stable
+   * across JVM default locales — on a Turkish-locale JVM
+   * {@code "I".toLowerCase()} is {@code "ı"}, which would distort the operation
+   * used in policy decisions.
+   */
+  static String operationOf(RestRequest request) {
+    String method = request.method();
+    return method == null ? "" : method.toLowerCase(Locale.ROOT);
   }
 
   /**
