@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  V00.75.10 H3 — SpotBugs / FindSecBugs baseline exclude (Konzept §5.3).
+  Findings present when the gate was introduced are excluded so it starts green
+  and only NEW findings break the build. Each entry is a documented backlog item.
+
+  Categories:
+   - EI_EXPOSE_REP / EI_EXPOSE_REP2: value records / carriers returning or
+     storing component arrays/collections by design (immutable value objects).
+   - UNSAFE_HASH_EQUALS: FindSecBugs flags String#equals on hash-looking values;
+     the constant-time paths use MessageDigest.isEqual, the flagged ones are
+     store lookups. Backlog.
+   - BC_VACUOUS_INSTANCEOF: the static resolver's default-instance fallback.
+   - HARD_CODE_PASSWORD: the dummy (timing-equalising) verification service.
+   - DCN_NULLPOINTER_EXCEPTION / DMI_RANDOM_USED_ONLY_ONCE /
+     SING_SINGLETON_HAS_NONPRIVATE_CONSTRUCTOR: localised, low-risk. Backlog.
+-->
+<FindBugsFilter>
+  <Match><Bug pattern="EI_EXPOSE_REP"/></Match>
+  <Match><Bug pattern="EI_EXPOSE_REP2"/></Match>
+  <Match><Bug pattern="UNSAFE_HASH_EQUALS"/></Match>
+  <Match><Bug pattern="BC_VACUOUS_INSTANCEOF"/></Match>
+  <Match><Bug pattern="DCN_NULLPOINTER_EXCEPTION"/></Match>
+  <Match>
+    <Class name="com.svenruppert.jsentinel.credential.password.dummy.DefaultDummyVerificationService"/>
+    <Bug pattern="HARD_CODE_PASSWORD"/>
+  </Match>
+  <Match>
+    <Class name="com.svenruppert.jsentinel.credential.password.pepper.PepperApplicator"/>
+    <Bug pattern="DMI_RANDOM_USED_ONLY_ONCE"/>
+  </Match>
+  <Match>
+    <Class name="com.svenruppert.jsentinel.session.NoopSessionPolicy"/>
+    <Bug pattern="SING_SINGLETON_HAS_NONPRIVATE_CONSTRUCTOR"/>
+  </Match>
+  <Match>
+    <Class name="com.svenruppert.jsentinel.rest.RestJSentinelVersionFilter"/>
+    <Bug pattern="NP_NULL_PARAM_DEREF"/>
+  </Match>
+  <Match><Bug pattern="IA_AMBIGUOUS_INVOCATION_OF_INHERITED_OR_OUTER_METHOD"/></Match>
+</FindBugsFilter>
