@@ -128,6 +128,9 @@ final class WireJson {
         ws();
         map.put(key, value());
         ws();
+        if (end()) {
+          throw new EventWireException("expected ',' or '}' but reached end of JSON");
+        }
         char c = s.charAt(pos++);
         if (c == ',') {
           continue;
@@ -159,6 +162,9 @@ final class WireJson {
           return sb.toString();
         }
         if (c == '\\') {
+          if (end()) {
+            throw new EventWireException("unterminated escape sequence");
+          }
           char esc = s.charAt(pos++);
           switch (esc) {
             case '"' -> sb.append('"');
@@ -170,7 +176,15 @@ final class WireJson {
             case 'b' -> sb.append('\b');
             case 'f' -> sb.append('\f');
             case 'u' -> {
-              sb.append((char) Integer.parseInt(s.substring(pos, pos + 4), 16));
+              if (pos + 4 > s.length()) {
+                throw new EventWireException("truncated \\u escape");
+              }
+              String hex = s.substring(pos, pos + 4);
+              try {
+                sb.append((char) Integer.parseInt(hex, 16));
+              } catch (NumberFormatException e) {
+                throw new EventWireException("invalid \\u escape '" + hex + "'", e);
+              }
               pos += 4;
             }
             default -> throw new EventWireException("invalid escape \\" + esc);
@@ -192,7 +206,12 @@ final class WireJson {
       if (pos == start) {
         throw new EventWireException("expected value at " + start);
       }
-      return Long.parseLong(s.substring(start, pos));
+      String digits = s.substring(start, pos);
+      try {
+        return Long.parseLong(digits);
+      } catch (NumberFormatException e) {
+        throw new EventWireException("number out of range: " + digits, e);
+      }
     }
 
     char peek() {

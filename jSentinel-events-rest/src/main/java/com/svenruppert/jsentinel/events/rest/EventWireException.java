@@ -38,4 +38,14 @@ public final class EventWireException extends RuntimeException {
   public EventWireException(String message) {
     super(message);
   }
+
+  /**
+   * @param message the detail message
+   * @param cause   the underlying parser failure (e.g. a JDK
+   *                {@code NumberFormatException}) being wrapped
+   * @since 00.75.10
+   */
+  public EventWireException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

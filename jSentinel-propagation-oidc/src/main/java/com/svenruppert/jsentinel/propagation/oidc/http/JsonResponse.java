@@ -46,11 +46,23 @@ public final class JsonResponse {
   }
 
   /**
-   * @return the {@code expires_in} value in seconds or empty if absent
+   * @return the {@code expires_in} value in seconds, or empty if absent or
+   *     malformed. A digit run longer than {@code long} (the regex matches
+   *     {@code \\d+} with no length bound) would otherwise overflow
+   *     {@link Long#parseLong}; that is treated as "no usable value" rather
+   *     than propagating a {@link NumberFormatException} to the caller
+   *     (V00.75.10, H4).
    */
   public static Optional<Long> expiresIn(String body) {
     Matcher m = EXPIRES_IN_RE.matcher(body);
-    return m.find() ? Optional.of(Long.parseLong(m.group(1))) : Optional.empty();
+    if (!m.find()) {
+      return Optional.empty();
+    }
+    try {
+      return Optional.of(Long.parseLong(m.group(1)));
+    } catch (NumberFormatException overflow) {
+      return Optional.empty();
+    }
   }
 
   /**
