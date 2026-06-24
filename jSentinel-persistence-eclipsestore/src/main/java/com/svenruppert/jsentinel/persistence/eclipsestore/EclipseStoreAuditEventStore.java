@@ -64,9 +64,14 @@ final class EclipseStoreAuditEventStore implements AuditEventStore {
     storage.lock().readLock().lock();
     try {
       List<AuditEnvelope> result = new ArrayList<>();
+      int limit = query.limit();
       for (AuditEnvelope envelope : storage.root().auditEnvelopes.values()) {
         if (envelope.tenant().equals(tenant) && query.matches(envelope.event())) {
           result.add(envelope);
+          // R039: honour AuditQuery.limit (0 = unlimited) — previously ignored.
+          if (limit > 0 && result.size() >= limit) {
+            break;
+          }
         }
       }
       return List.copyOf(result);

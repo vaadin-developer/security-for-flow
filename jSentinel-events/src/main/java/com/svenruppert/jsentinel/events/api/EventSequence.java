@@ -52,8 +52,16 @@ public record EventSequence(long value) implements Comparable<EventSequence> {
 
   /**
    * @return the immediately following sequence
+   * @throws ArithmeticException if this sequence is already at
+   *         {@link Long#MAX_VALUE} (R039 — guard the overflow that would
+   *         otherwise wrap to a negative value and break the monotonicity the
+   *         gap/repeat/roll-back detection relies on)
    */
   public EventSequence next() {
+    if (value == Long.MAX_VALUE) {
+      throw new ArithmeticException(
+          "EventSequence overflow: cannot advance past Long.MAX_VALUE");
+    }
     return new EventSequence(value + 1);
   }
 

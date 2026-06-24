@@ -70,9 +70,15 @@ public final class InMemoryAuditEventStore implements AuditEventStore {
     lock.readLock().lock();
     try {
       List<AuditEnvelope> result = new ArrayList<>();
+      int limit = query.limit();
       for (AuditEnvelope envelope : envelopes) {
         if (envelope.tenant().equals(tenant) && query.matches(envelope.event())) {
           result.add(envelope);
+          // R039: honour AuditQuery.limit (0 = unlimited), matching
+          // RingBufferAuditSink — previously the limit was silently ignored.
+          if (limit > 0 && result.size() >= limit) {
+            break;
+          }
         }
       }
       return List.copyOf(result);

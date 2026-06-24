@@ -175,6 +175,26 @@ class InMemoryAbuseDetectionServiceTest {
   }
 
   @Test
+  @DisplayName("R039: the sliding window is half-open — an event exactly `window` old has expired")
+  void slidingWindowBoundaryIsHalfOpen() {
+    InMemoryAbuseDetectionService svc = new InMemoryAbuseDetectionService(
+        AbuseLimitsPolicy.defaults(), new RecordingAudit());
+    for (int i = 0; i < 6; i++) {
+      svc.recordOutcome(loginAttempt("alice", null, T0), AttemptOutcome.FAILURE);
+    }
+    Duration window = Duration.ofMinutes(15); // default USERNAME login window
+
+    // one tick before the boundary: the events still count → Delay
+    assertInstanceOf(AbuseDecision.Delay.class,
+        svc.evaluate(loginAttempt("alice", null, T0.plus(window).minusNanos(1))),
+        "events one tick younger than `window` must still count");
+    // exactly `window` later: the boundary events have expired → Allow
+    assertSame(AbuseDecision.Allow.INSTANCE,
+        svc.evaluate(loginAttempt("alice", null, T0.plus(window))),
+        "an event exactly `window` old must be evicted (half-open window)");
+  }
+
+  @Test
   @DisplayName("Block decision publishes a RateLimitExceeded audit event")
   void blockEmitsAudit() {
     RecordingAudit audit = new RecordingAudit();

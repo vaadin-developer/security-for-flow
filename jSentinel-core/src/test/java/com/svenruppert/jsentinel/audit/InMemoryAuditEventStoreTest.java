@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -55,6 +56,19 @@ class InMemoryAuditEventStoreTest {
     AuditEnvelope a = store.append(TenantId.DEFAULT, loginSucceededAt(Instant.now(), "alice"));
     AuditEnvelope b = store.append(TenantId.DEFAULT, loginSucceededAt(Instant.now(), "alice"));
     assertNotEquals(a.id(), b.id());
+  }
+
+  @Test
+  @DisplayName("R039: query honours AuditQuery.limit (was silently ignored)")
+  void queryHonoursLimit() {
+    for (int i = 0; i < 5; i++) {
+      store.append(TenantId.DEFAULT, loginSucceededAt(Instant.now(), "u" + i));
+    }
+    AuditQuery limited = new AuditQuery(Set.of(), null, null, null, 2);
+    assertEquals(2, store.query(TenantId.DEFAULT, limited).size(),
+        "limit=2 must cap the result at 2 envelopes");
+    // limit=0 means unlimited
+    assertEquals(5, store.query(TenantId.DEFAULT, AuditQuery.all()).size());
   }
 
   @Test

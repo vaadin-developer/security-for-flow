@@ -165,7 +165,11 @@ public final class InMemoryAbuseDetectionService implements AbuseDetectionServic
     // — the same discipline as appendEvent and the success-reset. No deque is ever
     // accessed through a reference that a concurrent remove could have orphaned.
     counters.computeIfPresent(composite, (k, deque) -> {
-      while (!deque.isEmpty() && deque.peekFirst().isBefore(cutoff)) {
+      // R039: the sliding window is the half-open interval (now-window, now] —
+      // an event exactly `window` old has expired. Evict timestamps at or
+      // before the cutoff (was isBefore, which kept the boundary event and made
+      // the effective window one tick wider than "the last <window>").
+      while (!deque.isEmpty() && !deque.peekFirst().isAfter(cutoff)) {
         deque.pollFirst();
       }
       size[0] = deque.size();
