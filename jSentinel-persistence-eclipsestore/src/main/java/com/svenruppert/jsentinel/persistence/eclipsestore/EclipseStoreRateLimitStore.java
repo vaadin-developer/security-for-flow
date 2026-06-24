@@ -42,12 +42,20 @@ final class EclipseStoreRateLimitStore implements RateLimitStore {
     storage.lock().writeLock().lock();
     try {
       LinkedHashSet<Instant> events = storage.root().rateLimitEvents.get(key);
-      if (events == null) {
+      boolean newKey = events == null;
+      if (newKey) {
         events = new LinkedHashSet<>();
         storage.root().rateLimitEvents.put(key, events);
       }
       events.add(at);
-      storage.manager().store(storage.root().rateLimitEvents);
+      // Eclipse Store persists only the object actually stored. An in-place
+      // mutation of an already-persisted set is NOT captured by storing the
+      // parent map (R002), so store the mutated set itself; for a brand-new key
+      // also store the map to persist the new key->set entry.
+      storage.manager().store(events);
+      if (newKey) {
+        storage.manager().store(storage.root().rateLimitEvents);
+      }
     } finally {
       storage.lock().writeLock().unlock();
     }
@@ -94,22 +102,31 @@ final class EclipseStoreRateLimitStore implements RateLimitStore {
     storage.lock().writeLock().lock();
     try {
       int purged = 0;
+      boolean entriesRemoved = false;
       Iterator<Map.Entry<RateLimitKey, LinkedHashSet<Instant>>> entries =
           storage.root().rateLimitEvents.entrySet().iterator();
       while (entries.hasNext()) {
         LinkedHashSet<Instant> events = entries.next().getValue();
+        boolean setMutated = false;
         Iterator<Instant> it = events.iterator();
         while (it.hasNext()) {
           if (it.next().isBefore(cutoff)) {
             it.remove();
             purged++;
+            setMutated = true;
           }
         }
         if (events.isEmpty()) {
           entries.remove();
+          entriesRemoved = true;
+        } else if (setMutated) {
+          // persist the in-place set mutation — store(map) would not re-store
+          // an already-persisted nested set (R002).
+          storage.manager().store(events);
         }
       }
-      if (purged > 0) {
+      if (entriesRemoved) {
+        // entry removals mutate the map itself, which store(map) does persist.
         storage.manager().store(storage.root().rateLimitEvents);
       }
       return purged;
