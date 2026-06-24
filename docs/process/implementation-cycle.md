@@ -1,7 +1,8 @@
 # jSentinel Implementation Cycle — Process Reference
 
 **Geltungsbereich:** `vaadin-developer/security-for-flow` (jSentinel).
-**Stand:** 2026-06-23 (V00.74.20 released, V00.75.00 Phase 0 in flight).
+**Stand:** 2026-06-24 (V00.75.00 Security Event Bus released to Maven Central;
+00.75.10 maintenance line open). §3.4 Standards-Compliance-Pass added.
 
 Dieses Dokument beschreibt den vollständigen Release-Zyklus, wie er
 seit V00.74.10 etabliert ist: vom Öffnen eines neuen Release-Fensters
@@ -200,6 +201,40 @@ V00.74.20 P016 — Mutation-Lift `autoservice-processor` von 52 % auf
 - **ClickUp-Subtask** wird auf `completed` gesetzt (der Prompt-Versuch
   ist abgeschlossen); das Carry-over wird in den
   RELEASE-NOTES und einer Backlog-Memo dokumentiert.
+
+### 3.4 Standards-Compliance-Pass (nach den Implementierungen)
+
+Nach Abschluss aller Per-Prompt-Implementierungen (Stufe C), **vor** dem
+Release-Abschluss (Stufe D), läuft ein Compliance-Pass über **alle neuen
+und veränderten Sourcen** des Cycle gegen die Workspace-Standing-Rule-Skills.
+Jede Stufe ist ein Slash-Command-Skill; Skill-Invocation = Migrations-
+Aufforderung über das berührte Modul (Memory `feedback_skill_invocation_is_migration`).
+
+| Stufe | Skill | Prüft | Fix |
+|---|---|---|---|
+| 1 | `/haslogger` | hand-rolled Logger / `System.out` / `printStackTrace` | `implements HasLogger` + `logger()` + SLF4J-Platzhalter |
+| 2 | `/httpstatus` | Magic-3-stellige HTTP-Codes | `HttpStatus.X.code()` / `fromCode(...)` / Family-Predicates |
+| 3 | `/mediatype` | Content-Type-String-Literale | `MediaType.X.mime()` / `.withCharsetUtf8()` / `fromMime(...)` |
+| 4 | `/result` | `Optional`-für-Fehler, `throws`/`catch`-and-map, `return null` | `Result<T,E>` via `CheckedSupplier`; echte Präsenz/Absenz bleibt `Optional` |
+| 5 | `/vaadin-i18n` | hartkodierte UI-Strings (nur Vaadin-Module) | `I18n.tr(key, fallback, …)` |
+
+Disziplin:
+
+- **Scan zuerst** (grep über `src/main`), Umfang je Standard bestimmen,
+  dann die Skills invoken, dann fixen. Nicht mechanisch migrieren — die
+  Skill-Entscheidungsmatrix anwenden (z. B. `/result`: genuine
+  Präsenz/Absenz ohne Fehler-Story bleibt `Optional`; versiegelte
+  Domänen-Resultate *sind* das Result-Pattern).
+- **Bibliotheks-Verfügbarkeit prüfen**: Beispiel V00.75 — `MediaType` fehlt
+  in `com.svenruppert:core:06.02.01` (nur `HttpStatus` vorhanden) → `/mediatype`
+  N/A, Literal mit Inline-Kommentar belassen. `/vaadin-i18n` N/A für
+  Vaadin-freie Module.
+- **Released-Version nicht mutieren**: berührt der Pass funktionale Sourcen
+  einer bereits auf Central publizierten Version, **erst** auf die nächste
+  Maintenance-Linie bumpen (`VXX.YY.10-SNAPSHOT`), dann fixen — sonst driftet
+  der develop-Stand vom immutablen Central-Artefakt ab.
+- **Ergebnis dokumentieren**: pro Standard `applied` / `already-compliant` /
+  `N-A (Grund)`; Commit-Prefix `chore`/`refactor`, kein Prompt-Bezug.
 
 ---
 
