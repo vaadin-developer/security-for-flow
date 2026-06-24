@@ -28,6 +28,7 @@ package com.svenruppert.jsentinel.events.bus;
 import com.svenruppert.jsentinel.events.api.CausationId;
 import com.svenruppert.jsentinel.events.api.SignedJSentinelEventEnvelope;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -37,9 +38,17 @@ import java.nio.charset.StandardCharsets;
  * base, so the verifier can check the payload hash first and the signature base
  * afterwards.
  *
- * <p>Each field is emitted as a labelled line; all values are controlled tokens
- * (ids, ISO instants, integers) that cannot contain the line separator, so the
- * encoding is unambiguous.
+ * <p>Each field is emitted <strong>length-prefixed</strong>
+ * ({@code key '=' <utf8-byte-length> ':' value '\n'}). The explicit byte length
+ * makes the encoding unambiguous for <em>any</em> value content — a value
+ * containing {@code '='} or {@code '\n'} cannot be reframed as a different
+ * field set. The base is therefore injective over the field tuple without
+ * relying on the value types rejecting the separator (V00.75.10, R005:
+ * the previous {@code key=value\n} framing rested on that unenforced invariant).
+ *
+ * <p><strong>Wire-format note:</strong> this changed the signing base in
+ * V00.75.10; signatures produced by V00.75.00 do not verify under it. The event
+ * bus is {@code @ExperimentalJSentinelApi}, so the format may still change.
  */
 final class EnvelopeSignatureBase {
 
@@ -47,29 +56,32 @@ final class EnvelopeSignatureBase {
   }
 
   static byte[] compute(SignedJSentinelEventEnvelope e) {
-    StringBuilder sb = new StringBuilder(256);
-    line(sb, "envelopeId", e.envelopeId().value());
-    line(sb, "eventId", e.eventId().value());
-    line(sb, "eventType", e.eventType().value());
-    line(sb, "tenantId", e.tenantId().value());
-    line(sb, "subjectId", e.subjectId().value());
-    line(sb, "producerId", e.producerId().value());
-    line(sb, "occurredAt", e.occurredAt().toString());
-    line(sb, "issuedAt", e.issuedAt().toString());
-    line(sb, "expiresAt", e.expiresAt().toString());
-    line(sb, "correlationId", e.correlationId().value());
+    ByteArrayOutputStream out = new ByteArrayOutputStream(256);
+    field(out, "envelopeId", e.envelopeId().value());
+    field(out, "eventId", e.eventId().value());
+    field(out, "eventType", e.eventType().value());
+    field(out, "tenantId", e.tenantId().value());
+    field(out, "subjectId", e.subjectId().value());
+    field(out, "producerId", e.producerId().value());
+    field(out, "occurredAt", e.occurredAt().toString());
+    field(out, "issuedAt", e.issuedAt().toString());
+    field(out, "expiresAt", e.expiresAt().toString());
+    field(out, "correlationId", e.correlationId().value());
     CausationId causation = e.causationId();
-    line(sb, "causationId", causation == null ? "" : causation.value());
-    line(sb, "sequence", Long.toString(e.sequence().value()));
-    line(sb, "keyId", e.keyId().value());
-    line(sb, "signatureAlgorithm", e.signatureAlgorithm().value());
-    line(sb, "payloadContentType", e.payloadContentType().value());
-    line(sb, "payloadHashAlgorithm", e.payloadHashAlgorithm().value());
-    line(sb, "canonicalPayloadHash", e.canonicalPayloadHash());
-    return sb.toString().getBytes(StandardCharsets.UTF_8);
+    field(out, "causationId", causation == null ? "" : causation.value());
+    field(out, "sequence", Long.toString(e.sequence().value()));
+    field(out, "keyId", e.keyId().value());
+    field(out, "signatureAlgorithm", e.signatureAlgorithm().value());
+    field(out, "payloadContentType", e.payloadContentType().value());
+    field(out, "payloadHashAlgorithm", e.payloadHashAlgorithm().value());
+    field(out, "canonicalPayloadHash", e.canonicalPayloadHash());
+    return out.toByteArray();
   }
 
-  private static void line(StringBuilder sb, String key, String value) {
-    sb.append(key).append('=').append(value).append('\n');
+  private static void field(ByteArrayOutputStream out, String key, String value) {
+    byte[] v = value.getBytes(StandardCharsets.UTF_8);
+    out.writeBytes((key + '=' + v.length + ':').getBytes(StandardCharsets.UTF_8));
+    out.writeBytes(v);
+    out.write('\n');
   }
 }
