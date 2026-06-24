@@ -21,6 +21,7 @@ import com.svenruppert.jsentinel.audit.AuditQuery;
 import com.svenruppert.jsentinel.audit.JSentinelAuditService;
 import com.svenruppert.jsentinel.audit.TokenRotated;
 import com.svenruppert.jsentinel.authorization.api.tenant.TenantId;
+import com.svenruppert.jsentinel.credential.token.TokenHasher;
 import com.svenruppert.jsentinel.logout.SubjectId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,13 +50,39 @@ class TokenServiceTest {
   private static final SubjectId BOB = new SubjectId("bob");
   private static final Instant T0 = Instant.parse("2026-01-01T00:00:00Z");
 
-  private static final class FakeHasher implements PasswordHasher {
+  private static final class FakeHasher implements TokenHasher {
     @Override public String hash(char[] raw) {
       return "h:" + HexFormat.of().formatHex(new String(raw).getBytes());
     }
-    @Override public boolean verify(char[] raw, String stored) {
-      return hash(raw).equals(stored);
+  }
+
+  /** Deterministic construction, salted output — the dangerous shape the guard rejects. */
+  private static final class SaltedTokenHasher implements TokenHasher {
+    private final java.security.SecureRandom rng = new java.security.SecureRandom();
+    @Override public String hash(char[] raw) {
+      byte[] salt = new byte[8];
+      rng.nextBytes(salt);
+      return HexFormat.of().formatHex(salt) + ":" + new String(raw);
     }
+  }
+
+  @Test
+  @DisplayName("the deprecated ctor rejects a salted PasswordHasher at construction (H2)")
+  void saltedPasswordHasherRejected() {
+    PasswordHasher salted = new Pbkdf2PasswordHasher(); // real, salted per call — no mock
+    assertThrows(IllegalArgumentException.class,
+        () -> new TokenService(new InMemoryRefreshTokenStore(), salted,
+            new CollectingAuditService()));
+  }
+
+  @Test
+  @DisplayName("a non-deterministic TokenHasher makes rotate() silently fail — why the guard exists (H2)")
+  void nonDeterministicHasherBreaksRotation() {
+    TokenService service = new TokenService(new InMemoryRefreshTokenStore(),
+        new SaltedTokenHasher(), new CollectingAuditService());
+    TokenService.TokenPair pair = service.issue(ALICE);
+    assertTrue(service.rotate(pair.refreshToken()).isEmpty(),
+        "a fresh salt per hash() means the stored hash can never be looked up");
   }
 
   private static Supplier<String> sequentialSource(String prefix) {
@@ -281,7 +308,7 @@ class TokenServiceTest {
     assertThrows(NullPointerException.class,
         () -> new TokenService(null, hasher, audit));
     assertThrows(NullPointerException.class,
-        () -> new TokenService(store, null, audit));
+        () -> new TokenService(store, (TokenHasher) null, audit));
     assertThrows(NullPointerException.class,
         () -> new TokenService(store, hasher, null));
     assertThrows(IllegalArgumentException.class,

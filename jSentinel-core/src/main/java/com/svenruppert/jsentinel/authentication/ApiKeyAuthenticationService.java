@@ -21,6 +21,8 @@ import com.svenruppert.jsentinel.audit.ApiKeyUsed;
 import com.svenruppert.jsentinel.audit.JSentinelAuditService;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.authorization.api.tenant.TenantId;
+import com.svenruppert.jsentinel.credential.token.TokenHasher;
+import com.svenruppert.jsentinel.credential.token.TokenHashers;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -59,7 +61,7 @@ import static java.util.Objects.requireNonNull;
 public final class ApiKeyAuthenticationService {
 
   private final ApiKeyStore store;
-  private final PasswordHasher hasher;
+  private final TokenHasher hasher;
   private final JSentinelAuditService auditService;
   private final TenantId tenant;
   private final Clock clock;
@@ -69,11 +71,11 @@ public final class ApiKeyAuthenticationService {
    * system clock.
    *
    * @param store        API-key store; non-null
-   * @param hasher       hasher used to hash plain keys for lookup; non-null
+   * @param hasher       deterministic token hasher; non-null
    * @param auditService audit sink; non-null
    */
   public ApiKeyAuthenticationService(ApiKeyStore store,
-                                     PasswordHasher hasher,
+                                     TokenHasher hasher,
                                      JSentinelAuditService auditService) {
     this(store, hasher, auditService, TenantId.DEFAULT, Clock.systemUTC());
   }
@@ -82,14 +84,15 @@ public final class ApiKeyAuthenticationService {
    * Full constructor.
    *
    * @param store        API-key store; non-null
-   * @param hasher       hasher used to hash plain keys for lookup; non-null
+   * @param hasher       deterministic token hasher used to hash plain keys for
+   *                     lookup; non-null
    * @param auditService audit sink; non-null
    * @param tenant       tenant scope; {@code null} becomes
    *                     {@link TenantId#DEFAULT}
    * @param clock        time source; non-null
    */
   public ApiKeyAuthenticationService(ApiKeyStore store,
-                                     PasswordHasher hasher,
+                                     TokenHasher hasher,
                                      JSentinelAuditService auditService,
                                      TenantId tenant,
                                      Clock clock) {
@@ -98,6 +101,39 @@ public final class ApiKeyAuthenticationService {
     this.auditService = requireNonNull(auditService, "auditService must not be null");
     this.tenant = tenant == null ? TenantId.DEFAULT : tenant;
     this.clock = requireNonNull(clock, "clock must not be null");
+  }
+
+  /**
+   * @param store        API-key store; non-null
+   * @param hasher       <strong>deterministic</strong> password hasher; non-null
+   * @param auditService audit sink; non-null
+   * @deprecated since 00.75.10 — pass a {@link TokenHasher} (e.g.
+   *     {@link com.svenruppert.jsentinel.credential.token.Sha256TokenHasher}).
+   *     A salted KDF is rejected at construction (CWE-208 / CWE-640).
+   */
+  @Deprecated(forRemoval = true)
+  public ApiKeyAuthenticationService(ApiKeyStore store,
+                                     PasswordHasher hasher,
+                                     JSentinelAuditService auditService) {
+    this(store, TokenHashers.fromPasswordHasher(hasher), auditService);
+  }
+
+  /**
+   * @param store        API-key store; non-null
+   * @param hasher       <strong>deterministic</strong> password hasher; non-null
+   * @param auditService audit sink; non-null
+   * @param tenant       tenant scope; {@code null} becomes {@link TenantId#DEFAULT}
+   * @param clock        time source; non-null
+   * @deprecated since 00.75.10 — pass a {@link TokenHasher}; a salted
+   *     {@link PasswordHasher} is rejected at construction.
+   */
+  @Deprecated(forRemoval = true)
+  public ApiKeyAuthenticationService(ApiKeyStore store,
+                                     PasswordHasher hasher,
+                                     JSentinelAuditService auditService,
+                                     TenantId tenant,
+                                     Clock clock) {
+    this(store, TokenHashers.fromPasswordHasher(hasher), auditService, tenant, clock);
   }
 
   /**

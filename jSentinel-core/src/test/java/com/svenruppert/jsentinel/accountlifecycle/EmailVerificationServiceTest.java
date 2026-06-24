@@ -22,6 +22,8 @@ import com.svenruppert.jsentinel.audit.EmailVerificationRequested;
 import com.svenruppert.jsentinel.audit.EmailVerified;
 import com.svenruppert.jsentinel.audit.JSentinelAuditService;
 import com.svenruppert.jsentinel.authentication.PasswordHasher;
+import com.svenruppert.jsentinel.authentication.Pbkdf2PasswordHasher;
+import com.svenruppert.jsentinel.credential.token.TokenHasher;
 import com.svenruppert.jsentinel.authorization.api.tenant.TenantId;
 import com.svenruppert.jsentinel.logout.SubjectId;
 import org.junit.jupiter.api.DisplayName;
@@ -56,13 +58,41 @@ class EmailVerificationServiceTest {
   private static final String BOB_EMAIL = "bob@example.com";
   private static final Instant T0 = Instant.parse("2026-01-01T00:00:00Z");
 
-  private static final class FakeHasher implements PasswordHasher {
+  private static final class FakeHasher implements TokenHasher {
     @Override public String hash(char[] raw) {
       return "h:" + HexFormat.of().formatHex(new String(raw).getBytes());
     }
-    @Override public boolean verify(char[] raw, String stored) {
-      return hash(raw).equals(stored);
+  }
+
+  /** Deterministic construction, salted output — the dangerous shape the guard rejects. */
+  private static final class SaltedTokenHasher implements TokenHasher {
+    private final java.security.SecureRandom rng = new java.security.SecureRandom();
+    @Override public String hash(char[] raw) {
+      byte[] salt = new byte[8];
+      rng.nextBytes(salt);
+      return HexFormat.of().formatHex(salt) + ":" + new String(raw);
     }
+  }
+
+  @Test
+  @DisplayName("the deprecated ctor rejects a salted PasswordHasher at construction (H2)")
+  void saltedPasswordHasherRejected() {
+    PasswordHasher salted = new Pbkdf2PasswordHasher(); // real, salted per call — no mock
+    assertThrows(IllegalArgumentException.class,
+        () -> new EmailVerificationService(new InMemoryEmailVerificationTokenStore(), salted,
+            new CollectingAuditService(), new RecordingNotificationSender()));
+  }
+
+  @Test
+  @DisplayName("a non-deterministic TokenHasher makes validate() silently fail — why the guard exists (H2)")
+  void nonDeterministicHasherBreaksValidate() {
+    EmailVerificationService service = new EmailVerificationService(
+        new InMemoryEmailVerificationTokenStore(), new SaltedTokenHasher(),
+        new CollectingAuditService(), new RecordingNotificationSender());
+    EmailVerificationService.IssuedToken issued =
+        service.request(ALICE, ALICE_EMAIL, Duration.ofMinutes(5));
+    assertTrue(service.validate(issued.plainToken()).isEmpty(),
+        "a fresh salt per hash() means the stored hash can never be looked up");
   }
 
   private static Supplier<String> sequentialSource(String prefix) {
@@ -90,7 +120,7 @@ class EmailVerificationServiceTest {
     InMemoryEmailVerificationTokenStore store = new InMemoryEmailVerificationTokenStore();
     CollectingAuditService audit = new CollectingAuditService();
     RecordingNotificationSender sender = new RecordingNotificationSender();
-    PasswordHasher hasher = new FakeHasher();
+    TokenHasher hasher = new FakeHasher();
 
     EmailVerificationService service = new EmailVerificationService(
         store, hasher, audit, sender, TenantId.DEFAULT, fixed(T0),
@@ -119,7 +149,7 @@ class EmailVerificationServiceTest {
   @DisplayName("validate rejects unknown / wrong tenant / expired tokens")
   void validateNegativeCases() {
     InMemoryEmailVerificationTokenStore store = new InMemoryEmailVerificationTokenStore();
-    PasswordHasher hasher = new FakeHasher();
+    TokenHasher hasher = new FakeHasher();
     EmailVerificationService defaultSvc = new EmailVerificationService(
         store, hasher, new CollectingAuditService(), new RecordingNotificationSender(),
         TenantId.DEFAULT, fixed(T0), sequentialSource("def-"));
@@ -151,7 +181,7 @@ class EmailVerificationServiceTest {
   @DisplayName("consume is single-use and emits EmailVerified")
   void consumeIsSingleUse() {
     InMemoryEmailVerificationTokenStore store = new InMemoryEmailVerificationTokenStore();
-    PasswordHasher hasher = new FakeHasher();
+    TokenHasher hasher = new FakeHasher();
     CollectingAuditService audit = new CollectingAuditService();
     RecordingNotificationSender sender = new RecordingNotificationSender();
     EmailVerificationService service = new EmailVerificationService(
@@ -181,7 +211,7 @@ class EmailVerificationServiceTest {
   @DisplayName("revokeAll removes only the subject's tokens within the tenant")
   void revokeAllScoped() {
     InMemoryEmailVerificationTokenStore store = new InMemoryEmailVerificationTokenStore();
-    PasswordHasher hasher = new FakeHasher();
+    TokenHasher hasher = new FakeHasher();
     EmailVerificationService service = new EmailVerificationService(
         store, hasher, new CollectingAuditService(), new RecordingNotificationSender(),
         TenantId.DEFAULT, fixed(T0), sequentialSource("tok-"));
@@ -221,14 +251,14 @@ class EmailVerificationServiceTest {
   @DisplayName("null / blank arguments + non-positive TTL are rejected")
   void rejectNulls() {
     InMemoryEmailVerificationTokenStore store = new InMemoryEmailVerificationTokenStore();
-    PasswordHasher hasher = new FakeHasher();
+    TokenHasher hasher = new FakeHasher();
     CollectingAuditService audit = new CollectingAuditService();
     RecordingNotificationSender sender = new RecordingNotificationSender();
 
     assertThrows(NullPointerException.class,
         () -> new EmailVerificationService(null, hasher, audit, sender));
     assertThrows(NullPointerException.class,
-        () -> new EmailVerificationService(store, null, audit, sender));
+        () -> new EmailVerificationService(store, (TokenHasher) null, audit, sender));
 
     EmailVerificationService service = new EmailVerificationService(
         store, hasher, audit, sender, TenantId.DEFAULT, fixed(T0), sequentialSource("tok-"));

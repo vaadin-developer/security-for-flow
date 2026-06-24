@@ -20,6 +20,8 @@ import com.svenruppert.jsentinel.audit.JSentinelAuditService;
 import com.svenruppert.jsentinel.audit.TokenRotated;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.authorization.api.tenant.TenantId;
+import com.svenruppert.jsentinel.credential.token.TokenHasher;
+import com.svenruppert.jsentinel.credential.token.TokenHashers;
 import com.svenruppert.jsentinel.logout.SubjectId;
 
 import java.security.SecureRandom;
@@ -76,7 +78,7 @@ public final class TokenService {
   public static final int DEFAULT_TOKEN_BYTES = 32;
 
   private final RefreshTokenStore store;
-  private final PasswordHasher hasher;
+  private final TokenHasher hasher;
   private final JSentinelAuditService auditService;
   private final TenantId tenant;
   private final Clock clock;
@@ -90,11 +92,11 @@ public final class TokenService {
    * refresh TTL.
    *
    * @param store        backing store; non-null
-   * @param hasher       hasher used to hash refresh tokens; non-null
+   * @param hasher       deterministic token hasher; non-null
    * @param auditService audit sink; non-null
    */
   public TokenService(RefreshTokenStore store,
-                      PasswordHasher hasher,
+                      TokenHasher hasher,
                       JSentinelAuditService auditService) {
     this(store, hasher, auditService, TenantId.DEFAULT, Clock.systemUTC(),
         defaultTokenSource(),
@@ -105,7 +107,8 @@ public final class TokenService {
    * Full constructor.
    *
    * @param store        backing store; non-null
-   * @param hasher       hasher used to hash refresh tokens; non-null
+   * @param hasher       deterministic token hasher used to hash refresh
+   *                     tokens for lookup; non-null
    * @param auditService audit sink; non-null
    * @param tenant       tenant scope; {@code null} becomes
    *                     {@link TenantId#DEFAULT}
@@ -115,7 +118,7 @@ public final class TokenService {
    * @param refreshTtl   refresh-token lifetime; strictly positive
    */
   public TokenService(RefreshTokenStore store,
-                      PasswordHasher hasher,
+                      TokenHasher hasher,
                       JSentinelAuditService auditService,
                       TenantId tenant,
                       Clock clock,
@@ -130,6 +133,47 @@ public final class TokenService {
     this.tokenSource = requireNonNull(tokenSource, "tokenSource must not be null");
     this.accessTtl = requirePositive(accessTtl, "accessTtl");
     this.refreshTtl = requirePositive(refreshTtl, "refreshTtl");
+  }
+
+  /**
+   * @param store        backing store; non-null
+   * @param hasher       <strong>deterministic</strong> password hasher; non-null
+   * @param auditService audit sink; non-null
+   * @deprecated since 00.75.10 — pass a {@link TokenHasher} (e.g.
+   *     {@link com.svenruppert.jsentinel.credential.token.Sha256TokenHasher}).
+   *     A {@link PasswordHasher} is accepted only when deterministic; a
+   *     salted KDF is rejected at construction (CWE-208 / CWE-640).
+   */
+  @Deprecated(forRemoval = true)
+  public TokenService(RefreshTokenStore store,
+                      PasswordHasher hasher,
+                      JSentinelAuditService auditService) {
+    this(store, TokenHashers.fromPasswordHasher(hasher), auditService);
+  }
+
+  /**
+   * @param store        backing store; non-null
+   * @param hasher       <strong>deterministic</strong> password hasher; non-null
+   * @param auditService audit sink; non-null
+   * @param tenant       tenant scope; {@code null} becomes {@link TenantId#DEFAULT}
+   * @param clock        time source; non-null
+   * @param tokenSource  plain-token supplier; non-null
+   * @param accessTtl    access-token lifetime; strictly positive
+   * @param refreshTtl   refresh-token lifetime; strictly positive
+   * @deprecated since 00.75.10 — pass a {@link TokenHasher}; a salted
+   *     {@link PasswordHasher} is rejected at construction.
+   */
+  @Deprecated(forRemoval = true)
+  public TokenService(RefreshTokenStore store,
+                      PasswordHasher hasher,
+                      JSentinelAuditService auditService,
+                      TenantId tenant,
+                      Clock clock,
+                      Supplier<String> tokenSource,
+                      Duration accessTtl,
+                      Duration refreshTtl) {
+    this(store, TokenHashers.fromPasswordHasher(hasher), auditService, tenant, clock,
+        tokenSource, accessTtl, refreshTtl);
   }
 
   /**

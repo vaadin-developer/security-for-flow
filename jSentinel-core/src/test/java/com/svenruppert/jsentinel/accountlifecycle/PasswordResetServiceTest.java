@@ -22,6 +22,8 @@ import com.svenruppert.jsentinel.audit.PasswordResetCompleted;
 import com.svenruppert.jsentinel.audit.PasswordResetRequested;
 import com.svenruppert.jsentinel.audit.JSentinelAuditService;
 import com.svenruppert.jsentinel.authentication.PasswordHasher;
+import com.svenruppert.jsentinel.authentication.Pbkdf2PasswordHasher;
+import com.svenruppert.jsentinel.credential.token.TokenHasher;
 import com.svenruppert.jsentinel.authorization.api.tenant.TenantId;
 import com.svenruppert.jsentinel.logout.SubjectId;
 import org.junit.jupiter.api.DisplayName;
@@ -56,13 +58,40 @@ class PasswordResetServiceTest {
   private static final Instant T0 = Instant.parse("2026-01-01T00:00:00Z");
 
   /** Deterministic hasher mirroring StoreBackedRememberMeServiceTest. */
-  private static final class FakeHasher implements PasswordHasher {
+  private static final class FakeHasher implements TokenHasher {
     @Override public String hash(char[] raw) {
       return "h:" + HexFormat.of().formatHex(new String(raw).getBytes());
     }
-    @Override public boolean verify(char[] raw, String stored) {
-      return hash(raw).equals(stored);
+  }
+
+  /** Deterministic construction, salted output — the dangerous shape the guard rejects. */
+  private static final class SaltedTokenHasher implements TokenHasher {
+    private final java.security.SecureRandom rng = new java.security.SecureRandom();
+    @Override public String hash(char[] raw) {
+      byte[] salt = new byte[8];
+      rng.nextBytes(salt);
+      return HexFormat.of().formatHex(salt) + ":" + new String(raw);
     }
+  }
+
+  @Test
+  @DisplayName("the deprecated ctor rejects a salted PasswordHasher at construction (H2)")
+  void saltedPasswordHasherRejected() {
+    PasswordHasher salted = new Pbkdf2PasswordHasher(); // real, salted per call — no mock
+    assertThrows(IllegalArgumentException.class,
+        () -> new PasswordResetService(new InMemoryPasswordResetTokenStore(), salted,
+            new CollectingAuditService(), new RecordingNotificationSender()));
+  }
+
+  @Test
+  @DisplayName("a non-deterministic TokenHasher makes validate() silently fail — why the guard exists (H2)")
+  void nonDeterministicHasherBreaksValidate() {
+    PasswordResetService service = new PasswordResetService(
+        new InMemoryPasswordResetTokenStore(), new SaltedTokenHasher(),
+        new CollectingAuditService(), new RecordingNotificationSender());
+    PasswordResetService.IssuedToken issued = service.request(ALICE, Duration.ofMinutes(5));
+    assertTrue(service.validate(issued.plainToken()).isEmpty(),
+        "a fresh salt per hash() means the stored hash can never be looked up");
   }
 
   private static Supplier<String> sequentialSource(String prefix) {
@@ -95,7 +124,7 @@ class PasswordResetServiceTest {
     InMemoryPasswordResetTokenStore store = new InMemoryPasswordResetTokenStore();
     CollectingAuditService audit = new CollectingAuditService();
     RecordingNotificationSender sender = new RecordingNotificationSender();
-    PasswordHasher hasher = new FakeHasher();
+    TokenHasher hasher = new FakeHasher();
 
     PasswordResetService service = new PasswordResetService(
         store, hasher, audit, sender, TenantId.DEFAULT, fixed(T0),
@@ -127,7 +156,7 @@ class PasswordResetServiceTest {
   @DisplayName("validate accepts a live token and rejects unknown / wrong-tenant / consumed / expired")
   void validateNegativeCases() {
     InMemoryPasswordResetTokenStore store = new InMemoryPasswordResetTokenStore();
-    PasswordHasher hasher = new FakeHasher();
+    TokenHasher hasher = new FakeHasher();
     PasswordResetService defaultSvc = new PasswordResetService(
         store, hasher, new CollectingAuditService(), new RecordingNotificationSender(),
         TenantId.DEFAULT, fixed(T0), sequentialSource("def-"));
@@ -163,7 +192,7 @@ class PasswordResetServiceTest {
   @DisplayName("consume marks the record consumed exactly once and emits PasswordResetCompleted")
   void consumeIsSingleUse() {
     InMemoryPasswordResetTokenStore store = new InMemoryPasswordResetTokenStore();
-    PasswordHasher hasher = new FakeHasher();
+    TokenHasher hasher = new FakeHasher();
     CollectingAuditService audit = new CollectingAuditService();
     RecordingNotificationSender sender = new RecordingNotificationSender();
     PasswordResetService service = new PasswordResetService(
@@ -196,7 +225,7 @@ class PasswordResetServiceTest {
   @DisplayName("revokeAll removes only the subject's tokens within the tenant")
   void revokeAllScoped() {
     InMemoryPasswordResetTokenStore store = new InMemoryPasswordResetTokenStore();
-    PasswordHasher hasher = new FakeHasher();
+    TokenHasher hasher = new FakeHasher();
     PasswordResetService service = new PasswordResetService(
         store, hasher, new CollectingAuditService(), new RecordingNotificationSender(),
         TenantId.DEFAULT, fixed(T0), sequentialSource("tok-"));
@@ -217,7 +246,7 @@ class PasswordResetServiceTest {
   @DisplayName("purgeExpired removes expired records")
   void purgeExpired() {
     InMemoryPasswordResetTokenStore store = new InMemoryPasswordResetTokenStore();
-    PasswordHasher hasher = new FakeHasher();
+    TokenHasher hasher = new FakeHasher();
     Supplier<String> source = sequentialSource("tok-");
     PasswordResetService shortLived = new PasswordResetService(
         store, hasher, new CollectingAuditService(), new RecordingNotificationSender(),
@@ -258,14 +287,14 @@ class PasswordResetServiceTest {
   @DisplayName("null arguments / non-positive TTL / blank token source are rejected")
   void rejectNulls() {
     InMemoryPasswordResetTokenStore store = new InMemoryPasswordResetTokenStore();
-    PasswordHasher hasher = new FakeHasher();
+    TokenHasher hasher = new FakeHasher();
     CollectingAuditService audit = new CollectingAuditService();
     RecordingNotificationSender sender = new RecordingNotificationSender();
 
     assertThrows(NullPointerException.class,
         () -> new PasswordResetService(null, hasher, audit, sender));
     assertThrows(NullPointerException.class,
-        () -> new PasswordResetService(store, null, audit, sender));
+        () -> new PasswordResetService(store, (TokenHasher) null, audit, sender));
     assertThrows(NullPointerException.class,
         () -> new PasswordResetService(store, hasher, null, sender));
     assertThrows(NullPointerException.class,

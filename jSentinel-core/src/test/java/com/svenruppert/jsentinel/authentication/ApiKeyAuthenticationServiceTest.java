@@ -23,6 +23,7 @@ import com.svenruppert.jsentinel.audit.AuditQuery;
 import com.svenruppert.jsentinel.audit.JSentinelAuditService;
 import com.svenruppert.jsentinel.authorization.api.permissions.PermissionName;
 import com.svenruppert.jsentinel.authorization.api.tenant.TenantId;
+import com.svenruppert.jsentinel.credential.token.TokenHasher;
 import com.svenruppert.jsentinel.logout.SubjectId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,18 +48,46 @@ class ApiKeyAuthenticationServiceTest {
   private static final Instant T0 = Instant.parse("2026-01-01T00:00:00Z");
   private static final PermissionName READ = new PermissionName("document:read");
 
-  private static final class FakeHasher implements PasswordHasher {
+  private static final class FakeHasher implements TokenHasher {
     @Override public String hash(char[] raw) {
       return "h:" + HexFormat.of().formatHex(new String(raw).getBytes());
     }
-    @Override public boolean verify(char[] raw, String stored) {
-      return hash(raw).equals(stored);
+  }
+
+  /** Deterministic construction, salted output — the dangerous shape the guard rejects. */
+  private static final class SaltedTokenHasher implements TokenHasher {
+    private final java.security.SecureRandom rng = new java.security.SecureRandom();
+    @Override public String hash(char[] raw) {
+      byte[] salt = new byte[8];
+      rng.nextBytes(salt);
+      return HexFormat.of().formatHex(salt) + ":" + new String(raw);
     }
+  }
+
+  @Test
+  @DisplayName("the deprecated ctor rejects a salted PasswordHasher at construction (H2)")
+  void saltedPasswordHasherRejected() {
+    PasswordHasher salted = new Pbkdf2PasswordHasher(); // real, salted per call — no mock
+    assertThrows(IllegalArgumentException.class,
+        () -> new ApiKeyAuthenticationService(new InMemoryApiKeyStore(), salted,
+            new CollectingAuditService()));
+  }
+
+  @Test
+  @DisplayName("a non-deterministic TokenHasher makes authenticate() silently fail — why the guard exists (H2)")
+  void nonDeterministicHasherBreaksAuth() {
+    InMemoryApiKeyStore store = new InMemoryApiKeyStore();
+    SaltedTokenHasher salted = new SaltedTokenHasher();
+    seed(store, salted, "plain-k1", "my-key");
+    ApiKeyAuthenticationService service = new ApiKeyAuthenticationService(
+        store, salted, new CollectingAuditService());
+    assertTrue(service.authenticate("plain-k1").isEmpty(),
+        "a salted hasher stores under one hash and looks up under another");
   }
 
   private static Clock fixed(Instant at) { return Clock.fixed(at, ZoneOffset.UTC); }
 
-  private ApiKeyRecord seed(InMemoryApiKeyStore store, FakeHasher hasher,
+  private ApiKeyRecord seed(InMemoryApiKeyStore store, TokenHasher hasher,
                             String plain, String name) {
     ApiKeyRecord record = new ApiKeyRecord(
         hasher.hash(plain.toCharArray()), TenantId.DEFAULT, ALICE,
@@ -205,7 +234,7 @@ class ApiKeyAuthenticationServiceTest {
     assertThrows(NullPointerException.class,
         () -> new ApiKeyAuthenticationService(null, hasher, audit));
     assertThrows(NullPointerException.class,
-        () -> new ApiKeyAuthenticationService(store, null, audit));
+        () -> new ApiKeyAuthenticationService(store, (TokenHasher) null, audit));
     assertThrows(NullPointerException.class,
         () -> new ApiKeyAuthenticationService(store, hasher, null));
     assertThrows(NullPointerException.class,

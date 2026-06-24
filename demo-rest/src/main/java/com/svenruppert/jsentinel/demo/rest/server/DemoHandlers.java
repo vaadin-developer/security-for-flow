@@ -64,8 +64,8 @@ import com.svenruppert.jsentinel.accountlifecycle.PasswordResetService;
 import com.svenruppert.jsentinel.accountlifecycle.PasswordResetTokenRecord;
 import com.svenruppert.jsentinel.authentication.ApiKeyRecord;
 import com.svenruppert.jsentinel.authentication.ApiKeyStore;
-import com.svenruppert.jsentinel.authentication.PasswordHasher;
 import com.svenruppert.jsentinel.authentication.TokenService;
+import com.svenruppert.jsentinel.credential.token.TokenHasher;
 import com.svenruppert.jsentinel.authorization.api.permissions.PermissionName;
 import com.svenruppert.jsentinel.ratelimiting.RateLimitDecision;
 import com.svenruppert.jsentinel.ratelimiting.RateLimitKey;
@@ -112,7 +112,7 @@ public final class DemoHandlers {
   private final PasswordResetService passwordResetService;
   private final RateLimitPolicy loginRateLimit;
   private final ApiKeyStore apiKeyStore;
-  private final PasswordHasher apiKeyHasher;
+  private final TokenHasher apiKeyHasher;
   private final TokenService tokenService;
   /**
    * Pure data accessor for the Policy-DSL example — the policy
@@ -236,7 +236,7 @@ public final class DemoHandlers {
       PasswordResetService passwordResetService,
       RateLimitPolicy loginRateLimit,
       ApiKeyStore apiKeyStore,
-      PasswordHasher apiKeyHasher) {
+      TokenHasher apiKeyHasher) {
     this(userStore, tokenStore, documents, registry, subjectResolver,
         loginAttemptPolicy, securityVersionStore, passwordResetService,
         loginRateLimit, apiKeyStore, apiKeyHasher, null);
@@ -257,7 +257,7 @@ public final class DemoHandlers {
       PasswordResetService passwordResetService,
       RateLimitPolicy loginRateLimit,
       ApiKeyStore apiKeyStore,
-      PasswordHasher apiKeyHasher,
+      TokenHasher apiKeyHasher,
       TokenService tokenService) {
     this(userStore, tokenStore, documents, registry, subjectResolver,
         loginAttemptPolicy,
@@ -335,7 +335,7 @@ public final class DemoHandlers {
       PasswordResetService passwordResetService,
       RateLimitPolicy loginRateLimit,
       ApiKeyStore apiKeyStore,
-      PasswordHasher apiKeyHasher,
+      TokenHasher apiKeyHasher,
       TokenService tokenService) {
     this.userStore = userStore;
     this.tokenStore = tokenStore;

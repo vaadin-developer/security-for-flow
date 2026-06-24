@@ -29,6 +29,7 @@ import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.jsentinel.bruteforce.LoginAttemptConfiguration;
 import com.svenruppert.jsentinel.credential.password.PasswordHashingService;
 import com.svenruppert.jsentinel.credential.password.PasswordHashingServices;
+import com.svenruppert.jsentinel.credential.token.Sha256TokenHasher;
 import com.svenruppert.jsentinel.dx.rest.bootstrap.RestSecurity;
 import com.svenruppert.jsentinel.dx.runtime.JSentinelBootstrapMode;
 import com.svenruppert.jsentinel.dx.runtime.JSentinelRuntime;
