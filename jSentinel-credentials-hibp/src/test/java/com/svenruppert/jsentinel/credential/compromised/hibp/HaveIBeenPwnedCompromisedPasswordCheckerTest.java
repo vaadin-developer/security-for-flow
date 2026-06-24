@@ -116,6 +116,55 @@ class HaveIBeenPwnedCompromisedPasswordCheckerTest {
   }
 
   @Test
+  @DisplayName("a padding entry (suffix match with count 0) yields Clean, not a false-positive Pwned (R022)")
+  void paddingEntryCountZeroIsClean() {
+    String hex = sha1HexUpper("hunter222");
+    String suffix = hex.substring(5);
+    // Add-Padding responses include the queried suffix with count 0 when the
+    // password is not actually breached. The old Math.max(count, 1) turned that
+    // into a false-positive Pwned(1).
+    String body = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:0\n"
+        + suffix + ":0\nBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB:0\n";
+    HaveIBeenPwnedCompromisedPasswordChecker checker =
+        new HaveIBeenPwnedCompromisedPasswordChecker(
+            prefix -> new HaveIBeenPwnedCompromisedPasswordChecker.RangeResponse(
+                body, null));
+    assertSame(CompromisedPasswordResult.Clean.INSTANCE,
+        checker.check(SecretValue.ofString("hunter222")));
+  }
+
+  @Test
+  @DisplayName("usingJdkHttpClient sends the Add-Padding: true header (R022)")
+  void sendsAddPaddingHeader() throws Exception {
+    com.sun.net.httpserver.HttpServer server = com.sun.net.httpserver.HttpServer.create(
+        new java.net.InetSocketAddress("127.0.0.1", 0), 0);
+    java.util.concurrent.atomic.AtomicReference<String> captured =
+        new java.util.concurrent.atomic.AtomicReference<>();
+    server.createContext("/range/", exchange -> {
+      captured.set(exchange.getRequestHeaders().getFirst("Add-Padding"));
+      byte[] body = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:0\n"
+          .getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+      exchange.sendResponseHeaders(200, body.length);
+      try (java.io.OutputStream os = exchange.getResponseBody()) {
+        os.write(body);
+      }
+    });
+    server.start();
+    try {
+      java.net.URI endpoint = java.net.URI.create(
+          "http://127.0.0.1:" + server.getAddress().getPort() + "/range/");
+      HaveIBeenPwnedCompromisedPasswordChecker checker =
+          HaveIBeenPwnedCompromisedPasswordChecker.usingJdkHttpClient(
+              endpoint, java.time.Duration.ofSeconds(5));
+      checker.check(SecretValue.ofString("hunter222"));
+      assertEquals("true", captured.get(),
+          "the HIBP range request must carry Add-Padding: true");
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
   @DisplayName("No suffix match yields Clean")
   void noSuffixMatchClean() {
     String body = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:7\n"

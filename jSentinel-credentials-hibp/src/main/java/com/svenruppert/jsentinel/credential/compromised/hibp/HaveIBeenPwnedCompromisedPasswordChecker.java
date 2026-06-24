@@ -104,6 +104,10 @@ public final class HaveIBeenPwnedCompromisedPasswordChecker
             .uri(endpoint.resolve(prefix))
             .timeout(timeout)
             .header("Accept", "text/plain")
+            // R022: request padded range responses so a network observer cannot
+            // infer the queried bucket size. Padding entries arrive with a count
+            // of 0 and are tolerated by scan().
+            .header("Add-Padding", "true")
             .GET()
             .build();
         HttpResponse<String> res = http.send(req,
@@ -172,7 +176,12 @@ public final class HaveIBeenPwnedCompromisedPasswordChecker
       if (colon > from && colon < end) {
         if (equalsIgnoreCaseRange(body, from, colon, suffix)) {
           long count = parseCountSafe(body, colon + 1, end);
-          return new CompromisedPasswordResult.Pwned(Math.max(count, 1L));
+          // R022: with Add-Padding, padding entries carry a count of 0. A real
+          // suffix match with count 0 means the password is NOT in any breach —
+          // returning Pwned here would be a false positive.
+          return count > 0
+              ? new CompromisedPasswordResult.Pwned(count)
+              : CompromisedPasswordResult.Clean.INSTANCE;
         }
       } else if (eol < 0) {
         break;
