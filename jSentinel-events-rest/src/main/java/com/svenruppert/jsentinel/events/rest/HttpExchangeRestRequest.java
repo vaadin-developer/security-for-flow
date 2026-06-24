@@ -31,6 +31,8 @@ import com.sun.net.httpserver.HttpExchange;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,19 +83,30 @@ final class HttpExchangeRestRequest implements BodyRestRequest {
   @Override
   public Map<String, String> queryParameters() {
     Map<String, String> params = new LinkedHashMap<>();
-    String query = exchange.getRequestURI().getQuery();
+    // Raw query: URI.getQuery() would already %-decode, so decoding it again
+    // double-decodes a literal %2B; split the raw form and decode each token once.
+    String query = exchange.getRequestURI().getRawQuery();
     if (query == null || query.isBlank()) {
       return params;
     }
     for (String pair : query.split("&")) {
       int eq = pair.indexOf('=');
       if (eq >= 0) {
-        params.put(pair.substring(0, eq), pair.substring(eq + 1));
+        params.put(decode(pair.substring(0, eq)), decode(pair.substring(eq + 1)));
       } else {
-        params.put(pair, "");
+        params.put(decode(pair), "");
       }
     }
     return params;
+  }
+
+  /**
+   * Percent-decodes a query-string token (UTF-8). {@code +} decodes to a space,
+   * {@code %XX} to its byte — so a handler sees {@code "a b"} for {@code "a%20b"}
+   * (V00.75.10, H6: the raw {@code split}/{@code substring} left values encoded).
+   */
+  private static String decode(String raw) {
+    return URLDecoder.decode(raw, StandardCharsets.UTF_8);
   }
 
   @Override

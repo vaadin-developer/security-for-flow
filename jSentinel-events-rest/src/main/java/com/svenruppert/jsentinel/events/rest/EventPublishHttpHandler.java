@@ -37,6 +37,7 @@ import com.sun.net.httpserver.HttpHandler;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
@@ -71,7 +72,17 @@ public final class EventPublishHttpHandler implements HttpHandler, HasLogger {
       write(exchange, HttpStatus.METHOD_NOT_ALLOWED.code(), "Method Not Allowed");
       return;
     }
-    HttpExchangeRestRequest request = HttpExchangeRestRequest.read(exchange);
+    HttpExchangeRestRequest request;
+    try {
+      request = HttpExchangeRestRequest.read(exchange);
+    } catch (UncheckedIOException e) {
+      // a body-read failure (e.g. client disconnect mid-stream) is a client
+      // problem — map it to a clean 400 instead of letting the UncheckedIOException
+      // propagate out of handle() and close the connection ungracefully (H6).
+      logger().warn("events-rest/publish-read-failed: {}", e.getMessage());
+      write(exchange, HttpStatus.BAD_REQUEST.code(), "Malformed request");
+      return;
+    }
 
     Optional<JSentinelSubject> subject = subjectResolver.resolveSubject(request);
     if (subject.isEmpty()) {
