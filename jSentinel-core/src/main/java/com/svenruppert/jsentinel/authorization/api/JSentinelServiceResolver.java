@@ -17,30 +17,24 @@
 package com.svenruppert.jsentinel.authorization.api;
 
 import com.svenruppert.jsentinel.action.ActionAuthorizationService;
-import com.svenruppert.jsentinel.audit.NoopJSentinelAuditService;
 import com.svenruppert.jsentinel.audit.JSentinelAuditService;
 import com.svenruppert.jsentinel.authentication.AuthenticationService;
 import com.svenruppert.jsentinel.logout.LogoutService;
-import com.svenruppert.jsentinel.logout.NoopLogoutService;
 import com.svenruppert.jsentinel.logout.SubjectClearingLogoutService;
 import com.svenruppert.jsentinel.authentication.PasswordHasher;
 import com.svenruppert.jsentinel.authentication.Pbkdf2PasswordHasher;
-import com.svenruppert.jsentinel.authorization.api.roles.NoopRoleHierarchy;
 import com.svenruppert.jsentinel.authorization.api.roles.RoleHierarchy;
 import com.svenruppert.jsentinel.bruteforce.LoginAttemptPolicy;
-import com.svenruppert.jsentinel.bruteforce.NoopLoginAttemptPolicy;
 import com.svenruppert.jsentinel.credential.propagation.OutboundTokenStrategy;
 import com.svenruppert.jsentinel.credential.propagation.TokenCredentialStore;
 import com.svenruppert.jsentinel.policy.impl.InMemoryPolicyRegistry;
 import com.svenruppert.jsentinel.policy.impl.InMemoryResourceResolverRegistry;
 import com.svenruppert.jsentinel.policy.spi.PolicyRegistry;
 import com.svenruppert.jsentinel.policy.spi.ResourceResolverRegistry;
-import com.svenruppert.jsentinel.session.NoopSessionPolicy;
 import com.svenruppert.jsentinel.session.JSentinelVersionStore;
 import com.svenruppert.jsentinel.session.SessionPolicy;
 
 import java.util.Optional;
-import java.util.ServiceLoader;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -50,6 +44,13 @@ import java.util.stream.StreamSupport;
  * <p>
  * Provides a single point of access for SPI-registered security services
  * with caching and actionable error messages when an implementation is missing.
+ * <p>
+ * As of V00.75.10 this class is a thin, process-wide static facade over a
+ * single default {@link JSentinelContext} (reachable via {@link #current()}).
+ * Every static accessor delegates 1:1 to that context, so behaviour is
+ * unchanged for existing callers. Applications and tests that need an
+ * isolated, non-global service registry obtain one via
+ * {@link JSentinelContext#createIsolated()}.
  * <p>
  * Thread-safe: resolved services are cached via {@link AtomicReference} so
  * repeated lookups do not trigger SPI discovery again.
@@ -67,45 +68,23 @@ import java.util.stream.StreamSupport;
  */
 public final class JSentinelServiceResolver {
 
-  private static final AtomicReference<AuthenticationService<?, ?>> AUTHENTICATION_SERVICE_REF =
-      new AtomicReference<>();
-  private static final AtomicReference<AuthorizationService<?>> AUTHORIZATION_SERVICE_REF =
-      new AtomicReference<>();
-  private static final AtomicReference<JSentinelAuditService> AUDIT_SERVICE_REF =
-      new AtomicReference<>();
-  private static final AtomicReference<ActionAuthorizationService<?>> ACTION_AUTH_SERVICE_REF =
-      new AtomicReference<>();
-  private static final AtomicReference<LoginAttemptPolicy> LOGIN_ATTEMPT_POLICY_REF =
-      new AtomicReference<>();
-  private static final AtomicReference<SessionPolicy<?>> SESSION_POLICY_REF =
-      new AtomicReference<>();
-  private static final AtomicReference<PasswordHasher> PASSWORD_HASHER_REF =
-      new AtomicReference<>();
-  private static final AtomicReference<LogoutService> LOGOUT_SERVICE_REF =
-      new AtomicReference<>();
-  private static final AtomicReference<PolicyRegistry> POLICY_REGISTRY_REF =
-      new AtomicReference<>();
-  private static final AtomicReference<ResourceResolverRegistry> RESOURCE_RESOLVER_REGISTRY_REF =
-      new AtomicReference<>();
-  private static final AtomicReference<RoleHierarchy> ROLE_HIERARCHY_REF =
-      new AtomicReference<>();
-  private static final AtomicReference<JSentinelVersionStore> SECURITY_VERSION_STORE_REF =
-      new AtomicReference<>();
-  private static final AtomicReference<SubjectIdResolver<?>> SUBJECT_ID_RESOLVER_REF =
-      new AtomicReference<>();
-  private static final AtomicReference<String> STEP_UP_ROUTE_NAME_REF =
-      new AtomicReference<>();
-  // V00.74: token-propagation surface. Store cached via SPI; strategies
-  // registered explicitly through the .propagation(...) sub-builder.
-  private static final AtomicReference<TokenCredentialStore> TOKEN_CREDENTIAL_STORE_REF =
-      new AtomicReference<>();
-  private static final java.util.concurrent.ConcurrentMap<String, OutboundTokenStrategy>
-      OUTBOUND_STRATEGIES = new java.util.concurrent.ConcurrentHashMap<>();
-
   /** Default route name an adapter reroutes to when a policy demands step-up. */
   public static final String DEFAULT_STEP_UP_ROUTE_NAME = "step-up";
 
+  private static final JSentinelContext DEFAULT = new JSentinelContext();
+
   private JSentinelServiceResolver() {
+  }
+
+  /**
+   * Returns the process-wide default {@link JSentinelContext} that backs all
+   * of this facade's static accessors. Values set through the static facade
+   * are visible through this context and vice-versa.
+   *
+   * @return the default context, never {@code null}
+   */
+  public static JSentinelContext current() {
+    return DEFAULT;
   }
 
   // ── AuthenticationService ──────────────────────────────────────
@@ -118,19 +97,8 @@ public final class JSentinelServiceResolver {
    * @return the resolved service (cached after first lookup)
    * @throws IllegalStateException if no implementation is registered
    */
-  @SuppressWarnings("unchecked")
   public static <T, U> AuthenticationService<T, U> authenticationService() {
-    AuthenticationService<?, ?> cached = AUTHENTICATION_SERVICE_REF.get();
-    if (cached != null) {
-      return (AuthenticationService<T, U>) cached;
-    }
-
-    AuthenticationService<T, U> loaded = (AuthenticationService<T, U>) requireSingleService(
-        AuthenticationService.class,
-        ServiceLoader.load(AuthenticationService.class));
-
-    AUTHENTICATION_SERVICE_REF.compareAndSet(null, loaded);
-    return (AuthenticationService<T, U>) AUTHENTICATION_SERVICE_REF.get();
+    return DEFAULT.authenticationService();
   }
 
   /**
@@ -142,22 +110,13 @@ public final class JSentinelServiceResolver {
    * @return the service, or empty
    */
   public static <T, U> Optional<AuthenticationService<T, U>> findAuthenticationService() {
-    AuthenticationService<?, ?> cached = AUTHENTICATION_SERVICE_REF.get();
-    if (cached != null) {
-      return Optional.of((AuthenticationService<T, U>) cached);
-    }
-
-    Optional<AuthenticationService> loaded = findSingleService(
-        AuthenticationService.class,
-        ServiceLoader.load(AuthenticationService.class));
-    loaded.ifPresent(service -> AUTHENTICATION_SERVICE_REF.compareAndSet(null, service));
-    return Optional.ofNullable((AuthenticationService<T, U>) AUTHENTICATION_SERVICE_REF.get());
+    return DEFAULT.findAuthenticationService();
   }
 
   /**
    * Overrides the cached {@link AuthenticationService}. Primarily used by
    * tests and by deployments that compose the authentication service from
-   * application code rather than via {@link ServiceLoader}. Pass {@code null}
+   * application code rather than via {@code ServiceLoader}. Pass {@code null}
    * to clear the cache and force the next call to consult the SPI again.
    *
    * @param service the service to cache, or {@code null} to clear
@@ -165,7 +124,7 @@ public final class JSentinelServiceResolver {
    * @param <U>     subject type
    */
   public static <T, U> void setAuthenticationService(AuthenticationService<T, U> service) {
-    AUTHENTICATION_SERVICE_REF.set(service);
+    DEFAULT.setAuthenticationService(service);
   }
 
   // ── AuthorizationService ───────────────────────────────────────
@@ -177,19 +136,21 @@ public final class JSentinelServiceResolver {
    * @return the resolved service (cached after first lookup)
    * @throws IllegalStateException if no implementation is registered
    */
-  @SuppressWarnings("unchecked")
   public static <U> AuthorizationService<U> authorizationService() {
-    AuthorizationService<?> cached = AUTHORIZATION_SERVICE_REF.get();
-    if (cached != null) {
-      return (AuthorizationService<U>) cached;
-    }
+    return DEFAULT.authorizationService();
+  }
 
-    AuthorizationService<U> loaded = (AuthorizationService<U>) requireSingleService(
-        AuthorizationService.class,
-        ServiceLoader.load(AuthorizationService.class));
-
-    AUTHORIZATION_SERVICE_REF.compareAndSet(null, loaded);
-    return (AuthorizationService<U>) AUTHORIZATION_SERVICE_REF.get();
+  /**
+   * Overrides the cached {@link AuthorizationService}. Primarily used by
+   * tests and by deployments that compose the authorization service from
+   * application code rather than via {@code ServiceLoader}. Pass {@code null}
+   * to clear the cache and force the next call to consult the SPI again.
+   *
+   * @param service the service to cache, or {@code null} to clear
+   * @param <U>     subject type
+   */
+  public static <U> void setAuthorizationService(AuthorizationService<U> service) {
+    DEFAULT.setAuthorizationService(service);
   }
 
   /**
@@ -199,57 +160,21 @@ public final class JSentinelServiceResolver {
    * @param <U> the subject type
    * @return the service, or empty
    */
-  /**
-   * Overrides the cached {@link AuthorizationService}. Primarily used by
-   * tests and by deployments that compose the authorization service from
-   * application code rather than via {@link ServiceLoader}. Pass {@code null}
-   * to clear the cache and force the next call to consult the SPI again.
-   *
-   * @param service the service to cache, or {@code null} to clear
-   * @param <U>     subject type
-   */
-  public static <U> void setAuthorizationService(AuthorizationService<U> service) {
-    AUTHORIZATION_SERVICE_REF.set(service);
-  }
-
   public static <U> Optional<AuthorizationService<U>> findAuthorizationService() {
-    AuthorizationService<?> cached = AUTHORIZATION_SERVICE_REF.get();
-    if (cached != null) {
-      return Optional.of((AuthorizationService<U>) cached);
-    }
-
-    Optional<AuthorizationService> loaded = findSingleService(
-        AuthorizationService.class,
-        ServiceLoader.load(AuthorizationService.class));
-    loaded.ifPresent(service -> AUTHORIZATION_SERVICE_REF.compareAndSet(null, service));
-    return Optional.ofNullable((AuthorizationService<U>) AUTHORIZATION_SERVICE_REF.get());
+    return DEFAULT.findAuthorizationService();
   }
 
   // ── JSentinelAuditService ───────────────────────────────────────
 
   /**
-   * Returns the registered {@link JSentinelAuditService}, or
-   * {@link NoopJSentinelAuditService#INSTANCE} if no SPI implementation is
-   * registered. Unlike {@link #authenticationService()} and
-   * {@link #authorizationService()}, this method <strong>never</strong>
-   * throws — auditing is optional infrastructure and the framework must
-   * not refuse to operate when no sink is configured.
+   * Returns the registered {@link JSentinelAuditService}, or the noop
+   * fallback if no SPI implementation is registered. This method
+   * <strong>never</strong> throws — auditing is optional infrastructure.
    *
    * @return the resolved audit service, never {@code null}
    */
   public static JSentinelAuditService securityAuditService() {
-    JSentinelAuditService cached = AUDIT_SERVICE_REF.get();
-    if (cached != null) {
-      return cached;
-    }
-
-    JSentinelAuditService loaded = findSingleService(
-        JSentinelAuditService.class,
-        ServiceLoader.load(JSentinelAuditService.class))
-        .orElse(NoopJSentinelAuditService.INSTANCE);
-
-    AUDIT_SERVICE_REF.compareAndSet(null, loaded);
-    return AUDIT_SERVICE_REF.get();
+    return DEFAULT.securityAuditService();
   }
 
   /**
@@ -260,19 +185,7 @@ public final class JSentinelServiceResolver {
    * @return the SPI-registered service, or empty
    */
   public static Optional<JSentinelAuditService> findJSentinelAuditService() {
-    JSentinelAuditService cached = AUDIT_SERVICE_REF.get();
-    if (cached != null && cached != NoopJSentinelAuditService.INSTANCE) {
-      return Optional.of(cached);
-    }
-    if (cached == NoopJSentinelAuditService.INSTANCE) {
-      return Optional.empty();
-    }
-
-    Optional<JSentinelAuditService> loaded = findSingleService(
-        JSentinelAuditService.class,
-        ServiceLoader.load(JSentinelAuditService.class));
-    loaded.ifPresent(service -> AUDIT_SERVICE_REF.compareAndSet(null, service));
-    return loaded;
+    return DEFAULT.findJSentinelAuditService();
   }
 
   /**
@@ -282,7 +195,7 @@ public final class JSentinelServiceResolver {
    * @param service the audit service, or {@code null} to clear
    */
   public static void setJSentinelAuditService(JSentinelAuditService service) {
-    AUDIT_SERVICE_REF.set(service);
+    DEFAULT.setJSentinelAuditService(service);
   }
 
   // ── ActionAuthorizationService ─────────────────────────────────
@@ -295,20 +208,8 @@ public final class JSentinelServiceResolver {
    * @throws IllegalStateException if no implementation is registered
    *                               or programmatically configured
    */
-  @SuppressWarnings("unchecked")
   public static <U> ActionAuthorizationService<U> actionAuthorizationService() {
-    ActionAuthorizationService<?> cached = ACTION_AUTH_SERVICE_REF.get();
-    if (cached != null) {
-      return (ActionAuthorizationService<U>) cached;
-    }
-
-    ActionAuthorizationService<U> loaded =
-        (ActionAuthorizationService<U>) requireSingleService(
-            ActionAuthorizationService.class,
-            ServiceLoader.load(ActionAuthorizationService.class));
-
-    ACTION_AUTH_SERVICE_REF.compareAndSet(null, loaded);
-    return (ActionAuthorizationService<U>) ACTION_AUTH_SERVICE_REF.get();
+    return DEFAULT.actionAuthorizationService();
   }
 
   /**
@@ -318,18 +219,8 @@ public final class JSentinelServiceResolver {
    * @param <U> the subject type
    * @return the service, or empty
    */
-  @SuppressWarnings("unchecked")
   public static <U> Optional<ActionAuthorizationService<U>> findActionAuthorizationService() {
-    ActionAuthorizationService<?> cached = ACTION_AUTH_SERVICE_REF.get();
-    if (cached != null) {
-      return Optional.of((ActionAuthorizationService<U>) cached);
-    }
-
-    Optional<ActionAuthorizationService> loaded = findSingleService(
-        ActionAuthorizationService.class,
-        ServiceLoader.load(ActionAuthorizationService.class));
-    loaded.ifPresent(service -> ACTION_AUTH_SERVICE_REF.compareAndSet(null, service));
-    return Optional.ofNullable((ActionAuthorizationService<U>) ACTION_AUTH_SERVICE_REF.get());
+    return DEFAULT.findActionAuthorizationService();
   }
 
   /**
@@ -340,33 +231,21 @@ public final class JSentinelServiceResolver {
    * @param <U>     subject type
    */
   public static <U> void setActionAuthorizationService(ActionAuthorizationService<U> service) {
-    ACTION_AUTH_SERVICE_REF.set(service);
+    DEFAULT.setActionAuthorizationService(service);
   }
 
   // ── LoginAttemptPolicy ─────────────────────────────────────────
 
   /**
-   * Returns the registered {@link LoginAttemptPolicy}, or
-   * {@link NoopLoginAttemptPolicy#INSTANCE} if no SPI implementation is
-   * configured. Like {@link #securityAuditService()}, this method
+   * Returns the registered {@link LoginAttemptPolicy}, or the noop
+   * fallback if no SPI implementation is configured. This method
    * <strong>never</strong> throws — brute-force throttling is optional
    * infrastructure.
    *
    * @return the resolved policy, never {@code null}
    */
   public static LoginAttemptPolicy loginAttemptPolicy() {
-    LoginAttemptPolicy cached = LOGIN_ATTEMPT_POLICY_REF.get();
-    if (cached != null) {
-      return cached;
-    }
-
-    LoginAttemptPolicy loaded = findSingleService(
-        LoginAttemptPolicy.class,
-        ServiceLoader.load(LoginAttemptPolicy.class))
-        .orElse(NoopLoginAttemptPolicy.INSTANCE);
-
-    LOGIN_ATTEMPT_POLICY_REF.compareAndSet(null, loaded);
-    return LOGIN_ATTEMPT_POLICY_REF.get();
+    return DEFAULT.loginAttemptPolicy();
   }
 
   /**
@@ -377,19 +256,7 @@ public final class JSentinelServiceResolver {
    * @return the SPI-registered policy, or empty
    */
   public static Optional<LoginAttemptPolicy> findLoginAttemptPolicy() {
-    LoginAttemptPolicy cached = LOGIN_ATTEMPT_POLICY_REF.get();
-    if (cached != null && cached != NoopLoginAttemptPolicy.INSTANCE) {
-      return Optional.of(cached);
-    }
-    if (cached == NoopLoginAttemptPolicy.INSTANCE) {
-      return Optional.empty();
-    }
-
-    Optional<LoginAttemptPolicy> loaded = findSingleService(
-        LoginAttemptPolicy.class,
-        ServiceLoader.load(LoginAttemptPolicy.class));
-    loaded.ifPresent(policy -> LOGIN_ATTEMPT_POLICY_REF.compareAndSet(null, policy));
-    return loaded;
+    return DEFAULT.findLoginAttemptPolicy();
   }
 
   /**
@@ -399,36 +266,22 @@ public final class JSentinelServiceResolver {
    * @param policy the policy, or {@code null} to clear
    */
   public static void setLoginAttemptPolicy(LoginAttemptPolicy policy) {
-    LOGIN_ATTEMPT_POLICY_REF.set(policy);
+    DEFAULT.setLoginAttemptPolicy(policy);
   }
 
   // ── SessionPolicy ──────────────────────────────────────────────
 
   /**
-   * Returns the registered {@link SessionPolicy}, or
-   * {@link NoopSessionPolicy#instance()} if no SPI implementation is
-   * configured. Like the audit and login-attempt accessors, this method
+   * Returns the registered {@link SessionPolicy}, or the noop fallback
+   * if no SPI implementation is configured. This method
    * <strong>never</strong> throws — session policies are optional
    * infrastructure.
    *
    * @param <U> subject type
    * @return the resolved policy, never {@code null}
    */
-  @SuppressWarnings("unchecked")
   public static <U> SessionPolicy<U> sessionPolicy() {
-    SessionPolicy<?> cached = SESSION_POLICY_REF.get();
-    if (cached != null) {
-      return (SessionPolicy<U>) cached;
-    }
-
-    SessionPolicy<?> loaded = findSingleService(
-        SessionPolicy.class,
-        ServiceLoader.load(SessionPolicy.class))
-        .map(p -> (SessionPolicy<?>) p)
-        .orElseGet(NoopSessionPolicy::instance);
-
-    SESSION_POLICY_REF.compareAndSet(null, loaded);
-    return (SessionPolicy<U>) SESSION_POLICY_REF.get();
+    return DEFAULT.sessionPolicy();
   }
 
   /**
@@ -438,21 +291,8 @@ public final class JSentinelServiceResolver {
    * @param <U> subject type
    * @return the SPI-registered policy, or empty
    */
-  @SuppressWarnings("unchecked")
   public static <U> Optional<SessionPolicy<U>> findSessionPolicy() {
-    SessionPolicy<?> cached = SESSION_POLICY_REF.get();
-    if (cached != null && !(cached instanceof NoopSessionPolicy<?>)) {
-      return Optional.of((SessionPolicy<U>) cached);
-    }
-    if (cached instanceof NoopSessionPolicy<?>) {
-      return Optional.empty();
-    }
-
-    Optional<SessionPolicy> loaded = findSingleService(
-        SessionPolicy.class,
-        ServiceLoader.load(SessionPolicy.class));
-    loaded.ifPresent(policy -> SESSION_POLICY_REF.compareAndSet(null, policy));
-    return loaded.map(p -> (SessionPolicy<U>) p);
+    return DEFAULT.findSessionPolicy();
   }
 
   /**
@@ -463,34 +303,20 @@ public final class JSentinelServiceResolver {
    * @param <U>    subject type
    */
   public static <U> void setSessionPolicy(SessionPolicy<U> policy) {
-    SESSION_POLICY_REF.set(policy);
+    DEFAULT.setSessionPolicy(policy);
   }
 
   // ── PasswordHasher ─────────────────────────────────────────────
 
   /**
    * Returns the registered {@link PasswordHasher}, or a fresh
-   * {@link Pbkdf2PasswordHasher} when none is configured. Like the
-   * audit / login-attempt / session accessors, this method
-   * <strong>never</strong> throws — every application needs *some*
-   * hasher; falling back to PBKDF2 with default iterations is the
-   * least-surprising default.
+   * {@link Pbkdf2PasswordHasher} when none is configured. This method
+   * <strong>never</strong> throws.
    *
    * @return the resolved hasher, never {@code null}
    */
   public static PasswordHasher passwordHashingService() {
-    PasswordHasher cached = PASSWORD_HASHER_REF.get();
-    if (cached != null) {
-      return cached;
-    }
-
-    PasswordHasher loaded = findSingleService(
-        PasswordHasher.class,
-        ServiceLoader.load(PasswordHasher.class))
-        .orElseGet(Pbkdf2PasswordHasher::new);
-
-    PASSWORD_HASHER_REF.compareAndSet(null, loaded);
-    return PASSWORD_HASHER_REF.get();
+    return DEFAULT.passwordHashingService();
   }
 
   /**
@@ -500,21 +326,7 @@ public final class JSentinelServiceResolver {
    * @return the SPI-registered hasher, or empty
    */
   public static Optional<PasswordHasher> findPasswordHashingService() {
-    PasswordHasher cached = PASSWORD_HASHER_REF.get();
-    if (cached != null && !(cached instanceof Pbkdf2PasswordHasher)) {
-      return Optional.of(cached);
-    }
-    if (cached instanceof Pbkdf2PasswordHasher) {
-      // The cached instance is the default fallback. Allow SPI to
-      // override on the next lookup by reporting "no SPI" here.
-      return Optional.empty();
-    }
-
-    Optional<PasswordHasher> loaded = findSingleService(
-        PasswordHasher.class,
-        ServiceLoader.load(PasswordHasher.class));
-    loaded.ifPresent(hasher -> PASSWORD_HASHER_REF.compareAndSet(null, hasher));
-    return loaded;
+    return DEFAULT.findPasswordHashingService();
   }
 
   /**
@@ -524,38 +336,26 @@ public final class JSentinelServiceResolver {
    * @param hasher the hasher, or {@code null} to clear
    */
   public static void setPasswordHashingService(PasswordHasher hasher) {
-    PASSWORD_HASHER_REF.set(hasher);
+    DEFAULT.setPasswordHashingService(hasher);
   }
 
   // ── LogoutService ──────────────────────────────────────────────
 
   /**
-   * Returns the registered {@link LogoutService}, or
-   * {@link NoopLogoutService#INSTANCE} when none is configured.
+   * Returns the registered {@link LogoutService}, or the noop fallback
+   * when none is configured.
    * <p>
-   * Like the audit / login-attempt / session accessors, this method
-   * <strong>never</strong> throws — logout is optional infrastructure.
-   * Production applications register a real {@link LogoutService}
-   * (e.g. {@link SubjectClearingLogoutService} or the Vaadin adapter's
-   * {@code VaadinLogoutService}) during startup via
+   * This method <strong>never</strong> throws — logout is optional
+   * infrastructure. Production applications register a real
+   * {@link LogoutService} (e.g. {@link SubjectClearingLogoutService} or
+   * the Vaadin adapter's {@code VaadinLogoutService}) during startup via
    * {@link #setLogoutService(LogoutService)} or through
    * {@code META-INF/services}.
    *
    * @return the resolved service, never {@code null}
    */
   public static LogoutService logoutService() {
-    LogoutService cached = LOGOUT_SERVICE_REF.get();
-    if (cached != null) {
-      return cached;
-    }
-
-    LogoutService loaded = findSingleService(
-        LogoutService.class,
-        ServiceLoader.load(LogoutService.class))
-        .orElse(NoopLogoutService.INSTANCE);
-
-    LOGOUT_SERVICE_REF.compareAndSet(null, loaded);
-    return LOGOUT_SERVICE_REF.get();
+    return DEFAULT.logoutService();
   }
 
   /**
@@ -565,19 +365,7 @@ public final class JSentinelServiceResolver {
    * @return the SPI-registered service, or empty
    */
   public static Optional<LogoutService> findLogoutService() {
-    LogoutService cached = LOGOUT_SERVICE_REF.get();
-    if (cached != null && cached != NoopLogoutService.INSTANCE) {
-      return Optional.of(cached);
-    }
-    if (cached == NoopLogoutService.INSTANCE) {
-      return Optional.empty();
-    }
-
-    Optional<LogoutService> loaded = findSingleService(
-        LogoutService.class,
-        ServiceLoader.load(LogoutService.class));
-    loaded.ifPresent(service -> LOGOUT_SERVICE_REF.compareAndSet(null, service));
-    return loaded;
+    return DEFAULT.findLogoutService();
   }
 
   /**
@@ -587,36 +375,22 @@ public final class JSentinelServiceResolver {
    * @param service the logout service, or {@code null} to clear
    */
   public static void setLogoutService(LogoutService service) {
-    LOGOUT_SERVICE_REF.set(service);
+    DEFAULT.setLogoutService(service);
   }
 
   // ── PolicyRegistry ─────────────────────────────────────────────
 
   /**
    * Returns the registered {@link PolicyRegistry}, or a fresh
-   * {@link InMemoryPolicyRegistry} when none is configured. Like the
-   * audit / login-attempt / session accessors, this method
-   * <strong>never</strong> throws — the policy registry is optional
-   * infrastructure for applications that use the {@code @RequiresPolicy}
-   * annotation. The fallback registry is cached, so applications can
-   * register policies into it at startup and they are visible on
-   * subsequent lookups.
+   * {@link InMemoryPolicyRegistry} when none is configured. This method
+   * <strong>never</strong> throws. The fallback registry is cached, so
+   * applications can register policies into it at startup and they are
+   * visible on subsequent lookups.
    *
    * @return the resolved registry, never {@code null}
    */
   public static PolicyRegistry policyRegistry() {
-    PolicyRegistry cached = POLICY_REGISTRY_REF.get();
-    if (cached != null) {
-      return cached;
-    }
-
-    PolicyRegistry loaded = findSingleService(
-        PolicyRegistry.class,
-        ServiceLoader.load(PolicyRegistry.class))
-        .orElseGet(InMemoryPolicyRegistry::new);
-
-    POLICY_REGISTRY_REF.compareAndSet(null, loaded);
-    return POLICY_REGISTRY_REF.get();
+    return DEFAULT.policyRegistry();
   }
 
   /**
@@ -626,21 +400,7 @@ public final class JSentinelServiceResolver {
    * @return the SPI-registered registry, or empty
    */
   public static Optional<PolicyRegistry> findPolicyRegistry() {
-    PolicyRegistry cached = POLICY_REGISTRY_REF.get();
-    if (cached != null && !(cached instanceof InMemoryPolicyRegistry)) {
-      return Optional.of(cached);
-    }
-    if (cached instanceof InMemoryPolicyRegistry) {
-      // The cached instance is the default fallback. Report "no SPI"
-      // so callers can decide whether to override.
-      return Optional.empty();
-    }
-
-    Optional<PolicyRegistry> loaded = findSingleService(
-        PolicyRegistry.class,
-        ServiceLoader.load(PolicyRegistry.class));
-    loaded.ifPresent(registry -> POLICY_REGISTRY_REF.compareAndSet(null, registry));
-    return loaded;
+    return DEFAULT.findPolicyRegistry();
   }
 
   /**
@@ -650,7 +410,7 @@ public final class JSentinelServiceResolver {
    * @param registry the registry, or {@code null} to clear
    */
   public static void setPolicyRegistry(PolicyRegistry registry) {
-    POLICY_REGISTRY_REF.set(registry);
+    DEFAULT.setPolicyRegistry(registry);
   }
 
   // ── ResourceResolverRegistry ──────────────────────────────────
@@ -658,27 +418,13 @@ public final class JSentinelServiceResolver {
   /**
    * Returns the registered {@link ResourceResolverRegistry}, or a
    * fresh {@link InMemoryResourceResolverRegistry} when none is
-   * configured. Like the audit / policy accessors, this method
-   * <strong>never</strong> throws — resource resolution is optional
-   * infrastructure for applications that use
-   * {@code ResourcePredicates}. The fallback registry is cached so
-   * resolvers registered at startup remain visible.
+   * configured. This method <strong>never</strong> throws. The fallback
+   * registry is cached so resolvers registered at startup remain visible.
    *
    * @return the resolved registry, never {@code null}
    */
   public static ResourceResolverRegistry resourceResolverRegistry() {
-    ResourceResolverRegistry cached = RESOURCE_RESOLVER_REGISTRY_REF.get();
-    if (cached != null) {
-      return cached;
-    }
-
-    ResourceResolverRegistry loaded = findSingleService(
-        ResourceResolverRegistry.class,
-        ServiceLoader.load(ResourceResolverRegistry.class))
-        .orElseGet(InMemoryResourceResolverRegistry::new);
-
-    RESOURCE_RESOLVER_REGISTRY_REF.compareAndSet(null, loaded);
-    return RESOURCE_RESOLVER_REGISTRY_REF.get();
+    return DEFAULT.resourceResolverRegistry();
   }
 
   /**
@@ -689,19 +435,7 @@ public final class JSentinelServiceResolver {
    * @return the SPI-registered registry, or empty
    */
   public static Optional<ResourceResolverRegistry> findResourceResolverRegistry() {
-    ResourceResolverRegistry cached = RESOURCE_RESOLVER_REGISTRY_REF.get();
-    if (cached != null && !(cached instanceof InMemoryResourceResolverRegistry)) {
-      return Optional.of(cached);
-    }
-    if (cached instanceof InMemoryResourceResolverRegistry) {
-      return Optional.empty();
-    }
-
-    Optional<ResourceResolverRegistry> loaded = findSingleService(
-        ResourceResolverRegistry.class,
-        ServiceLoader.load(ResourceResolverRegistry.class));
-    loaded.ifPresent(registry -> RESOURCE_RESOLVER_REGISTRY_REF.compareAndSet(null, registry));
-    return loaded;
+    return DEFAULT.findResourceResolverRegistry();
   }
 
   /**
@@ -712,54 +446,30 @@ public final class JSentinelServiceResolver {
    * @param registry the registry, or {@code null} to clear
    */
   public static void setResourceResolverRegistry(ResourceResolverRegistry registry) {
-    RESOURCE_RESOLVER_REGISTRY_REF.set(registry);
+    DEFAULT.setResourceResolverRegistry(registry);
   }
 
   // ── RoleHierarchy ─────────────────────────────────────────────
 
   /**
-   * Returns the registered {@link RoleHierarchy}, or
-   * {@link NoopRoleHierarchy#INSTANCE} when none is configured. Like
-   * the audit / policy accessors, this method <strong>never</strong>
-   * throws — role inheritance is optional infrastructure.
+   * Returns the registered {@link RoleHierarchy}, or the noop fallback
+   * when none is configured. This method <strong>never</strong> throws —
+   * role inheritance is optional infrastructure.
    *
    * @return the resolved hierarchy, never {@code null}
    */
   public static RoleHierarchy roleHierarchy() {
-    RoleHierarchy cached = ROLE_HIERARCHY_REF.get();
-    if (cached != null) {
-      return cached;
-    }
-
-    RoleHierarchy loaded = findSingleService(
-        RoleHierarchy.class,
-        ServiceLoader.load(RoleHierarchy.class))
-        .orElse(NoopRoleHierarchy.INSTANCE);
-
-    ROLE_HIERARCHY_REF.compareAndSet(null, loaded);
-    return ROLE_HIERARCHY_REF.get();
+    return DEFAULT.roleHierarchy();
   }
 
   /**
    * Returns the SPI-registered {@link RoleHierarchy}, or empty when
-   * only the {@link NoopRoleHierarchy} fallback is in use.
+   * only the noop fallback is in use.
    *
    * @return the SPI-registered hierarchy, or empty
    */
   public static Optional<RoleHierarchy> findRoleHierarchy() {
-    RoleHierarchy cached = ROLE_HIERARCHY_REF.get();
-    if (cached != null && cached != NoopRoleHierarchy.INSTANCE) {
-      return Optional.of(cached);
-    }
-    if (cached == NoopRoleHierarchy.INSTANCE) {
-      return Optional.empty();
-    }
-
-    Optional<RoleHierarchy> loaded = findSingleService(
-        RoleHierarchy.class,
-        ServiceLoader.load(RoleHierarchy.class));
-    loaded.ifPresent(hierarchy -> ROLE_HIERARCHY_REF.compareAndSet(null, hierarchy));
-    return loaded;
+    return DEFAULT.findRoleHierarchy();
   }
 
   /**
@@ -769,7 +479,7 @@ public final class JSentinelServiceResolver {
    * @param hierarchy the hierarchy, or {@code null} to clear
    */
   public static void setRoleHierarchy(RoleHierarchy hierarchy) {
-    ROLE_HIERARCHY_REF.set(hierarchy);
+    DEFAULT.setRoleHierarchy(hierarchy);
   }
 
   // ── JSentinelVersionStore ──────────────────────────────────────
@@ -784,15 +494,7 @@ public final class JSentinelServiceResolver {
    * @return the registered store, or empty
    */
   public static Optional<JSentinelVersionStore> findJSentinelVersionStore() {
-    JSentinelVersionStore cached = SECURITY_VERSION_STORE_REF.get();
-    if (cached != null) {
-      return Optional.of(cached);
-    }
-    Optional<JSentinelVersionStore> loaded = findSingleService(
-        JSentinelVersionStore.class,
-        ServiceLoader.load(JSentinelVersionStore.class));
-    loaded.ifPresent(store -> SECURITY_VERSION_STORE_REF.compareAndSet(null, store));
-    return loaded;
+    return DEFAULT.findJSentinelVersionStore();
   }
 
   /**
@@ -803,7 +505,7 @@ public final class JSentinelServiceResolver {
    * @param store the store, or {@code null} to clear
    */
   public static void setJSentinelVersionStore(JSentinelVersionStore store) {
-    SECURITY_VERSION_STORE_REF.set(store);
+    DEFAULT.setJSentinelVersionStore(store);
   }
 
   // ── SubjectIdResolver ─────────────────────────────────────────
@@ -815,17 +517,8 @@ public final class JSentinelServiceResolver {
    * @param <U> application user type
    * @return the registered resolver, or empty
    */
-  @SuppressWarnings("unchecked")
   public static <U> Optional<SubjectIdResolver<U>> findSubjectIdResolver() {
-    SubjectIdResolver<?> cached = SUBJECT_ID_RESOLVER_REF.get();
-    if (cached != null) {
-      return Optional.of((SubjectIdResolver<U>) cached);
-    }
-    Optional<SubjectIdResolver> loaded = findSingleService(
-        SubjectIdResolver.class,
-        ServiceLoader.load(SubjectIdResolver.class));
-    loaded.ifPresent(resolver -> SUBJECT_ID_RESOLVER_REF.compareAndSet(null, resolver));
-    return Optional.ofNullable((SubjectIdResolver<U>) SUBJECT_ID_RESOLVER_REF.get());
+    return DEFAULT.findSubjectIdResolver();
   }
 
   /**
@@ -837,7 +530,7 @@ public final class JSentinelServiceResolver {
    * @param <U>      application user type
    */
   public static <U> void setSubjectIdResolver(SubjectIdResolver<U> resolver) {
-    SUBJECT_ID_RESOLVER_REF.set(resolver);
+    DEFAULT.setSubjectIdResolver(resolver);
   }
 
   // ── Step-up route ─────────────────────────────────────────────
@@ -851,8 +544,7 @@ public final class JSentinelServiceResolver {
    * @return non-blank route name, never {@code null}
    */
   public static String stepUpRouteName() {
-    String configured = STEP_UP_ROUTE_NAME_REF.get();
-    return configured == null ? DEFAULT_STEP_UP_ROUTE_NAME : configured;
+    return DEFAULT.stepUpRouteName();
   }
 
   /**
@@ -864,7 +556,7 @@ public final class JSentinelServiceResolver {
    * @return configured route name, or empty
    */
   public static Optional<String> findStepUpRouteName() {
-    return Optional.ofNullable(STEP_UP_ROUTE_NAME_REF.get());
+    return DEFAULT.findStepUpRouteName();
   }
 
   /**
@@ -877,19 +569,11 @@ public final class JSentinelServiceResolver {
    * @throws IllegalArgumentException if {@code routeName} is blank
    */
   public static void setStepUpRouteName(String routeName) {
-    if (routeName != null && routeName.isBlank()) {
-      throw new IllegalArgumentException("stepUpRouteName must not be blank");
-    }
-    STEP_UP_ROUTE_NAME_REF.set(routeName);
+    DEFAULT.setStepUpRouteName(routeName);
   }
 
-  // ── Reset (for testing) ────────────────────────────────────────
+  // ── TokenCredentialStore / OutboundTokenStrategy ───────────────
 
-  /**
-   * Clears all cached service references and resets {@link SubjectStores}.
-   * Intended for testing scenarios where SPI registrations change
-   * between runs.
-   */
   /**
    * V00.74 — resolve the {@link TokenCredentialStore}.
    *
@@ -903,13 +587,7 @@ public final class JSentinelServiceResolver {
    */
   @ExperimentalJSentinelApi
   public static TokenCredentialStore tokenCredentialStore() {
-    TokenCredentialStore cached = TOKEN_CREDENTIAL_STORE_REF.get();
-    if (cached != null) return cached;
-    TokenCredentialStore resolved = findSingleService(
-        TokenCredentialStore.class, ServiceLoader.load(TokenCredentialStore.class))
-        .orElseThrow(() -> missingService(TokenCredentialStore.class));
-    TOKEN_CREDENTIAL_STORE_REF.compareAndSet(null, resolved);
-    return TOKEN_CREDENTIAL_STORE_REF.get();
+    return DEFAULT.tokenCredentialStore();
   }
 
   /**
@@ -919,12 +597,7 @@ public final class JSentinelServiceResolver {
    */
   @ExperimentalJSentinelApi
   public static Optional<TokenCredentialStore> findTokenCredentialStore() {
-    TokenCredentialStore cached = TOKEN_CREDENTIAL_STORE_REF.get();
-    if (cached != null) return Optional.of(cached);
-    Optional<TokenCredentialStore> resolved = findSingleService(
-        TokenCredentialStore.class, ServiceLoader.load(TokenCredentialStore.class));
-    resolved.ifPresent(s -> TOKEN_CREDENTIAL_STORE_REF.compareAndSet(null, s));
-    return resolved;
+    return DEFAULT.findTokenCredentialStore();
   }
 
   /**
@@ -936,7 +609,7 @@ public final class JSentinelServiceResolver {
    */
   @ExperimentalJSentinelApi
   public static void setTokenCredentialStore(TokenCredentialStore store) {
-    TOKEN_CREDENTIAL_STORE_REF.set(store);
+    DEFAULT.setTokenCredentialStore(store);
   }
 
   /**
@@ -949,9 +622,7 @@ public final class JSentinelServiceResolver {
    */
   @ExperimentalJSentinelApi
   public static void registerOutboundTokenStrategy(String name, OutboundTokenStrategy strategy) {
-    java.util.Objects.requireNonNull(name, "name");
-    java.util.Objects.requireNonNull(strategy, "strategy");
-    OUTBOUND_STRATEGIES.put(name, strategy);
+    DEFAULT.registerOutboundTokenStrategy(name, strategy);
   }
 
   /**
@@ -965,26 +636,18 @@ public final class JSentinelServiceResolver {
    */
   @ExperimentalJSentinelApi
   public static Optional<OutboundTokenStrategy> findOutboundTokenStrategy(String name) {
-    return Optional.ofNullable(OUTBOUND_STRATEGIES.get(name));
+    return DEFAULT.findOutboundTokenStrategy(name);
   }
 
+  // ── Reset (for testing) ────────────────────────────────────────
+
+  /**
+   * Clears all cached service references on the default context and
+   * resets {@link SubjectStores}. Intended for testing scenarios where
+   * SPI registrations change between runs.
+   */
   public static void resetAll() {
-    AUTHENTICATION_SERVICE_REF.set(null);
-    AUTHORIZATION_SERVICE_REF.set(null);
-    AUDIT_SERVICE_REF.set(null);
-    ACTION_AUTH_SERVICE_REF.set(null);
-    LOGIN_ATTEMPT_POLICY_REF.set(null);
-    SESSION_POLICY_REF.set(null);
-    PASSWORD_HASHER_REF.set(null);
-    LOGOUT_SERVICE_REF.set(null);
-    POLICY_REGISTRY_REF.set(null);
-    RESOURCE_RESOLVER_REGISTRY_REF.set(null);
-    ROLE_HIERARCHY_REF.set(null);
-    SECURITY_VERSION_STORE_REF.set(null);
-    SUBJECT_ID_RESOLVER_REF.set(null);
-    STEP_UP_ROUTE_NAME_REF.set(null);
-    TOKEN_CREDENTIAL_STORE_REF.set(null);
-    OUTBOUND_STRATEGIES.clear();
+    DEFAULT.resetAll();
     SubjectStores.reset();
   }
 
