@@ -32,20 +32,33 @@ import com.svenruppert.jsentinel.events.store.StoredEnvelope;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Fans signed envelopes out to all connected SSE subscribers (Konzept §939).
  * Frame formatting goes through {@link EnvelopeWireCodec} + {@link SseFrames};
- * a subscriber whose bounded queue is full drops the frame (logged) rather than
- * blocking the broadcaster.
+ * a subscriber whose bounded queue is full drops the frame rather than blocking
+ * the broadcaster.
+ *
+ * <p><strong>Drop policy (R041).</strong> Delivery is best-effort: when a slow
+ * consumer's bounded queue is full the frame is dropped. Each drop increments
+ * {@link #droppedFrameCount()} (a process-lifetime counter operators can scrape)
+ * and is logged at WARN, rate-limited to the 1st and every
+ * {@value #DROP_LOG_INTERVAL}-th drop so a persistently-slow consumer cannot
+ * flood the log. A dropped frame is not retried; the consumer reconnects with a
+ * {@code Last-Event-ID} to catch up.
  *
  * @since 00.75.00
  */
 @ExperimentalJSentinelApi
 public final class SseEventBroadcaster implements HasLogger {
 
+  /** WARN is emitted on the 1st drop and every Nth drop thereafter. */
+  static final long DROP_LOG_INTERVAL = 100L;
+
   private final EnvelopeWireCodec wireCodec;
   private final Set<SseSubscriber> subscribers = ConcurrentHashMap.newKeySet();
+  private final AtomicLong droppedFrames = new AtomicLong();
 
   public SseEventBroadcaster(EnvelopeWireCodec wireCodec) {
     this.wireCodec = Objects.requireNonNull(wireCodec, "wireCodec");
@@ -75,8 +88,15 @@ public final class SseEventBroadcaster implements HasLogger {
         stored.cursor().position(), wireCodec.encode(stored.envelope()));
     for (SseSubscriber subscriber : subscribers) {
       if (!subscriber.offer(frame)) {
-        logger().warn("events-rest/sse-drop: subscriber queue full, dropped frame for {}",
-            stored.envelope().envelopeId().value());
+        long dropped = droppedFrames.incrementAndGet();
+        // R041: count every drop; rate-limit the WARN (1st + every Nth) so a
+        // persistently-slow consumer cannot flood the log.
+        if (dropped % DROP_LOG_INTERVAL == 1) {
+          logger().warn(
+              "events-rest/sse-drop: subscriber queue full, dropped frame for {} "
+                  + "(total dropped={})",
+              stored.envelope().envelopeId().value(), dropped);
+        }
       }
     }
   }
@@ -86,5 +106,13 @@ public final class SseEventBroadcaster implements HasLogger {
    */
   public int subscriberCount() {
     return subscribers.size();
+  }
+
+  /**
+   * @return the total number of frames dropped because a subscriber's queue was
+   *         full, over this broadcaster's lifetime (R041 backpressure metric)
+   */
+  public long droppedFrameCount() {
+    return droppedFrames.get();
   }
 }

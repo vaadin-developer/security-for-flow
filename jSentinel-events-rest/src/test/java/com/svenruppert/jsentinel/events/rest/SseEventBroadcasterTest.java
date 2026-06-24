@@ -79,4 +79,20 @@ class SseEventBroadcasterTest {
     assertTrue(subscriber.offer("a"));
     assertFalse(subscriber.offer("b"));
   }
+
+  @Test
+  @DisplayName("R041: a dropped frame increments the drop counter")
+  void dropIncrementsCounter() {
+    SseEventBroadcaster broadcaster = new SseEventBroadcaster(wire);
+    // a subscriber that is always full → every broadcast drops
+    broadcaster.register(frame -> false);
+    assertEquals(0L, broadcaster.droppedFrameCount());
+
+    SignedJSentinelEventEnvelope env = new EventsRestFixtures().signedEnvelope();
+    broadcaster.broadcast(new StoredEnvelope(JSentinelEventCursor.at(1), env));
+    broadcaster.broadcast(new StoredEnvelope(JSentinelEventCursor.at(2), env));
+
+    assertEquals(2L, broadcaster.droppedFrameCount(),
+        "each dropped frame must increment the backpressure counter");
+  }
 }
