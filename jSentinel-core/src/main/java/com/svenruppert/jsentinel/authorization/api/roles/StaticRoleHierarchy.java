@@ -131,6 +131,14 @@ public final class StaticRoleHierarchy implements RoleHierarchy {
     /**
      * Builds the immutable hierarchy.
      *
+     * <p>Cycle detection (R034): {@link #walk(RoleName)} runs once per declared
+     * parent and throws when it reaches a child equal to that walk's own start.
+     * Because {@code build()} walks <em>every</em> declared parent and every node
+     * in a cycle has an outgoing edge (so is itself a declared parent), walking
+     * from any cycle member reaches a back-edge to that member — therefore every
+     * cycle is rejected, regardless of {@code directChildren} iteration order.
+     * The guard is reachable and complete; there is no dead branch.
+     *
      * @return hierarchy
      * @throws IllegalStateException if the declared inheritance graph
      *                               contains a cycle

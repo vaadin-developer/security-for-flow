@@ -126,6 +126,31 @@ class StaticRoleHierarchyTest {
   }
 
   @Test
+  @DisplayName("three-node transitive cycle (ADMIN -> EDITOR -> VIEWER -> ADMIN) is rejected (R034)")
+  void rejectsThreeNodeCycle() {
+    StaticRoleHierarchy.Builder builder = StaticRoleHierarchy.builder()
+        .role(ADMIN).inheritsFrom(EDITOR)
+        .role(EDITOR).inheritsFrom(VIEWER)
+        .role(VIEWER).inheritsFrom(ADMIN);
+    assertThrows(IllegalStateException.class, builder::build,
+        "a transitive 3-node cycle must be rejected at build time");
+  }
+
+  @Test
+  @DisplayName("a cycle not involving the entry node is still rejected (R034)")
+  void rejectsCycleReachedFromANonCycleNode() {
+    // GUEST is not part of the cycle; it points into the EDITOR <-> VIEWER cycle.
+    // Detection must not depend on which parent build() happens to walk first:
+    // walking from EDITOR or VIEWER reaches a back-edge to its own start.
+    StaticRoleHierarchy.Builder builder = StaticRoleHierarchy.builder()
+        .role(GUEST).inheritsFrom(EDITOR)
+        .role(EDITOR).inheritsFrom(VIEWER)
+        .role(VIEWER).inheritsFrom(EDITOR);
+    assertThrows(IllegalStateException.class, builder::build,
+        "a cycle reachable from a non-cycle node must still be rejected");
+  }
+
+  @Test
   @DisplayName("inheritsFrom without preceding role(...) throws")
   void inheritsFromWithoutRoleThrows() {
     StaticRoleHierarchy.Builder builder = StaticRoleHierarchy.builder();
