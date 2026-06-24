@@ -55,7 +55,11 @@ public final class Argon2idDefaults {
 
   public static final int MIN_ITERATIONS = 1;
   public static final int MAX_ITERATIONS = 10;
-  public static final int MIN_MEMORY_KIB = 8_192;     //  8 MiB
+  // R044: OWASP Password Storage Cheat Sheet minimum for Argon2id interactive
+  // logins is m=19456 KiB (19 MiB) with t=2, p=1. The previous 8 MiB floor was
+  // below that. The DEFAULT_MEMORY_KIB (64 MiB) already exceeds it; below-floor
+  // stored hashes are rehashed on the next successful verify.
+  public static final int MIN_MEMORY_KIB = 19_456;    // 19 MiB (OWASP minimum)
   public static final int MAX_MEMORY_KIB = 1_048_576; //  1 GiB
   public static final int MIN_PARALLELISM = 1;
   public static final int MAX_PARALLELISM = 8;

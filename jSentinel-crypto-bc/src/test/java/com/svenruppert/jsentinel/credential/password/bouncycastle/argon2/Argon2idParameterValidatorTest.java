@@ -83,6 +83,19 @@ class Argon2idParameterValidatorTest {
   }
 
   @Test
+  @DisplayName("R044: memory floor is the OWASP minimum and a below-floor value is rejected")
+  void memoryFloorIsOwaspMinimum() {
+    assertEquals(19_456, Argon2idDefaults.MIN_MEMORY_KIB,
+        "Argon2id memory floor must be the OWASP minimum (19 MiB)");
+    Map<String, String> params = valid();
+    params.put(Argon2idParameterNames.MEMORY_KIB,
+        Integer.toString(Argon2idDefaults.MIN_MEMORY_KIB - 1));
+    assertThrows(PasswordHashValidationException.class,
+        () -> validator.validate(params, min, max),
+        "a memory parameter below the OWASP floor must be rejected at policy build");
+  }
+
+  @Test
   @DisplayName("Memory above the maximum is rejected (CWE-400 / CWE-770)")
   void memoryAboveMaximum() {
     Map<String, String> params = valid();

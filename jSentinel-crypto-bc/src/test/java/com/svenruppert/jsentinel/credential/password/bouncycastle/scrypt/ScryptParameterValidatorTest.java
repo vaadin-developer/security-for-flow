@@ -32,6 +32,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ScryptParameterValidatorTest {
 
@@ -73,7 +74,9 @@ class ScryptParameterValidatorTest {
   @DisplayName("Non-power-of-two N is rejected")
   void nonPowerOfTwoN() {
     Map<String, String> params = valid();
-    params.put(ScryptParameterNames.N, "17000");
+    // R044: must be within [MIN_N, MAX_N] so the power-of-two check is what
+    // fires (not the range check). 200000 is non-power-of-two and in range.
+    params.put(ScryptParameterNames.N, "200000");
     PasswordHashValidationException ex = assertThrows(
         PasswordHashValidationException.class,
         () -> validator.validate(params, min, max));
@@ -89,6 +92,15 @@ class ScryptParameterValidatorTest {
         Integer.toString(ScryptDefaults.MIN_N / 2));
     assertThrows(PasswordHashValidationException.class,
         () -> validator.validate(params, min, max));
+  }
+
+  @Test
+  @DisplayName("R044: N floor is the OWASP minimum (2^17) and the default is not below it")
+  void nFloorIsOwaspMinimum() {
+    assertEquals(131_072, ScryptDefaults.MIN_N,
+        "scrypt N floor must be the OWASP minimum 2^17");
+    assertTrue(ScryptDefaults.DEFAULT_N >= ScryptDefaults.MIN_N,
+        "the default N must not be below the OWASP floor");
   }
 
   @Test

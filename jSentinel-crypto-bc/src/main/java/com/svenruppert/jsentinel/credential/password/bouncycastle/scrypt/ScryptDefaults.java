@@ -31,9 +31,10 @@ import java.util.Map;
 /**
  * Phase-1b reference parameters for the scrypt password hashing path.
  *
- * <p>Defaults follow OWASP 2023 guidance for interactive logins:</p>
+ * <p>Defaults follow the OWASP Password Storage Cheat Sheet minimum for
+ * interactive logins (R044):</p>
  * <ul>
- *   <li>N = 2^15 = 32&nbsp;768 (CPU/memory cost)</li>
+ *   <li>N = 2^17 = 131&nbsp;072 (CPU/memory cost; OWASP minimum)</li>
  *   <li>r = 8 (block size; standard)</li>
  *   <li>p = 1 (parallelism)</li>
  *   <li>l = 32-byte derived key</li>
@@ -41,20 +42,23 @@ import java.util.Map;
  * </ul>
  *
  * <p>Memory consumed by a single verification is approximately
- * {@code 128 * r * N} bytes &mdash; 32&nbsp;MiB at the defaults. The
+ * {@code 128 * r * N} bytes &mdash; 128&nbsp;MiB at the defaults. The
  * upper bound (N=2^20, r=16) is deliberately tight at ≈ 2&nbsp;GiB so
  * a misconfiguration cannot trigger arbitrary memory allocation
  * (CWE-400 / CWE-770).</p>
  */
 public final class ScryptDefaults {
 
-  public static final int DEFAULT_N = 32_768;          // 2^15
+  public static final int DEFAULT_N = 131_072;         // 2^17 (OWASP minimum)
   public static final int DEFAULT_R = 8;
   public static final int DEFAULT_P = 1;
   public static final int DEFAULT_HASH_LENGTH = 32;
   public static final int DEFAULT_SALT_LENGTH = 16;
 
-  public static final int MIN_N = 16_384;              // 2^14
+  // R044: OWASP scrypt minimum is N=2^17 (131072) with r=8, p=1. The previous
+  // 2^14 floor (and 2^15 default) were below that; both are raised to 2^17.
+  // Below-floor stored hashes are rehashed on the next successful verify.
+  public static final int MIN_N = 131_072;             // 2^17 (OWASP minimum)
   public static final int MAX_N = 1_048_576;           // 2^20
   public static final int MIN_R = 4;
   public static final int MAX_R = 16;
