@@ -14,6 +14,7 @@ import com.svenruppert.jsentinel.credential.propagation.BearerToken;
 import com.svenruppert.jsentinel.credential.propagation.HeaderValue;
 import com.svenruppert.jsentinel.credential.propagation.OutboundCall;
 import com.svenruppert.jsentinel.propagation.oidc.cache.InMemoryTokenExchangeCache;
+import com.svenruppert.jsentinel.propagation.oidc.cache.TokenExchangeCache;
 import com.svenruppert.jsentinel.propagation.oidc.strategy.JSentinelPropagationException;
 import com.svenruppert.jsentinel.propagation.oidc.strategy.TokenExchangeStrategy;
 import org.junit.jupiter.api.AfterEach;
@@ -24,6 +25,9 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -100,6 +104,47 @@ class TokenExchangeStrategyIntegrationTest {
               java.net.URI.create("http://example.com/token"), "cid", "csecret"));
     } finally {
       System.setProperty("jsentinel.dev", "true");
+    }
+  }
+
+  @Test
+  @DisplayName("the cache is keyed on a hash of the token, never the raw bearer token (R023)")
+  void cacheKeyIsHashedNotRawToken() {
+    stub.respondWith(new StubTokenEndpoint.Response(200,
+        "{\"access_token\":\"minted\",\"token_type\":\"Bearer\",\"expires_in\":3600}"));
+    RecordingCache cache = new RecordingCache();
+    TokenExchangeStrategy strategy = new TokenExchangeStrategy(
+        stub.tokenEndpoint(), "cid", "csecret", HttpClient.newHttpClient(), cache);
+    String rawToken = "super-secret-subject-token-xyz";
+
+    strategy.resolve(
+        new OutboundCall("svc", "m", "api.example.com", Map.of()),
+        Optional.of(new BearerToken(rawToken)));
+
+    assertFalse(cache.keys.isEmpty(), "the exchange result must be cached");
+    for (String key : cache.keys) {
+      assertFalse(key.contains(rawToken),
+          "no cache key may contain the raw bearer token; got: " + key);
+    }
+  }
+
+  /** A real cache that records every key it is asked about (no mock). */
+  private static final class RecordingCache implements TokenExchangeCache {
+    final List<String> keys = new ArrayList<>();
+    final Map<String, CachedEntry> store = new HashMap<>();
+
+    @Override public Optional<CachedEntry> get(String key) {
+      keys.add(key);
+      return Optional.ofNullable(store.get(key));
+    }
+
+    @Override public void put(String key, CachedEntry value) {
+      keys.add(key);
+      store.put(key, value);
+    }
+
+    @Override public void clear() {
+      store.clear();
     }
   }
 

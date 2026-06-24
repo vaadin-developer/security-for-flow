@@ -26,6 +26,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
@@ -93,7 +95,7 @@ public final class TokenExchangeStrategy implements OutboundTokenStrategy, HasLo
   public Optional<HeaderValue> resolve(OutboundCall call, Optional<TokenCredential> inbound) {
     if (inbound.isEmpty()) return Optional.empty();
     String subject = inbound.get().value();
-    String key = subject + "|" + call.declaredAudience();
+    String key = cacheKey(subject, call.declaredAudience());
     Optional<TokenExchangeCache.CachedEntry> cached = cache.get(key);
     if (cached.isPresent()) {
       return Optional.of(new HeaderValue("Authorization", "Bearer " + cached.get().accessToken()));
@@ -128,6 +130,32 @@ public final class TokenExchangeStrategy implements OutboundTokenStrategy, HasLo
     cache.put(key, new TokenExchangeCache.CachedEntry(
         accessToken, Instant.now().plusSeconds(expiresIn)));
     return Optional.of(new HeaderValue("Authorization", "Bearer " + accessToken));
+  }
+
+  /**
+   * R023: the cache must never be keyed on the raw inbound bearer token — that
+   * places a live credential verbatim in the cache map (heap dumps / diagnostics
+   * leak it). Key on a SHA-256 digest of the token instead: a stable,
+   * non-reversible identifier. The raw token is still used for the actual
+   * exchange request body, never as a stored key.
+   */
+  private static String cacheKey(String subjectToken, String audience) {
+    return sha256Hex(subjectToken) + "|" + audience;
+  }
+
+  private static String sha256Hex(String value) {
+    try {
+      byte[] digest = MessageDigest.getInstance("SHA-256")
+          .digest(value.getBytes(StandardCharsets.UTF_8));
+      StringBuilder sb = new StringBuilder(digest.length * 2);
+      for (byte b : digest) {
+        sb.append(Character.forDigit((b >> 4) & 0xF, 16))
+            .append(Character.forDigit(b & 0xF, 16));
+      }
+      return sb.toString();
+    } catch (NoSuchAlgorithmException e) {
+      throw new IllegalStateException("SHA-256 is required but unavailable", e);
+    }
   }
 
   /** Caps a diagnostic body so a large/hostile error response can't flood the log. */
