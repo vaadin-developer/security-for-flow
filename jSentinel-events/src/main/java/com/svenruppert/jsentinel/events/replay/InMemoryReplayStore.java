@@ -35,13 +35,15 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * In-memory {@link JSentinelEventReplayStore} backed by a bounded LRU map.
+ * In-memory {@link JSentinelEventReplayStore} backed by a bounded map.
  *
  * <p>All access is synchronized so {@link #markSeen(EventEnvelopeId, Instant)}
- * is atomic. Documented limitation (Konzept §637): not JVM-restart-safe, and
- * an envelope evicted by the LRU bound could in principle be replayed — pair it
- * with a sensible expiry window, or use the persistent variant (Phase 10) for
- * cross-restart guarantees.
+ * is atomic. When the capacity bound is hit, the entry with the
+ * <strong>soonest expiry</strong> is evicted — i.e. the one closest to being
+ * purgeable anyway — rather than the least-recently-used one. The old LRU policy
+ * (V00.75.00) could drop a still-valid id while keeping an expired-but-recently-
+ * checked one, opening an in-window replay (V00.75.20, R012). Still not
+ * JVM-restart-safe; use the persistent variant for cross-restart guarantees.
  *
  * @since 00.75.00
  */
@@ -51,7 +53,8 @@ public final class InMemoryReplayStore implements JSentinelEventReplayStore {
   /** Default bound on the number of retained envelope ids. */
   public static final int DEFAULT_CAPACITY = 100_000;
 
-  private final Map<EventEnvelopeId, Instant> seen;
+  private final Map<EventEnvelopeId, Instant> seen = new LinkedHashMap<>();
+  private final int capacity;
 
   public InMemoryReplayStore() {
     this(DEFAULT_CAPACITY);
@@ -61,12 +64,7 @@ public final class InMemoryReplayStore implements JSentinelEventReplayStore {
     if (capacity < 1) {
       throw new IllegalArgumentException("capacity must be >= 1, was " + capacity);
     }
-    this.seen = new LinkedHashMap<>(16, 0.75f, true) {
-      @Override
-      protected boolean removeEldestEntry(Map.Entry<EventEnvelopeId, Instant> eldest) {
-        return size() > capacity;
-      }
-    };
+    this.capacity = capacity;
   }
 
   @Override
@@ -75,6 +73,14 @@ public final class InMemoryReplayStore implements JSentinelEventReplayStore {
     Objects.requireNonNull(expiresAt, "expiresAt");
     if (seen.containsKey(envelopeId)) {
       return false;
+    }
+    if (seen.size() >= capacity) {
+      // Evict the soonest-to-expire entry (smallest expiresAt) — it has the
+      // shortest remaining replay window, so dropping it is the least unsafe.
+      seen.entrySet().stream()
+          .min(Map.Entry.comparingByValue())
+          .map(Map.Entry::getKey)
+          .ifPresent(seen::remove);
     }
     seen.put(envelopeId, expiresAt);
     return true;

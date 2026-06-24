@@ -52,6 +52,23 @@ class InMemoryReplayStoreTest {
   }
 
   @Test
+  @DisplayName("on capacity overflow the soonest-to-expire entry is evicted, not the LRU one (R012)")
+  void evictsSoonestExpiryNotLru() {
+    InMemoryReplayStore store = new InMemoryReplayStore(2);
+    EventEnvelopeId longLived = EventEnvelopeId.of("long");   // inserted first (the LRU-eldest)
+    EventEnvelopeId shortLived = EventEnvelopeId.of("short");
+    store.markSeen(longLived, Instant.parse("2026-06-24T12:00:00Z"));  // later expiry
+    store.markSeen(shortLived, Instant.parse("2026-06-24T10:01:00Z")); // sooner expiry
+    // third insert overflows capacity 2 → must evict the soonest-to-expire (short),
+    // NOT the eldest/LRU (long, which is still valid for longer).
+    store.markSeen(EventEnvelopeId.of("third"), future);
+
+    assertTrue(store.hasSeen(longLived),
+        "a still-long-valid id must not be evicted (would open a replay window)");
+    assertFalse(store.hasSeen(shortLived), "the soonest-to-expire id is the one evicted");
+  }
+
+  @Test
   @DisplayName("purgeExpired drops entries at or before now")
   void purgeExpired() {
     InMemoryReplayStore store = new InMemoryReplayStore();
