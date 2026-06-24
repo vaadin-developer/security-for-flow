@@ -1,0 +1,90 @@
+package com.svenruppert.jsentinel.events.codec;
+
+/*-
+ * #%L
+ * jSentinel Events — Security Event Bus core
+ * $Id:$
+ * $HeadURL:$
+ * %%
+ * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * %%
+ * Licensed under the EUPL, Version 1.1 or – as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence");
+ *
+ * You may not use this work except in compliance with the Licence.
+ * You may obtain a copy of the Licence at:
+ *
+ * http://ec.europa.eu/idabc/eupl5
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the Licence is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
+ * #L%
+ */
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+@DisplayName("CanonicalJson parser — malformed input hardening (R015)")
+class CanonicalJsonTest {
+
+  @Test
+  @DisplayName("deeply nested input raises PayloadCodecException, not StackOverflowError")
+  void deepNestingRaisesCodecExceptionNotStackOverflow() {
+    int depth = CanonicalJson.MAX_DEPTH + 500;
+    StringBuilder json = new StringBuilder();
+    for (int i = 0; i < depth; i++) {
+      json.append("{\"a\":");
+    }
+    json.append('1');
+    for (int i = 0; i < depth; i++) {
+      json.append('}');
+    }
+    // Must be the codec exception (a depth guard fired) — never a StackOverflowError.
+    assertThrows(PayloadCodecException.class, () -> CanonicalJson.parse(json.toString()));
+  }
+
+  @Test
+  @DisplayName("a truncated \\u escape raises PayloadCodecException, not StringIndexOutOfBounds")
+  void truncatedUnicodeEscapeRaisesCodecException() {
+    // "\\u12 then end of input — only two hex digits available before the close.
+    assertThrows(PayloadCodecException.class, () -> CanonicalJson.parse("\"\\u12\""));
+  }
+
+  @Test
+  @DisplayName("an invalid \\u hex group raises PayloadCodecException, not NumberFormatException")
+  void invalidUnicodeEscapeHexRaisesCodecException() {
+    assertThrows(PayloadCodecException.class, () -> CanonicalJson.parse("\"\\uZZZZ\""));
+  }
+
+  @Test
+  @DisplayName("a dangling backslash at end of string raises PayloadCodecException")
+  void danglingBackslashRaisesCodecException() {
+    // Opening quote, content, then a trailing backslash with no following char.
+    assertThrows(PayloadCodecException.class, () -> CanonicalJson.parse("\"abc\\"));
+  }
+
+  @Test
+  @DisplayName("end of input where ',' or '}' is expected raises PayloadCodecException")
+  void unexpectedEndAfterValueRaisesCodecException() {
+    assertThrows(PayloadCodecException.class, () -> CanonicalJson.parse("{\"a\":1"));
+  }
+
+  @Test
+  @DisplayName("a valid object nested within the depth bound parses and round-trips")
+  void validNestedObjectWithinDepthParses() {
+    Object parsed = CanonicalJson.parse("{\"a\":{\"b\":1}}");
+    Map<?, ?> outer = assertInstanceOf(Map.class, parsed);
+    Map<?, ?> inner = assertInstanceOf(Map.class, outer.get("a"));
+    assertEquals(1L, inner.get("b"));
+  }
+}

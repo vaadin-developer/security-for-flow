@@ -120,9 +120,18 @@ final class CanonicalJson {
     return value;
   }
 
+  /**
+   * Hard bound on object nesting on the parse path. Canonical event payloads are
+   * shallow; this only exists to turn a hostile deeply-nested document into a
+   * clean {@link PayloadCodecException} instead of a {@link StackOverflowError}
+   * (R015 / CWE-674).
+   */
+  static final int MAX_DEPTH = 64;
+
   private static final class Parser {
     private final String s;
     private int pos;
+    private int depth;
 
     Parser(String s) {
       this.s = s;
@@ -156,29 +165,39 @@ final class CanonicalJson {
     }
 
     Map<String, Object> parseObject() {
-      expect('{');
-      Map<String, Object> map = new LinkedHashMap<>();
-      skipWhitespace();
-      if (peek() == '}') {
-        pos++;
-        return map;
+      // R015: bound recursion depth so a hostile {"a":{"a":{… document raises a
+      // PayloadCodecException rather than a StackOverflowError on the consume path.
+      if (++depth > MAX_DEPTH) {
+        throw new PayloadCodecException(
+            "canonical JSON nesting too deep (> " + MAX_DEPTH + ")");
       }
-      while (true) {
+      try {
+        expect('{');
+        Map<String, Object> map = new LinkedHashMap<>();
         skipWhitespace();
-        String key = parseString();
-        skipWhitespace();
-        expect(':');
-        skipWhitespace();
-        map.put(key, parseValue());
-        skipWhitespace();
-        char c = next();
-        if (c == ',') {
-          continue;
-        }
-        if (c == '}') {
+        if (peek() == '}') {
+          pos++;
           return map;
         }
-        throw new PayloadCodecException("expected ',' or '}' at index " + (pos - 1));
+        while (true) {
+          skipWhitespace();
+          String key = parseString();
+          skipWhitespace();
+          expect(':');
+          skipWhitespace();
+          map.put(key, parseValue());
+          skipWhitespace();
+          char c = next();
+          if (c == ',') {
+            continue;
+          }
+          if (c == '}') {
+            return map;
+          }
+          throw new PayloadCodecException("expected ',' or '}' at index " + (pos - 1));
+        }
+      } finally {
+        depth--;
       }
     }
 
@@ -194,6 +213,11 @@ final class CanonicalJson {
           return sb.toString();
         }
         if (c == '\\') {
+          // R015: an escape with no following character is malformed input, not
+          // a reason to throw a raw StringIndexOutOfBoundsException.
+          if (atEnd()) {
+            throw new PayloadCodecException("dangling escape at end of canonical JSON string");
+          }
           char esc = s.charAt(pos++);
           switch (esc) {
             case '"' -> sb.append('"');
@@ -205,9 +229,21 @@ final class CanonicalJson {
             case 'r' -> sb.append('\r');
             case 't' -> sb.append('\t');
             case 'u' -> {
+              // R015: bounds-check before substring and wrap a bad hex group so a
+              // truncated/invalid \\u yields PayloadCodecException, not a raw
+              // StringIndexOutOfBounds / NumberFormatException.
+              if (pos + 4 > s.length()) {
+                throw new PayloadCodecException(
+                    "truncated \\u escape in canonical JSON at index " + (pos - 2));
+              }
               String hex = s.substring(pos, pos + 4);
               pos += 4;
-              sb.append((char) Integer.parseInt(hex, 16));
+              try {
+                sb.append((char) Integer.parseInt(hex, 16));
+              } catch (NumberFormatException e) {
+                throw new PayloadCodecException(
+                    "invalid \\u escape '" + hex + "' in canonical JSON", e);
+              }
             }
             default -> throw new PayloadCodecException("invalid escape \\" + esc);
           }
@@ -243,6 +279,10 @@ final class CanonicalJson {
     }
 
     char next() {
+      // R015: never index past the end with a raw charAt — report malformed input.
+      if (atEnd()) {
+        throw new PayloadCodecException("unexpected end of canonical JSON");
+      }
       return s.charAt(pos++);
     }
 
