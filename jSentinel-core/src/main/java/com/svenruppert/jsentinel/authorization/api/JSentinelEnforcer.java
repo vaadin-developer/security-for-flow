@@ -288,9 +288,16 @@ public final class JSentinelEnforcer {
     var auth = JSentinelServiceResolver.<Object>authorizationService();
     HasRoles roles = auth.rolesFor(user);
     HasPermissions perms = auth.permissionsFor(user);
+    // R019: prefer the registered SubjectIdResolver for a stable, non-leaky id.
+    // user.toString() is the last-resort fallback only — an app user's toString()
+    // can expose internal fields (e.g. a record's password) into the subject id,
+    // which flows into authz contexts and audit.
+    SubjectIdResolver idResolver =
+        JSentinelServiceResolver.findSubjectIdResolver().orElse(null);
+    String id = idResolver != null ? idResolver.resolve(user).value() : user.toString();
     return Optional.of(new JSentinelSubject(
-        user.toString(),
-        user.toString(),
+        id,
+        id,
         Set.copyOf(roles.roleNames()),
         Set.copyOf(perms.permissionNames())));
   }

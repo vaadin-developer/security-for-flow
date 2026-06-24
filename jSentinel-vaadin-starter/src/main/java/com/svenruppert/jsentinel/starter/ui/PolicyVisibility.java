@@ -14,6 +14,7 @@ import com.svenruppert.jsentinel.authentication.AuthenticationService;
 import com.svenruppert.jsentinel.authorization.api.AuthorizationService;
 import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.jsentinel.authorization.api.JSentinelSubject;
+import com.svenruppert.jsentinel.authorization.api.SubjectIdResolver;
 import com.svenruppert.jsentinel.authorization.api.SubjectStores;
 import com.svenruppert.jsentinel.components.SecuredVisibilityMode;
 import com.svenruppert.jsentinel.authorization.navigation.AccessContext;
@@ -145,9 +146,14 @@ final class PolicyVisibility {
       }
       AuthorizationService<Object> authz = authzOpt.get();
       Object u = rawSubject.get();
+      // R019: prefer the registered SubjectIdResolver; String.valueOf(user) can
+      // leak internal user fields into the subject id.
+      SubjectIdResolver idResolver =
+          JSentinelServiceResolver.findSubjectIdResolver().orElse(null);
+      String id = idResolver != null ? idResolver.resolve(u).value() : String.valueOf(u);
       return Optional.of(new JSentinelSubject(
-          String.valueOf(u),
-          String.valueOf(u),
+          id,
+          id,
           new java.util.LinkedHashSet<>(authz.rolesFor(u).roleNames()),
           new java.util.LinkedHashSet<>(authz.permissionsFor(u).permissionNames())));
     } catch (RuntimeException ignored) {
