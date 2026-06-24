@@ -21,6 +21,7 @@ import com.svenruppert.jsentinel.audit.JSentinelAuditService;
 import com.svenruppert.jsentinel.authorization.api.AccessDeniedException;
 import com.svenruppert.jsentinel.authorization.api.AuthorizationService;
 import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.jsentinel.authorization.api.permissions.PermissionMatcher;
 import com.svenruppert.jsentinel.authorization.api.permissions.PermissionName;
 
 import java.time.Clock;
@@ -81,9 +82,12 @@ public final class StaticActionAuthorizationService<U> implements ActionAuthoriz
     if (subject == null || permission == null) {
       return false;
     }
+    // R027: match via PermissionMatcher (wildcard-aware) so a granted wildcard
+    // like "doc:*" authorizes "doc:delete" here exactly as it does on the
+    // annotation / enforcer path — exact String.equals() silently denied it.
+    PermissionName required = new PermissionName(permission.name());
     return authorizationService.permissionsFor(subject).permissionNames().stream()
-        .map(PermissionName::value)
-        .anyMatch(value -> value.equals(permission.name()));
+        .anyMatch(granted -> PermissionMatcher.matches(granted, required));
   }
 
   @Override

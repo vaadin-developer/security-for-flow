@@ -63,6 +63,17 @@ class StaticActionAuthorizationServiceTest {
   }
 
   @Test
+  @DisplayName("a wildcard grant authorizes a specific action via PermissionMatcher (R027)")
+  void isAllowed_wildcard() {
+    ActionPermission delete = new ActionPermission("doc:delete");
+    StaticActionAuthorizationService<String> service = service(
+        permissionsFor("alice", new PermissionName("doc:*")));
+
+    assertTrue(service.isAllowed("alice", delete),
+        "a doc:* wildcard grant must authorize doc:delete, like the annotation path");
+  }
+
+  @Test
   @DisplayName("isAllowed false for null subject or null permission")
   void isAllowed_nullArguments() {
     StaticActionAuthorizationService<String> service = service(permissionsFor("alice"));
