@@ -69,13 +69,19 @@ final class EclipseStoreRoleAssignmentStore implements RoleAssignmentStore {
     storage.lock().writeLock().lock();
     try {
       LinkedHashSet<RoleName> set = storage.root().roleAssignments.get(key);
-      if (set == null) {
+      boolean newKey = set == null;
+      if (newKey) {
         set = new LinkedHashSet<>();
         storage.root().roleAssignments.put(key, set);
       }
       boolean added = set.add(role);
       if (added) {
-        storage.manager().store(storage.root().roleAssignments);
+        // store the mutated set itself — store(map) would not re-store an
+        // already-persisted nested set (R002); also store the map for a new key.
+        storage.manager().store(set);
+        if (newKey) {
+          storage.manager().store(storage.root().roleAssignments);
+        }
       }
       return added;
     } finally {
@@ -96,9 +102,13 @@ final class EclipseStoreRoleAssignmentStore implements RoleAssignmentStore {
       boolean removed = set.remove(role);
       if (removed) {
         if (set.isEmpty()) {
+          // entry removal mutates the map itself, which store(map) persists.
           storage.root().roleAssignments.remove(key);
+          storage.manager().store(storage.root().roleAssignments);
+        } else {
+          // persist the in-place set mutation (R002).
+          storage.manager().store(set);
         }
-        storage.manager().store(storage.root().roleAssignments);
       }
       return removed;
     } finally {
