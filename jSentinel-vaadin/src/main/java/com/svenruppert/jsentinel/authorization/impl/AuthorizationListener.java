@@ -230,7 +230,11 @@ public class AuthorizationListener
   private AccessDecision map(AuthorizationDecision decision) {
     return switch (decision) {
       case AuthorizationDecision.Granted() -> AccessDecision.granted();
-      case AuthorizationDecision.Unauthenticated(String reason) -> AccessDecision.denied("login", false);
+      case AuthorizationDecision.Unauthenticated(String _) ->
+          // R025: resolve the login route through JSentinelServiceResolver
+          // (default "login") instead of a hardcoded literal, so apps that name
+          // their login route differently are not silently broken.
+          AccessDecision.denied(JSentinelServiceResolver.loginRouteName(), false);
       case AuthorizationDecision.Forbidden(String _) ->
           // R018: never surface the evaluator's internal reason to the user-facing
           // error view (it may carry subject ids, policy names, SQL). Use a generic

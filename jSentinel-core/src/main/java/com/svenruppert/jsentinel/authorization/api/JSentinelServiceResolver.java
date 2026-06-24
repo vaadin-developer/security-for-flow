@@ -71,6 +71,9 @@ public final class JSentinelServiceResolver {
   /** Default route name an adapter reroutes to when a policy demands step-up. */
   public static final String DEFAULT_STEP_UP_ROUTE_NAME = "step-up";
 
+  /** Default route name an adapter reroutes to when a subject is unauthenticated. */
+  public static final String DEFAULT_LOGIN_ROUTE_NAME = "login";
+
   private static final JSentinelContext DEFAULT = new JSentinelContext();
 
   private JSentinelServiceResolver() {
@@ -570,6 +573,43 @@ public final class JSentinelServiceResolver {
    */
   public static void setStepUpRouteName(String routeName) {
     DEFAULT.setStepUpRouteName(routeName);
+  }
+
+  // ── Login route ───────────────────────────────────────────────
+
+  /**
+   * Returns the route name a Vaadin adapter reroutes to when an
+   * {@link AuthorizationDecision.Unauthenticated} is mapped. Defaults to
+   * {@link #DEFAULT_LOGIN_ROUTE_NAME}; can be overridden via
+   * {@link #setLoginRouteName(String)} so apps that name their login route
+   * differently are not silently broken (R025).
+   *
+   * @return non-blank route name, never {@code null}
+   */
+  public static String loginRouteName() {
+    return DEFAULT.loginRouteName();
+  }
+
+  /**
+   * Returns the explicitly configured login route name, or empty when only the
+   * {@link #DEFAULT_LOGIN_ROUTE_NAME} fallback is in use.
+   *
+   * @return configured route name, or empty
+   */
+  public static Optional<String> findLoginRouteName() {
+    return DEFAULT.findLoginRouteName();
+  }
+
+  /**
+   * Overrides the login route name. Pass {@code null} to fall back to
+   * {@link #DEFAULT_LOGIN_ROUTE_NAME}. Adapter-side routing reads the value on
+   * every navigation, so reconfiguration takes effect immediately.
+   *
+   * @param routeName non-blank route name, or {@code null} to reset
+   * @throws IllegalArgumentException if {@code routeName} is blank
+   */
+  public static void setLoginRouteName(String routeName) {
+    DEFAULT.setLoginRouteName(routeName);
   }
 
   // ── TokenCredentialStore / OutboundTokenStrategy ───────────────

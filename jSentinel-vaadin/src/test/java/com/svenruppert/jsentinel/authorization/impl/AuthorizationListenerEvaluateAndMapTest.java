@@ -178,6 +178,23 @@ class AuthorizationListenerEvaluateAndMapTest {
     }
   }
 
+  @Test
+  @DisplayName("map(Unauthenticated) honours the configured loginRouteName (R025)")
+  void map_unauthenticatedConfiguredRoute() throws Exception {
+    com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver.resetAll();
+    com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver
+        .setLoginRouteName("sign-in");
+    try {
+      Object result = invokeMap(new AuthorizationDecision.Unauthenticated("not signed in"));
+      AccessDecision.Reroute reroute = (AccessDecision.Reroute) result;
+      assertEquals("sign-in", reroute.target(),
+          "Unauthenticated must reroute to the configured login route, not a hardcoded literal");
+      assertEquals(false, reroute.asForward());
+    } finally {
+      com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver.resetAll();
+    }
+  }
+
   // ── Helpers ───────────────────────────────────────────────────
 
   private Object invokeEvaluate(Object evaluator, AccessContext context, Annotation annotation)

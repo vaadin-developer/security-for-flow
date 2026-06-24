@@ -105,6 +105,8 @@ public final class JSentinelContext {
       new AtomicReference<>();
   private final AtomicReference<String> stepUpRouteNameRef =
       new AtomicReference<>();
+  private final AtomicReference<String> loginRouteNameRef =
+      new AtomicReference<>();
   // V00.74: token-propagation surface. Store cached via SPI; strategies
   // registered explicitly through the .propagation(...) sub-builder.
   private final AtomicReference<TokenCredentialStore> tokenCredentialStoreRef =
@@ -909,6 +911,47 @@ public final class JSentinelContext {
     stepUpRouteNameRef.set(routeName);
   }
 
+  // ── Login route ───────────────────────────────────────────────
+
+  /**
+   * Returns the route name a Vaadin adapter reroutes to when an
+   * {@link AuthorizationDecision.Unauthenticated} is mapped. Defaults to
+   * {@link JSentinelServiceResolver#DEFAULT_LOGIN_ROUTE_NAME}; can be overridden
+   * via {@link #setLoginRouteName(String)} at application bootstrap so apps that
+   * name their login route differently are not silently broken (R025).
+   *
+   * @return non-blank route name, never {@code null}
+   */
+  public String loginRouteName() {
+    String configured = loginRouteNameRef.get();
+    return configured == null
+        ? JSentinelServiceResolver.DEFAULT_LOGIN_ROUTE_NAME : configured;
+  }
+
+  /**
+   * Returns the explicitly configured login route name, or empty when only the
+   * {@link JSentinelServiceResolver#DEFAULT_LOGIN_ROUTE_NAME} fallback is in use.
+   *
+   * @return configured route name, or empty
+   */
+  public Optional<String> findLoginRouteName() {
+    return Optional.ofNullable(loginRouteNameRef.get());
+  }
+
+  /**
+   * Overrides the login route name. Pass {@code null} to fall back to
+   * {@link JSentinelServiceResolver#DEFAULT_LOGIN_ROUTE_NAME}.
+   *
+   * @param routeName non-blank route name, or {@code null} to reset
+   * @throws IllegalArgumentException if {@code routeName} is blank
+   */
+  public void setLoginRouteName(String routeName) {
+    if (routeName != null && routeName.isBlank()) {
+      throw new IllegalArgumentException("loginRouteName must not be blank");
+    }
+    loginRouteNameRef.set(routeName);
+  }
+
   // ── TokenCredentialStore / OutboundTokenStrategy ───────────────
 
   /**
@@ -1013,6 +1056,7 @@ public final class JSentinelContext {
     securityVersionStoreRef.set(null);
     subjectIdResolverRef.set(null);
     stepUpRouteNameRef.set(null);
+    loginRouteNameRef.set(null);
     tokenCredentialStoreRef.set(null);
     outboundStrategies.clear();
   }
