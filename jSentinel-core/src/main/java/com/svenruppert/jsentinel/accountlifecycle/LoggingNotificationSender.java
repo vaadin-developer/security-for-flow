@@ -17,11 +17,11 @@
 package com.svenruppert.jsentinel.accountlifecycle;
 
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Default {@link JSentinelNotificationSender} that writes a single
@@ -43,8 +43,11 @@ import java.util.logging.Logger;
 @ExperimentalJSentinelApi
 public final class LoggingNotificationSender implements JSentinelNotificationSender {
 
-  private static final Logger DEFAULT_LOGGER =
-      Logger.getLogger("com.svenruppert.jsentinel.accountlifecycle");
+  /** Notification stream name; route to a dedicated appender if desired. */
+  public static final String NOTIFY_LOGGER_NAME =
+      "com.svenruppert.jsentinel.accountlifecycle";
+
+  private static final Logger DEFAULT_LOGGER = LoggerFactory.getLogger(NOTIFY_LOGGER_NAME);
 
   private final Logger logger;
 
@@ -54,7 +57,7 @@ public final class LoggingNotificationSender implements JSentinelNotificationSen
   }
 
   /**
-   * @param logger non-null target logger
+   * @param logger non-null target SLF4J logger
    */
   public LoggingNotificationSender(Logger logger) {
     this.logger = Objects.requireNonNull(logger, "logger must not be null");
@@ -64,7 +67,7 @@ public final class LoggingNotificationSender implements JSentinelNotificationSen
   public void send(JSentinelNotification notification) {
     if (notification == null) return;
     try {
-      logger.log(Level.INFO, format(notification));
+      logger.info(format(notification));
     } catch (RuntimeException ignored) {
       // Senders must never throw.
     }

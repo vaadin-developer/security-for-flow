@@ -16,22 +16,30 @@
  */
 package com.svenruppert.jsentinel.audit;
 
+import com.svenruppert.dependencies.core.logger.HasLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
- * {@link AuditSink} that writes a single
- * {@link java.util.logging.Logger Logger} line per event at
- * {@link Level#INFO INFO} level. Never throws.
+ * {@link AuditSink} that writes a single {@link Logger SLF4J Logger} line per
+ * event at {@code INFO} level. Never throws.
  * <p>
  * The line format is intentionally compact and stable so it can be
  * grepped from a deployment log: {@code AUDIT type=… field=value …}.
+ * <p>
+ * R037: the audit stream is a named SLF4J logger
+ * ({@code com.svenruppert.jsentinel.audit}) — the {@code HasLogger} Shape-4
+ * "audit/metrics stream" pattern — so operators can route it to its own
+ * appender. The {@code (Logger)} constructor remains a test/injection seam.
  */
 public final class LoggingAuditSink implements AuditSink {
 
-  private static final Logger DEFAULT_LOGGER =
-      Logger.getLogger("com.svenruppert.jsentinel.audit");
+  /** Audit stream name; route this to a dedicated appender in logback/simplelogger. */
+  public static final String AUDIT_LOGGER_NAME = "com.svenruppert.jsentinel.audit";
+
+  private static final Logger DEFAULT_LOGGER = LoggerFactory.getLogger(AUDIT_LOGGER_NAME);
 
   private final Logger logger;
 
@@ -47,9 +55,15 @@ public final class LoggingAuditSink implements AuditSink {
   public void accept(AuditEvent event) {
     if (event == null) return;
     try {
-      logger.log(Level.INFO, format(event));
-    } catch (RuntimeException ignored) {
-      // sinks must never throw
+      logger.info(format(event));
+    } catch (RuntimeException ex) {
+      // R036: sinks must never throw, but a failing audit sink is a
+      // security-relevant blind spot — log the swallowed failure at WARN via a
+      // separate framework logger (the event's audit logger just failed). No
+      // secrets in the message: only the event type.
+      HasLogger.staticLogger().warn(
+          "audit/sink-failure: dropped a {} audit line because the audit logger threw",
+          event.getClass().getSimpleName(), ex);
     }
   }
 

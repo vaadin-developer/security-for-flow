@@ -22,6 +22,7 @@
  */
 package com.svenruppert.jsentinel.credential.password.audit;
 
+import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.jsentinel.audit.CredentialRehashed;
 import com.svenruppert.jsentinel.audit.CredentialVerificationFailed;
 import com.svenruppert.jsentinel.audit.CredentialVerificationSucceeded;
@@ -45,7 +46,7 @@ import java.util.Objects;
  * swallowed so a misconfigured audit backend cannot turn into a
  * denial-of-service against successful logins.</p>
  */
-public final class CredentialAuditPublisher {
+public final class CredentialAuditPublisher implements HasLogger {
 
   private final JSentinelAuditService auditService;
   private final Clock clock;
@@ -116,8 +117,13 @@ public final class CredentialAuditPublisher {
   private void safePublish(com.svenruppert.jsentinel.audit.AuditEvent event) {
     try {
       auditService.publish(event);
-    } catch (RuntimeException ignored) {
-      // Never let audit-sink failures break the login path (CWE-778).
+    } catch (RuntimeException ex) {
+      // R036: never let audit-sink failures break the login path (CWE-778), but
+      // a swallowed failure is a security-relevant blind spot — log it at WARN.
+      // No secrets in the message: only the event type.
+      logger().warn(
+          "audit/sink-failure: credential audit event {} not published",
+          event.getClass().getSimpleName(), ex);
     }
   }
 }

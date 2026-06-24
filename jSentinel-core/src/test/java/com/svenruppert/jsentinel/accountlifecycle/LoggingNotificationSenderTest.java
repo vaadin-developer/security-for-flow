@@ -16,18 +16,14 @@
  */
 package com.svenruppert.jsentinel.accountlifecycle;
 
+import com.svenruppert.jsentinel.audit.RecordingSlf4jLogger;
 import com.svenruppert.jsentinel.authorization.api.tenant.TenantId;
 import com.svenruppert.jsentinel.logout.SubjectId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -40,10 +36,7 @@ class LoggingNotificationSenderTest {
   @Test
   @DisplayName("notification is written as a single NOTIFY line with stable key=value pairs")
   void writesStableLine() {
-    Logger logger = Logger.getLogger("test.notify." + System.nanoTime());
-    logger.setUseParentHandlers(false);
-    CollectingHandler handler = new CollectingHandler();
-    logger.addHandler(handler);
+    RecordingSlf4jLogger logger = new RecordingSlf4jLogger();
 
     LoggingNotificationSender sender = new LoggingNotificationSender(logger);
     sender.send(new JSentinelNotification(
@@ -53,8 +46,8 @@ class LoggingNotificationSenderTest {
         Instant.parse("2026-01-01T00:00:00Z"),
         Map.of("tokenPlain", "abc", "expiresAt", "2026-01-02T00:00:00Z")));
 
-    assertEquals(1, handler.messages.size());
-    String line = handler.messages.get(0);
+    assertEquals(1, logger.messages.size());
+    String line = logger.messages.get(0);
     assertTrue(line.startsWith("NOTIFY "));
     assertTrue(line.contains("type=PASSWORD_RESET_REQUESTED"));
     assertTrue(line.contains("subject=alice"));
@@ -74,15 +67,11 @@ class LoggingNotificationSenderTest {
   @Test
   @DisplayName("logger throwing does not propagate")
   void loggerExceptionIsSwallowed() {
-    Logger logger = Logger.getLogger("test.notify.throw." + System.nanoTime());
-    logger.setUseParentHandlers(false);
-    logger.addHandler(new Handler() {
-      @Override public void publish(LogRecord r) { throw new RuntimeException("boom"); }
-      @Override public void flush() {}
-      @Override public void close() {}
-    });
+    RecordingSlf4jLogger throwing = new RecordingSlf4jLogger() {
+      @Override public void info(String msg) { throw new RuntimeException("boom"); }
+    };
 
-    new LoggingNotificationSender(logger).send(new JSentinelNotification(
+    new LoggingNotificationSender(throwing).send(new JSentinelNotification(
         JSentinelNotification.Kind.EMAIL_VERIFIED,
         new SubjectId("alice"), null, Instant.now(), Map.of()));
   }
@@ -111,12 +100,5 @@ class LoggingNotificationSenderTest {
   @DisplayName("constructor rejects null logger")
   void rejectsNullLogger() {
     assertThrows(NullPointerException.class, () -> new LoggingNotificationSender(null));
-  }
-
-  private static final class CollectingHandler extends Handler {
-    final List<String> messages = new ArrayList<>();
-    @Override public void publish(LogRecord r) { messages.add(r.getMessage()); }
-    @Override public void flush() {}
-    @Override public void close() {}
   }
 }

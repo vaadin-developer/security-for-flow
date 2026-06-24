@@ -25,14 +25,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -351,29 +344,10 @@ class LoggingAuditSinkAllVariantsTest {
     assertTrue(line.contains("reason=INC-2026-06-pepper/PEPPER_COMPROMISE"));
   }
 
-  /** Drive one event through an isolated logger and return its single line. */
+  /** Drive one event through a recording SLF4J logger and return its single line. */
   private static String log(AuditEvent event) {
-    RecordingHandler handler = new RecordingHandler();
-    Logger logger = Logger.getLogger("test.allvariants." + System.nanoTime());
-    logger.setUseParentHandlers(false);
-    logger.setLevel(Level.ALL);
-    logger.addHandler(handler);
+    RecordingSlf4jLogger logger = new RecordingSlf4jLogger();
     new LoggingAuditSink(logger).accept(event);
-    return handler.firstMessage();
-  }
-
-  private static final class RecordingHandler extends Handler {
-    final List<LogRecord> records = new ArrayList<>();
-
-    @Override public void publish(LogRecord record) {
-      records.add(record);
-    }
-    @Override public void flush() {}
-    @Override public void close() {}
-
-    String firstMessage() {
-      assertEquals(1, records.size(), "expected exactly one log line");
-      return records.get(0).getMessage();
-    }
+    return logger.firstMessage();
   }
 }

@@ -78,6 +78,32 @@ class CompositeAuditServiceTest {
   }
 
   @Test
+  @DisplayName("R036: a throwing sink is logged at WARN while the flow continues")
+  void throwingSinkIsLoggedAtWarn() {
+    RingBufferAuditSink ring = new RingBufferAuditSink();
+    AuditSink throwing = e -> { throw new RuntimeException("boom"); };
+    CompositeAuditService svc = new CompositeAuditService(ring, throwing);
+
+    java.io.PrintStream originalErr = System.err;
+    java.io.ByteArrayOutputStream captured = new java.io.ByteArrayOutputStream();
+    System.setErr(new java.io.PrintStream(captured, true, java.nio.charset.StandardCharsets.UTF_8));
+    try {
+      svc.publish(new LoginSucceeded(T0, "alice", null, null));
+    } finally {
+      System.setErr(originalErr);
+    }
+
+    // flow continued: the ring buffer still recorded the event
+    assertEquals(1, svc.query(AuditQuery.all()).size());
+    // and the swallowed failure was surfaced at WARN (slf4j-simple → System.err)
+    String err = captured.toString(java.nio.charset.StandardCharsets.UTF_8);
+    assertTrue(err.contains("audit/sink-failure"),
+        "expected the swallowed sink failure to be logged; stderr was: " + err);
+    assertTrue(err.contains("WARN"),
+        "the sink failure must be logged at WARN; stderr was: " + err);
+  }
+
+  @Test
   @DisplayName("throwing ring buffer does not stop extra sinks")
   void throwingRingBufferIsIsolated() {
     // A throwing query backend is irrelevant for publish — we want

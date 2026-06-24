@@ -16,6 +16,7 @@ import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.jsentinel.authorization.api.JSentinelSubject;
 import com.svenruppert.jsentinel.authorization.api.SubjectIdResolver;
 import com.svenruppert.jsentinel.authorization.api.SubjectStores;
+import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.jsentinel.components.SecuredVisibilityMode;
 import com.svenruppert.jsentinel.authorization.navigation.AccessContext;
 import com.svenruppert.jsentinel.policy.api.Policy;
@@ -25,8 +26,6 @@ import com.svenruppert.jsentinel.policy.spi.PolicyRegistry;
 import com.vaadin.flow.component.Component;
 
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * V00.73 policy-aware visibility helper for {@link SecuredUi}.
@@ -50,8 +49,6 @@ import java.util.logging.Logger;
  */
 final class PolicyVisibility {
 
-  private static final Logger LOG = Logger.getLogger(PolicyVisibility.class.getName());
-
   private PolicyVisibility() {
     throw new AssertionError("no instances");
   }
@@ -72,23 +69,23 @@ final class PolicyVisibility {
     switch (v) {
       case Allowed -> show(component);
       case DeniedNoSubject -> {
-        LOG.log(Level.INFO,
-            () -> "secured-ui/no-subject: policy=" + policyName + " — no subject bound");
+        HasLogger.staticLogger().info(
+            "secured-ui/no-subject: policy={} — no subject bound", policyName);
         denyVisible(component, mode);
       }
       case DeniedByPolicy -> {
-        LOG.log(Level.FINE,
-            () -> "secured-ui/policy-denied: policy=" + policyName);
+        HasLogger.staticLogger().debug(
+            "secured-ui/policy-denied: policy={}", policyName);
         denyVisible(component, mode);
       }
       case UnknownPolicy -> {
-        LOG.log(Level.WARNING,
-            () -> "secured-ui/unknown-policy: policy=" + policyName + " — PolicyRegistry has no entry");
+        HasLogger.staticLogger().warn(
+            "secured-ui/unknown-policy: policy={} — PolicyRegistry has no entry", policyName);
         denyVisible(component, mode);
       }
       case StepUpRequired -> {
-        LOG.log(Level.FINE,
-            () -> "secured-ui/step-up-required: policy=" + policyName);
+        HasLogger.staticLogger().debug(
+            "secured-ui/step-up-required: policy={}", policyName);
         // Treat step-up like a denial at the UI layer; the route-level
         // @SecureRoute(policy=...) handles step-up navigation.
         denyVisible(component, mode);

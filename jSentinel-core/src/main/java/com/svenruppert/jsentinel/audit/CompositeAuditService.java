@@ -16,6 +16,8 @@
  */
 package com.svenruppert.jsentinel.audit;
 
+import com.svenruppert.dependencies.core.logger.HasLogger;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -33,7 +35,7 @@ import java.util.Objects;
  * Queries always read from the ring buffer. Applications that need a
  * different query backend can wrap this class.
  */
-public final class CompositeAuditService implements JSentinelAuditService {
+public final class CompositeAuditService implements JSentinelAuditService, HasLogger {
 
   private final RingBufferAuditSink ringBuffer;
   private final List<AuditSink> extraSinks;
@@ -56,6 +58,19 @@ public final class CompositeAuditService implements JSentinelAuditService {
     }
   }
 
+  private void safeAccept(AuditSink sink, AuditEvent event) {
+    try {
+      sink.accept(event);
+    } catch (RuntimeException ex) {
+      // R036: never propagate — audit failure must not interrupt the security
+      // flow — but a failing sink is a security-relevant blind spot, so log it
+      // at WARN. No secrets: only the sink class and event type.
+      logger().warn(
+          "audit/sink-failure: sink {} threw on a {} event; it was dropped from that sink only",
+          sink.getClass().getName(), event.getClass().getSimpleName(), ex);
+    }
+  }
+
   @Override
   public List<AuditEvent> query(AuditQuery query) {
     Objects.requireNonNull(query, "query");
@@ -70,13 +85,5 @@ public final class CompositeAuditService implements JSentinelAuditService {
   /** Returns an unmodifiable snapshot of the configured extra sinks. */
   public List<AuditSink> extraSinks() {
     return new ArrayList<>(extraSinks);
-  }
-
-  private static void safeAccept(AuditSink sink, AuditEvent event) {
-    try {
-      sink.accept(event);
-    } catch (RuntimeException ignored) {
-      // never propagate — audit failure must not interrupt the security flow
-    }
   }
 }

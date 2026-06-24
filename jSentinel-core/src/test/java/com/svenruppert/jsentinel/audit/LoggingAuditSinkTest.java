@@ -22,12 +22,6 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -40,12 +34,11 @@ class LoggingAuditSinkTest {
   @Test
   @DisplayName("LoginSucceeded is logged with user/client/session fields")
   void logsLoginSucceeded() {
-    RecordingHandler handler = new RecordingHandler();
-    Logger logger = isolatedLogger(handler);
+    RecordingSlf4jLogger logger = new RecordingSlf4jLogger();
     new LoggingAuditSink(logger).accept(
         new LoginSucceeded(T0, "alice", "127.0.0.1", "S-1"));
 
-    String line = handler.firstMessage();
+    String line = logger.firstMessage();
     assertTrue(line.contains("type=LoginSucceeded"), line);
     assertTrue(line.contains("user=alice"), line);
     assertTrue(line.contains("client=127.0.0.1"), line);
@@ -55,12 +48,11 @@ class LoggingAuditSinkTest {
   @Test
   @DisplayName("LogoutPerformed is logged with subject/session/scope")
   void logsLogoutPerformed() {
-    RecordingHandler handler = new RecordingHandler();
-    Logger logger = isolatedLogger(handler);
+    RecordingSlf4jLogger logger = new RecordingSlf4jLogger();
     new LoggingAuditSink(logger).accept(
         new LogoutPerformed(T0, "alice", "tok-7", LogoutScope.AllSessionsOfSubject));
 
-    String line = handler.firstMessage();
+    String line = logger.firstMessage();
     assertTrue(line.contains("type=LogoutPerformed"));
     assertTrue(line.contains("subject=alice"));
     assertTrue(line.contains("session=tok-7"));
@@ -70,12 +62,11 @@ class LoggingAuditSinkTest {
   @Test
   @DisplayName("BruteForceLimitReached logs failedAttempts and lockoutSeconds")
   void logsBruteForce() {
-    RecordingHandler handler = new RecordingHandler();
-    Logger logger = isolatedLogger(handler);
+    RecordingSlf4jLogger logger = new RecordingSlf4jLogger();
     new LoggingAuditSink(logger).accept(new BruteForceLimitReached(
         T0, "alice", "127.0.0.1", 5, Duration.ofMinutes(15)));
 
-    String line = handler.firstMessage();
+    String line = logger.firstMessage();
     assertTrue(line.contains("type=BruteForceLimitReached"));
     assertTrue(line.contains("failedAttempts=5"));
     assertTrue(line.contains("lockoutSeconds=900"));
@@ -84,50 +75,34 @@ class LoggingAuditSinkTest {
   @Test
   @DisplayName("Null event is silently dropped")
   void nullEventDropped() {
-    RecordingHandler handler = new RecordingHandler();
-    Logger logger = isolatedLogger(handler);
+    RecordingSlf4jLogger logger = new RecordingSlf4jLogger();
     new LoggingAuditSink(logger).accept(null);
-    assertEquals(0, handler.records.size());
+    assertEquals(0, logger.messages.size());
   }
 
   @Test
   @DisplayName("Fields with null values are omitted from the log line")
   void nullFieldsAreOmitted() {
-    RecordingHandler handler = new RecordingHandler();
-    Logger logger = isolatedLogger(handler);
+    RecordingSlf4jLogger logger = new RecordingSlf4jLogger();
     new LoggingAuditSink(logger).accept(
         new AccessGranted(T0, null, null));
 
-    String line = handler.firstMessage();
+    String line = logger.firstMessage();
     assertTrue(line.contains("type=AccessGranted"));
     assertTrue(!line.contains("subject="), "null subject must not be logged: " + line);
     assertTrue(!line.contains("route="), "null route must not be logged: " + line);
   }
 
-  private static Logger isolatedLogger(RecordingHandler handler) {
-    Logger logger = Logger.getLogger("test." + System.nanoTime());
-    logger.setUseParentHandlers(false);
-    logger.setLevel(Level.ALL);
-    logger.addHandler(handler);
-    return logger;
-  }
-
-  private static final class RecordingHandler extends Handler {
-    final List<LogRecord> records = new ArrayList<>();
-
-    @Override public void publish(LogRecord record) {
-      records.add(record);
-    }
-
-    @Override public void flush() {
-    }
-
-    @Override public void close() {
-    }
-
-    String firstMessage() {
-      assertEquals(1, records.size(), "expected exactly one log line");
-      return records.get(0).getMessage();
-    }
+  @Test
+  @DisplayName("R036: a throwing audit logger is swallowed (accept never throws)")
+  void throwingLoggerIsSwallowed() {
+    RecordingSlf4jLogger throwing = new RecordingSlf4jLogger() {
+      @Override
+      public void info(String msg) {
+        throw new RuntimeException("logger boom");
+      }
+    };
+    // Must not propagate — the WARN goes to the framework static logger.
+    new LoggingAuditSink(throwing).accept(new LoginSucceeded(T0, "alice", "127.0.0.1", "S-1"));
   }
 }
