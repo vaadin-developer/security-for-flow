@@ -16,6 +16,7 @@
  */
 package com.svenruppert.jsentinel.rest;
 
+import com.svenruppert.dependencies.core.net.HttpStatus;
 import com.svenruppert.jsentinel.bootstrap.InitialAdminCreationResult;
 
 /**
@@ -28,12 +29,12 @@ public final class BootstrapRestStatusMapper {
 
   public int statusFor(InitialAdminCreationResult result) {
     return switch (result) {
-      case InitialAdminCreationResult.Created ignored -> 201;
-      case InitialAdminCreationResult.AlreadyInitialized ignored -> 409;
-      case InitialAdminCreationResult.InvalidBootstrapToken ignored -> 403;
-      case InitialAdminCreationResult.PasswordPolicyViolation ignored -> 400;
-      case InitialAdminCreationResult.InvalidUsername ignored -> 400;
-      case InitialAdminCreationResult.InternalError ignored -> 500;
+      case InitialAdminCreationResult.Created ignored -> HttpStatus.CREATED.code();
+      case InitialAdminCreationResult.AlreadyInitialized ignored -> HttpStatus.CONFLICT.code();
+      case InitialAdminCreationResult.InvalidBootstrapToken ignored -> HttpStatus.FORBIDDEN.code();
+      case InitialAdminCreationResult.PasswordPolicyViolation ignored -> HttpStatus.BAD_REQUEST.code();
+      case InitialAdminCreationResult.InvalidUsername ignored -> HttpStatus.BAD_REQUEST.code();
+      case InitialAdminCreationResult.InternalError ignored -> HttpStatus.INTERNAL_SERVER_ERROR.code();
     };
   }
 

@@ -16,6 +16,7 @@
  */
 package com.svenruppert.jsentinel.rest;
 
+import com.svenruppert.dependencies.core.net.HttpStatus;
 import com.svenruppert.jsentinel.audit.AccessDenied;
 import com.svenruppert.jsentinel.audit.AccessGranted;
 import com.svenruppert.jsentinel.audit.AuditEvent;
@@ -153,7 +154,7 @@ public final class RestAuthorizationFilter {
         SessionPolicyDecision sessionDecision = policy.evaluate(metadata.get());
         if (!(sessionDecision instanceof SessionPolicyDecision.Active)) {
           auditSessionExpired(metadata.get(), subject.get(), sessionDecision);
-          response.status(401);
+          response.status(HttpStatus.UNAUTHORIZED.code());
           response.body("Unauthorized");
           return;
         }

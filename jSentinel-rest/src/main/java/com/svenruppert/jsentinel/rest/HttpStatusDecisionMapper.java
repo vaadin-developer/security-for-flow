@@ -16,6 +16,7 @@
  */
 package com.svenruppert.jsentinel.rest;
 
+import com.svenruppert.dependencies.core.net.HttpStatus;
 import com.svenruppert.jsentinel.authorization.api.AuthorizationDecision;
 
 /**
@@ -51,12 +52,12 @@ public final class HttpStatusDecisionMapper {
     return switch (decision) {
       case AuthorizationDecision.Granted() -> true;
       case AuthorizationDecision.Unauthenticated(String ignored) -> {
-        response.status(401);
+        response.status(HttpStatus.UNAUTHORIZED.code());
         response.body("Unauthorized");
         yield false;
       }
       case AuthorizationDecision.Forbidden(String ignored) -> {
-        response.status(403);
+        response.status(HttpStatus.FORBIDDEN.code());
         response.body("Forbidden");
         yield false;
       }
@@ -64,7 +65,7 @@ public final class HttpStatusDecisionMapper {
         // RFC 7235 — return 401 with a syntactically-conformant
         // challenge so strict HTTP clients (curl --location, Postman,
         // OWASP tools) accept the response without ad-hoc parsing.
-        response.status(401);
+        response.status(HttpStatus.UNAUTHORIZED.code());
         response.header(
             RestHeaders.WWW_AUTHENTICATE,
             STEP_UP_SCHEME + " method=\"" + stepUp.method() + "\"");

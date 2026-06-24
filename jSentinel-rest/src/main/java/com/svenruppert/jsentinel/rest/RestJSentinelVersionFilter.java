@@ -16,6 +16,7 @@
  */
 package com.svenruppert.jsentinel.rest;
 
+import com.svenruppert.dependencies.core.net.HttpStatus;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.session.JSentinelVersionEnforcer;
 import com.svenruppert.jsentinel.session.JSentinelVersionEnforcer.EnforcementOutcome;
@@ -92,7 +93,7 @@ public final class RestJSentinelVersionFilter {
         context.sessionId(),
         route);
     if (outcome instanceof EnforcementOutcome.SessionStale) {
-      response.status(401);
+      response.status(HttpStatus.UNAUTHORIZED.code());
       response.header("WWW-Authenticate", SESSION_STALE_CHALLENGE);
       response.body("Unauthorized");
       return false;

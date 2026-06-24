@@ -16,6 +16,7 @@
  */
 package com.svenruppert.jsentinel.rest;
 
+import com.svenruppert.dependencies.core.net.HttpStatus;
 import com.svenruppert.jsentinel.audit.SessionExpired;
 import com.svenruppert.jsentinel.audit.JSentinelAuditService;
 import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
@@ -48,7 +49,7 @@ public final class RestAuthenticationFilter {
   public void requireAuthenticated(RestRequest request, RestResponse response, RestHandler handler) {
     Optional<JSentinelSubject> subject = subjectResolver.resolveSubject(request);
     if (subject.isEmpty()) {
-      response.status(401);
+      response.status(HttpStatus.UNAUTHORIZED.code());
       response.body("Unauthorized");
       return;
     }
@@ -58,7 +59,7 @@ public final class RestAuthenticationFilter {
       SessionPolicyDecision decision = policy.evaluate(metadata.get());
       if (!(decision instanceof SessionPolicyDecision.Active)) {
         auditExpired(metadata.get(), subject.orElse(null), decision);
-        response.status(401);
+        response.status(HttpStatus.UNAUTHORIZED.code());
         response.body("Unauthorized");
         return;
       }
