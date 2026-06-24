@@ -6,7 +6,7 @@ Authentication and Lifecycle Management)
 
 ## Position
 
-`security-for-flow` is not certified to any assurance level
+`jSentinel` is not certified to any assurance level
 under NIST SP 800-63B. The mapping below records which
 requirements at AAL1 are supported by framework features and
 which are deployment-level concerns.

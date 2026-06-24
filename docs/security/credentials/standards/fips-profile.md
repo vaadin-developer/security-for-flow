@@ -6,7 +6,7 @@ Errors)
 
 ## Position statement
 
-`security-for-flow` is **not** FIPS-certified.
+`jSentinel` is **not** FIPS-certified.
 
 The codebase is FIPS-**compatible** under specific conditions — those
 conditions are described below. Treating "the library is FIPS" and

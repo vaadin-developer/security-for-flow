@@ -1,6 +1,6 @@
 # 5-Minute Setup — Vaadin
 
-Goal: a Vaadin Flow application that uses `security-for-flow` V00.73 with
+Goal: a Vaadin Flow application that uses `jSentinel` V00.73 with
 the fluent bootstrap, `@JSentinelAutoService` and the Vaadin starter.
 V00.73 closes the two V00.72 carve-outs — the `.audit(...)` /
 `.sessions(...)` / `.policies(...)` / `.roles(...)` / `.credentials(...)`
@@ -12,19 +12,19 @@ sub-builders are real, and `SecuredUi.requiresPolicy(...)` /
 
 ```xml
 <dependency>
-  <groupId>com.svenruppert</groupId>
+  <groupId>com.svenruppert.jsentinel</groupId>
   <artifactId>jSentinel-vaadin</artifactId>
-  <version>${security-for-flow.version}</version>
+  <version>${jsentinel.version}</version>
 </dependency>
 <dependency>
-  <groupId>com.svenruppert</groupId>
+  <groupId>com.svenruppert.jsentinel</groupId>
   <artifactId>jSentinel-vaadin-starter</artifactId>
-  <version>${security-for-flow.version}</version>
+  <version>${jsentinel.version}</version>
 </dependency>
 <dependency>
-  <groupId>com.svenruppert</groupId>
+  <groupId>com.svenruppert.jsentinel</groupId>
   <artifactId>jSentinel-autoservice-annotations</artifactId>
-  <version>${security-for-flow.version}</version>
+  <version>${jsentinel.version}</version>
 </dependency>
 ```
 
@@ -34,14 +34,14 @@ sub-builders are real, and `SecuredUi.requiresPolicy(...)` /
   <configuration>
     <annotationProcessorPaths>
       <path>
-        <groupId>com.svenruppert</groupId>
+        <groupId>com.svenruppert.jsentinel</groupId>
         <artifactId>jSentinel-autoservice-processor</artifactId>
-        <version>${security-for-flow.version}</version>
+        <version>${jsentinel.version}</version>
       </path>
       <path>
-        <groupId>com.svenruppert</groupId>
+        <groupId>com.svenruppert.jsentinel</groupId>
         <artifactId>jSentinel-autoservice-annotations</artifactId>
-        <version>${security-for-flow.version}</version>
+        <version>${jsentinel.version}</version>
       </path>
     </annotationProcessorPaths>
   </configuration>

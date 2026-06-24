@@ -631,12 +631,12 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
         warnings.add(new JSentinelBootstrapWarning(
             Severity.ERROR,
             "credentials/modern-without-bc",
-            ".modern() requires the security-crypto-bc module on the classpath.",
+            ".modern() requires the jSentinel-crypto-bc module on the classpath.",
             "Add the dependency:\n"
                 + "  <dependency>\n"
-                + "    <groupId>com.svenruppert</groupId>\n"
-                + "    <artifactId>security-crypto-bc</artifactId>\n"
-                + "    <version>${security-for-flow.version}</version>\n"
+                + "    <groupId>com.svenruppert.jsentinel</groupId>\n"
+                + "    <artifactId>jSentinel-crypto-bc</artifactId>\n"
+                + "    <version>${jsentinel.version}</version>\n"
                 + "  </dependency>"));
         // do not register anything further when the explicit modern
         // request can't be honored

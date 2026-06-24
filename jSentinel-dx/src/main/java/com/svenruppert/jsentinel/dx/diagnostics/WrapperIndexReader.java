@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Reads the generated-wrappers index emitted by {@code security-processor}
+ * Reads the generated-wrappers index emitted by {@code jSentinel-processor}
  * into a {@link JSentinelProcessorReport}. The index lives at
  * {@code META-INF/jsentinel/generated-wrappers.idx} on the
  * classpath; each non-blank, non-comment line follows the format:
@@ -37,11 +37,10 @@ import java.util.Set;
  *
  * <p>The reader does NOT scan arbitrary classes. The processor owns the
  * authoritative view; the reader merely surfaces it.
- * <p>V00.72 ships only the reader path. The corresponding writer in
- * {@code security-processor} is staged as a V00.73 follow-up so that
- * the V00.72 invariant "behaviour of security-processor unchanged"
- * holds. Until then, the reader returns an empty report unless a
- * consumer ships a hand-authored index file.
+ * <p>The reader path shipped in V00.72; the corresponding writer in
+ * {@code jSentinel-processor} shipped in V00.73. The reader returns an empty
+ * report when no index file is on the classpath (e.g. a module that does not
+ * use the processor, or a hand-authored index).
  *
  * @since 00.72.00
  */
@@ -72,7 +71,7 @@ final class WrapperIndexReader {
       warnings.add(new ProcessorWarning(
           "processor/index-malformed",
           "Failed to enumerate generated-wrappers.idx: " + io.getMessage(),
-          "Inspect the security-processor build configuration."));
+          "Inspect the jSentinel-processor build configuration."));
       return new JSentinelProcessorReport(wrappers, warnings);
     }
 
@@ -91,7 +90,7 @@ final class WrapperIndexReader {
         warnings.add(new ProcessorWarning(
             "processor/index-malformed",
             "Failed to read " + url + ": " + io.getMessage(),
-            "Inspect the security-processor build configuration."));
+            "Inspect the jSentinel-processor build configuration."));
       }
     }
     return new JSentinelProcessorReport(wrappers, warnings);
@@ -193,11 +192,11 @@ final class WrapperIndexReader {
   }
 
   private static String fixSnippet() {
-    return "Add security-processor to <annotationProcessorPaths>:\n"
+    return "Add jSentinel-processor to <annotationProcessorPaths>:\n"
         + "  <path>\n"
-        + "    <groupId>com.svenruppert</groupId>\n"
-        + "    <artifactId>security-processor</artifactId>\n"
-        + "    <version>${security-for-flow.version}</version>\n"
+        + "    <groupId>com.svenruppert.jsentinel</groupId>\n"
+        + "    <artifactId>jSentinel-processor</artifactId>\n"
+        + "    <version>${jsentinel.version}</version>\n"
         + "  </path>";
   }
 

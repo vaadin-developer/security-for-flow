@@ -50,7 +50,7 @@ operator is responsible.
 
 ## Out of scope
 
-These items will not be implemented inside `security-for-flow`
+These items will not be implemented inside `jSentinel`
 regardless of release. The framework is not the right place.
 
 - Audit log retention enforcement (the audit sink decides).

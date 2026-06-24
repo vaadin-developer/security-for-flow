@@ -1,7 +1,7 @@
-# security-for-flow — Feature Catalogue
+# jSentinel — Feature Catalogue
 
 Vollständige Auflistung aller Funktionen und Erweiterungspunkte
-in security-for-flow 00.70.00 (Stand 2026-05-31, **V00.70.00
+in jSentinel 00.70.00 (Stand 2026-05-31, **V00.70.00
 feature-complete** — alle acht Phasen aus `Konzept-V00.70.00.md` sind
 gemerged: Tenant/Resource-Modell, 11 Persistence-Store-SPIs, Contract-
 Testkit + Eclipse-Store-Referenz-Impl, `JSentinelVersion`-Drift-

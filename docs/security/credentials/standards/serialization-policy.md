@@ -8,7 +8,7 @@ Resources)
 
 ## Position statement
 
-`security-for-flow` (jSentinel) **does not use Java serialization as
+`jSentinel` (jSentinel) **does not use Java serialization as
 an active data path**. No code in the framework calls
 `ObjectOutputStream`, `ObjectInputStream`, `writeObject`,
 `readObject`, `readObjectNoData`, `readResolve`, `writeReplace` or

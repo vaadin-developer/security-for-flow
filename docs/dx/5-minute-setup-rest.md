@@ -8,33 +8,33 @@ gone: `.audit(...)`, `.policies(...)`, `.roles(...)` and
 
 ```xml
 <dependency>
-  <groupId>com.svenruppert</groupId>
+  <groupId>com.svenruppert.jsentinel</groupId>
   <artifactId>jSentinel-rest</artifactId>
-  <version>${security-for-flow.version}</version>
+  <version>${jsentinel.version}</version>
 </dependency>
 <dependency>
-  <groupId>com.svenruppert</groupId>
+  <groupId>com.svenruppert.jsentinel</groupId>
   <artifactId>jSentinel-dx-rest</artifactId>
-  <version>${security-for-flow.version}</version>
+  <version>${jsentinel.version}</version>
 </dependency>
 <dependency>
-  <groupId>com.svenruppert</groupId>
+  <groupId>com.svenruppert.jsentinel</groupId>
   <artifactId>jSentinel-autoservice-annotations</artifactId>
-  <version>${security-for-flow.version}</version>
+  <version>${jsentinel.version}</version>
 </dependency>
 ```
 
 ```xml
 <annotationProcessorPaths>
   <path>
-    <groupId>com.svenruppert</groupId>
+    <groupId>com.svenruppert.jsentinel</groupId>
     <artifactId>jSentinel-autoservice-processor</artifactId>
-    <version>${security-for-flow.version}</version>
+    <version>${jsentinel.version}</version>
   </path>
   <path>
-    <groupId>com.svenruppert</groupId>
+    <groupId>com.svenruppert.jsentinel</groupId>
     <artifactId>jSentinel-autoservice-annotations</artifactId>
-    <version>${security-for-flow.version}</version>
+    <version>${jsentinel.version}</version>
   </path>
 </annotationProcessorPaths>
 ```

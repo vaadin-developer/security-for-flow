@@ -7,7 +7,7 @@ CWE: CWE-937 (Use of Components with Known Vulnerabilities), CWE-693
 ## What this document is
 
 This is **not** a certification statement. It is a description of the
-choices an operator deploying `security-for-flow` must make
+choices an operator deploying `jSentinel` must make
 explicitly, and the boundaries between what the framework can
 guarantee and what it cannot.
 
@@ -68,7 +68,7 @@ The four trust questions are independent:
 | Algorithm safety                        | NIST / IETF / operator policy |
 | Provider implementation correctness     | JDK vendor           |
 | JVM distribution integrity              | Operator (checksum + signature) |
-| Application-level policy enforcement    | `security-for-flow`  |
+| Application-level policy enforcement    | `jSentinel`  |
 
 A FIPS-validated provider does **not** make a deployment FIPS-
 certified — see `fips-profile.md`. An SBOM-listed dependency does
