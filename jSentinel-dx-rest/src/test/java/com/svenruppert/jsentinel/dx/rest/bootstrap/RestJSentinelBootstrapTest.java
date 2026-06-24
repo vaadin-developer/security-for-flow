@@ -182,6 +182,37 @@ class RestJSentinelBootstrapTest {
   }
 
   @Test
+  void cors_wildcardWithCredentials_warnsInNonStrict() {
+    RestCorsContext.reset();
+    JSentinelRuntime runtime = RestSecurity.bootstrap()
+        .authentication(FakeAuthenticationService.forType(String.class))
+        .authorization(new FakeAuthorizationService<String>())
+        .subjectResolver(TEST_RESOLVER)
+        .cors(c -> c.allowedOrigins("*").allowCredentials(true))
+        .install();
+
+    assertTrue(runtime.warnings().stream()
+            .anyMatch(w -> "cors/wildcard-with-credentials".equals(w.code())),
+        "wildcard origin + credentials must surface a warning, got: " + runtime.warnings());
+  }
+
+  @Test
+  void cors_wildcardWithCredentials_throwsInStrict() {
+    RestCorsContext.reset();
+    JSentinelBootstrapException ex = assertThrows(JSentinelBootstrapException.class, () ->
+        RestSecurity.bootstrap()
+            .mode(JSentinelBootstrapMode.STRICT)
+            .authentication(FakeAuthenticationService.forType(String.class))
+            .authorization(new FakeAuthorizationService<String>())
+            .subjectResolver(TEST_RESOLVER)
+            .cors(c -> c.allowedOrigins("*").allowCredentials(true))
+            .install());
+
+    assertTrue(ex.warnings().stream()
+        .anyMatch(w -> "cors/wildcard-with-credentials".equals(w.code())));
+  }
+
+  @Test
   void openApiMetadata_publishesAndRuntimeEntry() {
     RestOpenApiContext.reset();
     JSentinelRuntime runtime = RestSecurity.bootstrap()

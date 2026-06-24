@@ -173,6 +173,21 @@ final class RestJSentinelBootstrapImpl
 
     // V00.74 (A2.2): publish CORS configuration when configured.
     if (corsConfiguration != null) {
+      // R009: a wildcard origin combined with allowCredentials(true) is an
+      // invalid/insecure CORS combination — browsers reject
+      // "Access-Control-Allow-Origin: *" together with
+      // "Access-Control-Allow-Credentials: true". Flag it as an ERROR so STRICT
+      // mode rejects it; other modes record the warning.
+      if (corsConfiguration.allowCredentials()
+          && corsConfiguration.allowedOrigins().contains("*")) {
+        warnings.add(new JSentinelBootstrapWarning(
+            Severity.ERROR,
+            "cors/wildcard-with-credentials",
+            "CORS is configured with a wildcard origin (\"*\") together with "
+                + "allowCredentials(true).",
+            "Browsers reject this combination. List explicit allowedOrigins(...) "
+                + "instead of \"*\", or disable allowCredentials."));
+      }
       RestCorsContext.publish(corsConfiguration);
       services.add(new RegisteredJSentinelService(
           RestCorsContext.class, RestCorsConfiguration.class,
