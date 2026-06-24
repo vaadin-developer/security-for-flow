@@ -75,6 +75,15 @@ public final class JSentinelAutoServiceProcessor extends AbstractProcessor {
   /** spi-fqn -> sorted set of impl FQNs accumulated during the build. */
   private final Map<String, Set<String>> generated = new LinkedHashMap<>();
 
+  /**
+   * resource-path -> hand-written entries read from a pre-existing file.
+   * R032: populated during regular (non-{@code processingOver}) rounds so the
+   * read is decoupled from the {@code createResource} write that happens in
+   * {@code processingOver} — reading a resource and creating it are kept in
+   * separate rounds, avoiding the same-round Filer read/write footgun.
+   */
+  private final Map<String, Set<String>> handWrittenByResource = new LinkedHashMap<>();
+
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     Messager messager = processingEnv.getMessager();
@@ -99,7 +108,16 @@ public final class JSentinelAutoServiceProcessor extends AbstractProcessor {
       }
     }
 
-    if (roundEnv.processingOver()) {
+    if (!roundEnv.processingOver()) {
+      // R032: read pre-existing hand-written entries once, BEFORE the
+      // processingOver write round, so getResource and createResource never
+      // touch the same path in the same round.
+      for (String spiFqn : generated.keySet()) {
+        handWrittenByResource.computeIfAbsent(
+            "META-INF/services/" + spiFqn,
+            path -> readHandWrittenSafely(filer, path));
+      }
+    } else {
       writeAllResources(filer, messager);
     }
     return true;
@@ -112,6 +130,15 @@ public final class JSentinelAutoServiceProcessor extends AbstractProcessor {
       error(messager, impl, "autoservice/abstract",
           "abstract type cannot be a ServiceLoader provider",
           "Make the class non-abstract or remove @JSentinelAutoService.");
+      return false;
+    }
+    // R032: a non-public impl yields a services entry that ServiceLoader cannot
+    // instantiate at runtime (it needs an accessible public provider). Catch it
+    // at compile time, mirroring the existing autoservice/non-public-spi check.
+    if (!impl.getModifiers().contains(Modifier.PUBLIC)) {
+      error(messager, impl, "autoservice/non-public-impl",
+          "non-public type cannot be instantiated by ServiceLoader",
+          "Make the class public.");
       return false;
     }
     NestingKind nesting = impl.getNestingKind();
@@ -209,19 +236,10 @@ public final class JSentinelAutoServiceProcessor extends AbstractProcessor {
       String resourcePath = "META-INF/services/" + entry.getKey();
       Set<String> newEntries = entry.getValue();
 
-      Set<String> handWritten = new LinkedHashSet<>();
-      // Try to preserve hand-written entries from an existing file.
-      // getResource / openInputStream may throw IOException (real Filer
-      // implementations) or RuntimeException (the in-memory file
-      // managers used by processor tests when the resource has not
-      // been written yet).
-      try {
-        FileObject existing = filer.getResource(
-            StandardLocation.CLASS_OUTPUT, "", resourcePath);
-        readExistingEntries(existing, handWritten);
-      } catch (IOException | RuntimeException ignored) {
-        // file does not exist yet — nothing to preserve
-      }
+      // R032: hand-written entries were read in an earlier round (decoupled
+      // from this write) — no getResource in the same round as createResource.
+      Set<String> handWritten = handWrittenByResource.getOrDefault(
+          resourcePath, new LinkedHashSet<>());
 
       try {
         FileObject created = filer.createResource(
@@ -232,7 +250,10 @@ public final class JSentinelAutoServiceProcessor extends AbstractProcessor {
               w.write(h);
               w.write('\n');
             }
-            messager.printMessage(Diagnostic.Kind.WARNING,
+            // R032: a mixed file (hand-written + generated) is a supported,
+            // benign state — preserved across rounds. NOTE, not WARNING, so a
+            // clean build that legitimately merges does not emit a warning.
+            messager.printMessage(Diagnostic.Kind.NOTE,
                 "autoservice/mixed-file-detected: " + resourcePath
                     + " contains hand-written entries plus processor-generated entries. "
                     + "Consider migrating the hand-written entries to @JSentinelAutoService.");
@@ -253,6 +274,25 @@ public final class JSentinelAutoServiceProcessor extends AbstractProcessor {
             "Failed to write " + resourcePath + ": " + io.getMessage());
       }
     }
+  }
+
+  /**
+   * Reads pre-existing hand-written entries for {@code resourcePath}, returning
+   * an empty set when no file exists yet. {@code getResource}/{@code openInputStream}
+   * may throw {@link IOException} (real Filers) or a {@link RuntimeException}
+   * (in-memory file managers when the resource is absent); both mean
+   * "nothing to preserve".
+   */
+  private Set<String> readHandWrittenSafely(Filer filer, String resourcePath) {
+    Set<String> handWritten = new LinkedHashSet<>();
+    try {
+      FileObject existing = filer.getResource(
+          StandardLocation.CLASS_OUTPUT, "", resourcePath);
+      readExistingEntries(existing, handWritten);
+    } catch (IOException | RuntimeException ignored) {
+      // file does not exist yet — nothing to preserve
+    }
+    return handWritten;
   }
 
   private void readExistingEntries(FileObject existing, Set<String> handWritten) throws IOException {

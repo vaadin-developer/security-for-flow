@@ -187,6 +187,59 @@ class JSentinelAutoServiceProcessorTest {
     assertTrue(aPos < zPos, "AImpl should be sorted before ZImpl: " + content);
   }
 
+  // ── V00.75.20 R032: non-public impl, no spurious warning ───────────────
+
+  @Test
+  void nonPublicImpl_failsWithDiagnostic() throws IOException {
+    // R032: a package-private impl produces a services entry ServiceLoader
+    // cannot instantiate at runtime — catch it at compile time.
+    Map<String, String> sources = new LinkedHashMap<>();
+    sources.put("com.example.Api", """
+        package com.example;
+        public interface Api {}
+        """);
+    sources.put("com.example.PackagePrivateImpl", """
+        package com.example;
+        import com.svenruppert.jsentinel.autoservice.api.JSentinelAutoService;
+        @JSentinelAutoService(Api.class)
+        final class PackagePrivateImpl implements Api {}
+        """);
+
+    InMemoryCompiler.Result r = InMemoryCompiler.compile(sources);
+
+    assertFalse(r.success,
+        "compilation must fail when the impl is non-public: " + diagSummary(r));
+    assertTrue(r.diagnostics.stream()
+            .anyMatch(d -> d.getKind() == Diagnostic.Kind.ERROR
+                && d.getMessage(null).contains("autoservice/non-public-impl")),
+        "expected autoservice/non-public-impl ERROR: " + diagSummary(r));
+  }
+
+  @Test
+  void cleanBuild_emitsNoWarning() throws IOException {
+    // R032: a fresh build that writes a services file must not emit any WARNING
+    // (the mixed-file note is a NOTE, and it only fires when merging an
+    // existing hand-written file — never on a clean build).
+    Map<String, String> sources = new LinkedHashMap<>();
+    sources.put("com.example.Api", """
+        package com.example;
+        public interface Api {}
+        """);
+    sources.put("com.example.ApiImpl", """
+        package com.example;
+        import com.svenruppert.jsentinel.autoservice.api.JSentinelAutoService;
+        @JSentinelAutoService(Api.class)
+        public final class ApiImpl implements Api {}
+        """);
+
+    InMemoryCompiler.Result r = InMemoryCompiler.compile(sources);
+
+    assertTrue(r.success, diagSummary(r));
+    assertFalse(r.diagnostics.stream()
+            .anyMatch(d -> d.getKind() == Diagnostic.Kind.WARNING),
+        "a clean build must not emit warnings: " + diagSummary(r));
+  }
+
   private static String diagSummary(InMemoryCompiler.Result r) {
     StringBuilder sb = new StringBuilder();
     sb.append("success=").append(r.success).append("\nDiagnostics:");
