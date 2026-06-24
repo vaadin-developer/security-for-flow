@@ -33,6 +33,10 @@ import com.svenruppert.jsentinel.events.sequence.JSentinelEventSequenceStore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -74,5 +78,55 @@ public interface SequenceStoreContract {
     assertEquals(10, store.lastSequence(TenantId.DEFAULT, PRODUCER_A).orElseThrow().value());
     assertEquals(20, store.lastSequence(TenantId.DEFAULT, PRODUCER_B).orElseThrow().value());
     assertEquals(30, store.lastSequence(TenantId.of("other"), PRODUCER_A).orElseThrow().value());
+  }
+
+  @Test
+  @DisplayName("reserveNext starts at FIRST and advances monotonically")
+  default void reserveNextAdvances() {
+    JSentinelEventSequenceStore store = newSequenceStore();
+    assertEquals(EventSequence.FIRST, store.reserveNext(TenantId.DEFAULT, PRODUCER_A));
+    assertEquals(2, store.reserveNext(TenantId.DEFAULT, PRODUCER_A).value());
+    assertEquals(2, store.lastSequence(TenantId.DEFAULT, PRODUCER_A).orElseThrow().value());
+    // a different scope is independent
+    assertEquals(EventSequence.FIRST, store.reserveNext(TenantId.DEFAULT, PRODUCER_B));
+  }
+
+  @Test
+  @DisplayName("reserveNext is atomic — N concurrent reservations yield N distinct, gap-free sequences (R011)")
+  default void reserveNextIsAtomicUnderContention() throws InterruptedException {
+    JSentinelEventSequenceStore store = newSequenceStore();
+    int threads = 64;
+    ConcurrentHashMap.KeySetView<Long, Boolean> seen = ConcurrentHashMap.newKeySet();
+    AtomicInteger duplicates = new AtomicInteger();
+    CountDownLatch start = new CountDownLatch(1);
+    Thread[] pool = new Thread[threads];
+    for (int i = 0; i < threads; i++) {
+      pool[i] = new Thread(() -> {
+        try {
+          start.await();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          return;
+        }
+        EventSequence reserved = store.reserveNext(TenantId.DEFAULT, PRODUCER_A);
+        if (!seen.add(reserved.value())) {
+          duplicates.incrementAndGet();
+        }
+      });
+    }
+    for (Thread t : pool) {
+      t.start();
+    }
+    start.countDown();
+    for (Thread t : pool) {
+      t.join();
+    }
+    assertEquals(0, duplicates.get(), "no two reservations may share a sequence");
+    assertEquals(threads, seen.size(), "every reservation is distinct");
+    assertEquals(threads, store.lastSequence(TenantId.DEFAULT, PRODUCER_A).orElseThrow().value(),
+        "the last reserved sequence equals the reservation count (gap-free)");
+    long sum = seen.stream().mapToLong(Long::longValue).sum();
+    assertEquals((long) threads * (threads + 1) / 2, sum,
+        "the reserved sequences are exactly 1..N with no gaps");
   }
 }

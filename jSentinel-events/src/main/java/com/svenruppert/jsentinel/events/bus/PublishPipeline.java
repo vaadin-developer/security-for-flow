@@ -46,7 +46,6 @@ import com.svenruppert.jsentinel.events.sequence.JSentinelEventSequenceStore;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -143,9 +142,8 @@ public final class PublishPipeline {
   }
 
   private EventSequence reserveSequence(TenantId tenantId) {
-    Optional<EventSequence> last = sequenceStore.lastSequence(tenantId, producerId);
-    EventSequence next = last.map(EventSequence::next).orElse(EventSequence.FIRST);
-    sequenceStore.updateSequence(tenantId, producerId, next);
-    return next;
+    // R011: a single atomic reservation — read+advance+write as one step — so two
+    // publishers for the same (tenant, producer) can never get the same sequence.
+    return sequenceStore.reserveNext(tenantId, producerId);
   }
 }

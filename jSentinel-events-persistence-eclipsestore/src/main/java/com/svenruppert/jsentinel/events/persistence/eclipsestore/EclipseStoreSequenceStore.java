@@ -77,4 +77,22 @@ final class EclipseStoreSequenceStore implements JSentinelEventSequenceStore {
       storage.lock().writeLock().unlock();
     }
   }
+
+  // R011: the whole read-advance-write runs under the storage write lock, so two
+  // publishers for the same scope can never reserve the same sequence.
+  @Override
+  public EventSequence reserveNext(TenantId tenantId, EventProducerId producerId) {
+    String key = key(tenantId, producerId);
+    storage.lock().writeLock().lock();
+    try {
+      Map<String, Long> sequences = storage.root().sequences;
+      Long last = sequences.get(key);
+      EventSequence next = last == null ? EventSequence.FIRST : EventSequence.of(last).next();
+      sequences.put(key, next.value());
+      storage.manager().store(sequences);
+      return next;
+    } finally {
+      storage.lock().writeLock().unlock();
+    }
+  }
 }

@@ -57,4 +57,31 @@ public interface JSentinelEventSequenceStore {
    * @param sequence the new last-accepted sequence
    */
   void updateSequence(TenantId tenantId, EventProducerId producerId, EventSequence sequence);
+
+  /**
+   * Atomically reserves and returns the next sequence for the scope: reads the
+   * current last sequence, advances it ({@link EventSequence#next()}, or
+   * {@link EventSequence#FIRST} for a fresh scope), persists it and returns the
+   * reserved value — as one indivisible step.
+   *
+   * <p>The {@code default} implementation is <strong>not</strong> atomic: it
+   * composes {@link #lastSequence} and {@link #updateSequence}, so two threads
+   * publishing for the same {@code (tenant, producer)} can read the same last
+   * value and reserve the same next one. Concurrent implementations
+   * <strong>must</strong> override this method so a reserved sequence is always
+   * scope-unique (R011). The shipped in-memory and Eclipse-Store stores
+   * override it atomically.</p>
+   *
+   * @param tenantId the tenant scope
+   * @param producerId the producer scope
+   * @return the freshly reserved, scope-unique next sequence
+   * @since 00.75.20
+   */
+  default EventSequence reserveNext(TenantId tenantId, EventProducerId producerId) {
+    EventSequence next = lastSequence(tenantId, producerId)
+        .map(EventSequence::next)
+        .orElse(EventSequence.FIRST);
+    updateSequence(tenantId, producerId, next);
+    return next;
+  }
 }

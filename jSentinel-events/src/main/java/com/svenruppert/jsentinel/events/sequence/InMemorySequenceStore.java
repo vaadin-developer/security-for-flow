@@ -62,6 +62,15 @@ public final class InMemorySequenceStore implements JSentinelEventSequenceStore 
     sequences.put(key(tenantId, producerId), sequence);
   }
 
+  // R011: read-advance-write must be one indivisible step, else two publishers
+  // for the same scope can reserve the same sequence. ConcurrentHashMap#compute
+  // applies the remapping atomically per key.
+  @Override
+  public EventSequence reserveNext(TenantId tenantId, EventProducerId producerId) {
+    return sequences.compute(key(tenantId, producerId),
+        (scope, last) -> last == null ? EventSequence.FIRST : last.next());
+  }
+
   private static Scope key(TenantId tenantId, EventProducerId producerId) {
     return new Scope(
         Objects.requireNonNull(tenantId, "tenantId"),
