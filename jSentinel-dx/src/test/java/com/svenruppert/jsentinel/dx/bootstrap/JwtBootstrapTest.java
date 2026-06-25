@@ -115,4 +115,14 @@ class JwtBootstrapTest {
         .applyJwt();
     assertTrue(hasError(warnings, "jwt/factory-missing"));
   }
+
+  @Test
+  @DisplayName("the CUSTOM profile without an explicit allow-list fails gracefully, not by exception (RF02)")
+  void customProfileFailsGracefully() {
+    List<JSentinelBootstrapWarning> warnings = new TestBootstrap()
+        .jwt(j -> j.jwksUri(URI.create("https://idp.example/jwks"))
+            .algorithmProfile(AlgorithmProfile.CUSTOM))
+        .applyJwt();
+    assertTrue(hasError(warnings, "jwt/custom-profile-needs-allow-list"));
+  }
 }

@@ -308,6 +308,15 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
     if (jwt.allowList() != null) {
       allowList = jwt.allowList();
     } else if (jwt.profile() != null) {
+      if (jwt.profile() == com.svenruppert.jsentinel.jwt.api.AlgorithmProfile.CUSTOM) {
+        // RF02: CUSTOM has no intrinsic allow-list (toAllowList() would throw) — fail
+        // gracefully as a STRICT-class warning instead of an uncaught exception.
+        warnings.add(new JSentinelBootstrapWarning(Severity.ERROR,
+            "jwt/custom-profile-needs-allow-list",
+            ".algorithmProfile(CUSTOM) has no intrinsic allow-list.",
+            "Pass an explicit .algorithmAllowList(...) instead of the CUSTOM profile."));
+        return;
+      }
       allowList = jwt.profile().toAllowList();
     } else {
       warnings.add(new JSentinelBootstrapWarning(Severity.ERROR,
