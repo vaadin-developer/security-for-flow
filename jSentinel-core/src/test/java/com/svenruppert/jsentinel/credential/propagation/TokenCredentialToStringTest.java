@@ -44,7 +44,8 @@ class TokenCredentialToStringTest {
     OidcAccessToken token = new OidcAccessToken(SECRET,
         Optional.empty(),
         Optional.of("api"),
-        Optional.of("a1b2c3"));
+        Optional.of("a1b2c3"),
+        Optional.empty());
     String s = token.toString();
     assertFalse(s.contains(SECRET));
     assertTrue(s.contains("value=***"));

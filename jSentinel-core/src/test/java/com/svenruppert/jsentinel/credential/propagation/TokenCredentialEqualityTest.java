@@ -50,7 +50,8 @@ class TokenCredentialEqualityTest {
     assertThrows(IllegalArgumentException.class,
         () -> new BearerToken("", Optional.empty(), Optional.empty(), Optional.empty()));
     assertThrows(IllegalArgumentException.class,
-        () -> new OidcAccessToken("", Optional.empty(), Optional.empty(), Optional.empty()));
+        () -> new OidcAccessToken("", Optional.empty(), Optional.empty(), Optional.empty(),
+            Optional.empty()));
     assertThrows(IllegalArgumentException.class,
         () -> new RefreshToken("", Optional.empty(), Optional.empty(), Optional.empty()));
     assertThrows(IllegalArgumentException.class,

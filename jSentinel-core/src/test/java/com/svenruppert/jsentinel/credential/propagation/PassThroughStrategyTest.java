@@ -51,7 +51,7 @@ class PassThroughStrategyTest {
   void oidcForwarded() {
     Optional<HeaderValue> r = PassThroughStrategy.INSTANCE
         .resolve(CALL, Optional.of(new OidcAccessToken("xyz",
-            Optional.empty(), Optional.empty(), Optional.empty())));
+            Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty())));
     assertEquals(new HeaderValue("Authorization", "Bearer xyz"), r.orElseThrow());
   }
 

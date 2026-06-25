@@ -36,7 +36,8 @@ class TokenCredentialPatternSwitchTest {
   void eachPermitReached() {
     assertEquals("bearer", label(new BearerToken("a")));
     assertEquals("oidc", label(new OidcAccessToken("b",
-        java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty())));
+        java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty(),
+        java.util.Optional.empty())));
     assertEquals("refresh", label(new RefreshToken("c",
         java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty())));
     assertEquals("api-key", label(new ApiKey("d",
