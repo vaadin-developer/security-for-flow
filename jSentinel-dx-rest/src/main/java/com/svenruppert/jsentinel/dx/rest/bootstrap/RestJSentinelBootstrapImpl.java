@@ -170,6 +170,8 @@ final class RestJSentinelBootstrapImpl
     applyPolicyConfiguration(services, warnings);
     // V00.74: apply propagation sub-builder state.
     applyPropagationConfiguration(services, warnings);
+    // V00.76: apply JWT sub-builder state.
+    applyJwtConfiguration(services, warnings);
 
     // V00.74 (A2.2): publish CORS configuration when configured.
     if (corsConfiguration != null) {

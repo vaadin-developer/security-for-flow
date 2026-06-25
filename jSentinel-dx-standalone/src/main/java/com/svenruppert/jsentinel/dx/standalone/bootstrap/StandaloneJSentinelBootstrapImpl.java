@@ -163,6 +163,8 @@ final class StandaloneJSentinelBootstrapImpl
     applyPolicyConfiguration(services, warnings);
     // V00.74: apply propagation sub-builder state.
     applyPropagationConfiguration(services, warnings);
+    // V00.76: apply JWT sub-builder state.
+    applyJwtConfiguration(services, warnings);
 
     // V00.74 (A2.3): publish thread-propagation strategy.
     if (threadPropagation != null) {

@@ -64,6 +64,19 @@ public interface CommonJSentinelBootstrap<B extends CommonJSentinelBootstrap<B>>
   B propagation(Consumer<PropagationBootstrap> config);
 
   /**
+   * V00.76: declarative JWT-validation sub-builder. Adapter-symmetric — each
+   * adapter installs the recorded state in its {@code install()} pass via the
+   * ServiceLoader-discovered {@code JwtValidatorFactory} (or the explicit
+   * {@code .validator(...)}). JWT validation is format work, not UI work, so all
+   * three facades share it.
+   *
+   * @param config non-null lambda recording into a {@link JwtBootstrap}
+   * @return this builder
+   * @since 00.76.00
+   */
+  B jwt(Consumer<JwtBootstrap> config);
+
+  /**
    * V00.74: registers a logout service. Wired through
    * {@code JSentinelServiceResolver.setLogoutService(...)} by
    * {@code install()}.

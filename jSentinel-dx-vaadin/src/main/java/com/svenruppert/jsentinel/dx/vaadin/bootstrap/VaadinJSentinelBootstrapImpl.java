@@ -184,6 +184,8 @@ final class VaadinJSentinelBootstrapImpl
     applyPolicyConfiguration(services, warnings);
     // V00.74: apply propagation sub-builder state.
     applyPropagationConfiguration(services, warnings);
+    // V00.76: apply JWT sub-builder state.
+    applyJwtConfiguration(services, warnings);
 
     // V00.73 (Prompt 012 / Konzept §8.5): deterministic SecureRoute
     // cross-validation if discovery is opt-in.

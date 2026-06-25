@@ -54,6 +54,9 @@ public final class BootstrapState {
   private final CredentialState credentialState = new CredentialState();
   private final PolicyState policyState = new PolicyState();
   private final PropagationState propagationState = new PropagationState();
+  // V00.76: JWT validation sub-aggregate.
+  private boolean jwtConfigured;
+  private final JwtState jwtState = new JwtState();
 
   /** @return the typed audit sub-aggregate (V00.73) */
   public AuditState auditState() {
@@ -159,6 +162,21 @@ public final class BootstrapState {
   /** V00.74 — call after consuming {@code .propagation(...)}. */
   public void markPropagationConfigured() {
     this.propagationConfigured = true;
+  }
+
+  /** V00.76 — typed JWT sub-aggregate. */
+  public JwtState jwtState() {
+    return jwtState;
+  }
+
+  /** V00.76 — true if {@code .jwt(...)} was called. */
+  public boolean jwtConfigured() {
+    return jwtConfigured;
+  }
+
+  /** V00.76 — call after consuming {@code .jwt(...)}. */
+  public void markJwtConfigured() {
+    this.jwtConfigured = true;
   }
 
   // V00.74 accessors

@@ -145,6 +145,14 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
   }
 
   @Override
+  public B jwt(Consumer<com.svenruppert.jsentinel.dx.bootstrap.JwtBootstrap> config) {
+    Objects.requireNonNull(config, "config")
+        .accept(new RecordingJwtBootstrap(state.jwtState()));
+    state.markJwtConfigured();
+    return self();
+  }
+
+  @Override
   public B logout(LogoutService service) {
     state.logoutService(Objects.requireNonNull(service, "service"));
     return self();
@@ -256,6 +264,102 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
           "bootstrap-strategy:" + name,
           false));
     });
+  }
+
+  /**
+   * V00.76 — consume the {@link com.svenruppert.jsentinel.dx.internal.JwtState}
+   * accumulated by {@code .jwt(...)}. The explicit {@code .validator(...)} wins;
+   * otherwise a Nimbus validator is assembled from the {@code .jwksUri(...)} path
+   * via the ServiceLoader-discovered {@code JwtValidatorFactory} (keeping this DX
+   * layer free of any JOSE compile dependency). Emits the §13.2 STRICT codes.
+   * Called by each adapter's {@code install()}.
+   */
+  protected final void applyJwtConfiguration(
+      List<RegisteredJSentinelService> services,
+      List<JSentinelBootstrapWarning> warnings) {
+    if (!state.jwtConfigured()) {
+      return;
+    }
+    com.svenruppert.jsentinel.dx.internal.JwtState jwt = state.jwtState();
+    if (!jwt.hasAnySelection()) {
+      // empty .jwt(j -> {}) — silent on purpose
+      return;
+    }
+
+    // Explicit validator wins.
+    if (jwt.validator() != null) {
+      JSentinelServiceResolver.setJwtValidator(jwt.validator());
+      services.add(new RegisteredJSentinelService(
+          com.svenruppert.jsentinel.jwt.api.JwtValidator.class,
+          jwt.validator().getClass(), "bootstrap-explicit", false));
+      return;
+    }
+
+    // jwksUri path.
+    if (jwt.jwksUri() == null) {
+      warnings.add(new JSentinelBootstrapWarning(Severity.ERROR,
+          "jwt/missing-jwks-uri-or-validator",
+          ".jwt(...) needs either .jwksUri(...) or .validator(...).",
+          "Add .jwksUri(URI.create(\"https://idp/.well-known/jwks.json\")) or pass .validator(...)."));
+      return;
+    }
+
+    com.svenruppert.jsentinel.jwt.api.AlgorithmAllowList allowList;
+    if (jwt.allowList() != null) {
+      allowList = jwt.allowList();
+    } else if (jwt.profile() != null) {
+      allowList = jwt.profile().toAllowList();
+    } else {
+      warnings.add(new JSentinelBootstrapWarning(Severity.ERROR,
+          "jwt/no-algorithm-allow-list",
+          ".jwt(...) was configured without an algorithm profile or allow-list.",
+          "Add .algorithmProfile(AlgorithmProfile.STRICT_MODERN) or .algorithmAllowList(...)."));
+      return;
+    }
+
+    if (!"https".equalsIgnoreCase(jwt.jwksUri().getScheme())) {
+      Severity severity = switch (state.mode()) {
+        case STRICT -> Severity.ERROR;
+        case PRODUCTION -> Severity.WARNING;
+        default -> Severity.INFO;
+      };
+      warnings.add(new JSentinelBootstrapWarning(severity, "jwks/uri-not-https",
+          "JWKS URI is not https (" + jwt.jwksUri().getScheme() + ").",
+          "Use an https JWKS endpoint."));
+      if (severity == Severity.ERROR) {
+        return;
+      }
+    }
+
+    if (jwt.issuer() == null) {
+      warnings.add(new JSentinelBootstrapWarning(Severity.INFO, "jwt/issuer-missing",
+          ".jwt(...) has no .issuer(...); inbound tokens will not be issuer-checked.",
+          "Add .issuer(\"https://idp/\")."));
+    }
+
+    com.svenruppert.jsentinel.jwt.api.ClaimExpectations expectations =
+        new com.svenruppert.jsentinel.jwt.api.ClaimExpectations(
+            java.util.Optional.ofNullable(jwt.issuer()), jwt.audiences(),
+            true, false, false, false,
+            jwt.clockSkew() != null
+                ? new com.svenruppert.jsentinel.jwt.api.ClockSkewPolicy(jwt.clockSkew())
+                : com.svenruppert.jsentinel.jwt.api.ClockSkewPolicy.DEFAULT);
+
+    java.util.Optional<com.svenruppert.jsentinel.jwt.api.JwtValidatorFactory> factory =
+        java.util.ServiceLoader.load(com.svenruppert.jsentinel.jwt.api.JwtValidatorFactory.class)
+            .findFirst();
+    if (factory.isEmpty()) {
+      warnings.add(new JSentinelBootstrapWarning(Severity.ERROR, "jwt/factory-missing",
+          "No JwtValidatorFactory on the classpath (the jSentinel-jwt module).",
+          "Add the jSentinel-jwt dependency, or pass a pre-built .validator(...)."));
+      return;
+    }
+    com.svenruppert.jsentinel.jwt.api.JwtValidator validator = factory.get().create(
+        new com.svenruppert.jsentinel.jwt.api.JwtValidatorSpec(jwt.jwksUri(), allowList, expectations));
+    JSentinelServiceResolver.setJwtValidator(validator);
+    services.add(new RegisteredJSentinelService(
+        com.svenruppert.jsentinel.jwt.api.JwtValidator.class,
+        validator.getClass(), "bootstrap-jwks", false));
   }
 
   /**
