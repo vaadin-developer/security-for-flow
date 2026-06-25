@@ -138,3 +138,46 @@ RestSecurity.bootstrap()
 The pair's two-phase `close()` shuts app first, framework second; the
 framework close-attempt always runs so its lock file is released
 even if app shutdown throws.
+
+## JWT validation (V00.76)
+
+Add `jSentinel-jwt` to the classpath and wire `.jwt(...)` to validate inbound
+JWT bearer tokens against a JWKS endpoint. The DX layer never compiles against a
+JOSE library — it discovers the Nimbus `JwtValidatorFactory` via `ServiceLoader`:
+
+```java
+RestSecurity.bootstrap()
+    .mode(SecurityBootstrapMode.PRODUCTION)
+    .jwt(j -> j
+        .jwksUri(URI.create("https://idp.example/.well-known/jwks.json"))
+        .algorithmProfile(AlgorithmProfile.STRICT_MODERN)  // RS256/PS256/ES256/EdDSA
+        .issuer("https://idp.example/")                    // exact-match iss
+        .audience("api.example")                           // any-match aud
+        .clockSkew(Duration.ofSeconds(30)))                // exp/nbf leeway
+    .install();
+```
+
+A `RestSubjectResolver` then validates the token via the resolver SPI:
+
+```java
+JwtValidator validator = JSentinelServiceResolver.findJwtValidator().orElseThrow();
+return new BearerTokenExtractor().extract(req)
+    .flatMap(raw -> validator.validate(raw).toOptional())
+    .map(validated -> {
+      TokenCredentialStores.current().bind(OidcAccessToken.fromValidated(raw, validated));
+      return toSubject(validated);
+    });
+```
+
+Notes:
+
+- the algorithm **allow-list is mandatory** — pass `.algorithmProfile(...)` or
+  `.algorithmAllowList(...)`, or STRICT/PRODUCTION reject the bootstrap
+  (`jwt/no-algorithm-allow-list`). HMAC and `alg: none` are never accepted.
+- a fully pre-built validator is the alternative to the `.jwksUri` path:
+  `.jwt(j -> j.validator(myValidator))` (the two are mutually exclusive).
+- the JWKS client caches by `Cache-Control: max-age` (default 5 min), refreshes
+  once on a `kid` miss (single-flight), and negative-caches endpoint failures.
+- a non-`https` JWKS URI is a STRICT error (`jwks/uri-not-https`).
+
+See `demo-rest`'s `/api/jwt/demo` route for an end-to-end example.

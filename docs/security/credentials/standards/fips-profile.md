@@ -71,6 +71,49 @@ constructed. Its purpose is to be:
 - It does **not** verify the `java.security` configuration of the
   host JVM.
 
+## JWT signature algorithms (V00.76, `jSentinel-jwt`)
+
+The V00.76 JWT validator (`jSentinel-jwt`, Nimbus-backed) enforces a mandatory
+algorithm allow-list — there is no implicit "accept whatever the header says".
+Three curated profiles ship (`AlgorithmProfile`); the FIPS profile is:
+
+| Profile | Allowed `alg` | Notes |
+|---|---|---|
+| `STRICT_MODERN` (default) | RS256, PS256, ES256, EdDSA | covers ~90 % of OIDC IDPs |
+| `LEGACY_BROAD` | + RS384/512, PS384/512, ES384/512 | opt-in for legacy estates |
+| **`FIPS_140_3`** | **RS256/384/512, ES256/384/512** | **no EdDSA, no PS in V00.76** |
+
+Rationale for the FIPS set:
+
+- **RSASSA-PKCS1-v1_5 (RS\*)** and **ECDSA (ES\*)** map to FIPS 186-4/186-5
+  approved signature schemes.
+- **EdDSA** is FIPS 186-5 approved in principle, but is **excluded** here until
+  the framework can assert the JCA provider's EdDSA implementation is the
+  validated one; conservatively out of the V00.76 FIPS set.
+- **RSASSA-PSS (PS\*)** is approved but **deferred** to a later release for the
+  FIPS profile (it is available via `STRICT_MODERN` / `LEGACY_BROAD` for non-FIPS
+  use).
+- **HMAC (`HS*`)** and **`alg: none`** are **never** in any profile — V00.76 is
+  asymmetric-only, which is also the first line of the algorithm-confusion
+  defence.
+
+Provider posture: `jSentinel-jwt` performs RSA/EC signature verification through
+Nimbus, which delegates to the JVM's JCA provider; EdDSA verification uses the
+JDK's native `Signature("Ed25519")` (no Google Tink). In a FIPS deployment the
+validated provider therefore governs the JWT crypto exactly as it governs the
+credential pipeline. Select the FIPS set explicitly:
+
+```java
+RestSecurity.bootstrap()
+    .mode(SecurityBootstrapMode.STRICT)
+    .jwt(j -> j
+        .jwksUri(URI.create("https://idp.example/.well-known/jwks.json"))
+        .algorithmProfile(AlgorithmProfile.FIPS_140_3)
+        .issuer("https://idp.example/")
+        .audience("api.example"))
+    .install();
+```
+
 ## Operator checklist (when FIPS is required)
 
 - [ ] JDK is a vendor distribution with a FIPS-validated provider.
