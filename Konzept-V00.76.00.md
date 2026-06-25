@@ -1,7 +1,8 @@
 # Konzept V00.76.00: jSentinel-jwt — Standardisierte JWT-Verarbeitung
 
 Version: `00.76.00`
-Quellstand: V00.74.00 (Token-Propagation, in Umsetzung) + V00.75.00 (Security Event Bus, in Umsetzung)
+Quellstand: V00.75.20 (released; V00.74 Token-Propagation **und** V00.75 Security Event Bus sind ausgeliefert — `jSentinel-events` existiert)
+Konzept-Review-Gate A.0: durchlaufen 2026-06-25 (faktische Korrekturen + 4 Design-Entscheidungen eingearbeitet)
 Zielprojekt: `vaadin-developer/security-for-flow`
 Zielbranch: `develop`
 Java: `26+`
@@ -24,9 +25,9 @@ Vier zentrale Bausteine:
 3. **JWKS-Client** mit TTL-Cache, `kid`-Hot-Rotation, Stampede-Schutz und expliziter `Cache-Control`-Auswertung.
 4. **Algorithmen-Allow-List** mit harter Sperre gegen Algorithm-Confusion-Attacken (`alg: none`, HS+RSA-Public-Key, downgrade auf schwächere Kurven).
 
-Begleitend erhält V00.74 eine kleine Erweiterung: `OidcAccessToken` und neue `JwtToken extends TokenCredential` tragen ein optionales `ValidatedJwt`-Feld. Der V00.74-Outbound-Pfad bleibt unverändert; der V00.76-Inbound-Pfad kann Validierungsergebnisse durchreichen.
+Begleitend erhält der V00.74-`TokenCredential`-Stack (in `jSentinel-core`, Paket `com.svenruppert.jsentinel.credential.propagation`) eine **additive** Erweiterung: `OidcAccessToken` bekommt ein fünftes, optionales `ValidatedJwt`-Feld (die vier bestehenden Felder `value/expiresAt/audience/issuerHash` bleiben). Die `TokenCredential`-`permits`-Klausel bleibt unverändert — **kein** neues `JwtToken`-Zwischeninterface, **kein** `GenericJwtToken` in V00.76. Der V00.74-Outbound-Pfad bleibt unverändert; der V00.76-Inbound-Pfad kann Validierungsergebnisse durchreichen.
 
-V00.76 ist additiv über V00.73/V00.74/V00.75. Bestehende Konsumenten ohne JWT-Bedarf ziehen keine neue Dependency. Der Kern (`jSentinel-core`) bekommt nur Interface-Definitionen — die schweren JOSE-Klassen leben ausschließlich in `jSentinel-jwt`.
+V00.76 ist additiv über V00.73/V00.74/V00.75. Bestehende Konsumenten ohne JWT-Bedarf ziehen keine neue Dependency. Der Kern (`jSentinel-core`) bekommt nur SPI-/Record-Definitionen (`jwt/api`, inkl. `JwtValidatorFactory`) plus das additive `OidcAccessToken`-Feld — die schweren JOSE-Klassen leben ausschließlich in `jSentinel-jwt`.
 
 ---
 
@@ -65,7 +66,10 @@ V00.76 ist die kleinste mögliche Brücken-Release zwischen DX-Schwerpunkt (V00.
   - `.issuer(String)` — erwarteter `iss`-Wert (exact match)
   - `.audience(String...)` — erlaubte `aud`-Werte (any-match)
   - `.algorithmAllowList(AlgorithmAllowList)` — explizite Liste statt Profile
-- **V00.74-Integration**: neue `JwtToken extends TokenCredential` mit `Optional<ValidatedJwt>`; `OidcAccessToken` wird zur Bequemlichkeits-Subtype von `JwtToken`.
+- **V00.74-Integration (additiv, in `jSentinel-core`)**: `OidcAccessToken` bekommt ein fünftes optionales Feld `Optional<ValidatedJwt> validated`. Die `TokenCredential`-`permits`-Klausel (`BearerToken, OidcAccessToken, RefreshToken, ApiKey`) bleibt unverändert — kein neues `JwtToken`-Interface, kein `GenericJwtToken` in V00.76 (beide deferred).
+- **`JwtValidatorFactory`-SPI** in `jSentinel-core/jwt/api`: nimmt `jwksUri` + Algorithmen-Profil + Claim-Erwartungen und liefert einen vollständig verdrahteten `JwtValidator`. `jSentinel-jwt` registriert die Nimbus-Factory via `ServiceLoader`; dadurch bleibt `jSentinel-dx` Nimbus-frei (baut keinen `NimbusJwtValidator` selbst).
+- **Nur asymmetrische Algorithmen in V00.76**: `JwsAlgorithm` führt RS/PS/ES/EdDSA. HMAC (`HS*`) ist out-of-scope — JWKS liefert `PublicKey`s, symmetrische Secrets kommen nicht aus einem JWKS. Symmetrisches JWT ist V00.79.
+- **`jSentinel-propagation-oidc` erhält Inbound-Validierung über die Core-SPI**: das bestehende OIDC-Outbound-Modul (Token-Exchange / Client-Credentials) konsumiert den `JwtValidator` über `jSentinel-core` (Abhängigkeit besteht bereits) und holt die Instanz zur Laufzeit via `JSentinelServiceResolver.findJwtValidator()`. **Keine** Compile-Dep auf `jSentinel-jwt`, **kein** Nimbus am Classpath des OIDC-Moduls — der Enforcer-JOSE-Ban dort bleibt **vollständig intakt** (Maven-Enforcer trennt direkt/transitiv nicht; der Core-SPI-Weg vermeidet Nimbus dort ganz).
 - **Diagnostik** über neuen `JwtDiagnosticContributor` in `jSentinel-jwt` (Algorithmen-Profile, JWKS-URI, Cache-Hit-Rate, letzte Refresh-Zeit).
 - **V00.75-Audit-Events** (sofern V00.75 ausgeliefert): `JwtValidationSucceededEvent`, `JwtValidationFailedEvent`, `JwksRefreshedEvent`, `JwksRefreshFailedEvent`.
 - **`fips-profile.md`-Update** in `docs/security/credentials/standards/` um JWT-Algorithmen-Allow-List.
@@ -134,27 +138,34 @@ Adapter-Symmetrie ist hier hoch — JWT-Validierung ist Format-Arbeit, nicht UI-
 
 ## 5. Modulstrategie
 
-V00.76 fügt **ein neues Modul** hinzu und erweitert **drei** bestehende.
+V00.76 fügt **ein neues Modul** hinzu und erweitert **vier** bestehende.
 
 | Modul | Status | V00.76-Rolle |
 |---|---|---|
-| `jSentinel-core` | erweitert | Neue Pakete `jwt/api/` (SPIs, Records, Sealed-Types); ansonsten unverändert |
-| `jSentinel-jwt` | **neu, opt-in** | Nimbus-JOSE+JWT-basierte Default-Implementierung von `JwtValidator` + `JwksClient`; `JwtDiagnosticContributor`; SPI-Registrierungen |
-| `jSentinel-dx` | erweitert | `JwtBootstrap`-Interface, `JwtState`-Aggregat in `BootstrapState`, neue Sub-Builder-Methode `.jwt(...)` auf `CommonJSentinelBootstrap<B>` |
-| `jSentinel-propagation` (V00.74) | erweitert | `JwtToken extends TokenCredential` sealed-Subtype hinzugefügt; `OidcAccessToken` wird zu seinem Subtype |
+| `jSentinel-core` | erweitert | Neue Pakete `jwt/api/` (SPIs inkl. `JwtValidatorFactory`, Records, Sealed-Types); **additive `OidcAccessToken`-Erweiterung** (5. Feld `validated`) im bestehenden `credential.propagation`-Paket; neuer `JSentinelServiceResolver.setJwtValidator(...)`/`findJwtValidator()`-Setter |
+| `jSentinel-jwt` | **neu, opt-in** | Nimbus-JOSE+JWT-basierte Default-Implementierung von `JwtValidator` + `JwksClient` + `JwtValidatorFactory`; `JwtDiagnosticContributor`; SPI-Registrierungen |
+| `jSentinel-dx` | erweitert | `JwtBootstrap`-Interface, `JwtState`-Aggregat in `BootstrapState`, neue Sub-Builder-Methode `.jwt(...)` auf `CommonJSentinelBootstrap<B>`; holt die Default-Instanz über die `JwtValidatorFactory`-SPI (ServiceLoader) — **kennt Nimbus nicht** |
+| `jSentinel-propagation-oidc` (V00.74) | erweitert | Inbound-Validierung über die Core-SPI (`JSentinelServiceResolver.findJwtValidator()` zur Laufzeit); **keine** Compile-Dep auf `jSentinel-jwt`, **kein** Nimbus am Classpath — Enforcer-JOSE-Ban bleibt unverändert |
+| `jSentinel-events` (V00.75) | erweitert | neue Event-Typen `JwtValidationSucceededEvent`, `JwtValidationFailedEvent`, `JwksRefreshedEvent`, `JwksRefreshFailedEvent` |
 | `demo-rest` | Demo | Neue Route `/jwt/demo` zeigt JWT-Validierung gegen Stub-IDP (in-process Nimbus-Issuer in `demo-rest-shared`) |
 
 ### 5.1 Abhängigkeitsregeln (V00.76-Ergänzungen)
 
 ```text
-jSentinel-core                 -> (unverändert; nur neue Pakete)
-jSentinel-jwt                  -> jSentinel-core,
+jSentinel-core                 -> (neue jwt/api-Pakete + additives OidcAccessToken-Feld;
+                                  TokenCredential-permits unverändert)
+jSentinel-jwt                  -> jSentinel-core, jSentinel-events,
                                   com.nimbusds:nimbus-jose-jwt:10.0.x
 jSentinel-dx                   -> + jSentinel-jwt (compile)? NEIN — bewusste Asymmetrie:
-                                  jSentinel-dx kennt nur das jSentinel-core-Interface JwtValidator;
-                                  die Nimbus-Default-Instanz wird zur Laufzeit über ServiceLoader
-                                  oder explizite .validator(...)-Übergabe geholt.
-jSentinel-propagation          -> unverändert (sealed-Hierarchie wird im Kern erweitert)
+                                  jSentinel-dx kennt nur die jSentinel-core-SPIs JwtValidator +
+                                  JwtValidatorFactory; die Nimbus-Default-Instanz wird zur Laufzeit
+                                  über die JwtValidatorFactory (ServiceLoader) oder explizite
+                                  .validator(...)-Übergabe geholt.
+jSentinel-propagation-oidc     -> unverändert (nur jSentinel-core, das schon da ist):
+                                  konsumiert JwtValidator über die Core-SPI, holt die
+                                  Instanz zur Laufzeit via JSentinelServiceResolver.findJwtValidator().
+                                  KEINE Compile-Dep auf jSentinel-jwt, kein Nimbus am Classpath,
+                                  Enforcer-JOSE-Ban bleibt vollständig intakt
 demo-rest                      -> + jSentinel-jwt (test scope)
 demo-rest-shared               -> + JwtIssuerStub (für Demo/Test)
 ```
@@ -243,8 +254,10 @@ public enum JwsAlgorithm {
   RS256, RS384, RS512,
   PS256, PS384, PS512,
   ES256, ES384, ES512,
-  EdDSA,
-  HS256, HS384, HS512;     // nur für symmetrische Setups
+  EdDSA;
+  // Nur asymmetrisch in V00.76. HMAC (HS256/384/512) ist out-of-scope:
+  // JWKS liefert PublicKeys; symmetrische Secrets kommen nicht aus einem
+  // JWKS. Symmetrisches JWT ist V00.79.
   // NONE wird absichtlich NICHT als Enum-Wert geführt.
 }
 
@@ -266,6 +279,8 @@ V00.76-Default ist `STRICT_MODERN`. JWTs mit RS384/512 oder PS384/512 werden ohn
 - `LEGACY_BROAD` ist explizit opt-in für Bestandsumgebungen.
 
 ### 7.4 Algorithm-Confusion-Defense
+
+In V00.76 ist `HS*` gar nicht erst allow-gelistet (nur asymmetrisch, §7.2) — ein `alg: HS256`-Header scheitert daher bereits am Allow-List-Check (Schritt 3 der Pipeline, `UnsupportedAlgorithm`), bevor überhaupt ein Key gesucht wird. Der folgende Family-Check ist **Defense-in-Depth** für Custom-Allow-Lists und spätere Releases:
 
 `NimbusJwtValidator` weigert sich, HS-Algorithmen zu verifizieren, wenn der für `kid` gefundene Key ein asymmetrischer Public-Key ist (`RSA`, `EC`, `OKP`). Das ist die klassische CVE-Klasse, in der Angreifer einen `alg: HS256`-JWT senden und der Verifier den RSA-Public-Key als HMAC-Secret missbraucht.
 
@@ -389,7 +404,7 @@ public record JwksRefreshResult(
 
 ---
 
-## 10. Baustein 5: V00.74-Integration — `JwtToken` Sealed-Subtype
+## 10. Baustein 5: V00.74-Integration — additives `OidcAccessToken`-Feld
 
 ### 10.1 Problem
 
@@ -397,27 +412,32 @@ V00.74 hat `TokenCredential` als Sealed-Hierarchie eingeführt: `BearerToken`, `
 
 ### 10.2 Ziel
 
-`TokenCredential`-Hierarchie wird erweitert:
+Die `TokenCredential`-Hierarchie (in `jSentinel-core`, Paket `com.svenruppert.jsentinel.credential.propagation`) bleibt in ihrer `permits`-Klausel **unverändert**. Nur `OidcAccessToken` wird **additiv** um ein fünftes, optionales Feld erweitert:
 
 ```java
-public sealed interface TokenCredential
-    permits BearerToken, JwtToken, RefreshToken, ApiKey {
+public sealed interface TokenCredential            // UNVERÄNDERT
+    permits BearerToken, OidcAccessToken, RefreshToken, ApiKey {
   String value();
   Optional<Instant> expiresAt();
   Optional<String> audience();
   Optional<String> issuerHash();
 }
 
-public non-sealed interface JwtToken extends TokenCredential
-    permits OidcAccessToken, GenericJwtToken {
-  Optional<ValidatedJwt> validated();        // present, sobald V00.76 validiert hat
-}
+public record OidcAccessToken(                      // + 5. Feld (additiv)
+    String value,
+    Optional<Instant> expiresAt,
+    Optional<String> audience,
+    Optional<String> issuerHash,
+    Optional<ValidatedJwt> validated)               // NEU, present sobald V00.76 validiert hat
+    implements TokenCredential {
+  // toString() maskiert value weiterhin
 
-public record OidcAccessToken(String value, Optional<ValidatedJwt> validated) implements JwtToken { /* ... */ }
-public record GenericJwtToken(String value, Optional<ValidatedJwt> validated) implements JwtToken { /* ... */ }
+  /** Leitet expiresAt/audience/issuerHash aus den validierten Claims ab. */
+  public static OidcAccessToken fromValidated(String raw, ValidatedJwt v) { /* ... */ }
+}
 ```
 
-`BearerToken`, `RefreshToken`, `ApiKey` bleiben unverändert. Die Sealed-Hierarchie wird um eine Ebene tiefer — wer auf `TokenCredential`-Pattern-Match arbeitet, muss seinen `switch` einmal erweitern, was im Compiler-Check sichtbar wird.
+`BearerToken`, `RefreshToken`, `ApiKey` und die `permits`-Klausel bleiben unverändert — **kein** neues `JwtToken`-Interface und **kein** `GenericJwtToken` in V00.76 (beide deferred; ein generisches Nicht-OIDC-JWT wird vorerst über `OidcAccessToken` getragen oder bleibt V00.79-Scope). Ein exhaustiver `switch` über `TokenCredential` kompiliert damit **ohne Änderung** weiter; nur wer `OidcAccessToken` per Record-Pattern dekonstruiert (`case OidcAccessToken(var v, var e, var a, var i) ->`), muss sein Pattern um die fünfte Komponente erweitern — sichtbar im Compiler-Check, und zulässig, weil `OidcAccessToken` `@ExperimentalJSentinelApi` ist.
 
 ### 10.3 Inbound-Flow
 
@@ -428,7 +448,7 @@ public Optional<JSentinelSubject> resolveSubject(RestRequest req) {
   return BEARER.extract(req)
       .flatMap(raw -> jwtValidator.validate(raw)
           .map(validated -> {
-            var token = new OidcAccessToken(raw, Optional.of(validated));
+            var token = OidcAccessToken.fromValidated(raw, validated);
             tokenCredentialStores.current().bind(token);
             return toSubject(validated);
           })
@@ -487,8 +507,8 @@ public interface JwtBootstrap {
 
 - `.validator(...)` und (`jwksUri(...)` + Profile + ...) sind exklusiv. Beides gesetzt → `jwt/conflicting-validator-config`.
 - `.algorithmProfile(...)` und `.algorithmAllowList(...)` sind exklusiv. Beides gesetzt → `jwt/conflicting-algorithm-config`.
-- `install()` baut bei `.jwksUri(...)`-Pfad einen `NimbusJwtValidator` mit `HttpJwksClient`-Default.
-- Resultat wird über `JSentinelServiceResolver.setJwtValidator(...)` registriert (neuer Core-Setter — die einzige Core-API-Erweiterung in V00.76).
+- `install()` ruft bei `.jwksUri(...)`-Pfad die `JwtValidatorFactory` (ServiceLoader-aufgelöst, von `jSentinel-jwt` bereitgestellt) — die Factory baut intern `NimbusJwtValidator` + `HttpJwksClient`-Default. `jSentinel-dx` instanziert **keinen** Nimbus-Typ selbst.
+- Resultat wird über `JSentinelServiceResolver.setJwtValidator(...)` registriert. Core bekommt in V00.76 mehrere additive Erweiterungen: das `jwt/api`-Paket (inkl. `JwtValidatorFactory`-SPI), das fünfte `OidcAccessToken`-Feld und den `setJwtValidator(...)`/`findJwtValidator()`-Setter.
 - `RestSubjectResolver`-Implementierungen können sich den Validator über `JSentinelServiceResolver.findJwtValidator()` holen.
 
 ### 11.5 STRICT-Regeln
@@ -505,7 +525,7 @@ public interface JwtBootstrap {
 ### 12.1 V00.76-Position: vollständig experimentell
 
 Alle neuen Public-Typen tragen `@ExperimentalJSentinelApi`:
-`JwtValidator`, `ValidatedJwt`, `JwtValidationError` (+ Sub-Typen), `JwksClient`, `ClaimsValidator`, `ClaimExpectations`, `ClockSkewPolicy`, `AlgorithmAllowList`, `AlgorithmProfile`, `JwsAlgorithm`, `JwtBootstrap`, `JwtToken`, `OidcAccessToken` (Form-Änderung), `GenericJwtToken`.
+`JwtValidator`, `JwtValidatorFactory`, `ValidatedJwt`, `JwtValidationError` (+ Sub-Typen), `JwksClient`, `ClaimsValidator`, `ClaimExpectations`, `ClockSkewPolicy`, `AlgorithmAllowList`, `AlgorithmProfile`, `JwsAlgorithm`, `JwtBootstrap`, `OidcAccessToken` (additive Form-Änderung: 5. Feld).
 
 ### 12.2 Promotion-Plan
 
@@ -518,7 +538,7 @@ Alle neuen Public-Typen tragen `@ExperimentalJSentinelApi`:
 
 V00.76 ändert keinen V00.73-Stable-Typ. Konsumenten der V00.73-Stable-Surface sehen keine Form-Änderung an `VaadinSecurity` / `RestSecurity` / `StandaloneSecurity` / `JSentinelRuntime` / `JSentinelDiagnostics`.
 
-`TokenCredential`-Sealed-Hierarchie-Erweiterung ist Compile-Time-Breaking für Pattern-Match-Code in Konsumenten-Code, aber V00.74-`TokenCredential` ist explizit `@ExperimentalJSentinelApi` markiert — Konsumenten wurden vor V00.79-Stable-Promotion gewarnt.
+Die `permits`-Klausel von `TokenCredential` bleibt unverändert — ein exhaustiver `switch` ohne `JwtToken`-Fall kompiliert weiter. Nur die Record-Pattern-Dekonstruktion von `OidcAccessToken` sieht das fünfte Feld; `OidcAccessToken` ist explizit `@ExperimentalJSentinelApi` — Konsumenten wurden vor V00.79-Stable-Promotion gewarnt.
 
 ---
 
@@ -579,8 +599,9 @@ Siehe §9.4 — `JwtDiagnosticContributor` ergänzt den V00.72-`JSentinelDiagnos
 - STRICT-Regeln + Validierungs-Tests.
 
 ### Phase 5 — V00.74-Integration
-- `TokenCredential`-Sealed-Hierarchie um `JwtToken` erweitern.
-- `OidcAccessToken` als `JwtToken`-Subtype refaktorieren.
+- `OidcAccessToken` (in `jSentinel-core`) additiv um `Optional<ValidatedJwt> validated` erweitern (5. Feld); `TokenCredential`-`permits` unverändert lassen.
+- `OidcAccessToken.fromValidated(raw, validated)`-Factory ergänzen.
+- `jSentinel-propagation-oidc` inbound über die Core-SPI validieren lassen (`JSentinelServiceResolver.findJwtValidator()`); **kein** Pom-/Enforcer-Change.
 - V00.74-Tests grün halten.
 
 ### Phase 6 — Demo + Dokumentation
@@ -603,8 +624,10 @@ Siehe §9.4 — `JwtDiagnosticContributor` ergänzt den V00.72-`JSentinelDiagnos
 - STRICT-Mode wirft für jeden der documented Validierungs-Codes.
 - `JSentinelDiagnostics.inspect()` zeigt den `[JWT]`-Block.
 - `demo-rest` `/jwt/demo` Route demonstriert End-to-End-JWT-Validierung gegen den Stub-IDP.
-- V00.74-`TokenCredential`-Sealed-Hierarchie wurde sauber um `JwtToken` erweitert; alle V00.74-Tests grün.
-- Voller Reactor (28+ Module): `./mvnw clean install` ist grün.
+- `OidcAccessToken` (in `jSentinel-core`) wurde additiv um das `validated`-Feld erweitert; `TokenCredential`-`permits` unverändert; alle V00.74-Tests grün.
+- `jSentinel-propagation-oidc` validiert inbound über die Core-SPI (`JSentinelServiceResolver.findJwtValidator()`); **keine** Compile-Dep auf `jSentinel-jwt`, kein Nimbus am Classpath, Enforcer-JOSE-Ban dort unverändert grün.
+- `JwtValidatorFactory`-SPI ist ServiceLoader-aufgelöst; `jSentinel-dx` hat **keine** Nimbus-Compile-Dependency.
+- Voller Reactor (39+ Module): `./mvnw clean install` ist grün.
 - Mutation-Coverage der V00.71-V00.75-Module sinkt durch V00.76 nicht.
 
 ---
@@ -624,6 +647,7 @@ Siehe §9.4 — `JwtDiagnosticContributor` ergänzt den V00.72-`JSentinelDiagnos
 | Test-Stub-IDP wird zu Live-IDP missbraucht | `JwtIssuerStub` lebt in `demo-rest-shared/src/main/java` und ist explizit als „test scope only" dokumentiert; Compile-Warning bei Production-Profile |
 | ValidatedJwt-Claims-Map enthält PII (email, name) | `ValidatedJwt#toString()` maskiert per Default; `JwtDiagnosticContributor` filtert Standard-PII-Claims aus dem Audit-Stream |
 | FIPS-Profile lehnt EdDSA ab, aber Konsument konfiguriert es | FIPS-Profile-Check zur Bootstrap-Zeit: Algorithmen außerhalb des FIPS-Sets → STRICT wirft `jwt/fips-violation` |
+| Inbound/outbound-Kopplung im OIDC-Modul | `jSentinel-propagation-oidc` konsumiert nur die Core-SPI (`JwtValidator` via `JSentinelServiceResolver`), keine Compile-Dep auf `jSentinel-jwt`, kein Nimbus am Classpath — Enforcer-JOSE-Ban bleibt vollständig intakt |
 
 ---
 
@@ -632,7 +656,7 @@ Siehe §9.4 — `JwtDiagnosticContributor` ergänzt den V00.72-`JSentinelDiagnos
 - **V00.70** liefert `JSentinelAnnotationScanner`, Subject-Modell. V00.76 nutzt davon nichts direkt — JWT-Validierung ist eine eigene Schicht unterhalb der Subject-Auflösung.
 - **V00.71** liefert Credential-Pipeline (`PasswordHashingService`, `CredentialStore`). Orthogonal zu JWT.
 - **V00.72/V00.73** liefert Fluent-Bootstrap. V00.76 fügt einen weiteren Sub-Builder hinzu (`/jwt`), folgt der V00.73-`BootstrapState`-Sub-Aggregat-Disziplin.
-- **V00.74** liefert `TokenCredential`-Hierarchie. V00.76 erweitert sie um `JwtToken`-Sealed-Subtype.
+- **V00.74** liefert die `TokenCredential`-Sealed-Hierarchie (in `jSentinel-core`). V00.76 erweitert **nur** `OidcAccessToken` additiv um `validated` — `permits` unverändert. Das bestehende `jSentinel-propagation-oidc` (outbound Token-Exchange / Client-Credentials) validiert ab V00.76 inbound über die Core-SPI (`JSentinelServiceResolver.findJwtValidator()`) — ohne Compile-Dep auf `jSentinel-jwt`, der JOSE-Ban dort bleibt intakt.
 - **V00.75** liefert Security Event Bus. V00.76 publiziert `JwtValidationSucceededEvent`, `JwtValidationFailedEvent`, `JwksRefreshedEvent`.
 - **V00.77** wird `jSentinel-jwt` für Private-Key-JWT-Client-Authentication (RFC 7521/7523) verwenden.
 - **V00.78** wird `jSentinel-jwt` für ID-Token-Validierung verwenden, ergänzt um OIDC-spezifische Claims (`nonce`, `at_hash`).
