@@ -185,4 +185,15 @@ class HttpJwksClientTest {
     leader.join(5_000);
     assertEquals(1, requests.get(), "single-flight collapses the stampede to one fetch");
   }
+
+  @Test
+  @DisplayName("an oversized JWKS body is rejected (no OOM) and opens the negative cache (RF01)")
+  void oversizedBodyRejected() {
+    // > 1 MiB of body: a hostile / MITM'd endpoint. Must be rejected before parsing.
+    body.set("x".repeat((1 << 20) + 16));
+    HttpJwksClient client = client();
+    assertFalse(client.findKey("k1", JwsAlgorithm.RS256).isPresent());
+    assertFalse(client.findKey("k1", JwsAlgorithm.RS256).isPresent());
+    assertEquals(1, requests.get(), "the failure opens a negative-cache window — no re-fetch");
+  }
 }

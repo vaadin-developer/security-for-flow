@@ -35,10 +35,12 @@ import com.svenruppert.jsentinel.jwt.api.JwksRefreshResult;
 import com.svenruppert.jsentinel.jwt.api.JwsAlgorithm;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.text.ParseException;
 import java.time.Duration;
@@ -73,6 +75,8 @@ public final class HttpJwksClient implements JwksClient, HasLogger {
   private static final Duration NEGATIVE_TTL = Duration.ofSeconds(30);
   private static final Pattern MAX_AGE = Pattern.compile("max-age\\s*=\\s*(\\d+)");
   private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(10);
+  /** RF01: a JWKS document is a few KB; a larger body is a hostile / MITM'd endpoint. */
+  private static final int MAX_JWKS_BYTES = 1 << 20;
 
   private final URI jwksUri;
   private final HttpClient httpClient;
@@ -145,14 +149,27 @@ public final class HttpJwksClient implements JwksClient, HasLogger {
     Instant now = clock.get();
     try {
       HttpRequest request = HttpRequest.newBuilder(jwksUri).timeout(HTTP_TIMEOUT).GET().build();
-      HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+      HttpResponse<InputStream> response =
+          httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
       if (response.statusCode() / 100 != 2) {
+        response.body().close();
         logger().warn("jwks/refresh-non-2xx: status={}", response.statusCode());
         return new FetchOutcome(new JwksRefreshResult(0, now, NEGATIVE_TTL,
             Optional.of(new IllegalStateException("JWKS endpoint returned " + response.statusCode()))),
             null);
       }
-      Map<String, PublicKey> keys = parse(response.body());
+      // RF01: read at most MAX_JWKS_BYTES + 1; a larger body is rejected before parsing
+      // (the 10s timeout caps time, not size).
+      byte[] bytes;
+      try (InputStream in = response.body()) {
+        bytes = in.readNBytes(MAX_JWKS_BYTES + 1);
+      }
+      if (bytes.length > MAX_JWKS_BYTES) {
+        logger().warn("jwks/refresh-oversized: body exceeds {} bytes", MAX_JWKS_BYTES);
+        return new FetchOutcome(new JwksRefreshResult(0, now, NEGATIVE_TTL,
+            Optional.of(new IllegalStateException("JWKS body exceeds the size cap"))), null);
+      }
+      Map<String, PublicKey> keys = parse(new String(bytes, StandardCharsets.UTF_8));
       return new FetchOutcome(
           new JwksRefreshResult(keys.size(), now, ttlFrom(response), Optional.empty()), keys);
     } catch (RuntimeException | IOException | ParseException e) {
@@ -190,7 +207,7 @@ public final class HttpJwksClient implements JwksClient, HasLogger {
     return Map.copyOf(keys);
   }
 
-  private static Duration ttlFrom(HttpResponse<String> response) {
+  private static Duration ttlFrom(HttpResponse<?> response) {
     Optional<String> cacheControl = response.headers().firstValue("Cache-Control");
     if (cacheControl.isPresent()) {
       Matcher m = MAX_AGE.matcher(cacheControl.get());
