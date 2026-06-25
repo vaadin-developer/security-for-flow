@@ -94,7 +94,7 @@ public final class RestJSentinelVersionFilter {
         route);
     if (outcome instanceof EnforcementOutcome.SessionStale) {
       response.status(HttpStatus.UNAUTHORIZED.code());
-      response.header("WWW-Authenticate", SESSION_STALE_CHALLENGE);
+      response.header(RestHeaders.WWW_AUTHENTICATE, SESSION_STALE_CHALLENGE);
       response.body("Unauthorized");
       return false;
     }

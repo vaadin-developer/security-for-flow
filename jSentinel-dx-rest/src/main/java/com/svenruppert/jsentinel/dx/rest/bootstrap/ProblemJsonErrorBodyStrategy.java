@@ -16,6 +16,7 @@
  */
 package com.svenruppert.jsentinel.dx.rest.bootstrap;
 
+import com.svenruppert.dependencies.core.net.HttpStatus;
 import com.svenruppert.jsentinel.authorization.api.AuthorizationDecision;
 
 /**
@@ -45,11 +46,11 @@ public final class ProblemJsonErrorBodyStrategy implements RestErrorBodyStrategy
     return switch (decision) {
       case AuthorizationDecision.Granted ignored -> "";
       case AuthorizationDecision.Unauthenticated ignored ->
-          problemJson("about:blank", "Unauthorized", 401);
+          problemJson("about:blank", "Unauthorized", HttpStatus.UNAUTHORIZED.code());
       case AuthorizationDecision.Forbidden ignored ->
-          problemJson("about:blank", "Forbidden", 403);
+          problemJson("about:blank", "Forbidden", HttpStatus.FORBIDDEN.code());
       case AuthorizationDecision.StepUpRequired ignored ->
-          problemJson("about:blank", "Step-Up Required", 401);
+          problemJson("about:blank", "Step-Up Required", HttpStatus.UNAUTHORIZED.code());
     };
   }
 

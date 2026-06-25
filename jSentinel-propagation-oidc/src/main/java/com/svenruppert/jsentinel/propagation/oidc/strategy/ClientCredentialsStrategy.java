@@ -19,6 +19,7 @@ import com.svenruppert.jsentinel.propagation.oidc.cache.InMemoryTokenExchangeCac
 import com.svenruppert.jsentinel.propagation.oidc.cache.TokenExchangeCache;
 import com.svenruppert.jsentinel.propagation.oidc.http.JsonResponse;
 import com.svenruppert.dependencies.core.logger.HasLogger;
+import com.svenruppert.dependencies.core.net.MediaType;
 
 import java.net.URI;
 import java.net.URLEncoder;
@@ -41,6 +42,8 @@ import java.util.Optional;
  */
 @ExperimentalJSentinelApi
 public final class ClientCredentialsStrategy implements OutboundTokenStrategy, HasLogger {
+
+  private static final String AUTHORIZATION = "Authorization";
 
   /** Default lookup key. */
   public static final String NAME = "service";
@@ -93,12 +96,12 @@ public final class ClientCredentialsStrategy implements OutboundTokenStrategy, H
     String key = clientId + "|" + call.declaredAudience();
     Optional<TokenExchangeCache.CachedEntry> cached = cache.get(key);
     if (cached.isPresent()) {
-      return Optional.of(new HeaderValue("Authorization", "Bearer " + cached.get().accessToken()));
+      return Optional.of(new HeaderValue(AUTHORIZATION, "Bearer " + cached.get().accessToken()));
     }
     String body = formBody(call);
     HttpRequest request = HttpRequest.newBuilder(tokenEndpoint)
         .POST(HttpRequest.BodyPublishers.ofString(body))
-        .header("Content-Type", "application/x-www-form-urlencoded")
+        .header("Content-Type", MediaType.APPLICATION_FORM_URLENCODED.mime())
         .timeout(Duration.ofSeconds(10))
         .build();
     HttpResponse<String> response;
@@ -124,7 +127,7 @@ public final class ClientCredentialsStrategy implements OutboundTokenStrategy, H
     long expiresIn = JsonResponse.expiresIn(response.body()).orElse(60L);
     cache.put(key, new TokenExchangeCache.CachedEntry(
         accessToken, Instant.now().plusSeconds(expiresIn)));
-    return Optional.of(new HeaderValue("Authorization", "Bearer " + accessToken));
+    return Optional.of(new HeaderValue(AUTHORIZATION, "Bearer " + accessToken));
   }
 
   /** Caps a diagnostic body so a large/hostile error response can't flood the log. */
