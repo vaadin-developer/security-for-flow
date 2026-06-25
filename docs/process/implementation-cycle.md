@@ -11,7 +11,10 @@ ClickUp**, nicht mehr als Markdown auf Platte (das Konzept bleibt als
 `Konzept-VXX.YY.ZZ.md` am Repo-Root); (3) neuer Produktions-Review-Schritt
 (Security + Refactoring) → Issues als ClickUp-Subtasks mit je einem Prompt
 (§3.5); (4) neues ClickUp-Custom-Field `Bewertung` für die menschliche
-Beschreibung + Einschätzung pro Issue (§5.7).
+Beschreibung + Einschätzung pro Issue (§5.7); (5) **Status-Disziplin:** jeder
+Subtask wechselt bei Arbeitsbeginn auf `in progress` und erst bei Abschluss auf
+`completed` — kein Subtask bleibt auf `not started`, während daran gearbeitet
+wird (§3.1 Schritt 2, §5.3).
 
 Dieses Dokument beschreibt den vollständigen Release-Zyklus, wie er
 seit V00.74.10 etabliert ist: vom Öffnen eines neuen Release-Fensters
@@ -175,30 +178,43 @@ die Mechanik *pro* Prompt; §3.6 ist die Reihenfolge *zwischen* den Prompts.
 │ 1. Read prompt details aus dem ClickUp-Subtask                   │
 │    (= einzige Source-of-Truth; kein Plan-Markdown mehr)          │
 │                                                                  │
-│ 2. Implementierung                                               │
+│ 2. ClickUp: status → in progress (BEI ARBEITSBEGINN)             │
+│    - clickup_search nach \"[VXX.YY.ZZ PNNN]\"                     │
+│    - clickup_update_task: status=\"in progress\"                  │
+│    - KEIN Description-Append (der Completion-Log kommt erst in    │
+│      Schritt 6); nur der Status wechselt (siehe §5.3)            │
+│                                                                  │
+│ 3. Implementierung                                               │
 │    - Neue Files anlegen (Write)                                  │
 │    - Bestehende Files editieren (Edit)                           │
 │    - Tests mit echten Implementierungen (NO MOCKS, siehe §6.1)   │
 │    - JavaDoc + @ExperimentalJSentinelApi + @since VXX.YY         │
 │                                                                  │
-│ 3. Acceptance                                                    │
+│ 4. Acceptance                                                    │
 │    - Modul-Test: ./mvnw -pl <modul> test                         │
 │    - Verify (mit enforcer): ./mvnw -pl <modul> -am verify        │
 │    - Bei Änderungen am Parent-Pom: ./mvnw clean install -q       │
 │      -DskipTests gesamten Reactor                                │
 │                                                                  │
-│ 4. Commit                                                        │
+│ 5. Commit                                                        │
 │    - Stage nur die für diesen Prompt relevanten Files            │
 │    - Commit-Message: dx(VXX.YY.ZZ/NNN): <kurzform> (siehe §4)    │
 │    - KEINE Co-Authored-By-Zeile, KEIN \"Generated with\"-Footer   │
 │                                                                  │
-│ 5. ClickUp-Sync                                                  │
+│ 6. ClickUp-Sync (BEI ABSCHLUSS)                                  │
 │    - clickup_search nach \"[VXX.YY.ZZ PNNN]\"                     │
 │    - clickup_update_task: status=completed +                     │
 │      markdown_description mit ## Completion log angehängt        │
 │      (siehe §5)                                                  │
 └──────────────────────────────────────────────────────────────────┘
 ```
+
+> **Status-Disziplin (seit 2026-06-24):** ein Subtask wechselt **bei
+> Arbeitsbeginn** (Schritt 2) auf `in progress` und **erst bei Abschluss**
+> (Schritt 6) auf `completed`. Kein Subtask bleibt auf `not started`, während
+> daran gearbeitet wird — der ClickUp-Board-Zustand spiegelt jederzeit den
+> realen Arbeitsstand. Das gilt für jeden Subtask-Typ (`P<NNN>`, `R<NN>`,
+> `RF<NN>`, Deploy-Marker), nicht nur die Konzept-Prompts.
 
 ### 3.2 Mehrere Prompts in einem Commit
 
@@ -269,7 +285,16 @@ Disziplin:
   Maintenance-Linie bumpen (`VXX.YY.10-SNAPSHOT`), dann fixen — sonst driftet
   der develop-Stand vom immutablen Central-Artefakt ab.
 - **Ergebnis dokumentieren**: pro Standard `applied` / `already-compliant` /
-  `N-A (Grund)`; Commit-Prefix `chore`/`refactor`, kein Prompt-Bezug.
+  `N-A (Grund)`; Commit-Prefix `chore`/`refactor`.
+- **Issue pro Befund (seit 2026-06-25 — Pflicht)**: jeder *actionable*
+  Standards-Pass-Befund (ein echter Fix, nicht `already-compliant` / `N-A`)
+  bekommt **einen ClickUp-Subtask** `[VXX.YY.ZZ SP<NN>]` unter dem Plan-Parent
+  (`SP` = Standards-Pass), Body = Problem → betroffener Standard/Skill → Fix,
+  Status-Fluss wie alle Subtasks (§5.3), Completion-Log mit dem
+  `chore`/`refactor`-Commit-Hash (§5.4). **Kein Gate-Befund ohne
+  Tracker-Eintrag** — auch wenn er im selben Zug gefixt wird (siehe das
+  übergreifende Prinzip in §3.7.3). `already-compliant` / `N-A` brauchen keinen
+  Subtask (es gibt nichts zu tracken) — sie bleiben im Pass-Ergebnis vermerkt.
 
 ### 3.5 Produktions-Review #1 — Entry-Gate (Security + Refactoring)
 
@@ -433,8 +458,22 @@ selbst eingebracht hat, wird vor dem Release gefixt** — dafür ist das Gate da
 
 #### 3.7.3 ClickUp-Dokumentation
 
+> **Übergreifendes Prinzip (seit 2026-06-25): kein Gate-Befund ohne
+> ClickUp-Issue.** Jeder Befund eines Review-/Standards-Gates — Entry-Review
+> (`R<NN>`, §3.5), Standards-Pass (`SP<NN>`, §3.4) und Exit-Review (`RF<NN>`,
+> hier) — bekommt **einen ClickUp-Subtask unter dem Plan-Parent**, *auch wenn er
+> sofort in-cycle gefixt wird*. Ein in derselben Stunde gefundener und behobener
+> Befund wird also **angelegt und sofort auf `completed` mit Completion-Log
+> gesetzt** — der Tracker bildet den Befund ab, nicht nur den Commit. Ein
+> `chore`/`refactor`/`fix`-Commit allein ist **kein** Ersatz für den Subtask.
+
 - `RF<NN>`-Subtasks hängen unter demselben
-  `VXX.YY.ZZ — Implementation Plan`-Parent wie `P<NNN>` und `R<NN>`.
+  `VXX.YY.ZZ — Implementation Plan`-Parent wie `P<NNN>`, `R<NN>` und `SP<NN>`.
+- **Jeder** Exit-Befund wird als `[VXX.YY.ZZ RF<NN>]`-Subtask angelegt — auch ein
+  trivialer oder sofort gefixter (z. B. ein Static-Analysis-Gate-Treffer): erst
+  Subtask anlegen (Body = Problem → Lösung → Acceptance), dann fixen, dann auf
+  `completed` + Completion-Log. Nicht „nur committen und im Release-Notes
+  erwähnen".
 - Status-Fluss wie alle Subtasks: `not started → in progress → completed`
   (§5.3), Completion-Log pro Subtask (§5.4).
 - **Gate-Anker**: ein Marker-Subtask `[VXX.YY.ZZ] Final Production-Review`
@@ -451,8 +490,8 @@ selbst eingebracht hat, wird vor dem Release gefixt** — dafür ist das Gate da
 | Gate | Wann | Findet | Behebung |
 |---|---|---|---|
 | §3.5 Entry-Review #1 | Stufe A.3 (vor Implementierung) | geerbter Stand | `R<NN>`, Backlog erlaubt |
-| §3.4 Standards-Pass | nach Stufe C | Standing-Rule-Verstöße in neuen/geänderten Src | inline, in-cycle |
-| §3.7 Exit-Review #2 | nach §3.4, vor Stufe D | gelieferter Stand (Cycle-Delta) | `RF<NN>`, **in-cycle Pflicht** |
+| §3.4 Standards-Pass | nach Stufe C | Standing-Rule-Verstöße in neuen/geänderten Src | inline, in-cycle (+ `SP<NN>`-Subtask je Fix) |
+| §3.7 Exit-Review #2 | nach §3.4, vor Stufe D | gelieferter Stand (Cycle-Delta) | `RF<NN>`-Subtask je Befund, **in-cycle Pflicht** |
 
 So steht am Anfang *und* am Ende des Cycle je ein Security-Review inkl.
 Behebung — Entry öffnet den Scope, Exit schließt ihn, bevor das Artefakt nach
@@ -551,9 +590,15 @@ auf `deployed`, sobald das Release in Maven Central liegt.)
 | Trigger | Tasks die wechseln |
 |---|---|
 | Release-Window öffnet (P000+P001 done) | Parent → `in progress`; P000+P001 → `completed` |
-| Pro abgeschlossenem Prompt | dieser Prompt → `completed` |
+| **Arbeit an einem Prompt beginnt** | **dieser Prompt → `in progress`** (§3.1 Schritt 2) |
+| Pro abgeschlossenem Prompt | dieser Prompt → `completed` (§3.1 Schritt 6) |
 | Maven Central Deploy erfolgreich | `[VXX.YY.ZZ] Maven Central Deploy` → `completed` |
 | GitHub-Release + Plan-COMPLETED-Marker | Parent → `completed`; Konzept-Task → `deployed` |
+
+Der `in progress`-Übergang ist verpflichtend: kein Subtask wird direkt von
+`not started` auf `completed` gezogen, während aktiv daran gearbeitet wird.
+Bei einem gebündelten Mehr-Prompt-Commit (§3.2) wechseln **alle** betroffenen
+Subtasks gemeinsam auf `in progress`, sobald die Arbeit am Bündel beginnt.
 
 ### 5.4 Completion-Log — der Workaround
 
@@ -987,7 +1032,13 @@ find . -name "pom.xml" -not -path "*/target/*" \
 // Subtask finden
 clickup_search({ keywords: "[V00.XX.YY PNNN]" })
 
-// Status + Completion-Log setzen
+// Bei Arbeitsbeginn: nur Status, kein Description-Append
+clickup_update_task({
+  task_id: "<id>",
+  status: "in progress"
+})
+
+// Bei Abschluss: Status + Completion-Log setzen
 clickup_update_task({
   task_id: "<id>",
   status: "completed",
