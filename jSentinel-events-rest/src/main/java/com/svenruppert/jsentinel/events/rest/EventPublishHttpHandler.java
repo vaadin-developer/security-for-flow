@@ -54,16 +54,34 @@ import java.util.Optional;
 @ExperimentalJSentinelApi
 public final class EventPublishHttpHandler implements HttpHandler, HasLogger {
 
+  /**
+   * Default cap on the {@code POST /api/events} request body (1 MiB). Event
+   * envelopes are small JSON; a larger body is rejected with {@code 413} before
+   * it is buffered, so an unauthenticated client cannot OOM the server by
+   * streaming an oversized body that is read ahead of authorization (R01).
+   */
+  public static final int DEFAULT_MAX_PUBLISH_BODY_BYTES = 1 << 20;
+
   private final EventPublishService publishService;
   private final RestSubjectResolver subjectResolver;
   private final PermissionName requiredPermission;
+  private final int maxBodyBytes;
 
   public EventPublishHttpHandler(EventPublishService publishService,
       RestSubjectResolver subjectResolver, String requiredPermission) {
+    this(publishService, subjectResolver, requiredPermission, DEFAULT_MAX_PUBLISH_BODY_BYTES);
+  }
+
+  public EventPublishHttpHandler(EventPublishService publishService,
+      RestSubjectResolver subjectResolver, String requiredPermission, int maxBodyBytes) {
     this.publishService = Objects.requireNonNull(publishService, "publishService");
     this.subjectResolver = Objects.requireNonNull(subjectResolver, "subjectResolver");
     this.requiredPermission = new PermissionName(
         Objects.requireNonNull(requiredPermission, "requiredPermission"));
+    if (maxBodyBytes < 1) {
+      throw new IllegalArgumentException("maxBodyBytes must be positive");
+    }
+    this.maxBodyBytes = maxBodyBytes;
   }
 
   @Override
@@ -74,7 +92,12 @@ public final class EventPublishHttpHandler implements HttpHandler, HasLogger {
     }
     HttpExchangeRestRequest request;
     try {
-      request = HttpExchangeRestRequest.read(exchange);
+      request = HttpExchangeRestRequest.read(exchange, maxBodyBytes);
+    } catch (RequestBodyTooLargeException tooLarge) {
+      // reject before buffering / before authorization — pre-auth OOM guard (R01).
+      logger().warn("events-rest/publish-body-too-large: {}", tooLarge.getMessage());
+      write(exchange, HttpStatus.CONTENT_TOO_LARGE.code(), "Content Too Large");
+      return;
     } catch (UncheckedIOException e) {
       // a body-read failure (e.g. client disconnect mid-stream) is a client
       // problem — map it to a clean 400 instead of letting the UncheckedIOException

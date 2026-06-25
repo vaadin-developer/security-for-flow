@@ -51,9 +51,28 @@ final class HttpExchangeRestRequest implements BodyRestRequest {
     this.body = body;
   }
 
-  static HttpExchangeRestRequest read(HttpExchange exchange) {
+  static HttpExchangeRestRequest read(HttpExchange exchange, int maxBodyBytes) {
+    // Fast pre-check on the declared Content-Length: a body that announces itself
+    // as oversized is rejected before any read. A missing / lying / chunked length
+    // is caught by the bounded read below, which is authoritative.
+    String declared = exchange.getRequestHeaders().getFirst("Content-Length");
+    if (declared != null) {
+      try {
+        if (Long.parseLong(declared.trim()) > maxBodyBytes) {
+          throw new RequestBodyTooLargeException(maxBodyBytes);
+        }
+      } catch (NumberFormatException malformed) {
+        // untrusted header — ignore and rely on the bounded read
+      }
+    }
     try (InputStream in = exchange.getRequestBody()) {
-      return new HttpExchangeRestRequest(exchange, in.readAllBytes());
+      // Read at most maxBodyBytes + 1: getting the full +1 means the body exceeds
+      // the cap, so reject before buffering anything larger (pre-auth OOM guard, R01).
+      byte[] bytes = in.readNBytes(maxBodyBytes + 1);
+      if (bytes.length > maxBodyBytes) {
+        throw new RequestBodyTooLargeException(maxBodyBytes);
+      }
+      return new HttpExchangeRestRequest(exchange, bytes);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
