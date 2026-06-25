@@ -77,6 +77,15 @@
       <groupId>com.svenruppert</groupId>
       <artifactId>core</artifactId>
     </dependency>
+    <!-- V00.76: the /jwt/demo end-to-end test wires a NimbusJwtValidator + a
+         Nimbus-signed JwtIssuerStub. Test scope only — the demo server's main
+         code uses the core JwtValidator SPI, not Nimbus. -->
+    <dependency>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-jwt</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>

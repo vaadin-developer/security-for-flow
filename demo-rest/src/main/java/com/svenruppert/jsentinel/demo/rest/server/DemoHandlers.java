@@ -56,6 +56,9 @@ import com.svenruppert.jsentinel.demo.rest.domain.DemoUserStore;
 import com.svenruppert.jsentinel.demo.rest.shared.DemoEndpoints;
 import com.svenruppert.jsentinel.authorization.api.operations.SecuredOperationDescriptor;
 import com.svenruppert.jsentinel.demo.rest.shared.DemoJson;
+import com.svenruppert.jsentinel.jwt.api.JwtValidator;
+import com.svenruppert.jsentinel.jwt.api.ValidatedJwt;
+import com.svenruppert.jsentinel.rest.BearerTokenExtractor;
 import com.svenruppert.jsentinel.rest.BodyRestRequest;
 import com.svenruppert.jsentinel.rest.RestHeaders;
 import com.svenruppert.jsentinel.rest.RestRequest;
@@ -543,6 +546,36 @@ public final class DemoHandlers {
     payload.put("roles", subject.roles().stream().map(r -> r.value()).sorted().toList());
     payload.put("permissions",
         subject.permissions().stream().map(p -> p.value()).sorted().toList());
+    response.status(HttpStatus.OK.code());
+    response.body(DemoJson.encode(payload));
+  }
+
+  /**
+   * V00.76 — validate an inbound JWT bearer token against the configured
+   * {@link JwtValidator} (wired via {@code .jwt(...)} bootstrap, resolved at
+   * runtime through {@code JSentinelServiceResolver}). On success returns the
+   * issuer / subject / algorithm; on a missing validator, or a missing or
+   * invalid token, it returns 401. The raw token is never echoed.
+   */
+  public void jwtDemo(RestRequest request, RestResponse response) {
+    Optional<JwtValidator> validator = JSentinelServiceResolver.findJwtValidator();
+    Optional<String> bearer = new BearerTokenExtractor().extract(request);
+    if (validator.isEmpty() || bearer.isEmpty()) {
+      response.status(HttpStatus.UNAUTHORIZED.code());
+      response.body("Unauthorized");
+      return;
+    }
+    Optional<ValidatedJwt> validated = validator.get().validate(bearer.get()).toOptional();
+    if (validated.isEmpty()) {
+      response.status(HttpStatus.UNAUTHORIZED.code());
+      response.body("Unauthorized");
+      return;
+    }
+    ValidatedJwt jwt = validated.get();
+    Map<String, Object> payload = new LinkedHashMap<>();
+    payload.put("issuer", jwt.issuer().orElse(null));
+    payload.put("subject", jwt.subject().orElse(null));
+    payload.put("algorithm", jwt.header().alg());
     response.status(HttpStatus.OK.code());
     response.body(DemoJson.encode(payload));
   }

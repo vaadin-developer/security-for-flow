@@ -136,6 +136,11 @@ public final class DemoHttpRouter implements HttpHandler {
       handlers.login(request, response);
       return;
     }
+    // V00.76: the JWT is self-authenticating, so this route is dispatched directly.
+    if (DemoEndpoints.JWT_DEMO.equals(path) && "POST".equals(method)) {
+      handlers.jwtDemo(request, response);
+      return;
+    }
     if (DemoEndpoints.PASSWORD_RESET_REQUEST.equals(path) && "POST".equals(method)) {
       handlers.requestPasswordReset(request, response);
       return;

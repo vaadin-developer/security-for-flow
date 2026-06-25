@@ -20,6 +20,8 @@ package com.svenruppert.jsentinel.demo.rest.shared;
 public final class DemoEndpoints {
 
   public static final String API_PREFIX = "/api";
+  /** V00.76: validate an inbound JWT bearer token against the configured JwtValidator. */
+  public static final String JWT_DEMO = "/api/jwt/demo";
   public static final String LOGIN = "/api/login";
   public static final String LOGOUT = "/api/logout";
   public static final String ME = "/api/me";
