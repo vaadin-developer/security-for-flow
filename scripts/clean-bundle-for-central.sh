@@ -86,6 +86,7 @@ MODULES=(
     "jSentinel-events-rest"
     "jSentinel-events-testkit"
     "jSentinel-events-persistence-eclipsestore"
+    "jSentinel-jwt"
 )
 
 if [ $# -ge 1 ]; then
