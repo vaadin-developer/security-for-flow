@@ -47,6 +47,19 @@
       <artifactId>jSentinel-events</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!-- V00.76: DiagnosticContributor SPI for JwtDiagnosticContributor (same
+         module->dx pattern jSentinel-propagation already uses; dx does NOT
+         depend on jSentinel-jwt, so this is acyclic and keeps dx Nimbus-free). -->
+    <dependency>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-dx</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-autoservice-annotations</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <!-- V00.76: the only place a JOSE library is on the classpath (Konzept §5.2). -->
     <dependency>
       <groupId>com.nimbusds</groupId>
@@ -63,6 +76,25 @@
 
   <build>
     <plugins>
+      <!-- V00.76: @JSentinelAutoService -> META-INF/services for the
+           JwtValidatorFactory + JwtDiagnosticContributor registrations. -->
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>com.svenruppert.jsentinel</groupId>
+              <artifactId>jSentinel-autoservice-processor</artifactId>
+              <version>${project.version}</version>
+            </path>
+            <path>
+              <groupId>com.svenruppert.jsentinel</groupId>
+              <artifactId>jSentinel-autoservice-annotations</artifactId>
+              <version>${project.version}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
       <!--
         V00.76: ban Jackson / Gson / org.json on the compile/runtime classpath
         so no transitive JSON library can silently take over parsing. Nimbus

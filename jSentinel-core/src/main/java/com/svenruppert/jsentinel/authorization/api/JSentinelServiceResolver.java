@@ -665,6 +665,33 @@ public final class JSentinelServiceResolver {
     DEFAULT.setTokenCredentialStore(store);
   }
 
+  // ── JwtValidator (V00.76) ──────────────────────────────────────
+
+  /**
+   * V00.76 — optional lookup of the installed {@link
+   * com.svenruppert.jsentinel.jwt.api.JwtValidator}. Not SPI-discovered; present
+   * only after the {@code .jwt(...)} sub-builder installs one. Consumed e.g. by
+   * REST subject resolvers and by {@code jSentinel-propagation-oidc} for inbound
+   * validation.
+   *
+   * @return the active validator, or empty
+   */
+  @ExperimentalJSentinelApi
+  public static Optional<com.svenruppert.jsentinel.jwt.api.JwtValidator> findJwtValidator() {
+    return DEFAULT.findJwtValidator();
+  }
+
+  /**
+   * V00.76 — install the {@link com.svenruppert.jsentinel.jwt.api.JwtValidator}.
+   * Used by the {@code .jwt(...)} bootstrap sub-builder.
+   *
+   * @param validator the validator, or {@code null} to reset
+   */
+  @ExperimentalJSentinelApi
+  public static void setJwtValidator(com.svenruppert.jsentinel.jwt.api.JwtValidator validator) {
+    DEFAULT.setJwtValidator(validator);
+  }
+
   /**
    * V00.74 — register an {@link OutboundTokenStrategy} under a name.
    * Used by the {@code .propagation(p -> p.strategy(name, ...))} bootstrap

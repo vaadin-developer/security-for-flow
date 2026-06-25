@@ -113,6 +113,10 @@ public final class JSentinelContext {
       new AtomicReference<>();
   private final java.util.concurrent.ConcurrentMap<String, OutboundTokenStrategy>
       outboundStrategies = new java.util.concurrent.ConcurrentHashMap<>();
+  // V00.76: JWT validator surface. Not SPI-discovered — assembled by the
+  // JwtValidatorFactory and installed explicitly through the .jwt(...) sub-builder.
+  private final AtomicReference<com.svenruppert.jsentinel.jwt.api.JwtValidator>
+      jwtValidatorRef = new AtomicReference<>();
 
   /**
    * Creates a fresh, empty context. Use {@link #createIsolated()} for a
@@ -1001,6 +1005,29 @@ public final class JSentinelContext {
   @ExperimentalJSentinelApi
   public void setTokenCredentialStore(TokenCredentialStore store) {
     tokenCredentialStoreRef.set(store);
+  }
+
+  /**
+   * V00.76 — optional lookup of the installed {@link
+   * com.svenruppert.jsentinel.jwt.api.JwtValidator}. Not SPI-discovered; present
+   * only after the {@code .jwt(...)} sub-builder installs one.
+   *
+   * @return the active validator, or empty
+   */
+  @ExperimentalJSentinelApi
+  public Optional<com.svenruppert.jsentinel.jwt.api.JwtValidator> findJwtValidator() {
+    return Optional.ofNullable(jwtValidatorRef.get());
+  }
+
+  /**
+   * V00.76 — install the {@link com.svenruppert.jsentinel.jwt.api.JwtValidator}.
+   * Used by the {@code .jwt(...)} bootstrap sub-builder.
+   *
+   * @param validator the validator, or {@code null} to reset
+   */
+  @ExperimentalJSentinelApi
+  public void setJwtValidator(com.svenruppert.jsentinel.jwt.api.JwtValidator validator) {
+    jwtValidatorRef.set(validator);
   }
 
   /**
