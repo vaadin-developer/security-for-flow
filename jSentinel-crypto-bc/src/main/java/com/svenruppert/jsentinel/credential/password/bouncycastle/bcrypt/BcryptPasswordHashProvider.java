@@ -184,6 +184,20 @@ public final class BcryptPasswordHashProvider implements PasswordHashProvider {
           InternalAuditEventType.VERIFICATION_FAILED_INVALID_PARAMETERS,
           "bcrypt salt has unexpected length");
     }
+    if (cost > BcryptDefaults.MAX_COST) {
+      // R02: defence-in-depth — reject a cost above the hard ceiling BEFORE
+      // computing. bcrypt runs 2^cost key-schedule rounds, so a tampered envelope
+      // with cost=31 would monopolise a worker thread for an extreme duration
+      // (CWE-400/770). The policy-driven validator only runs on the hash path,
+      // not here. Mirrors the scrypt/argon2 R017 verify guards. The lower bound
+      // is intentionally NOT enforced: a legitimately weaker legacy hash must
+      // still verify (and then trigger a rehash) — and an out-of-range low/high
+      // cost outside bcrypt's 4..31 range is already caught by the generator.
+      Arrays.fill(salt, (byte) 0);
+      return new ProviderVerificationResult.ProviderError(
+          InternalAuditEventType.VERIFICATION_FAILED_INVALID_PARAMETERS,
+          "bcrypt envelope cost parameters exceed safe limits");
+    }
 
     byte[] pwBytes = toUtf8(password);
     byte[] candidate = null;

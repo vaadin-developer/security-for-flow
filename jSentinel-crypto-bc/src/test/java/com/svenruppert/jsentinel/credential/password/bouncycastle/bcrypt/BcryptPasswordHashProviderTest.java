@@ -23,6 +23,7 @@
 package com.svenruppert.jsentinel.credential.password.bouncycastle.bcrypt;
 
 import com.svenruppert.jsentinel.credential.CredentialType;
+import com.svenruppert.jsentinel.credential.InternalAuditEventType;
 import com.svenruppert.jsentinel.credential.password.PasswordHashResult;
 import com.svenruppert.jsentinel.credential.password.ProviderVerificationResult;
 import com.svenruppert.jsentinel.credential.password.envelope.PasswordHashCodec;
@@ -231,5 +232,31 @@ class BcryptPasswordHashProviderTest {
     assertEquals(BcryptParameterNames.PROVIDER_ID, provider.providerId());
     assertEquals(BcryptParameterNames.ALGORITHM, provider.algorithm());
     assertTrue(provider.supports(provider.providerId(), provider.algorithm()));
+  }
+
+  @Test
+  @DisplayName("verify rejects an over-ceiling cost parameter before computing (R02)")
+  void verifyRejectsOverCeilingCostBeforeComputing() {
+    Map<String, String> tampered = new LinkedHashMap<>();
+    // cost = 31 is far above MAX_COST (16). bcrypt runs 2^cost rounds, so without
+    // the guard this would monopolise a worker thread. It must be rejected BEFORE
+    // computing — the test returning promptly is the proof. The salt is a valid
+    // 16-byte value so the guard, not the salt-length check, is what fires.
+    tampered.put(BcryptParameterNames.COST, "31");
+    tampered.put(BcryptParameterNames.SALT, "AAAAAAAAAAAAAAAAAAAAAA==");
+    PasswordHashEnvelope env = new PasswordHashEnvelope(
+        PasswordHashFormatVersion.V1, CredentialType.PASSWORD,
+        BcryptParameterNames.ALGORITHM, BcryptParameterNames.PROVIDER_ID,
+        1, Optional.empty(), tampered, "ZGVyaXZlZA==");
+    ProviderVerificationResult result = provider.verify(
+        "x".toCharArray(), env, Optional.empty());
+    ProviderVerificationResult.ProviderError error = assertInstanceOf(
+        ProviderVerificationResult.ProviderError.class, result);
+    assertEquals(InternalAuditEventType.VERIFICATION_FAILED_INVALID_PARAMETERS,
+        error.internalAuditEventType());
+    assertTrue(error.message().contains("exceed safe limits"));
+    // Note: the lower bound is intentionally NOT enforced — roundtripMatches()
+    // already verifies a cost-4 hash (below the MIN_COST=10 policy floor) as
+    // Matched, proving a legitimately weaker legacy hash still verifies.
   }
 }
