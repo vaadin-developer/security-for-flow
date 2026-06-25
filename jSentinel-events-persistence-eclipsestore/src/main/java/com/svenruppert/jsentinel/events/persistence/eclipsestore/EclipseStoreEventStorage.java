@@ -55,6 +55,7 @@ public final class EclipseStoreEventStorage implements AutoCloseable, HasLogger 
   private final EmbeddedStorageManager manager;
   private final EventStorageRoot root;
   private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+  private boolean closed;
 
   private EclipseStoreEventStorage(EmbeddedStorageManager manager, EventStorageRoot root) {
     this.manager = manager;
@@ -113,8 +114,26 @@ public final class EclipseStoreEventStorage implements AutoCloseable, HasLogger 
     return new EclipseStoreDeadLetterStore(this);
   }
 
+  /**
+   * Shuts the storage manager down. Idempotent.
+   *
+   * <p>R04: a {@code closed} guard (taken under the write lock, so it is
+   * thread-safe and ordered against in-flight writes) makes the second and
+   * later calls genuine no-ops — previously a double close (destroy listener +
+   * JVM shutdown hook) hit an already-shut manager. Mirrors the R033 guard on
+   * {@code EclipseStoreJSentinelStorage}.
+   */
   @Override
   public void close() {
-    manager.shutdown();
+    lock.writeLock().lock();
+    try {
+      if (closed) {
+        return;
+      }
+      closed = true;
+      manager.shutdown();
+    } finally {
+      lock.writeLock().unlock();
+    }
   }
 }
