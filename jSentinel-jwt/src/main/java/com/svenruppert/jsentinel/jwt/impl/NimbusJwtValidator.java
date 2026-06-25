@@ -28,6 +28,8 @@ package com.svenruppert.jsentinel.jwt.impl;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jose.util.Base64URL;
+import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.svenruppert.functional.result.Result;
@@ -41,8 +43,12 @@ import com.svenruppert.jsentinel.jwt.api.JwtValidationError;
 import com.svenruppert.jsentinel.jwt.api.JwtValidator;
 import com.svenruppert.jsentinel.jwt.api.ValidatedJwt;
 
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.PublicKey;
+import java.security.Signature;
 import java.security.interfaces.ECPublicKey;
+import java.security.interfaces.EdECPublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
 import java.time.Instant;
@@ -103,16 +109,21 @@ public final class NimbusJwtValidator implements JwtValidator {
           "compact JWT does not have three segments"));
     }
 
-    // 2. Header parse — alg/kid are untrusted until the signature verifies.
-    SignedJWT jwt;
+    // 2. Header parse — read alg/kid from the untrusted header WITHOUT requiring a
+    //    valid signature structure, so an alg:none token (no signature segment) is
+    //    detected here rather than being misclassified as malformed. Konzept §4.7.
     String headerAlg;
     String kid;
+    String typ;
     try {
-      jwt = SignedJWT.parse(compactJwt);
-      headerAlg = jwt.getHeader().getAlgorithm() == null
-          ? null : jwt.getHeader().getAlgorithm().getName();
-      kid = jwt.getHeader().getKeyID();
-    } catch (ParseException e) {
+      String headerJson = new String(
+          new Base64URL(compactJwt.substring(0, compactJwt.indexOf('.'))).decode(),
+          StandardCharsets.UTF_8);
+      Map<String, Object> header = JSONObjectUtils.parse(headerJson);
+      headerAlg = header.get("alg") instanceof String s ? s : null;
+      kid = header.get("kid") instanceof String s ? s : null;
+      typ = header.get("typ") instanceof String s ? s : null;
+    } catch (ParseException | RuntimeException e) {
       return Result.failure(new JwtValidationError.MalformedJwt("JOSE header is not parseable"));
     }
 
@@ -145,18 +156,29 @@ public final class NimbusJwtValidator implements JwtValidator {
           "algorithm family does not match the resolved key type"));
     }
 
-    // 6. Signature verification.
-    Optional<JWSVerifier> verifier = verifierFor(alg, key.get());
-    if (verifier.isEmpty()) {
-      return Result.failure(new JwtValidationError.UnsupportedAlgorithm(
-          "jwt/algorithm-not-in-allow-list",
-          "no verifier available for the algorithm"));
+    // 6. Signature verification — parse the full JWS (a real signing alg), then
+    //    verify. EdDSA uses the JDK's native Ed25519 provider (no Google Tink
+    //    dependency); RSA/EC use the Nimbus verifiers.
+    SignedJWT jwt;
+    try {
+      jwt = SignedJWT.parse(compactJwt);
+    } catch (ParseException e) {
+      return Result.failure(new JwtValidationError.SignatureInvalid("token is not a parseable JWS"));
     }
     boolean signatureValid;
-    try {
-      signatureValid = jwt.verify(verifier.get());
-    } catch (RuntimeException | com.nimbusds.jose.JOSEException e) {
-      return Result.failure(new JwtValidationError.SignatureInvalid("signature verification failed"));
+    if (alg == JwsAlgorithm.EdDSA) {
+      signatureValid = verifyEd25519(jwt, key.get());
+    } else {
+      Optional<JWSVerifier> verifier = verifierFor(alg, key.get());
+      if (verifier.isEmpty()) {
+        return Result.failure(new JwtValidationError.SignatureInvalid(
+            "no verifier available for the algorithm"));
+      }
+      try {
+        signatureValid = jwt.verify(verifier.get());
+      } catch (RuntimeException | com.nimbusds.jose.JOSEException e) {
+        return Result.failure(new JwtValidationError.SignatureInvalid("signature verification failed"));
+      }
     }
     if (!signatureValid) {
       return Result.failure(new JwtValidationError.SignatureInvalid("signature does not verify"));
@@ -175,8 +197,7 @@ public final class NimbusJwtValidator implements JwtValidator {
     }
 
     // 8. Success.
-    JoseHeader header = new JoseHeader(headerAlg, Optional.ofNullable(kid),
-        Optional.ofNullable(jwt.getHeader().getType()).map(Object::toString));
+    JoseHeader header = new JoseHeader(headerAlg, Optional.ofNullable(kid), Optional.ofNullable(typ));
     return Result.success(new ValidatedJwt(compactJwt, header, toClaimMap(claims), clock.get()));
   }
 
@@ -242,11 +263,30 @@ public final class NimbusJwtValidator implements JwtValidator {
             Optional.of(new RSASSAVerifier((RSAPublicKey) key));
         case ES256, ES384, ES512 ->
             Optional.of(new ECDSAVerifier((ECPublicKey) key));
-        // EdDSA verifier (OctetKeyPair) wiring is completed in a follow-up.
+        // EdDSA is verified via the JDK path in verifyEd25519(...), not here.
         case EdDSA -> Optional.empty();
       };
     } catch (com.nimbusds.jose.JOSEException e) {
       return Optional.empty();
+    }
+  }
+
+  /**
+   * Verifies an EdDSA (Ed25519) JWS using the JDK's native provider — avoids a
+   * Google Tink dependency that Nimbus's own Ed25519 verifier would require. The
+   * signing input is {@code header.payload}; the signature is the third segment.
+   */
+  private static boolean verifyEd25519(SignedJWT jwt, PublicKey key) {
+    if (!(key instanceof EdECPublicKey)) {
+      return false;
+    }
+    try {
+      Signature sig = Signature.getInstance("Ed25519");
+      sig.initVerify(key);
+      sig.update(jwt.getSigningInput());
+      return sig.verify(jwt.getSignature().decode());
+    } catch (GeneralSecurityException e) {
+      return false;
     }
   }
 
