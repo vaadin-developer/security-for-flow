@@ -30,6 +30,11 @@
       <groupId>com.svenruppert</groupId>
       <artifactId>core</artifactId>
     </dependency>
+    <!-- V00.76: typed fallible returns (Result) for the jwt/api JwtValidator SPI. -->
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>functional-reactive</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
