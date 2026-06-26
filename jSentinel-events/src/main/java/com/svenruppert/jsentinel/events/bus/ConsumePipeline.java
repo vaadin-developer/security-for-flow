@@ -164,7 +164,18 @@ public final class ConsumePipeline {
     if (!replayStore.markSeen(envelope.envelopeId(), envelope.expiresAt())) {
       return new JSentinelEventVerificationResult.ReplayDetected(envelope.envelopeId());
     }
-    sequenceStore.updateSequence(tenantId, producerId, envelope.sequence());
+    // R016 (V00.76.10): advance the per-producer sequence with an atomic
+    // compare-and-advance against the value we observed at line `last = ...`. If
+    // a concurrent envelope advanced the sequence between our read and this
+    // commit, the CAS fails and we reject this one as a SequenceViolation —
+    // closing the check-then-act race where two distinct envelopes both claiming
+    // the same next sequence could both pass and both commit (lost update /
+    // monotonicity break).
+    if (!sequenceStore.compareAndAdvance(tenantId, producerId, last, envelope.sequence())) {
+      EventSequence expected = last.map(EventSequence::next).orElse(EventSequence.FIRST);
+      return new JSentinelEventVerificationResult.SequenceViolation(
+          tenantId, producerId, expected, envelope.sequence());
+    }
 
     return new JSentinelEventVerificationResult.Valid(envelope);
   }

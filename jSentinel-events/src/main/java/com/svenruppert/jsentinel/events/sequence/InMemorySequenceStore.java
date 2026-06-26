@@ -71,6 +71,20 @@ public final class InMemorySequenceStore implements JSentinelEventSequenceStore 
         (scope, last) -> last == null ? EventSequence.FIRST : last.next());
   }
 
+  // R016: consume-side compare-and-advance. ConcurrentHashMap#replace (present)
+  // and #putIfAbsent (fresh scope) are atomic per key, so a read-validate-commit
+  // that lost a race to a concurrent advance fails the CAS rather than clobbering.
+  @Override
+  public boolean compareAndAdvance(TenantId tenantId, EventProducerId producerId,
+      Optional<EventSequence> expectedLast, EventSequence newSequence) {
+    Objects.requireNonNull(expectedLast, "expectedLast");
+    Objects.requireNonNull(newSequence, "newSequence");
+    Scope scope = key(tenantId, producerId);
+    return expectedLast
+        .map(prev -> sequences.replace(scope, prev, newSequence))
+        .orElseGet(() -> sequences.putIfAbsent(scope, newSequence) == null);
+  }
+
   private static Scope key(TenantId tenantId, EventProducerId producerId) {
     return new Scope(
         Objects.requireNonNull(tenantId, "tenantId"),

@@ -95,4 +95,29 @@ final class EclipseStoreSequenceStore implements JSentinelEventSequenceStore {
       storage.lock().writeLock().unlock();
     }
   }
+
+  // R016: the consume-side compare-and-advance runs the read-compare-commit under
+  // the storage write lock, so a read-validate-commit cannot lose a race to a
+  // concurrent advance (lost update / monotonicity break).
+  @Override
+  public boolean compareAndAdvance(TenantId tenantId, EventProducerId producerId,
+      Optional<EventSequence> expectedLast, EventSequence newSequence) {
+    Objects.requireNonNull(expectedLast, "expectedLast");
+    Objects.requireNonNull(newSequence, "newSequence");
+    String key = key(tenantId, producerId);
+    storage.lock().writeLock().lock();
+    try {
+      Map<String, Long> sequences = storage.root().sequences;
+      Optional<EventSequence> current =
+          Optional.ofNullable(sequences.get(key)).map(EventSequence::of);
+      if (!current.equals(expectedLast)) {
+        return false;
+      }
+      sequences.put(key, newSequence.value());
+      storage.manager().store(sequences);
+      return true;
+    } finally {
+      storage.lock().writeLock().unlock();
+    }
+  }
 }

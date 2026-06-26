@@ -33,11 +33,13 @@ import com.svenruppert.jsentinel.events.sequence.JSentinelEventSequenceStore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -128,5 +130,75 @@ public interface SequenceStoreContract {
     long sum = seen.stream().mapToLong(Long::longValue).sum();
     assertEquals((long) threads * (threads + 1) / 2, sum,
         "the reserved sequences are exactly 1..N with no gaps");
+  }
+
+  // ── R016 (V00.76.10): consume-side compareAndAdvance ───────────
+
+  @Test
+  @DisplayName("compareAndAdvance from a fresh scope succeeds once, then the stale 'empty' expectation fails")
+  default void compareAndAdvanceFromFresh() {
+    JSentinelEventSequenceStore store = newSequenceStore();
+    assertTrue(store.compareAndAdvance(TenantId.DEFAULT, PRODUCER_A,
+        Optional.empty(), EventSequence.FIRST), "fresh-scope advance must apply");
+    assertEquals(EventSequence.FIRST,
+        store.lastSequence(TenantId.DEFAULT, PRODUCER_A).orElseThrow());
+    // the scope is no longer fresh — a second 'empty' expectation must fail
+    assertFalse(store.compareAndAdvance(TenantId.DEFAULT, PRODUCER_A,
+        Optional.empty(), EventSequence.of(99)), "stale 'empty' expectation must not apply");
+    assertEquals(EventSequence.FIRST,
+        store.lastSequence(TenantId.DEFAULT, PRODUCER_A).orElseThrow());
+  }
+
+  @Test
+  @DisplayName("compareAndAdvance applies when the expected last matches, and is rejected when it is stale")
+  default void compareAndAdvanceMatchesOrRejects() {
+    JSentinelEventSequenceStore store = newSequenceStore();
+    store.updateSequence(TenantId.DEFAULT, PRODUCER_A, EventSequence.of(5));
+    // matching expectation advances
+    assertTrue(store.compareAndAdvance(TenantId.DEFAULT, PRODUCER_A,
+        Optional.of(EventSequence.of(5)), EventSequence.of(6)));
+    assertEquals(6, store.lastSequence(TenantId.DEFAULT, PRODUCER_A).orElseThrow().value());
+    // stale expectation (still expecting 5) is rejected, last unchanged
+    assertFalse(store.compareAndAdvance(TenantId.DEFAULT, PRODUCER_A,
+        Optional.of(EventSequence.of(5)), EventSequence.of(7)));
+    assertEquals(6, store.lastSequence(TenantId.DEFAULT, PRODUCER_A).orElseThrow().value());
+  }
+
+  @Test
+  @DisplayName("compareAndAdvance is atomic — N envelopes claiming the same next sequence: exactly one wins (R016)")
+  default void compareAndAdvanceAtomicUnderContention() throws InterruptedException {
+    JSentinelEventSequenceStore store = newSequenceStore();
+    int threads = 64;
+    AtomicInteger winners = new AtomicInteger();
+    CountDownLatch start = new CountDownLatch(1);
+    Thread[] pool = new Thread[threads];
+    for (int i = 0; i < threads; i++) {
+      pool[i] = new Thread(() -> {
+        try {
+          start.await();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          return;
+        }
+        // every thread observed an empty scope and validated sequence FIRST —
+        // the consume-side race the bus faces when distinct envelopes claim the
+        // same next sequence concurrently.
+        if (store.compareAndAdvance(TenantId.DEFAULT, PRODUCER_A,
+            Optional.empty(), EventSequence.FIRST)) {
+          winners.incrementAndGet();
+        }
+      });
+    }
+    for (Thread t : pool) {
+      t.start();
+    }
+    start.countDown();
+    for (Thread t : pool) {
+      t.join();
+    }
+    assertEquals(1, winners.get(),
+        "exactly one of N envelopes claiming the same next sequence may be accepted");
+    assertEquals(EventSequence.FIRST,
+        store.lastSequence(TenantId.DEFAULT, PRODUCER_A).orElseThrow());
   }
 }

@@ -30,6 +30,7 @@ import com.svenruppert.jsentinel.authorization.api.tenant.TenantId;
 import com.svenruppert.jsentinel.events.api.EventProducerId;
 import com.svenruppert.jsentinel.events.api.EventSequence;
 
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -83,5 +84,44 @@ public interface JSentinelEventSequenceStore {
         .orElse(EventSequence.FIRST);
     updateSequence(tenantId, producerId, next);
     return next;
+  }
+
+  /**
+   * Atomically advances the last accepted sequence from {@code expectedLast} to
+   * {@code newSequence} for the scope — the <em>consume-side</em> counterpart to
+   * {@link #reserveNext}. If the current last sequence still equals
+   * {@code expectedLast}, it is replaced by {@code newSequence} and {@code true}
+   * is returned; otherwise (another thread advanced it in between) nothing is
+   * changed and {@code false} is returned.
+   *
+   * <p>A consumer reads {@link #lastSequence}, validates the inbound sequence
+   * against that observed value, then calls this method passing the same
+   * observed value as {@code expectedLast}. A {@code false} result means the
+   * read-validate-commit lost a race and the inbound envelope must be rejected
+   * (R016, V00.76.10): there is no lost update, and the per-producer
+   * monotonicity guarantee holds even when distinct envelopes claim the same
+   * sequence concurrently.</p>
+   *
+   * <p>The {@code default} implementation is <strong>not</strong> atomic (it
+   * composes {@link #lastSequence} + {@link #updateSequence}); concurrent
+   * implementations <strong>must</strong> override it. The shipped in-memory and
+   * Eclipse-Store stores override it atomically.</p>
+   *
+   * @param tenantId the tenant scope
+   * @param producerId the producer scope
+   * @param expectedLast the last sequence the caller observed ({@code empty} for a fresh scope)
+   * @param newSequence the sequence to advance to
+   * @return {@code true} iff the advance was applied atomically
+   * @since 00.76.10
+   */
+  default boolean compareAndAdvance(TenantId tenantId, EventProducerId producerId,
+      Optional<EventSequence> expectedLast, EventSequence newSequence) {
+    Objects.requireNonNull(expectedLast, "expectedLast");
+    Objects.requireNonNull(newSequence, "newSequence");
+    if (!lastSequence(tenantId, producerId).equals(expectedLast)) {
+      return false;
+    }
+    updateSequence(tenantId, producerId, newSequence);
+    return true;
   }
 }
