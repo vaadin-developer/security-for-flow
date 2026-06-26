@@ -60,10 +60,12 @@ import java.util.Optional;
  * Refresh-token rotation with reuse-detection (BCP 9700 §4.13.2, V00.77). A
  * refresh is performed against the {@link TokenEndpointClient}; the presented
  * and newly-issued refresh tokens are tracked by hash in the
- * {@link RefreshTokenFamilyStore}. If an <em>already-rotated</em> refresh token
- * is replayed (a theft signal), the whole family is revoked and the rotation
- * fails with {@link OAuth2Error.RefreshTokenFamilyRevoked} — independent of
- * whether the authorization server itself detected the reuse.
+ * {@link RefreshTokenFamilyStore}. A replayed (already-rotated) refresh token is
+ * detected <em>before</em> it is forwarded to the authorization server
+ * ({@link RefreshTokenFamilyStore#detectReuse}); on that theft signal the whole
+ * family is revoked and the rotation fails with
+ * {@link OAuth2Error.RefreshTokenFamilyRevoked} — independent of whether the
+ * authorization server itself rejects the replayed token.
  *
  * <p>Only token hashes leave this class; raw refresh-token values are never
  * stored or logged.
@@ -93,11 +95,28 @@ public final class RefreshTokenRotator {
   public Result<TokenResponse, OAuth2Error> rotate(String familyId, SecretValue presentedRefreshToken) {
     Objects.requireNonNull(familyId, "familyId");
     Objects.requireNonNull(presentedRefreshToken, "presentedRefreshToken");
-    String presentedHash = sha256Hex(presentedRefreshToken.asUtf8Bytes());
+    byte[] presentedBytes = presentedRefreshToken.asUtf8Bytes();
+    String presentedHash;
+    try {
+      presentedHash = sha256Hex(presentedBytes);
+    } finally {
+      java.util.Arrays.fill(presentedBytes, (byte) 0);
+    }
+
+    // R-EXIT-1: detect a replayed (already-rotated) token BEFORE forwarding it to
+    // the AS. A correctly-rotating AS rejects a replayed token, so gating the
+    // family revoke on AS success would never fire on the theft path. Revoke now,
+    // and never forward a replayed token onward.
+    if (familyStore.detectReuse(familyId, presentedHash)
+        == RefreshTokenFamilyStore.RotationResult.REUSE_DETECTED) {
+      return Result.failure(new OAuth2Error.RefreshTokenFamilyRevoked());
+    }
 
     Result<TokenResponse, OAuth2Error> result = endpoint.refresh(presentedRefreshToken);
     Optional<TokenResponse> success = result.toOptional();
     if (success.isEmpty()) {
+      // a current token the AS rejected for a non-reuse reason (e.g. expired) —
+      // do not revoke the family.
       return result;
     }
 

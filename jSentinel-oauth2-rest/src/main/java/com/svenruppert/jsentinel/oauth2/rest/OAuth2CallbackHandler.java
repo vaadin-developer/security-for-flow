@@ -61,6 +61,18 @@ import java.util.Optional;
  * {@link TokenSink} — the handler itself never writes tokens into the response
  * body. Errors map to short, generic statuses + bodies; the OAuth
  * {@code error_description} is never echoed (no internals leak to the caller).
+ *
+ * <p><strong>Security — bind {@code state} to the user-agent (login-CSRF).</strong>
+ * REST has no inherent per-browser store, so the default
+ * {@code JdkInMemoryStateStore} is process-global: validating only that a
+ * {@code state} exists does <em>not</em> prove the callback belongs to the
+ * browser that started the flow. To prevent OAuth login-CSRF / session fixation,
+ * the integrating application MUST tie {@code state} to the caller's session —
+ * e.g. set the {@code state} in a {@code __Host-} cookie at
+ * {@code startRequest(...)} time and reject the callback (in the {@link TokenSink}
+ * or a wrapping filter) unless the callback {@code state} equals that cookie. The
+ * Vaadin adapter's {@code VaadinSessionStateStore} already binds state to the
+ * {@code VaadinSession} and needs no extra step.
  */
 public final class OAuth2CallbackHandler implements RestHandler {
 

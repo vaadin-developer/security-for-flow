@@ -93,6 +93,22 @@ public final class InMemoryRefreshTokenFamilyStore implements RefreshTokenFamily
   }
 
   @Override
+  public synchronized RotationResult detectReuse(String familyId, String presentedHash) {
+    Objects.requireNonNull(familyId, "familyId");
+    Objects.requireNonNull(presentedHash, "presentedHash");
+    if (revokedFamilies.contains(familyId)) {
+      return RotationResult.REUSE_DETECTED;
+    }
+    String current = currentHashByFamily.get(familyId);
+    if (current != null && current.equals(presentedHash)) {
+      return RotationResult.ROTATED; // current — safe to forward, no rotation yet
+    }
+    // an already-rotated or unknown token was replayed — revoke before the AS call
+    revokeFamily(familyId);
+    return RotationResult.REUSE_DETECTED;
+  }
+
+  @Override
   public synchronized void revokeFamily(String familyId) {
     Objects.requireNonNull(familyId, "familyId");
     currentHashByFamily.remove(familyId);

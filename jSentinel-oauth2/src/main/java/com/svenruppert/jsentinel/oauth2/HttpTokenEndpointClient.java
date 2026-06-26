@@ -63,6 +63,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -126,7 +127,9 @@ public final class HttpTokenEndpointClient implements TokenEndpointClient {
   public Result<TokenResponse, OAuth2Error> refresh(SecretValue refreshToken) {
     Map<String, String> form = new LinkedHashMap<>();
     form.put("grant_type", "refresh_token");
-    form.put("refresh_token", new String(refreshToken.asUtf8Bytes(), StandardCharsets.UTF_8));
+    byte[] rt = refreshToken.asUtf8Bytes();
+    form.put("refresh_token", new String(rt, StandardCharsets.UTF_8));
+    Arrays.fill(rt, (byte) 0);
     return post(form);
   }
 
@@ -213,7 +216,9 @@ public final class HttpTokenEndpointClient implements TokenEndpointClient {
           request.header("Authorization", basicHeader(basic.clientId(), basic.secret()));
       case ClientAuthentication.ClientSecretPost post -> {
         form.put("client_id", post.clientId());
-        form.put("client_secret", new String(post.secret().asUtf8Bytes(), StandardCharsets.UTF_8));
+        byte[] secret = post.secret().asUtf8Bytes();
+        form.put("client_secret", new String(secret, StandardCharsets.UTF_8));
+        Arrays.fill(secret, (byte) 0);
       }
       case ClientAuthentication.NoneAuthentication none -> form.put("client_id", none.clientId());
       case ClientAuthentication.PrivateKeyJwt pk ->

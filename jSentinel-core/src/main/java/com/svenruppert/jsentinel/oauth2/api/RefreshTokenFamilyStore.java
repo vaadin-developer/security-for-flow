@@ -47,6 +47,23 @@ public interface RefreshTokenFamilyStore {
    */
   RotationResult consumeAndRotate(String familyId, String presentedHash, String newHash);
 
+  /**
+   * Reuse pre-check (V00.77, R-EXIT-1): determines whether {@code presentedHash}
+   * is the family's current token <em>before</em> the refresh is forwarded to the
+   * authorization server. If it is not current (an already-rotated or unknown
+   * token was replayed — a theft signal), the family is revoked and
+   * {@link RotationResult#REUSE_DETECTED} is returned. This closes the gap where
+   * a replayed token that the AS itself rejects would otherwise never trigger the
+   * RP-side family revoke. Returns {@link RotationResult#ROTATED} (meaning
+   * "current — safe to forward") without rotating; the actual rotation still goes
+   * through {@link #consumeAndRotate} on success.
+   *
+   * @param familyId      the token-family identifier
+   * @param presentedHash the hash of the refresh token presented by the client
+   * @return {@link RotationResult#ROTATED} if current, else {@link RotationResult#REUSE_DETECTED}
+   */
+  RotationResult detectReuse(String familyId, String presentedHash);
+
   /** Revokes a whole family (e.g. on logout, or after reuse-detection). */
   void revokeFamily(String familyId);
 

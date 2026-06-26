@@ -135,7 +135,9 @@ public final class OAuth2FormPost {
           request.header("Authorization", basicHeader(basic.clientId(), basic.secret()));
       case ClientAuthentication.ClientSecretPost post -> {
         form.put("client_id", post.clientId());
-        form.put("client_secret", new String(post.secret().asUtf8Bytes(), StandardCharsets.UTF_8));
+        byte[] secret = post.secret().asUtf8Bytes();
+        form.put("client_secret", new String(secret, StandardCharsets.UTF_8));
+        Arrays.fill(secret, (byte) 0);
       }
       case ClientAuthentication.NoneAuthentication none -> form.put("client_id", none.clientId());
       case ClientAuthentication.PrivateKeyJwt pk ->

@@ -60,6 +60,7 @@ import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -121,6 +122,26 @@ class RefreshTokenRotatorTest {
     Result<TokenResponse, OAuth2Error> afterRevoke = rotator.rotate("fam", SecretValue.ofString("RT-2"));
     assertInstanceOf(OAuth2Error.RefreshTokenFamilyRevoked.class,
         afterRevoke.map(t -> (OAuth2Error) null).getOrElse(e -> e));
+  }
+
+  @Test
+  @DisplayName("R-EXIT-1: a replayed token revokes the family WITHOUT forwarding it to the AS")
+  void reuseDetectedBeforeEndpointCall() {
+    InMemoryRefreshTokenFamilyStore store = new InMemoryRefreshTokenFamilyStore();
+    RefreshTokenRotator rotator = rotator(store);
+    rotator.registerInitial("fam", "RT-1");
+    rotator.rotate("fam", SecretValue.ofString("RT-1")).toOptional().orElseThrow();
+    int callsAfterFirstRotation = counter.get();
+
+    // Replay the already-rotated RT-1. A correctly-rotating AS would reject it, so
+    // gating the family revoke on AS success would miss the theft. The pre-AS
+    // detectReuse check must revoke the family and NOT forward the token onward.
+    Result<TokenResponse, OAuth2Error> reuse = rotator.rotate("fam", SecretValue.ofString("RT-1"));
+    assertInstanceOf(OAuth2Error.RefreshTokenFamilyRevoked.class,
+        reuse.map(t -> (OAuth2Error) null).getOrElse(e -> e));
+    assertTrue(store.isRevoked("fam"), "the family must be revoked");
+    assertEquals(callsAfterFirstRotation, counter.get(),
+        "a replayed token must never reach the token endpoint");
   }
 
   @Test

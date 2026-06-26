@@ -101,7 +101,9 @@ public final class DeviceTokenPoller {
    */
   public Result<TokenResponse, OAuth2Error> poll(DeviceAuthorizationResponse device) {
     Objects.requireNonNull(device, "device");
-    long intervalSeconds = device.intervalSeconds();
+    // R-EXIT-2: floor the interval to >= 1s so a hostile/buggy AS returning
+    // interval=0 cannot turn the poll into a tight busy-loop hammering the endpoint.
+    long intervalSeconds = Math.max(1L, device.intervalSeconds());
     while (true) {
       if (clock.get().isAfter(device.expiresAt())) {
         return Result.failure(new OAuth2Error.DeviceCodeExpired());
