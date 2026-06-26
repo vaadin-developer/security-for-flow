@@ -156,6 +156,20 @@ class HttpJwksClientTest {
   }
 
   @Test
+  @DisplayName("F3: a failed refresh exposes a non-secret errorClass token, never a Throwable")
+  void refreshFailureExposesErrorClassNotThrowable() {
+    status.set(503);
+    body.set("service unavailable: backend db at 10.0.0.5 down"); // would-be-leaky detail
+    com.svenruppert.jsentinel.jwt.api.JwksRefreshResult result = client().refreshOnce();
+    assertFalse(result.succeeded(), "a 503 refresh must not be reported as succeeded");
+    assertTrue(result.errorClass().isPresent(), "a failed refresh must carry an errorClass");
+    assertEquals("Non2xxResponse", result.errorClass().get(),
+        "the errorClass is a stable non-secret token, not a message or class with internals");
+    assertFalse(result.errorClass().get().contains("10.0.0.5"),
+        "no response-body detail may leak into the errorClass");
+  }
+
+  @Test
   @DisplayName("R10: a kid-less token returns empty, never an NPE (healthy cache)")
   void nullKidReturnsEmptyOnHealthyCache() {
     body.set(jwks(k1));

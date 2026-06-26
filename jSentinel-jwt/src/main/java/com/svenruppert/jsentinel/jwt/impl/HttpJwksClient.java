@@ -164,8 +164,7 @@ public final class HttpJwksClient implements JwksClient, HasLogger {
         response.body().close();
         logger().warn("jwks/refresh-non-2xx: status={}", response.statusCode());
         return new FetchOutcome(new JwksRefreshResult(0, now, NEGATIVE_TTL,
-            Optional.of(new IllegalStateException("JWKS endpoint returned " + response.statusCode()))),
-            null);
+            Optional.of("Non2xxResponse")), null);
       }
       // RF01: read at most MAX_JWKS_BYTES + 1; a larger body is rejected before parsing
       // (the 10s timeout caps time, not size).
@@ -176,17 +175,19 @@ public final class HttpJwksClient implements JwksClient, HasLogger {
       if (bytes.length > MAX_JWKS_BYTES) {
         logger().warn("jwks/refresh-oversized: body exceeds {} bytes", MAX_JWKS_BYTES);
         return new FetchOutcome(new JwksRefreshResult(0, now, NEGATIVE_TTL,
-            Optional.of(new IllegalStateException("JWKS body exceeds the size cap"))), null);
+            Optional.of("OversizedBody")), null);
       }
       Map<String, PublicKey> keys = parse(new String(bytes, StandardCharsets.UTF_8));
       return new FetchOutcome(
           new JwksRefreshResult(keys.size(), now, ttlFrom(response), Optional.empty()), keys);
     } catch (RuntimeException | IOException | ParseException e) {
       logger().warn("jwks/refresh-failed: {}", e.getClass().getSimpleName());
-      return new FetchOutcome(new JwksRefreshResult(0, now, NEGATIVE_TTL, Optional.of(e)), null);
+      return new FetchOutcome(
+          new JwksRefreshResult(0, now, NEGATIVE_TTL, Optional.of(e.getClass().getSimpleName())), null);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      return new FetchOutcome(new JwksRefreshResult(0, now, NEGATIVE_TTL, Optional.of(e)), null);
+      return new FetchOutcome(
+          new JwksRefreshResult(0, now, NEGATIVE_TTL, Optional.of(e.getClass().getSimpleName())), null);
     }
   }
 
