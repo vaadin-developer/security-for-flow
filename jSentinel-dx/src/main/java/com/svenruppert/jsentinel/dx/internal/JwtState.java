@@ -25,6 +25,7 @@ public final class JwtState {
   private String issuer;
   private final Set<String> audiences = new LinkedHashSet<>();
   private Duration clockSkew;
+  private String tokenType;
 
   public JwtValidator validator() {
     return validator;
@@ -86,9 +87,17 @@ public final class JwtState {
     this.clockSkew = d;
   }
 
+  public String tokenType() {
+    return tokenType;
+  }
+
+  public void tokenType(String t) {
+    this.tokenType = t;
+  }
+
   /** @return true if the sub-builder recorded anything (an empty {@code .jwt(j -> {})} is a no-op). */
   public boolean hasAnySelection() {
     return validator != null || jwksUri != null || profile != null || allowList != null
-        || issuer != null || !audiences.isEmpty() || clockSkew != null;
+        || issuer != null || !audiences.isEmpty() || clockSkew != null || tokenType != null;
   }
 }

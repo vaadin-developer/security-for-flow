@@ -106,6 +106,16 @@ class JwtBootstrapTest {
   }
 
   @Test
+  @DisplayName("F4: .tokenType(...) is recorded into the JWT state and flows to ClaimExpectations")
+  void tokenTypeRecorded() {
+    JwtState state = new JwtState();
+    new RecordingJwtBootstrap(state).tokenType("at+jwt");
+    assertEquals("at+jwt", state.tokenType());
+    assertTrue(state.hasAnySelection(),
+        "recording a tokenType must mark the .jwt(...) sub-builder as non-empty");
+  }
+
+  @Test
   @DisplayName("R11: a non-https JWKS URI is also an ERROR in PRODUCTION mode (was WARNING)")
   void nonHttpsJwksUriIsErrorInProduction() {
     List<JSentinelBootstrapWarning> warnings = new TestBootstrap()

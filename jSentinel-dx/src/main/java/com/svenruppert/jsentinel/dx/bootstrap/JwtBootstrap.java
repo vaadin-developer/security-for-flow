@@ -48,4 +48,19 @@ public interface JwtBootstrap {
 
   /** The clock-skew leeway for {@code exp} / {@code nbf} (default 30s). */
   JwtBootstrap clockSkew(Duration leeway);
+
+  /**
+   * F4 (V00.76.10): the expected {@code typ} header media type (e.g.
+   * {@code "at+jwt"}). When set, a token whose {@code typ} header is absent or
+   * does not match is rejected (RFC 8725 §3.11, cross-JWT-type confusion).
+   * Unset by default — the {@code typ} header is not checked. Added as a
+   * {@code default} no-op for backwards compatibility; the in-tree recording
+   * bootstrap overrides it.
+   *
+   * @param tokenType the expected media type
+   * @return this builder
+   */
+  default JwtBootstrap tokenType(String tokenType) {
+    return this;
+  }
 }

@@ -357,7 +357,9 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
             true, false, false, false,
             jwt.clockSkew() != null
                 ? new com.svenruppert.jsentinel.jwt.api.ClockSkewPolicy(jwt.clockSkew())
-                : com.svenruppert.jsentinel.jwt.api.ClockSkewPolicy.DEFAULT);
+                : com.svenruppert.jsentinel.jwt.api.ClockSkewPolicy.DEFAULT,
+            // F4 (V00.76.10): optional typ-header check via .jwt(j -> j.tokenType(...)).
+            java.util.Optional.ofNullable(jwt.tokenType()));
 
     java.util.Optional<com.svenruppert.jsentinel.jwt.api.JwtValidatorFactory> factory =
         java.util.ServiceLoader.load(com.svenruppert.jsentinel.jwt.api.JwtValidatorFactory.class)

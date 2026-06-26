@@ -86,4 +86,10 @@ public final class RecordingJwtBootstrap implements JwtBootstrap {
     state.clockSkew(Objects.requireNonNull(leeway, "leeway"));
     return this;
   }
+
+  @Override
+  public JwtBootstrap tokenType(String tokenType) {
+    state.tokenType(Objects.requireNonNull(tokenType, "tokenType"));
+    return this;
+  }
 }

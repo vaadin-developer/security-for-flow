@@ -178,4 +178,80 @@ class NimbusJwtValidatorTest {
     // Result has no direct getError; re-derive via a failure-only mapping.
     return result.map(v -> (JwtValidationError) null).getOrElse(e -> e);
   }
+
+  // ── F4 (V00.76.10): optional typ-header validation (RFC 8725 §3.11) ─────
+
+  private NimbusJwtValidator validatorExpectingTyp(String expectedTyp) throws Exception {
+    PublicKey publicKey = rsaJwk.toRSAPublicKey();
+    JwksClient staticKeys = new JwksClient() {
+      @Override
+      public Optional<PublicKey> findKey(String kid, JwsAlgorithm alg) {
+        return KID.equals(kid) ? Optional.of(publicKey) : Optional.empty();
+      }
+
+      @Override
+      public JwksRefreshResult refreshOnce() {
+        return new JwksRefreshResult(1, NOW, Duration.ofMinutes(5), Optional.empty());
+      }
+    };
+    ClaimExpectations expectations = new ClaimExpectations(
+        Optional.of(ISSUER), Set.of(AUDIENCE), true, false, false, false,
+        ClockSkewPolicy.DEFAULT, Optional.of(expectedTyp));
+    return new NimbusJwtValidator(
+        AlgorithmProfile.STRICT_MODERN.toAllowList(), staticKeys, expectations, () -> NOW);
+  }
+
+  private String issueWithTyp(JWTClaimsSet claims, String typ) throws Exception {
+    JWSHeader.Builder header = new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(KID);
+    if (typ != null) {
+      header.type(new com.nimbusds.jose.JOSEObjectType(typ));
+    }
+    SignedJWT jwt = new SignedJWT(header.build(), claims);
+    jwt.sign(new RSASSASigner(rsaJwk));
+    return jwt.serialize();
+  }
+
+  private static JwtValidationError errorOf(NimbusJwtValidator v, String token) {
+    Result<ValidatedJwt, JwtValidationError> result = v.validate(token);
+    assertTrue(result.toOptional().isEmpty(), "expected failure for token");
+    return result.map(x -> (JwtValidationError) null).getOrElse(e -> e);
+  }
+
+  @Test
+  @DisplayName("F4: a matching typ header is accepted (application/ prefix tolerated)")
+  void typMatchAccepted() throws Exception {
+    NimbusJwtValidator v = validatorExpectingTyp("at+jwt");
+    assertTrue(v.validate(issueWithTyp(validClaims().build(), "at+jwt")).toOptional().isPresent(),
+        "an exact typ match must pass");
+    assertTrue(v.validate(issueWithTyp(validClaims().build(), "application/at+jwt")).toOptional().isPresent(),
+        "the application/ prefix and case must be tolerated");
+    assertTrue(v.validate(issueWithTyp(validClaims().build(), "AT+JWT")).toOptional().isPresent(),
+        "the comparison is case-insensitive");
+  }
+
+  @Test
+  @DisplayName("F4: a mismatching typ header is rejected with claims/typ-mismatch")
+  void typMismatchRejected() throws Exception {
+    NimbusJwtValidator v = validatorExpectingTyp("at+jwt");
+    JwtValidationError error = errorOf(v, issueWithTyp(validClaims().build(), "JWT"));
+    assertEquals("claims/typ-mismatch", error.code());
+  }
+
+  @Test
+  @DisplayName("F4: a missing typ header is rejected when a type is expected")
+  void typMissingRejectedWhenExpected() throws Exception {
+    NimbusJwtValidator v = validatorExpectingTyp("at+jwt");
+    JwtValidationError error = errorOf(v, issueWithTyp(validClaims().build(), null));
+    assertEquals("claims/typ-mismatch", error.code());
+  }
+
+  @Test
+  @DisplayName("F4: default (no expected typ) does not check the typ header")
+  void typNotCheckedByDefault() throws Exception {
+    // the default `validator` (setUp) has no expectedTyp — any/no typ is accepted
+    assertTrue(validator.validate(issueWithTyp(validClaims().build(), "anything+jwt")).toOptional().isPresent(),
+        "without an expected typ, the header must not be checked");
+    assertTrue(validator.validate(issueWithTyp(validClaims().build(), null)).toOptional().isPresent(),
+        "without an expected typ, a missing typ header must be accepted");
+  }
 }

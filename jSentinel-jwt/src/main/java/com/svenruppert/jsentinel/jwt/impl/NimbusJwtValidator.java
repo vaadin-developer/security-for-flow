@@ -196,6 +196,15 @@ public final class NimbusJwtValidator implements JwtValidator {
       return Result.failure(claimError.get());
     }
 
+    // 7b. F4 (RFC 8725 §3.11): optional typ-header check against cross-JWT-type
+    //     confusion. Only enforced when an expected type is configured; default
+    //     behaviour (no expectedTyp) is unchanged. The typ header is part of the
+    //     signed JOSE header, so it is trusted only after signature verification.
+    Optional<JwtValidationError> typError = validateTyp(typ);
+    if (typError.isPresent()) {
+      return Result.failure(typError.get());
+    }
+
     // 8. Success.
     JoseHeader header = new JoseHeader(headerAlg, Optional.ofNullable(kid), Optional.ofNullable(typ));
     return Result.success(new ValidatedJwt(compactJwt, header, toClaimMap(claims), clock.get()));
@@ -245,6 +254,32 @@ public final class NimbusJwtValidator implements JwtValidator {
       }
     }
     return Optional.empty();
+  }
+
+  /**
+   * F4 (RFC 8725 §3.11): when an expected {@code typ} is configured, the token's
+   * {@code typ} header must be present and match (case-insensitive, tolerating an
+   * {@code application/} prefix). No expectation configured → no check.
+   */
+  private Optional<JwtValidationError> validateTyp(String typ) {
+    Optional<String> expected = expectations.expectedTyp();
+    if (expected.isEmpty()) {
+      return Optional.empty();
+    }
+    if (typ == null || !typMatches(expected.get(), typ)) {
+      return Optional.of(new JwtValidationError.ClaimInvalid(
+          "claims/typ-mismatch", "token typ header does not match the expected media type"));
+    }
+    return Optional.empty();
+  }
+
+  private static boolean typMatches(String expected, String actual) {
+    return normalizeTyp(expected).equals(normalizeTyp(actual));
+  }
+
+  private static String normalizeTyp(String t) {
+    String lower = t.trim().toLowerCase(java.util.Locale.ROOT);
+    return lower.startsWith("application/") ? lower.substring("application/".length()) : lower;
   }
 
   private static boolean familyMatches(JwsAlgorithm alg, PublicKey key) {
