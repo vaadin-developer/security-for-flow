@@ -37,9 +37,49 @@ class JsonResponseTest {
   @Test
   @DisplayName("an overlong digit run yields empty instead of throwing")
   void overflowYieldsEmpty() {
-    // 30 digits — far beyond Long.MAX_VALUE; the regex matches \\d+ with no bound.
+    // 30 digits — far beyond Long.MAX_VALUE.
     assertTrue(JsonResponse.expiresIn(
         "{\"expires_in\":999999999999999999999999999999}").isEmpty(),
         "an out-of-range expires_in must degrade to empty, not throw");
+  }
+
+  @Test
+  @DisplayName("the three top-level fields are extracted from a normal token response")
+  void topLevelFieldsExtracted() {
+    String body = "{\"access_token\":\"abc.def.ghi\",\"token_type\":\"Bearer\",\"expires_in\":3600}";
+    assertEquals(Optional.of("abc.def.ghi"), JsonResponse.accessToken(body));
+    assertEquals(Optional.of("Bearer"), JsonResponse.tokenType(body));
+    assertEquals(Optional.of(3600L), JsonResponse.expiresIn(body));
+  }
+
+  @Test
+  @DisplayName("R09: a nested access_token is NOT grabbed — only the top-level field")
+  void nestedAccessTokenNotGrabbed() {
+    // The real top-level token is "real-token". A nested object carries a
+    // decoy "access_token" that the old non-anchored regex would have matched
+    // first (it appears earlier in the body).
+    String body = "{"
+        + "\"error_context\":{\"echo\":{\"access_token\":\"NESTED-DECOY\"}},"
+        + "\"access_token\":\"real-token\","
+        + "\"token_type\":\"Bearer\""
+        + "}";
+    assertEquals(Optional.of("real-token"), JsonResponse.accessToken(body),
+        "only the top-level access_token may be returned, never a nested one");
+  }
+
+  @Test
+  @DisplayName("R09: a key that appears only nested yields empty at the top level")
+  void onlyNestedYieldsEmpty() {
+    String body = "{\"data\":{\"access_token\":\"NESTED-ONLY\"}}";
+    assertTrue(JsonResponse.accessToken(body).isEmpty(),
+        "a key present only inside a nested object must not be extracted");
+  }
+
+  @Test
+  @DisplayName("R09: a string value containing the key text is not mistaken for the key")
+  void keyTextInsideValueNotMatched() {
+    // The value of "note" contains the substring access_token but is not a key.
+    String body = "{\"note\":\"see access_token below\",\"access_token\":\"real\"}";
+    assertEquals(Optional.of("real"), JsonResponse.accessToken(body));
   }
 }
