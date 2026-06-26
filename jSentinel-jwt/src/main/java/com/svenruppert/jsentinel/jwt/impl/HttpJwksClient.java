@@ -110,7 +110,7 @@ public final class HttpJwksClient implements JwksClient, HasLogger {
     State snapshot = state;
     Instant now = clock.get();
     boolean fresh = now.isBefore(snapshot.expiry);
-    if (fresh && kid != null && snapshot.keys.containsKey(kid)) {
+    if (fresh && snapshot.keys.containsKey(kid)) {
       return Optional.ofNullable(snapshot.keys.get(kid));
     }
     // stale, or a kid miss (hot rotation): refresh once — unless we are inside a
