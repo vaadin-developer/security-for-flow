@@ -90,6 +90,9 @@ MODULES=(
     "jSentinel-oauth2"
     "jSentinel-oauth2-vaadin"
     "jSentinel-oauth2-rest"
+    "jSentinel-identity-oidc"
+    "jSentinel-identity-oidc-vaadin"
+    "jSentinel-identity-oidc-rest"
 )
 
 if [ $# -ge 1 ]; then
