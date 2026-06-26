@@ -127,15 +127,13 @@ public final class JsonResponse {
     if (wantString) {
       return Optional.empty();
     }
+    // Digits only — matches the prior `\d+` extraction. The single numeric field
+    // (expires_in) is a non-negative seconds count, so a leading sign is not a
+    // valid value here and yields empty (as the old regex did).
     int start = at;
     int k = at;
-    while (k < n) {
-      char c = body.charAt(k);
-      if ((c >= '0' && c <= '9') || c == '-' || c == '+') {
-        k++;
-      } else {
-        break;
-      }
+    while (k < n && body.charAt(k) >= '0' && body.charAt(k) <= '9') {
+      k++;
     }
     return k > start ? Optional.of(body.substring(start, k)) : Optional.empty();
   }

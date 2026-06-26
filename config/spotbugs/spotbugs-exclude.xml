@@ -85,7 +85,7 @@
        digest. SHA-1 here is a wire-protocol requirement of a third-party API,
        NOT password storage or a security primitive we choose — the password
        pipeline hashes with Argon2id/PBKDF2 elsewhere. Cannot be "fixed" without
-       breaking the HIBP contract. Scoped to the single method.
+       breaking the HIBP contract. Scoped to the single (single-purpose) class.
   -->
   <Match>
     <Class name="com.svenruppert.jsentinel.credential.compromised.hibp.HaveIBeenPwnedCompromisedPasswordChecker"/>
