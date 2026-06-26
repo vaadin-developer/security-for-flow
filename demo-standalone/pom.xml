@@ -41,6 +41,12 @@
       <artifactId>jSentinel-standalone</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!-- V00.77: OAuth2 device-code grant demo (CLI has no browser). -->
+    <dependency>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-oauth2</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <!--
       Annotations module shipped by jSentinel-processor's underlying
       proxybuilder. The processor emits @GeneratedByProxyBuilder into
