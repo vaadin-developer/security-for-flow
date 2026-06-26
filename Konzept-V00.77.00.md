@@ -1,13 +1,30 @@
 # Konzept V00.77.00: jSentinel-oauth2 — OAuth2 RP-Flows
 
 Version: `00.77.00`
-Quellstand: V00.76.00 (jSentinel-jwt, in Umsetzung)
+Quellstand: V00.76.10 (Security-Hardening, **released to Maven Central**)
 Zielprojekt: `vaadin-developer/security-for-flow`
 Zielbranch: `develop`
 Java: `26+`
 Build: Maven 4
 Lizenz: EUPL 1.2
-Status: Architektur- und Umsetzungskonzept
+Status: Architektur- und Umsetzungskonzept — **A.0-Review-Gate durchlaufen 2026-06-26**
+Scope-Entscheidung: voller **OAuth2-RP** (inkl. Authorization-Code-Login) — User bestätigt 2026-06-26.
+
+> **A.0-Korrekturen (2026-06-26).** Faktenchecks gegen den realen Quellstand V00.76.10:
+> 1. **JWT-Signing existiert noch nicht.** V00.76 liefert nur **Validierung** (`NimbusJwtValidator`);
+>    es gibt **keinen** `JwtSigner` in den Main-Sources (Signing passiert nur in Test-Stubs wie
+>    `JwtIssuerStub`). `private_key_jwt`/`client_secret_jwt` (§7) hängen daran — daher baut **V00.77**
+>    den Signer-SPI selbst: neuer `JwtSigner` in `jSentinel-core/jwt/api` + `NimbusJwtSigner` in
+>    `jSentinel-jwt` (additiv, asymmetrisch via Allow-List). Das ist eine eigene Phase (§14, neue Phase 0b).
+> 2. **Test-Strategie: In-Process-AS-Stub statt Keycloak-Docker als Primärweg.** Der Hausstil ist
+>    No-Mocks via echtem JDK-`HttpServer` (jwt/hibp/events nutzen das). V00.77 testet primär gegen einen
+>    **in-process realen OAuth2-Authorization-Server-Stub** (JDK-`HttpServer`, echte Endpoints, echte
+>    Krypto/PKCE/Assertion-Verifikation). Keycloak-Docker bleibt **optionales** `oidc-integration`-Profil,
+>    nicht der Pflicht-CI-Pfad (§15/§16/Phase 3+9 entsprechend gelesen).
+> 3. Reaktor steht aktuell bei **40 Modulen**; V00.77 fügt 3 hinzu → **43** (§15 „31+" ist veraltet).
+> 4. `jSentinel-dx-{vaadin,rest}` → `-oauth2-{vaadin,rest}` ist ein **opt-in-Modul + ServiceLoader/
+>    DiagnosticContributor**-Wiring (kein „compile-optional via Reflection", §5.1) — konsistent zum
+>    `.jwt(...)`-Muster.
 
 ---
 
@@ -699,7 +716,7 @@ V00.77 promoted keinen Vorgänger-Code zu STRICT.
 - **V00.72/V00.73** liefert Fluent-Bootstrap. V00.77 fügt `.oauth2(...)` hinzu.
 - **V00.74** liefert `TokenCredential`. V00.77 produziert `OidcAccessToken` und `RefreshToken` als Output des Flows.
 - **V00.75** liefert Security Event Bus. V00.77 publiziert sieben neue Event-Typen.
-- **V00.76** liefert JWT-Validierung und JWT-Signing-Helper. V00.77 nutzt Signing für `PrivateKeyJwt`-Client-Auth.
+- **V00.76** liefert JWT-**Validierung** (`NimbusJwtValidator`) — aber **kein** Signing (A.0-Korrektur). V00.77 **ergänzt** den `JwtSigner`-SPI (`jSentinel-core/jwt/api`) + `NimbusJwtSigner` (`jSentinel-jwt`) und nutzt ihn für `PrivateKeyJwt`/`ClientSecretJwt`-Client-Auth.
 - **V00.78** wird `jSentinel-oauth2` für den OIDC-Authorization-Code-Flow nutzen (`scope=openid` + ID-Token-Validierung).
 - **V00.79** wird mTLS-Client-Auth, DPoP, PAR ergänzen.
 
