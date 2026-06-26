@@ -153,6 +153,14 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
   }
 
   @Override
+  public B oauth2(Consumer<com.svenruppert.jsentinel.dx.bootstrap.OAuth2Bootstrap> config) {
+    Objects.requireNonNull(config, "config")
+        .accept(new RecordingOAuth2Bootstrap(state.oauth2State()));
+    state.markOAuth2Configured();
+    return self();
+  }
+
+  @Override
   public B logout(LogoutService service) {
     state.logoutService(Objects.requireNonNull(service, "service"));
     return self();
@@ -228,6 +236,7 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
     applyPolicyConfiguration(services, warnings);
     applyPropagationConfiguration(services, warnings);
     applyJwtConfiguration(services, warnings);
+    applyOAuth2Configuration(services, warnings);
   }
 
   /**
@@ -406,6 +415,64 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
     services.add(new RegisteredJSentinelService(
         com.svenruppert.jsentinel.jwt.api.JwtValidator.class,
         validator.getClass(), "bootstrap-jwks", false));
+  }
+
+  /**
+   * V00.77 — validate the {@link OAuth2State} recorded by {@code .oauth2(...)}
+   * and emit the Konzept §11.3 codes. The DX layer does not construct the HTTP
+   * clients (that is adapter-side in {@code jSentinel-oauth2-*}); it only
+   * enforces that a usable RP configuration was supplied. STRICT raises on
+   * {@code oauth2/missing-client-id}, {@code oauth2/missing-token-endpoint} and
+   * {@code oauth2/redirect-uri-not-https}; an empty scope is INFO only.
+   */
+  protected final void applyOAuth2Configuration(
+      List<RegisteredJSentinelService> services,
+      List<JSentinelBootstrapWarning> warnings) {
+    if (!state.oauth2Configured()) {
+      return;
+    }
+    OAuth2State oauth2 = state.oauth2State();
+    if (!oauth2.hasAnySelection()) {
+      // empty .oauth2(o -> {}) — silent on purpose
+      return;
+    }
+
+    if (oauth2.clientId() == null || oauth2.clientId().isBlank()) {
+      warnings.add(new JSentinelBootstrapWarning(Severity.ERROR, "oauth2/missing-client-id",
+          ".oauth2(...) was configured without a .clientId(...).",
+          "Add .oauth2(o -> o.clientId(\"my-rp\") ...)."));
+      return;
+    }
+    if (oauth2.tokenEndpoint() == null) {
+      warnings.add(new JSentinelBootstrapWarning(Severity.ERROR, "oauth2/missing-token-endpoint",
+          ".oauth2(...) has no .tokenEndpoint(...).",
+          "Add .tokenEndpoint(URI.create(\"https://idp.example/token\"))."));
+      return;
+    }
+    if (oauth2.redirectUri() != null && !isHttpsOrLoopback(oauth2.redirectUri())) {
+      warnings.add(new JSentinelBootstrapWarning(Severity.ERROR, "oauth2/redirect-uri-not-https",
+          ".redirectUri(" + oauth2.redirectUri() + ") is neither https nor http://localhost*.",
+          "Use an https redirect URI (or http://localhost... for local development)."));
+      return;
+    }
+    if (oauth2.scopes().isEmpty()) {
+      warnings.add(new JSentinelBootstrapWarning(Severity.INFO, "oauth2/scope-empty",
+          ".oauth2(...) requested no scopes.",
+          "Add .scope(\"openid\", \"profile\") if the IdP expects scopes."));
+    }
+
+    services.add(new RegisteredJSentinelService(
+        OAuth2State.class, OAuth2State.class, "bootstrap-oauth2", false));
+  }
+
+  private static boolean isHttpsOrLoopback(java.net.URI uri) {
+    if ("https".equalsIgnoreCase(uri.getScheme())) {
+      return true;
+    }
+    String host = uri.getHost();
+    return "http".equalsIgnoreCase(uri.getScheme())
+        && host != null
+        && ("localhost".equalsIgnoreCase(host) || "127.0.0.1".equals(host) || "[::1]".equals(host));
   }
 
   /**

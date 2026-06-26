@@ -57,6 +57,9 @@ public final class BootstrapState {
   // V00.76: JWT validation sub-aggregate.
   private boolean jwtConfigured;
   private final JwtState jwtState = new JwtState();
+  // V00.77: OAuth2 Relying-Party sub-aggregate.
+  private boolean oauth2Configured;
+  private final OAuth2State oauth2State = new OAuth2State();
 
   /** @return the typed audit sub-aggregate (V00.73) */
   public AuditState auditState() {
@@ -177,6 +180,21 @@ public final class BootstrapState {
   /** V00.76 — call after consuming {@code .jwt(...)}. */
   public void markJwtConfigured() {
     this.jwtConfigured = true;
+  }
+
+  /** V00.77 — typed OAuth2 RP sub-aggregate. */
+  public OAuth2State oauth2State() {
+    return oauth2State;
+  }
+
+  /** V00.77 — true if {@code .oauth2(...)} was called. */
+  public boolean oauth2Configured() {
+    return oauth2Configured;
+  }
+
+  /** V00.77 — call after consuming {@code .oauth2(...)}. */
+  public void markOAuth2Configured() {
+    this.oauth2Configured = true;
   }
 
   // V00.74 accessors

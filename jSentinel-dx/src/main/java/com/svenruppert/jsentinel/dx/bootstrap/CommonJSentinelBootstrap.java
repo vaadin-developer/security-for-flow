@@ -77,6 +77,20 @@ public interface CommonJSentinelBootstrap<B extends CommonJSentinelBootstrap<B>>
   B jwt(Consumer<JwtBootstrap> config);
 
   /**
+   * V00.77: declarative OAuth2 Relying-Party sub-builder. Adapter-symmetric —
+   * each adapter installs the recorded RP configuration in its {@code install()}
+   * pass (Vaadin: redirect/callback route; REST: callback handler; Standalone:
+   * device grant). The DX layer only records + STRICT-validates; the HTTP clients
+   * are assembled in the {@code jSentinel-oauth2-*} modules, so this facade stays
+   * JOSE-free.
+   *
+   * @param config non-null lambda recording into an {@link OAuth2Bootstrap}
+   * @return this builder
+   * @since 00.77.00
+   */
+  B oauth2(Consumer<OAuth2Bootstrap> config);
+
+  /**
    * V00.74: registers a logout service. Wired through
    * {@code JSentinelServiceResolver.setLogoutService(...)} by
    * {@code install()}.
