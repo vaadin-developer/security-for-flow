@@ -548,6 +548,12 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
       return;
     }
 
+    // Publish a non-secret snapshot for OidcDiagnosticContributor.
+    com.svenruppert.jsentinel.dx.diagnostics.OidcDiagnosticState.publish(
+        new com.svenruppert.jsentinel.dx.diagnostics.OidcDiagnosticState.Snapshot(
+            oidc.requireNonce(), oidc.userInfoEnabled(), oidc.logoutEnabled(),
+            !oidc.acrValues().isEmpty()));
+
     services.add(new RegisteredJSentinelService(
         OidcState.class, OidcState.class, "bootstrap-oidc", false));
   }

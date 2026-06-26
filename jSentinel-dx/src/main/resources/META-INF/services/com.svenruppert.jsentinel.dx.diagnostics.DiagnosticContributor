@@ -1,1 +1,2 @@
 com.svenruppert.jsentinel.dx.diagnostics.OAuth2DiagnosticContributor
+com.svenruppert.jsentinel.dx.diagnostics.OidcDiagnosticContributor
