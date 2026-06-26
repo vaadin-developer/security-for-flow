@@ -90,6 +90,14 @@ public final class DefaultClaimsToSubjectMapper implements ClaimsToSubjectMapper
   public JSentinelSubject map(ValidatedIdToken idToken, Optional<UserInfoResponse> userInfo) {
     Objects.requireNonNull(idToken, "idToken");
     Objects.requireNonNull(userInfo, "userInfo");
+    // R-EXIT-2 / OIDC Core §5.3.2: a UserInfo response MUST be for the same subject
+    // as the ID token, otherwise its claims must not be trusted.
+    userInfo.ifPresent(ui -> {
+      if (!idToken.subject().map(ui.subject()::equals).orElse(false)) {
+        throw new IllegalArgumentException(
+            "oidc/userinfo-sub-mismatch: UserInfo sub does not match the ID token sub");
+      }
+    });
     return new JSentinelSubject(
         buildSubjectId(idToken),
         displayName(idToken, userInfo),
@@ -103,7 +111,14 @@ public final class DefaultClaimsToSubjectMapper implements ClaimsToSubjectMapper
     if (!issuerPrefixed) {
       return sub;
     }
-    return idToken.issuer().map(iss -> iss + "#" + sub).orElse(sub);
+    // R-EXIT-1: an injective encoding — sub may legally contain '#', so a raw
+    // delimiter is ambiguous (iss="a",sub="b#c" vs iss="a#b",sub="c"). Escape '%'
+    // then '#' in both components so the '#' join cannot collide.
+    return idToken.issuer().map(iss -> escape(iss) + "#" + escape(sub)).orElse(sub);
+  }
+
+  private static String escape(String value) {
+    return value.replace("%", "%25").replace("#", "%23");
   }
 
   private static String displayName(ValidatedIdToken idToken, Optional<UserInfoResponse> userInfo) {

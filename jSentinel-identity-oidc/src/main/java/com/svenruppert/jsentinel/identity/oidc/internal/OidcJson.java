@@ -195,7 +195,17 @@ public final class OidcJson {
             if (i + 4 > s.length()) {
               throw new JsonException("truncated unicode escape");
             }
-            sb.append((char) Integer.parseInt(s.substring(i, i + 4), 16));
+            // R-EXIT: reject non-hex escapes here — Integer.parseInt would otherwise
+            // throw an uncaught NumberFormatException, escaping the Result channel.
+            int code = 0;
+            for (int h = 0; h < 4; h++) {
+              int digit = Character.digit(s.charAt(i + h), 16);
+              if (digit < 0) {
+                throw new JsonException("invalid unicode escape");
+              }
+              code = (code << 4) | digit;
+            }
+            sb.append((char) code);
             i += 4;
           }
           default -> throw new JsonException("invalid escape \\" + e);

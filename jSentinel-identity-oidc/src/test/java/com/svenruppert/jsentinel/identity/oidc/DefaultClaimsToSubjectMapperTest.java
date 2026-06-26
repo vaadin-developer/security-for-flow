@@ -112,4 +112,34 @@ class DefaultClaimsToSubjectMapperTest {
         .map(idToken(Map.of("name", "Alice")), Optional.empty());
     assertEquals("alice", s.subjectId());
   }
+
+  @Test
+  @DisplayName("R-EXIT-2: a UserInfo sub differing from the ID token sub is rejected (§5.3.2)")
+  void userInfoSubMismatchRejected() {
+    UserInfoResponse ui = new UserInfoResponse("someone-else", Map.of("sub", "someone-else"));
+    org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+        () -> new DefaultClaimsToSubjectMapper().map(idToken(Map.of()), Optional.of(ui)));
+  }
+
+  @Test
+  @DisplayName("R-EXIT-1: the issuer-prefixed subject id is injective when sub contains '#'")
+  void injectiveSubjectId() {
+    DefaultClaimsToSubjectMapper mapper = new DefaultClaimsToSubjectMapper();
+    String a = mapper.map(idTokenWith("https://a", "b#c"), Optional.empty()).subjectId();
+    String b = mapper.map(idTokenWith("https://a#b", "c"), Optional.empty()).subjectId();
+    org.junit.jupiter.api.Assertions.assertNotEquals(a, b,
+        "distinct (iss,sub) pairs must not collide on the subject id");
+  }
+
+  private static ValidatedIdToken idTokenWith(String iss, String sub) {
+    Map<String, Object> claims = new java.util.LinkedHashMap<>();
+    claims.put("iss", iss);
+    claims.put("sub", sub);
+    com.svenruppert.jsentinel.jwt.api.ValidatedJwt jwt =
+        new com.svenruppert.jsentinel.jwt.api.ValidatedJwt("c",
+            new com.svenruppert.jsentinel.jwt.api.JoseHeader("RS256", Optional.empty(), Optional.empty()),
+            claims, Instant.now());
+    return new ValidatedIdToken(jwt, Optional.empty(), Optional.empty(),
+        Optional.empty(), List.of(), Optional.empty(), Optional.empty());
+  }
 }

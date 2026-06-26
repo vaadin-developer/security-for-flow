@@ -109,7 +109,10 @@ public final class DefaultIdTokenValidator implements IdTokenValidator {
     // 2. nonce — must equal the value bound at authorization time.
     if (expectations.expectedNonce().isPresent()) {
       Optional<String> nonce = jwt.claim("nonce", String.class);
-      if (!expectations.expectedNonce().equals(nonce)) {
+      // R-EXIT: constant-time compare (consistency with the hash checks); a missing
+      // nonce claim is rejected.
+      if (nonce.isEmpty()
+          || !constantTimeEquals(expectations.expectedNonce().get(), nonce.get())) {
         return Result.failure(new IdTokenValidationError.NonceMismatch());
       }
     }

@@ -95,6 +95,13 @@ class OidcJsonTest {
   }
 
   @Test
+  @DisplayName("R-EXIT: a non-hex \\u escape is a JsonException, not an uncaught NumberFormatException")
+  void invalidUnicodeEscape() {
+    assertThrows(OidcJson.JsonException.class, () -> OidcJson.parse("{\"k\":\"\\uZZZZ\"}"));
+    assertThrows(OidcJson.JsonException.class, () -> OidcJson.parse("{\"k\":\"\\u00+1\"}"));
+  }
+
+  @Test
   @DisplayName("caps nesting depth (defence against stack-exhausting input)")
   void capsDepth() {
     StringBuilder deep = new StringBuilder();
