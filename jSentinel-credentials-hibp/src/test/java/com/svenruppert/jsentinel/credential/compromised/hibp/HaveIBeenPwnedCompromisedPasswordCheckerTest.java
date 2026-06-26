@@ -134,6 +134,44 @@ class HaveIBeenPwnedCompromisedPasswordCheckerTest {
   }
 
   @Test
+  @DisplayName("R12: an oversized range body is bounded and degrades to a NETWORK failure (no OOM)")
+  void oversizedBodyIsBoundedAsNetworkFailure() throws Exception {
+    com.sun.net.httpserver.HttpServer server = com.sun.net.httpserver.HttpServer.create(
+        new java.net.InetSocketAddress("127.0.0.1", 0), 0);
+    server.createContext("/range/", exchange -> {
+      // 2 MiB of body — well past the 1 MiB cap. A hostile/compromised mirror
+      // could stream far more; the checker must not buffer it whole.
+      int size = 2 * 1024 * 1024;
+      exchange.sendResponseHeaders(200, size);
+      byte[] chunk = new byte[8192];
+      java.util.Arrays.fill(chunk, (byte) 'A');
+      try (java.io.OutputStream os = exchange.getResponseBody()) {
+        int written = 0;
+        while (written < size) {
+          int n = Math.min(chunk.length, size - written);
+          os.write(chunk, 0, n);
+          written += n;
+        }
+      }
+    });
+    server.start();
+    try {
+      java.net.URI endpoint = java.net.URI.create(
+          "http://127.0.0.1:" + server.getAddress().getPort() + "/range/");
+      HaveIBeenPwnedCompromisedPasswordChecker checker =
+          HaveIBeenPwnedCompromisedPasswordChecker.usingJdkHttpClient(
+              endpoint, java.time.Duration.ofSeconds(5));
+      CompromisedPasswordResult result = checker.check(SecretValue.ofString("hunter222"));
+      CompromisedPasswordResult.CheckFailed failed =
+          assertInstanceOf(CompromisedPasswordResult.CheckFailed.class, result,
+              "an over-cap body must degrade to a failure, never report pwned/clean");
+      assertEquals(CompromisedPasswordResult.FailureReason.NETWORK, failed.reason());
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
   @DisplayName("usingJdkHttpClient sends the Add-Padding: true header (R022)")
   void sendsAddPaddingHeader() throws Exception {
     com.sun.net.httpserver.HttpServer server = com.sun.net.httpserver.HttpServer.create(

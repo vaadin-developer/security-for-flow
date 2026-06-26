@@ -95,9 +95,16 @@ public final class HaveIBeenPwnedCompromisedPasswordChecker
       URI endpoint, Duration timeout) {
     Objects.requireNonNull(endpoint, "endpoint");
     Objects.requireNonNull(timeout, "timeout");
+    // R12 (V00.76.10): cap the response body so a hostile / compromised mirror
+    // (operators may repoint the endpoint) cannot return a multi-GB body and OOM
+    // the verifying JVM. A padded HIBP range response is a few tens of KB; 1 MiB
+    // sits far above any legitimate response.
+    final int maxRangeBytes = 1024 * 1024;
     HttpClient http = HttpClient.newBuilder()
         .connectTimeout(timeout)
-        .followRedirects(HttpClient.Redirect.NORMAL)
+        // R12: never follow redirects — the HIBP range API does not redirect, and
+        // a redirect from a hostile mirror is a request-forwarding / SSRF vector.
+        .followRedirects(HttpClient.Redirect.NEVER)
         .build();
     Function<String, RangeResponse> lookup = prefix -> {
       try {
@@ -111,8 +118,8 @@ public final class HaveIBeenPwnedCompromisedPasswordChecker
             .header("Add-Padding", "true")
             .GET()
             .build();
-        HttpResponse<String> res = http.send(req,
-            HttpResponse.BodyHandlers.ofString(StandardCharsets.US_ASCII));
+        HttpResponse<java.io.InputStream> res = http.send(req,
+            HttpResponse.BodyHandlers.ofInputStream());
         if (res.statusCode() == 429) {
           return new RangeResponse(null,
               CompromisedPasswordResult.FailureReason.RATE_LIMITED);
@@ -121,7 +128,17 @@ public final class HaveIBeenPwnedCompromisedPasswordChecker
           return new RangeResponse(null,
               CompromisedPasswordResult.FailureReason.NETWORK);
         }
-        return new RangeResponse(res.body(), null);
+        // R12: read at most maxRangeBytes + 1; a body over the cap is treated as
+        // a network failure rather than buffered into the heap.
+        byte[] body;
+        try (java.io.InputStream in = res.body()) {
+          body = in.readNBytes(maxRangeBytes + 1);
+        }
+        if (body.length > maxRangeBytes) {
+          return new RangeResponse(null,
+              CompromisedPasswordResult.FailureReason.NETWORK);
+        }
+        return new RangeResponse(new String(body, StandardCharsets.US_ASCII), null);
       } catch (java.net.http.HttpTimeoutException timeoutEx) {
         return new RangeResponse(null,
             CompromisedPasswordResult.FailureReason.TIMEOUT);
