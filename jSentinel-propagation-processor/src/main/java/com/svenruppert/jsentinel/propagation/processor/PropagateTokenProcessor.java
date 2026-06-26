@@ -23,7 +23,9 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
@@ -63,6 +65,7 @@ public final class PropagateTokenProcessor extends AbstractProcessor {
 
   private Filer filer;
   private Messager messager;
+  private Types types;
 
   public PropagateTokenProcessor() {
   }
@@ -72,6 +75,7 @@ public final class PropagateTokenProcessor extends AbstractProcessor {
     super.init(env);
     this.filer = env.getFiler();
     this.messager = env.getMessager();
+    this.types = env.getTypeUtils();
   }
 
   @Override
@@ -177,7 +181,7 @@ public final class PropagateTokenProcessor extends AbstractProcessor {
       if (!mods.contains(Modifier.PUBLIC)) continue;
       if (mods.contains(Modifier.FINAL) || mods.contains(Modifier.STATIC)) continue;
       ExecutableElement m = (ExecutableElement) member;
-      methods.add(MethodSpec.from(m));
+      methods.add(MethodSpec.from(m, types));
     }
     return methods;
   }
@@ -206,48 +210,93 @@ public final class PropagateTokenProcessor extends AbstractProcessor {
   }
 
   /** Minimal data carrier for one to-be-overridden method. */
-  private record MethodSpec(String name,
+  private record MethodSpec(String typeParams,
+                            String name,
                             String returnType,
                             boolean voidReturn,
                             List<Param> params,
-                            List<String> thrown,
-                            boolean propagateOnMethod) {
+                            List<String> thrown) {
 
-    static MethodSpec from(ExecutableElement m) {
-      List<Param> params = m.getParameters().stream()
-          .map(p -> new Param(p.asType().toString(), p.getSimpleName().toString()))
-          .toList();
+    static MethodSpec from(ExecutableElement m, Types types) {
+      // R17 (V00.76.10): render the method's own type parameters (with bounds)
+      // so a generic method like `<T extends Foo> void m(T t)` is overridden with
+      // a matching signature — the old generator dropped them and emitted an
+      // uncompilable `T.class`, breaking the consuming build.
+      String typeParams = "";
+      if (!m.getTypeParameters().isEmpty()) {
+        typeParams = m.getTypeParameters().stream().map(tp -> {
+          String tpName = tp.getSimpleName().toString();
+          String bounds = tp.getBounds().stream()
+              .map(TypeMirror::toString)
+              .filter(b -> !b.equals("java.lang.Object"))
+              .collect(Collectors.joining(" & "));
+          return bounds.isEmpty() ? tpName : tpName + " extends " + bounds;
+        }).collect(Collectors.joining(", ", "<", "> "));
+      }
+
+      boolean varargs = m.isVarArgs();
+      List<? extends VariableElement> ps = m.getParameters();
+      List<Param> params = new ArrayList<>();
+      for (int i = 0; i < ps.size(); i++) {
+        VariableElement p = ps.get(i);
+        // The signature uses the parameter's declared (generic) type; the
+        // reflective getMethod(...) lookup uses the ERASURE so a type variable
+        // resolves to its bound (java.lang.Object by default) — a valid `.class`
+        // literal that matches the erased method signature reflection sees.
+        String declaredType = p.asType().toString();
+        String erased = types.erasure(p.asType()).toString();
+        boolean lastVararg = varargs && i == ps.size() - 1;
+        params.add(new Param(declaredType, erased, p.getSimpleName().toString(), lastVararg));
+      }
+
       List<String> thrown = m.getThrownTypes().stream()
           .map(TypeMirror::toString)
           .toList();
       TypeMirror ret = m.getReturnType();
       boolean voidReturn = ret.toString().equals("void");
       String returnType = ret.toString();
-      boolean methodAnnotated = m.getAnnotation(
-          com.svenruppert.jsentinel.annotations.PropagateToken.class) != null;
-      return new MethodSpec(m.getSimpleName().toString(),
-          returnType, voidReturn, params, thrown, methodAnnotated);
+      return new MethodSpec(typeParams, m.getSimpleName().toString(),
+          returnType, voidReturn, params, thrown);
     }
 
     String render(String sourceSimpleName) {
       StringBuilder sb = new StringBuilder();
-      String paramList = params.stream()
-          .map(p -> p.type() + " " + p.name())
-          .collect(Collectors.joining(", "));
+      // Signature: render the last parameter as varargs (`T... name`) when the
+      // overridden method is varargs, so the override stays varargs-compatible.
+      String paramSig = params.stream().map(p -> {
+        if (p.vararg()) {
+          String base = p.declaredType().endsWith("[]")
+              ? p.declaredType().substring(0, p.declaredType().length() - 2)
+              : p.declaredType();
+          return base + "... " + p.name();
+        }
+        return p.declaredType() + " " + p.name();
+      }).collect(Collectors.joining(", "));
       String argList = params.stream()
           .map(Param::name)
           .collect(Collectors.joining(", "));
       String throwsClause = thrown.isEmpty() ? ""
           : " throws " + String.join(", ", thrown);
       sb.append("  @Override\n")
-        .append("  public ").append(returnType).append(' ').append(name)
-        .append('(').append(paramList).append(')').append(throwsClause).append(" {\n");
-      sb.append("    PropagateToken __ann = ").append(sourceSimpleName)
+        .append("  public ").append(typeParams).append(returnType).append(' ').append(name)
+        .append('(').append(paramSig).append(')').append(throwsClause).append(" {\n");
+      // The reflective method lookup obtains the @PropagateToken instance the
+      // advisor needs (strategy()/header()/audience()). The try/catch is emitted
+      // inline — the prior version post-processed the body with a fragile
+      // String.replace (R18). sourceSimpleName + name are Java identifiers, which
+      // cannot contain quote/backslash, so emitting them as literals is safe; the
+      // erased `.class` literals are framework/JDK type names, never user strings.
+      sb.append("    PropagateToken __ann;\n");
+      sb.append("    try {\n");
+      sb.append("      __ann = ").append(sourceSimpleName)
         .append(".class.getMethod(\"").append(name).append('"');
       for (Param p : params) {
-        sb.append(", ").append(eraseGenerics(p.type())).append(".class");
+        sb.append(", ").append(p.erasedClass()).append(".class");
       }
       sb.append(").getAnnotation(PropagateToken.class);\n");
+      sb.append("    } catch (NoSuchMethodException __e) {\n");
+      sb.append("      throw new RuntimeException(__e);\n");
+      sb.append("    }\n");
       sb.append("    if (__ann == null) __ann = ")
         .append(sourceSimpleName).append(".class.getAnnotation(PropagateToken.class);\n");
       sb.append("    if (__ann != null) {\n");
@@ -271,30 +320,10 @@ public final class PropagateTokenProcessor extends AbstractProcessor {
       sb.append("    ").append(voidReturn ? "" : "return ")
         .append("super.").append(name).append('(').append(argList).append(");\n");
       sb.append("  }\n\n");
-      // The Method-lookup uses reflection. To avoid NoSuchMethodException
-      // showing up as a checked exception, the generated method declares
-      // `throws Exception` on top of the original throws clause when the
-      // original doesn't already. We add the broadest superset.
-      return wrapNoSuchMethod(sb.toString());
-    }
-
-    private static String eraseGenerics(String t) {
-      int idx = t.indexOf('<');
-      return idx < 0 ? t : t.substring(0, idx);
-    }
-
-    private static String wrapNoSuchMethod(String body) {
-      // Quick hack: wrap the body so reflective lookup raises a runtime
-      // exception rather than requiring callers to declare throws.
-      return body.replace(
-          "PropagateToken __ann = ",
-          "PropagateToken __ann; try { __ann = ")
-          .replace(
-              ".getAnnotation(PropagateToken.class);\n",
-              ".getAnnotation(PropagateToken.class); } catch (NoSuchMethodException __e) { throw new RuntimeException(__e); }\n");
+      return sb.toString();
     }
   }
 
-  private record Param(String type, String name) {
+  private record Param(String declaredType, String erasedClass, String name, boolean vararg) {
   }
 }

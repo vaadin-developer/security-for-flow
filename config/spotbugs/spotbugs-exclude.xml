@@ -97,9 +97,12 @@
        generator emits Java source at COMPILE time from compile-time-known
        method identifiers and parameter names (never runtime/attacker input);
        Java identifiers cannot contain the quote/markup chars the detector
-       fears. It is a build-time code generator, not a request path. The codegen
-       robustness/escaping invariant is tracked as a real hardening task
-       (V00.76.10 R17/R18); this exclude can be dropped once that rewrite lands.
+       fears. It is a build-time code generator, not a request path. V00.76.10
+       R17/R18 hardened the generator (compile-time type-parameter rendering,
+       Types.erasure for the reflective .class literals, inline try/catch instead
+       of a fragile String.replace) — but the StringBuilder-builds-source pattern
+       remains, so the detector still fires. The values emitted as literals are
+       provably safe identifiers, so this is a permanent justified exclude.
        Scoped to the processor class.
   -->
   <Match>
