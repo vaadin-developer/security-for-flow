@@ -461,6 +461,17 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
           "Add .scope(\"openid\", \"profile\") if the IdP expects scopes."));
     }
 
+    // Publish a non-secret snapshot for OAuth2DiagnosticContributor (Konzept §13.3).
+    boolean publicClient = oauth2.clientAuthentication() == null
+        || oauth2.clientAuthentication()
+            instanceof com.svenruppert.jsentinel.oauth2.api.ClientAuthentication.NoneAuthentication;
+    boolean introspectionCacheDisabled = oauth2.introspectionCacheTtl() != null
+        && oauth2.introspectionCacheTtl().isZero();
+    com.svenruppert.jsentinel.dx.diagnostics.OAuth2DiagnosticState.publish(
+        new com.svenruppert.jsentinel.dx.diagnostics.OAuth2DiagnosticState.Snapshot(
+            publicClient, oauth2.pkceRequired(),
+            oauth2.introspectionEndpoint() != null, introspectionCacheDisabled));
+
     services.add(new RegisteredJSentinelService(
         OAuth2State.class, OAuth2State.class, "bootstrap-oauth2", false));
   }
