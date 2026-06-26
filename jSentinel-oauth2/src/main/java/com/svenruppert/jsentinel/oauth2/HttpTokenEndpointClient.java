@@ -49,6 +49,8 @@ import com.svenruppert.jsentinel.oauth2.api.OAuth2Error;
 import com.svenruppert.jsentinel.oauth2.api.PkceVerifier;
 import com.svenruppert.jsentinel.oauth2.api.TokenEndpointClient;
 import com.svenruppert.jsentinel.oauth2.api.TokenResponse;
+import com.svenruppert.jsentinel.oauth2.internal.ClientAssertions;
+import com.svenruppert.jsentinel.oauth2.internal.JwtSigners;
 import com.svenruppert.jsentinel.oauth2.internal.OAuth2Json;
 
 import java.io.IOException;
@@ -214,10 +216,10 @@ public final class HttpTokenEndpointClient implements TokenEndpointClient {
         form.put("client_secret", new String(post.secret().asUtf8Bytes(), StandardCharsets.UTF_8));
       }
       case ClientAuthentication.NoneAuthentication none -> form.put("client_id", none.clientId());
-      case ClientAuthentication.PrivateKeyJwt ignored ->
-          throw new IllegalStateException("private_key_jwt is wired in V00.77 phase 6");
-      case ClientAuthentication.ClientSecretJwt ignored ->
-          throw new IllegalStateException("client_secret_jwt is wired in V00.77 phase 6");
+      case ClientAuthentication.PrivateKeyJwt pk ->
+          ClientAssertions.applyPrivateKeyJwt(pk, tokenEndpoint, clock, JwtSigners.require(), form);
+      case ClientAuthentication.ClientSecretJwt cs ->
+          ClientAssertions.applyClientSecretJwt(cs, tokenEndpoint, clock, form);
     }
   }
 

@@ -130,7 +130,10 @@ class HttpAuthorizationCodeFlowTest {
     assertTrue(url.contains("code_challenge_method=S256"));
     assertTrue(url.contains("code_challenge="));
     assertTrue(url.contains("state=" + req.stateKey()));
-    assertTrue(url.contains("scope=openid+profile") || url.contains("scope=openid%20profile"));
+    // scope order follows the config Set's iteration order (unspecified per RFC 6749 §3.3),
+    // so assert both tokens are present regardless of order / space encoding (+ or %20).
+    assertTrue(url.contains("scope="), url);
+    assertTrue(url.contains("openid") && url.contains("profile"), url);
     assertTrue(store.size() == 1, "the state must be bound exactly once");
   }
 

@@ -55,6 +55,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Map;
@@ -101,7 +102,7 @@ public final class OAuth2FormPost {
         .timeout(TIMEOUT)
         .header("Accept", "application/json")
         .header("Content-Type", "application/x-www-form-urlencoded");
-    applyClientAuth(auth, form, request);
+    applyClientAuth(auth, endpoint, form, request);
 
     HttpResponse<InputStream> response;
     try {
@@ -127,8 +128,8 @@ public final class OAuth2FormPost {
     }
   }
 
-  private static void applyClientAuth(ClientAuthentication auth, Map<String, String> form,
-      HttpRequest.Builder request) {
+  private static void applyClientAuth(ClientAuthentication auth, URI endpoint,
+      Map<String, String> form, HttpRequest.Builder request) {
     switch (auth) {
       case ClientAuthentication.ClientSecretBasic basic ->
           request.header("Authorization", basicHeader(basic.clientId(), basic.secret()));
@@ -137,10 +138,10 @@ public final class OAuth2FormPost {
         form.put("client_secret", new String(post.secret().asUtf8Bytes(), StandardCharsets.UTF_8));
       }
       case ClientAuthentication.NoneAuthentication none -> form.put("client_id", none.clientId());
-      case ClientAuthentication.PrivateKeyJwt ignored ->
-          throw new IllegalStateException("private_key_jwt is wired in V00.77 phase 6");
-      case ClientAuthentication.ClientSecretJwt ignored ->
-          throw new IllegalStateException("client_secret_jwt is wired in V00.77 phase 6");
+      case ClientAuthentication.PrivateKeyJwt pk ->
+          ClientAssertions.applyPrivateKeyJwt(pk, endpoint, Instant::now, JwtSigners.require(), form);
+      case ClientAuthentication.ClientSecretJwt cs ->
+          ClientAssertions.applyClientSecretJwt(cs, endpoint, Instant::now, form);
     }
   }
 
