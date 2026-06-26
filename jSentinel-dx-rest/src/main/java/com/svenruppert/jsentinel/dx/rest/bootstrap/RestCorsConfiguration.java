@@ -64,4 +64,18 @@ public record RestCorsConfiguration(
     allowedHeaders = List.copyOf(allowedHeaders);
     exposedHeaders = List.copyOf(exposedHeaders);
   }
+
+  /**
+   * Whether this snapshot is the dangerous credentialed-wildcard combination —
+   * {@code Access-Control-Allow-Credentials: true} together with a wildcard
+   * {@code "*"} origin. That pair is forbidden by the CORS spec (browsers reject
+   * it) and, if a server reflected it, an account-takeover hole. The bootstrap
+   * uses this to warn in every mode, throw in STRICT, and — R15 (V00.76.10) —
+   * refuse to publish it live in PRODUCTION.
+   *
+   * @return {@code true} iff credentials are allowed alongside a wildcard origin
+   */
+  public boolean isCredentialedWildcard() {
+    return allowCredentials && allowedOrigins.contains("*");
+  }
 }

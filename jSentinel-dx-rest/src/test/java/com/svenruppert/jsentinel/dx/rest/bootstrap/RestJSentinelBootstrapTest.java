@@ -213,6 +213,44 @@ class RestJSentinelBootstrapTest {
   }
 
   @Test
+  void cors_wildcardWithCredentials_notPublishedInProduction() {
+    // R15 (V00.76.10): PRODUCTION records the ERROR warning AND refuses to
+    // publish the dangerous credentialed-wildcard config live — CORS stays
+    // unconfigured (the safe default), mirroring the JWKS PRODUCTION refusal.
+    RestCorsContext.reset();
+    JSentinelRuntime runtime = RestSecurity.bootstrap()
+        .mode(JSentinelBootstrapMode.PRODUCTION)
+        .authentication(FakeAuthenticationService.forType(String.class))
+        .authorization(new FakeAuthorizationService<String>())
+        .subjectResolver(TEST_RESOLVER)
+        .cors(c -> c.allowedOrigins("*").allowCredentials(true))
+        .install();
+
+    assertTrue(runtime.warnings().stream()
+            .anyMatch(w -> "cors/wildcard-with-credentials".equals(w.code())),
+        "PRODUCTION must still surface the credentialed-wildcard warning");
+    assertTrue(RestCorsContext.configuration().isEmpty(),
+        "PRODUCTION must NOT publish the dangerous credentialed-wildcard config live");
+  }
+
+  @Test
+  void cors_explicitOriginWithCredentials_publishedInProduction() {
+    // Control: a credentialed config with explicit origins (no wildcard) is
+    // valid and must still publish in PRODUCTION.
+    RestCorsContext.reset();
+    RestSecurity.bootstrap()
+        .mode(JSentinelBootstrapMode.PRODUCTION)
+        .authentication(FakeAuthenticationService.forType(String.class))
+        .authorization(new FakeAuthorizationService<String>())
+        .subjectResolver(TEST_RESOLVER)
+        .cors(c -> c.allowedOrigins("https://app.example.com").allowCredentials(true))
+        .install();
+
+    assertTrue(RestCorsContext.configuration().isPresent(),
+        "explicit-origin credentialed CORS must still publish in PRODUCTION");
+  }
+
+  @Test
   void openApiMetadata_publishesAndRuntimeEntry() {
     RestOpenApiContext.reset();
     JSentinelRuntime runtime = RestSecurity.bootstrap()

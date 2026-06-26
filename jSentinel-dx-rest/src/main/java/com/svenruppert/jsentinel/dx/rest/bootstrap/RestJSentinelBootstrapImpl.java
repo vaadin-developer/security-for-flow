@@ -180,8 +180,8 @@ final class RestJSentinelBootstrapImpl
       // "Access-Control-Allow-Origin: *" together with
       // "Access-Control-Allow-Credentials: true". Flag it as an ERROR so STRICT
       // mode rejects it; other modes record the warning.
-      if (corsConfiguration.allowCredentials()
-          && corsConfiguration.allowedOrigins().contains("*")) {
+      boolean credentialedWildcard = corsConfiguration.isCredentialedWildcard();
+      if (credentialedWildcard) {
         warnings.add(new JSentinelBootstrapWarning(
             Severity.ERROR,
             "cors/wildcard-with-credentials",
@@ -190,10 +190,24 @@ final class RestJSentinelBootstrapImpl
             "Browsers reject this combination. List explicit allowedOrigins(...) "
                 + "instead of \"*\", or disable allowCredentials."));
       }
-      RestCorsContext.publish(corsConfiguration);
-      services.add(new RegisteredJSentinelService(
-          RestCorsContext.class, RestCorsConfiguration.class,
-          "bootstrap-cors", false));
+      // R15 (V00.76.10): in PRODUCTION, do NOT publish the dangerous
+      // credentialed-wildcard config live — leave CORS unconfigured (no
+      // cross-origin headers, the safe default) and rely on the ERROR warning
+      // above, mirroring how the JWKS trust-root is refused in PRODUCTION (R11).
+      // STRICT throws on the ERROR below; DEVELOPMENT / COMMUNITY_DEFAULTS still
+      // publish so local cross-origin testing keeps working with the warning.
+      boolean refusePublish = credentialedWildcard
+          && state.mode() == JSentinelBootstrapMode.PRODUCTION;
+      if (refusePublish) {
+        services.add(new RegisteredJSentinelService(
+            RestCorsContext.class, RestCorsConfiguration.class,
+            "bootstrap-cors-refused-credentialed-wildcard", false));
+      } else {
+        RestCorsContext.publish(corsConfiguration);
+        services.add(new RegisteredJSentinelService(
+            RestCorsContext.class, RestCorsConfiguration.class,
+            "bootstrap-cors", false));
+      }
     }
     // V00.74 (A2.2): publish OpenAPI metadata when configured.
     if (openApiMetadata != null) {
