@@ -16,7 +16,9 @@
  */
 package com.svenruppert.jsentinel.dx.standalone.bootstrap;
 
-import com.svenruppert.jsentinel.authorization.api.JSentinelSubject;
+import com.svenruppert.jsentinel.authentication.AuthenticationService;
+import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.jsentinel.authorization.api.SubjectStore;
 import com.svenruppert.jsentinel.authorization.api.SubjectStores;
 
 import java.util.Objects;
@@ -88,27 +90,44 @@ public final class StandaloneThreadPropagationContext {
     @Override
     public void execute(Runnable command) {
       Objects.requireNonNull(command, "command");
-      JSentinelSubject captured = SubjectStores.findSubjectStore()
-          .flatMap(s -> s.currentSubject(JSentinelSubject.class))
+      // R13 (V00.76.10): the subject is bound in the store under the application's
+      // subject type (AuthenticationService.subjectType(), e.g. User.class) — see
+      // StandaloneLoginFlow#login — NOT under JSentinelSubject.class. Capturing
+      // and rebinding under JSentinelSubject.class therefore always missed, so the
+      // propagated worker ran with no subject: fail-closed, but the advertised
+      // .threadPropagation(t -> t.inheritOnSubmit()) feature was silently dead.
+      // Resolve the same type key the login flow uses.
+      Class<?> subjectType = JSentinelServiceResolver.findAuthenticationService()
+          .map(AuthenticationService::subjectType)
           .orElse(null);
+      Object captured = subjectType == null
+          ? null
+          : SubjectStores.findSubjectStore()
+              .flatMap(s -> s.currentSubject(subjectType))
+              .orElse(null);
       delegate.execute(() -> {
         if (captured == null) {
           command.run();
           return;
         }
-        var store = SubjectStores.subjectStore();
-        JSentinelSubject prior = store.currentSubject(JSentinelSubject.class).orElse(null);
-        store.setCurrentSubject(captured, JSentinelSubject.class);
+        SubjectStore store = SubjectStores.subjectStore();
+        Object prior = store.currentSubject(subjectType).orElse(null);
+        bind(store, captured, subjectType);
         try {
           command.run();
         } finally {
           if (prior != null) {
-            store.setCurrentSubject(prior, JSentinelSubject.class);
+            bind(store, prior, subjectType);
           } else {
-            store.deleteCurrentSubject(JSentinelSubject.class);
+            store.deleteCurrentSubject(subjectType);
           }
         }
       });
+    }
+
+    /** Bridges the {@code Class<?>} key to the store's {@code <T>} setter. */
+    private static <T> void bind(SubjectStore store, Object subject, Class<T> type) {
+      store.setCurrentSubject(type.cast(subject), type);
     }
   }
 }

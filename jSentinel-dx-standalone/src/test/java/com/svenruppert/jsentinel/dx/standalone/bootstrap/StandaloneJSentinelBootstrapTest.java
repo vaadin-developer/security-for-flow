@@ -144,26 +144,61 @@ class StandaloneJSentinelBootstrapTest {
         .threadPropagation(t -> t.inheritOnSubmit())
         .install();
 
-    var subject = new com.svenruppert.jsentinel.authorization.api.JSentinelSubject(
-        "alice", "Alice", java.util.Set.of(), java.util.Set.of());
-    com.svenruppert.jsentinel.authorization.api.SubjectStores.subjectStore()
-        .setCurrentSubject(subject, com.svenruppert.jsentinel.authorization.api.JSentinelSubject.class);
+    // R13: bind the subject under the application's subject type (String here),
+    // exactly the way StandaloneLoginFlow#login does — NOT under
+    // JSentinelSubject.class. Before the fix the propagation captured under
+    // JSentinelSubject.class and so missed real logins, leaving the worker
+    // unbound ("<unbound>") even though the feature looked wired.
+    SubjectStores.subjectStore().setCurrentSubject("alice", String.class);
 
     var pool = java.util.concurrent.Executors.newSingleThreadExecutor();
     try {
       java.util.concurrent.Executor wrapped = StandaloneThreadPropagationContext.wrap(pool);
       java.util.concurrent.CompletableFuture<String> observed = new java.util.concurrent.CompletableFuture<>();
       wrapped.execute(() -> observed.complete(
-          com.svenruppert.jsentinel.authorization.api.SubjectStores.findSubjectStore()
-              .flatMap(st -> st.currentSubject(
-                  com.svenruppert.jsentinel.authorization.api.JSentinelSubject.class))
-              .map(com.svenruppert.jsentinel.authorization.api.JSentinelSubject::subjectId)
+          SubjectStores.findSubjectStore()
+              .flatMap(st -> st.currentSubject(String.class))
               .orElse("<unbound>")));
-      assertEquals("alice", observed.get(2, java.util.concurrent.TimeUnit.SECONDS));
+      assertEquals("alice", observed.get(2, java.util.concurrent.TimeUnit.SECONDS),
+          "the worker must see the subject bound under the application subject type");
     } finally {
       pool.shutdownNow();
-      com.svenruppert.jsentinel.authorization.api.SubjectStores.subjectStore()
-          .deleteCurrentSubject(com.svenruppert.jsentinel.authorization.api.JSentinelSubject.class);
+      SubjectStores.subjectStore().deleteCurrentSubject(String.class);
+    }
+  }
+
+  @Test
+  void threadPropagation_inheritOnSubmit_restoresWorkerPriorBinding() throws Exception {
+    // A worker with no prior binding must be left clean (deleteCurrentSubject)
+    // after a propagated task. This requires per-thread semantics, so use the
+    // real ThreadLocalSubjectStore (the SPI default) — not the shared
+    // InMemorySubjectStore, where every thread sees the same binding.
+    StandaloneThreadPropagationContext.reset();
+    StandaloneSecurity.bootstrap()
+        .authentication(FakeAuthenticationService.forType(String.class))
+        .authorization(new FakeAuthorizationService<String>())
+        .subjectStore(new ThreadLocalSubjectStore())
+        .threadPropagation(t -> t.inheritOnSubmit())
+        .install();
+    SubjectStores.subjectStore().setCurrentSubject("submitter", String.class);
+
+    var pool = java.util.concurrent.Executors.newSingleThreadExecutor();
+    try {
+      java.util.concurrent.Executor wrapped = StandaloneThreadPropagationContext.wrap(pool);
+      // run once so the single worker thread has executed a propagated task
+      java.util.concurrent.CompletableFuture<String> first = new java.util.concurrent.CompletableFuture<>();
+      wrapped.execute(() -> first.complete(
+          SubjectStores.findSubjectStore().flatMap(st -> st.currentSubject(String.class)).orElse("<unbound>")));
+      assertEquals("submitter", first.get(2, java.util.concurrent.TimeUnit.SECONDS));
+      // the worker thread must be clean again (no prior binding -> deleted)
+      java.util.concurrent.CompletableFuture<String> after = new java.util.concurrent.CompletableFuture<>();
+      pool.execute(() -> after.complete(
+          SubjectStores.findSubjectStore().flatMap(st -> st.currentSubject(String.class)).orElse("<clean>")));
+      assertEquals("<clean>", after.get(2, java.util.concurrent.TimeUnit.SECONDS),
+          "the worker's binding must be cleared after a propagated task with no prior binding");
+    } finally {
+      pool.shutdownNow();
+      SubjectStores.subjectStore().deleteCurrentSubject(String.class);
     }
   }
 
