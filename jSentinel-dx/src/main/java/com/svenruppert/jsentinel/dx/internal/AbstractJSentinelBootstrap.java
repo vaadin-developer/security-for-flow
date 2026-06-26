@@ -327,9 +327,14 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
     }
 
     if (!"https".equalsIgnoreCase(jwt.jwksUri().getScheme())) {
+      // R11 (V00.76.10): a non-https JWKS URI fetches the entire JWT trust root
+      // over cleartext, where a MITM can substitute its own JWKS and forge
+      // tokens that pass the allow-list + family + signature checks against the
+      // attacker's key. That must not be a mere warning in PRODUCTION — it is an
+      // ERROR there too (was WARNING). Only the local dev modes (DEVELOPMENT /
+      // COMMUNITY_DEFAULTS) keep it at INFO so loopback http works for local IdPs.
       Severity severity = switch (state.mode()) {
-        case STRICT -> Severity.ERROR;
-        case PRODUCTION -> Severity.WARNING;
+        case STRICT, PRODUCTION -> Severity.ERROR;
         default -> Severity.INFO;
       };
       warnings.add(new JSentinelBootstrapWarning(severity, "jwks/uri-not-https",

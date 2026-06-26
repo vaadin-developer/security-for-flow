@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -102,6 +103,30 @@ class JwtBootstrapTest {
             .algorithmProfile(AlgorithmProfile.STRICT_MODERN))
         .applyJwt();
     assertTrue(hasError(warnings, "jwks/uri-not-https"));
+  }
+
+  @Test
+  @DisplayName("R11: a non-https JWKS URI is also an ERROR in PRODUCTION mode (was WARNING)")
+  void nonHttpsJwksUriIsErrorInProduction() {
+    List<JSentinelBootstrapWarning> warnings = new TestBootstrap()
+        .mode(JSentinelBootstrapMode.PRODUCTION)
+        .jwt(j -> j.jwksUri(URI.create("http://idp.example/jwks"))
+            .algorithmProfile(AlgorithmProfile.STRICT_MODERN))
+        .applyJwt();
+    assertTrue(hasError(warnings, "jwks/uri-not-https"),
+        "PRODUCTION must reject a cleartext JWKS trust root, not merely warn");
+  }
+
+  @Test
+  @DisplayName("R11: a non-https JWKS URI is NOT an error in DEVELOPMENT (loopback http stays allowed)")
+  void nonHttpsJwksUriIsNotErrorInDevelopment() {
+    List<JSentinelBootstrapWarning> warnings = new TestBootstrap()
+        .mode(JSentinelBootstrapMode.DEVELOPMENT)
+        .jwt(j -> j.jwksUri(URI.create("http://localhost/jwks"))
+            .algorithmProfile(AlgorithmProfile.STRICT_MODERN))
+        .applyJwt();
+    assertFalse(hasError(warnings, "jwks/uri-not-https"),
+        "DEVELOPMENT keeps non-https at INFO so local/loopback IdPs work");
   }
 
   @Test
