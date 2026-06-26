@@ -27,12 +27,12 @@ package com.svenruppert.jsentinel.identity.oidc;
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
  * EUPL (the "Licence");
- *
+ * 
  * You may not use this work except in compliance with the Licence.
  * You may obtain a copy of the Licence at:
- *
+ * 
  * http://ec.europa.eu/idabc/eupl5
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the Licence is distributed on an "AS IS" basis,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,25 +41,40 @@ package com.svenruppert.jsentinel.identity.oidc;
  * #L%
  */
 
-import com.svenruppert.jsentinel.authorization.api.permissions.PermissionName;
-import com.svenruppert.jsentinel.oidc.api.ClaimsToPermissionsMapper;
-import com.svenruppert.jsentinel.oidc.api.UserInfoResponse;
-import com.svenruppert.jsentinel.oidc.api.ValidatedIdToken;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.svenruppert.jsentinel.oidc.api.LogoutRequest;
+
+import java.net.URI;
 import java.util.Optional;
-import java.util.Set;
 
-/** The spec-clean default: no permissions (V00.78). */
-public final class EmptyPermissionsMapper implements ClaimsToPermissionsMapper {
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
-  public static final EmptyPermissionsMapper INSTANCE = new EmptyPermissionsMapper();
+@DisplayName("RpInitiatedLogoutInitiator — builds the end_session URL with encoded params")
+class RpInitiatedLogoutInitiatorTest {
 
-  public EmptyPermissionsMapper() {
+  private final RpInitiatedLogoutInitiator initiator = new RpInitiatedLogoutInitiator();
+
+  @Test
+  @DisplayName("includes id_token_hint, post_logout_redirect_uri and state, percent-encoded")
+  void buildsFullUrl() {
+    URI url = initiator.buildLogoutUri(URI.create("https://idp.example/logout"),
+        new LogoutRequest("ID.TOKEN.HINT",
+            Optional.of(URI.create("https://app.example/after?x=1")), Optional.of("st 123")));
+    String s = url.toString();
+    assertTrue(s.startsWith("https://idp.example/logout?"));
+    assertTrue(s.contains("id_token_hint=ID.TOKEN.HINT"));
+    assertTrue(s.contains("post_logout_redirect_uri=https%3A%2F%2Fapp.example%2Fafter%3Fx%3D1"),
+        "redirect uri must be percent-encoded: " + s);
+    assertTrue(s.contains("state=st+123") || s.contains("state=st%20123"), s);
   }
 
-  @Override
-  public Set<PermissionName> mapPermissions(
-      ValidatedIdToken idToken, Optional<UserInfoResponse> userInfo) {
-    return Set.of();
+  @Test
+  @DisplayName("appends with & when the end_session_endpoint already has a query")
+  void appendsToExistingQuery() {
+    URI url = initiator.buildLogoutUri(URI.create("https://idp.example/logout?ui_locales=en"),
+        new LogoutRequest("HINT", Optional.empty(), Optional.empty()));
+    assertTrue(url.toString().startsWith("https://idp.example/logout?ui_locales=en&id_token_hint=HINT"));
   }
 }
