@@ -40,6 +40,17 @@ import java.util.Optional;
  * <p>The store guarantees a stable append order so the SSE bridge can resume
  * from a {@link JSentinelEventCursor}.
  *
+ * <p><strong>Retention (R07, V00.76.10): unbounded by design.</strong> A
+ * {@link JSentinelEventCursor} is a stable append position, and {@link
+ * #findAfter(JSentinelEventCursor, int)} resumes from it — so the store is an
+ * append-only log and cannot purge old entries without invalidating outstanding
+ * cursors. Bounding it is therefore an <em>operational</em> concern: tier the
+ * persistent store behind an external retention/archival job (it is "not an
+ * audit store" — see above; audit-grade durability is an audit listener's job),
+ * or front it with a bounded-window implementation that advances cursors. The
+ * shipped in-memory store is for development / single-process use and grows with
+ * the event volume; do not use it as a long-lived sink.
+ *
  * @since 00.75.00
  */
 @ExperimentalJSentinelApi

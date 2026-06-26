@@ -88,8 +88,15 @@ final class EclipseStoreDeadLetterStore implements JSentinelEventDeadLetterStore
     Objects.requireNonNull(id, "id");
     storage.lock().writeLock().lock();
     try {
+      // R07 (V00.76.10): drop the heavy record (it embeds a full signed envelope)
+      // so resolved dead letters cannot accumulate without bound. The lightweight
+      // resolved-id set is still maintained so any legacy already-persisted
+      // resolved record continues to filter out of findOpen.
+      Map<String, JSentinelEventDeadLetter> records = storage.root().deadLetters;
       Set<String> resolved = storage.root().resolvedDeadLetters;
+      records.remove(id.value());
       resolved.add(id.value());
+      storage.manager().store(records);
       storage.manager().store(resolved);
     } finally {
       storage.lock().writeLock().unlock();

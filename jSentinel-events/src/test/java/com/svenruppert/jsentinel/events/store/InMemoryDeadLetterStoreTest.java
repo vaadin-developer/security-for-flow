@@ -66,6 +66,29 @@ class InMemoryDeadLetterStoreTest {
   }
 
   @Test
+  @DisplayName("R07: markResolved drops the heavy record so resolved dead letters do not accumulate")
+  void markResolvedDropsRecord() {
+    InMemoryDeadLetterStore store = new InMemoryDeadLetterStore();
+    JSentinelEventDeadLetter a = JSentinelEventDeadLetter.of(
+        StoreFixtures.envelope("a"), RejectionReason.SEQUENCE_VIOLATION, AT);
+    JSentinelEventDeadLetter b = JSentinelEventDeadLetter.of(
+        StoreFixtures.envelope("b"), RejectionReason.REPLAY_DETECTED, AT);
+    store.store(a);
+    store.store(b);
+    assertEquals(2, store.retainedRecordCount());
+
+    store.markResolved(a.id());
+
+    // the record (and its embedded signed envelope) is gone, not parked in a
+    // side set — only the still-open dead letter is retained
+    assertEquals(1, store.retainedRecordCount(),
+        "a resolved dead letter must not be retained");
+    List<JSentinelEventDeadLetter> open = store.findOpen(10);
+    assertEquals(1, open.size());
+    assertEquals(RejectionReason.REPLAY_DETECTED, open.get(0).reason());
+  }
+
+  @Test
   @DisplayName("findOpen honours the limit")
   void limit() {
     InMemoryDeadLetterStore store = new InMemoryDeadLetterStore();

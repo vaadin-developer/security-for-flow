@@ -32,12 +32,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  * In-memory {@link JSentinelEventDeadLetterStore}. Insertion order is
  * preserved so {@link #findOpen(int)} returns oldest-first. All access is
  * synchronized.
+ *
+ * <p>R07 (V00.76.10): {@link #markResolved(DeadLetterId)} now removes the record
+ * entirely rather than parking its id in a side set while keeping the heavy
+ * record (each embeds a full signed envelope). The store therefore only retains
+ * <em>open</em> dead letters and cannot grow without bound for a producer that
+ * reliably trips a rejection reason.
  *
  * @since 00.75.00
  */
@@ -45,7 +50,6 @@ import java.util.Set;
 public final class InMemoryDeadLetterStore implements JSentinelEventDeadLetterStore {
 
   private final Map<DeadLetterId, JSentinelEventDeadLetter> records = new LinkedHashMap<>();
-  private final Set<DeadLetterId> resolved = new java.util.HashSet<>();
 
   @Override
   public synchronized void store(JSentinelEventDeadLetter deadLetter) {
@@ -63,15 +67,20 @@ public final class InMemoryDeadLetterStore implements JSentinelEventDeadLetterSt
       if (open.size() >= limit) {
         break;
       }
-      if (!resolved.contains(record.id())) {
-        open.add(record);
-      }
+      open.add(record);
     }
     return open;
   }
 
   @Override
   public synchronized void markResolved(DeadLetterId id) {
-    resolved.add(Objects.requireNonNull(id, "id"));
+    // R07: drop the record (and its embedded signed envelope) — a resolved dead
+    // letter no longer needs retention, so resolved records cannot accumulate.
+    records.remove(Objects.requireNonNull(id, "id"));
+  }
+
+  /** Test seam (R07): the number of retained (open) dead-letter records. */
+  synchronized int retainedRecordCount() {
+    return records.size();
   }
 }
