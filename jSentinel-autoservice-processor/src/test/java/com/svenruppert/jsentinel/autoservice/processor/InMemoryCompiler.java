@@ -63,6 +63,17 @@ final class InMemoryCompiler {
    * processor under test.
    */
   static Result compile(Map<String, String> sources) throws IOException {
+    return compile(sources, Map.of());
+  }
+
+  /**
+   * Compiles {@code sources} with the processor, seeding the CLASS_OUTPUT with
+   * {@code seedResources} (path → bytes) so a prior compilation round's output
+   * (e.g. an existing {@code META-INF/services/*} file) is visible to the
+   * processor's {@code getResource} read — used to exercise incremental builds.
+   */
+  static Result compile(Map<String, String> sources, Map<String, byte[]> seedResources)
+      throws IOException {
     JavaCompiler javac = ToolProvider.getSystemJavaCompiler();
     DiagnosticCollector<JavaFileObject> collector = new DiagnosticCollector<>();
     StandardJavaFileManager std = javac.getStandardFileManager(collector, null, StandardCharsets.UTF_8);
@@ -72,7 +83,7 @@ final class InMemoryCompiler {
       compilationUnits.add(new InMemorySource(e.getKey(), e.getValue()));
     }
 
-    Map<String, byte[]> resources = new LinkedHashMap<>();
+    Map<String, byte[]> resources = new LinkedHashMap<>(seedResources);
     CapturingFileManager fm = new CapturingFileManager(std, resources);
 
     JavaCompiler.CompilationTask task = javac.getTask(
@@ -153,6 +164,29 @@ final class InMemoryCompiler {
           resources.put(path, this.toByteArray());
         }
       };
+    }
+
+    // JavacFiler.getResource(CLASS_OUTPUT, ...) reads through getFileForOutput
+    // (an output location), so this object must be readable to expose a
+    // pre-existing / prior-round resource. Returns the current bytes for this
+    // path (the seed) or signals absence so the processor's safe-read treats it
+    // as "nothing to preserve".
+    @Override
+    public java.io.InputStream openInputStream() throws IOException {
+      byte[] bytes = resources.get(path);
+      if (bytes == null) {
+        throw new IOException("not found: " + path);
+      }
+      return new java.io.ByteArrayInputStream(bytes);
+    }
+
+    @Override
+    public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
+      byte[] bytes = resources.get(path);
+      if (bytes == null) {
+        throw new IOException("not found: " + path);
+      }
+      return new String(bytes, StandardCharsets.UTF_8);
     }
   }
 

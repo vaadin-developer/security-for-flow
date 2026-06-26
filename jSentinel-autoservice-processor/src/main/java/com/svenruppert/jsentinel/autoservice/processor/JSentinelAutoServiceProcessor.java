@@ -84,6 +84,18 @@ public final class JSentinelAutoServiceProcessor extends AbstractProcessor {
    */
   private final Map<String, Set<String>> handWrittenByResource = new LinkedHashMap<>();
 
+  /**
+   * resource-path -> processor-authored (below-marker) entries read from a
+   * pre-existing file. R19 (V00.76.10): retained so an <em>incremental</em>
+   * compilation that recompiles only a subset of an SPI's {@code
+   * @JSentinelAutoService} impls does not drop the others. {@code generated}
+   * (this round's impls) is unioned with this set at write time. Caveat: under a
+   * partial incremental build, removing the annotation from one impl is not
+   * reflected (the pre-existing entry is retained) until a clean rebuild; the
+   * release path always does a clean build, which reconciles exactly.
+   */
+  private final Map<String, Set<String>> preExistingGeneratedByResource = new LinkedHashMap<>();
+
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     Messager messager = processingEnv.getMessager();
@@ -113,9 +125,12 @@ public final class JSentinelAutoServiceProcessor extends AbstractProcessor {
       // processingOver write round, so getResource and createResource never
       // touch the same path in the same round.
       for (String spiFqn : generated.keySet()) {
-        handWrittenByResource.computeIfAbsent(
-            "META-INF/services/" + spiFqn,
-            path -> readHandWrittenSafely(filer, path));
+        String path = "META-INF/services/" + spiFqn;
+        if (!handWrittenByResource.containsKey(path)) {
+          ExistingEntries existing = readExistingSafely(filer, path);
+          handWrittenByResource.put(path, existing.handWritten());
+          preExistingGeneratedByResource.put(path, existing.generated());
+        }
       }
     } else {
       writeAllResources(filer, messager);
@@ -234,7 +249,13 @@ public final class JSentinelAutoServiceProcessor extends AbstractProcessor {
   private void writeAllResources(Filer filer, Messager messager) {
     for (Map.Entry<String, Set<String>> entry : generated.entrySet()) {
       String resourcePath = "META-INF/services/" + entry.getKey();
-      Set<String> newEntries = entry.getValue();
+      // R19: union this round's impls with any processor-authored entries that
+      // already exist in the file, so an incremental round that recompiled only
+      // a subset of the SPI's impls does not drop the others. TreeSet keeps the
+      // output sorted/deterministic.
+      Set<String> newEntries = new TreeSet<>(entry.getValue());
+      newEntries.addAll(preExistingGeneratedByResource.getOrDefault(
+          resourcePath, Set.of()));
 
       // R032: hand-written entries were read in an earlier round (decoupled
       // from this write) — no getResource in the same round as createResource.
@@ -276,26 +297,33 @@ public final class JSentinelAutoServiceProcessor extends AbstractProcessor {
     }
   }
 
+  /** Hand-written (above-marker) + processor-authored (below-marker) entries of an existing file. */
+  private record ExistingEntries(Set<String> handWritten, Set<String> generated) {
+  }
+
   /**
-   * Reads pre-existing hand-written entries for {@code resourcePath}, returning
-   * an empty set when no file exists yet. {@code getResource}/{@code openInputStream}
-   * may throw {@link IOException} (real Filers) or a {@link RuntimeException}
-   * (in-memory file managers when the resource is absent); both mean
-   * "nothing to preserve".
+   * Reads the pre-existing entries for {@code resourcePath}, separating the
+   * hand-written (above-marker) entries from the processor-authored (below-
+   * marker) ones, returning empty sets when no file exists yet. {@code
+   * getResource}/{@code openInputStream} may throw {@link IOException} (real
+   * Filers) or a {@link RuntimeException} (in-memory file managers when the
+   * resource is absent); both mean "nothing to preserve".
    */
-  private Set<String> readHandWrittenSafely(Filer filer, String resourcePath) {
+  private ExistingEntries readExistingSafely(Filer filer, String resourcePath) {
     Set<String> handWritten = new LinkedHashSet<>();
+    Set<String> generated = new LinkedHashSet<>();
     try {
       FileObject existing = filer.getResource(
           StandardLocation.CLASS_OUTPUT, "", resourcePath);
-      readExistingEntries(existing, handWritten);
+      readExistingEntries(existing, handWritten, generated);
     } catch (IOException | RuntimeException ignored) {
       // file does not exist yet — nothing to preserve
     }
-    return handWritten;
+    return new ExistingEntries(handWritten, generated);
   }
 
-  private void readExistingEntries(FileObject existing, Set<String> handWritten) throws IOException {
+  private void readExistingEntries(FileObject existing, Set<String> handWritten,
+      Set<String> generated) throws IOException {
     boolean processorAuthoredFromHere = false;
     try (InputStream in = existing.openInputStream();
          BufferedReader r = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
@@ -309,7 +337,10 @@ public final class JSentinelAutoServiceProcessor extends AbstractProcessor {
           continue;
         }
         if (processorAuthoredFromHere) {
-          // skip — processor will re-emit these from `generated`
+          // R19: retain pre-existing processor-authored entries so an incremental
+          // round recompiling only a subset of an SPI's impls does not drop the
+          // others (they are unioned with this round's `generated` at write time).
+          generated.add(line.trim());
           continue;
         }
         if (line.startsWith("#")) {

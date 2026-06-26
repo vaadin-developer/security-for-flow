@@ -25,6 +25,42 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class JSentinelAutoServiceProcessorTest {
 
   @Test
+  void incrementalCompile_retainsPriorGeneratedEntries() throws IOException {
+    // R19 (V00.76.10): simulate a prior round whose output already lists two
+    // processor-generated impls below the marker, then recompile only one of
+    // them (Impl2's source is intentionally absent from this round). The merge
+    // must NOT drop Impl2.
+    String prior = JSentinelAutoServiceProcessor.MARKER + "\n"
+        + "com.example.Impl1\n"
+        + "com.example.Impl2\n";
+    Map<String, byte[]> seed = new LinkedHashMap<>();
+    seed.put("META-INF/services/com.example.Api",
+        prior.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+    Map<String, String> sources = new LinkedHashMap<>();
+    sources.put("com.example.Api", """
+        package com.example;
+        public interface Api {}
+        """);
+    sources.put("com.example.Impl1", """
+        package com.example;
+        import com.svenruppert.jsentinel.autoservice.api.JSentinelAutoService;
+        @JSentinelAutoService(Api.class)
+        public final class Impl1 implements Api {}
+        """);
+
+    InMemoryCompiler.Result r = InMemoryCompiler.compile(sources, seed);
+
+    assertTrue(r.success, diagSummary(r));
+    String out = r.resourceAsString("META-INF/services/com.example.Api");
+    assertNotNull(out, "the service file must be (re)written");
+    assertTrue(out.contains("com.example.Impl1"),
+        "the recompiled impl must be present; got:\n" + out);
+    assertTrue(out.contains("com.example.Impl2"),
+        "R19: a prior-round impl not recompiled this round must be retained, not dropped; got:\n" + out);
+  }
+
+  @Test
   void noAnnotation_noResourcesGenerated() throws IOException {
     Map<String, String> sources = new LinkedHashMap<>();
     sources.put("com.example.Plain", """
