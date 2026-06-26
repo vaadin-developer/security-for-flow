@@ -39,6 +39,13 @@
       <artifactId>jSentinel-vaadin</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!-- VaadinSession's attribute API references jakarta.servlet types in its
+         method signatures; provided (non-transitive) just like jSentinel-vaadin. -->
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
