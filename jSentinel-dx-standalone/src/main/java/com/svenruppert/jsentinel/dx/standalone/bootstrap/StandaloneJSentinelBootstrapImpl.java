@@ -149,22 +149,10 @@ final class StandaloneJSentinelBootstrapImpl
     // (logout / bruteForce / rateLimit / apiKeys / refreshTokens).
     // The legacy .loginAttemptPolicy(...) builder method on
     // StandaloneJSentinelBootstrap delegates to .bruteForce(...).
-    applyDirectServiceConfiguration(services, warnings);
-
-    // V00.73: apply audit sub-builder state (no-op when .audit(...) wasn't called).
-    applyAuditConfiguration(services, warnings);
-    // V00.73: apply sessions sub-builder state (no-op + INFO on standalone if configured).
-    applySessionConfiguration(AdapterKind.STANDALONE, services, warnings);
-    // V00.73: apply roles sub-builder state.
-    applyRoleConfiguration(services, warnings);
-    // V00.73: apply credentials sub-builder state.
-    applyCredentialConfiguration(services, warnings);
-    // V00.73: apply policies sub-builder state.
-    applyPolicyConfiguration(services, warnings);
-    // V00.74: apply propagation sub-builder state.
-    applyPropagationConfiguration(services, warnings);
-    // V00.76: apply JWT sub-builder state.
-    applyJwtConfiguration(services, warnings);
+    // R05-Rest (V00.76.10): the shared per-concern sub-builder consumption is
+    // hoisted into the base. Standalone symmetry is preserved inside the applyX
+    // methods (e.g. sessions emit standalone/sessions-not-applicable INFO).
+    applyCommonConfiguration(AdapterKind.STANDALONE, services, warnings);
 
     // V00.74 (A2.3): publish thread-propagation strategy.
     if (threadPropagation != null) {

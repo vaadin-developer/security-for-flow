@@ -154,24 +154,10 @@ final class RestJSentinelBootstrapImpl
         errorBodiesDefaulted ? "bootstrap-default" : "bootstrap-explicit",
         errorBodiesDefaulted));
 
-    // V00.74: apply direct-set services from CommonJSentinelBootstrap
-    // (logout / bruteForce / rateLimit / apiKeys / refreshTokens).
-    applyDirectServiceConfiguration(services, warnings);
-    // V00.73: apply audit sub-builder state (no-op when .audit(...) wasn't called).
-    applyAuditConfiguration(services, warnings);
-    // V00.73: apply sessions sub-builder state. REST consumes Policy/Version/Resolver;
-    // .storeBacked(...) emits rest/session-store-unused (INFO).
-    applySessionConfiguration(AdapterKind.REST, services, warnings);
-    // V00.73: apply roles sub-builder state.
-    applyRoleConfiguration(services, warnings);
-    // V00.73: apply credentials sub-builder state.
-    applyCredentialConfiguration(services, warnings);
-    // V00.73: apply policies sub-builder state.
-    applyPolicyConfiguration(services, warnings);
-    // V00.74: apply propagation sub-builder state.
-    applyPropagationConfiguration(services, warnings);
-    // V00.76: apply JWT sub-builder state.
-    applyJwtConfiguration(services, warnings);
+    // R05-Rest (V00.76.10): the shared per-concern sub-builder consumption is
+    // hoisted into the base. REST symmetry is preserved inside the applyX
+    // methods (e.g. .storeBacked(...) emits rest/session-store-unused INFO).
+    applyCommonConfiguration(AdapterKind.REST, services, warnings);
 
     // V00.74 (A2.2): publish CORS configuration when configured.
     if (corsConfiguration != null) {

@@ -201,6 +201,36 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
   }
 
   /**
+   * R05-Rest (V00.76.10): the shared {@code install()} body. Each adapter's
+   * {@code install()} performs its own adapter-specific pre-steps (the
+   * once-only guard, mandatory authn/authz resolution) and post-steps (REST CORS
+   * / OpenAPI, Vaadin secure-route discovery, the STRICT-mode error gate, the
+   * {@link JSentinelRuntime} result) — but the per-concern sub-builder
+   * consumption in between was duplicated verbatim across all three adapters.
+   * This template hoists that identical sequence into one place; the only
+   * adapter-specific variation is the {@link AdapterKind} passed to
+   * {@link #applySessionConfiguration}. Behaviour and ordering are unchanged.
+   *
+   * @param adapter  the adapter kind (drives session-store applicability)
+   * @param services the running service registry to append to
+   * @param warnings the running warning list to append to
+   */
+  protected final void applyCommonConfiguration(AdapterKind adapter,
+      List<RegisteredJSentinelService> services,
+      List<JSentinelBootstrapWarning> warnings) {
+    // direct-set services from CommonJSentinelBootstrap
+    // (logout / bruteForce / rateLimit / apiKeys / refreshTokens)
+    applyDirectServiceConfiguration(services, warnings);
+    applyAuditConfiguration(services, warnings);
+    applySessionConfiguration(adapter, services, warnings);
+    applyRoleConfiguration(services, warnings);
+    applyCredentialConfiguration(services, warnings);
+    applyPolicyConfiguration(services, warnings);
+    applyPropagationConfiguration(services, warnings);
+    applyJwtConfiguration(services, warnings);
+  }
+
+  /**
    * V00.74 — consume the {@link PropagationState} accumulated by
    * {@code .propagation(...)}. Registers the chosen credential store
    * (or the SPI default), the named strategies and the default

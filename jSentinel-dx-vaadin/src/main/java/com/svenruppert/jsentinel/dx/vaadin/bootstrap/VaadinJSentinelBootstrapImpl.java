@@ -169,23 +169,10 @@ final class VaadinJSentinelBootstrapImpl
       JSentinelServiceResolver.setStepUpRouteName(stepUpRoute);
     }
 
-    // V00.74: apply direct-set services from CommonJSentinelBootstrap
-    // (logout / bruteForce / rateLimit / apiKeys / refreshTokens).
-    applyDirectServiceConfiguration(services, warnings);
-    // V00.73: apply audit sub-builder state (no-op when .audit(...) wasn't called).
-    applyAuditConfiguration(services, warnings);
-    // V00.73: apply sessions sub-builder state (full consumption on Vaadin).
-    applySessionConfiguration(AdapterKind.VAADIN, services, warnings);
-    // V00.73: apply roles sub-builder state.
-    applyRoleConfiguration(services, warnings);
-    // V00.73: apply credentials sub-builder state.
-    applyCredentialConfiguration(services, warnings);
-    // V00.73: apply policies sub-builder state.
-    applyPolicyConfiguration(services, warnings);
-    // V00.74: apply propagation sub-builder state.
-    applyPropagationConfiguration(services, warnings);
-    // V00.76: apply JWT sub-builder state.
-    applyJwtConfiguration(services, warnings);
+    // R05-Rest (V00.76.10): the shared per-concern sub-builder consumption
+    // (direct-set services, audit, sessions, roles, credentials, policies,
+    // propagation, JWT) — identical across adapters — is hoisted into the base.
+    applyCommonConfiguration(AdapterKind.VAADIN, services, warnings);
 
     // V00.73 (Prompt 012 / Konzept §8.5): deterministic SecureRoute
     // cross-validation if discovery is opt-in.
