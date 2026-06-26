@@ -69,6 +69,36 @@ class InMemoryReplayStoreTest {
   }
 
   @Test
+  @DisplayName("R08: ids sharing one expiry instant evict + purge cleanly (no orphaned index entries)")
+  void sameExpiryInstantHandledByIndex() {
+    // Two ids share the exact same expiry instant — exercises the per-instant
+    // Set in the O(log n) expiry index. Eviction must drop exactly one of them
+    // and leave the store consistent; purge must clear the rest with no orphans.
+    InMemoryReplayStore store = new InMemoryReplayStore(2);
+    Instant shared = Instant.parse("2026-06-24T10:01:00Z");
+    EventEnvelopeId a = EventEnvelopeId.of("a");
+    EventEnvelopeId b = EventEnvelopeId.of("b");
+    store.markSeen(a, shared);
+    store.markSeen(b, shared);
+    // third insert (later expiry) overflows capacity 2 → evict one soonest-to-
+    // expire id (a or b, both share the soonest instant), keep the other + third
+    store.markSeen(EventEnvelopeId.of("third"), future);
+    assertEquals(2, store.size());
+    int survivingSharedExpiry = (store.hasSeen(a) ? 1 : 0) + (store.hasSeen(b) ? 1 : 0);
+    assertEquals(1, survivingSharedExpiry, "exactly one of the two same-expiry ids must remain");
+    assertTrue(store.hasSeen(EventEnvelopeId.of("third")));
+    // purge at the shared instant drops the surviving same-expiry id; third stays
+    store.purgeExpired(shared);
+    assertEquals(1, store.size());
+    assertFalse(store.hasSeen(a));
+    assertFalse(store.hasSeen(b));
+    assertTrue(store.hasSeen(EventEnvelopeId.of("third")));
+    // re-inserting an id at the just-purged shared instant must succeed (index
+    // entry was not left orphaned)
+    assertTrue(store.markSeen(a, shared));
+  }
+
+  @Test
   @DisplayName("purgeExpired drops entries at or before now")
   void purgeExpired() {
     InMemoryReplayStore store = new InMemoryReplayStore();

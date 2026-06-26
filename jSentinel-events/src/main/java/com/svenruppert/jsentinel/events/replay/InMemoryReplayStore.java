@@ -29,10 +29,12 @@ import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.events.api.EventEnvelopeId;
 
 import java.time.Instant;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Objects;
+import java.util.TreeMap;
 
 /**
  * In-memory {@link JSentinelEventReplayStore} backed by a bounded map.
@@ -53,7 +55,13 @@ public final class InMemoryReplayStore implements JSentinelEventReplayStore {
   /** Default bound on the number of retained envelope ids. */
   public static final int DEFAULT_CAPACITY = 100_000;
 
-  private final Map<EventEnvelopeId, Instant> seen = new LinkedHashMap<>();
+  private final Map<EventEnvelopeId, Instant> seen = new HashMap<>();
+  // R08 (V00.76.10): a secondary expiry-ordered index so soonest-to-expire
+  // eviction and purge are O(log n) / O(k) instead of a full O(n) min-scan on
+  // every insert at capacity. Multiple ids can share an expiry instant, so each
+  // key maps to the set of ids with that expiry (insertion-ordered for
+  // determinism). seen and byExpiry are kept consistent under `synchronized`.
+  private final NavigableMap<Instant, LinkedHashSet<EventEnvelopeId>> byExpiry = new TreeMap<>();
   private final int capacity;
 
   public InMemoryReplayStore() {
@@ -77,12 +85,18 @@ public final class InMemoryReplayStore implements JSentinelEventReplayStore {
     if (seen.size() >= capacity) {
       // Evict the soonest-to-expire entry (smallest expiresAt) — it has the
       // shortest remaining replay window, so dropping it is the least unsafe.
-      seen.entrySet().stream()
-          .min(Map.Entry.comparingByValue())
-          .map(Map.Entry::getKey)
-          .ifPresent(seen::remove);
+      // O(log n) via the expiry-ordered index instead of an O(n) min-scan.
+      Map.Entry<Instant, LinkedHashSet<EventEnvelopeId>> soonest = byExpiry.firstEntry();
+      LinkedHashSet<EventEnvelopeId> ids = soonest.getValue();
+      EventEnvelopeId victim = ids.iterator().next();
+      ids.remove(victim);
+      if (ids.isEmpty()) {
+        byExpiry.remove(soonest.getKey());
+      }
+      seen.remove(victim);
     }
     seen.put(envelopeId, expiresAt);
+    byExpiry.computeIfAbsent(expiresAt, k -> new LinkedHashSet<>()).add(envelopeId);
     return true;
   }
 
@@ -94,13 +108,16 @@ public final class InMemoryReplayStore implements JSentinelEventReplayStore {
   @Override
   public synchronized void purgeExpired(Instant now) {
     Objects.requireNonNull(now, "now");
-    Iterator<Map.Entry<EventEnvelopeId, Instant>> it = seen.entrySet().iterator();
-    while (it.hasNext()) {
-      Instant expiresAt = it.next().getValue();
-      if (!expiresAt.isAfter(now)) {
-        it.remove();
+    // Entries are expired when expiresAt <= now, i.e. the head of the expiry
+    // index up to and including `now`. headMap(now, true) is that prefix in
+    // O(log n + k); removing through the view drops them from byExpiry too.
+    NavigableMap<Instant, LinkedHashSet<EventEnvelopeId>> expired = byExpiry.headMap(now, true);
+    for (LinkedHashSet<EventEnvelopeId> ids : expired.values()) {
+      for (EventEnvelopeId id : ids) {
+        seen.remove(id);
       }
     }
+    expired.clear();
   }
 
   /**
