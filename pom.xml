@@ -97,6 +97,9 @@
         <module>jSentinel-events-testkit</module>
         <module>jSentinel-events-persistence-eclipsestore</module>
         <module>jSentinel-jwt</module>
+        <module>jSentinel-oauth2</module>
+        <module>jSentinel-oauth2-vaadin</module>
+        <module>jSentinel-oauth2-rest</module>
         <module>demo-rest-shared</module>
         <module>demo-vaadin</module>
         <module>demo-rest</module>
