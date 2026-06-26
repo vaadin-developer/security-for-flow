@@ -326,9 +326,25 @@ public abstract class LoginView
     }
   }
 
-  private static String subjectIdOf(SessionContext<Object> context) {
+  // Package-private for direct testing of the id-derivation (R14): the
+  // auditRotation() path itself needs a live Vaadin session, so the
+  // security-relevant logic — never leak subject.toString() — is unit-tested
+  // here in isolation.
+  static String subjectIdOf(SessionContext<Object> context) {
     Object subject = context.subject();
-    return subject == null ? "" : subject.toString();
+    if (subject == null) {
+      return "";
+    }
+    // R14 (V00.76.10): never publish subject.toString() as the audit subject id.
+    // An application user object's toString() commonly serialises email / hash /
+    // internal ids into the audit channel — the leak class R019 / R020-R021
+    // closed on the REST / StepUp / policy paths. Derive a stable id via the
+    // registered SubjectIdResolver (the same resolver the JSentinelVersion
+    // snapshot path uses), falling back to a non-PII empty id when none is
+    // registered (audit attribution requires a resolver by design).
+    Optional<SubjectIdResolver<Object>> resolver =
+        JSentinelServiceResolver.findSubjectIdResolver();
+    return resolver.map(r -> r.resolve(subject).value()).orElse("");
   }
 
   /**
