@@ -91,6 +91,18 @@ public interface CommonJSentinelBootstrap<B extends CommonJSentinelBootstrap<B>>
   B oauth2(Consumer<OAuth2Bootstrap> config);
 
   /**
+   * V00.78: declarative OIDC Relying-Party sub-builder (identity layer over the
+   * V00.77 OAuth2 flows). Adapter-symmetric. The DX layer only records +
+   * STRICT-validates; the HTTP clients are assembled in the
+   * {@code jSentinel-identity-oidc(-*)} modules, so this facade stays JOSE-free.
+   *
+   * @param config non-null lambda recording into an {@link OidcBootstrap}
+   * @return this builder
+   * @since 00.78.00
+   */
+  B oidc(Consumer<OidcBootstrap> config);
+
+  /**
    * V00.74: registers a logout service. Wired through
    * {@code JSentinelServiceResolver.setLogoutService(...)} by
    * {@code install()}.

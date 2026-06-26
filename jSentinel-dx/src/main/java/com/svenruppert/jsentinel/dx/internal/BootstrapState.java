@@ -60,6 +60,9 @@ public final class BootstrapState {
   // V00.77: OAuth2 Relying-Party sub-aggregate.
   private boolean oauth2Configured;
   private final OAuth2State oauth2State = new OAuth2State();
+  // V00.78: OIDC Relying-Party sub-aggregate.
+  private boolean oidcConfigured;
+  private final OidcState oidcState = new OidcState();
 
   /** @return the typed audit sub-aggregate (V00.73) */
   public AuditState auditState() {
@@ -195,6 +198,21 @@ public final class BootstrapState {
   /** V00.77 — call after consuming {@code .oauth2(...)}. */
   public void markOAuth2Configured() {
     this.oauth2Configured = true;
+  }
+
+  /** V00.78 — typed OIDC RP sub-aggregate. */
+  public OidcState oidcState() {
+    return oidcState;
+  }
+
+  /** V00.78 — true if {@code .oidc(...)} was called. */
+  public boolean oidcConfigured() {
+    return oidcConfigured;
+  }
+
+  /** V00.78 — call after consuming {@code .oidc(...)}. */
+  public void markOidcConfigured() {
+    this.oidcConfigured = true;
   }
 
   // V00.74 accessors

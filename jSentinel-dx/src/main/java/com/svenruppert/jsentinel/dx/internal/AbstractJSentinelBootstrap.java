@@ -161,6 +161,14 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
   }
 
   @Override
+  public B oidc(Consumer<com.svenruppert.jsentinel.dx.bootstrap.OidcBootstrap> config) {
+    Objects.requireNonNull(config, "config")
+        .accept(new RecordingOidcBootstrap(state.oidcState()));
+    state.markOidcConfigured();
+    return self();
+  }
+
+  @Override
   public B logout(LogoutService service) {
     state.logoutService(Objects.requireNonNull(service, "service"));
     return self();
@@ -237,6 +245,7 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
     applyPropagationConfiguration(services, warnings);
     applyJwtConfiguration(services, warnings);
     applyOAuth2Configuration(services, warnings);
+    applyOidcConfiguration(services, warnings);
   }
 
   /**
@@ -484,6 +493,63 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
     return "http".equalsIgnoreCase(uri.getScheme())
         && host != null
         && ("localhost".equalsIgnoreCase(host) || "127.0.0.1".equals(host) || "[::1]".equals(host));
+  }
+
+  /**
+   * V00.78 — validate the {@link OidcState} recorded by {@code .oidc(...)} and emit
+   * the Konzept §11.4 codes. The DX layer does not construct the OIDC clients (that
+   * is adapter-side in {@code jSentinel-identity-oidc-*}); it only enforces that a
+   * usable RP configuration was supplied. STRICT raises for {@code oidc/missing-issuer},
+   * {@code oidc/missing-client-id}, {@code oidc/scope-without-openid},
+   * {@code oidc/redirect-uri-not-https} and
+   * {@code oidc/logout-without-post-logout-redirect-uri}.
+   */
+  protected final void applyOidcConfiguration(
+      List<RegisteredJSentinelService> services,
+      List<JSentinelBootstrapWarning> warnings) {
+    if (!state.oidcConfigured()) {
+      return;
+    }
+    OidcState oidc = state.oidcState();
+    if (!oidc.hasAnySelection()) {
+      // empty .oidc(o -> {}) — silent on purpose
+      return;
+    }
+
+    if (oidc.issuer() == null || oidc.issuer().isBlank()) {
+      warnings.add(new JSentinelBootstrapWarning(Severity.ERROR, "oidc/missing-issuer",
+          ".oidc(...) was configured without an .issuer(...).",
+          "Add .oidc(o -> o.issuer(\"https://idp.example/realm\") ...)."));
+      return;
+    }
+    if (oidc.clientId() == null || oidc.clientId().isBlank()) {
+      warnings.add(new JSentinelBootstrapWarning(Severity.ERROR, "oidc/missing-client-id",
+          ".oidc(...) has no .clientId(...).",
+          "Add .clientId(\"my-app\")."));
+      return;
+    }
+    if (!oidc.scopes().contains("openid")) {
+      warnings.add(new JSentinelBootstrapWarning(Severity.ERROR, "oidc/scope-without-openid",
+          ".oidc(...) scope must include \"openid\" (it is an OIDC spec requirement).",
+          "Add .scope(\"openid\", ...)."));
+      return;
+    }
+    if (oidc.redirectUri() != null && !isHttpsOrLoopback(oidc.redirectUri())) {
+      warnings.add(new JSentinelBootstrapWarning(Severity.ERROR, "oidc/redirect-uri-not-https",
+          ".redirectUri(" + oidc.redirectUri() + ") is neither https nor http://localhost*.",
+          "Use an https redirect URI (or http://localhost... for local development)."));
+      return;
+    }
+    if (oidc.logoutEnabled() && oidc.postLogoutRedirectUri() == null) {
+      warnings.add(new JSentinelBootstrapWarning(Severity.ERROR,
+          "oidc/logout-without-post-logout-redirect-uri",
+          ".logoutEnabled(true) needs a .postLogoutRedirectUri(...).",
+          "Add .postLogoutRedirectUri(URI.create(\"https://app.example/\"))."));
+      return;
+    }
+
+    services.add(new RegisteredJSentinelService(
+        OidcState.class, OidcState.class, "bootstrap-oidc", false));
   }
 
   /**
