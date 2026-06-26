@@ -98,6 +98,15 @@ public final class HttpJwksClient implements JwksClient, HasLogger {
 
   @Override
   public Optional<PublicKey> findKey(String kid, JwsAlgorithm alg) {
+    // R10 (V00.76.10): a JWS whose header omits `kid` cannot select a key from a
+    // keyed JWKS set. The cache maps are immutable (Map.of()/Map.copyOf), and
+    // Map#get(null) throws NPE on them — so a kid-less token arriving during the
+    // negative-cache or post-refresh window (lines below) would throw an
+    // unhandled NPE that escapes validate() instead of returning empty. Guard
+    // here and honour the contract ("empty if no key is known").
+    if (kid == null) {
+      return Optional.empty();
+    }
     State snapshot = state;
     Instant now = clock.get();
     boolean fresh = now.isBefore(snapshot.expiry);

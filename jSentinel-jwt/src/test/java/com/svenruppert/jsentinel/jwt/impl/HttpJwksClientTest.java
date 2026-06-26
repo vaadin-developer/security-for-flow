@@ -156,6 +156,35 @@ class HttpJwksClientTest {
   }
 
   @Test
+  @DisplayName("R10: a kid-less token returns empty, never an NPE (healthy cache)")
+  void nullKidReturnsEmptyOnHealthyCache() {
+    body.set(jwks(k1));
+    cacheControl.set("max-age=120");
+    HttpJwksClient client = client();
+    assertTrue(client.findKey("k1", JwsAlgorithm.RS256).isPresent());
+    // A JWS without a `kid` header: the immutable cache map would throw on
+    // get(null) — the guard must return empty instead.
+    assertFalse(client.findKey(null, JwsAlgorithm.RS256).isPresent(),
+        "a kid-less token must resolve to empty, not throw");
+  }
+
+  @Test
+  @DisplayName("R10: a kid-less token inside the negative-cache window returns empty, never an NPE")
+  void nullKidDuringNegativeCacheWindow() {
+    // This was the actual request-path DoS vector: endpoint faulted -> negative
+    // cache open -> a flood of kid-less tokens previously hit get(null) on the
+    // immutable empty map and threw NPE out of validate().
+    status.set(503);
+    body.set("service unavailable");
+    HttpJwksClient client = client();
+    assertFalse(client.findKey("k1", JwsAlgorithm.RS256).isPresent());
+    assertFalse(client.findKey(null, JwsAlgorithm.RS256).isPresent(),
+        "a kid-less token inside the negative-cache window must resolve to empty, not throw");
+    assertEquals(1, requests.get(),
+        "the kid-less lookup inside the negative-cache window must not re-fetch");
+  }
+
+  @Test
   @DisplayName("concurrent lookups during a slow fetch trigger a single request (single-flight)")
   void singleFlightUnderConcurrency() throws Exception {
     body.set(jwks(k1));
