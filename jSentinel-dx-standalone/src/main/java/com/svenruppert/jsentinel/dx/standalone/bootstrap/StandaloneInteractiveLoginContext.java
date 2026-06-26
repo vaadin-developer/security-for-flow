@@ -39,10 +39,25 @@ public final class StandaloneInteractiveLoginContext {
   /**
    * Publishes the active configuration.
    *
+   * <p>R06 (V00.76.10): this holder is <strong>process-global</strong> (one per
+   * JVM). Re-publishing an equal configuration is idempotent; publishing a
+   * different one while one is already active throws rather than silently
+   * overwriting (the multi-app-in-one-JVM hazard). Run one bootstrap per JVM or
+   * call {@link #reset()} between intentional re-inits.
+   *
    * @param configuration non-null configuration
+   * @throws IllegalStateException if a different configuration is already published
    */
   public static void publish(InteractiveLoginConfiguration configuration) {
-    CONFIG.set(Objects.requireNonNull(configuration, "configuration"));
+    Objects.requireNonNull(configuration, "configuration");
+    InteractiveLoginConfiguration existing = CONFIG.get();
+    if (existing != null && !existing.equals(configuration)) {
+      throw new IllegalStateException(
+          "StandaloneInteractiveLoginContext already holds a different configuration. "
+              + "This holder is process-global (one per JVM); use one bootstrap per "
+              + "JVM, or call reset() between intentional re-inits.");
+    }
+    CONFIG.set(configuration);
   }
 
   /** @return the active configuration, if any */

@@ -213,6 +213,28 @@ class RestJSentinelBootstrapTest {
   }
 
   @Test
+  void corsContext_rejectsConflictingSecondPublish() {
+    // R06 (V00.76.10): the process-global holder must reject a conflicting second
+    // publish loudly (the multi-app-in-one-JVM hazard) rather than silently
+    // overwriting; an equal re-publish stays idempotent.
+    RestCorsContext.reset();
+    RestCorsConfiguration a = new RestCorsConfiguration(
+        java.util.List.of("https://a.example"), java.util.List.of("GET"),
+        java.util.List.of(), java.util.List.of(), false, -1L);
+    RestCorsContext.publish(a);
+    RestCorsContext.publish(a); // equal re-publish is idempotent
+    RestCorsConfiguration b = new RestCorsConfiguration(
+        java.util.List.of("https://b.example"), java.util.List.of("GET"),
+        java.util.List.of(), java.util.List.of(), false, -1L);
+    assertThrows(IllegalStateException.class, () -> RestCorsContext.publish(b),
+        "a conflicting second publish must fail loudly, not silently overwrite");
+    assertEquals(java.util.List.of("https://a.example"),
+        RestCorsContext.configuration().orElseThrow().allowedOrigins(),
+        "the first app's config must survive a rejected conflicting publish");
+    RestCorsContext.reset();
+  }
+
+  @Test
   void cors_wildcardWithCredentials_notPublishedInProduction() {
     // R15 (V00.76.10): PRODUCTION records the ERROR warning AND refuses to
     // publish the dangerous credentialed-wildcard config live — CORS stays

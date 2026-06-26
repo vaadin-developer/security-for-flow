@@ -39,10 +39,29 @@ public final class RestCorsContext {
   /**
    * Publishes the active CORS configuration.
    *
+   * <p>R06 (V00.76.10): this holder is <strong>process-global</strong> (one per
+   * JVM). Re-publishing an equal configuration is idempotent, but publishing a
+   * <em>different</em> configuration while one is already active throws rather
+   * than silently overwriting — that is the multi-app-in-one-JVM hazard (two
+   * bootstraps, parallel test suites, hot redeploy) where the second app's
+   * config would otherwise clobber the first's. Run one bootstrap per JVM, scope
+   * the holder per classloader, or call {@link #reset()} between intentional
+   * re-inits.
+   *
    * @param config the configuration; non-null
+   * @throws IllegalStateException if a different configuration is already published
    */
   public static void publish(RestCorsConfiguration config) {
-    CONFIG.set(Objects.requireNonNull(config, "config"));
+    Objects.requireNonNull(config, "config");
+    RestCorsConfiguration existing = CONFIG.get();
+    if (existing != null && !existing.equals(config)) {
+      throw new IllegalStateException(
+          "RestCorsContext already holds a different CORS configuration. This "
+              + "holder is process-global (one per JVM); hosting two apps with "
+              + "conflicting CORS configuration in a single JVM is unsupported. "
+              + "Use one bootstrap per JVM, or call reset() between intentional re-inits.");
+    }
+    CONFIG.set(config);
   }
 
   /** @return the active CORS configuration, if any */

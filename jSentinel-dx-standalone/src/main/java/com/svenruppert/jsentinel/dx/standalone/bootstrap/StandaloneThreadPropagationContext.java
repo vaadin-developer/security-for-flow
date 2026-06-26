@@ -51,10 +51,25 @@ public final class StandaloneThreadPropagationContext {
   /**
    * Publishes the active propagation strategy.
    *
+   * <p>R06 (V00.76.10): this holder is <strong>process-global</strong> (one per
+   * JVM). Re-publishing an equal strategy is idempotent; publishing a different
+   * one while one is already active throws rather than silently overwriting (the
+   * multi-app-in-one-JVM hazard). Run one bootstrap per JVM or call
+   * {@link #reset()} between intentional re-inits.
+   *
    * @param strategy strategy; non-null
+   * @throws IllegalStateException if a different strategy is already published
    */
   public static void publish(ThreadPropagationStrategy strategy) {
-    STRATEGY.set(Objects.requireNonNull(strategy, "strategy"));
+    Objects.requireNonNull(strategy, "strategy");
+    ThreadPropagationStrategy existing = STRATEGY.get();
+    if (existing != null && !existing.equals(strategy)) {
+      throw new IllegalStateException(
+          "StandaloneThreadPropagationContext already holds a different strategy. "
+              + "This holder is process-global (one per JVM); use one bootstrap per "
+              + "JVM, or call reset() between intentional re-inits.");
+    }
+    STRATEGY.set(strategy);
   }
 
   /** @return the active strategy, if configured */
