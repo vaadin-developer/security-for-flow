@@ -51,4 +51,59 @@
     <Method name="current"/>
     <Bug pattern="MS_EXPOSE_REP"/>
   </Match>
+
+  <!--
+    V00.76.10 H2 — reactor-wide SpotBugs rollout (the gate moved from 5 modules
+    into jSentinel-parent, so 20 more modules now run it). Three justified
+    excludes surfaced by that rollout:
+
+    1) SE_BAD_FIELD on the Vaadin adapter classes. These are Serializable ONLY
+       because Vaadin's UI/navigation lifecycle requires it (a documented
+       legitimate Serializable shape — see docs/security/credentials/standards/
+       serialization-policy.md). The flagged fields are stateless strategy
+       singletons resolved via JSentinelServiceResolver/ServiceLoader, not state.
+       Marking them `transient final` would null them after session
+       deserialization (final cannot be re-assigned without readObject
+       machinery); the project does NOT use Java session serialization (Eclipse-
+       Store / JSON per the policy), so the array/field is never actually
+       serialized. Scoped to the four concrete classes so the rule stays strict.
+  -->
+  <Match>
+    <Or>
+      <Class name="com.svenruppert.jsentinel.authorization.impl.AuthorizationListener"/>
+      <Class name="com.svenruppert.jsentinel.components.SecuredButton"/>
+      <Class name="com.svenruppert.jsentinel.components.SecuredRouterLink"/>
+      <Class name="com.svenruppert.jsentinel.session.vaadin.JSentinelVersionEnforcerListener"/>
+    </Or>
+    <Bug pattern="SE_BAD_FIELD"/>
+  </Match>
+
+  <!--
+    2) WEAK_MESSAGE_DIGEST_SHA1 on the HIBP checker. The Have-I-Been-Pwned
+       range API is defined on SHA-1 k-anonymity: the client MUST hash the
+       candidate password with SHA-1 and send the first five hex chars of the
+       digest. SHA-1 here is a wire-protocol requirement of a third-party API,
+       NOT password storage or a security primitive we choose — the password
+       pipeline hashes with Argon2id/PBKDF2 elsewhere. Cannot be "fixed" without
+       breaking the HIBP contract. Scoped to the single method.
+  -->
+  <Match>
+    <Class name="com.svenruppert.jsentinel.credential.compromised.hibp.HaveIBeenPwnedCompromisedPasswordChecker"/>
+    <Bug pattern="WEAK_MESSAGE_DIGEST_SHA1"/>
+  </Match>
+
+  <!--
+    3) POTENTIAL_XML_INJECTION on the propagation annotation processor. The
+       generator emits Java source at COMPILE time from compile-time-known
+       method identifiers and parameter names (never runtime/attacker input);
+       Java identifiers cannot contain the quote/markup chars the detector
+       fears. It is a build-time code generator, not a request path. The codegen
+       robustness/escaping invariant is tracked as a real hardening task
+       (V00.76.10 R17/R18); this exclude can be dropped once that rewrite lands.
+       Scoped to the processor class.
+  -->
+  <Match>
+    <Class name="~com\.svenruppert\.jsentinel\.propagation\.processor\.PropagateTokenProcessor.*"/>
+    <Bug pattern="POTENTIAL_XML_INJECTION"/>
+  </Match>
 </FindBugsFilter>

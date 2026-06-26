@@ -59,44 +59,4 @@
     </plugins>
   </build>
 
-  <profiles>
-    <!-- V00.75.10 H3: SpotBugs + FindSecBugs gate (CI-only via -Pstatic-analysis). -->
-    <profile>
-      <id>static-analysis</id>
-      <properties>
-        <spotbugs.skip>false</spotbugs.skip>
-      </properties>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>com.github.spotbugs</groupId>
-            <artifactId>spotbugs-maven-plugin</artifactId>
-            <version>4.9.8.3</version>
-            <configuration>
-              <effort>Max</effort>
-              <threshold>Medium</threshold>
-              <failOnError>true</failOnError>
-              <excludeFilterFile>${maven.multiModuleProjectDirectory}/config/spotbugs/spotbugs-exclude.xml</excludeFilterFile>
-              <plugins>
-                <plugin>
-                  <groupId>com.h3xstream.findsecbugs</groupId>
-                  <artifactId>findsecbugs-plugin</artifactId>
-                  <version>1.13.0</version>
-                </plugin>
-              </plugins>
-            </configuration>
-            <executions>
-              <execution>
-                <id>spotbugs-gate</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>check</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 </project>

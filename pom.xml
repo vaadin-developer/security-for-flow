@@ -602,5 +602,51 @@
                 </plugins>
             </build>
         </profile>
+        <!-- V00.76.10 H2: SpotBugs + FindSecBugs security/static-analysis gate,
+             hoisted from the per-module poms into the parent so every library
+             module (and any future module) inherits it automatically — closing
+             the P001-class drift where a new module silently ships without the
+             gate. Activated only via -Pstatic-analysis; spotbugs.skip defaults
+             to true (see <properties>) so normal builds are unaffected. A central
+             baseline exclude keeps it green so only NEW findings break the build.
+             Demo modules inherit it too (opt-in/best-effort, A.0) but are not
+             release-blocking; the release gate runs library modules only. -->
+        <profile>
+            <id>static-analysis</id>
+            <properties>
+                <spotbugs.skip>false</spotbugs.skip>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs-maven-plugin</artifactId>
+                        <version>4.9.8.3</version>
+                        <configuration>
+                            <effort>Max</effort>
+                            <threshold>Medium</threshold>
+                            <failOnError>true</failOnError>
+                            <excludeFilterFile>${maven.multiModuleProjectDirectory}/config/spotbugs/spotbugs-exclude.xml</excludeFilterFile>
+                            <plugins>
+                                <plugin>
+                                    <groupId>com.h3xstream.findsecbugs</groupId>
+                                    <artifactId>findsecbugs-plugin</artifactId>
+                                    <version>1.13.0</version>
+                                </plugin>
+                            </plugins>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>spotbugs-gate</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 </project>

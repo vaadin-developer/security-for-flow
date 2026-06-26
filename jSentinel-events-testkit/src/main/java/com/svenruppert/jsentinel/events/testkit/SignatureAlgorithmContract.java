@@ -48,7 +48,12 @@ public interface SignatureAlgorithmContract {
 
   SignatureAlgorithm newAlgorithm();
 
-  byte[] DATA = "the signature base".getBytes(StandardCharsets.UTF_8);
+  // V00.76.10 H2: a fresh array per call instead of a shared mutable static
+  // interface constant (SpotBugs MS_OOI_PKGPROTECT — interface fields are
+  // implicitly public, so a byte[] constant is a process-wide mutable exposure).
+  default byte[] data() {
+    return "the signature base".getBytes(StandardCharsets.UTF_8);
+  }
 
   @Test
   @DisplayName("id is non-null")
@@ -61,8 +66,8 @@ public interface SignatureAlgorithmContract {
   default void roundTrip() {
     SignatureAlgorithm algorithm = newAlgorithm();
     KeyPair keyPair = algorithm.generateKeyPair();
-    byte[] signature = algorithm.sign(DATA, keyPair.getPrivate());
-    assertTrue(algorithm.verify(DATA, signature, keyPair.getPublic()));
+    byte[] signature = algorithm.sign(data(), keyPair.getPrivate());
+    assertTrue(algorithm.verify(data(), signature, keyPair.getPublic()));
   }
 
   @Test
@@ -70,7 +75,7 @@ public interface SignatureAlgorithmContract {
   default void tamperedFails() {
     SignatureAlgorithm algorithm = newAlgorithm();
     KeyPair keyPair = algorithm.generateKeyPair();
-    byte[] signature = algorithm.sign(DATA, keyPair.getPrivate());
+    byte[] signature = algorithm.sign(data(), keyPair.getPrivate());
     byte[] tampered = "the signature base!".getBytes(StandardCharsets.UTF_8);
     assertFalse(algorithm.verify(tampered, signature, keyPair.getPublic()));
   }
@@ -80,6 +85,6 @@ public interface SignatureAlgorithmContract {
   default void garbageReturnsFalse() {
     SignatureAlgorithm algorithm = newAlgorithm();
     KeyPair keyPair = algorithm.generateKeyPair();
-    assertFalse(algorithm.verify(DATA, new byte[]{0, 1, 2, 3}, keyPair.getPublic()));
+    assertFalse(algorithm.verify(data(), new byte[]{0, 1, 2, 3}, keyPair.getPublic()));
   }
 }
