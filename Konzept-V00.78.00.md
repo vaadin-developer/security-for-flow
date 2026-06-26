@@ -1,13 +1,43 @@
 # Konzept V00.78.00: jSentinel-identity-oidc — OIDC RP
 
 Version: `00.78.00`
-Quellstand: V00.77.00 (jSentinel-oauth2, in Umsetzung)
+Quellstand: V00.77.00 (jSentinel-oauth2, **released** — Tag `v00.77.00`, Maven Central)
 Zielprojekt: `vaadin-developer/security-for-flow`
 Zielbranch: `develop`
 Java: `26+`
 Build: Maven 4
 Lizenz: EUPL 1.2
-Status: Architektur- und Umsetzungskonzept
+Status: Architektur- und Umsetzungskonzept — **A.0-Review-Gate bestanden (2026-06-26)**
+
+---
+
+## A.0-Review-Gate — Korrekturen gegen geshippte V00.77-Realität (2026-06-26)
+
+Das Konzept wurde geschrieben, als V00.77 „in Umsetzung" war. Gegen den jetzt geshippten Code
+(Explore-Fact-Check) ist es tragfähig — mit **zwei Korrekturen**, beide ohne Änderung an
+geshipptem Stable-Code:
+
+1. **`NimbusJwtValidator` ist `final`.** Der Konzept-Plan `NimbusIdTokenValidator extends
+   NimbusJwtValidator` (§6.2, §7.1, §7.3) kompiliert nicht. → **Komposition statt Vererbung:**
+   `NimbusIdTokenValidator` umschließt die `JwtValidator`-**SPI** (nicht die konkrete Nimbus-Klasse),
+   führt die JWT-Standard-Validierung aus und layert die OIDC-Checks
+   (`nonce`/`azp`/`at_hash`/`c_hash`/`auth_time`/`acr`) auf das `ValidatedJwt`-Ergebnis. Sauberer
+   (hängt an der SPI), bleibt JOSE-isoliert.
+2. **`JSentinelSubject` hat 4 Felder** `(String subjectId, String displayName, Set<RoleName> roles,
+   Set<PermissionName> permissions)`, nicht die 6 aus §10.2 (kein `Optional<TenantId>`, kein
+   `Map additionalAttributes`). `JSentinelSubject` ist **Stable-API (V00.73)** und bleibt
+   unangetastet. → Der `DefaultClaimsToSubjectMapper` baut das echte 4-Feld-Subject; `TenantId`
+   kommt aus der separaten `ClaimsToTenantMapper`-SPI (in §10.2 bereits vorhanden); die
+   Zusatz-Claims (`acr`/`amr`/`auth_time`/`email`/…) bleiben in `ValidatedIdToken` und werden vom
+   Step-Up-Evaluator bzw. einem OIDC-Principal/Context gelesen — nicht in `JSentinelSubject`
+   gequetscht. Die §10.2-Skizze ist entsprechend zu lesen (4-Arg-Konstruktor + Tenant separat).
+
+Bestätigt vorhanden (keine Drift): `ValidatedJwt.claims()`/typed getters/`claim(name,type)`,
+`StartRequestParams.nonce`, `StateEntry.nonce`, `TokenResponse.idToken()`, `JwtSigner`, `JwksClient`,
+`ClaimExpectations`, `JwsAlgorithm`, `AlgorithmAllowList`, `OAuth2Bootstrap`+`OAuth2State`,
+`RoleName`/`PermissionName`/`SubjectId`/`TenantId`. Reaktor: 43 Module, Version `00.77.00`
+(Bump → `00.78.00-SNAPSHOT` in Stage B). `jSentinel-identity-oidc` kollidiert nicht mit
+`jSentinel-propagation-oidc`.
 
 ---
 
