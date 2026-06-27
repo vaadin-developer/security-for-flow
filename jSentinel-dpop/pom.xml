@@ -21,14 +21,19 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>jSentinel-identity-vendor-okta</artifactId>
-  <name>jSentinel OIDC Vendor — Okta</name>
-  <description>V00.79 opt-in module: Okta vendor profile — groups claim, okta:* claim filter, org authorization-server pattern.</description>
+  <artifactId>jSentinel-dpop</artifactId>
+  <name>jSentinel DPoP (RFC 9449)</name>
+  <description>V00.79 opt-in module: Demonstrating Proof-of-Possession (RFC 9449) — DPoP proof generator (outbound) and validator (inbound, htm/htu/iat/jti + cnf thumbprint binding + replay protection).</description>
 
   <dependencies>
     <dependency>
       <groupId>com.svenruppert.jsentinel</groupId>
-      <artifactId>jSentinel-identity-oidc</artifactId>
+      <artifactId>jSentinel-jwt</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-propagation</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
