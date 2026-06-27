@@ -100,6 +100,7 @@ MODULES=(
     "jSentinel-identity-vendor-okta"
     "jSentinel-identity-vendor-google"
     "jSentinel-identity-vendor-github"
+    "jSentinel-dpop"
 )
 
 if [ $# -ge 1 ]; then
