@@ -53,6 +53,22 @@
             <artifactId>jSentinel-vaadin-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- V00.79.20 B9: vendor-profile OIDC example (Keycloak / Entra / Auth0) -->
+        <dependency>
+            <groupId>com.svenruppert.jsentinel</groupId>
+            <artifactId>jSentinel-identity-vendor-keycloak</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.svenruppert.jsentinel</groupId>
+            <artifactId>jSentinel-identity-vendor-entra</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.svenruppert.jsentinel</groupId>
+            <artifactId>jSentinel-identity-vendor-auth0</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- Vaadin 25.1.1 Jackson 2-annotations transitive (see demo-vaadin) -->
         <dependency>
             <groupId>tools.jackson.core</groupId>
