@@ -84,4 +84,16 @@ class StableApiPromotionGuardTest {
           type.getName() + " is V00.79-new and must keep @ExperimentalJSentinelApi");
     }
   }
+
+  @Test
+  @DisplayName("R-EXIT: a stable type that exposes an experimental type does so via an experimental method")
+  void experimentalLeakIsMarkedAtTheMethod() throws NoSuchMethodException {
+    // OidcBootstrap is stable but .vendor(VendorProfile) takes a kept-experimental
+    // type — the method itself must stay experimental so the soak status propagates.
+    var vendor = com.svenruppert.jsentinel.dx.bootstrap.OidcBootstrap.class
+        .getMethod("vendor", com.svenruppert.jsentinel.oidc.api.VendorProfile.class);
+    assertTrue(vendor.isAnnotationPresent(ExperimentalJSentinelApi.class),
+        "OidcBootstrap.vendor(VendorProfile) must be @ExperimentalJSentinelApi (it exposes an "
+            + "experimental type from an otherwise-stable interface)");
+  }
 }
