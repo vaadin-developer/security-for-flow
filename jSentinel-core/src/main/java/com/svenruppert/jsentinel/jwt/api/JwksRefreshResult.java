@@ -1,7 +1,5 @@
 package com.svenruppert.jsentinel.jwt.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
@@ -24,7 +22,6 @@ import java.util.Optional;
  * @param errorClass the failure descriptor, if the refresh failed; empty on success
  * @since 00.76.00
  */
-@ExperimentalJSentinelApi
 public record JwksRefreshResult(
     int keyCount,
     Instant fetchedAt,

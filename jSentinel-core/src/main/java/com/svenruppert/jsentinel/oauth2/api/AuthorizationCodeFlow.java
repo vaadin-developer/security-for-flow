@@ -17,7 +17,6 @@
 package com.svenruppert.jsentinel.oauth2.api;
 
 import com.svenruppert.functional.result.Result;
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 
 import java.net.URI;
 import java.util.Map;
@@ -34,7 +33,6 @@ import java.util.Set;
  *
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
 public interface AuthorizationCodeFlow {
 
   /** Builds the authorization request (redirect URI + the state key bound in the store). */

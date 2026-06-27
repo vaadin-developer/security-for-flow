@@ -16,8 +16,6 @@
  */
 package com.svenruppert.jsentinel.oauth2.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.util.Objects;
 
 /**
@@ -28,7 +26,6 @@ import java.util.Objects;
  * @param method        always {@code "S256"}
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
 public record PkceChallenge(String codeChallenge, String method) {
 
   public PkceChallenge {

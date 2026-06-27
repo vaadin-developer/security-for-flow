@@ -16,7 +16,6 @@
  */
 package com.svenruppert.jsentinel.oidc.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.jwt.api.JwtValidationError;
 
 import java.util.Objects;
@@ -29,7 +28,6 @@ import java.util.Objects;
  *
  * @since 00.78.00
  */
-@ExperimentalJSentinelApi
 public sealed interface IdTokenValidationError
     permits IdTokenValidationError.JwtInvalid, IdTokenValidationError.NonceMismatch,
             IdTokenValidationError.AuthorizedPartyInvalid, IdTokenValidationError.AccessTokenHashMismatch,

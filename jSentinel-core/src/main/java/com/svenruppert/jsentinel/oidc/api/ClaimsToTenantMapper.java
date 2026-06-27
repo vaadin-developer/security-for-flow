@@ -16,7 +16,6 @@
  */
 package com.svenruppert.jsentinel.oidc.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.authorization.api.tenant.TenantId;
 
 import java.util.Optional;
@@ -30,7 +29,6 @@ import java.util.Optional;
  *
  * @since 00.78.00
  */
-@ExperimentalJSentinelApi
 public interface ClaimsToTenantMapper {
   Optional<TenantId> mapTenant(ValidatedIdToken idToken, Optional<UserInfoResponse> userInfo);
 }

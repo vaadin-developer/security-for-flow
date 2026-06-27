@@ -16,8 +16,6 @@
  */
 package com.svenruppert.jsentinel.oauth2.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.net.URI;
 import java.time.Instant;
 import java.util.Map;
@@ -37,7 +35,6 @@ import java.util.Optional;
  * @param createdAt    when this entry was created (for TTL)
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
 public record StateEntry(
     String pkceVerifier,
     Optional<String> nonce,

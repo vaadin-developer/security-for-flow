@@ -17,7 +17,6 @@
 package com.svenruppert.jsentinel.oidc.api;
 
 import com.svenruppert.functional.result.Result;
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 
 /**
  * Validates an OIDC ID token (V00.78). Runs the JWT-standard validation (signature
@@ -29,7 +28,6 @@ import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
  *
  * @since 00.78.00
  */
-@ExperimentalJSentinelApi
 public interface IdTokenValidator {
 
   /**

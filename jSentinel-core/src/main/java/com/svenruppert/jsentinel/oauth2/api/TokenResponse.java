@@ -16,8 +16,6 @@
  */
 package com.svenruppert.jsentinel.oauth2.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
@@ -39,7 +37,6 @@ import java.util.Set;
  * @param scopes       the granted scopes
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
 public record TokenResponse(
     String accessToken,
     Optional<String> refreshToken,

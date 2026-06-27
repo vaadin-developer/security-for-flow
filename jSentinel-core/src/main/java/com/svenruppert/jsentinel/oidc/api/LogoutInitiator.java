@@ -16,8 +16,6 @@
  */
 package com.svenruppert.jsentinel.oidc.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.net.URI;
 
 /**
@@ -29,7 +27,6 @@ import java.net.URI;
  *
  * @since 00.78.00
  */
-@ExperimentalJSentinelApi
 public interface LogoutInitiator {
 
   /**

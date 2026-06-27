@@ -1,7 +1,5 @@
 package com.svenruppert.jsentinel.jwt.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -30,7 +28,6 @@ import java.util.Set;
  *                         prefix.
  * @since 00.76.00
  */
-@ExperimentalJSentinelApi
 public record ClaimExpectations(
     Optional<String> expectedIssuer,
     Set<String> acceptedAudiences,

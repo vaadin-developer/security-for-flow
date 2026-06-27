@@ -16,8 +16,6 @@
  */
 package com.svenruppert.jsentinel.oidc.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -31,7 +29,6 @@ import java.util.Optional;
  * @param claims  the full claim set (immutable; includes {@code sub})
  * @since 00.78.00
  */
-@ExperimentalJSentinelApi
 public record UserInfoResponse(String subject, Map<String, Object> claims) {
 
   public UserInfoResponse {

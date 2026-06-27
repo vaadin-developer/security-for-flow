@@ -1,7 +1,5 @@
 package com.svenruppert.jsentinel.jwt.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.util.Objects;
 
 /**
@@ -11,7 +9,6 @@ import java.util.Objects;
  *
  * @since 00.76.00
  */
-@ExperimentalJSentinelApi
 public sealed interface JwtValidationError
     permits JwtValidationError.MalformedJwt, JwtValidationError.SignatureInvalid,
             JwtValidationError.UnsupportedAlgorithm, JwtValidationError.UnknownKid,

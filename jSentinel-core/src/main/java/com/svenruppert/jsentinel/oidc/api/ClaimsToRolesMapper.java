@@ -16,7 +16,6 @@
  */
 package com.svenruppert.jsentinel.oidc.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.authorization.api.roles.RoleName;
 
 import java.util.Optional;
@@ -30,7 +29,6 @@ import java.util.Set;
  *
  * @since 00.78.00
  */
-@ExperimentalJSentinelApi
 public interface ClaimsToRolesMapper {
   Set<RoleName> mapRoles(ValidatedIdToken idToken, Optional<UserInfoResponse> userInfo);
 }

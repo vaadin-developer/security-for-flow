@@ -16,8 +16,6 @@
  */
 package com.svenruppert.jsentinel.oauth2.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.net.URI;
 import java.time.Duration;
 import java.util.Objects;
@@ -42,7 +40,6 @@ import java.util.Set;
  * @param stateTtl                   the authorization-state TTL
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
 public record OAuth2ClientConfig(
     ClientAuthentication clientAuth,
     Optional<URI> authorizationEndpoint,

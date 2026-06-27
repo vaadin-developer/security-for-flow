@@ -1,7 +1,5 @@
 package com.svenruppert.jsentinel.jwt.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +17,6 @@ import java.util.Optional;
  * @param validatedAt when validation completed
  * @since 00.76.00
  */
-@ExperimentalJSentinelApi
 public record ValidatedJwt(
     String compact,
     JoseHeader header,

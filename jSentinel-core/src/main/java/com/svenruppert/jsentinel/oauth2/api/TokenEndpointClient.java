@@ -17,7 +17,6 @@
 package com.svenruppert.jsentinel.oauth2.api;
 
 import com.svenruppert.functional.result.Result;
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.credential.secret.SecretValue;
 
 import java.net.URI;
@@ -32,7 +31,6 @@ import java.util.Set;
  *
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
 public interface TokenEndpointClient {
 
   /** Authorization-code grant (RFC 6749 §4.1.3) with the PKCE verifier. */

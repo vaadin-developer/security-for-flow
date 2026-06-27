@@ -16,8 +16,6 @@
  */
 package com.svenruppert.jsentinel.oidc.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.net.URI;
 import java.util.Objects;
 import java.util.Optional;
@@ -32,7 +30,6 @@ import java.util.Set;
  *
  * @since 00.78.00
  */
-@ExperimentalJSentinelApi
 public record OidcProviderMetadata(
     String issuer,
     URI authorizationEndpoint,

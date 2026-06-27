@@ -1,7 +1,5 @@
 package com.svenruppert.jsentinel.jwt.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.util.Objects;
 import java.util.Set;
 
@@ -13,7 +11,6 @@ import java.util.Set;
  * @param allowed the permitted algorithms (defensively copied, immutable)
  * @since 00.76.00
  */
-@ExperimentalJSentinelApi
 public record AlgorithmAllowList(Set<JwsAlgorithm> allowed) {
 
   public AlgorithmAllowList {

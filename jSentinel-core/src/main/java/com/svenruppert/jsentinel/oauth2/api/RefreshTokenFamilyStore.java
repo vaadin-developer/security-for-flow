@@ -16,8 +16,6 @@
  */
 package com.svenruppert.jsentinel.oauth2.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 /**
  * Tracks refresh-token families for rotation + reuse-detection (BCP 9700
  * §4.13.2, V00.77). On each successful refresh the rotator presents the old
@@ -29,7 +27,6 @@ import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
  *
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
 public interface RefreshTokenFamilyStore {
 
   /** Records a freshly-issued family with its first refresh-token hash. */

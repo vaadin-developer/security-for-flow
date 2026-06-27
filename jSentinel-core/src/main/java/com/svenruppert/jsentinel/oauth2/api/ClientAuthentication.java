@@ -16,7 +16,6 @@
  */
 package com.svenruppert.jsentinel.oauth2.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.credential.secret.SecretValue;
 import com.svenruppert.jsentinel.jwt.api.JwtSigningKey;
 
@@ -32,7 +31,6 @@ import java.util.Objects;
  *
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
 public sealed interface ClientAuthentication
     permits ClientAuthentication.ClientSecretBasic, ClientAuthentication.ClientSecretPost,
             ClientAuthentication.ClientSecretJwt, ClientAuthentication.PrivateKeyJwt,

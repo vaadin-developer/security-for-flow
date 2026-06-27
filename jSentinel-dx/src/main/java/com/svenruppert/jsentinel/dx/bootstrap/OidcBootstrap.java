@@ -1,6 +1,5 @@
 package com.svenruppert.jsentinel.dx.bootstrap;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.oauth2.api.ClientAuthentication;
 import com.svenruppert.jsentinel.oidc.api.ClaimsToPermissionsMapper;
 import com.svenruppert.jsentinel.oidc.api.ClaimsToRolesMapper;
@@ -29,7 +28,6 @@ import java.time.Duration;
  *
  * @since 00.78.00
  */
-@ExperimentalJSentinelApi
 public interface OidcBootstrap {
 
   /** The OIDC issuer (required — STRICT raises {@code oidc/missing-issuer}). */

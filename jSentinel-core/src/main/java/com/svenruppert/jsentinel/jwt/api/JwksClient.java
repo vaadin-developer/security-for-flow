@@ -1,7 +1,5 @@
 package com.svenruppert.jsentinel.jwt.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.security.PublicKey;
 import java.util.Optional;
 
@@ -14,7 +12,6 @@ import java.util.Optional;
  *
  * @since 00.76.00
  */
-@ExperimentalJSentinelApi
 public interface JwksClient {
 
   /**

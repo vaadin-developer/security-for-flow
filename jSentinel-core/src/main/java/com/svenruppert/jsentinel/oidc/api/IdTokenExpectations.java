@@ -16,8 +16,6 @@
  */
 package com.svenruppert.jsentinel.oidc.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
@@ -39,7 +37,6 @@ import java.util.Set;
  * @param clockSkew             the allowed clock skew for time-based checks
  * @since 00.78.00
  */
-@ExperimentalJSentinelApi
 public record IdTokenExpectations(
     String expectedIssuer,
     String expectedAudience,

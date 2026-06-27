@@ -1,6 +1,5 @@
 package com.svenruppert.jsentinel.dx.bootstrap;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.oauth2.api.ClientAuthentication;
 import com.svenruppert.jsentinel.oauth2.api.RefreshTokenFamilyStore;
 import com.svenruppert.jsentinel.oauth2.api.StateStore;
@@ -23,7 +22,6 @@ import java.time.Duration;
  *
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
 public interface OAuth2Bootstrap {
 
   /** The RP's {@code client_id} (required — STRICT raises {@code oauth2/missing-client-id}). */

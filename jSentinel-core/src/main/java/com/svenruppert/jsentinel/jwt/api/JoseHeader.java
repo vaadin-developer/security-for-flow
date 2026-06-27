@@ -1,7 +1,5 @@
 package com.svenruppert.jsentinel.jwt.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.util.Objects;
 import java.util.Optional;
 
@@ -16,7 +14,6 @@ import java.util.Optional;
  * @param typ the optional token type
  * @since 00.76.00
  */
-@ExperimentalJSentinelApi
 public record JoseHeader(String alg, Optional<String> kid, Optional<String> typ) {
 
   public JoseHeader {

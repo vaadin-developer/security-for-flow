@@ -16,15 +16,12 @@
  */
 package com.svenruppert.jsentinel.oauth2.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 /**
  * The {@code token_type_hint} for introspection / revocation (RFC 7009 §2.1,
  * RFC 7662 §2.1, V00.77).
  *
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
 public enum TokenTypeHint {
   ACCESS_TOKEN("access_token"),
   REFRESH_TOKEN("refresh_token");

@@ -1,7 +1,6 @@
 package com.svenruppert.jsentinel.jwt.api;
 
 import com.svenruppert.functional.result.Result;
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 
 /**
  * Validates a compact JWT: format, signature (against an allow-listed algorithm
@@ -11,7 +10,6 @@ import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
  *
  * @since 00.76.00
  */
-@ExperimentalJSentinelApi
 public interface JwtValidator {
 
   /**

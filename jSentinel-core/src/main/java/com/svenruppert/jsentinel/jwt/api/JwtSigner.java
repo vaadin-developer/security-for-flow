@@ -16,8 +16,6 @@
  */
 package com.svenruppert.jsentinel.jwt.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.util.Map;
 
 /**
@@ -37,7 +35,6 @@ import java.util.Map;
  *
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
 public interface JwtSigner {
 
   /**

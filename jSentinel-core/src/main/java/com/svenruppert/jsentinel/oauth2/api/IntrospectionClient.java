@@ -17,7 +17,6 @@
 package com.svenruppert.jsentinel.oauth2.api;
 
 import com.svenruppert.functional.result.Result;
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 
 /**
  * Token introspection (RFC 7662, V00.77) — the RP asks the authorization server
@@ -26,7 +25,6 @@ import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
  *
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
 public interface IntrospectionClient {
 
   /**

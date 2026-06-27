@@ -1,6 +1,5 @@
 package com.svenruppert.jsentinel.dx.bootstrap;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.jwt.api.AlgorithmAllowList;
 import com.svenruppert.jsentinel.jwt.api.AlgorithmProfile;
 import com.svenruppert.jsentinel.jwt.api.JwtValidator;
@@ -25,7 +24,6 @@ import java.time.Duration;
  *
  * @since 00.76.00
  */
-@ExperimentalJSentinelApi
 public interface JwtBootstrap {
 
   /** Install a fully pre-built validator (exclusive with {@link #jwksUri(URI)}). */

@@ -16,8 +16,6 @@
  */
 package com.svenruppert.jsentinel.oauth2.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.util.Objects;
 
 /**
@@ -28,7 +26,6 @@ import java.util.Objects;
  *
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
 public sealed interface OAuth2Error
     permits OAuth2Error.ProtocolError, OAuth2Error.StateInvalid,
             OAuth2Error.AuthorizationDenied, OAuth2Error.RefreshTokenFamilyRevoked,

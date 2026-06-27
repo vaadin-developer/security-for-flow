@@ -16,7 +16,6 @@
  */
 package com.svenruppert.jsentinel.oidc.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.jwt.api.ValidatedJwt;
 
 import java.time.Instant;
@@ -40,7 +39,6 @@ import java.util.Optional;
  * @param sessionState     the {@code session_state} claim, if present
  * @since 00.78.00
  */
-@ExperimentalJSentinelApi
 public record ValidatedIdToken(
     ValidatedJwt jwt,
     Optional<String> nonce,

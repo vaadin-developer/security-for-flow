@@ -1,7 +1,5 @@
 package com.svenruppert.jsentinel.jwt.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.time.Duration;
 import java.util.Objects;
 
@@ -14,7 +12,6 @@ import java.util.Objects;
  * @param leeway the non-negative leeway applied to {@code exp} and {@code nbf}
  * @since 00.76.00
  */
-@ExperimentalJSentinelApi
 public record ClockSkewPolicy(Duration leeway) {
 
   /** 30 seconds — the V00.76 default. */

@@ -1,7 +1,5 @@
 package com.svenruppert.jsentinel.jwt.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.util.Set;
 
 /**
@@ -10,7 +8,6 @@ import java.util.Set;
  *
  * @since 00.76.00
  */
-@ExperimentalJSentinelApi
 public enum AlgorithmProfile {
 
   /** RS256, PS256, ES256, EdDSA — covers ~90% of OIDC IDPs. */

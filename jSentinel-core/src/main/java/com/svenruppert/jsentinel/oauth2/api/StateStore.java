@@ -16,8 +16,6 @@
  */
 package com.svenruppert.jsentinel.oauth2.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.time.Duration;
 import java.util.Optional;
 
@@ -30,7 +28,6 @@ import java.util.Optional;
  *
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
 public interface StateStore {
 
   /**

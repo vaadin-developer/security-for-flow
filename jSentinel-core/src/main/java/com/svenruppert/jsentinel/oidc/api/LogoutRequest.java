@@ -16,8 +16,6 @@
  */
 package com.svenruppert.jsentinel.oidc.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.net.URI;
 import java.util.Objects;
 import java.util.Optional;
@@ -34,7 +32,6 @@ import java.util.Optional;
  * @param state                 an opaque value echoed back on the redirect, if any
  * @since 00.78.00
  */
-@ExperimentalJSentinelApi
 public record LogoutRequest(
     String idTokenHint,
     Optional<URI> postLogoutRedirectUri,

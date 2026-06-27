@@ -17,7 +17,6 @@
 package com.svenruppert.jsentinel.oauth2.api;
 
 import com.svenruppert.functional.result.Result;
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 
 import java.util.Set;
 
@@ -29,7 +28,6 @@ import java.util.Set;
  *
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
 public interface DeviceAuthorizationClient {
 
   /**

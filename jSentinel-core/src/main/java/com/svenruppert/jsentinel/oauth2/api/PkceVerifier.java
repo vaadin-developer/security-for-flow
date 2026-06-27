@@ -16,8 +16,6 @@
  */
 package com.svenruppert.jsentinel.oauth2.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -37,7 +35,6 @@ import java.util.Objects;
  *
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
 public final class PkceVerifier {
 
   private static final SecureRandom RANDOM = new SecureRandom();

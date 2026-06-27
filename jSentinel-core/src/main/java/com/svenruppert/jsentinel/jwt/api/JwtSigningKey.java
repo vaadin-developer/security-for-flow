@@ -16,8 +16,6 @@
  */
 package com.svenruppert.jsentinel.jwt.api;
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 import java.security.PrivateKey;
 import java.util.Objects;
 import java.util.Optional;
@@ -36,7 +34,6 @@ import java.util.Optional;
  * @param keyId      optional {@code kid} header value
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
 public record JwtSigningKey(PrivateKey privateKey, JwsAlgorithm algorithm, Optional<String> keyId) {
 
   public JwtSigningKey {
