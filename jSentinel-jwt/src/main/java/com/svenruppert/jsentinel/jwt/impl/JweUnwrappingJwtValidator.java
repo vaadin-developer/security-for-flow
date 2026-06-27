@@ -1,0 +1,110 @@
+/**
+ * Copyright © 2017 Sven Ruppert (sven.ruppert@gmail.com)
+ *
+ * Licensed under the EUPL, Version 1.2 or - as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence"); You may not use this work except in
+ * compliance with the Licence. You may obtain a copy of the Licence at:
+ *
+ * https://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the Licence is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
+ */
+package com.svenruppert.jsentinel.jwt.impl;
+
+/*-
+ * #%L
+ * jSentinel JWT — standardized JWT validation
+ * $Id:$
+ * $HeadURL:$
+ * %%
+ * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * %%
+ * Licensed under the EUPL, Version 1.1 or – as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence");
+ *
+ * You may not use this work except in compliance with the Licence.
+ * You may obtain a copy of the Licence at:
+ *
+ * http://ec.europa.eu/idabc/eupl5
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the Licence is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
+ * #L%
+ */
+
+import com.svenruppert.functional.result.Result;
+import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
+import com.svenruppert.jsentinel.jwt.api.JweDecoder;
+import com.svenruppert.jsentinel.jwt.api.JweDecodingError;
+import com.svenruppert.jsentinel.jwt.api.JwtValidationError;
+import com.svenruppert.jsentinel.jwt.api.JwtValidator;
+import com.svenruppert.jsentinel.jwt.api.ValidatedJwt;
+
+import java.security.PrivateKey;
+import java.util.Objects;
+
+/**
+ * A {@link JwtValidator} decorator that transparently unwraps encrypted JWTs (V00.79,
+ * RFC 7516). A five-segment JWE is decrypted via the composed {@link JweDecoder} and the
+ * resulting inner compact JWS is handed to the wrapped validator; a three-segment JWS is
+ * passed straight through. Composition, not inheritance — the wrapped
+ * {@code NimbusJwtValidator} is untouched and keeps doing the full signature/claims work.
+ *
+ * @since 00.79.20
+ */
+@ExperimentalJSentinelApi
+public final class JweUnwrappingJwtValidator implements JwtValidator {
+
+  private final JwtValidator delegate;
+  private final JweDecoder jweDecoder;
+  private final PrivateKey decryptionKey;
+
+  public JweUnwrappingJwtValidator(JwtValidator delegate, JweDecoder jweDecoder, PrivateKey decryptionKey) {
+    this.delegate = Objects.requireNonNull(delegate, "delegate");
+    this.jweDecoder = Objects.requireNonNull(jweDecoder, "jweDecoder");
+    this.decryptionKey = Objects.requireNonNull(decryptionKey, "decryptionKey");
+  }
+
+  @Override
+  public Result<ValidatedJwt, JwtValidationError> validate(String compactJwt) {
+    if (compactJwt == null || compactJwt.isBlank()) {
+      return Result.failure(new JwtValidationError.MalformedJwt("compact JWT is blank"));
+    }
+    if (countSegments(compactJwt) != 5) {
+      return delegate.validate(compactJwt);
+    }
+    Result<String, JweDecodingError> decrypted = jweDecoder.decode(compactJwt, decryptionKey);
+    return decrypted.fold(
+        inner -> delegate.validate(inner),
+        error -> Result.failure(toJwtError(error)));
+  }
+
+  private static JwtValidationError toJwtError(JweDecodingError error) {
+    return switch (error) {
+      case JweDecodingError.UnsupportedAlgorithm a ->
+          new JwtValidationError.UnsupportedAlgorithm(a.code(), a.message());
+      case JweDecodingError.UnsupportedEncryption e ->
+          new JwtValidationError.UnsupportedAlgorithm(e.code(), e.message());
+      default -> new JwtValidationError.MalformedJwt(error.code() + ": " + error.message());
+    };
+  }
+
+  private static int countSegments(String compact) {
+    int dots = 0;
+    for (int i = 0; i < compact.length(); i++) {
+      if (compact.charAt(i) == '.') {
+        dots++;
+      }
+    }
+    return dots + 1;
+  }
+}
