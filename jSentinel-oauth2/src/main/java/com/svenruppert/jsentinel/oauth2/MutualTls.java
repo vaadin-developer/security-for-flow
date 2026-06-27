@@ -42,6 +42,7 @@ package com.svenruppert.jsentinel.oauth2;
  */
 
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
+import com.svenruppert.jsentinel.oauth2.internal.OAuth2FormPost;
 
 import java.net.URI;
 import java.security.KeyStore;
@@ -61,6 +62,11 @@ import javax.net.ssl.TrustManagerFactory;
  * resulting {@code SSLContext} is handed to {@code HttpClient.newBuilder().sslContext(…)}
  * and that client to {@code HttpTokenEndpointClient}.
  *
+ * <p><strong>Protocol pinning:</strong> the context is created with {@code "TLSv1.3"} so
+ * TLS 1.3 is negotiated, but an {@code SSLContext} alone does not disable a 1.2 fallback —
+ * to forbid downgrade entirely, pin {@code SSLParameters.setProtocols("TLSv1.3")} on the
+ * {@code HttpClient} ({@code .sslParameters(...)}) / socket. See {@code mtls-setup.md}.
+ *
  * @since 00.79.20
  */
 @ExperimentalJSentinelApi
@@ -69,14 +75,15 @@ public final class MutualTls {
   private MutualTls() {
   }
 
-  /** TLS-1.3-only {@link SSLContext} presenting the client key, trusting the JVM default trust store. */
+  /** {@link SSLContext} (TLS 1.3) presenting the client key, trusting the JVM default trust store. */
   public static SSLContext sslContext(MutualTlsClientConfig config) {
     return sslContext(config, null);
   }
 
   /**
-   * TLS-1.3-only {@link SSLContext} presenting the client key from {@code config} and
-   * trusting {@code trustStore} (or the JVM default when {@code null}).
+   * {@link SSLContext} (TLS 1.3) presenting the client key from {@code config} and trusting
+   * {@code trustStore} (or the JVM default when {@code null}). Pin {@code enabledProtocols}
+   * to {@code TLSv1.3} on the socket / {@code HttpClient} to forbid a 1.2 downgrade.
    *
    * @throws IllegalStateException if the keystore holds no key entry under the alias
    *                               ({@code oauth2/mtls-keystore-empty})
@@ -114,13 +121,17 @@ public final class MutualTls {
   /**
    * Returns the {@code mtls_endpoint_aliases} override for {@code endpointName} (e.g.
    * {@code "token_endpoint"}) when the provider published one, else {@code fallback}
-   * (RFC 8705 §5). A mTLS client MUST use the aliased endpoint when present.
+   * (RFC 8705 §5). A mTLS client MUST use the aliased endpoint when present. The aliased
+   * URI is https-enforced: a tampered discovery document cannot redirect the
+   * client-certificate-bearing request to a plaintext / attacker endpoint.
    */
   public static URI endpointAlias(Map<String, URI> mtlsEndpointAliases, String endpointName, URI fallback) {
     Objects.requireNonNull(endpointName, "endpointName");
     Objects.requireNonNull(fallback, "fallback");
-    return Optional.ofNullable(mtlsEndpointAliases)
-        .map(m -> m.get(endpointName))
-        .orElse(fallback);
+    URI alias = Optional.ofNullable(mtlsEndpointAliases).map(m -> m.get(endpointName)).orElse(null);
+    if (alias == null) {
+      return fallback;
+    }
+    return OAuth2FormPost.requireHttps(alias, "oauth2/mtls-alias-not-https");
   }
 }

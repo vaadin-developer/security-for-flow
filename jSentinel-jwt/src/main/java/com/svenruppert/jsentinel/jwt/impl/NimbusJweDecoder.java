@@ -67,6 +67,9 @@ import java.util.Objects;
 @ExperimentalJSentinelApi
 public final class NimbusJweDecoder implements JweDecoder {
 
+  /** Upper bound on a compact JWE: ID tokens are small; this caps memory + parse work. */
+  private static final int MAX_JWE_BYTES = 100_000;
+
   private final JweAlgorithmAllowList allowList;
 
   public NimbusJweDecoder(JweAlgorithmAllowList allowList) {
@@ -78,6 +81,9 @@ public final class NimbusJweDecoder implements JweDecoder {
     Objects.requireNonNull(decryptionKey, "decryptionKey");
     if (jweCompact == null || jweCompact.isBlank()) {
       return Result.failure(new JweDecodingError.NotJwe("compact JWE is blank"));
+    }
+    if (jweCompact.length() > MAX_JWE_BYTES) {
+      return Result.failure(new JweDecodingError.Malformed("compact JWE exceeds the size cap"));
     }
     if (countSegments(jweCompact) != 5) {
       return Result.failure(new JweDecodingError.NotJwe("compact form is not a five-segment JWE"));
@@ -91,6 +97,12 @@ public final class NimbusJweDecoder implements JweDecoder {
     }
 
     JWEHeader header = jwe.getHeader();
+    // Reject any compression: Nimbus honours a header zip=DEF on decrypt and inflates the
+    // plaintext, so an attacker holding the recipient's public key could mint a valid
+    // RSA-OAEP-256 + GCM JWE whose deflated payload inflates to a memory bomb.
+    if (header.getCompressionAlgorithm() != null) {
+      return Result.failure(new JweDecodingError.UnsupportedAlgorithm("compression (zip) is not permitted"));
+    }
     String alg = header.getAlgorithm() == null ? "" : header.getAlgorithm().getName();
     if (!allowList.allowsKeyManagement(alg)) {
       return Result.failure(new JweDecodingError.UnsupportedAlgorithm("alg not on the allow-list"));

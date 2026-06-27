@@ -14,10 +14,20 @@ jSentinel turns it into the `SSLContext` the `HttpClient` presents:
 
 ```java
 MutualTlsClientConfig mtls = new MutualTlsClientConfig(keyStore, password, "client");
-SSLContext ctx = MutualTls.sslContext(mtls);              // TLS 1.3 only
-HttpClient http = HttpClient.newBuilder().sslContext(ctx).build();
+SSLContext ctx = MutualTls.sslContext(mtls);              // context protocol = TLS 1.3
+
+// Pin enabledProtocols to forbid a TLS 1.2 downgrade (an SSLContext alone does not):
+SSLParameters params = new SSLParameters();
+params.setProtocols(new String[] {"TLSv1.3"});
+HttpClient http = HttpClient.newBuilder().sslContext(ctx).sslParameters(params).build();
+
 TokenEndpointClient tokens = new HttpTokenEndpointClient(tokenEndpoint, clientAuth, http);
 ```
+
+> **No-downgrade:** `MutualTls.sslContext(...)` builds the context with `"TLSv1.3"`, but a
+> bare `SSLContext` still permits a 1.2 negotiation. Pinning
+> `SSLParameters.setProtocols("TLSv1.3")` on the `HttpClient` (above) is what actually
+> forbids the downgrade — required for the FIPS profile.
 
 jSentinel never loads the client key from a hardware token or OS keychain — the
 operator pre-loads the `KeyStore` (Konzept §4.5).

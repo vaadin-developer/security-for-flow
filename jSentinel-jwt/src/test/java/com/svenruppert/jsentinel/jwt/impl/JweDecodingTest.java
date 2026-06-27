@@ -218,6 +218,26 @@ class JweDecodingTest {
   }
 
   @Test
+  @DisplayName("a JWE carrying a zip (compression) header is rejected (decompression-bomb guard)")
+  void compressionRejected() {
+    String jwe;
+    try {
+      com.nimbusds.jose.JWEObject obj = new com.nimbusds.jose.JWEObject(
+          new com.nimbusds.jose.JWEHeader.Builder(JWEAlgorithm.RSA_OAEP_256, EncryptionMethod.A256GCM)
+              .compressionAlgorithm(com.nimbusds.jose.CompressionAlgorithm.DEF)
+              .contentType("JWT").build(),
+          new com.nimbusds.jose.Payload(innerJws()));
+      obj.encrypt(new com.nimbusds.jose.crypto.RSAEncrypter(encPub()));
+      jwe = obj.serialize();
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
+    }
+    JweDecodingError err = new NimbusJweDecoder(JweAlgorithmAllowList.defaults())
+        .decode(jwe, encPriv()).fold(ok -> null, e -> e);
+    assertInstanceOf(JweDecodingError.UnsupportedAlgorithm.class, err);
+  }
+
+  @Test
   @DisplayName("a non-JWE three-segment input is reported as not-a-JWE by the decoder")
   void notJwe() {
     JweDecodingError err = new NimbusJweDecoder(JweAlgorithmAllowList.defaults())

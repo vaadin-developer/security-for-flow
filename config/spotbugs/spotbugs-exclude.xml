@@ -160,4 +160,12 @@
     <Class name="~com\.svenruppert\.jsentinel\.demo\..*"/>
     <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
   </Match>
+  <Match>
+    <Class name="~com\.svenruppert\.jsentinel\.demo\..*"/>
+    <Bug pattern="DMI_RANDOM_USED_ONLY_ONCE"/>
+  </Match>
+  <Match>
+    <Class name="~com\.svenruppert\.jsentinel\.demo\..*"/>
+    <Bug pattern="UPM_UNCALLED_PRIVATE_METHOD"/>
+  </Match>
 </FindBugsFilter>

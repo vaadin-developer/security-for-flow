@@ -237,4 +237,12 @@ class MutualTlsTest {
     assertEquals(plain, MutualTls.endpointAlias(null, "token_endpoint", plain));
   }
 
+  @Test
+  @DisplayName("a plaintext aliased endpoint is rejected (tampered discovery cannot redirect the cert)")
+  void endpointAliasHttpRejected() {
+    URI plain = URI.create("https://op.example.com/token");
+    Map<String, URI> evil = Map.of("token_endpoint", URI.create("http://attacker.example.com/token"));
+    assertThrows(IllegalArgumentException.class,
+        () -> MutualTls.endpointAlias(evil, "token_endpoint", plain));
+  }
 }
