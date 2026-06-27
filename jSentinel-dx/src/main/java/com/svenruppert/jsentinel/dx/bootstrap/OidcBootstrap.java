@@ -9,6 +9,7 @@ import com.svenruppert.jsentinel.oidc.api.ClaimsToTenantMapper;
 import com.svenruppert.jsentinel.oidc.api.IdTokenValidator;
 import com.svenruppert.jsentinel.oidc.api.OidcDiscoveryClient;
 import com.svenruppert.jsentinel.oidc.api.UserInfoClient;
+import com.svenruppert.jsentinel.oidc.api.VendorProfile;
 
 import java.net.URI;
 import java.time.Duration;
@@ -84,4 +85,15 @@ public interface OidcBootstrap {
 
   /** Overrides the UserInfo client. */
   OidcBootstrap userInfoClient(UserInfoClient client);
+
+  /**
+   * V00.79: applies a vendor profile — a bundle of IdP-specific claim mappers
+   * (Keycloak {@code realm_access}, Entra {@code wids}, Auth0 namespace, …). Each
+   * mapper the profile provides overrides the corresponding default; explicit
+   * {@code .rolesMapper(...)} etc. calls after {@code .vendor(...)} still win.
+   *
+   * @param profile the vendor profile (e.g. {@code KeycloakProfile.INSTANCE})
+   * @return this builder
+   */
+  OidcBootstrap vendor(VendorProfile profile);
 }

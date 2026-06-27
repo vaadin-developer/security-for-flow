@@ -134,4 +134,14 @@ public final class RecordingOidcBootstrap implements OidcBootstrap {
     state.userInfoClient(client);
     return this;
   }
+
+  @Override
+  public OidcBootstrap vendor(com.svenruppert.jsentinel.oidc.api.VendorProfile profile) {
+    java.util.Objects.requireNonNull(profile, "profile");
+    profile.rolesMapper().ifPresent(state::rolesMapper);
+    profile.permissionsMapper().ifPresent(state::permissionsMapper);
+    profile.tenantMapper().ifPresent(state::tenantMapper);
+    profile.subjectMapper().ifPresent(state::claimsMapper);
+    return this;
+  }
 }
