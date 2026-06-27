@@ -93,6 +93,13 @@ MODULES=(
     "jSentinel-identity-oidc"
     "jSentinel-identity-oidc-vaadin"
     "jSentinel-identity-oidc-rest"
+    "jSentinel-test-oidc"
+    "jSentinel-identity-vendor-keycloak"
+    "jSentinel-identity-vendor-entra"
+    "jSentinel-identity-vendor-auth0"
+    "jSentinel-identity-vendor-okta"
+    "jSentinel-identity-vendor-google"
+    "jSentinel-identity-vendor-github"
 )
 
 if [ $# -ge 1 ]; then

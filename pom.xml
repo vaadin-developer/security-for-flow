@@ -25,7 +25,7 @@
 
     <groupId>com.svenruppert.jsentinel</groupId>
     <artifactId>jSentinel-parent</artifactId>
-    <version>00.79.00-SNAPSHOT</version>
+    <version>00.79.00</version>
     <packaging>pom</packaging>
 
     <name>jSentinel — Security for Vaadin Flow</name>
