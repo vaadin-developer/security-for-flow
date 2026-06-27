@@ -1,13 +1,45 @@
 # Konzept V00.79.00: Identity-Hardening + Interop + Stable-API
 
 Version: `00.79.00`
-Quellstand: V00.78.00 (jSentinel-identity-oidc, in Umsetzung)
+Quellstand: V00.78.00 (jSentinel-identity-oidc, **released** — Tag `v00.78.00`, Maven Central)
 Zielprojekt: `vaadin-developer/security-for-flow`
 Zielbranch: `develop`
 Java: `26+`
 Build: Maven 4
 Lizenz: EUPL 1.2
-Status: Architektur- und Umsetzungskonzept
+Status: Architektur- und Umsetzungskonzept — **A.0-Review-Gate bestanden (2026-06-27)**
+
+---
+
+## A.0-Review-Gate (2026-06-27) — Fact-Check gegen geshipptes V00.78 + Deploy-Strategie
+
+Konzept tragfähig, **kein Blocker**. Befunde (Explore-Fact-Check):
+
+- **170 Promotion-Kandidaten** (`@ExperimentalJSentinelApi`): jSentinel-core 154
+  (jwt/oauth2/oidc api), jSentinel-jwt 3, jSentinel-oauth2 5, jSentinel-dx 8.
+- `@ExperimentalJSentinelApi` ist ein **reiner RUNTIME-Marker** — keine Reflection-/
+  Processor-/ArchUnit-Nutzung. Entfernen = reine Source-Löschung, null Test-/Runtime-
+  Impact. V00.79 ergänzt einen **ArchUnit-Guard**, der die *behaltenen* Experimental-
+  Typen markiert hält.
+- **Kein `.vendor(...)`-Hook** auf `OidcBootstrap`, aber die Override-Punkte
+  (`.rolesMapper`/`.claimsMapper`/`.permissionsMapper`/`.tenantMapper`/`.discoveryClient`/
+  `.idTokenValidator`/`.userInfoClient`) existieren — ein `VendorProfile` bündelt sie
+  nur (1-Methoden-Erweiterung).
+- `StubIdentityProvider`-Infra ist aus den V00.78-Tests extrahierbar
+  (`HttpOidcDiscoveryClientTest` HttpServer + `DefaultIdTokenValidatorTest`
+  Nimbus-Signing).
+- Markup-Lücke (V00.78): identity-oidc-Impl-Klassen tragen kein
+  `@ExperimentalJSentinelApi` (nur die SPIs) — der Promotion-Audit korrigiert das.
+- Reaktor **44 Module**, Version `00.78.00`. Keine V00.79-Module gescaffoldet.
+
+**Deploy-Strategie (User-Entscheidung: volles Konzept, mehrere Etappen):**
+- **Etappe 1 → `v00.79.00`:** B1 Test-Infra + B2 Vendor-Profile + B8 Stable-API-
+  Promotion (V00.76/77/78-Typen).
+- **Etappe 2 → `v00.79.10`:** B3 Replay-Stores + B4 DPoP + B5 Logout-Hardening.
+- **Etappe 3 → `v00.79.20`:** B6 mTLS/PAR/JAR/JWE + B7 FIPS + B9 Demos/Doku.
+
+V00.79-Neuheiten bleiben pro Etappe `@ExperimentalJSentinelApi` (eigene Soak-Zeit);
+nur die reifen V00.76/77/78-Typen werden in Etappe 1 promoted.
 
 ---
 
