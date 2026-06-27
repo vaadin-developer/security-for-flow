@@ -114,6 +114,48 @@ RestSecurity.bootstrap()
     .install();
 ```
 
+## OAuth2 / OIDC / DPoP / JWE / mTLS profile (V00.79)
+
+V00.76–V00.79 grew the framework from JWT validation into a full OAuth2 RP / OIDC
+RP / DPoP / mTLS stack. The FIPS posture extends to every new crypto surface; the
+constraints below are the FIPS-approved subset of what each feature otherwise
+permits.
+
+| Surface | FIPS-approved subset | Excluded |
+|---|---|---|
+| **JWS** (ID token, JAR request object, DPoP proof, logout token) | RS256/384/512, ES256/384/512 | EdDSA, PS\* (as above), `HS*`, `none` |
+| **JWE key-management** (`alg`) — `JweAlgorithmAllowList.fips()` | `RSA-OAEP-256` | `RSA-OAEP`, `RSA1_5`, `dir`, ECDH-ES\* |
+| **JWE content-encryption** (`enc`) — `JweAlgorithmAllowList.fips()` | `A256GCM` | `A128GCM`, `A128CBC-HS256`, `A192*` |
+| **DPoP proof key** (RFC 9449) | RSA-2048+ or P-256 (ES256) | Ed25519, P-521-only estates |
+| **mTLS** (RFC 8705) — `MutualTls.sslContext` | TLS 1.3 only | TLS ≤ 1.2 |
+| **Discovery / JWKS / UserInfo / token endpoints** | TLS 1.3 only | plaintext, TLS ≤ 1.2 |
+
+Notes:
+
+- **`MutualTls.sslContext(...)` builds a `TLSv1.3` `SSLContext`** explicitly — it
+  never negotiates down. The presented client certificate's key must itself be an
+  approved type (RSA-2048+ / P-256).
+- **JWE downgrade defence**: `NimbusJweDecoder` enforces the `alg`/`enc`
+  allow-list *before* decryption, so a `RSA1_5` / `dir` header is rejected without
+  touching the ciphertext. Pass `JweAlgorithmAllowList.fips()` for the FIPS subset:
+
+  ```java
+  JweDecoder decoder = new NimbusJweDecoder(JweAlgorithmAllowList.fips());
+  JwtValidator idTokenValidator =
+      new JweUnwrappingJwtValidator(innerValidator, decoder, decryptionKey);
+  ```
+
+- **DPoP / JAR / logout-token** signatures travel the same JWS path as the ID
+  token, so the JWS row above governs them; select `AlgorithmProfile.FIPS_140_3`
+  for the validators and an RSA-2048+/P-256 `JwtSigningKey` for the signers.
+- **Operationally**, mTLS material (the client `KeyStore`) is supplied by the
+  operator — see [`mtls-setup.md`](mtls-setup.md). jSentinel never loads it from a
+  hardware token / OS keychain itself.
+
+As with the JWT row, these are *allow-list* guarantees: the framework refuses
+anything outside the set. It still does not attest that the host JVM's JCA
+provider is the FIPS-validated one — that remains the operator checklist below.
+
 ## Operator checklist (when FIPS is required)
 
 - [ ] JDK is a vendor distribution with a FIPS-validated provider.
