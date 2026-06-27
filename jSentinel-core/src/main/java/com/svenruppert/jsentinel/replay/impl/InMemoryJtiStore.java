@@ -22,27 +22,32 @@ import com.svenruppert.jsentinel.replay.api.JtiStore;
 import com.svenruppert.jsentinel.replay.api.ReplayError;
 
 import java.time.Instant;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
- * In-memory {@link JtiStore} (V00.79): a sliding window of seen {@code jti}s with an
- * LRU cap (default 100k). A {@code jti} seen within its validity window is a replay;
- * once a {@code jti}'s {@code expiresAt} has passed it may be recorded again (its
- * proof's window is over). For a single JVM only — a multi-node deployment needs a
- * shared store. Thread-safe (synchronised).
+ * In-memory {@link JtiStore} (V00.79): a sliding window of seen {@code jti}s, bounded by
+ * a capacity (default 100k). A {@code jti} seen within its validity window is a replay;
+ * once a {@code jti}'s {@code expiresAt} has passed it may be recorded again (its proof's
+ * window is over). When the capacity bound is hit, expired entries are purged first and,
+ * if still full, the entry with the <strong>soonest expiry</strong> (shortest remaining
+ * replay window) is evicted — never the least-recently-used one. The old LRU policy let
+ * an attacker flood the store with self-signed valid proofs to evict a victim's still-live
+ * {@code jti} and replay a captured proof (mirrors the V00.75.20 R012 fix to the event
+ * replay store). For a single JVM only — a multi-node deployment needs a shared store.
+ * Thread-safe (synchronised).
  */
 @ExperimentalJSentinelApi
 public final class InMemoryJtiStore implements JtiStore {
 
-  /** Default LRU cap. */
+  /** Default capacity bound on retained {@code jti}s. */
   public static final int DEFAULT_MAX_ENTRIES = 100_000;
 
   private final int maxEntries;
   private final Supplier<Instant> clock;
-  private final Map<String, Instant> seen;
+  private final Map<String, Instant> seen = new HashMap<>();
 
   public InMemoryJtiStore() {
     this(DEFAULT_MAX_ENTRIES, Instant::now);
@@ -54,12 +59,6 @@ public final class InMemoryJtiStore implements JtiStore {
     }
     this.maxEntries = maxEntries;
     this.clock = Objects.requireNonNull(clock, "clock");
-    this.seen = new LinkedHashMap<>(256, 0.75f, true) {
-      @Override
-      protected boolean removeEldestEntry(Map.Entry<String, Instant> eldest) {
-        return size() > InMemoryJtiStore.this.maxEntries;
-      }
-    };
   }
 
   @Override
@@ -71,7 +70,23 @@ public final class InMemoryJtiStore implements JtiStore {
     if (existing != null && existing.isAfter(now)) {
       return Result.failure(ReplayError.replayDetected());
     }
+    if (!seen.containsKey(jti) && seen.size() >= maxEntries) {
+      evictOne(now);
+    }
     seen.put(jti, expiresAt);
     return Result.success(Boolean.TRUE);
+  }
+
+  private void evictOne(Instant now) {
+    // Purge everything already expired (free to drop — its replay window is over).
+    seen.values().removeIf(exp -> !exp.isAfter(now));
+    if (seen.size() < maxEntries) {
+      return;
+    }
+    // Still full: drop the entry with the smallest expiresAt (shortest remaining window).
+    seen.entrySet().stream()
+        .min(Map.Entry.comparingByValue())
+        .map(Map.Entry::getKey)
+        .ifPresent(seen::remove);
   }
 }

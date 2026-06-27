@@ -122,15 +122,21 @@ public final class DefaultLogoutTokenValidator implements LogoutTokenValidator {
       return Result.failure(new LogoutTokenValidationError.MissingSubjectAndSid());
     }
 
-    String issuer = jwt.issuer().orElse("");
+    // §2.4 step 1 — jti is REQUIRED. Reject its absence rather than silently skipping
+    // replay protection (a jti-less token would otherwise be infinitely replayable).
     Optional<String> jti = jwt.jwtId();
-    if (jtiStore.isPresent() && jti.isPresent()) {
+    if (jti.isEmpty() || jti.get().isBlank()) {
+      return Result.failure(new LogoutTokenValidationError.MissingJwtId());
+    }
+
+    String issuer = jwt.issuer().orElse("");
+    if (jtiStore.isPresent()) {
       Instant expiresAt = jwt.issuedAt().orElse(Instant.EPOCH).plus(JTI_RETENTION);
       if (!jtiStore.get().record(jti.get(), expiresAt).isSuccess()) {
         return Result.failure(new LogoutTokenValidationError.Replay());
       }
     }
 
-    return Result.success(new BackChannelLogoutToken(issuer, subject, sid, jti.orElse("")));
+    return Result.success(new BackChannelLogoutToken(issuer, subject, sid, jti.get()));
   }
 }

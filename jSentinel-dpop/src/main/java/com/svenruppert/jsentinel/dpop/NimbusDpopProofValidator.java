@@ -157,13 +157,14 @@ public final class NimbusDpopProofValidator implements DpopProofValidator {
     if (jti == null || jti.isBlank()) {
       return fail(new DpopValidationError.ProofMalformed("missing jti"));
     }
+    // Compute the thumbprint (the last fallible step) BEFORE recording the jti, so a
+    // thumbprint failure cannot consume a one-time jti and still fail the proof.
+    JwkThumbprint thumbprint = thumbprintOf(headerJwk);
     Instant expiresAt = issuedAt.plus(maxAge).plus(maxFutureSkew);
     boolean recorded = jtiStore.record(jti, expiresAt).isSuccess();
     if (!recorded) {
       return fail(new DpopValidationError.Replay("jti already seen"));
     }
-
-    JwkThumbprint thumbprint = thumbprintOf(headerJwk);
     return Result.success(new ValidatedDpopProof(thumbprint, htm, request.httpUri(), jti, issuedAt));
   }
 

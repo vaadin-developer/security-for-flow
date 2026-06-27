@@ -72,4 +72,20 @@ class ReplayStoresTest {
   void unknownKeyEmpty() {
     assertFalse(new InMemoryNonceStore(now::get).consume("nope").isPresent());
   }
+
+  @Test
+  @DisplayName("on overflow the soonest-to-expire jti is evicted, not a long-lived one (R012)")
+  void overflowEvictsSoonestToExpire() {
+    InMemoryJtiStore store = new InMemoryJtiStore(2, now::get);
+    store.record("jti-long", now.get().plusSeconds(3600)).toOptional().orElseThrow();
+    store.record("jti-short", now.get().plusSeconds(10)).toOptional().orElseThrow();
+    // third record at capacity → evicts the soonest-to-expire entry (jti-short).
+    store.record("jti-other", now.get().plusSeconds(3600)).toOptional().orElseThrow();
+
+    // jti-long must still be remembered → re-recording it within its window is a replay.
+    assertTrue(store.record("jti-long", now.get().plusSeconds(3600)).isFailure(),
+        "long-lived jti must survive the overflow");
+    // jti-short was evicted → it records fresh again.
+    assertTrue(store.record("jti-short", now.get().plusSeconds(10)).toOptional().isPresent());
+  }
 }

@@ -67,6 +67,14 @@ public sealed interface LogoutTokenValidationError {
     }
   }
 
+  /** The REQUIRED {@code jti} claim was absent (§2.4 step 1); without it replay can't be enforced. */
+  record MissingJwtId() implements LogoutTokenValidationError {
+    @Override
+    public String code() {
+      return "logout-token/missing-jti";
+    }
+  }
+
   /** The {@code jti} was already seen — replayed logout token. */
   record Replay() implements LogoutTokenValidationError {
     @Override

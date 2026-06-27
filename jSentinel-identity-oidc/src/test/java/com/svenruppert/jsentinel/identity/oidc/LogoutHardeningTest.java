@@ -202,6 +202,22 @@ class LogoutHardeningTest {
   }
 
   @Test
+  @DisplayName("a logout token without the required jti is rejected")
+  void missingJtiRejected() {
+    String token;
+    try {
+      JWTClaimsSet.Builder c = logoutClaims().issuer(ISSUER).audience(CLIENT).issueTime(Date.from(NOW));
+      SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(KID).build(), c.build());
+      jwt.sign(new RSASSASigner(rsa));
+      token = jwt.serialize();
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
+    }
+    var err = validator().validate(token).fold(ok -> null, e -> e);
+    assertInstanceOf(LogoutTokenValidationError.MissingJwtId.class, err);
+  }
+
+  @Test
   @DisplayName("a replayed logout token (same jti) is rejected the second time")
   void replayRejected() {
     DefaultLogoutTokenValidator v = validator();
