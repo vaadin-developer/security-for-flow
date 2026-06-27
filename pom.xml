@@ -25,7 +25,7 @@
 
     <groupId>com.svenruppert.jsentinel</groupId>
     <artifactId>jSentinel-parent</artifactId>
-    <version>00.78.00</version>
+    <version>00.79.00-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>jSentinel — Security for Vaadin Flow</name>
@@ -103,6 +103,13 @@
         <module>jSentinel-identity-oidc</module>
         <module>jSentinel-identity-oidc-vaadin</module>
         <module>jSentinel-identity-oidc-rest</module>
+        <module>jSentinel-test-oidc</module>
+        <module>jSentinel-identity-vendor-keycloak</module>
+        <module>jSentinel-identity-vendor-entra</module>
+        <module>jSentinel-identity-vendor-auth0</module>
+        <module>jSentinel-identity-vendor-okta</module>
+        <module>jSentinel-identity-vendor-google</module>
+        <module>jSentinel-identity-vendor-github</module>
         <module>demo-rest-shared</module>
         <module>demo-vaadin</module>
         <module>demo-rest</module>
