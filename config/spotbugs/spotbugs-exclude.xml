@@ -109,4 +109,26 @@
     <Class name="~com\.svenruppert\.jsentinel\.propagation\.processor\.PropagateTokenProcessor.*"/>
     <Bug pattern="POTENTIAL_XML_INJECTION"/>
   </Match>
+
+  <!--
+    V00.79.10 (exit-review): MS_EXPOSE_REP on the two demo-vaadin static
+    test-seam providers. Both return a deliberately swappable static instance
+    so tests can replace the backing SPI before exercising it (the Javadoc on
+    each documents the setter + reset()). This is the same intended-static-
+    accessor pattern already excluded for JSentinelServiceResolver.current()
+    (V00.75.20 RF-01) — not an accidental leak, and confined to demo modules
+    that are never part of the Central bundle. Scoped to the two accessor
+    methods so the rule stays strict elsewhere. (Pre-existing since the V00.73
+    rebrand; surfaced when the demo reactor was rebuilt under -Pstatic-analysis.)
+  -->
+  <Match>
+    <Class name="com.svenruppert.jsentinel.demo.app.security.model.DemoUserDirectoryProvider"/>
+    <Method name="directory"/>
+    <Bug pattern="MS_EXPOSE_REP"/>
+  </Match>
+  <Match>
+    <Class name="com.svenruppert.jsentinel.demo.app.security.services.DemoSessionStoreProvider"/>
+    <Method name="sessionStore"/>
+    <Bug pattern="MS_EXPOSE_REP"/>
+  </Match>
 </FindBugsFilter>

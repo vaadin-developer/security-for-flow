@@ -65,9 +65,15 @@ class JwtDemoRouteTest {
   @DisplayName("a tampered token is rejected with 401")
   void tamperedTokenRejected() throws Exception {
     String token = stub.issue("alice", NOW);
-    // flip the last signature char so the RS256 signature no longer verifies
-    String tampered = token.substring(0, token.length() - 1)
-        + (token.endsWith("A") ? "B" : "A");
+    // flip the FIRST signature char so the RS256 signature no longer verifies.
+    // (The last base64url char of a 256-byte signature carries only non-significant
+    // padding bits, so flipping it leaves the decoded signature bytes unchanged ~1/4
+    // of the time — a flaky false-200. The first char's six bits are all significant.)
+    int sigStart = token.lastIndexOf('.') + 1;
+    char first = token.charAt(sigStart);
+    String tampered = token.substring(0, sigStart)
+        + (first == 'A' ? 'B' : 'A')
+        + token.substring(sigStart + 1);
     assertEquals(HttpStatus.UNAUTHORIZED.code(), postJwtDemo(tampered).statusCode());
   }
 
