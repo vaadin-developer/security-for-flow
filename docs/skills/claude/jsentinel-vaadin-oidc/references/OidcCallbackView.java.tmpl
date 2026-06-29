@@ -1,0 +1,79 @@
+package {{BASE_PACKAGE}}.views;
+
+import com.svenruppert.functional.result.Result;
+import com.svenruppert.jsentinel.authorization.api.JSentinelSubject;
+import com.svenruppert.jsentinel.authorization.vaadin.VaadinSessionSubjectStore;
+import com.svenruppert.jsentinel.oauth2.api.AuthorizationCodeFlow.CallbackParams;
+import com.svenruppert.jsentinel.oauth2.api.OAuth2Error;
+import com.svenruppert.jsentinel.oauth2.api.TokenResponse;
+import com.svenruppert.jsentinel.oidc.api.IdTokenExpectations;
+import com.svenruppert.jsentinel.oidc.api.ValidatedIdToken;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.VaadinSession;
+
+import {{BASE_PACKAGE}}.security.oidc.OidcClients;
+import {{BASE_PACKAGE}}.security.oidc.OidcNonceStore;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * OIDC redirect target. Exchanges the authorization code for tokens, validates the ID
+ * token (signature / iss / aud / nonce / exp), maps the validated claims to a
+ * {@link JSentinelSubject} via the vendor profile, binds it into the Vaadin session, and
+ * forwards to the dashboard. Any failure reroutes to {@code /login} (never a 500).
+ *
+ * <p>The {@code redirect_uri} registered at the IdP MUST be {@code .../oauth2/callback}.
+ */
+@Route("oauth2/callback")
+public class OidcCallbackView extends Div implements BeforeEnterObserver {
+
+  @Override
+  public void beforeEnter(BeforeEnterEvent event) {
+    Map<String, List<String>> qp = event.getLocation().getQueryParameters().getParameters();
+    Optional<String> code = first(qp, "code");
+    Optional<String> error = first(qp, "error");
+    String state = first(qp, "state").orElse("");
+    if (error.isPresent()) {
+      event.forwardTo("login");
+      return;
+    }
+
+    OidcClients clients = OidcClients.get();
+
+    Result<TokenResponse, OAuth2Error> tokenResult = clients.flow().handleCallback(
+        new CallbackParams(code, state, error, first(qp, "error_description")));
+    if (tokenResult.isFailure()) {
+      event.forwardTo("login");
+      return;
+    }
+    TokenResponse tokens = tokenResult.getOrThrow();
+
+    String nonce = OidcNonceStore.consume(state);
+    Result<ValidatedIdToken, ?> idTokenResult = clients.idTokenValidator().validate(
+        tokens.idToken().orElseThrow(),
+        IdTokenExpectations.of(OidcClients.ISSUER, OidcClients.CLIENT_ID, Optional.ofNullable(nonce)));
+    if (idTokenResult.isFailure()) {
+      event.forwardTo("login");
+      return;
+    }
+    ValidatedIdToken idToken = idTokenResult.getOrThrow();
+
+    JSentinelSubject subject = clients.claimsMapper().map(idToken, Optional.empty());
+    new VaadinSessionSubjectStore().setCurrentSubject(subject, JSentinelSubject.class);
+
+    // Keep the raw ID token so the logout view can pass it as id_token_hint (RP-logout).
+    tokens.idToken().ifPresent(t -> VaadinSession.getCurrent().setAttribute("oidc.id_token", t));
+
+    event.forwardTo("dashboard");
+  }
+
+  private static Optional<String> first(Map<String, List<String>> qp, String key) {
+    List<String> values = qp.get(key);
+    return (values == null || values.isEmpty()) ? Optional.empty() : Optional.of(values.get(0));
+  }
+}

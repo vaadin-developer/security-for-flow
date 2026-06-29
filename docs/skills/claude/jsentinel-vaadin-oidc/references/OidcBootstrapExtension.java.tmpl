@@ -1,0 +1,37 @@
+package {{BASE_PACKAGE}}.security.bootstrap;
+
+import com.svenruppert.jsentinel.dx.bootstrap.OidcBootstrap;
+
+import {{BASE_PACKAGE}}.security.oidc.OidcClients;
+import {{VENDOR_PROFILE_PKG}}.{{VENDOR_PROFILE}};
+
+import java.net.URI;
+
+/**
+ * Registers the OIDC federated-login configuration into the fluent bootstrap via the
+ * {@code contributeOidc} channel. Discovered/runtime clients (discovery, flow,
+ * id-token validator, claims mapper) live in {@link OidcClients}; this only records
+ * the declarative slots the DX layer validates at install.
+ */
+public final class OidcBootstrapExtension implements BootstrapExtension {
+
+  @Override
+  public boolean wantsOidc() {
+    return true;
+  }
+
+  @Override
+  public void contributeOidc(OidcBootstrap o) {
+    o.issuer(OidcClients.ISSUER)
+        .clientId(OidcClients.CLIENT_ID)
+        .clientAuthentication(OidcClients.clientAuth())
+        .redirectUri(URI.create(OidcClients.REDIRECT_URI))
+        .scope({{SCOPES}})
+        .vendor({{VENDOR_PROFILE}}.INSTANCE);
+  }
+
+  @Override
+  public int order() {
+    return 50;
+  }
+}
