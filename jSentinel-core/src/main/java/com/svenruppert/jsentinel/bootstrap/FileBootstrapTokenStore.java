@@ -16,6 +16,8 @@
  */
 package com.svenruppert.jsentinel.bootstrap;
 
+import com.svenruppert.dependencies.core.logger.HasLogger;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,7 +36,10 @@ import java.util.Optional;
  * File-backed token store for {@link BootstrapMode#PERSISTENT_FILE}.
  * <p>
  * The token survives restarts as long as the file exists. POSIX systems
- * receive {@code rw-------} (0600) permissions on save.
+ * receive {@code rw-------} (0600) permissions on save; on a non-POSIX
+ * filesystem owner-only permissions cannot be enforced and a WARN is logged
+ * (JS-SEC-016) — place the file in an owner-only directory or prefer
+ * {@code TRANSIENT_CONSOLE}.
  * <p>
  * Format (intentionally simple, no JSON dependency):
  * <pre>
@@ -42,7 +47,7 @@ import java.util.Optional;
  * createdAt=2026-05-06T09:30:00Z
  * </pre>
  */
-public final class FileBootstrapTokenStore implements BootstrapTokenStore {
+public final class FileBootstrapTokenStore implements BootstrapTokenStore, HasLogger {
 
   private static final EnumSet<PosixFilePermission> OWNER_RW =
       EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE);
@@ -89,7 +94,8 @@ public final class FileBootstrapTokenStore implements BootstrapTokenStore {
       // Create the file atomically with restrictive permissions so it never
       // exists with default umask permissions, even briefly.
       Files.deleteIfExists(path);
-      FileAttribute<?>[] attrs = path.getFileSystem().supportedFileAttributeViews().contains("posix")
+      boolean posix = path.getFileSystem().supportedFileAttributeViews().contains("posix");
+      FileAttribute<?>[] attrs = posix
           ? new FileAttribute<?>[]{PosixFilePermissions.asFileAttribute(OWNER_RW)}
           : new FileAttribute<?>[0];
       String content =
@@ -99,6 +105,15 @@ public final class FileBootstrapTokenStore implements BootstrapTokenStore {
           EnumSet.of(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE),
           attrs)) {
         channel.write(StandardCharsets.UTF_8.encode(content));
+      }
+      if (!posix) {
+        // JS-SEC-016 (CWE-256): owner-only permissions could not be enforced on
+        // this non-POSIX filesystem. The bootstrap token is a plaintext
+        // credential — place the file in an owner-only directory, or prefer
+        // TRANSIENT_CONSOLE.
+        logger().warn("bootstrap/token-file-permissions: owner-only permissions could "
+            + "not be enforced for {} on a non-POSIX filesystem; ensure the containing "
+            + "directory restricts access, or use TRANSIENT_CONSOLE", path);
       }
     } catch (IOException e) {
       throw new IllegalStateException("Could not write bootstrap token file", e);

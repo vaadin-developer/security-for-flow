@@ -33,6 +33,20 @@ import static org.junit.jupiter.api.Assertions.*;
 class FileBootstrapTokenStoreTest {
 
   @Test
+  @DisplayName("JS-SEC-016: the saved token file is owner-only (0600) on POSIX")
+  void savedFileIsOwnerOnly(@TempDir Path tmp) throws Exception {
+    org.junit.jupiter.api.Assumptions.assumeTrue(
+        java.nio.file.FileSystems.getDefault().supportedFileAttributeViews().contains("posix"),
+        "POSIX-only permission check");
+    Path file = tmp.resolve("bootstrap.token");
+    new FileBootstrapTokenStore(file)
+        .save(new BootstrapToken("ABCD-EFGH-JKLM-NPQR-STUV", Instant.parse("2026-05-06T09:30:00Z")));
+    Set<PosixFilePermission> perms = Files.getPosixFilePermissions(file);
+    assertEquals(Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE), perms,
+        "the bootstrap token file must be owner-only rw------- (no group/other access)");
+  }
+
+  @Test
   @DisplayName("save writes token; load reads it back; invalidate deletes the file")
   void roundTrip(@TempDir Path tmp) {
     Path file = tmp.resolve("bootstrap.token");

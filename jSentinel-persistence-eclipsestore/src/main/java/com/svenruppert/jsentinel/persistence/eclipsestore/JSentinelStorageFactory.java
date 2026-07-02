@@ -16,13 +16,19 @@
  */
 package com.svenruppert.jsentinel.persistence.eclipsestore;
 
+import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import org.eclipse.store.storage.embedded.types.EmbeddedStorage;
 import org.eclipse.store.storage.embedded.types.EmbeddedStorageManager;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -96,6 +102,7 @@ public final class JSentinelStorageFactory {
     Objects.requireNonNull(parent, "parent");
     Objects.requireNonNull(layout, "layout");
     ensureParentIsWritableDirectory(parent);
+    hardenStorageTree(parent, layout);
 
     Path frameworkDir = parent.resolve(layout.frameworkSubdir());
     Path appDir       = parent.resolve(layout.appSubdir());
@@ -140,6 +147,50 @@ public final class JSentinelStorageFactory {
     if (!Files.isWritable(parent)) {
       throw new IllegalArgumentException(
           "persistence/storage-pair-parent-not-writable: " + parent);
+    }
+  }
+
+  /**
+   * JS-SEC-017 (CWE-276): pre-create the storage tree owner-only ({@code 0700})
+   * on POSIX before {@code EmbeddedStorage.start}, so the framework store —
+   * which holds session handles, role assignments, login-attempt records and
+   * token hashes — is never group/other-readable under a default umask. Warns
+   * if an existing tree is group/other-accessible. Best-effort: never blocks the
+   * storage open, and a no-op on non-POSIX filesystems (rely on directory ACLs).
+   */
+  private static void hardenStorageTree(Path parent, StorageLayout layout) {
+    if (!parent.getFileSystem().supportedFileAttributeViews().contains("posix")) {
+      return;
+    }
+    FileAttribute<?> ownerOnly = PosixFilePermissions.asFileAttribute(
+        PosixFilePermissions.fromString("rwx------"));
+    try {
+      createOwnerOnly(parent, ownerOnly);
+      createOwnerOnly(parent.resolve(layout.frameworkSubdir()), ownerOnly);
+      createOwnerOnly(parent.resolve(layout.appSubdir()), ownerOnly);
+      warnIfGroupOrOtherAccessible(parent);
+    } catch (IOException hardenFailure) {
+      HasLogger.staticLogger().warn(
+          "persistence/storage-permissions: could not harden {} to owner-only: {}",
+          parent, hardenFailure.toString());
+    }
+  }
+
+  private static void createOwnerOnly(Path dir, FileAttribute<?> ownerOnly) throws IOException {
+    if (!Files.exists(dir)) {
+      Files.createDirectories(dir, ownerOnly);
+    }
+  }
+
+  private static void warnIfGroupOrOtherAccessible(Path dir) throws IOException {
+    Set<PosixFilePermission> perms = Files.getPosixFilePermissions(dir);
+    boolean exposed = perms.stream().anyMatch(p ->
+        p.name().startsWith("GROUP_") || p.name().startsWith("OTHERS_"));
+    if (exposed) {
+      HasLogger.staticLogger().warn(
+          "persistence/storage-permissions: {} is group/other-accessible ({}); "
+              + "the framework store holds session handles, roles and token hashes",
+          dir, PosixFilePermissions.toString(perms));
     }
   }
 

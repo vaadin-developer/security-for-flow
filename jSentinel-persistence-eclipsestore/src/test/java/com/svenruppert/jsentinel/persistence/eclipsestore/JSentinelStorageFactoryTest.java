@@ -59,6 +59,20 @@ class JSentinelStorageFactoryTest {
   }
 
   @Test
+  void storageTreeIsOwnerOnly() throws IOException {
+    assumeTrue(tempDir.getFileSystem().supportedFileAttributeViews().contains("posix"),
+        "POSIX-only permission check");
+    try (JSentinelStoragePair pair = JSentinelStorageFactory.openAt(tempDir)) {
+      assertNotNull(pair);
+      Path frameworkDir = tempDir.resolve(StorageLayout.DEFAULT.frameworkSubdir());
+      assertTrue(Files.isDirectory(frameworkDir));
+      Set<PosixFilePermission> perms = Files.getPosixFilePermissions(frameworkDir);
+      assertEquals(PosixFilePermissions.fromString("rwx------"), perms,
+          "the framework storage dir must be owner-only rwx------ (no group/other access)");
+    }
+  }
+
+  @Test
   void happyPath_defaultLayout_bothStoresAlive() {
     JSentinelStoragePair pair = JSentinelStorageFactory.openAt(tempDir);
     try {
