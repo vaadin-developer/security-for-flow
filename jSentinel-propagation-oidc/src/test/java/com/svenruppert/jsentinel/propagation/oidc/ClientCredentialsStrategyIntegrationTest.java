@@ -13,6 +13,7 @@ package com.svenruppert.jsentinel.propagation.oidc;
 import com.svenruppert.jsentinel.credential.propagation.HeaderValue;
 import com.svenruppert.jsentinel.credential.propagation.OutboundCall;
 import com.svenruppert.jsentinel.propagation.oidc.cache.InMemoryTokenExchangeCache;
+import com.svenruppert.jsentinel.propagation.oidc.cache.TokenExchangeCache;
 import com.svenruppert.jsentinel.propagation.oidc.strategy.ClientCredentialsStrategy;
 import com.svenruppert.jsentinel.propagation.oidc.strategy.JSentinelPropagationException;
 import org.junit.jupiter.api.AfterEach;
@@ -29,6 +30,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("ClientCredentialsStrategy — integration against StubTokenEndpoint")
 class ClientCredentialsStrategyIntegrationTest {
@@ -75,5 +77,53 @@ class ClientCredentialsStrategyIntegrationTest {
     assertEquals(400, ex.httpStatus());
     assertFalse(ex.getMessage().contains("leaked-secret-xyz"),
         "the response body must never appear in the propagation exception message");
+  }
+
+  @Test
+  @DisplayName("JS-SEC-014: the requested scope is part of the cache key (a narrower scope does not reuse a broader token)")
+  void scopeIsPartOfCacheKey() {
+    ClientCredentialsStrategy strategy = new ClientCredentialsStrategy(
+        stub.tokenEndpoint(), "cid", "csecret",
+        HttpClient.newHttpClient(), new InMemoryTokenExchangeCache(),
+        ClientCredentialsStrategy.NAME);
+
+    stub.respondWith(new StubTokenEndpoint.Response(200,
+        "{\"access_token\":\"tok-read\",\"token_type\":\"Bearer\",\"expires_in\":3600}"));
+    HeaderValue read = strategy.resolve(
+        new OutboundCall("svc", "m", "api", Map.of("scope", "documents.read")), Optional.empty())
+        .orElseThrow();
+    assertEquals(new HeaderValue("Authorization", "Bearer tok-read"), read);
+
+    // A different scope must NOT reuse the read token — it mints a fresh one.
+    stub.respondWith(new StubTokenEndpoint.Response(200,
+        "{\"access_token\":\"tok-write\",\"token_type\":\"Bearer\",\"expires_in\":3600}"));
+    HeaderValue write = strategy.resolve(
+        new OutboundCall("svc", "m", "api", Map.of("scope", "documents.write")), Optional.empty())
+        .orElseThrow();
+    assertEquals(new HeaderValue("Authorization", "Bearer tok-write"), write);
+
+    // The original scope is still served from its own cache entry.
+    HeaderValue readAgain = strategy.resolve(
+        new OutboundCall("svc", "m", "api", Map.of("scope", "documents.read")), Optional.empty())
+        .orElseThrow();
+    assertEquals(new HeaderValue("Authorization", "Bearer tok-read"), readAgain);
+  }
+
+  @Test
+  @DisplayName("JS-SEC-015: the in-memory token-exchange cache is bounded — it never exceeds maxEntries")
+  void cacheIsBounded() {
+    java.time.Instant future = java.time.Instant.now().plusSeconds(3600);
+    InMemoryTokenExchangeCache bounded =
+        new InMemoryTokenExchangeCache(java.time.Clock.systemUTC(), 30L, 3);
+    for (int i = 0; i < 50; i++) {
+      bounded.put("key-" + i, new TokenExchangeCache.CachedEntry("tok-" + i, future));
+    }
+    int present = 0;
+    for (int i = 0; i < 50; i++) {
+      if (bounded.get("key-" + i).isPresent()) {
+        present++;
+      }
+    }
+    assertTrue(present <= 3, "cache must stay within maxEntries=3; found " + present);
   }
 }

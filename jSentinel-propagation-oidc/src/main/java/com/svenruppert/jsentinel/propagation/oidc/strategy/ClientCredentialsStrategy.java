@@ -93,7 +93,10 @@ public final class ClientCredentialsStrategy implements OutboundTokenStrategy, H
 
   @Override
   public Optional<HeaderValue> resolve(OutboundCall call, Optional<TokenCredential> inbound) {
-    String key = clientId + "|" + call.declaredAudience();
+    // JS-SEC-014 (CWE-269): include the requested scope in the cache key so a
+    // narrower-scope call never receives a broader-scope token minted earlier.
+    String key = clientId + "|" + call.declaredAudience()
+        + "|" + call.hints().getOrDefault("scope", "");
     Optional<TokenExchangeCache.CachedEntry> cached = cache.get(key);
     if (cached.isPresent()) {
       return Optional.of(new HeaderValue(AUTHORIZATION, "Bearer " + cached.get().accessToken()));
