@@ -16,6 +16,9 @@
  */
 package com.svenruppert.jsentinel.identity.oidc.vaadin;
 
+import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.jsentinel.authorization.api.SubjectStore;
+import com.svenruppert.jsentinel.authorization.api.SubjectStores;
 import com.svenruppert.jsentinel.identity.oidc.RpInitiatedLogoutInitiator;
 import com.svenruppert.jsentinel.oidc.api.LogoutInitiator;
 import com.svenruppert.jsentinel.oidc.api.LogoutRequest;
@@ -24,14 +27,15 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 
 import java.net.URI;
+import java.util.Optional;
 
 /**
  * Reusable base for the Vaadin OIDC RP-initiated-logout route (V00.78). The
- * consumer maps it to a {@code @Route} (e.g. {@code "logout"}), tears down the local
- * session in {@link #onBeforeLogout()} and supplies the {@code end_session_endpoint}
- * + {@link LogoutRequest}; on entry it redirects the browser to the OP end-session
- * URL. Like the other Vaadin-runtime building blocks, the navigation glue is
- * exercised in the demo rather than unit-tested.
+ * consumer maps it to a {@code @Route} (e.g. {@code "logout"}) and supplies the
+ * {@code end_session_endpoint} + {@link LogoutRequest}; on entry it clears the local
+ * subject (JS-SEC-028), invokes the {@link #onBeforeLogout()} hook, and redirects the
+ * browser to the OP end-session URL. Like the other Vaadin-runtime building blocks, the
+ * navigation glue is exercised in the demo rather than unit-tested.
  */
 public abstract class AbstractOidcLogoutView extends Div implements BeforeEnterObserver {
 
@@ -43,14 +47,45 @@ public abstract class AbstractOidcLogoutView extends Div implements BeforeEnterO
   /** @return the logout parameters (id_token_hint, post_logout_redirect_uri, state). */
   protected abstract LogoutRequest logoutRequest();
 
-  /** Hook to clear the local session/subject before the redirect (default: no-op). */
+  /**
+   * Additional teardown hook, run after the default local-subject clear and before the
+   * redirect (default: no-op).
+   *
+   * @implSpec The base {@link #beforeEnter} already clears the current subject from the
+   *     {@code SubjectStore} (JS-SEC-028) so a logout never leaves the RP session
+   *     authenticated after the OP session ends. Override this for <em>extra</em>
+   *     teardown; do not treat it as the <em>only</em> teardown path.
+   */
   protected void onBeforeLogout() {
   }
 
   @Override
   public void beforeEnter(BeforeEnterEvent event) {
+    // JS-SEC-028 (CWE-613): tear down the local session by default so a "logout"
+    // never leaves the RP session authenticated after the OP session ends.
+    clearLocalSubject();
     onBeforeLogout();
     URI redirect = initiator.buildLogoutUri(endSessionEndpoint(), logoutRequest());
     getUI().ifPresent(ui -> ui.getPage().setLocation(redirect.toString()));
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private static void clearLocalSubject() {
+    try {
+      Optional<SubjectStore> store = SubjectStores.findSubjectStore();
+      if (store.isEmpty()) {
+        return;
+      }
+      Class<?> subjectType;
+      try {
+        subjectType = JSentinelServiceResolver.<Object, Object>authenticationService().subjectType();
+      } catch (RuntimeException ignored) {
+        return;
+      }
+      Class raw = subjectType;
+      store.get().deleteCurrentSubject(raw);
+    } catch (RuntimeException ignored) {
+      // never block the logout redirect on a teardown failure
+    }
   }
 }

@@ -195,6 +195,14 @@ public abstract class LoginView
   }
 
   /**
+   * JS-SEC-027: warns once (not per login) when a JSentinelVersionStore is
+   * registered but no SubjectIdResolver is resolvable, so drift detection is
+   * silently inert.
+   */
+  private static final java.util.concurrent.atomic.AtomicBoolean DRIFT_INERT_WARNED =
+      new java.util.concurrent.atomic.AtomicBoolean(false);
+
+  /**
    * Phase 4c-Followup: best-effort capture of the
    * {@link JSentinelVersion} snapshot into
    * {@link VaadinJSentinelVersionContext} so the
@@ -227,6 +235,17 @@ public abstract class LoginView
       Optional<SubjectIdResolver<Object>> resolverOpt =
           JSentinelServiceResolver.findSubjectIdResolver();
       if (resolverOpt.isEmpty()) {
+        // JS-SEC-027 (CWE-636): a version store is registered but no
+        // SubjectIdResolver — the snapshot is never captured, so the drift
+        // enforcer no-ops on every navigation (mid-session revocation is silently
+        // not enforced). Warn once so a manual-SPI integrator gets a runtime
+        // signal (the DX bootstrap fails this as a STRICT/ERROR diagnostic).
+        if (DRIFT_INERT_WARNED.compareAndSet(false, true)) {
+          logger().warn("JSentinelVersion drift detection is inert: a JSentinelVersionStore "
+              + "is registered but no SubjectIdResolver is resolvable, so no login snapshot is "
+              + "captured and mid-session role/permission revocation will not be enforced. "
+              + "Register a SubjectIdResolver.");
+        }
         return;
       }
       Object subject = currentSubject().orElse(null);

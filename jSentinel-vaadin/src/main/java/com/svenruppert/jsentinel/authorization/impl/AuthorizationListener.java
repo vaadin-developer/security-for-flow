@@ -54,6 +54,17 @@ import static java.util.Objects.requireNonNull;
  * {@link AccessEvaluator#evaluate}. It then maps the resulting
  * {@link AccessDecision} to the {@link BeforeEnterEvent}.
  * <p>
+ * <strong>Authorization model (JS-SEC-024 / CWE-862):</strong> this is an
+ * <em>allow-by-omission</em> model — authorization is only enforced when the
+ * scanner finds a restriction annotation on the navigation target. A
+ * {@code @Route} that carries <em>no</em> restriction annotation is public by
+ * design, so a forgotten annotation on a sensitive view exposes it silently
+ * rather than failing closed. To defend against a forgotten annotation, mark
+ * views that must require authentication with a constraint-less
+ * {@code @SecureRoute()} (fail-closed, R035), and treat "no annotation = public"
+ * as an explicit decision. An opt-in deny-by-default mode plus a STRICT startup
+ * diagnostic that enumerates un-annotated routes is backlog.
+ * <p>
  * Registered as a {@link VaadinServiceInitListener} via
  * {@code META-INF/services}.
  */

@@ -50,6 +50,7 @@ import com.svenruppert.jsentinel.oidc.api.BackChannelLogoutToken;
 import com.svenruppert.jsentinel.oidc.api.LogoutTokenValidationError;
 import com.svenruppert.jsentinel.oidc.api.LogoutTokenValidator;
 import com.svenruppert.jsentinel.replay.api.JtiStore;
+import com.svenruppert.jsentinel.replay.impl.InMemoryJtiStore;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -80,8 +81,14 @@ public final class DefaultLogoutTokenValidator implements LogoutTokenValidator {
   private final JwtValidator jwtValidator;
   private final Optional<JtiStore> jtiStore;
 
+  /**
+   * Convenience constructor that installs an in-memory single-use {@code jti} store so
+   * back-channel-logout replay protection is <strong>on by default</strong> (JS-SEC-021).
+   * A single-JVM store suffices for one node; a multi-node RP must pass a shared
+   * {@link JtiStore} via {@link #DefaultLogoutTokenValidator(JwtValidator, JtiStore)}.
+   */
   public DefaultLogoutTokenValidator(JwtValidator jwtValidator) {
-    this(jwtValidator, Optional.empty());
+    this(jwtValidator, Optional.of(new InMemoryJtiStore()));
   }
 
   public DefaultLogoutTokenValidator(JwtValidator jwtValidator, JtiStore jtiStore) {
