@@ -51,6 +51,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("HttpJwksClient — caching discipline over a real JDK HttpServer (no mocks)")
@@ -238,5 +239,44 @@ class HttpJwksClientTest {
     assertFalse(client.findKey("k1", JwsAlgorithm.RS256).isPresent());
     assertFalse(client.findKey("k1", JwsAlgorithm.RS256).isPresent());
     assertEquals(1, requests.get(), "the failure opens a negative-cache window — no re-fetch");
+  }
+
+  @Test
+  @DisplayName("JS-SEC-001: a flood of unknown kids after a successful fetch is throttled to one extra refresh")
+  void unknownKidFloodIsThrottled() {
+    body.set(jwks(k1));
+    cacheControl.set("max-age=120");
+    HttpJwksClient client = client();
+    assertTrue(client.findKey("k1", JwsAlgorithm.RS256).isPresent());
+    assertEquals(1, requests.get(), "one fetch to populate the cache");
+
+    // A stream of distinct unknown kids (reachable before signature
+    // verification) must not force a network refresh each. The first miss
+    // probes once (could be a rotation); the endpoint still serves only k1, so
+    // a throttle window opens and the rest are served from cache.
+    for (int i = 0; i < 50; i++) {
+      assertFalse(client.findKey("rogue-" + i, JwsAlgorithm.RS256).isPresent());
+    }
+    assertEquals(2, requests.get(),
+        "the unknown-kid flood is capped at one extra refresh (throttle window), not one per kid");
+  }
+
+  @Test
+  @DisplayName("JS-SEC-018: a non-loopback http jwks_uri is rejected at construction (CWE-319)")
+  void nonLoopbackHttpRejected() {
+    assertThrows(IllegalArgumentException.class,
+        () -> new HttpJwksClient(URI.create("http://idp.example.com/jwks"),
+            HttpClient.newHttpClient(), () -> NOW));
+  }
+
+  @Test
+  @DisplayName("JS-SEC-018: https anywhere and loopback http are accepted")
+  void httpsAndLoopbackAccepted() {
+    new HttpJwksClient(URI.create("https://idp.example.com/jwks"),
+        HttpClient.newHttpClient(), () -> NOW);
+    new HttpJwksClient(URI.create("http://127.0.0.1:8080/jwks"),
+        HttpClient.newHttpClient(), () -> NOW);
+    new HttpJwksClient(URI.create("http://localhost:8080/jwks"),
+        HttpClient.newHttpClient(), () -> NOW);
   }
 }

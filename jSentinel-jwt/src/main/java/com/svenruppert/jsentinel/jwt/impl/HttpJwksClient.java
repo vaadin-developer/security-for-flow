@@ -57,14 +57,21 @@ import java.util.regex.Pattern;
 
 /**
  * {@link JwksClient} that fetches a JWKS document over HTTP with a disciplined
- * cache (Konzept §9): TTL from {@code Cache-Control: max-age} (default 5 min),
- * a single synchronous refresh on a {@code kid} miss with single-flight stampede
- * protection, and a 30-second negative cache on endpoint failures so a transient
- * outage cannot turn into a DoS against the IDP.
+ * cache (Konzept §9, §16): TTL from {@code Cache-Control: max-age} (default
+ * 5 min), a single synchronous refresh on a {@code kid} miss with single-flight
+ * stampede protection, a 30-second negative cache on endpoint failures, and a
+ * post-miss refresh throttle (JS-SEC-001 / CWE-770): when a refresh does not
+ * resolve the sought {@code kid} — a genuinely unknown kid, reachable before
+ * signature verification — a short window is opened so a stream of distinct
+ * unknown kids cannot force one network refresh each. A real hot rotation
+ * resolves the kid and is never throttled.
  *
- * <p>HTTPS is <em>not</em> enforced here — that is a bootstrap-time STRICT rule
- * ({@code jwks/uri-not-https}); the client serves whatever URI it is given so
- * loopback test stubs work.
+ * <p>HTTPS is enforced at construction (JS-SEC-018 / CWE-319): a non-loopback
+ * {@code jwks_uri} must use {@code https://} — the JWKS is the public-key trust
+ * root, so cleartext transport invites key substitution and token forgery. A
+ * loopback host ({@code localhost} / {@code 127.0.0.1} / {@code ::1}) may use
+ * {@code http://} so local dev and test stubs work; the DX bootstrap keeps its
+ * own STRICT {@code jwks/uri-not-https} rule for defense in depth.
  *
  * @since 00.76.00
  */
@@ -73,6 +80,8 @@ public final class HttpJwksClient implements JwksClient, HasLogger {
 
   private static final Duration DEFAULT_TTL = Duration.ofMinutes(5);
   private static final Duration NEGATIVE_TTL = Duration.ofSeconds(30);
+  /** JS-SEC-001: min interval before another unknown-kid miss may force a refresh. */
+  private static final Duration REFRESH_MIN_INTERVAL = Duration.ofSeconds(20);
   private static final Pattern MAX_AGE = Pattern.compile("max-age\\s*=\\s*(\\d+)");
   private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(10);
   /** RF01: a JWKS document is a few KB; a larger body is a hostile / MITM'd endpoint. */
@@ -91,9 +100,32 @@ public final class HttpJwksClient implements JwksClient, HasLogger {
   }
 
   public HttpJwksClient(URI jwksUri, HttpClient httpClient, Supplier<Instant> clock) {
-    this.jwksUri = Objects.requireNonNull(jwksUri, "jwksUri");
+    this.jwksUri = requireHttpsOrLoopback(Objects.requireNonNull(jwksUri, "jwksUri"));
     this.httpClient = Objects.requireNonNull(httpClient, "httpClient");
     this.clock = Objects.requireNonNull(clock, "clock");
+  }
+
+  // JS-SEC-018 (CWE-319): the JWKS is the public-key trust root; loading it over
+  // cleartext http lets an on-path attacker substitute keys and forge tokens.
+  // Enforce https for any non-loopback endpoint; loopback http is allowed for
+  // local dev / test stubs (the class contract).
+  private static URI requireHttpsOrLoopback(URI uri) {
+    String scheme = uri.getScheme();
+    if ("https".equalsIgnoreCase(scheme)) {
+      return uri;
+    }
+    if ("http".equalsIgnoreCase(scheme) && isLoopback(uri.getHost())) {
+      return uri;
+    }
+    throw new IllegalArgumentException(
+        "jwks/uri-not-https: JWKS endpoint must use https:// (got: " + uri + ")");
+  }
+
+  private static boolean isLoopback(String host) {
+    return "localhost".equalsIgnoreCase(host)
+        || "127.0.0.1".equals(host)
+        || "::1".equals(host)
+        || "[::1]".equals(host);
   }
 
   @Override
@@ -119,7 +151,27 @@ public final class HttpJwksClient implements JwksClient, HasLogger {
       return Optional.ofNullable(snapshot.keys.get(kid));
     }
     refreshOnce();
-    return Optional.ofNullable(state.keys.get(kid));
+    PublicKey key = state.keys.get(kid);
+    if (key == null) {
+      // JS-SEC-001 (CWE-770): the refresh did not resolve this kid — it is
+      // genuinely unknown, not a hot rotation. Open a short throttle window so a
+      // stream of distinct unknown kids cannot each force a network refresh.
+      openUnknownKidThrottle();
+    }
+    return Optional.ofNullable(key);
+  }
+
+  /** Opens (or extends) the unknown-kid refresh-throttle window (JS-SEC-001). */
+  private void openUnknownKidThrottle() {
+    Instant until = clock.get().plus(REFRESH_MIN_INTERVAL);
+    lock.lock();
+    try {
+      State s = state;
+      Instant neg = s.negativeUntil.isAfter(until) ? s.negativeUntil : until;
+      this.state = new State(s.keys, s.expiry, neg);
+    } finally {
+      lock.unlock();
+    }
   }
 
   @Override
