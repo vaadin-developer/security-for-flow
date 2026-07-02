@@ -154,6 +154,34 @@ class DefaultIdTokenValidatorTest {
   }
 
   @Test
+  @DisplayName("JS-SEC-007: OIDC-layer backstop rejects a wrong audience even when the composed JwtValidator does not check aud")
+  void backstopRejectsWrongAudience() {
+    // A JwtValidator with NO audience expectation (empty acceptedAudiences) —
+    // the mis-wiring the OIDC-layer backstop defends against. It still checks
+    // the issuer, isolating the audience path.
+    JwksClient keys = new JwksClient() {
+      @Override public Optional<PublicKey> findKey(String kid, JwsAlgorithm alg) {
+        return KID.equals(kid) ? Optional.of(publicKey()) : Optional.empty();
+      }
+      @Override public JwksRefreshResult refreshOnce() {
+        return new JwksRefreshResult(1, NOW, Duration.ofMinutes(5), Optional.empty());
+      }
+    };
+    ClaimExpectations laxAud = new ClaimExpectations(
+        Optional.of(ISSUER), Set.of(), true, false, false, false,
+        ClockSkewPolicy.DEFAULT, Optional.empty());
+    DefaultIdTokenValidator lax = new DefaultIdTokenValidator(
+        new NimbusJwtValidator(AlgorithmProfile.STRICT_MODERN.toAllowList(), keys, laxAud, () -> NOW),
+        () -> NOW);
+
+    // token for a DIFFERENT client — the lax JWT layer accepts it, the OIDC
+    // backstop must reject it (JS-SEC-007).
+    String token = sign(new JWTClaimsSet.Builder().audience("victim-rp-b").claim("nonce", "n-1"));
+    assertEquals("oidc/audience-mismatch",
+        errorOf(lax.validate(token, IdTokenExpectations.of(ISSUER, CLIENT, Optional.of("n-1")))).code());
+  }
+
+  @Test
   @DisplayName("a well-formed ID token (nonce, single aud) validates and surfaces the OIDC claims")
   void validToken() {
     String token = sign(new JWTClaimsSet.Builder().audience(CLIENT)

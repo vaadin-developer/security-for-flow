@@ -399,6 +399,16 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
           "Add .issuer(\"https://idp/\")."));
     }
 
+    if (jwt.audiences() == null || jwt.audiences().isEmpty()) {
+      // JS-SEC-005 (CWE-345): an empty acceptedAudiences accepts any aud. Surface
+      // it (Konzept §567 / ClaimExpectations JavaDoc promised this INFO). Not an
+      // ERROR — RFC 7519 makes aud validation conditional; STRICT stays on .oidc().
+      warnings.add(new JSentinelBootstrapWarning(Severity.INFO, "claims/audience-empty",
+          ".jwt(...) has no .audience(...); inbound tokens will not be audience-checked "
+              + "(any aud is accepted). Unsafe behind a multi-RP shared IdP.",
+          "Add .audience(\"<your-client-id>\")."));
+    }
+
     com.svenruppert.jsentinel.jwt.api.ClaimExpectations expectations =
         new com.svenruppert.jsentinel.jwt.api.ClaimExpectations(
             java.util.Optional.ofNullable(jwt.issuer()), jwt.audiences(),

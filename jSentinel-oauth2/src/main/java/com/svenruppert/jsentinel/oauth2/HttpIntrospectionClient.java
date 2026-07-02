@@ -131,8 +131,15 @@ public final class HttpIntrospectionClient implements IntrospectionClient {
           return Result.success(parse(outcome.body()));
         });
     result.toOptional().ifPresent(parsed -> {
+      // JS-SEC-006 (CWE-613): cap the positive cache entry at the token's own
+      // exp, so an opaque token is never reported active past its real expiry
+      // — the RS has no other way to check exp for opaque tokens.
+      long expiry = parsed.expiresAt()
+          .map(Instant::toEpochMilli)
+          .map(exp -> Math.min(now + ttlMillis, exp))
+          .orElse(now + ttlMillis);
       synchronized (cache) {
-        cache.put(key, new CacheEntry(parsed, now + ttlMillis));
+        cache.put(key, new CacheEntry(parsed, expiry));
       }
     });
     return result;

@@ -53,6 +53,11 @@ class JwtBootstrapTest {
         w.code().equals(code) && w.severity() == Severity.ERROR);
   }
 
+  private static boolean hasInfo(List<JSentinelBootstrapWarning> warnings, String code) {
+    return warnings.stream().anyMatch(w ->
+        w.code().equals(code) && w.severity() == Severity.INFO);
+  }
+
   @Test
   @DisplayName("an explicit .validator(...) is installed into the resolver")
   void explicitValidatorInstalled() {
@@ -92,6 +97,29 @@ class JwtBootstrapTest {
     List<JSentinelBootstrapWarning> warnings = new TestBootstrap()
         .jwt(j -> j.issuer("https://idp.example/")).applyJwt();
     assertTrue(hasError(warnings, "jwt/missing-jwks-uri-or-validator"));
+  }
+
+  @Test
+  @DisplayName("JS-SEC-005: .jwt(...) without .audience(...) emits the claims/audience-empty INFO")
+  void audienceEmptyEmitsInfo() {
+    List<JSentinelBootstrapWarning> warnings = new TestBootstrap()
+        .jwt(j -> j.jwksUri(URI.create("https://idp.example/jwks"))
+            .algorithmAllowList(AlgorithmProfile.STRICT_MODERN.toAllowList())
+            .issuer("https://idp.example/"))
+        .applyJwt();
+    assertTrue(hasInfo(warnings, "claims/audience-empty"));
+  }
+
+  @Test
+  @DisplayName("JS-SEC-005: .jwt(...) with an .audience(...) does not emit claims/audience-empty")
+  void audienceSetSuppressesInfo() {
+    List<JSentinelBootstrapWarning> warnings = new TestBootstrap()
+        .jwt(j -> j.jwksUri(URI.create("https://idp.example/jwks"))
+            .algorithmAllowList(AlgorithmProfile.STRICT_MODERN.toAllowList())
+            .issuer("https://idp.example/")
+            .audience("rp-client"))
+        .applyJwt();
+    assertFalse(hasInfo(warnings, "claims/audience-empty"));
   }
 
   @Test

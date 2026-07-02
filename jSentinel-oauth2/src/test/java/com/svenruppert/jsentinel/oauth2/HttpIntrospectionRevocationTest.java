@@ -82,11 +82,18 @@ class HttpIntrospectionRevocationTest {
     server.createContext("/introspect", exchange -> {
       introspectCalls.incrementAndGet();
       String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
-      boolean active = body.contains("token=good-token");
-      String json = active
-          ? "{\"active\":true,\"scope\":\"read write\",\"client_id\":\"c1\","
-              + "\"username\":\"alice\",\"token_type\":\"Bearer\",\"exp\":1893456000,\"jti\":\"id-9\"}"
-          : "{\"active\":false}";
+      String json;
+      if (body.contains("token=good-token")) {
+        json = "{\"active\":true,\"scope\":\"read write\",\"client_id\":\"c1\","
+            + "\"username\":\"alice\",\"token_type\":\"Bearer\",\"exp\":1893456000,\"jti\":\"id-9\"}";
+      } else if (body.contains("token=expiring-token")) {
+        // active but exp already in the past (JS-SEC-006 cache-cap probe)
+        long pastExp = (System.currentTimeMillis() / 1000L) - 10;
+        json = "{\"active\":true,\"scope\":\"read\",\"client_id\":\"c1\","
+            + "\"token_type\":\"Bearer\",\"exp\":" + pastExp + ",\"jti\":\"id-exp\"}";
+      } else {
+        json = "{\"active\":false}";
+      }
       respond(exchange, 200, json);
     });
     server.createContext("/revoke", exchange -> {
@@ -153,6 +160,19 @@ class HttpIntrospectionRevocationTest {
     client.introspect("good-token", TokenTypeHint.ACCESS_TOKEN).toOptional().orElseThrow();
     client.introspect("good-token", TokenTypeHint.ACCESS_TOKEN).toOptional().orElseThrow();
     assertEquals(1, introspectCalls.get(), "second lookup must hit the cache");
+  }
+
+  @Test
+  @DisplayName("JS-SEC-006: a positive cache entry is capped at the token exp — a past-exp token is not served stale")
+  void cacheEntryCappedAtTokenExp() {
+    HttpIntrospectionClient client = new HttpIntrospectionClient(HttpClient.newHttpClient(),
+        introspectEndpoint, auth());
+    client.introspect("expiring-token", TokenTypeHint.ACCESS_TOKEN).toOptional().orElseThrow();
+    // The entry is capped at the (past) token exp, so it is already expired —
+    // the second lookup must re-introspect instead of serving stale-active.
+    client.introspect("expiring-token", TokenTypeHint.ACCESS_TOKEN).toOptional().orElseThrow();
+    assertEquals(2, introspectCalls.get(),
+        "cache entry capped at the past token exp must force a re-introspection");
   }
 
   @Test

@@ -103,7 +103,18 @@ public final class DefaultIdTokenValidator implements IdTokenValidator {
     }
     ValidatedJwt jwt = ok.get();
 
+    // 1b. OIDC-layer iss/aud backstop (JS-SEC-007 / CWE-287): enforce the
+    // mandatory issuer + audience here, independently of the composed
+    // JwtValidator's ClaimExpectations, so an id_token minted for another
+    // client (or a mis-wired validator) cannot pass.
+    if (jwt.issuer().isEmpty()
+        || !jwt.issuer().get().equals(expectations.expectedIssuer())) {
+      return Result.failure(new IdTokenValidationError.IssuerMismatch());
+    }
     List<String> audiences = jwt.audience().orElse(List.of());
+    if (!audiences.contains(expectations.expectedAudience())) {
+      return Result.failure(new IdTokenValidationError.AudienceMismatch());
+    }
     Optional<String> azp = jwt.claim("azp", String.class);
 
     // 2. nonce — must equal the value bound at authorization time.

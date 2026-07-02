@@ -32,7 +32,8 @@ public sealed interface IdTokenValidationError
     permits IdTokenValidationError.JwtInvalid, IdTokenValidationError.NonceMismatch,
             IdTokenValidationError.AuthorizedPartyInvalid, IdTokenValidationError.AccessTokenHashMismatch,
             IdTokenValidationError.CodeHashMismatch, IdTokenValidationError.AuthTimeStale,
-            IdTokenValidationError.AcrUnsatisfied {
+            IdTokenValidationError.AcrUnsatisfied, IdTokenValidationError.IssuerMismatch,
+            IdTokenValidationError.AudienceMismatch {
 
   /** @return a stable kebab-case error code. */
   String code();
@@ -94,6 +95,22 @@ public sealed interface IdTokenValidationError
     @Override
     public String code() {
       return "oidc/acr-unsatisfied";
+    }
+  }
+
+  /** The {@code iss} claim did not equal the expected issuer (OIDC-layer backstop). */
+  record IssuerMismatch() implements IdTokenValidationError {
+    @Override
+    public String code() {
+      return "oidc/issuer-mismatch";
+    }
+  }
+
+  /** The {@code aud} claim did not contain the expected audience (OIDC-layer backstop). */
+  record AudienceMismatch() implements IdTokenValidationError {
+    @Override
+    public String code() {
+      return "oidc/audience-mismatch";
     }
   }
 }
