@@ -253,21 +253,23 @@ public abstract class LoginView
   /**
    * Best-effort notification of {@link SessionPolicy#onLogin(SessionContext)}.
    * <p>
-   * Fires after a successful {@link #checkCredentials()} so the policy can
-   * emit a {@code SessionCreated} audit event and, when configured, trigger
-   * session-id rotation. Failures, missing Vaadin session, or missing SPI
-   * are silently absorbed — the lifecycle hook must never block the login
-   * flow.
+   * Fires after a successful {@link #checkCredentials()}. It <em>always</em>
+   * rotates the HTTP session id (session-fixation mitigation, secure-by-default
+   * — JS-SEC-003 / CWE-384) and lets the configured {@link SessionPolicy}
+   * contribute the audit reason and any extra {@code Invalidate} semantics.
+   * Failures, a missing Vaadin session, or a missing SPI are silently absorbed
+   * — the lifecycle hook must never block the login flow.
    * <p>
-   * If the policy returns
-   * {@link SessionDecision.Invalidate Invalidate} the listener
-   * reinitializes the HTTP session via
-   * {@link VaadinService#reinitializeSession(VaadinRequest)} (session-id
-   * rotates, VaadinSession attributes — including the just-bound subject —
-   * survive) and emits a {@code SessionInvalidated} audit event for the
-   * <em>old</em> session id. The {@code loginRoute} field of the decision
-   * is deliberately ignored in the post-login context: the user proceeds
-   * to {@link #navigateToApp()} on the rotated session. Invalidation
+   * Rotation goes through
+   * {@link VaadinService#reinitializeSession(VaadinRequest)} (the HTTP
+   * session-id rotates, VaadinSession attributes — including the just-bound
+   * subject — survive) and emits a {@code SessionInvalidated} audit event for
+   * the <em>old</em> session id. When the policy returns
+   * {@link SessionDecision.Invalidate Invalidate} its {@code reason} is used;
+   * otherwise the default {@code "RotationAfterLogin"} reason is recorded. The
+   * {@code loginRoute} of an {@code Invalidate} decision is deliberately
+   * ignored in the post-login context: the user proceeds to
+   * {@link #navigateToApp()} on the rotated session. Invalidation
    * <em>from {@code beforeNavigation}</em> (session expired) follows a
    * different code path and uses {@code loginRoute} as written.
    */
@@ -279,10 +281,18 @@ public abstract class LoginView
         return;
       }
       SessionContext<Object> context = contextOpt.get();
+      // JS-SEC-003 (CWE-384): rotate the HTTP session id on every successful
+      // login, independently of the SessionPolicy decision. reinitializeSession
+      // preserves the just-bound subject, so unconditional rotation is safe and
+      // makes fixation mitigation secure-by-default — the resolver default,
+      // NoopSessionPolicy, returns Continue and would otherwise never rotate.
+      // The policy still supplies the audit reason and any extra Invalidate
+      // semantics.
       SessionDecision decision = policy.onLogin(context);
-      if (decision instanceof SessionDecision.Invalidate invalidate) {
-        rotateSessionAfterLogin(context, invalidate);
-      }
+      String reason = decision instanceof SessionDecision.Invalidate invalidate
+          ? invalidate.reason()
+          : "RotationAfterLogin";
+      rotateSessionAfterLogin(context, reason);
     } catch (RuntimeException notifyFailure) {
       logger().warn("SessionPolicy.onLogin notification failed: {}", notifyFailure.toString());
     }
@@ -297,7 +307,7 @@ public abstract class LoginView
    * <p>
    * Audit emit is best-effort and never propagates exceptions.
    */
-  private void rotateSessionAfterLogin(SessionContext<Object> context, SessionDecision.Invalidate decision) {
+  private void rotateSessionAfterLogin(SessionContext<Object> context, String reason) {
     VaadinRequest request = VaadinRequest.getCurrent();
     if (request == null) {
       return;
@@ -310,7 +320,7 @@ public abstract class LoginView
           rotationFailure.toString());
       return;
     }
-    auditRotation(context, oldSessionId, decision.reason());
+    auditRotation(context, oldSessionId, reason);
   }
 
   private void auditRotation(SessionContext<Object> context, String oldSessionId, String reason) {

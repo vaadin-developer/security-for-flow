@@ -137,6 +137,49 @@ class B3SessionRotationIntegrationTest extends BrowserlessTest {
             + "(Invalidate.loginRoute is intentionally ignored in the post-login context)");
   }
 
+  @Test
+  @DisplayName("JS-SEC-003: login rotates the session id even when the policy returns Continue (secure-by-default)")
+  void rotatesEvenWhenPolicyReturnsContinue() {
+    // Override the @BeforeEach RotatingPolicy with one that does NOT ask for
+    // invalidation — the behaviour of the resolver default, NoopSessionPolicy.
+    // Before JS-SEC-003 this left the pre-auth session id intact: a fixation
+    // hole on the canonical login path.
+    JSentinelServiceResolver.setSessionPolicy(new NonRotatingPolicy(capturedContext));
+
+    navigate(B3FixtureLoginView.class);
+    VaadinSession beforeSession = VaadinSession.getCurrent();
+    assertNotNull(beforeSession, "Browserless must bind a current VaadinSession before login");
+    String oldSessionId = beforeSession.getSession().getId();
+
+    test($view(TextField.class).id(LoginView.TF_USERNAME_ID)).setValue("alice");
+    test($view(PasswordField.class).id(LoginView.PF_PASSWORD_ID)).setValue("alice");
+    test($view(Button.class).id(LoginView.BTN_LOGIN_ID)).click();
+
+    // Policy was consulted but returned Continue (no Invalidate requested).
+    assertNotNull(capturedContext.get(),
+        "SessionPolicy.onLogin must still be called even when it returns Continue");
+
+    // The HTTP session id rotated anyway — secure-by-default.
+    WrappedSession afterWrapped = VaadinSession.getCurrent().getSession();
+    assertNotNull(afterWrapped, "post-rotation wrapped session must still be present");
+    assertFalse(oldSessionId.equals(afterWrapped.getId()),
+        "session id must rotate on login even when the policy returns Continue; "
+            + "old=" + oldSessionId + " new=" + afterWrapped.getId());
+
+    // A SessionInvalidated audit event is emitted with the OLD id and the
+    // default rotation reason (the policy supplied none).
+    SessionInvalidated event = audit.events().stream()
+        .filter(SessionInvalidated.class::isInstance)
+        .map(SessionInvalidated.class::cast)
+        .findFirst()
+        .orElseThrow(() -> new AssertionError(
+            "expected one SessionInvalidated audit event; got: " + audit.events()));
+    assertEquals(oldSessionId, event.sessionId(),
+        "SessionInvalidated must carry the OLD wrapped-session id");
+    assertEquals("RotationAfterLogin", event.reason(),
+        "default rotation reason when the policy does not supply an Invalidate reason");
+  }
+
   // ── Fixtures ──────────────────────────────────────────────────
 
   /** Test-only LoginView whose checkCredentials always succeeds. */
@@ -166,6 +209,33 @@ class B3SessionRotationIntegrationTest extends BrowserlessTest {
     @Override public SessionDecision onLogin(SessionContext<Object> context) {
       captured.set(context);
       return new SessionDecision.Invalidate(reason, "/login");
+    }
+
+    @Override public SessionDecision beforeNavigation(SessionContext<Object> context) {
+      return SessionDecision.Continue.INSTANCE;
+    }
+
+    @Override public SessionPolicyDecision evaluate(SessionMetadata metadata) {
+      return SessionPolicyDecision.active();
+    }
+  }
+
+  /**
+   * SessionPolicy that captures the {@code onLogin} context but returns
+   * {@link SessionDecision.Continue} — models the resolver default
+   * ({@code NoopSessionPolicy}), which never asks for invalidation. Used to
+   * prove JS-SEC-003 rotates the session id regardless of the decision.
+   */
+  static final class NonRotatingPolicy implements SessionPolicy<Object> {
+    private final AtomicReference<SessionContext<Object>> captured;
+
+    NonRotatingPolicy(AtomicReference<SessionContext<Object>> captured) {
+      this.captured = captured;
+    }
+
+    @Override public SessionDecision onLogin(SessionContext<Object> context) {
+      captured.set(context);
+      return SessionDecision.Continue.INSTANCE;
     }
 
     @Override public SessionDecision beforeNavigation(SessionContext<Object> context) {
