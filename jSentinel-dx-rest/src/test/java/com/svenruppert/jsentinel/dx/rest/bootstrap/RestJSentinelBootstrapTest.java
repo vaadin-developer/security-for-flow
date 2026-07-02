@@ -197,6 +197,22 @@ class RestJSentinelBootstrapTest {
   }
 
   @Test
+  void cors_credentialedNullOrigin_warnsInNonStrict() {
+    RestCorsContext.reset();
+    JSentinelRuntime runtime = RestSecurity.bootstrap()
+        .authentication(FakeAuthenticationService.forType(String.class))
+        .authorization(new FakeAuthorizationService<String>())
+        .subjectResolver(TEST_RESOLVER)
+        .cors(c -> c.allowedOrigins("null").allowCredentials(true))
+        .install();
+
+    assertTrue(runtime.warnings().stream()
+            .anyMatch(w -> "cors/wildcard-with-credentials".equals(w.code())),
+        "credentialed \"null\" origin must surface the same warning (JS-SEC-025), got: "
+            + runtime.warnings());
+  }
+
+  @Test
   void cors_wildcardWithCredentials_throwsInStrict() {
     RestCorsContext.reset();
     JSentinelBootstrapException ex = assertThrows(JSentinelBootstrapException.class, () ->

@@ -68,14 +68,19 @@ public record RestCorsConfiguration(
   /**
    * Whether this snapshot is the dangerous credentialed-wildcard combination —
    * {@code Access-Control-Allow-Credentials: true} together with a wildcard
-   * {@code "*"} origin. That pair is forbidden by the CORS spec (browsers reject
-   * it) and, if a server reflected it, an account-takeover hole. The bootstrap
-   * uses this to warn in every mode, throw in STRICT, and — R15 (V00.76.10) —
-   * refuse to publish it live in PRODUCTION.
+   * {@code "*"} <em>or</em> the literal {@code "null"} origin (JS-SEC-025). Both
+   * are account-takeover holes if a server reflected them with credentials; the
+   * {@code "null"} origin (sandboxed iframes, {@code data:}/{@code file:} docs)
+   * is honoured by browsers, unlike {@code "*"}. The bootstrap uses this to warn
+   * in every mode, throw in STRICT, and — R15 (V00.76.10) — refuse to publish it
+   * live in PRODUCTION. This is a developer lint, not a header-rendering control
+   * (jSentinel ships no CORS filter).
    *
-   * @return {@code true} iff credentials are allowed alongside a wildcard origin
+   * @return {@code true} iff credentials are allowed alongside a wildcard or
+   *     {@code "null"} origin
    */
   public boolean isCredentialedWildcard() {
-    return allowCredentials && allowedOrigins.contains("*");
+    return allowCredentials && (allowedOrigins.contains("*")
+        || allowedOrigins.stream().anyMatch("null"::equalsIgnoreCase));
   }
 }

@@ -49,12 +49,25 @@ final class RestJSentinelBootstrapImpl
     return this;
   }
 
+  /**
+   * Records a custom {@link RestDecisionMapper}. <strong>Note (JS-SEC-026):</strong>
+   * this is recorded for diagnostics only — the enforcing {@code RestAuthorizationFilter}
+   * hard-wires {@code HttpStatusDecisionMapper}, so a custom mapper has no runtime effect
+   * unless the application passes it to the filter itself. Full auto-wiring is backlog.
+   */
   @Override
   public RestJSentinelBootstrap decisionMapper(RestDecisionMapper mapper) {
     this.decisionMapper = Objects.requireNonNull(mapper, "mapper");
     return this;
   }
 
+  /**
+   * Records a custom {@link RestErrorBodyStrategy}. <strong>Note (JS-SEC-026):</strong>
+   * recorded for diagnostics only — not consumed by the enforcing
+   * {@code RestAuthorizationFilter}, which returns the conservative default bodies
+   * ({@code "Unauthorized"} / {@code "Forbidden"}). The application must apply a custom
+   * strategy itself. Full auto-wiring is backlog.
+   */
   @Override
   public RestJSentinelBootstrap errorBodies(RestErrorBodyStrategy strategy) {
     this.errorBodies = Objects.requireNonNull(strategy, "strategy");
