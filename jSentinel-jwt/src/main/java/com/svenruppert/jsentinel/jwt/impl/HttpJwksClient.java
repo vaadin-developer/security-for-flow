@@ -63,8 +63,11 @@ import java.util.regex.Pattern;
  * post-miss refresh throttle (JS-SEC-001 / CWE-770): when a refresh does not
  * resolve the sought {@code kid} — a genuinely unknown kid, reachable before
  * signature verification — a short window is opened so a stream of distinct
- * unknown kids cannot force one network refresh each. A real hot rotation
- * resolves the kid and is never throttled.
+ * unknown kids cannot force one network refresh each. A hot rotation whose kid
+ * arrives outside an open throttle window resolves on the next refresh; a
+ * rotation that coincides with a window just opened by a prior unknown-kid probe
+ * may be delayed up to {@code REFRESH_MIN_INTERVAL} and then loaded — a bounded,
+ * self-limiting availability tradeoff, not a correctness or security issue.
  *
  * <p>HTTPS is enforced at construction (JS-SEC-018 / CWE-319): a non-loopback
  * {@code jwks_uri} must use {@code https://} — the JWKS is the public-key trust

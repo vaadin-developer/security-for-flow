@@ -61,11 +61,13 @@ public abstract class AbstractOidcLogoutView extends Div implements BeforeEnterO
 
   @Override
   public void beforeEnter(BeforeEnterEvent event) {
-    // JS-SEC-028 (CWE-613): tear down the local session by default so a "logout"
-    // never leaves the RP session authenticated after the OP session ends.
-    clearLocalSubject();
-    onBeforeLogout();
+    // RF02: build the OP logout request while the subject is still bound (a
+    // consumer may derive the id_token_hint from it), THEN tear down the local
+    // session by default (JS-SEC-028 / CWE-613) so a "logout" never leaves the RP
+    // session authenticated after the OP session ends, THEN redirect.
     URI redirect = initiator.buildLogoutUri(endSessionEndpoint(), logoutRequest());
+    onBeforeLogout();
+    clearLocalSubject();
     getUI().ifPresent(ui -> ui.getPage().setLocation(redirect.toString()));
   }
 
