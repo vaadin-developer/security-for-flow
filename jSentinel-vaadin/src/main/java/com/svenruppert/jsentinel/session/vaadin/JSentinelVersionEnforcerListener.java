@@ -17,6 +17,9 @@
 package com.svenruppert.jsentinel.session.vaadin;
 
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
+import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.jsentinel.authorization.api.SubjectStore;
+import com.svenruppert.jsentinel.authorization.api.SubjectStores;
 import com.svenruppert.jsentinel.session.JSentinelVersionEnforcer;
 import com.svenruppert.jsentinel.session.JSentinelVersionEnforcer.EnforcementOutcome;
 import com.vaadin.flow.component.Component;
@@ -44,6 +47,9 @@ import static java.util.Objects.requireNonNull;
  * <ol>
  *   <li>{@link JSentinelVersionEnforcer#enforce enforce} publishes
  *       a {@code SessionStale} audit event.</li>
+ *   <li>The cached subject is dropped from the {@code SubjectStore} so the
+ *       next navigation is evaluated as unauthenticated — revocation is
+ *       actually enforced, not just deflected once (JS-SEC-002 / CWE-613).</li>
  *   <li>The recorded snapshot is cleared from the session.</li>
  *   <li>{@code BeforeEnterEvent#rerouteTo} sends the user to the
  *       supplied target — typically the login view.</li>
@@ -92,10 +98,54 @@ public final class JSentinelVersionEnforcerListener implements BeforeEnterListen
         snapshot.sessionId(),
         route);
     if (outcome instanceof EnforcementOutcome.SessionStale) {
+      // JS-SEC-002 (CWE-613): drop the cached subject so the very next
+      // navigation is evaluated as unauthenticated. Clearing only the version
+      // snapshot left the revoked subject bound and authoritative — the
+      // enforcer then no-op'd (snapshot gone) and the AuthorizationListener
+      // granted against the stale subject, so revocation was never enforced
+      // beyond the single reroute.
+      clearCurrentSubject();
       // Clear the snapshot so subsequent requests aren't re-checked
       // against the stale value while the user is on the login page.
       VaadinJSentinelVersionContext.clear(VaadinSession.getCurrent());
       event.rerouteTo(rerouteTargetOnStale);
     }
+  }
+
+  /**
+   * Best-effort drop of the cached subject on drift. A missing
+   * {@link SubjectStore}, an unresolvable subject type, or a removal failure
+   * must never break the reroute — but on the common path this forces the next
+   * navigation to be evaluated without a subject, so the revoked user is
+   * effectively logged out until re-authentication.
+   */
+  private static void clearCurrentSubject() {
+    try {
+      Optional<SubjectStore> store = SubjectStores.findSubjectStore();
+      if (store.isEmpty()) {
+        return;
+      }
+      Class<?> subjectType = resolveSubjectType();
+      if (subjectType == null) {
+        return;
+      }
+      removeSubjectUnchecked(store.get(), subjectType);
+    } catch (RuntimeException ignored) {
+      // never block the reroute because subject removal failed
+    }
+  }
+
+  private static Class<?> resolveSubjectType() {
+    try {
+      return JSentinelServiceResolver.<Object, Object>authenticationService().subjectType();
+    } catch (RuntimeException ignored) {
+      return null;
+    }
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private static void removeSubjectUnchecked(SubjectStore store, Class<?> subjectType) {
+    Class raw = subjectType;
+    store.deleteCurrentSubject(raw);
   }
 }

@@ -20,12 +20,14 @@ import com.svenruppert.jsentinel.audit.AuditEvent;
 import com.svenruppert.jsentinel.audit.AuditQuery;
 import com.svenruppert.jsentinel.audit.JSentinelAuditService;
 import com.svenruppert.jsentinel.audit.SessionStale;
+import com.svenruppert.jsentinel.authorization.api.SubjectStores;
 import com.svenruppert.jsentinel.authorization.api.tenant.TenantId;
 import com.svenruppert.jsentinel.logout.SubjectId;
 import com.svenruppert.jsentinel.session.InMemoryJSentinelVersionStore;
 import com.svenruppert.jsentinel.session.JSentinelVersion;
 import com.svenruppert.jsentinel.session.JSentinelVersionEnforcer;
 import com.svenruppert.jsentinel.session.JSentinelVersionKey;
+import com.svenruppert.jsentinel.test.InMemorySubjectStore;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.internal.CurrentInstance;
@@ -66,6 +68,7 @@ class JSentinelVersionEnforcerListenerTest {
   @BeforeEach
   void setUp() {
     CurrentInstance.clearAll();
+    SubjectStores.reset();
     versionStore = new InMemoryJSentinelVersionStore();
     audit = new CollectingAuditService();
     listener = new JSentinelVersionEnforcerListener(
@@ -76,6 +79,7 @@ class JSentinelVersionEnforcerListenerTest {
   @AfterEach
   void teardown() {
     CurrentInstance.clearAll();
+    SubjectStores.reset();
   }
 
   @Test
@@ -131,6 +135,32 @@ class JSentinelVersionEnforcerListenerTest {
     assertEquals(DummyTarget.class.getName(), published.route());
     assertEquals(0L, published.snapshotVersion());
     assertEquals(2L, published.currentVersion());
+  }
+
+  @Test
+  @DisplayName("JS-SEC-002: drift drops the cached subject so the next navigation is unauthenticated")
+  void driftDropsCachedSubject() {
+    InMemoryVaadinSession session = bindSession();
+    SubjectStores.setSubjectStore(new InMemorySubjectStore());
+    SubjectStores.subjectStore().setCurrentSubject("alice", String.class);
+    VaadinJSentinelVersionContext.record(session, ALICE, TenantId.DEFAULT,
+        JSentinelVersion.INITIAL, "sid-9");
+    versionStore.increment(ALICE_KEY);
+    versionStore.increment(ALICE_KEY);
+
+    assertTrue(SubjectStores.subjectStore().currentSubject(String.class).isPresent(),
+        "precondition: a subject is cached before drift");
+
+    RecordingEvent event = new RecordingEvent();
+    VaadinSession.setCurrent(session);
+    listener.beforeEnter(event);
+
+    // The user is rerouted AND the stale subject is gone, so the very next
+    // navigation is evaluated without a subject — revocation is enforced, not
+    // just deflected once.
+    assertSame(DummyLoginView.class, event.rerouteTarget);
+    assertTrue(SubjectStores.subjectStore().currentSubject(String.class).isEmpty(),
+        "drift must drop the cached subject (JS-SEC-002)");
   }
 
   @Test
