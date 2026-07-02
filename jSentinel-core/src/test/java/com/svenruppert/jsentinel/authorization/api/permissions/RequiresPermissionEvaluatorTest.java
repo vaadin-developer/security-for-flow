@@ -70,6 +70,19 @@ class RequiresPermissionEvaluatorTest {
     assertInstanceOf(AuthorizationDecision.Forbidden.class, decision);
   }
 
+  @Test
+  @DisplayName("JS-SEC-010: empty @RequiresPermission({}) fails closed even for a subject with permissions")
+  void emptyPermissionFailsClosed() throws NoSuchMethodException {
+    JSentinelSubject subject = new JSentinelSubject(
+        "u1", "User", Set.of(), Set.of(new PermissionName("document:read")));
+
+    AuthorizationDecision decision = evaluator.evaluate(
+        context(Optional.of(subject)),
+        annotation("empty"));
+
+    assertInstanceOf(AuthorizationDecision.Forbidden.class, decision);
+  }
+
   private static AccessContext context(Optional<JSentinelSubject> subject) {
     return new AccessContext(subject, "rest-endpoint", "/documents", "read", Map.of());
   }
@@ -86,6 +99,10 @@ class RequiresPermissionEvaluatorTest {
 
     @RequiresPermission("document:delete")
     void delete() {
+    }
+
+    @RequiresPermission({})
+    void empty() {
     }
   }
 }

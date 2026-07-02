@@ -45,15 +45,19 @@ public abstract class RoleBasedAccessEvaluator<T extends Annotation, U>
     public AccessDecision evaluate(AccessContext context, T annotation) {
         final Set<RoleName> roleNames = requiredRoles(annotation);
 
-        if (roleNames.isEmpty()) {
-            return AccessDecision.granted();
-        }
-
+        // JS-SEC-011 (CWE-863): authenticate first. An empty required-role set
+        // means "any authenticated subject", never "anyone" — so the subject
+        // check must run before the empty-roles short-circuit, otherwise an
+        // anonymous visitor is granted access to a @VisibleFor({}) route.
         final Class<U> subjectType = subjectType();
         final var currentSubject = SubjectStores.subjectStore().currentSubject(subjectType);
         if (currentSubject.isEmpty()) {
             return AccessDecision.denied(
                 alternativeNavigationTarget(context, annotation), false);
+        }
+
+        if (roleNames.isEmpty()) {
+            return AccessDecision.granted();
         }
 
         final AuthorizationService<U> authorizationService = this.authorizationService();

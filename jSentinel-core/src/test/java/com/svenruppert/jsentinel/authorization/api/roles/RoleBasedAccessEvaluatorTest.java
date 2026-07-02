@@ -107,11 +107,23 @@ class RoleBasedAccessEvaluatorTest {
   }
 
   @Test
-  @DisplayName("empty required-roles set grants regardless of subject")
-  void emptyRequiredGrants() {
+  @DisplayName("JS-SEC-011: empty required-roles set denies an anonymous visitor (authenticate first)")
+  void emptyRequiredDeniesAnonymous() {
+    FixedRoleEvaluator ev = new FixedRoleEvaluator(Set.of());
+    // no subject bound — previously this granted access to anyone (fail-open).
+    org.junit.jupiter.api.Assertions.assertFalse(
+        ev.evaluate(ctx(), null) instanceof AccessDecision.Granted,
+        "empty roles must not grant an anonymous visitor");
+  }
+
+  @Test
+  @DisplayName("JS-SEC-011: empty required-roles set grants any authenticated subject")
+  void emptyRequiredGrantsAuthenticated() {
+    store.setCurrentSubject(new Sub(Set.of("VIEWER")), Sub.class);
     FixedRoleEvaluator ev = new FixedRoleEvaluator(Set.of());
     assertInstanceOf(AccessDecision.Granted.class,
-        ev.evaluate(ctx(), null));
+        ev.evaluate(ctx(), null),
+        "empty roles means any authenticated subject");
   }
 
   @Test

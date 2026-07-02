@@ -35,6 +35,14 @@ public final class RequiresPermissionEvaluator implements AuthorizationEvaluator
     if (context.subject().isEmpty()) {
       return AuthorizationDecision.unauthenticated("No authenticated subject");
     }
+    // JS-SEC-010 (CWE-863): an empty @RequiresPermission({}) must fail closed.
+    // An empty required set makes PermissionMatcher.containsAll vacuously true,
+    // which would grant to any authenticated subject regardless of permissions.
+    // Mirror the fail-closed siblings (RequiresAll/AnyPermissionsEvaluator).
+    if (annotation.value().length == 0) {
+      return AuthorizationDecision.forbidden(
+          "@RequiresPermission requires at least one permission");
+    }
 
     Set<PermissionName> required = Arrays.stream(annotation.value())
         .map(PermissionName::new)
