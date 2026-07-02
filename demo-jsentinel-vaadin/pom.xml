@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.svenruppert.jsentinel</groupId>
         <artifactId>jSentinel-parent</artifactId>
-        <version>00.79.20</version>
+        <version>00.79.30-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
