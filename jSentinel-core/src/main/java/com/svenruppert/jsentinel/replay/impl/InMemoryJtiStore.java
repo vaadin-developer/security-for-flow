@@ -33,11 +33,16 @@ import java.util.function.Supplier;
  * once a {@code jti}'s {@code expiresAt} has passed it may be recorded again (its proof's
  * window is over). When the capacity bound is hit, expired entries are purged first and,
  * if still full, the entry with the <strong>soonest expiry</strong> (shortest remaining
- * replay window) is evicted — never the least-recently-used one. The old LRU policy let
- * an attacker flood the store with self-signed valid proofs to evict a victim's still-live
- * {@code jti} and replay a captured proof (mirrors the V00.75.20 R012 fix to the event
- * replay store). For a single JVM only — a multi-node deployment needs a shared store.
- * Thread-safe (synchronised).
+ * replay window) is evicted — never the least-recently-used one. This <em>mitigates</em>
+ * the flood-evict-replay weakness of the old LRU policy (a flooding attacker now evicts the
+ * entry closest to expiry, i.e. the one with the least remaining replay value) but does
+ * <strong>not</strong> fully close it on a single JVM (JS-SEC-008): a sustained flood of
+ * freshly-issued proofs can still evict a victim's still-live {@code jti} within its window.
+ * A production DPoP resource server must therefore use a shared atomic {@code SET-NX + TTL}
+ * store (Redis / JDBC) — that is the real replay defense. The naive
+ * fail-closed-reject-on-full alternative is intentionally avoided: it turns the narrow
+ * replay window into a trivial full DoS. For a single JVM only — a multi-node deployment
+ * needs a shared store. Thread-safe (synchronised).
  */
 @ExperimentalJSentinelApi
 public final class InMemoryJtiStore implements JtiStore {

@@ -45,6 +45,16 @@ import static java.util.Objects.requireNonNull;
  * not carry — applications that need progressive backoff stay on
  * the in-memory policy or wrap this one with a richer key store.
  *
+ * <p><strong>Scope (JS-SEC-012):</strong> the lockout key is the
+ * {@code (tenant, username, ip)} tuple, so this policy only locks a
+ * <em>single</em> username from a <em>single</em> source address. It does
+ * <strong>not</strong> stop password spraying (many usernames, one host) or
+ * distributed credential stuffing (one account, many IPs) — those keep every
+ * per-tuple counter under the threshold. Anti-automation across those
+ * dimensions is the job of the {@code AbuseDetectionService} (CLIENT_ADDRESS /
+ * TENANT / GLOBAL volume, per the ASVS L2 map); wire it alongside this policy
+ * rather than relying on the lockout alone.
+ *
  * <p>Bound to one {@link TenantId} at construction. Multi-tenant
  * deployments instantiate one policy per tenant or wrap with a
  * resolver.

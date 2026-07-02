@@ -30,6 +30,7 @@ document.
 | Konzept V00.71 §10 | Optional foreign hash import for brownfield migration            | Deferred | V00.71 Prompt 036 (still open) |
 | Konzept V00.71 §3 | Password strength estimator implementation (zxcvbn-style)         | Deferred | TBD — no committed version |
 | V00.74 Framework Feedback §1 | App-side persistence has no extension slot in `EclipseStoreJSentinelStorage`; consumers run a parallel `EmbeddedStorageManager` with hand-managed lifecycle (or, in current skill scaffolding, fall back to JDK `ObjectOutputStream` on a `.ser` file — the latter is rejected by `serialization-policy.md`) | Deferred | V00.74.20 — Storage-Pair (Option B), see `Konzept-V00.74.20.md` |
+| JS-SEC-009 (V00.79.30) | Mixed-algorithm timing side channel — during a lazy KDF migration the anti-enumeration dummy KDF runs the *preferred* algorithm, so a wrong-password attempt against an existing-but-unmigrated user can be timing-distinguishable (leaks "existing & unmigrated"). | Documented (`DefaultPasswordHashingService` JavaDoc) | Backlog — optional per-outcome cost-floor; mitigate with forced-rehash migration |
 
 ## Operator-only items
 

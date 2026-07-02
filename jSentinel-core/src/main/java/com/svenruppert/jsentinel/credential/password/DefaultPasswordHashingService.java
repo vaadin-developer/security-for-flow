@@ -79,6 +79,16 @@ import java.util.Optional;
  * collapses onto {@link PublicFailureType#INVALID_CREDENTIALS}; the
  * differentiated {@link InternalAuditEventType} is preserved for audit
  * sinks.</p>
+ *
+ * <p><strong>Caveat (JS-SEC-009):</strong> the dummy KDF runs the
+ * <em>preferred</em> algorithm/parameters, so the timing profile is
+ * observationally equivalent only while every stored hash uses that same
+ * preferred algorithm. During a lazy multi-KDF migration (e.g. legacy PBKDF2
+ * coexisting with a preferred Argon2id) a wrong-password attempt against an
+ * existing-but-unmigrated user runs the stored (legacy) KDF, which can differ
+ * in cost from the preferred dummy — a statistical timing side channel that can
+ * leak &quot;existing &amp; unmigrated&quot;. Prefer a forced-rehash migration
+ * over lazy rehash-on-login when hardening this residual leak.</p>
  */
 public final class DefaultPasswordHashingService implements PasswordHashingService {
 
