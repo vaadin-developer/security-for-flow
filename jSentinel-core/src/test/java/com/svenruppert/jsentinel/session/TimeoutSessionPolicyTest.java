@@ -22,6 +22,9 @@ import com.svenruppert.jsentinel.audit.SessionCreated;
 import com.svenruppert.jsentinel.audit.SessionExpired;
 import com.svenruppert.jsentinel.audit.SessionInvalidated;
 import com.svenruppert.jsentinel.audit.JSentinelAuditService;
+import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.jsentinel.logout.SubjectId;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -35,6 +38,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -48,6 +52,12 @@ class TimeoutSessionPolicyTest {
   private static SessionContext<String> ctx(Instant created, Instant lastActivity) {
     return new SessionContext<>(
         "alice", "sess-1", created, lastActivity, "10.0.0.1", Map.of());
+  }
+
+  @AfterEach
+  void resetResolver() {
+    // JS-SEC-004 tests register a SubjectIdResolver; reset so it never leaks.
+    JSentinelServiceResolver.resetAll();
   }
 
   // ── Config validation ────────────────────────────────────────
@@ -191,6 +201,42 @@ class TimeoutSessionPolicyTest {
     assertEquals(1, audit.events.size());
     SessionInvalidated event = (SessionInvalidated) audit.events.get(0);
     assertEquals("Logout", event.reason());
+  }
+
+  @Test
+  @DisplayName("JS-SEC-004: audit subjectId comes from the SubjectIdResolver, never subject.toString()")
+  void auditSubjectIdUsesResolverNotToString() {
+    Instant t0 = Instant.parse("2026-05-08T10:00:00Z");
+    RecordingAudit audit = new RecordingAudit();
+    // Resolver maps the subject to a clean, non-PII id distinct from toString().
+    JSentinelServiceResolver.<String>setSubjectIdResolver(
+        s -> SubjectId.of("uid-" + s.length()));
+    TimeoutSessionPolicy<String> policy = new TimeoutSessionPolicy<>(
+        CONFIG, Clock.fixed(t0, ZoneOffset.UTC), audit);
+
+    policy.onLogout(ctx(t0, t0)); // subject "alice"
+
+    SessionInvalidated event = (SessionInvalidated) audit.events.get(0);
+    assertEquals("uid-5", event.subjectId(),
+        "audit subjectId must be the resolver value");
+    assertNotEquals("alice", event.subjectId(),
+        "must never publish subject.toString() (JS-SEC-004)");
+  }
+
+  @Test
+  @DisplayName("JS-SEC-004: audit subjectId is empty (never toString()) when no resolver is registered")
+  void auditSubjectIdEmptyWithoutResolver() {
+    Instant t0 = Instant.parse("2026-05-08T10:00:00Z");
+    JSentinelServiceResolver.resetAll(); // ensure no resolver is registered
+    RecordingAudit audit = new RecordingAudit();
+    TimeoutSessionPolicy<String> policy = new TimeoutSessionPolicy<>(
+        CONFIG, Clock.fixed(t0, ZoneOffset.UTC), audit);
+
+    policy.onLogout(ctx(t0, t0));
+
+    SessionInvalidated event = (SessionInvalidated) audit.events.get(0);
+    assertEquals("", event.subjectId(),
+        "no resolver → empty subjectId, never subject.toString() (JS-SEC-004)");
   }
 
   @Test

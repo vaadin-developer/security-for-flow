@@ -42,8 +42,11 @@ import java.util.Objects;
  *   <li>{@link #onLogin(SessionContext)} — emits
  *       {@link SessionCreated}.
  *       If {@link Config#rotateSessionAfterLogin()} is {@code true},
- *       returns {@link SessionDecision.Invalidate} so the adapter rotates
- *       the session id; otherwise {@link SessionDecision.Continue#INSTANCE}.</li>
+ *       returns {@link SessionDecision.Invalidate} carrying the rotation
+ *       reason; otherwise {@link SessionDecision.Continue#INSTANCE}. Since
+ *       V00.79.30 (JS-SEC-003) the Vaadin adapter's {@code LoginView} rotates
+ *       the session id on <em>every</em> login regardless of this flag — the
+ *       flag now only selects the audit reason recorded for the rotation.</li>
  *   <li>{@link #beforeNavigation(SessionContext)} — checks absolute
  *       lifetime first, then idle timeout. Either trip emits
  *       {@link SessionExpired}
@@ -200,7 +203,19 @@ public final class TimeoutSessionPolicy<U> implements SessionPolicy<U> {
   }
 
   private String subjectIdOf(SessionContext<U> context) {
-    return context.subject() == null ? "" : context.subject().toString();
+    // JS-SEC-004 (CWE-532): derive the audit subjectId via the registered
+    // SubjectIdResolver — never subject.toString(), which commonly serialises
+    // PII (email / hash / internal id) into the audit channel. Empty fallback
+    // is safe here: these are audit-only emissions (SessionCreated /
+    // SessionExpired / SessionInvalidated) which accept an empty subjectId,
+    // mirroring LoginView.subjectIdOf.
+    U subject = context.subject();
+    if (subject == null) {
+      return "";
+    }
+    return JSentinelServiceResolver.<U>findSubjectIdResolver()
+        .map(r -> r.resolve(subject).value())
+        .orElse("");
   }
 
   private void publish(AuditEvent event) {

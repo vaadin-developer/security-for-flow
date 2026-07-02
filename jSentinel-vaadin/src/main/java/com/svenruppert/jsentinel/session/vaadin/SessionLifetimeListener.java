@@ -23,6 +23,7 @@ import com.svenruppert.jsentinel.authorization.LoginListener;
 import com.svenruppert.jsentinel.authorization.LoginListeners;
 import com.svenruppert.jsentinel.authorization.LoginView;
 import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.jsentinel.authorization.api.SubjectIdResolver;
 import com.svenruppert.jsentinel.authorization.api.SubjectStore;
 import com.svenruppert.jsentinel.authorization.api.SubjectStores;
 import com.svenruppert.jsentinel.session.SessionMetadata;
@@ -183,12 +184,21 @@ public class SessionLifetimeListener
   }
 
   private static String subjectIdOf(Object subject) {
-    String value = subject.toString();
-    if (value == null || value.isBlank()) {
-      return subject.getClass().getSimpleName()
-          + "@" + Integer.toHexString(System.identityHashCode(subject));
+    // JS-SEC-004 (CWE-532): derive the audit subjectId via the registered
+    // SubjectIdResolver — never subject.toString(), which commonly serialises
+    // PII (email / hash / internal id) into the audit channel. SessionMetadata
+    // rejects a blank subjectId, so when no resolver is registered (or it
+    // yields blank) fall back to a non-PII identity handle, never toString().
+    Optional<SubjectIdResolver<Object>> resolver =
+        JSentinelServiceResolver.findSubjectIdResolver();
+    if (resolver.isPresent()) {
+      String resolved = resolver.get().resolve(subject).value();
+      if (resolved != null && !resolved.isBlank()) {
+        return resolved;
+      }
     }
-    return value;
+    return subject.getClass().getSimpleName()
+        + "@" + Integer.toHexString(System.identityHashCode(subject));
   }
 
   private static Instant sessionCreatedAt(VaadinSession session) {

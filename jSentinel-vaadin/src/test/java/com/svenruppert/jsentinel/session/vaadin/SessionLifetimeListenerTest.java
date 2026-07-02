@@ -22,6 +22,7 @@ import com.svenruppert.jsentinel.authorization.LoginListeners;
 import com.svenruppert.jsentinel.authorization.LoginView;
 import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.jsentinel.authorization.api.SubjectStores;
+import com.svenruppert.jsentinel.logout.SubjectId;
 import com.svenruppert.jsentinel.test.InMemorySubjectStore;
 import com.svenruppert.jsentinel.test.RecordingAuditSink;
 import com.svenruppert.jsentinel.session.SessionContext;
@@ -54,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -122,6 +124,8 @@ class SessionLifetimeListenerTest {
     LoginListeners.setLoginListener(new TestLoginListener());
     JSentinelServiceResolver.setSessionPolicy(
         new AlwaysDecide<String>(SessionPolicyDecision.idleTimeout()));
+    // JS-SEC-004: the audit subjectId must come from the resolver, not toString().
+    JSentinelServiceResolver.<String>setSubjectIdResolver(s -> SubjectId.of("resolved-" + s));
 
     SessionLifetimeListener listener = new SessionLifetimeListener(
         Clock.fixed(T0.plusSeconds(60), ZoneOffset.UTC));
@@ -136,7 +140,32 @@ class SessionLifetimeListenerTest {
     assertEquals(1, audit.events().size());
     SessionExpired ev = (SessionExpired) audit.events().get(0);
     assertEquals("IdleTimeout", ev.reason());
-    assertEquals("alice", ev.subjectId());
+    assertEquals("resolved-alice", ev.subjectId(),
+        "audit subjectId must be the resolver value, never subject.toString()");
+  }
+
+  @Test
+  @DisplayName("JS-SEC-004: no resolver → audit subjectId is a non-PII handle, never subject.toString()")
+  void noResolver_subjectIdFallsBackToNonPiiHandle() {
+    bindSession(T0);
+    SubjectStores.setSubjectStore(new InMemorySubjectStore());
+    SubjectStores.subjectStore().setCurrentSubject("alice", String.class);
+    LoginListeners.setLoginListener(new TestLoginListener());
+    JSentinelServiceResolver.setSessionPolicy(
+        new AlwaysDecide<String>(SessionPolicyDecision.idleTimeout()));
+    // No SubjectIdResolver registered — SessionMetadata rejects a blank id, so
+    // the listener must fall back to a non-blank, non-PII identity handle.
+
+    SessionLifetimeListener listener = new SessionLifetimeListener(
+        Clock.fixed(T0.plusSeconds(60), ZoneOffset.UTC));
+
+    listener.beforeEnter(new RecordingEvent());
+
+    SessionExpired ev = (SessionExpired) audit.events().get(0);
+    assertNotEquals("alice", ev.subjectId(),
+        "must never fall back to subject.toString() (JS-SEC-004)");
+    assertTrue(ev.subjectId().startsWith("String@"),
+        "fallback is a class@identityHashCode handle; got " + ev.subjectId());
   }
 
   @Test
