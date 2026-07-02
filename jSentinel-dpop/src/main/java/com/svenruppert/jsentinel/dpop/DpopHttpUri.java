@@ -21,9 +21,11 @@ import java.util.Locale;
 
 /**
  * Normalises an HTTP URI to its DPoP {@code htu} form (RFC 9449 §4.3 step 9): the
- * scheme + authority + path, with the query and fragment removed. Scheme and host are
- * lower-cased; the default port for the scheme is dropped so {@code https://h:443/p}
- * and {@code https://h/p} compare equal.
+ * scheme + authority + raw path, with the query and fragment removed. Scheme and host
+ * are lower-cased; the default port for the scheme is dropped so {@code https://h:443/p}
+ * and {@code https://h/p} compare equal. The <em>raw</em> (percent-encoded) path is used
+ * so a reserved octet such as {@code %2F} is not collapsed to a literal separator
+ * (JS-SEC-022).
  */
 final class DpopHttpUri {
 
@@ -37,7 +39,10 @@ final class DpopHttpUri {
     if (isDefaultPort(scheme, port)) {
       port = -1;
     }
-    String path = uri.getPath() == null ? "" : uri.getPath();
+    // JS-SEC-022 (CWE-172): use the raw (percent-encoded) path, not the decoded
+    // one, so a reserved octet like %2F is never collapsed to a literal '/' —
+    // over-decoding would widen the htu equivalence class a captured proof binds to.
+    String path = uri.getRawPath() == null ? "" : uri.getRawPath();
     StringBuilder sb = new StringBuilder();
     sb.append(scheme).append("://").append(host);
     if (port != -1) {

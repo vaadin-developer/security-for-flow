@@ -145,6 +145,16 @@ public final class NimbusDpopProofValidator implements DpopProofValidator {
       return fail(new DpopValidationError.ProofExpired("proof is too old"));
     }
 
+    // JS-SEC-023 (CWE-345): if the proof carries an `ath` claim but no access
+    // token was supplied, the caller used the binding-only profile (of(...)) at
+    // a protected resource — fail closed rather than silently skipping the
+    // RFC 9449 mandatory ath check.
+    boolean hasAth = claims.getClaim("ath") instanceof String a && !a.isBlank();
+    if (hasAth && request.accessToken().isEmpty()) {
+      return fail(new DpopValidationError.AccessTokenHashMismatch(
+          "proof carries ath but no access token was provided for validation"));
+    }
+
     if (request.accessToken().isPresent()) {
       String ath = claims.getClaim("ath") instanceof String s ? s : null;
       String expected = DpopProofGenerator.accessTokenHash(request.accessToken().get());

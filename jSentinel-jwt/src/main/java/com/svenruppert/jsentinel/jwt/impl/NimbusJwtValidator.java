@@ -165,6 +165,16 @@ public final class NimbusJwtValidator implements JwtValidator {
     } catch (ParseException e) {
       return Result.failure(new JwtValidationError.SignatureInvalid("token is not a parseable JWS"));
     }
+    // JS-SEC-020 (RFC 7515 §4.1.11 / CWE-345): reject any token that declares a
+    // `crit` header parameter. jSentinel understands no crit extensions, so it
+    // rejects them uniformly across all alg families. The RSA/EC path gets this
+    // from Nimbus's CriticalHeaderParamsDeferral; the EdDSA path bypasses Nimbus,
+    // so enforce it here for consistency and spec compliance.
+    var crit = jwt.getHeader().getCriticalParams();
+    if (crit != null && !crit.isEmpty()) {
+      return Result.failure(new JwtValidationError.SignatureInvalid(
+          "token declares unsupported critical header parameters"));
+    }
     boolean signatureValid;
     if (alg == JwsAlgorithm.EdDSA) {
       signatureValid = verifyEd25519(jwt, key.get());

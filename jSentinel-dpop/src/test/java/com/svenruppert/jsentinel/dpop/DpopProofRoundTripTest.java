@@ -83,6 +83,21 @@ class DpopProofRoundTripTest {
   }
 
   @Test
+  @DisplayName("JS-SEC-023: a proof carrying ath but validated without an access token is rejected")
+  void athWithoutTokenIsRejected() throws Exception {
+    RSAKey key = rsaKey();
+    URI uri = URI.create("https://api.example.com/resource");
+    // Minted WITH an ath (bound to an access token)...
+    String proof = generator.generate(key, "GET", uri, Optional.of("the-access-token"));
+    // ...but validated with the binding-only profile of(...) (no token) — must
+    // fail closed rather than silently skip the RFC 9449 ath check.
+    var result = validatorWith(new InMemoryJtiStore(1000, now::get))
+        .validate(DpopValidationRequest.of(proof, "GET", uri));
+    assertTrue(result.isFailure());
+    assertInstanceOf(AccessTokenHashMismatch.class, result.fold(v -> null, e -> e));
+  }
+
+  @Test
   @DisplayName("an EC proof validates")
   void ecRoundTrip() throws Exception {
     JWK key = ecKey();
