@@ -107,6 +107,21 @@ public sealed interface AuthorizationDecision
       if (method == null || method.isBlank()) {
         throw new IllegalArgumentException("method must not be blank");
       }
+      // JS-SEC-013 (CWE-113): `method` flows verbatim into a WWW-Authenticate
+      // header on the REST adapter. Reject anything outside the RFC 7235 token
+      // set — CR/LF, whitespace, quotes, backslash, control chars — so an
+      // evaluator deriving it from request input cannot split the response.
+      for (int i = 0; i < method.length(); i++) {
+        if (!isToken(method.charAt(i))) {
+          throw new IllegalArgumentException(
+              "method must be an RFC 7235 token (no CR/LF, whitespace, quotes or control chars)");
+        }
+      }
+    }
+
+    private static boolean isToken(char c) {
+      return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+          || "!#$%&'*+-.^_`|~".indexOf(c) >= 0;
     }
   }
 

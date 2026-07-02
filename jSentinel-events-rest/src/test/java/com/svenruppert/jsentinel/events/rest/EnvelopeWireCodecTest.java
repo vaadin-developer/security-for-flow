@@ -29,7 +29,10 @@ import com.svenruppert.jsentinel.events.api.SignedJSentinelEventEnvelope;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("EnvelopeWireCodec")
@@ -61,5 +64,23 @@ class EnvelopeWireCodecTest {
   void malformed() {
     assertTrue(codec.decode("{").isFailure());
     assertTrue(codec.decode("{\"envelopeId\":\"x\"}").isFailure());
+  }
+
+  @Test
+  @DisplayName("JS-SEC-019: a malformed body's decode error carries no control chars (no log-forging)")
+  void decodeErrorHasNoControlChars() {
+    // Malformed inputs whose parse error may echo attacker-controlled fragments,
+    // including raw CR/LF that could forge extra log lines when the error is logged.
+    for (String bad : List.of(
+        "{\"eventType\":\"a\r\nFAKE 200 OK\"}",
+        "{\"createdAt\":\"2026\n01\n01\"}",
+        "not json\r\ninjected line",
+        "{")) {
+      String error = codec.decode(bad).fold(v -> "", e -> e);
+      for (int i = 0; i < error.length(); i++) {
+        assertFalse(Character.isISOControl(error.charAt(i)),
+            "decode error must be free of control chars (JS-SEC-019); got: " + error);
+      }
+    }
   }
 }

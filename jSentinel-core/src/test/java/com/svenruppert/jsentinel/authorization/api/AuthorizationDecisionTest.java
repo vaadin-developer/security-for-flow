@@ -66,6 +66,20 @@ class AuthorizationDecisionTest {
   }
 
   @Test
+  @DisplayName("JS-SEC-013: StepUpRequired rejects a non-token method (CR/LF, quote, space) to prevent header injection")
+  void stepUpRejectsNonTokenMethod() {
+    assertThrows(IllegalArgumentException.class,
+        () -> new AuthorizationDecision.StepUpRequired("r", "MFA\r\nSet-Cookie: sid=attacker"));
+    assertThrows(IllegalArgumentException.class,
+        () -> new AuthorizationDecision.StepUpRequired("r", "MFA\"evil"));
+    assertThrows(IllegalArgumentException.class,
+        () -> new AuthorizationDecision.StepUpRequired("r", "needs mfa"));
+    // valid RFC 7235 tokens are accepted
+    assertEquals("MFA", new AuthorizationDecision.StepUpRequired("r", "MFA").method());
+    assertEquals("re-auth", new AuthorizationDecision.StepUpRequired("r", "re-auth").method());
+  }
+
+  @Test
   @DisplayName("sealed switch covers all four variants exhaustively")
   void sealedExhaustiveness() {
     assertEquals("g", describe(AuthorizationDecision.granted()));

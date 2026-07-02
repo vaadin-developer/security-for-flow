@@ -125,8 +125,22 @@ public final class EnvelopeWireCodec {
    */
   public Result<SignedJSentinelEventEnvelope, String> decode(String json) {
     CheckedSupplier<SignedJSentinelEventEnvelope> step = () -> decodeOrThrow(json);
-    return step.get().mapError(t -> t.getClass().getSimpleName()
-        + (t.getMessage() == null ? "" : ": " + t.getMessage()));
+    return step.get().mapError(t -> scrub(t.getClass().getSimpleName()
+        + (t.getMessage() == null ? "" : ": " + t.getMessage())));
+  }
+
+  // JS-SEC-019 (CWE-117): parse-exception messages embed attacker-influenced
+  // wire fragments; strip CR/LF and other control chars so a value cannot forge
+  // extra log lines when a consumer (e.g. the publish endpoint) logs this error.
+  private static String scrub(String s) {
+    StringBuilder sb = new StringBuilder(s.length());
+    for (int i = 0; i < s.length(); i++) {
+      char c = s.charAt(i);
+      if (!Character.isISOControl(c)) {
+        sb.append(c);
+      }
+    }
+    return sb.toString();
   }
 
   private SignedJSentinelEventEnvelope decodeOrThrow(String json) {
