@@ -10,6 +10,8 @@
  */
 package com.svenruppert.jsentinel.starter.routes;
 
+import com.svenruppert.jsentinel.authorization.annotations.PublicRoute;
+import com.svenruppert.jsentinel.authorization.impl.JSentinelAnnotationScanner;
 import com.svenruppert.jsentinel.dx.vaadin.routes.SecureRouteDiscovery;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.router.RouteData;
@@ -35,6 +37,8 @@ import java.util.stream.Stream;
  */
 public final class VaadinRouterSecureRouteDiscovery implements SecureRouteDiscovery {
 
+  private final JSentinelAnnotationScanner scanner = new JSentinelAnnotationScanner();
+
   @Override
   public Stream<String> discoverPolicyNames() {
     try {
@@ -57,6 +61,21 @@ public final class VaadinRouterSecureRouteDiscovery implements SecureRouteDiscov
           .map(RouteData::getNavigationTarget)
           .filter(c -> c != null && c.isAnnotationPresent(SecureRoute.class))
           .filter(VaadinRouterSecureRouteDiscovery::isConstraintless)
+          .map(Class::getSimpleName);
+    } catch (RuntimeException ignored) {
+      return Stream.empty();
+    }
+  }
+
+  @Override
+  public Stream<String> discoverUnannotatedRouteNames() {
+    try {
+      return RouteConfiguration.forApplicationScope()
+          .getAvailableRoutes().stream()
+          .map(RouteData::getNavigationTarget)
+          .filter(c -> c != null
+              && !c.isAnnotationPresent(PublicRoute.class)
+              && scanner.scan(c).isEmpty())
           .map(Class::getSimpleName);
     } catch (RuntimeException ignored) {
       return Stream.empty();

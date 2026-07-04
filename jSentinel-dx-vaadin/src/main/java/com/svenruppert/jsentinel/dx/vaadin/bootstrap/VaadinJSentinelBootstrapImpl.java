@@ -306,6 +306,20 @@ final class VaadinJSentinelBootstrapImpl
                 + "policy; it grants any authenticated subject.",
             "Add roles/permissions/policy to restrict further, or keep it if an "
                 + "authenticated-only route is intended.")));
+
+    // JS-SEC-024 (CWE-862): when deny-by-default is enabled, enumerate the routes it
+    // will now deny (no security annotation, not @PublicRoute) so a forgotten annotation
+    // surfaces at startup. Severity.ERROR → STRICT throws; other modes record only.
+    if (JSentinelServiceResolver.isDenyByDefault()) {
+      discovery.discoverUnannotatedRouteNames().forEach(routeName ->
+          warnings.add(new JSentinelBootstrapWarning(
+              Severity.ERROR,
+              "deny-by-default/unannotated-route",
+              "Route " + routeName + " has no security annotation and is not @PublicRoute; "
+                  + "deny-by-default will deny all navigation to it.",
+              "Add a restriction annotation (@RequiresRole / @RequiresPermission / "
+                  + "@SecureRoute), or mark it @PublicRoute if it is intentionally public.")));
+    }
   }
 
   private static SecureRouteDiscovery tryLoadDefaultDiscovery() {

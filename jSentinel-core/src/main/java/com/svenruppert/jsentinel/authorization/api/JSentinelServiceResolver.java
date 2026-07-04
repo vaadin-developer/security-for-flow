@@ -625,6 +625,40 @@ public final class JSentinelServiceResolver {
     DEFAULT.setLoginRouteName(routeName);
   }
 
+  // ── Deny-by-default (JS-SEC-024 / CWE-862) ─────────────────────
+
+  /**
+   * Whether the adapters treat an un-annotated {@code @Route} / REST handler as
+   * denied (fail-closed) instead of public. Defaults to {@code false} —
+   * allow-by-omission — so existing applications are unaffected. When {@code true},
+   * an un-annotated navigation target or handler is denied unless it carries
+   * {@link com.svenruppert.jsentinel.authorization.annotations.PublicRoute}.
+   *
+   * @return {@code true} when deny-by-default is enabled
+   */
+  public static boolean isDenyByDefault() {
+    return DEFAULT.isDenyByDefault();
+  }
+
+  /**
+   * Enables/disables deny-by-default (JS-SEC-024). Opt-in; production apps turn it
+   * on at bootstrap. Pass {@code false} to restore allow-by-omission.
+   *
+   * <p><strong>Important:</strong> when deny-by-default is on, <em>every</em>
+   * un-annotated target is denied — including your login view, error views and any
+   * public landing pages. Mark each intentionally-public target with
+   * {@link com.svenruppert.jsentinel.authorization.annotations.PublicRoute} (or give
+   * it a security annotation), otherwise it becomes unreachable. The STRICT startup
+   * diagnostic (via {@code SecureRouteDiscovery}) enumerates these so they surface
+   * at boot rather than at first navigation.
+   *
+   * @param denyByDefault {@code true} to fail closed on un-annotated,
+   *                      non-{@code @PublicRoute} targets
+   */
+  public static void setDenyByDefault(boolean denyByDefault) {
+    DEFAULT.setDenyByDefault(denyByDefault);
+  }
+
   // ── TokenCredentialStore / OutboundTokenStrategy ───────────────
 
   /**

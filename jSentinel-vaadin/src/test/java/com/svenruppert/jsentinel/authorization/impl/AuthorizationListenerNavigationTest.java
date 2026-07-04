@@ -19,6 +19,7 @@ package com.svenruppert.jsentinel.authorization.impl;
 import com.svenruppert.jsentinel.audit.AccessDenied;
 import com.svenruppert.jsentinel.audit.AccessGranted;
 import com.svenruppert.jsentinel.authorization.annotations.JSentinelAnnotation;
+import com.svenruppert.jsentinel.authorization.annotations.PublicRoute;
 import com.svenruppert.jsentinel.authorization.api.AccessEvaluator;
 import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.jsentinel.authorization.api.SubjectStores;
@@ -109,6 +110,36 @@ class AuthorizationListenerNavigationTest extends BrowserlessTest {
         "unannotated routes must not produce any audit event; got: " + audit.events());
   }
 
+  @Test
+  @DisplayName("JS-SEC-024: deny-by-default denies an un-annotated route (AccessDenied audited)")
+  void denyByDefault_unannotatedRoute_denied() {
+    JSentinelServiceResolver.setDenyByDefault(true);
+    try {
+      navigate(PlainFixture.class);
+    } catch (RuntimeException expected) {
+      // rerouteToError may throw in the browserless harness; the denial is
+      // audited before the redirect, which is what we assert.
+    }
+    // The un-annotated PlainFixture is denied. (The reroute target — the harness
+    // error view — is also un-annotated, so it too is denied; a real app marks its
+    // error/login views @PublicRoute. We assert the PlainFixture denial specifically.)
+    boolean deniedPlain = audit.events().stream()
+        .filter(AccessDenied.class::isInstance)
+        .map(AccessDenied.class::cast)
+        .anyMatch(d -> "PlainFixture".equals(d.route()) && d.reason().startsWith("Error:"));
+    assertTrue(deniedPlain,
+        "deny-by-default must deny the un-annotated PlainFixture route; got: " + audit.events());
+  }
+
+  @Test
+  @DisplayName("JS-SEC-024: deny-by-default still allows a @PublicRoute route (no denial)")
+  void denyByDefault_publicRoute_allowed() {
+    JSentinelServiceResolver.setDenyByDefault(true);
+    navigate(PublicFixture.class);
+    assertEquals(0, audit.events().size(),
+        "@PublicRoute must stay reachable under deny-by-default; got: " + audit.events());
+  }
+
   // ── Fixtures ──────────────────────────────────────────────────
 
   @Retention(RetentionPolicy.RUNTIME)
@@ -143,4 +174,8 @@ class AuthorizationListenerNavigationTest extends BrowserlessTest {
 
   @Route("plain")
   public static class PlainFixture extends Composite<Div> { }
+
+  @Route("public-plain")
+  @PublicRoute
+  public static class PublicFixture extends Composite<Div> { }
 }

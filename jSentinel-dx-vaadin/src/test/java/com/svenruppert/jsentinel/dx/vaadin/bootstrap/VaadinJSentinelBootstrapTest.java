@@ -25,6 +25,7 @@ import com.svenruppert.jsentinel.test.FakeAuthenticationService;
 import com.svenruppert.jsentinel.test.FakeAuthorizationService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -146,6 +147,66 @@ class VaadinJSentinelBootstrapTest {
                 && w.severity() == Severity.WARNING
                 && w.message().contains("OpenView")),
         "a constraint-less @SecureRoute must surface a secure-route/no-constraints advisory");
+  }
+
+  private static com.svenruppert.jsentinel.dx.vaadin.routes.SecureRouteDiscovery
+      unannotatedDiscovery(String routeName) {
+    return new com.svenruppert.jsentinel.dx.vaadin.routes.SecureRouteDiscovery() {
+      @Override public java.util.stream.Stream<String> discoverPolicyNames() {
+        return java.util.stream.Stream.empty();
+      }
+      @Override public java.util.stream.Stream<String> discoverUnannotatedRouteNames() {
+        return java.util.stream.Stream.of(routeName);
+      }
+    };
+  }
+
+  @Test
+  @DisplayName("JS-SEC-024: deny-by-default + un-annotated route → STRICT bootstrap exception")
+  void denyByDefault_unannotatedRoute_strictThrows() {
+    JSentinelServiceResolver.setDenyByDefault(true);
+    JSentinelBootstrapException ex = assertThrows(JSentinelBootstrapException.class, () ->
+        VaadinSecurity.bootstrap()
+            .authentication(FakeAuthenticationService.forType(String.class))
+            .authorization(new FakeAuthorizationService<String>())
+            .mode(JSentinelBootstrapMode.STRICT)
+            .discoverSecureRoutes(unannotatedDiscovery("ForgottenView"))
+            .install());
+    assertTrue(ex.warnings().stream()
+            .anyMatch(w -> "deny-by-default/unannotated-route".equals(w.code())
+                && w.message().contains("ForgottenView")),
+        "STRICT must throw a deny-by-default/unannotated-route finding");
+  }
+
+  @Test
+  @DisplayName("JS-SEC-024: deny-by-default + un-annotated route → PRODUCTION records the finding")
+  void denyByDefault_unannotatedRoute_productionWarns() {
+    JSentinelServiceResolver.setDenyByDefault(true);
+    JSentinelRuntime runtime = VaadinSecurity.bootstrap()
+        .authentication(FakeAuthenticationService.forType(String.class))
+        .authorization(new FakeAuthorizationService<String>())
+        .mode(JSentinelBootstrapMode.PRODUCTION)
+        .discoverSecureRoutes(unannotatedDiscovery("ForgottenView"))
+        .install();
+    assertTrue(runtime.warnings().stream()
+            .anyMatch(w -> "deny-by-default/unannotated-route".equals(w.code())
+                && w.severity() == Severity.ERROR),
+        "PRODUCTION must record the deny-by-default/unannotated-route finding");
+  }
+
+  @Test
+  @DisplayName("JS-SEC-024: deny-by-default OFF → no unannotated-route finding is emitted")
+  void denyByDefaultOff_unannotatedRoute_noFinding() {
+    // deny-by-default defaults to off — the enumeration must not run.
+    JSentinelRuntime runtime = VaadinSecurity.bootstrap()
+        .authentication(FakeAuthenticationService.forType(String.class))
+        .authorization(new FakeAuthorizationService<String>())
+        .mode(JSentinelBootstrapMode.PRODUCTION)
+        .discoverSecureRoutes(unannotatedDiscovery("ForgottenView"))
+        .install();
+    assertFalse(runtime.warnings().stream()
+            .anyMatch(w -> "deny-by-default/unannotated-route".equals(w.code())),
+        "with deny-by-default off, no unannotated-route finding may be emitted");
   }
 
   @Test

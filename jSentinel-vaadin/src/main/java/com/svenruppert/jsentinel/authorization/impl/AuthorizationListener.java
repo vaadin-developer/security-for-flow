@@ -25,6 +25,7 @@ import com.svenruppert.jsentinel.audit.StepUpChallenged;
 import com.svenruppert.jsentinel.authorization.api.AccessEvaluator;
 import com.svenruppert.jsentinel.authorization.api.AuthorizationDecision;
 import com.svenruppert.jsentinel.authorization.api.AuthorizationEvaluator;
+import com.svenruppert.jsentinel.authorization.annotations.PublicRoute;
 import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.jsentinel.authorization.api.JSentinelSubject;
 import com.svenruppert.jsentinel.authorization.navigation.AccessContext;
@@ -62,8 +63,10 @@ import static java.util.Objects.requireNonNull;
  * rather than failing closed. To defend against a forgotten annotation, mark
  * views that must require authentication with a constraint-less
  * {@code @SecureRoute()} (fail-closed, R035), and treat "no annotation = public"
- * as an explicit decision. An opt-in deny-by-default mode plus a STRICT startup
- * diagnostic that enumerates un-annotated routes is backlog.
+ * as an explicit decision. Opt-in deny-by-default is now available (JS-SEC-024):
+ * enable it with {@code JSentinelServiceResolver.setDenyByDefault(true)} and an
+ * un-annotated route then fails closed unless it is marked {@link PublicRoute};
+ * a STRICT startup diagnostic enumerates the routes it would deny.
  * <p>
  * Registered as a {@link VaadinServiceInitListener} via
  * {@code META-INF/services}.
@@ -104,33 +107,62 @@ public class AuthorizationListener
   public void beforeEnter(BeforeEnterEvent event) {
     Class<?> navigationTarget = event.getNavigationTarget();
 
-    scanner.scan(navigationTarget).ifPresent(pair -> {
-      // 1. Resolve evaluator via Vaadin instantiator
-      Class<?> evaluatorClass = pair.evaluatorClass();
-      requireNonNull(evaluatorClass,
-          "AccessEvaluator class must not be null for " + navigationTarget.getName());
+    var scanned = scanner.scan(navigationTarget);
+    if (scanned.isEmpty()) {
+      // JS-SEC-024 (CWE-862): no security annotation — allow-by-omission unless
+      // deny-by-default is enabled (then fail closed unless @PublicRoute).
+      denyByDefaultIfEnabled(navigationTarget, event);
+      return;
+    }
+    var pair = scanned.get();
 
-      Object evaluator = VaadinService.getCurrent()
-          .getInstantiator()
-          .getOrCreate(evaluatorClass);
-      requireNonNull(evaluator,
-          "Could not instantiate AccessEvaluator: " + evaluatorClass.getName());
+    // 1. Resolve evaluator via Vaadin instantiator
+    Class<?> evaluatorClass = pair.evaluatorClass();
+    requireNonNull(evaluatorClass,
+        "AccessEvaluator class must not be null for " + navigationTarget.getName());
 
-      // 2. Evaluate — obtain a Vaadin-free decision plus the original
-      //    AuthorizationDecision (when the evaluator produced one), so
-      //    audit can record StepUp specifics that get lost in the
-      //    AccessDecision mapping.
-      Annotation annotation = pair.annotation();
-      logger().info("Evaluating access for {} with {}", event.getLocation(), annotation);
-      AccessContext context = contextFactory.create(event);
-      EvaluatedDecision evaluated = evaluateWithOriginal(evaluator, context, annotation);
+    Object evaluator = VaadinService.getCurrent()
+        .getInstantiator()
+        .getOrCreate(evaluatorClass);
+    requireNonNull(evaluator,
+        "Could not instantiate AccessEvaluator: " + evaluatorClass.getName());
 
-      // 3. Audit the decision
-      audit(evaluated, context);
+    // 2. Evaluate — obtain a Vaadin-free decision plus the original
+    //    AuthorizationDecision (when the evaluator produced one), so
+    //    audit can record StepUp specifics that get lost in the
+    //    AccessDecision mapping.
+    Annotation annotation = pair.annotation();
+    logger().info("Evaluating access for {} with {}", event.getLocation(), annotation);
+    AccessContext context = contextFactory.create(event);
+    EvaluatedDecision evaluated = evaluateWithOriginal(evaluator, context, annotation);
 
-      // 4. Apply the decision to the Vaadin event
-      decisionMapper.apply(evaluated.mapped(), event);
-    });
+    // 3. Audit the decision
+    audit(evaluated, context);
+
+    // 4. Apply the decision to the Vaadin event
+    decisionMapper.apply(evaluated.mapped(), event);
+  }
+
+  /**
+   * JS-SEC-024 (CWE-862): when deny-by-default is enabled and the target carries
+   * neither a security annotation (scanner empty) nor {@link PublicRoute}, fail
+   * closed — reroute to the generic error view exactly as an
+   * {@link AuthorizationDecision.Forbidden} would, and audit the denial. When
+   * deny-by-default is off (the default) this is a no-op, preserving
+   * allow-by-omission and full backward compatibility.
+   */
+  private void denyByDefaultIfEnabled(Class<?> navigationTarget, BeforeEnterEvent event) {
+    if (!JSentinelServiceResolver.isDenyByDefault()
+        || navigationTarget.isAnnotationPresent(PublicRoute.class)) {
+      return;
+    }
+    logger().warn(
+        "deny-by-default: {} has no security annotation and is not @PublicRoute — denying",
+        navigationTarget.getName());
+    AccessContext context = contextFactory.create(event);
+    AccessDecision denied = AccessDecision.deniedWithError(SecurityException.class, "Access denied");
+    audit(new EvaluatedDecision(denied, Optional.empty()), context);
+    decisionMapper.apply(denied, event);
   }
 
   /**

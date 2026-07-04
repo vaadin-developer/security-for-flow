@@ -16,9 +16,12 @@
  */
 package com.svenruppert.jsentinel.rest;
 
+import com.svenruppert.jsentinel.authorization.annotations.PublicRoute;
 import com.svenruppert.jsentinel.authorization.annotations.RequiresPermission;
+import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.jsentinel.authorization.api.JSentinelSubject;
 import com.svenruppert.jsentinel.authorization.api.permissions.PermissionName;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +35,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("RestAuthorizationFilter")
 class RestAuthorizationFilterTest {
+
+  @AfterEach
+  void resetDenyByDefault() {
+    JSentinelServiceResolver.setDenyByDefault(false);
+  }
 
   @Test
   @DisplayName("request without subject receives 401 and handler is not executed")
@@ -138,6 +146,53 @@ class RestAuthorizationFilterTest {
     assertEquals(200, response.status);
   }
 
+  @Test
+  @DisplayName("JS-SEC-024: deny-by-default denies an un-annotated handler with 403")
+  void denyByDefault_unannotatedHandler_forbidden() throws NoSuchMethodException {
+    JSentinelServiceResolver.setDenyByDefault(true);
+    RecordingResponse response = new RecordingResponse();
+    AtomicBoolean executed = new AtomicBoolean();
+    RestAuthorizationFilter filter = new RestAuthorizationFilter(request -> Optional.empty());
+
+    filter.authorizeAndHandle(request(), response,
+        (req, res) -> executed.set(true),
+        HandlerFixture.class.getDeclaredMethod("open"), "read", Map.of());
+
+    assertEquals(403, response.status);
+    assertFalse(executed.get(), "un-annotated handler must not run under deny-by-default");
+  }
+
+  @Test
+  @DisplayName("JS-SEC-024: deny-by-default still allows a @PublicRoute handler")
+  void denyByDefault_publicRoute_allowsHandler() throws NoSuchMethodException {
+    JSentinelServiceResolver.setDenyByDefault(true);
+    RecordingResponse response = new RecordingResponse();
+    AtomicBoolean executed = new AtomicBoolean();
+    RestAuthorizationFilter filter = new RestAuthorizationFilter(request -> Optional.empty());
+
+    filter.authorizeAndHandle(request(), response,
+        (req, res) -> { executed.set(true); res.status(200); },
+        HandlerFixture.class.getDeclaredMethod("openPublic"), "read", Map.of());
+
+    assertTrue(executed.get(), "@PublicRoute handler must run even under deny-by-default");
+    assertEquals(200, response.status);
+  }
+
+  @Test
+  @DisplayName("JS-SEC-024: with deny-by-default OFF (default) an un-annotated handler still runs")
+  void denyByDefaultOff_unannotatedHandler_allowed() throws NoSuchMethodException {
+    RecordingResponse response = new RecordingResponse();
+    AtomicBoolean executed = new AtomicBoolean();
+    RestAuthorizationFilter filter = new RestAuthorizationFilter(request -> Optional.empty());
+
+    filter.authorizeAndHandle(request(), response,
+        (req, res) -> { executed.set(true); res.status(200); },
+        HandlerFixture.class.getDeclaredMethod("open"), "read", Map.of());
+
+    assertTrue(executed.get());
+    assertEquals(200, response.status);
+  }
+
   private static Method securedMethod() throws NoSuchMethodException {
     return HandlerFixture.class.getDeclaredMethod("delete");
   }
@@ -156,6 +211,10 @@ class RestAuthorizationFilterTest {
     }
 
     void open() {
+    }
+
+    @PublicRoute
+    void openPublic() {
     }
   }
 

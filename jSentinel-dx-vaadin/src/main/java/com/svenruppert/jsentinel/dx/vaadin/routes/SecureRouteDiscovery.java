@@ -55,4 +55,19 @@ public interface SecureRouteDiscovery {
   default Stream<String> discoverConstraintlessRouteNames() {
     return Stream.empty();
   }
+
+  /**
+   * Reports navigation targets that carry <em>no</em> security annotation and are
+   * <em>not</em> {@code @PublicRoute} — exactly the routes deny-by-default
+   * (JS-SEC-024 / CWE-862) will start denying once enabled. The bootstrap turns
+   * each into a {@code deny-by-default/unannotated-route} finding (STRICT throws).
+   *
+   * @return the simple names of un-annotated, non-{@code @PublicRoute} targets;
+   *         an empty stream is fine. Default returns empty so existing (lambda)
+   *         implementations stay source-compatible.
+   * @since 00.79.40
+   */
+  default Stream<String> discoverUnannotatedRouteNames() {
+    return Stream.empty();
+  }
 }

@@ -23,6 +23,7 @@ import com.svenruppert.jsentinel.audit.AuditEvent;
 import com.svenruppert.jsentinel.audit.SessionExpired;
 import com.svenruppert.jsentinel.audit.JSentinelAuditService;
 import com.svenruppert.jsentinel.audit.StepUpChallenged;
+import com.svenruppert.jsentinel.authorization.annotations.PublicRoute;
 import com.svenruppert.jsentinel.authorization.api.AuthorizationDecision;
 import com.svenruppert.jsentinel.authorization.api.AuthorizationEvaluator;
 import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
@@ -141,6 +142,20 @@ public final class RestAuthorizationFilter {
       Map<String, Object> attributes) {
     var pair = scanner.scan(securedElement);
     if (pair.isEmpty()) {
+      // JS-SEC-024 (CWE-862): fail closed on an un-annotated handler when
+      // deny-by-default is enabled, unless the element opts back in via
+      // @PublicRoute. The default (allow-by-omission) keeps the handler public.
+      if (JSentinelServiceResolver.isDenyByDefault()
+          && !securedElement.isAnnotationPresent(PublicRoute.class)) {
+        Optional<JSentinelSubject> denySubject = subjectResolver.resolveSubject(request);
+        AccessContext denyContext =
+            contextFactory.create(request, denySubject, operation, attributes);
+        AuthorizationDecision denied =
+            AuthorizationDecision.forbidden("deny-by-default:no-security-annotation");
+        audit(denied, denyContext, denySubject);
+        decisionMapper.apply(denied, response);
+        return;
+      }
       handler.handle(request, response);
       return;
     }

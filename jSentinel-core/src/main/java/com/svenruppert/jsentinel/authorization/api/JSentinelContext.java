@@ -41,6 +41,7 @@ import com.svenruppert.jsentinel.session.SessionPolicy;
 
 import java.util.Optional;
 import java.util.ServiceLoader;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -107,6 +108,8 @@ public final class JSentinelContext {
       new AtomicReference<>();
   private final AtomicReference<String> loginRouteNameRef =
       new AtomicReference<>();
+  // JS-SEC-024 (CWE-862): opt-in deny-by-default for un-annotated targets.
+  private final AtomicBoolean denyByDefaultRef = new AtomicBoolean(false);
   // V00.74: token-propagation surface. Store cached via SPI; strategies
   // registered explicitly through the .propagation(...) sub-builder.
   private final AtomicReference<TokenCredentialStore> tokenCredentialStoreRef =
@@ -956,6 +959,23 @@ public final class JSentinelContext {
     loginRouteNameRef.set(routeName);
   }
 
+  // ── Deny-by-default (JS-SEC-024 / CWE-862) ─────────────────────
+
+  /** @return {@code true} when un-annotated non-{@code @PublicRoute} targets fail closed. */
+  public boolean isDenyByDefault() {
+    return denyByDefaultRef.get();
+  }
+
+  /**
+   * Enables/disables deny-by-default. Adapters read this on every navigation /
+   * request, so reconfiguration is immediate.
+   *
+   * @param denyByDefault {@code true} to fail closed
+   */
+  public void setDenyByDefault(boolean denyByDefault) {
+    denyByDefaultRef.set(denyByDefault);
+  }
+
   // ── TokenCredentialStore / OutboundTokenStrategy ───────────────
 
   /**
@@ -1084,6 +1104,7 @@ public final class JSentinelContext {
     subjectIdResolverRef.set(null);
     stepUpRouteNameRef.set(null);
     loginRouteNameRef.set(null);
+    denyByDefaultRef.set(false);
     tokenCredentialStoreRef.set(null);
     outboundStrategies.clear();
   }
