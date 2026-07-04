@@ -120,6 +120,29 @@ class HttpJwksClientTest {
   }
 
   @Test
+  @DisplayName("JS-SEC-033: an oversized Cache-Control max-age is clamped so the cache expires within 24h")
+  void oversizedMaxAgeIsClamped() {
+    AtomicReference<Instant> clock = new AtomicReference<>(NOW);
+    HttpJwksClient client = new HttpJwksClient(
+        URI.create(jwksUrl), HttpClient.newHttpClient(), clock::get);
+    body.set(jwks(k1));
+    cacheControl.set("max-age=999999999"); // ~31 years — a hostile/misconfigured endpoint
+
+    assertTrue(client.findKey("k1", JwsAlgorithm.RS256).isPresent());
+    assertEquals(1, requests.get());
+
+    // still within the 24h clamp — served from cache
+    clock.set(NOW.plus(java.time.Duration.ofHours(23)));
+    assertTrue(client.findKey("k1", JwsAlgorithm.RS256).isPresent());
+    assertEquals(1, requests.get(), "within the 24h clamp -> served from cache");
+
+    // past the 24h clamp — unclamped this key set would stay fresh for years; clamped it refetches
+    clock.set(NOW.plus(java.time.Duration.ofHours(25)));
+    assertTrue(client.findKey("k1", JwsAlgorithm.RS256).isPresent());
+    assertEquals(2, requests.get(), "past the 24h clamp -> cache expired, refetched");
+  }
+
+  @Test
   @DisplayName("a fresh cache (Cache-Control max-age) is not re-fetched")
   void ttlAvoidsRefetch() {
     body.set(jwks(k1));

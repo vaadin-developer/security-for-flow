@@ -82,6 +82,8 @@ import java.util.regex.Pattern;
 public final class HttpJwksClient implements JwksClient, HasLogger {
 
   private static final Duration DEFAULT_TTL = Duration.ofMinutes(5);
+  /** JS-SEC-033 (CWE-613): upper clamp on an endpoint-advertised Cache-Control max-age. */
+  private static final Duration MAX_TTL = Duration.ofHours(24);
   private static final Duration NEGATIVE_TTL = Duration.ofSeconds(30);
   /** JS-SEC-001: min interval before another unknown-kid miss may force a refresh. */
   private static final Duration REFRESH_MIN_INTERVAL = Duration.ofSeconds(20);
@@ -280,7 +282,10 @@ public final class HttpJwksClient implements JwksClient, HasLogger {
         try {
           long seconds = Long.parseLong(m.group(1));
           if (seconds > 0) {
-            return Duration.ofSeconds(seconds);
+            // JS-SEC-033 (CWE-613): clamp an endpoint-controlled max-age to a sane
+            // maximum so a hostile/misconfigured IdP cannot pin a (possibly revoked)
+            // key set far into the future — this bounds the revocation-propagation window.
+            return Duration.ofSeconds(Math.min(seconds, MAX_TTL.toSeconds()));
           }
         } catch (NumberFormatException ignored) {
           // fall through to the default
