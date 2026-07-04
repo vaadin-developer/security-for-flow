@@ -27,6 +27,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -43,6 +44,20 @@ class RestAccessContextFactoryTest {
 
   private static SimpleRequest req() {
     return new SimpleRequest("GET", "/api/x", Map.of(), Map.of("q", "1"));
+  }
+
+  @Test
+  @DisplayName("JS-SEC-031: CR/LF in the request path is scrubbed from resourceName and the path attribute")
+  void scrubsCrlfInPath() {
+    SimpleRequest r = new SimpleRequest(
+        "GET", "/api/x\r\nAUDIT type=LoginSucceeded user=admin", Map.of(), Map.of());
+
+    AccessContext ctx = factory.create(r, Optional.empty(), "read", Map.of());
+
+    assertFalse(ctx.resourceName().contains("\n"), ctx.resourceName());
+    assertFalse(ctx.resourceName().contains("\r"), ctx.resourceName());
+    assertFalse(((String) ctx.attributes().get("path")).contains("\n"),
+        (String) ctx.attributes().get("path"));
   }
 
   @Test

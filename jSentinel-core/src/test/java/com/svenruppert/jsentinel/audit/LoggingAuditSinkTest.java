@@ -24,12 +24,26 @@ import java.time.Duration;
 import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("LoggingAuditSink")
 class LoggingAuditSinkTest {
 
   private static final Instant T0 = Instant.parse("2026-05-11T10:00:00Z");
+
+  @Test
+  @DisplayName("JS-SEC-031: CR/LF in a logged field is scrubbed so it cannot forge a second log line")
+  void scrubsCrlfInLoggedField() {
+    RecordingSlf4jLogger logger = new RecordingSlf4jLogger();
+    new LoggingAuditSink(logger).accept(
+        new LoginSucceeded(T0, "alice\r\nfake=INJECTED", "127.0.0.1", "S-1"));
+
+    String line = logger.firstMessage();
+    assertFalse(line.contains("\n"), "log line must not contain a newline: " + line);
+    assertFalse(line.contains("\r"), "log line must not contain a CR: " + line);
+    assertTrue(line.contains("user=alice??fake=INJECTED"), line);
+  }
 
   @Test
   @DisplayName("LoginSucceeded is logged with user/client/session fields")

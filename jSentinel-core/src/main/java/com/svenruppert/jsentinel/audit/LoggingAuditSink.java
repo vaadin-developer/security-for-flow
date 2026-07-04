@@ -241,6 +241,29 @@ public final class LoggingAuditSink implements AuditSink {
 
   private static void appendField(StringBuilder sb, String key, String value) {
     if (value == null) return;
-    sb.append(' ').append(key).append('=').append(value);
+    sb.append(' ').append(key).append('=').append(scrub(value));
+  }
+
+  /**
+   * JS-SEC-031 (CWE-117): replace CR / LF / other ISO control chars in a logged
+   * value so an attacker-influenced field (e.g. a request-path-derived route)
+   * cannot forge a second log line. Applied to every field this sink emits; only
+   * allocates when a control char is actually present.
+   */
+  static String scrub(String value) {
+    StringBuilder out = null;
+    for (int i = 0; i < value.length(); i++) {
+      char c = value.charAt(i);
+      if (Character.isISOControl(c)) {
+        if (out == null) {
+          out = new StringBuilder(value.length());
+          out.append(value, 0, i);
+        }
+        out.append('?');
+      } else if (out != null) {
+        out.append(c);
+      }
+    }
+    return out == null ? value : out.toString();
   }
 }
