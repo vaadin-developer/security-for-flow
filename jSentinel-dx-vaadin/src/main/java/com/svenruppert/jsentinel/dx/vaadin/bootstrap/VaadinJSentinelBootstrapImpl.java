@@ -261,6 +261,27 @@ final class VaadinJSentinelBootstrapImpl
    * emits {@code secure-route/discovery-disabled} (INFO).
    */
   private void crossCheckSecureRoutes(List<JSentinelBootstrapWarning> warnings) {
+    // JS-SEC-024 (CWE-862): the deny-by-default startup safety-net must fire whenever
+    // deny-by-default is enabled — independent of the @SecureRoute discovery opt-in.
+    // Otherwise STRICT boots green while un-annotated routes would only be denied at first
+    // navigation, contradicting setDenyByDefault's "surface at boot" contract. Uses the
+    // explicit discovery if set, else the default impl (no-op when none is on the classpath).
+    if (JSentinelServiceResolver.isDenyByDefault()) {
+      SecureRouteDiscovery denyDiscovery = secureRouteDiscovery != null
+          ? secureRouteDiscovery
+          : tryLoadDefaultDiscovery();
+      if (denyDiscovery != null) {
+        denyDiscovery.discoverUnannotatedRouteNames().forEach(routeName ->
+            warnings.add(new JSentinelBootstrapWarning(
+                Severity.ERROR,
+                "deny-by-default/unannotated-route",
+                "Route " + routeName + " has no security annotation and is not @PublicRoute; "
+                    + "deny-by-default will deny all navigation to it.",
+                "Add a restriction annotation (@RequiresRole / @RequiresPermission / "
+                    + "@SecureRoute), or mark it @PublicRoute if it is intentionally public.")));
+      }
+    }
+
     if (!discoverSecureRoutesEnabled) {
       warnings.add(new JSentinelBootstrapWarning(
           Severity.INFO,
@@ -306,20 +327,6 @@ final class VaadinJSentinelBootstrapImpl
                 + "policy; it grants any authenticated subject.",
             "Add roles/permissions/policy to restrict further, or keep it if an "
                 + "authenticated-only route is intended.")));
-
-    // JS-SEC-024 (CWE-862): when deny-by-default is enabled, enumerate the routes it
-    // will now deny (no security annotation, not @PublicRoute) so a forgotten annotation
-    // surfaces at startup. Severity.ERROR → STRICT throws; other modes record only.
-    if (JSentinelServiceResolver.isDenyByDefault()) {
-      discovery.discoverUnannotatedRouteNames().forEach(routeName ->
-          warnings.add(new JSentinelBootstrapWarning(
-              Severity.ERROR,
-              "deny-by-default/unannotated-route",
-              "Route " + routeName + " has no security annotation and is not @PublicRoute; "
-                  + "deny-by-default will deny all navigation to it.",
-              "Add a restriction annotation (@RequiresRole / @RequiresPermission / "
-                  + "@SecureRoute), or mark it @PublicRoute if it is intentionally public.")));
-    }
   }
 
   private static SecureRouteDiscovery tryLoadDefaultDiscovery() {
