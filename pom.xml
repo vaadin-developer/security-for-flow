@@ -20,12 +20,12 @@
     <parent>
         <groupId>com.svenruppert</groupId>
         <artifactId>dependencies</artifactId>
-        <version>06.02.02</version>
+        <version>06.02.04</version>
     </parent>
 
     <groupId>com.svenruppert.jsentinel</groupId>
     <artifactId>jSentinel-parent</artifactId>
-    <version>00.79.30</version>
+    <version>00.79.40-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>jSentinel — Security for Vaadin Flow</name>
