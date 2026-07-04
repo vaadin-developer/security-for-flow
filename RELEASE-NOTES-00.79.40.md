@@ -1,18 +1,21 @@
 # Release Notes — jSentinel V00.79.40
 
 **Theme:** Second security-hardening tick on the 00.79 line — the 10 findings of the 2026-07-04
-fresh source-review audit (the follow-up pass after V00.79.30). No new feature, no new module.
-V00.80.00 stays feature-reserved.
+fresh source-review audit (the follow-up pass after V00.79.30), plus **JS-SEC-024** (opt-in
+deny-by-default authorization), the highest-value item that had been deferred from V00.79.30.
+No new module. V00.80.00 stays feature-reserved.
 
 ## Result: no Critical / High / Medium
 
 The 2026-07-04 audit (a fresh 12-dimension adversarial source-review that explicitly excluded the 28
 findings already fixed in V00.79.30) confirmed **10 distinct findings, all Low** — after the previous
 tick, only defense-in-depth / robustness gaps remain. Three (JS-SEC-031/037/038) are direct
-follow-ups of V00.79.30 fixes that had not fully reached their target module.
+follow-ups of V00.79.30 fixes that had not fully reached their target module. This release also lands
+**JS-SEC-024** (CWE-862) — the opt-in deny-by-default authorization feature V00.79.30 documented but
+deferred; it is backward-compatible (default stays allow-by-omission).
 
 Full audit: `docs/security/audit/security-audit-2026-07-04.md` (ClickUp epic `86cajqzje`,
-`JS-SEC-029`…`038`).
+`JS-SEC-024` + `JS-SEC-029`…`038`).
 
 ## Statement of additivity
 
@@ -21,9 +24,21 @@ API-signature change is on an `@ExperimentalJSentinelApi` type: `SseStreamHttpHa
 now requires a `RestSubjectResolver` + a required permission (JS-SEC-032) — a fail-closed change so
 the security-event stream can no longer be wired unauthenticated. Two additive DX changes:
 `InMemoryAbuseDetectionService` gains an optional `maxEntries` constructor overload; `EventsRestRoutes`
-gains a `STREAM_PERMISSION` constant.
+gains a `STREAM_PERMISSION` constant. JS-SEC-024 adds a `@PublicRoute` marker + a
+`JSentinelServiceResolver.setDenyByDefault(boolean)` toggle that defaults to **off** (allow-by-omission),
+so no existing app changes behaviour unless it explicitly opts in; `SecureRouteDiscovery` grows one
+`default` method (source-compatible for existing implementors).
 
-## Findings closed (10)
+## Findings closed (11)
+
+### Authorization (feature)
+- **JS-SEC-024** (CWE-862) — opt-in **deny-by-default** closes the allow-by-omission gap: with
+  `JSentinelServiceResolver.setDenyByDefault(true)`, an un-annotated `@Route` / REST handler is denied
+  (Vaadin error-reroute, REST 403) unless marked `@PublicRoute`; a STRICT startup diagnostic
+  (`SecureRouteDiscovery.discoverUnannotatedRouteNames`) enumerates the routes it would deny so a
+  forgotten annotation surfaces at boot. Default stays allow-by-omission (backward-compatible). Login /
+  error / public views must be marked `@PublicRoute`. REST startup enumeration is a documented
+  Vaadin-only carve-out (no central REST handler registry); runtime deny still applies to REST.
 
 ### DPoP / JWT / OAuth2
 - **JS-SEC-029** (CWE-326) — `NimbusDpopProofValidator` rejects RSA proof keys with a modulus
@@ -58,7 +73,8 @@ gains a `STREAM_PERMISSION` constant.
 
 ## What V00.79.40 does NOT do
 
-- No opt-in deny-by-default authorization mode (still backlog from V00.79.30 JS-SEC-024).
+- No REST startup route/handler enumeration for the JS-SEC-024 diagnostic (REST has no central
+  handler registry); the STRICT diagnostic is Vaadin-only. Runtime deny-by-default still applies to REST.
 - No REST decision-mapper auto-wiring (still backlog from V00.79.30 JS-SEC-026).
 - No per-outcome KDF cost-floor for the mixed-algorithm timing caveat (backlog from JS-SEC-009).
 - No secure-default `TimeoutSessionPolicy` in PRODUCTION/STRICT profiles (JS-SEC-035 ships the WARN
@@ -91,13 +107,22 @@ house pattern (`HttpTokenEndpointClient`, `OAuth2FormPost`, `HttpJwksClient`); `
 brings the propagation strategies into line with it. A codebase-wide `BodySubscribers.limiting` hardening
 is out of scope for this tick.
 
+**JS-SEC-024** got its own adversarial exit review (deny-by-default is authorization code). Verdict:
+runtime enforcement sound and fail-closed on both adapters, backward compatibility exact with the flag
+off, `@PublicRoute` inheritance fails safe, flag lifecycle clean. One Medium finding (F1) — the STRICT
+startup diagnostic was gated behind a second (`@SecureRoute` discovery) opt-in, so STRICT could boot
+green while un-annotated routes would only be denied at first navigation — **fixed in-cycle**
+(`ad2c71c0`: the enumeration now runs whenever deny-by-default is on). F2 (login/error views must be
+`@PublicRoute` under deny-by-default) and F3 (REST deny-by-default is filter-scoped, not a global
+backstop) are documented/inherent, no code change.
+
 No exit findings deferred.
 
 ## Mutation coverage (V00.79.40)
 
 | Module | V00.79.40 measured | Line | Note |
 |---|---|---|---|
-| `jSentinel-core` | **84 % (2171/2586)** | 89 % | representative PIT pass — the most-touched module (InMemoryAbuseDetectionService bound, LoggingAuditSink scrub) |
+| `jSentinel-core` | **84 % (2178/2593)** | 89 % | representative PIT pass — the most-touched module (InMemoryAbuseDetectionService bound, LoggingAuditSink scrub, JS-SEC-024 @PublicRoute + deny-by-default flag) |
 
 Identical to the V00.79.30 baseline (84 %, 2156/2566); the +20 mutations / +15 kills come from the
 additive bound + scrub code, so the percentage held. The V00.79.40 changes are additive — every
@@ -110,14 +135,16 @@ construction.
 
 ## Acceptance summary
 
-- ✓ 10/10 audit findings implemented, each with a no-mock real-implementation regression test.
+- ✓ 11 findings implemented (10 Low + JS-SEC-024 opt-in feature), each with a no-mock
+  real-implementation regression test.
 - ✓ Per-module `verify` green for every touched module (dpop, jwt, oauth2, core, vaadin, rest,
-  events-rest, propagation-oidc, persistence-eclipsestore, events-persistence-eclipsestore).
+  events-rest, propagation-oidc, persistence-eclipsestore, events-persistence-eclipsestore, dx-vaadin,
+  vaadin-starter).
 - ✓ Full library-reactor `clean install` green (all fixes integrate; demos excluded — pre-existing
   demo/env debt, deploy is library-only).
 - ✓ Standards pass already-compliant.
-- ✓ Exit production-review clean — no findings, no in-cycle fixes, none deferred.
-- ✓ PIT regression: `jSentinel-core` 84 % (2171/2586, = V00.79.30 baseline); other touched modules non-regressed by construction (additive tests only).
+- ✓ Exit production-review — the 10-finding delta clean; JS-SEC-024 reviewed separately, one Medium (F1) fixed in-cycle, none deferred.
+- ✓ PIT regression: `jSentinel-core` 84 % (2178/2593, = V00.79.30 baseline); other touched modules non-regressed by construction (additive tests only).
 
 ## Build note (environment)
 
