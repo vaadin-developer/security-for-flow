@@ -28,17 +28,22 @@ package com.svenruppert.jsentinel.events.rest;
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.dependencies.core.net.HttpStatus;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
+import com.svenruppert.jsentinel.authorization.api.JSentinelSubject;
+import com.svenruppert.jsentinel.authorization.api.permissions.PermissionName;
 import com.svenruppert.jsentinel.events.store.JSentinelEventCursor;
 import com.svenruppert.jsentinel.events.store.JSentinelEventEnvelopeStore;
 import com.svenruppert.jsentinel.events.store.StoredEnvelope;
+import com.svenruppert.jsentinel.rest.RestSubjectResolver;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -54,18 +59,27 @@ import java.util.concurrent.TimeUnit;
 @ExperimentalJSentinelApi
 public final class SseStreamHttpHandler implements HttpHandler, HasLogger {
 
+  /** JS-SEC-032 (CWE-306): cap on the auth-probe read of the (bodyless) GET request. */
+  private static final int MAX_AUTH_PROBE_BODY_BYTES = 8 * 1024;
+
   private final SseEventBroadcaster broadcaster;
   private final JSentinelEventEnvelopeStore envelopeStore;
   private final EnvelopeWireCodec wireCodec;
+  private final RestSubjectResolver subjectResolver;
+  private final PermissionName requiredPermission;
   private final long keepAliveSeconds;
   private final int replayBatch;
 
   public SseStreamHttpHandler(SseEventBroadcaster broadcaster,
       JSentinelEventEnvelopeStore envelopeStore, EnvelopeWireCodec wireCodec,
+      RestSubjectResolver subjectResolver, String requiredPermission,
       long keepAliveSeconds, int replayBatch) {
     this.broadcaster = Objects.requireNonNull(broadcaster, "broadcaster");
     this.envelopeStore = envelopeStore; // optional (resume disabled when null)
     this.wireCodec = Objects.requireNonNull(wireCodec, "wireCodec");
+    this.subjectResolver = Objects.requireNonNull(subjectResolver, "subjectResolver");
+    this.requiredPermission = new PermissionName(
+        Objects.requireNonNull(requiredPermission, "requiredPermission"));
     this.keepAliveSeconds = keepAliveSeconds;
     this.replayBatch = replayBatch;
   }
@@ -74,6 +88,29 @@ public final class SseStreamHttpHandler implements HttpHandler, HasLogger {
   public void handle(HttpExchange exchange) throws IOException {
     if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
       writeStatus(exchange, HttpStatus.METHOD_NOT_ALLOWED.code());
+      return;
+    }
+    // JS-SEC-032 (CWE-306): the read side self-authorizes symmetrically with the publish
+    // sibling — resolve the subject and require the permission BEFORE opening the stream
+    // (before the 200 and before any replay), so an unauthenticated client cannot harvest
+    // the security-event feed.
+    HttpExchangeRestRequest authProbe;
+    try {
+      authProbe = HttpExchangeRestRequest.read(exchange, MAX_AUTH_PROBE_BODY_BYTES);
+    } catch (RequestBodyTooLargeException tooLarge) {
+      writeStatus(exchange, HttpStatus.CONTENT_TOO_LARGE.code());
+      return;
+    } catch (UncheckedIOException e) {
+      writeStatus(exchange, HttpStatus.BAD_REQUEST.code());
+      return;
+    }
+    Optional<JSentinelSubject> subject = subjectResolver.resolveSubject(authProbe);
+    if (subject.isEmpty()) {
+      writeStatus(exchange, HttpStatus.UNAUTHORIZED.code());
+      return;
+    }
+    if (!subject.get().permissions().contains(requiredPermission)) {
+      writeStatus(exchange, HttpStatus.FORBIDDEN.code());
       return;
     }
     exchange.getResponseHeaders().add("Content-Type", EventsRestRoutes.EVENT_STREAM_MEDIA_TYPE);

@@ -51,6 +51,9 @@ public final class EventsRestRoutes {
   /** Permission required to publish envelopes via the bridge. */
   public static final String PUBLISH_PERMISSION = "events:publish";
 
+  /** JS-SEC-032 (CWE-306): permission required to subscribe to the SSE event stream. */
+  public static final String STREAM_PERMISSION = "events:subscribe";
+
   /** SSE event name for security-event frames. */
   public static final String EVENT_NAME = "security-event";
 

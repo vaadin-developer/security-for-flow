@@ -79,8 +79,9 @@ class SseBridgeHttpTest {
     RestSubjectResolver resolver = request -> {
       String auth = request.headers().get("Authorization");
       if ("Bearer admin".equals(auth)) {
-        return Optional.of(new JSentinelSubject("admin", "Admin",
-            Set.of(), Set.of(new PermissionName("events:publish"))));
+        return Optional.of(new JSentinelSubject("admin", "Admin", Set.of(),
+            Set.of(new PermissionName("events:publish"),
+                new PermissionName("events:subscribe"))));
       }
       if ("Bearer user".equals(auth)) {
         return Optional.of(new JSentinelSubject("user", "User", Set.of(), Set.of()));
@@ -93,7 +94,8 @@ class SseBridgeHttpTest {
     server.createContext(EventsRestRoutes.PUBLISH,
         new EventPublishHttpHandler(publishService, resolver, EventsRestRoutes.PUBLISH_PERMISSION));
     server.createContext(EventsRestRoutes.STREAM,
-        new SseStreamHttpHandler(broadcaster, store, wire, 15, 100));
+        new SseStreamHttpHandler(broadcaster, store, wire, resolver,
+            EventsRestRoutes.STREAM_PERMISSION, 15, 100));
     server.start();
     base = "http://127.0.0.1:" + server.getAddress().getPort();
   }
@@ -143,6 +145,7 @@ class SseBridgeHttpTest {
 
     assertTimeoutPreemptively(Duration.ofSeconds(8), () -> {
       HttpRequest req = HttpRequest.newBuilder(URI.create(base + EventsRestRoutes.STREAM))
+          .header("Authorization", "Bearer admin")
           .GET().build();
       HttpResponse<InputStream> resp =
           client.send(req, HttpResponse.BodyHandlers.ofInputStream());
