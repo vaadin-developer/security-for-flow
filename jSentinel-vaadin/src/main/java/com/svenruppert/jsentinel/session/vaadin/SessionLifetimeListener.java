@@ -26,6 +26,7 @@ import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.jsentinel.authorization.api.SubjectIdResolver;
 import com.svenruppert.jsentinel.authorization.api.SubjectStore;
 import com.svenruppert.jsentinel.authorization.api.SubjectStores;
+import com.svenruppert.jsentinel.session.NoopSessionPolicy;
 import com.svenruppert.jsentinel.session.SessionMetadata;
 import com.svenruppert.jsentinel.session.SessionPolicy;
 import com.svenruppert.jsentinel.session.SessionPolicyDecision;
@@ -87,6 +88,10 @@ public class SessionLifetimeListener
   static final String LAST_ACTIVITY_ATTRIBUTE =
       "com.svenruppert.jsentinel.session.lastActivity";
 
+  /** JS-SEC-035 (CWE-613): warn once when session-lifetime enforcement is inert. */
+  private static final java.util.concurrent.atomic.AtomicBoolean NOOP_POLICY_WARNED =
+      new java.util.concurrent.atomic.AtomicBoolean(false);
+
   private final transient Clock clock;
 
   /** Default — uses {@link Clock#systemUTC()}. */
@@ -140,6 +145,17 @@ public class SessionLifetimeListener
 
     SessionMetadata metadata = new SessionMetadata(subjectId, createdAt, lastActivity);
     SessionPolicy<Object> policy = JSentinelServiceResolver.sessionPolicy();
+    if (policy instanceof NoopSessionPolicy && NOOP_POLICY_WARNED.compareAndSet(false, true)) {
+      // JS-SEC-035 (CWE-613): this listener is auto-registered and advertises idle /
+      // absolute-lifetime enforcement, but with the default NoopSessionPolicy the decision
+      // is always Active — no idle timeout and, critically, no absolute-lifetime cap is
+      // enforced (only the servlet container's idle timeout applies). Warn once (mirrors
+      // JS-SEC-027) so an integrator relying on jSentinel for session lifetime registers a
+      // TimeoutSessionPolicy.
+      logger().warn("Session lifetime enforcement is inert: no SessionPolicy is registered, so "
+          + "SessionLifetimeListener enforces neither an idle timeout nor an absolute-lifetime cap "
+          + "(the servlet container's idle timeout still applies). Register a TimeoutSessionPolicy.");
+    }
     SessionPolicyDecision decision = policy.evaluate(metadata);
 
     switch (decision) {
