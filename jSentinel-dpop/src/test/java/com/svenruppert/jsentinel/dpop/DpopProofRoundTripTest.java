@@ -20,21 +20,33 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.nimbusds.jose.JOSEObjectType;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 import com.svenruppert.jsentinel.dpop.DpopValidationError.AccessTokenHashMismatch;
 import com.svenruppert.jsentinel.dpop.DpopValidationError.HtmMismatch;
 import com.svenruppert.jsentinel.dpop.DpopValidationError.HtuMismatch;
 import com.svenruppert.jsentinel.dpop.DpopValidationError.ProofExpired;
+import com.svenruppert.jsentinel.dpop.DpopValidationError.ProofMalformed;
 import com.svenruppert.jsentinel.dpop.DpopValidationError.Replay;
 import com.svenruppert.jsentinel.replay.impl.InMemoryJtiStore;
 
 import java.net.URI;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.time.Instant;
+import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -65,6 +77,40 @@ class DpopProofRoundTripTest {
 
   private static ECKey ecKey() throws Exception {
     return new ECKeyGenerator(Curve.P_256).generate();
+  }
+
+  @Test
+  @DisplayName("JS-SEC-029: a DPoP proof signed with a weak (1024-bit) RSA key is rejected")
+  void weakRsaProofKeyIsRejected() throws Exception {
+    KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+    kpg.initialize(1024);
+    KeyPair kp = kpg.generateKeyPair();
+    RSAKey weak = new RSAKey.Builder((RSAPublicKey) kp.getPublic())
+        .privateKey((RSAPrivateKey) kp.getPrivate())
+        .keyID("weak")
+        .build();
+    URI uri = URI.create("https://api.example.com/resource");
+    // An attacker hand-signs a proof with the weak key. Nimbus's normal RSASSASigner
+    // refuses < 2048-bit, so bypass it with allowWeakKey=true — exactly the off-Nimbus
+    // path the validator must defend against; the honest generator cannot produce this.
+    JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.RS256)
+        .type(new JOSEObjectType("dpop+jwt"))
+        .jwk(weak.toPublicJWK())
+        .build();
+    JWTClaimsSet claims = new JWTClaimsSet.Builder()
+        .jwtID("weak-jti")
+        .claim("htm", "GET")
+        .claim("htu", DpopHttpUri.normalize(uri))
+        .issueTime(Date.from(now.get()))
+        .build();
+    SignedJWT jws = new SignedJWT(header, claims);
+    jws.sign(new RSASSASigner(weak, true));
+    String proof = jws.serialize();
+
+    var result = validatorWith(new InMemoryJtiStore(1000, now::get))
+        .validate(DpopValidationRequest.of(proof, "GET", uri));
+    assertTrue(result.isFailure());
+    assertInstanceOf(ProofMalformed.class, result.fold(v -> null, e -> e));
   }
 
   @Test

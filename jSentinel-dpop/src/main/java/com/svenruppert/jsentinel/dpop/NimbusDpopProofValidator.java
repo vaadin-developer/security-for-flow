@@ -178,8 +178,21 @@ public final class NimbusDpopProofValidator implements DpopProofValidator {
     return Result.success(new ValidatedDpopProof(thumbprint, htm, request.httpUri(), jti, issuedAt));
   }
 
+  /** JS-SEC-029 (CWE-326): accepted RSA proof-key modulus bounds. */
+  private static final int MIN_RSA_MODULUS_BITS = 2048;
+  private static final int MAX_RSA_MODULUS_BITS = 8192;
+
   private static JWSVerifier verifierFor(JWK jwk) throws Exception {
     if (jwk instanceof RSAKey rsa) {
+      // JS-SEC-029 (CWE-326): reject a factorable (or absurdly large) RSA proof key.
+      // DPoP is a sender-constraint — binding a token to a weak RSA key lets a token
+      // thief factor it offline and forge valid proofs; Nimbus's RSASSAVerifier enforces
+      // no floor, and the RSASSASigner floor only guards honest signers, not an attacker.
+      // An oversized modulus also amplifies unauthenticated verification cost.
+      int bits = rsa.toRSAPublicKey().getModulus().bitLength();
+      if (bits < MIN_RSA_MODULUS_BITS || bits > MAX_RSA_MODULUS_BITS) {
+        throw new IllegalArgumentException("RSA proof-key modulus out of range: " + bits + " bits");
+      }
       return new RSASSAVerifier(rsa.toRSAPublicKey());
     }
     if (jwk instanceof ECKey ec) {
