@@ -151,8 +151,7 @@ public final class HttpIntrospectionClient implements IntrospectionClient {
       return IntrospectionResult.inactive();
     }
     Set<String> scopes = OAuth2Json.string(body, "scope")
-        .filter(s -> !s.isBlank())
-        .map(s -> Set.of(s.trim().split("\\s+")))
+        .map(OAuth2Json::parseScopes)
         .orElse(Set.of());
     return new IntrospectionResult(true, scopes,
         OAuth2Json.string(body, "client_id"),

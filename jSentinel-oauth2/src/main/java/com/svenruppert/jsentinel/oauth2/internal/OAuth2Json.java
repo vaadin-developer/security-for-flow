@@ -41,7 +41,11 @@ package com.svenruppert.jsentinel.oauth2.internal;
  * #L%
  */
 
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Minimal, depth-aware JSON field extractor for OAuth2 token / introspection /
@@ -81,6 +85,26 @@ public final class OAuth2Json {
       case "false" -> Optional.of(Boolean.FALSE);
       default -> Optional.empty();
     });
+  }
+
+  /**
+   * JS-SEC-034 (CWE-248): parse an RFC 6749 scope string into a set without
+   * {@code Set.of}'s duplicate-hostility. Splits on whitespace, drops blanks and
+   * de-duplicates into an insertion-ordered {@link LinkedHashSet}. {@code Set.of}
+   * throws {@link IllegalArgumentException} on a duplicate scope (or an empty token
+   * from consecutive spaces), which escaped the module's {@code Result} never-throw
+   * contract on a non-conformant authorization-server response.
+   *
+   * @param scope the raw {@code scope} value (may be {@code null} / blank)
+   * @return the de-duplicated scopes, never {@code null}
+   */
+  public static Set<String> parseScopes(String scope) {
+    if (scope == null || scope.isBlank()) {
+      return Set.of();
+    }
+    return Arrays.stream(scope.trim().split("\\s+"))
+        .filter(token -> !token.isEmpty())
+        .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   private static Optional<String> topLevelValue(String body, String key, boolean wantString) {

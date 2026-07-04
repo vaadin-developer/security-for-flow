@@ -124,6 +124,20 @@ class HttpTokenEndpointClientTest {
   }
 
   @Test
+  @DisplayName("JS-SEC-034: a duplicate / multi-space scope response yields Result.success (never a thrown IAE)")
+  void duplicateScopesDoNotThrow() {
+    // "read read   write" — a duplicate scope value AND empty tokens from consecutive
+    // spaces both made Set.of throw IllegalArgumentException, escaping the Result contract.
+    responseBody = "{\"access_token\":\"AT-9\",\"token_type\":\"Bearer\",\"scope\":\"read read   write\"}";
+    Result<TokenResponse, OAuth2Error> r = client(
+        new ClientAuthentication.NoneAuthentication("svc"))
+        .clientCredentials(Set.of());
+
+    TokenResponse tr = r.toOptional().orElseThrow(() -> new AssertionError("expected success, got " + r));
+    assertEquals(Set.of("read", "write"), tr.scopes());
+  }
+
+  @Test
   @DisplayName("client_secret_post: client_id + client_secret go into the form body, not a header")
   void clientSecretPost() {
     responseBody = "{\"access_token\":\"AT-2\",\"token_type\":\"Bearer\"}";

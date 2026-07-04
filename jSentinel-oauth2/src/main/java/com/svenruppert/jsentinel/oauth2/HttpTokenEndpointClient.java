@@ -204,7 +204,7 @@ public final class HttpTokenEndpointClient implements TokenEndpointClient {
     Optional<String> refreshToken = OAuth2Json.string(body, "refresh_token");
     Optional<String> idToken = OAuth2Json.string(body, "id_token");
     Set<String> scopes = OAuth2Json.string(body, "scope")
-        .map(s -> Set.of(s.split(" ")))
+        .map(OAuth2Json::parseScopes)
         .orElse(Set.of());
     return Result.success(new TokenResponse(
         accessToken.get(), refreshToken, idToken, tokenType, expiresAt, scopes));
