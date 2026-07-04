@@ -126,4 +126,19 @@ class ClientCredentialsStrategyIntegrationTest {
     }
     assertTrue(present <= 3, "cache must stay within maxEntries=3; found " + present);
   }
+
+  @Test
+  @DisplayName("JS-SEC-036: an oversized token-endpoint response body is rejected, not buffered whole")
+  void oversizedResponseBodyRejected() {
+    // ~2 MiB body — over the 1 MiB bounded-read ceiling.
+    String huge = "{\"access_token\":\"x\",\"filler\":\"" + "A".repeat(1 << 21) + "\"}";
+    stub.respondWith(new StubTokenEndpoint.Response(200, huge));
+    ClientCredentialsStrategy strategy = new ClientCredentialsStrategy(
+        stub.tokenEndpoint(), "cid", "csecret",
+        HttpClient.newHttpClient(), new InMemoryTokenExchangeCache(),
+        ClientCredentialsStrategy.NAME);
+
+    assertThrows(JSentinelPropagationException.class,
+        () -> strategy.resolve(new OutboundCall("svc", "m", "api", Map.of()), Optional.empty()));
+  }
 }

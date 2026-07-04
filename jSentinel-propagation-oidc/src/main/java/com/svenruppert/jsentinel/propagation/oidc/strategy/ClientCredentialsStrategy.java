@@ -25,7 +25,6 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
@@ -107,13 +106,8 @@ public final class ClientCredentialsStrategy implements OutboundTokenStrategy, H
         .header("Content-Type", MediaType.APPLICATION_FORM_URLENCODED.mime())
         .timeout(Duration.ofSeconds(10))
         .build();
-    HttpResponse<String> response;
-    try {
-      response = http.send(request, HttpResponse.BodyHandlers.ofString());
-    } catch (Exception e) {
-      throw new JSentinelPropagationException(0,
-          "Token endpoint call failed: " + e.getMessage(), e);
-    }
+    // JS-SEC-036 (CWE-770): bounded read — reject an oversized token-endpoint body.
+    BoundedTokenHttp.Response response = BoundedTokenHttp.send(http, request);
     if (response.statusCode() < 200 || response.statusCode() >= 300) {
       // R010: never put the token-endpoint body in the exception message — OAuth
       // error bodies carry error_description and on a misconfig can echo grant
