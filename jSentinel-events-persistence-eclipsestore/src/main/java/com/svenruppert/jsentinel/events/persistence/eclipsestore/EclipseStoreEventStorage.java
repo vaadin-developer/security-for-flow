@@ -34,8 +34,13 @@ import com.svenruppert.jsentinel.events.store.JSentinelEventEnvelopeStore;
 import org.eclipse.store.storage.embedded.types.EmbeddedStorage;
 import org.eclipse.store.storage.embedded.types.EmbeddedStorageManager;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -70,6 +75,7 @@ public final class EclipseStoreEventStorage implements AutoCloseable, HasLogger 
    */
   public static EclipseStoreEventStorage openAt(Path storageDirectory) {
     Objects.requireNonNull(storageDirectory, "storageDirectory");
+    hardenOwnerOnly(storageDirectory);
     EmbeddedStorageManager manager = EmbeddedStorage.start(storageDirectory);
     EventStorageRoot root;
     if (manager.root() instanceof EventStorageRoot existing) {
@@ -80,6 +86,36 @@ public final class EclipseStoreEventStorage implements AutoCloseable, HasLogger 
       manager.storeRoot();
     }
     return new EclipseStoreEventStorage(manager, root);
+  }
+
+  /**
+   * JS-SEC-037 (CWE-276): pre-create the event-store directory owner-only ({@code 0700})
+   * on POSIX before {@code EmbeddedStorage.start}, so the persisted security-event feed
+   * (signed envelopes with subject ids, dead-letters, replay ids, sequences) is never
+   * group/other-readable under a default umask. Warns if an existing tree is
+   * group/other-accessible. Best-effort: never blocks the open; no-op on non-POSIX.
+   */
+  private static void hardenOwnerOnly(Path dir) {
+    if (!dir.getFileSystem().supportedFileAttributeViews().contains("posix")) {
+      return;
+    }
+    try {
+      if (!Files.exists(dir)) {
+        Files.createDirectories(dir, PosixFilePermissions.asFileAttribute(
+            PosixFilePermissions.fromString("rwx------")));
+      }
+      Set<PosixFilePermission> perms = Files.getPosixFilePermissions(dir);
+      if (perms.stream().anyMatch(p -> p.name().startsWith("GROUP_") || p.name().startsWith("OTHERS_"))) {
+        HasLogger.staticLogger().warn(
+            "events-persistence/storage-permissions: {} is group/other-accessible ({}); "
+                + "the store holds signed security-event envelopes with subject ids",
+            dir, PosixFilePermissions.toString(perms));
+      }
+    } catch (IOException hardenFailure) {
+      HasLogger.staticLogger().warn(
+          "events-persistence/storage-permissions: could not harden {} to owner-only: {}",
+          dir, hardenFailure.toString());
+    }
   }
 
   EventStorageRoot root() {

@@ -32,7 +32,12 @@ import com.svenruppert.jsentinel.session.SessionStore;
 import org.eclipse.store.storage.embedded.types.EmbeddedStorage;
 import org.eclipse.store.storage.embedded.types.EmbeddedStorageManager;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.util.Objects.requireNonNull;
@@ -117,7 +122,41 @@ public final class EclipseStoreJSentinelStorage implements AutoCloseable {
    * @return a started {@link EmbeddedStorageManager}
    */
   static EmbeddedStorageManager initStorageManager(Path dir) {
+    hardenOwnerOnly(dir);
     return EmbeddedStorage.start(dir);
+  }
+
+  /**
+   * JS-SEC-038 (CWE-276): pre-create the storage directory owner-only ({@code 0700}) on
+   * POSIX before {@code EmbeddedStorage.start}, so the framework store — session handles,
+   * role assignments, login-attempt records and token hashes — is never group/other-readable
+   * under a default umask. Closes the JS-SEC-017 gap on the direct {@code openAt(Path)}
+   * facade, which bypassed {@code JSentinelStorageFactory.hardenStorageTree}; because this
+   * lives in the shared init it also hardens the factory-reuse path (createDirectories is
+   * idempotent). Warns if an existing tree is group/other-accessible. Best-effort: never
+   * blocks the open; no-op on non-POSIX.
+   */
+  private static void hardenOwnerOnly(Path dir) {
+    if (!dir.getFileSystem().supportedFileAttributeViews().contains("posix")) {
+      return;
+    }
+    try {
+      if (!Files.exists(dir)) {
+        Files.createDirectories(dir, PosixFilePermissions.asFileAttribute(
+            PosixFilePermissions.fromString("rwx------")));
+      }
+      Set<PosixFilePermission> perms = Files.getPosixFilePermissions(dir);
+      if (perms.stream().anyMatch(p -> p.name().startsWith("GROUP_") || p.name().startsWith("OTHERS_"))) {
+        com.svenruppert.dependencies.core.logger.HasLogger.staticLogger().warn(
+            "persistence/storage-permissions: {} is group/other-accessible ({}); the framework "
+                + "store holds session handles, roles and token hashes",
+            dir, PosixFilePermissions.toString(perms));
+      }
+    } catch (IOException hardenFailure) {
+      com.svenruppert.dependencies.core.logger.HasLogger.staticLogger().warn(
+          "persistence/storage-permissions: could not harden {} to owner-only: {}",
+          dir, hardenFailure.toString());
+    }
   }
 
   /**
