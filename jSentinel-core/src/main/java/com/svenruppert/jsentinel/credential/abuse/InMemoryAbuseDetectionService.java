@@ -60,15 +60,33 @@ public final class InMemoryAbuseDetectionService implements AbuseDetectionServic
       AbuseDimension.TENANT,
       AbuseDimension.GLOBAL);
 
+  /** JS-SEC-030 (CWE-770): default upper bound on tracked counter keys. */
+  public static final int DEFAULT_MAX_ENTRIES = 100_000;
+
   private final AbuseLimitsPolicy policy;
   private final JSentinelAuditService auditService;
+  private final int maxEntries;
   private final ConcurrentHashMap<String, Deque<Instant>> counters =
       new ConcurrentHashMap<>();
 
   public InMemoryAbuseDetectionService(
       AbuseLimitsPolicy policy, JSentinelAuditService auditService) {
+    this(policy, auditService, DEFAULT_MAX_ENTRIES);
+  }
+
+  public InMemoryAbuseDetectionService(
+      AbuseLimitsPolicy policy, JSentinelAuditService auditService, int maxEntries) {
     this.policy = Objects.requireNonNull(policy, "policy");
     this.auditService = Objects.requireNonNull(auditService, "auditService");
+    if (maxEntries < 1) {
+      throw new IllegalArgumentException("maxEntries must be >= 1");
+    }
+    this.maxEntries = maxEntries;
+  }
+
+  /** Package-visible for tests: number of tracked counter keys (JS-SEC-030 bound). */
+  int trackedCounterCount() {
+    return counters.size();
   }
 
   @Override
@@ -173,12 +191,17 @@ public final class InMemoryAbuseDetectionService implements AbuseDetectionServic
         deque.pollFirst();
       }
       size[0] = deque.size();
-      return deque;
+      // JS-SEC-030 (CWE-770): drop a fully-expired (now-empty) counter so the map is
+      // self-reclaiming — the composite key embeds an attacker-controlled username /
+      // client address. Safe: appendEvent's add is atomic inside compute, so a
+      // concurrent record on this key just recreates the deque.
+      return deque.isEmpty() ? null : deque;
     });
     return size[0];
   }
 
   private void appendEvent(String composite, Instant at) {
+    enforceBound(composite);
     // R014: create-or-append in a single atomic compute. The previous
     // computeIfAbsent + synchronized(deque) left a window in which a concurrent
     // success-reset could remove the freshly created deque before the add landed,
@@ -188,6 +211,28 @@ public final class InMemoryAbuseDetectionService implements AbuseDetectionServic
       d.addLast(at);
       return d;
     });
+  }
+
+  /**
+   * JS-SEC-030 (CWE-770): hard cap on the counter map. The composite key embeds an
+   * attacker-controlled username / client address, and {@link #currentCount} only
+   * reclaims keys that are re-evaluated — a spray of distinct keys each recorded once
+   * and never re-evaluated would otherwise grow the map without limit. When a new key
+   * would exceed {@code maxEntries}, evict arbitrary existing counters back under the
+   * bound via a safe {@code keySet().iterator().remove()}. Soft bound: a concurrent
+   * burst may transiently overshoot by a few, but growth stays bounded.
+   */
+  private void enforceBound(String incomingKey) {
+    if (counters.size() < maxEntries || counters.containsKey(incomingKey)) {
+      return;
+    }
+    var it = counters.keySet().iterator();
+    while (counters.size() >= maxEntries && it.hasNext()) {
+      String victim = it.next();
+      if (!victim.equals(incomingKey)) {
+        it.remove();
+      }
+    }
   }
 
   private static AbuseDecision mapToDecision(

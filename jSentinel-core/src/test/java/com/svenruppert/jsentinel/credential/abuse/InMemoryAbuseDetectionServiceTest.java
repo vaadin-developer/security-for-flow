@@ -64,6 +64,22 @@ class InMemoryAbuseDetectionServiceTest {
   }
 
   @Test
+  @DisplayName("JS-SEC-030: the counter map stays bounded under a distinct-username flood")
+  void counterMapBoundedUnderUsernameFlood() {
+    int cap = 100;
+    InMemoryAbuseDetectionService svc = new InMemoryAbuseDetectionService(
+        AbuseLimitsPolicy.defaults(), new RecordingAudit(), cap);
+    // an unauthenticated spray across 5000 distinct usernames — each mints a per-username
+    // counter key that was previously never reclaimed (CWE-770 memory-exhaustion).
+    for (int i = 0; i < 5000; i++) {
+      svc.recordOutcome(loginAttempt("user-" + i, null, T0), AttemptOutcome.FAILURE);
+    }
+    int tracked = svc.trackedCounterCount();
+    assertTrue(tracked <= cap + 2,
+        "counter map must stay bounded (<= " + (cap + 2) + " for cap " + cap + "), was " + tracked);
+  }
+
+  @Test
   @DisplayName("Empty state allows the first attempt")
   void firstAttemptAllowed() {
     InMemoryAbuseDetectionService svc = new InMemoryAbuseDetectionService(
