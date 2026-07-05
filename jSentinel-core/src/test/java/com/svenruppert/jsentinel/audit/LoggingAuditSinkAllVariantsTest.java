@@ -46,7 +46,9 @@ class LoggingAuditSinkAllVariantsTest {
     assertTrue(line.contains("type=LoginFailed"));
     assertTrue(line.contains("user=alice"));
     assertTrue(line.contains("client=127.0.0.1"));
-    assertTrue(line.contains("reason=bad pw"));
+    // RF (exit-review): the space delimiter is scrubbed in every field so a value
+    // cannot forge a second key=value token on the space-separated line.
+    assertTrue(line.contains("reason=bad?pw"));
   }
 
   @Test
@@ -65,7 +67,8 @@ class LoggingAuditSinkAllVariantsTest {
     assertTrue(line.contains("type=AccessDenied"));
     assertTrue(line.contains("subject=alice"));
     assertTrue(line.contains("route=/admin"));
-    assertTrue(line.contains("reason=no role"));
+    // RF (exit-review): space delimiter scrubbed (field-forge defense).
+    assertTrue(line.contains("reason=no?role"));
   }
 
   @Test

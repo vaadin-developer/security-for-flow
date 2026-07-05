@@ -247,14 +247,24 @@ public final class LoggingAuditSink implements AuditSink {
   /**
    * JS-SEC-031 (CWE-117): replace CR / LF / other ISO control chars in a logged
    * value so an attacker-influenced field (e.g. a request-path-derived route)
-   * cannot forge a second log line. Applied to every field this sink emits; only
-   * allocates when a control char is actually present.
+   * cannot forge a second log line.
+   *
+   * <p>RF (exit-review, same-line field spoofing): the audit line is a
+   * space-separated sequence of {@code key=value} tokens, so a value that contains
+   * a raw space can forge a <em>second field</em> on the same line even with no
+   * control char — a username like {@code "alice user=admin"} (spaces only, passing
+   * the control-char filter unchanged) would make a whitespace-splitting SIEM parser
+   * attribute the event to {@code admin}. The space (0x20) — the field delimiter — is
+   * therefore neutralized alongside control chars; identifiers carried in audit fields
+   * (user / client / session / route) have no semantic need for embedded spaces, and a
+   * space in one is itself suspicious. Applied to every field this sink emits; only
+   * allocates when a disallowed char is actually present.
    */
   static String scrub(String value) {
     StringBuilder out = null;
     for (int i = 0; i < value.length(); i++) {
       char c = value.charAt(i);
-      if (Character.isISOControl(c)) {
+      if (Character.isISOControl(c) || c == ' ') {
         if (out == null) {
           out = new StringBuilder(value.length());
           out.append(value, 0, i);

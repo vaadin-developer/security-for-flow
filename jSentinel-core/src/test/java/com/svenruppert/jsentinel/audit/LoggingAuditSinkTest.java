@@ -46,6 +46,22 @@ class LoggingAuditSinkTest {
   }
 
   @Test
+  @DisplayName("RF (exit-review): a space in a logged field cannot forge a second key=value token")
+  void scrubsSpaceFieldForging() {
+    RecordingSlf4jLogger logger = new RecordingSlf4jLogger();
+    // username carries no control char at all — only spaces — attempting to forge
+    // an attributable user=admin field on the space-separated audit line.
+    new LoggingAuditSink(logger).accept(
+        new LoginSucceeded(T0, "alice user=admin client=10.0.0.1", "127.0.0.1", "S-1"));
+
+    String line = logger.firstMessage();
+    // the real user field stays attacker-bounded — the injected " user=admin" cannot
+    // appear as a standalone token, because every space in the value became '?'.
+    assertFalse(line.contains("user=alice user=admin"), line);
+    assertTrue(line.contains("user=alice?user=admin?client=10.0.0.1"), line);
+  }
+
+  @Test
   @DisplayName("LoginSucceeded is logged with user/client/session fields")
   void logsLoginSucceeded() {
     RecordingSlf4jLogger logger = new RecordingSlf4jLogger();
