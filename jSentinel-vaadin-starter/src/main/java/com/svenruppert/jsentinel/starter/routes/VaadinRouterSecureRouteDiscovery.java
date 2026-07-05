@@ -12,6 +12,7 @@ package com.svenruppert.jsentinel.starter.routes;
 
 import com.svenruppert.jsentinel.authorization.annotations.PublicRoute;
 import com.svenruppert.jsentinel.authorization.impl.JSentinelAnnotationScanner;
+import com.svenruppert.jsentinel.components.SessionManagementView;
 import com.svenruppert.jsentinel.dx.vaadin.routes.SecureRouteDiscovery;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.router.RouteData;
@@ -70,15 +71,59 @@ public final class VaadinRouterSecureRouteDiscovery implements SecureRouteDiscov
   @Override
   public Stream<String> discoverUnannotatedRouteNames() {
     try {
+      // RF (exit-review): collect eagerly (toList) INSIDE the try so any per-element
+      // exception is caught here, not later when the bootstrap drains the stream outside
+      // this method's try/catch (which would take the whole boot down — RF05).
       return RouteConfiguration.forApplicationScope()
           .getAvailableRoutes().stream()
           .map(RouteData::getNavigationTarget)
-          .filter(c -> c != null
-              && !c.isAnnotationPresent(PublicRoute.class)
-              && scanner.scan(c).isEmpty())
-          .map(Class::getSimpleName);
+          .filter(c -> c != null && isConsumerRoute(c) && isUnannotated(c))
+          .map(Class::getSimpleName)
+          .toList()
+          .stream();
     } catch (RuntimeException ignored) {
       return Stream.empty();
+    }
+  }
+
+  @Override
+  public boolean routesAvailable() {
+    // RF (exit-review): probe the registry so the bootstrap can tell "no un-annotated
+    // routes" apart from "registry not readable" and raise a loud
+    // deny-by-default/discovery-unavailable instead of a silent green STRICT boot (RF03).
+    try {
+      RouteConfiguration.forApplicationScope().getAvailableRoutes();
+      return true;
+    } catch (RuntimeException notAvailable) {
+      return false;
+    }
+  }
+
+  /**
+   * RF (exit-review, RF02): the deny-by-default diagnostic is about the <em>consumer's</em>
+   * routes. jSentinel ships its own {@code SessionManagementRoute} (a {@link SessionManagementView})
+   * that carries no consumer annotation and that the consumer cannot annotate — flagging it would
+   * break a STRICT boot on a class the consumer does not own. It is therefore excluded here by
+   * type, symmetrically with the runtime exemption in {@code AuthorizationListener}.
+   */
+  private static boolean isConsumerRoute(Class<?> target) {
+    return !SessionManagementView.class.isAssignableFrom(target);
+  }
+
+  /**
+   * RF (exit-review, RF05): a route may legitimately be un-annotated, or it may carry more
+   * than one {@code @JSentinelAnnotation} — which makes {@code scanner.scan} throw. A misconfigured
+   * multi-annotation route is <em>annotated</em> (not a deny-by-default risk) and must not abort
+   * discovery, so the scan is guarded per element and such a route is skipped rather than fatal.
+   */
+  private boolean isUnannotated(Class<?> target) {
+    if (target.isAnnotationPresent(PublicRoute.class)) {
+      return false;
+    }
+    try {
+      return scanner.scan(target).isEmpty();
+    } catch (RuntimeException multipleAnnotations) {
+      return false;
     }
   }
 

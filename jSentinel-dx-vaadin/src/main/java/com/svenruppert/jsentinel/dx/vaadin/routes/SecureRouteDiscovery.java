@@ -70,4 +70,27 @@ public interface SecureRouteDiscovery {
   default Stream<String> discoverUnannotatedRouteNames() {
     return Stream.empty();
   }
+
+  /**
+   * Reports whether the underlying route registry is queryable at the moment this
+   * runs. Discovery methods return an empty stream both when there are genuinely no
+   * matching routes <em>and</em> when the registry cannot be read (e.g. no active
+   * {@code VaadinService} during a {@code ServletContextListener} bootstrap) — two
+   * very different states.
+   *
+   * <p>RF (exit-review): the deny-by-default STRICT safety-net relies on this to avoid
+   * a silent green boot. When this returns {@code false} while deny-by-default is
+   * enabled, the bootstrap emits {@code deny-by-default/discovery-unavailable} (an
+   * ERROR that STRICT turns into a boot failure) instead of trusting an empty result —
+   * otherwise un-annotated routes would surface only at first navigation in production,
+   * exactly the failure mode JS-SEC-024 exists to prevent.
+   *
+   * @return {@code true} if the route registry could be read (default; also the correct
+   *         answer for custom in-memory implementations), {@code false} if it was not
+   *         available and the empty discovery result must therefore not be trusted
+   * @since 00.79.40
+   */
+  default boolean routesAvailable() {
+    return true;
+  }
 }

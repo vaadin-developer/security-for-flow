@@ -120,9 +120,9 @@ class AuthorizationListenerNavigationTest extends BrowserlessTest {
       // rerouteToError may throw in the browserless harness; the denial is
       // audited before the redirect, which is what we assert.
     }
-    // The un-annotated PlainFixture is denied. (The reroute target — the harness
-    // error view — is also un-annotated, so it too is denied; a real app marks its
-    // error/login views @PublicRoute. We assert the PlainFixture denial specifically.)
+    // The un-annotated PlainFixture is denied. (RF exit-review: the reroute target — a
+    // Vaadin error view (HasErrorParameter) — is now exempt from deny-by-default, so the
+    // denial no longer cascades into a second denial. We assert the PlainFixture denial.)
     boolean deniedPlain = audit.events().stream()
         .filter(AccessDenied.class::isInstance)
         .map(AccessDenied.class::cast)

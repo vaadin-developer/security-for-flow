@@ -30,9 +30,11 @@ import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
 import com.svenruppert.jsentinel.authorization.api.JSentinelSubject;
 import com.svenruppert.jsentinel.authorization.navigation.AccessContext;
 import com.svenruppert.jsentinel.authorization.navigation.AccessDecision;
+import com.svenruppert.jsentinel.components.SessionManagementView;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterListener;
+import com.vaadin.flow.router.HasErrorParameter;
 import com.vaadin.flow.router.ListenerPriority;
 import com.vaadin.flow.server.*;
 import com.vaadin.flow.shared.Registration;
@@ -153,7 +155,8 @@ public class AuthorizationListener
    */
   private void denyByDefaultIfEnabled(Class<?> navigationTarget, BeforeEnterEvent event) {
     if (!JSentinelServiceResolver.isDenyByDefault()
-        || navigationTarget.isAnnotationPresent(PublicRoute.class)) {
+        || navigationTarget.isAnnotationPresent(PublicRoute.class)
+        || isDenyByDefaultExempt(navigationTarget)) {
       return;
     }
     logger().warn(
@@ -163,6 +166,27 @@ public class AuthorizationListener
     AccessDecision denied = AccessDecision.deniedWithError(SecurityException.class, "Access denied");
     audit(new EvaluatedDecision(denied, Optional.empty()), context);
     decisionMapper.apply(denied, event);
+  }
+
+  /**
+   * RF (exit-review): deny-by-default must not deny the navigation targets the framework
+   * itself reroutes to or ships un-annotated.
+   * <ul>
+   *   <li><strong>Error views</strong> ({@link HasErrorParameter}) are the reroute target
+   *   of a denial. Denying them cascades into a second denial and a broken/blank page
+   *   instead of the intended access-denied view, and Vaadin's built-in
+   *   {@code RouteNotFoundError} / {@code InternalServerError} cannot be annotated by the
+   *   integrator at all — so the documented "mark it @PublicRoute" remedy is impossible.</li>
+   *   <li><strong>Framework-owned routes</strong> (e.g. {@code SessionManagementRoute}) carry
+   *   no consumer annotation and cannot be annotated by the app either; the consumer activates
+   *   them by explicit opt-in ({@code .sessionManagementView()}), so deny-by-default leaves
+   *   them on the same allow-by-omission footing they already have in every other mode rather
+   *   than making them permanently unreachable.</li>
+   * </ul>
+   */
+  static boolean isDenyByDefaultExempt(Class<?> navigationTarget) {
+    return HasErrorParameter.class.isAssignableFrom(navigationTarget)
+        || SessionManagementView.class.isAssignableFrom(navigationTarget);
   }
 
   /**

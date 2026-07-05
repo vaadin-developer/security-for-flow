@@ -270,7 +270,19 @@ final class VaadinJSentinelBootstrapImpl
       SecureRouteDiscovery denyDiscovery = secureRouteDiscovery != null
           ? secureRouteDiscovery
           : tryLoadDefaultDiscovery();
-      if (denyDiscovery != null) {
+      if (denyDiscovery != null && !denyDiscovery.routesAvailable()) {
+        // RF (exit-review, RF03): discovery could not read the route registry (e.g. no
+        // active VaadinService at bootstrap). An empty result must NOT be trusted as
+        // "no un-annotated routes" — that would let STRICT boot green while every
+        // un-annotated route is denied only at first navigation. Surface it loudly.
+        warnings.add(new JSentinelBootstrapWarning(
+            Severity.ERROR,
+            "deny-by-default/discovery-unavailable",
+            "deny-by-default is enabled but the Vaadin route registry could not be read at "
+                + "bootstrap, so un-annotated routes cannot be surfaced now.",
+            "Run VaadinSecurity.bootstrap().install() where a VaadinService is active (e.g. from "
+                + "a VaadinServiceInitListener), or pass an explicit SecureRouteDiscovery."));
+      } else if (denyDiscovery != null) {
         denyDiscovery.discoverUnannotatedRouteNames().forEach(routeName ->
             warnings.add(new JSentinelBootstrapWarning(
                 Severity.ERROR,
