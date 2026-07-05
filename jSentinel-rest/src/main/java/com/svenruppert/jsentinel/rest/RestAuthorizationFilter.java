@@ -36,6 +36,7 @@ import com.svenruppert.jsentinel.session.SessionPolicyDecision;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Method;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Locale;
@@ -145,13 +146,17 @@ public final class RestAuthorizationFilter {
       // JS-SEC-024 (CWE-862): fail closed on an un-annotated handler when
       // deny-by-default is enabled, unless the element opts back in via
       // @PublicRoute. The default (allow-by-omission) keeps the handler public.
-      if (JSentinelServiceResolver.isDenyByDefault()
-          && !securedElement.isAnnotationPresent(PublicRoute.class)) {
+      if (JSentinelServiceResolver.isDenyByDefault() && !isPublicRoute(securedElement)) {
         Optional<JSentinelSubject> denySubject = subjectResolver.resolveSubject(request);
         AccessContext denyContext =
             contextFactory.create(request, denySubject, operation, attributes);
-        AuthorizationDecision denied =
-            AuthorizationDecision.forbidden("deny-by-default:no-security-annotation");
+        // RF (exit-review): a missing subject is Unauthenticated (401 + a re-auth
+        // signal), not Forbidden (403) — matching every annotated endpoint, so a
+        // client with an expired/absent token still triggers its standard re-auth
+        // flow. Only a resolved-but-unauthorized subject maps to 403.
+        AuthorizationDecision denied = denySubject.isPresent()
+            ? AuthorizationDecision.forbidden("deny-by-default:no-security-annotation")
+            : AuthorizationDecision.unauthenticated("deny-by-default:no-security-annotation");
         audit(denied, denyContext, denySubject);
         decisionMapper.apply(denied, response);
         return;
@@ -261,6 +266,22 @@ public final class RestAuthorizationFilter {
           "REST security requires AuthorizationEvaluator: " + evaluatorClass.getName());
     }
     return ((AuthorizationEvaluator<Annotation>) authorizationEvaluator).evaluate(context, annotation);
+  }
+
+  /**
+   * RF (exit-review): {@code @PublicRoute} is {@code @Target({TYPE, METHOD})}, so a
+   * handler class marked {@code @PublicRoute} must opt the endpoint back in even when the
+   * call site passes the individual handler {@link Method} (the common wiring shape).
+   * {@link Method#isAnnotationPresent} does not consult the declaring class, so check both
+   * — otherwise a class-level {@code @PublicRoute} is invisible and deny-by-default would
+   * 403 an intentionally-public endpoint (health check, login).
+   */
+  private static boolean isPublicRoute(AnnotatedElement securedElement) {
+    if (securedElement.isAnnotationPresent(PublicRoute.class)) {
+      return true;
+    }
+    return securedElement instanceof Method method
+        && method.getDeclaringClass().isAnnotationPresent(PublicRoute.class);
   }
 
   private static Object instantiate(Class<?> evaluatorClass) {

@@ -147,8 +147,8 @@ class RestAuthorizationFilterTest {
   }
 
   @Test
-  @DisplayName("JS-SEC-024: deny-by-default denies an un-annotated handler with 403")
-  void denyByDefault_unannotatedHandler_forbidden() throws NoSuchMethodException {
+  @DisplayName("JS-SEC-024 / RF: deny-by-default without a subject is 401, not 403")
+  void denyByDefault_unannotatedHandler_noSubject_unauthorized() throws NoSuchMethodException {
     JSentinelServiceResolver.setDenyByDefault(true);
     RecordingResponse response = new RecordingResponse();
     AtomicBoolean executed = new AtomicBoolean();
@@ -158,8 +158,46 @@ class RestAuthorizationFilterTest {
         (req, res) -> executed.set(true),
         HandlerFixture.class.getDeclaredMethod("open"), "read", Map.of());
 
+    // RF (exit-review): a missing subject is Unauthenticated (401) so a client with an
+    // expired/absent token still triggers its standard re-auth flow — was 403.
+    assertEquals(401, response.status);
+    assertFalse(executed.get(), "un-annotated handler must not run under deny-by-default");
+  }
+
+  @Test
+  @DisplayName("JS-SEC-024 / RF: deny-by-default with a resolved subject is 403")
+  void denyByDefault_unannotatedHandler_withSubject_forbidden() throws NoSuchMethodException {
+    JSentinelServiceResolver.setDenyByDefault(true);
+    RecordingResponse response = new RecordingResponse();
+    AtomicBoolean executed = new AtomicBoolean();
+    RestAuthorizationFilter filter = new RestAuthorizationFilter(
+        request -> Optional.of(subject(Set.of(new PermissionName("document:read")))));
+
+    filter.authorizeAndHandle(request(), response,
+        (req, res) -> executed.set(true),
+        HandlerFixture.class.getDeclaredMethod("open"), "read", Map.of());
+
+    // A resolved-but-unauthorized subject on an un-annotated handler is Forbidden (403).
     assertEquals(403, response.status);
     assertFalse(executed.get(), "un-annotated handler must not run under deny-by-default");
+  }
+
+  @Test
+  @DisplayName("JS-SEC-024 / RF: class-level @PublicRoute opts the endpoint back in even when a Method is passed")
+  void denyByDefault_classLevelPublicRoute_allowsHandler() throws NoSuchMethodException {
+    JSentinelServiceResolver.setDenyByDefault(true);
+    RecordingResponse response = new RecordingResponse();
+    AtomicBoolean executed = new AtomicBoolean();
+    RestAuthorizationFilter filter = new RestAuthorizationFilter(request -> Optional.empty());
+
+    // the handler METHOD carries no annotation; @PublicRoute lives on the declaring class.
+    filter.authorizeAndHandle(request(), response,
+        (req, res) -> { executed.set(true); res.status(200); },
+        PublicClassFixture.class.getDeclaredMethod("open"), "read", Map.of());
+
+    assertTrue(executed.get(),
+        "a class-level @PublicRoute must keep the endpoint public even when the Method is the secured element");
+    assertEquals(200, response.status);
   }
 
   @Test
@@ -215,6 +253,13 @@ class RestAuthorizationFilterTest {
 
     @PublicRoute
     void openPublic() {
+    }
+  }
+
+  /** RF (exit-review): {@code @PublicRoute} on the class, method carries no annotation. */
+  @PublicRoute
+  static final class PublicClassFixture {
+    void open() {
     }
   }
 
