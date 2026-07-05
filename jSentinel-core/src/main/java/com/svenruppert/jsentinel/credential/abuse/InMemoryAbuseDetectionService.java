@@ -218,9 +218,18 @@ public final class InMemoryAbuseDetectionService implements AbuseDetectionServic
    * attacker-controlled username / client address, and {@link #currentCount} only
    * reclaims keys that are re-evaluated — a spray of distinct keys each recorded once
    * and never re-evaluated would otherwise grow the map without limit. When a new key
-   * would exceed {@code maxEntries}, evict arbitrary existing counters back under the
-   * bound via a safe {@code keySet().iterator().remove()}. Soft bound: a concurrent
-   * burst may transiently overshoot by a few, but growth stays bounded.
+   * would exceed {@code maxEntries}, evict existing counters back under the bound via a
+   * safe {@code keySet().iterator().remove()}.
+   *
+   * <p>RF (exit-review, lockout-eviction bypass): eviction must never drop a counter
+   * that is <em>currently at or over its block threshold</em>. Otherwise an attacker
+   * spraying failures across ~{@code maxEntries} distinct throwaway usernames could push
+   * the map to capacity and evict a victim's (or their own IP-dimension's) in-force block
+   * before {@code blockAt} takes effect — turning the very map that JS-SEC-030 bounds into
+   * a brute-force-lockout bypass. Actively-blocking counters are therefore skipped; if
+   * <em>every</em> remaining counter is an active block (pathological), a transient soft
+   * overshoot is accepted rather than resetting a live lockout — blocks are time-bounded
+   * and self-reclaim via {@link #currentCount}'s expiry purge.
    */
   private void enforceBound(String incomingKey) {
     if (counters.size() < maxEntries || counters.containsKey(incomingKey)) {
@@ -229,10 +238,46 @@ public final class InMemoryAbuseDetectionService implements AbuseDetectionServic
     var it = counters.keySet().iterator();
     while (counters.size() >= maxEntries && it.hasNext()) {
       String victim = it.next();
-      if (!victim.equals(incomingKey)) {
-        it.remove();
+      if (victim.equals(incomingKey) || isActivelyBlocking(victim)) {
+        continue; // never evict the incoming key or an in-force block
       }
+      it.remove();
     }
+    // Soft bound: if the loop protected every non-incoming counter (all active
+    // blocks), the map may briefly exceed maxEntries. That is the safe trade —
+    // preserving lockouts wins over the DoS-mitigation cap, and the overshoot is
+    // transient because blocks expire and are reclaimed on the next evaluation.
+  }
+
+  /**
+   * True when {@code composite} names a failure/volume counter that has reached its
+   * configured {@code blockAt} threshold and is therefore an in-force block. The
+   * composite key is {@code attemptType/dimension/key}; only the first two segments are
+   * parsed (the trailing key may itself contain {@code '/'}). An unparseable segment,
+   * an absent limit, or a non-positive {@code blockAt} means "not protected" — eviction
+   * proceeds. A stale over-count (expired timestamps not yet purged) only makes this more
+   * conservative, which is safe.
+   */
+  private boolean isActivelyBlocking(String composite) {
+    int firstSlash = composite.indexOf('/');
+    int secondSlash = firstSlash < 0 ? -1 : composite.indexOf('/', firstSlash + 1);
+    if (firstSlash < 0 || secondSlash < 0) {
+      return false;
+    }
+    AbuseAttemptType attemptType;
+    AbuseDimension dimension;
+    try {
+      attemptType = AbuseAttemptType.valueOf(composite.substring(0, firstSlash));
+      dimension = AbuseDimension.valueOf(composite.substring(firstSlash + 1, secondSlash));
+    } catch (IllegalArgumentException notParseable) {
+      return false;
+    }
+    Optional<AbuseLimitsPolicy.Limit> maybeLimit = policy.limit(attemptType, dimension);
+    if (maybeLimit.isEmpty() || maybeLimit.get().blockAt() <= 0) {
+      return false;
+    }
+    Deque<Instant> deque = counters.get(composite);
+    return deque != null && deque.size() >= maybeLimit.get().blockAt();
   }
 
   private static AbuseDecision mapToDecision(

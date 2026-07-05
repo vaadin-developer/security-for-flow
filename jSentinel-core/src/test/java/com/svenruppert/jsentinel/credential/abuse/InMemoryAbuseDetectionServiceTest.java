@@ -80,6 +80,41 @@ class InMemoryAbuseDetectionServiceTest {
   }
 
   @Test
+  @DisplayName("RF (exit-review): a distinct-username spray cannot evict a victim's in-force block")
+  void sprayDoesNotEvictActiveBlock() {
+    // USERNAME-only policy: blocks after 3 failures. No volume-dimension limits, so
+    // evaluate() consults only the per-username counter and the assertion is unambiguous.
+    AbuseLimitsPolicy usernameOnly = AbuseLimitsPolicy.builder()
+        .with(AbuseAttemptType.LOGIN, AbuseDimension.USERNAME,
+            // (window, delayAt, stepUpAt, blockAt, delayLen, blockLen): block after 3,
+            // no delay/step-up so the victim goes straight to Block.
+            new AbuseLimitsPolicy.Limit(
+                Duration.ofMinutes(15), 0, 0, 3,
+                Duration.ofSeconds(1), Duration.ofMinutes(15)))
+        .build();
+    int cap = 20;
+    InMemoryAbuseDetectionService svc = new InMemoryAbuseDetectionService(
+        usernameOnly, new RecordingAudit(), cap);
+
+    AbuseAttemptContext victim = loginAttempt("victim", null, T0);
+    for (int i = 0; i < 3; i++) {
+      svc.recordOutcome(victim, AttemptOutcome.FAILURE);
+    }
+    assertInstanceOf(AbuseDecision.Block.class, svc.evaluate(victim),
+        "victim must be blocked after reaching blockAt");
+
+    // Spray far past the cap across distinct throwaway usernames (each a size-1,
+    // non-blocking counter). With arbitrary eviction this would drop the victim's
+    // block before it is lifted — the lockout-bypass this fix closes.
+    for (int i = 0; i < cap * 3; i++) {
+      svc.recordOutcome(loginAttempt("spray-" + i, null, T0), AttemptOutcome.FAILURE);
+    }
+
+    assertInstanceOf(AbuseDecision.Block.class, svc.evaluate(victim),
+        "the in-force block must survive the eviction pressure of the spray");
+  }
+
+  @Test
   @DisplayName("Empty state allows the first attempt")
   void firstAttemptAllowed() {
     InMemoryAbuseDetectionService svc = new InMemoryAbuseDetectionService(
