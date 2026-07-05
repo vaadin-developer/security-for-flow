@@ -29,6 +29,7 @@ import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.dependencies.core.net.HttpStatus;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.authorization.api.JSentinelSubject;
+import com.svenruppert.jsentinel.authorization.api.permissions.PermissionMatcher;
 import com.svenruppert.jsentinel.authorization.api.permissions.PermissionName;
 import com.svenruppert.jsentinel.events.store.JSentinelEventCursor;
 import com.svenruppert.jsentinel.events.store.JSentinelEventEnvelopeStore;
@@ -44,6 +45,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -109,7 +111,13 @@ public final class SseStreamHttpHandler implements HttpHandler, HasLogger {
       writeStatus(exchange, HttpStatus.UNAUTHORIZED.code());
       return;
     }
-    if (!subject.get().permissions().contains(requiredPermission)) {
+    // RF (exit-review): match the framework's evaluator path (RequiresPermissionEvaluator
+    // uses PermissionMatcher), which honors terminal-wildcard grants such as "events:*".
+    // A flat permissions().contains(...) is exact-match only, so a subject holding
+    // "events:*" (or an admin granted events:subscribe via a wildcard) would be denied
+    // here while passing @RequiresPermission("events:subscribe") on regular handlers.
+    if (!PermissionMatcher.containsAll(
+        subject.get().permissionNames(), Set.of(requiredPermission))) {
       writeStatus(exchange, HttpStatus.FORBIDDEN.code());
       return;
     }

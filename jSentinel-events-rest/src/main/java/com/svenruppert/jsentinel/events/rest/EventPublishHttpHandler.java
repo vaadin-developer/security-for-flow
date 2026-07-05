@@ -30,6 +30,7 @@ import com.svenruppert.dependencies.core.net.HttpStatus;
 import com.svenruppert.dependencies.core.net.MediaType;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.authorization.api.JSentinelSubject;
+import com.svenruppert.jsentinel.authorization.api.permissions.PermissionMatcher;
 import com.svenruppert.jsentinel.authorization.api.permissions.PermissionName;
 import com.svenruppert.jsentinel.rest.RestSubjectResolver;
 import com.sun.net.httpserver.HttpExchange;
@@ -41,6 +42,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * JDK-{@code HttpServer} endpoint for {@code POST /api/events} (Konzept §970).
@@ -112,7 +114,11 @@ public final class EventPublishHttpHandler implements HttpHandler, HasLogger {
       write(exchange, HttpStatus.UNAUTHORIZED.code(), "Unauthorized");
       return;
     }
-    if (!subject.get().permissions().contains(requiredPermission)) {
+    // RF (exit-review): wildcard-aware match via PermissionMatcher — same path as
+    // RequiresPermissionEvaluator — so a subject holding "events:*" is permitted
+    // symmetrically with the annotation-guarded handlers (was exact-match contains()).
+    if (!PermissionMatcher.containsAll(
+        subject.get().permissionNames(), Set.of(requiredPermission))) {
       write(exchange, HttpStatus.FORBIDDEN.code(), "Forbidden");
       return;
     }

@@ -105,6 +105,28 @@ class SseStreamHttpHandlerTest {
     assertEquals(403, ex.status);
   }
 
+  @Test
+  @DisplayName("RF (exit-review): a subject holding a terminal-wildcard permission (events:*) may stream")
+  void wildcardPermissionStreamAllowed() {
+    assertTimeoutPreemptively(java.time.Duration.ofSeconds(5), () -> {
+      SseEventBroadcaster broadcaster = new SseEventBroadcaster(new EnvelopeWireCodec());
+      // "events:*" is not equal to "events:subscribe" but grants it via PermissionMatcher —
+      // the same wildcard semantics @RequiresPermission uses. A flat contains() would 403 this.
+      RestSubjectResolver wildcard = req -> Optional.of(new JSentinelSubject(
+          "u", "U", Set.of(), Set.of(new PermissionName("events:*"))));
+      SseStreamHttpHandler handler = new SseStreamHttpHandler(
+          broadcaster, null, new EnvelopeWireCodec(), wildcard,
+          EventsRestRoutes.STREAM_PERMISSION, 0L, 100);
+
+      CapturingExchange ex = new CapturingExchange();
+      handler.handle(ex);
+
+      // auth passed → the stream opened with a 200 (the keep-alive write then fails on the
+      // throwing body, terminating the handler). A 403 here would mean the wildcard was ignored.
+      assertEquals(200, ex.status);
+    });
+  }
+
   /** Fake exchange whose response body throws on the first write (dead client). */
   private static final class DisconnectedExchange extends HttpExchange {
     private final Headers requestHeaders = new Headers();
@@ -156,7 +178,18 @@ class SseStreamHttpHandlerTest {
     @Override public HttpContext getHttpContext() { return null; }
     @Override public void close() { /* no-op */ }
     @Override public InputStream getRequestBody() { return new ByteArrayInputStream(new byte[0]); }
-    @Override public OutputStream getResponseBody() { return new ByteArrayOutputStream(); }
+    // Body write throws so an auth-PASS path (which opens the stream and writes a
+    // keep-alive) terminates instead of blocking — the rejection paths return before
+    // ever touching the body, so this does not affect them.
+    @Override public OutputStream getResponseBody() {
+      return new OutputStream() {
+        @Override public void write(int b) throws IOException { throw new IOException("client gone"); }
+        @Override public void write(byte[] b) throws IOException { throw new IOException("client gone"); }
+        @Override public void write(byte[] b, int off, int len) throws IOException {
+          throw new IOException("client gone");
+        }
+      };
+    }
     @Override public void sendResponseHeaders(int rCode, long responseLength) { this.status = rCode; }
     @Override public InetSocketAddress getRemoteAddress() { return null; }
     @Override public int getResponseCode() { return status; }
