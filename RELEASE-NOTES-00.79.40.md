@@ -116,7 +116,31 @@ green while un-annotated routes would only be denied at first navigation — **f
 `@PublicRoute` under deny-by-default) and F3 (REST deny-by-default is filter-scoped, not a global
 backstop) are documented/inherent, no code change.
 
-No exit findings deferred.
+### Exit production-review — round 2 (workflow-backed, high effort)
+
+Before deploy, a second exit review was run as a workflow-backed multi-agent pass (eight finder
+angles + an independent verifier per candidate) over the full delivered diff. Where round 1 cleared
+the individual finding fixes, round 2 concentrated on the **interaction** of the new JS-SEC-024
+deny-by-default feature with the framework's own routes, the error-navigation path, and the REST/SSE
+gates. It surfaced **10 distinct exit findings (RF01–RF10)**, all **fixed in-cycle** (none deferred),
+each with a no-mock regression test:
+
+| # | Area | Fix |
+|---|---|---|
+| RF01 | core — `InMemoryAbuseDetectionService` | eviction no longer drops an **in-force block**; a distinct-username spray can't reset a victim's lockout (CWE-770) |
+| RF02 | vaadin / starter | deny-by-default (diagnostic + runtime) **exempts the framework's own `SessionManagementView`** — the consumer can't annotate it (CWE-862) |
+| RF03 | starter / dx-vaadin | new `SecureRouteDiscovery.routesAvailable()` probe → STRICT raises `deny-by-default/discovery-unavailable` instead of a silent green boot when the route registry is unreadable |
+| RF04 | vaadin | deny-by-default **exempts Vaadin error views** (`HasErrorParameter`) — the reroute target no longer cascades into a second denial |
+| RF05 | starter | `discoverUnannotatedRouteNames` collects **eagerly + guards the per-element scan**, so a >1-annotation route can't take the whole bootstrap down |
+| RF06 | rest | deny-by-default returns **401 without a subject** (was 403), so a client re-auth flow triggers |
+| RF07 | rest | class-level `@PublicRoute` honored when the handler **Method** is the secured element |
+| RF08 | events-rest | SSE + publish permission gates use **`PermissionMatcher`** (wildcard-aware), symmetric with `@RequiresPermission` (CWE-863) |
+| RF09 | core — `LoggingAuditSink` | `scrub()` also neutralizes the **space field-delimiter**, closing same-line field spoofing the JS-SEC-031 control-char scrub left open (CWE-117) |
+| RF10 | persistence | three byte-identical POSIX-hardening copies folded into one `StorageTreeHardening` home; factory double-harden removed (CWE-276) |
+
+RF01, RF06, RF08 and RF09 are correctness/security on the delivered paths; RF02–RF05 harden the
+deny-by-default rollout so the safety-net can't be silently defeated or make the app un-bootable; RF10
+is drift prevention on the storage-ACL code. No exit findings deferred.
 
 ## Mutation coverage (V00.79.40)
 
@@ -143,7 +167,8 @@ construction.
 - ✓ Full library-reactor `clean install` green (all fixes integrate; demos excluded — pre-existing
   demo/env debt, deploy is library-only).
 - ✓ Standards pass already-compliant.
-- ✓ Exit production-review — the 10-finding delta clean; JS-SEC-024 reviewed separately, one Medium (F1) fixed in-cycle, none deferred.
+- ✓ Exit production-review (round 1) — the 10-finding delta clean; JS-SEC-024 reviewed separately, one Medium (F1) fixed in-cycle.
+- ✓ Exit production-review (round 2, workflow-backed, high effort) — **10 interaction findings (RF01–RF10) all fixed in-cycle**, each with a no-mock regression test; none deferred.
 - ✓ PIT regression: `jSentinel-core` 84 % (2178/2593, = V00.79.30 baseline); other touched modules non-regressed by construction (additive tests only).
 
 ## Build note (environment)
