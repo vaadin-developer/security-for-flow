@@ -27,6 +27,7 @@ package com.svenruppert.jsentinel.events.persistence.eclipsestore;
 
 import com.svenruppert.jsentinel.events.api.EventEnvelopeId;
 import com.svenruppert.jsentinel.events.replay.JSentinelEventReplayStore;
+import com.svenruppert.jsentinel.util.CapacityBound;
 
 import java.time.Instant;
 import java.util.Map;
@@ -40,9 +41,15 @@ import java.util.Objects;
 final class EclipseStoreReplayStore implements JSentinelEventReplayStore {
 
   private final EclipseStoreEventStorage storage;
+  private final int maxEntries;
 
   EclipseStoreReplayStore(EclipseStoreEventStorage storage) {
+    this(storage, CapacityBound.DEFAULT_MAX_ENTRIES);
+  }
+
+  EclipseStoreReplayStore(EclipseStoreEventStorage storage, int maxEntries) {
     this.storage = storage;
+    this.maxEntries = CapacityBound.requirePositiveCapacity(maxEntries);
   }
 
   @Override
@@ -54,6 +61,21 @@ final class EclipseStoreReplayStore implements JSentinelEventReplayStore {
       Map<String, Long> seen = storage.root().seenEnvelopes;
       if (seen.containsKey(envelopeId.value())) {
         return false;
+      }
+      // JS-SEC-050 (CWE-770): this production-recommended persistent store had no bound and nothing
+      // schedules purgeExpired, so it grew forever. When full, fold the expiry purge into the write
+      // path (the replay window == the envelope TTL, so this keeps the map proportional to in-window
+      // traffic); if still full of live entries evict the soonest-to-expire one. Over-retention is
+      // safe — an expired envelope is rejected upstream, so replay protection never fails open.
+      if (seen.size() >= maxEntries) {
+        long now = System.currentTimeMillis();
+        seen.values().removeIf(expiry -> expiry <= now);
+        if (seen.size() >= maxEntries) {
+          seen.entrySet().stream()
+              .min(Map.Entry.comparingByValue())
+              .map(Map.Entry::getKey)
+              .ifPresent(seen::remove);
+        }
       }
       seen.put(envelopeId.value(), expiresAt.toEpochMilli());
       storage.manager().store(seen);

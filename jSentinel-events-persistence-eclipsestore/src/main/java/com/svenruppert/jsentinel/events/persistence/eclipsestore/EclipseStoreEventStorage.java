@@ -86,7 +86,26 @@ public final class EclipseStoreEventStorage implements AutoCloseable, HasLogger 
       manager.setRoot(root);
       manager.storeRoot();
     }
+    migrateResolvedDeadLetters(manager, root);
     return new EclipseStoreEventStorage(manager, root);
+  }
+
+  /**
+   * JS-SEC-052 (CWE-770): one-time drain of the legacy append-only {@code resolvedDeadLetters} set.
+   * Any id still there is an already-resolved dead letter (its heavy record was dropped by R07) or a
+   * legacy pre-R07 record that must now be dropped; remove any matching record and clear the set so
+   * it can never grow again. Idempotent — a later open finds an empty set and does nothing.
+   */
+  private static void migrateResolvedDeadLetters(EmbeddedStorageManager manager, EventStorageRoot root) {
+    if (root.resolvedDeadLetters.isEmpty()) {
+      return;
+    }
+    for (String id : root.resolvedDeadLetters) {
+      root.deadLetters.remove(id);
+    }
+    root.resolvedDeadLetters.clear();
+    manager.store(root.deadLetters);
+    manager.store(root.resolvedDeadLetters);
   }
 
   EventStorageRoot root() {

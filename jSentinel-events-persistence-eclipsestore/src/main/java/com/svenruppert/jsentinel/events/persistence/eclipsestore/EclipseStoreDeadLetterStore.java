@@ -88,16 +88,19 @@ final class EclipseStoreDeadLetterStore implements JSentinelEventDeadLetterStore
     Objects.requireNonNull(id, "id");
     storage.lock().writeLock().lock();
     try {
-      // R07 (V00.76.10): drop the heavy record (it embeds a full signed envelope)
-      // so resolved dead letters cannot accumulate without bound. The lightweight
-      // resolved-id set is still maintained so any legacy already-persisted
-      // resolved record continues to filter out of findOpen.
+      // R07 (V00.76.10): drop the heavy record (it embeds a full signed envelope) so resolved dead
+      // letters cannot accumulate without bound.
+      //
+      // JS-SEC-052 (CWE-770): DO NOT also append the id to resolvedDeadLetters. Because the record is
+      // deleted, findOpen can never surface it again, and the ids are random UUIDs so no future dead
+      // letter can collide — the resolved-id set was pure append-only, never-pruned growth that
+      // uniquely defeated the R07 "cannot grow without bound" guarantee the InMemory reference
+      // honours. Legacy already-persisted resolved ids are drained by the one-time startup migration
+      // in EclipseStoreEventStorage, so findOpen (which still filters against the now-emptied set)
+      // needs nothing here.
       Map<String, JSentinelEventDeadLetter> records = storage.root().deadLetters;
-      Set<String> resolved = storage.root().resolvedDeadLetters;
       records.remove(id.value());
-      resolved.add(id.value());
       storage.manager().store(records);
-      storage.manager().store(resolved);
     } finally {
       storage.lock().writeLock().unlock();
     }
