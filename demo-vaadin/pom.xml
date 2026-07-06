@@ -91,6 +91,20 @@
             <version>2.21</version>
         </dependency>
         <!--
+          Servlet API at compile time only (provided by the Jetty/servlet
+          container at runtime). Needed because com.vaadin.flow.server.VaadinSession
+          implements jakarta.servlet.http.HttpSessionBindingListener, so javac must
+          resolve that interface wherever VaadinSession is referenced (e.g.
+          MyLoginView.recordSession) even though the binding callbacks are never
+          called here. Mirrors demo-vaadin-rest-client.
+        -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <!--
           Annotations module shipped by jSentinel-processor's underlying
           proxybuilder. The processor emits @GeneratedByProxyBuilder and
           @DelegatesTo into every generated wrapper class; consumers of
