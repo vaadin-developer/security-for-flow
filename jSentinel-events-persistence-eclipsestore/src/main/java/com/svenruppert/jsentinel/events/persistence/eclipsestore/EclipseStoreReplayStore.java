@@ -67,6 +67,11 @@ final class EclipseStoreReplayStore implements JSentinelEventReplayStore {
       // path (the replay window == the envelope TTL, so this keeps the map proportional to in-window
       // traffic); if still full of live entries evict the soonest-to-expire one. Over-retention is
       // safe — an expired envelope is rejected upstream, so replay protection never fails open.
+      // Exit-review F1 (accepted CWE-770 tradeoff): evicting the soonest-to-expire *live* entry means
+      // that single envelope could in principle be replayed before its real expiry, but only under a
+      // flood of maxEntries (100k) distinct in-window ids, and evicting the minimal-remaining-window
+      // entry is the least-bad choice versus unbounded growth (OOM). Raise maxEntries if that flood is
+      // a realistic threat for the deployment.
       if (seen.size() >= maxEntries) {
         long now = System.currentTimeMillis();
         seen.values().removeIf(expiry -> expiry <= now);

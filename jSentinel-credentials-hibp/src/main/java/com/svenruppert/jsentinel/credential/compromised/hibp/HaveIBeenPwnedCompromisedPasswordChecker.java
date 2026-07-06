@@ -200,8 +200,10 @@ public final class HaveIBeenPwnedCompromisedPasswordChecker
       // with an empty/blank body means a hostile or broken mirror. Fail CLOSED (CheckFailed) rather
       // than treating it as Clean, so a stripped body cannot silently pass a breached password.
       if (response.body() == null || response.body().isBlank()) {
+        // Exit-review F3: an empty 2xx body is a protocol anomaly, not a transport failure —
+        // MALFORMED_RESPONSE labels it precisely (still fail-closed via CheckFailed).
         return new CompromisedPasswordResult.CheckFailed(
-            CompromisedPasswordResult.FailureReason.NETWORK);
+            CompromisedPasswordResult.FailureReason.MALFORMED_RESPONSE);
       }
       return scan(response.body(), suffix);
     } catch (RuntimeException unexpected) {

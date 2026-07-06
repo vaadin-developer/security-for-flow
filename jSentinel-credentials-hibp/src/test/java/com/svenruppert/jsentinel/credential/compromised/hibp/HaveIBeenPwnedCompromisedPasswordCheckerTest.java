@@ -224,8 +224,11 @@ class HaveIBeenPwnedCompromisedPasswordCheckerTest {
                 "", null));
     // with Add-Padding a real range response is never empty; an empty body means a hostile/broken
     // mirror, so we must not silently accept the password.
-    assertInstanceOf(CompromisedPasswordResult.CheckFailed.class,
+    CompromisedPasswordResult.CheckFailed failed = assertInstanceOf(
+        CompromisedPasswordResult.CheckFailed.class,
         checker.check(SecretValue.ofString("hunter222")));
+    // exit-review F3: labelled precisely as a protocol anomaly, not a transport failure.
+    assertEquals(CompromisedPasswordResult.FailureReason.MALFORMED_RESPONSE, failed.reason());
   }
 
   @Test
