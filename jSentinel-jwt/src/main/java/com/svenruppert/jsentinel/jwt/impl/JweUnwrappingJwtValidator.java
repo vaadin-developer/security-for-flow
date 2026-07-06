@@ -79,6 +79,11 @@ public final class JweUnwrappingJwtValidator implements JwtValidator {
     if (compactJwt == null || compactJwt.isBlank()) {
       return Result.failure(new JwtValidationError.MalformedJwt("compact JWT is blank"));
     }
+    // JS-SEC-053 (CWE-770): bound the input here too so the pre-JWE branch (delegate.validate) and
+    // the JWE decode below are both capped at the shared ceiling before any base64/parse work.
+    if (compactJwt.length() > JoseLimits.MAX_COMPACT_BYTES) {
+      return Result.failure(new JwtValidationError.MalformedJwt("compact JWT exceeds the size cap"));
+    }
     if (countSegments(compactJwt) != 5) {
       return delegate.validate(compactJwt);
     }

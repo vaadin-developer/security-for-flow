@@ -172,6 +172,14 @@ class NimbusJwtValidatorTest {
     assertInstanceOf(JwtValidationError.MalformedJwt.class, error("a.b"));
   }
 
+  @Test
+  @DisplayName("JS-SEC-053: an oversized compact token is rejected as MalformedJwt (size cap, before any base64/parse)")
+  void rejectsOversizedToken() {
+    // a well-formed 3-segment shape but far larger than the 100 KB JOSE ceiling
+    String oversized = "aa." + "b".repeat(200_000) + ".cc";
+    assertInstanceOf(JwtValidationError.MalformedJwt.class, error(oversized));
+  }
+
   private JwtValidationError error(String token) {
     Result<ValidatedJwt, JwtValidationError> result = validator.validate(token);
     assertTrue(result.toOptional().isEmpty(), "expected failure for token");

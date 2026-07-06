@@ -98,6 +98,12 @@ public final class NimbusJwtValidator implements JwtValidator {
     if (compactJwt == null || compactJwt.isBlank()) {
       return Result.failure(new JwtValidationError.MalformedJwt("compact JWT is blank"));
     }
+    // JS-SEC-053 (CWE-770): cap the input BEFORE the unconditional header base64-decode + JSON parse
+    // and SignedJWT.parse below, which an unauthenticated caller can trigger with garbage. The JWE
+    // sibling already caps at the same shared ceiling; a real signed token is a few tens of KB.
+    if (compactJwt.length() > JoseLimits.MAX_COMPACT_BYTES) {
+      return Result.failure(new JwtValidationError.MalformedJwt("compact JWT exceeds the size cap"));
+    }
     // 1. Format check — three segments for JWS, five for JWE.
     int segments = countSegments(compactJwt);
     if (segments == 5) {

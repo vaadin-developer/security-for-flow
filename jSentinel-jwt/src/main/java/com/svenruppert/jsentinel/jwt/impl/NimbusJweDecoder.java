@@ -67,9 +67,6 @@ import java.util.Objects;
 @ExperimentalJSentinelApi
 public final class NimbusJweDecoder implements JweDecoder {
 
-  /** Upper bound on a compact JWE: ID tokens are small; this caps memory + parse work. */
-  private static final int MAX_JWE_BYTES = 100_000;
-
   private final JweAlgorithmAllowList allowList;
 
   public NimbusJweDecoder(JweAlgorithmAllowList allowList) {
@@ -82,7 +79,8 @@ public final class NimbusJweDecoder implements JweDecoder {
     if (jweCompact == null || jweCompact.isBlank()) {
       return Result.failure(new JweDecodingError.NotJwe("compact JWE is blank"));
     }
-    if (jweCompact.length() > MAX_JWE_BYTES) {
+    // JS-SEC-053: shared JOSE compact-form ceiling (was a private MAX_JWE_BYTES).
+    if (jweCompact.length() > JoseLimits.MAX_COMPACT_BYTES) {
       return Result.failure(new JweDecodingError.Malformed("compact JWE exceeds the size cap"));
     }
     if (countSegments(jweCompact) != 5) {
