@@ -64,6 +64,9 @@ public final class SseStreamHttpHandler implements HttpHandler, HasLogger {
   /** JS-SEC-032 (CWE-306): cap on the auth-probe read of the (bodyless) GET request. */
   private static final int MAX_AUTH_PROBE_BODY_BYTES = 8 * 1024;
 
+  /** JS-SEC-049 (CWE-400): default cap on concurrent SSE streams (each pins one server thread). */
+  public static final int DEFAULT_MAX_SUBSCRIBERS = 256;
+
   private final SseEventBroadcaster broadcaster;
   private final JSentinelEventEnvelopeStore envelopeStore;
   private final EnvelopeWireCodec wireCodec;
@@ -71,11 +74,30 @@ public final class SseStreamHttpHandler implements HttpHandler, HasLogger {
   private final PermissionName requiredPermission;
   private final long keepAliveSeconds;
   private final int replayBatch;
+  private final int maxSubscribers;
+  private final java.util.concurrent.atomic.AtomicInteger activeStreams =
+      new java.util.concurrent.atomic.AtomicInteger();
 
   public SseStreamHttpHandler(SseEventBroadcaster broadcaster,
       JSentinelEventEnvelopeStore envelopeStore, EnvelopeWireCodec wireCodec,
       RestSubjectResolver subjectResolver, String requiredPermission,
       long keepAliveSeconds, int replayBatch) {
+    this(broadcaster, envelopeStore, wireCodec, subjectResolver, requiredPermission,
+        keepAliveSeconds, replayBatch, DEFAULT_MAX_SUBSCRIBERS);
+  }
+
+  /**
+   * JS-SEC-049 (CWE-400): {@code maxSubscribers} bounds the number of concurrent streams. Each SSE
+   * connection pins one blocking JDK-HttpServer thread for its lifetime (a connected-but-non-reading
+   * client blocks the write indefinitely), so without a cap an authenticated {@code events:subscribe}
+   * holder could open many streams and starve every other endpoint on the same server. Size the
+   * server's executor with a bound accounting for this cap, and consider setting the JDK
+   * {@code sun.net.httpserver.maxRspTime} for a write deadline.
+   */
+  public SseStreamHttpHandler(SseEventBroadcaster broadcaster,
+      JSentinelEventEnvelopeStore envelopeStore, EnvelopeWireCodec wireCodec,
+      RestSubjectResolver subjectResolver, String requiredPermission,
+      long keepAliveSeconds, int replayBatch, int maxSubscribers) {
     this.broadcaster = Objects.requireNonNull(broadcaster, "broadcaster");
     this.envelopeStore = envelopeStore; // optional (resume disabled when null)
     this.wireCodec = Objects.requireNonNull(wireCodec, "wireCodec");
@@ -84,6 +106,15 @@ public final class SseStreamHttpHandler implements HttpHandler, HasLogger {
         Objects.requireNonNull(requiredPermission, "requiredPermission"));
     this.keepAliveSeconds = keepAliveSeconds;
     this.replayBatch = replayBatch;
+    if (maxSubscribers < 1) {
+      throw new IllegalArgumentException("maxSubscribers must be >= 1");
+    }
+    this.maxSubscribers = maxSubscribers;
+  }
+
+  /** @return the number of currently-open SSE streams (JS-SEC-049 — operators can alarm on this). */
+  public int activeStreamCount() {
+    return activeStreams.get();
   }
 
   @Override
@@ -121,30 +152,44 @@ public final class SseStreamHttpHandler implements HttpHandler, HasLogger {
       writeStatus(exchange, HttpStatus.FORBIDDEN.code());
       return;
     }
-    exchange.getResponseHeaders().add("Content-Type", EventsRestRoutes.EVENT_STREAM_MEDIA_TYPE);
-    exchange.getResponseHeaders().add("Cache-Control", "no-cache");
-    exchange.getResponseHeaders().add("Connection", "keep-alive");
-    exchange.sendResponseHeaders(HttpStatus.OK.code(), 0);
+    // JS-SEC-049 (CWE-400): atomically reserve a stream slot BEFORE the 200 + stream. Each stream
+    // pins one server thread for its lifetime, so a full pool is refused with 503 + Retry-After
+    // rather than opening a stream that would starve other endpoints. The slot is released on every
+    // exit path in the finally below.
+    if (activeStreams.incrementAndGet() > maxSubscribers) {
+      activeStreams.decrementAndGet();
+      exchange.getResponseHeaders().add("Retry-After", "5");
+      writeStatus(exchange, HttpStatus.SERVICE_UNAVAILABLE.code());
+      return;
+    }
+    try {
+      exchange.getResponseHeaders().add("Content-Type", EventsRestRoutes.EVENT_STREAM_MEDIA_TYPE);
+      exchange.getResponseHeaders().add("Cache-Control", "no-cache");
+      exchange.getResponseHeaders().add("Connection", "keep-alive");
+      exchange.sendResponseHeaders(HttpStatus.OK.code(), 0);
 
-    BoundedQueueSseSubscriber subscriber = new BoundedQueueSseSubscriber();
-    // R042: the broadcaster registration is an AutoCloseable held by this
-    // try-with-resources, so the subscriber is removed on EVERY exit path —
-    // normal completion, client disconnect (IOException from write), interrupt
-    // or any other error — leaving no zombie subscription. The keep-alive write
-    // in streamLive() bounds detection latency to keepAliveSeconds even when no
-    // real events flow.
-    try (OutputStream out = exchange.getResponseBody();
-         AutoCloseable registration = broadcaster.register(subscriber)) {
-      replaySince(resumeCursor(exchange), out);
-      streamLive(subscriber, out);
-    } catch (IOException disconnected) {
-      logger().info("events-rest/sse-disconnect: {}", disconnected.toString());
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    } catch (Exception e) {
-      logger().warn("events-rest/sse-error: {}", e.toString());
+      BoundedQueueSseSubscriber subscriber = new BoundedQueueSseSubscriber();
+      // R042: the broadcaster registration is an AutoCloseable held by this
+      // try-with-resources, so the subscriber is removed on EVERY exit path —
+      // normal completion, client disconnect (IOException from write), interrupt
+      // or any other error — leaving no zombie subscription. The keep-alive write
+      // in streamLive() bounds detection latency to keepAliveSeconds even when no
+      // real events flow.
+      try (OutputStream out = exchange.getResponseBody();
+           AutoCloseable registration = broadcaster.register(subscriber)) {
+        replaySince(resumeCursor(exchange), out);
+        streamLive(subscriber, out);
+      } catch (IOException disconnected) {
+        logger().info("events-rest/sse-disconnect: {}", disconnected.toString());
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      } catch (Exception e) {
+        logger().warn("events-rest/sse-error: {}", e.toString());
+      } finally {
+        exchange.close();
+      }
     } finally {
-      exchange.close();
+      activeStreams.decrementAndGet();
     }
   }
 

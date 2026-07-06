@@ -127,6 +127,41 @@ class SseStreamHttpHandlerTest {
     });
   }
 
+  @Test
+  @DisplayName("JS-SEC-049: a full subscriber pool refuses a new stream with 503")
+  void concurrentCapReturns503() {
+    assertTimeoutPreemptively(java.time.Duration.ofSeconds(5), () -> {
+      SseEventBroadcaster broadcaster = new SseEventBroadcaster(new EnvelopeWireCodec());
+      RestSubjectResolver authorized = req -> Optional.of(new JSentinelSubject(
+          "u", "U", Set.of(), Set.of(new PermissionName(EventsRestRoutes.STREAM_PERMISSION))));
+      // keepAlive large so the first stream parks in poll() holding its slot; cap = 1.
+      SseStreamHttpHandler handler = new SseStreamHttpHandler(
+          broadcaster, null, new EnvelopeWireCodec(), authorized,
+          EventsRestRoutes.STREAM_PERMISSION, 3600L, 100, 1);
+
+      Thread first = new Thread(() -> {
+        try {
+          handler.handle(new CapturingExchange());
+        } catch (Exception ignored) {
+          // interrupted at teardown
+        }
+      });
+      first.setDaemon(true);
+      first.start();
+
+      // wait until the first stream has reserved the only slot
+      while (handler.activeStreamCount() < 1) {
+        Thread.sleep(5);
+      }
+
+      CapturingExchange second = new CapturingExchange();
+      handler.handle(second);
+      assertEquals(503, second.status, "a full subscriber pool must refuse with 503");
+
+      first.interrupt();
+    });
+  }
+
   /** Fake exchange whose response body throws on the first write (dead client). */
   private static final class DisconnectedExchange extends HttpExchange {
     private final Headers requestHeaders = new Headers();
