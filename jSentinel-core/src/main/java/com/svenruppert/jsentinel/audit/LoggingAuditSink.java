@@ -261,19 +261,8 @@ public final class LoggingAuditSink implements AuditSink {
    * allocates when a disallowed char is actually present.
    */
   static String scrub(String value) {
-    StringBuilder out = null;
-    for (int i = 0; i < value.length(); i++) {
-      char c = value.charAt(i);
-      if (Character.isISOControl(c) || c == ' ') {
-        if (out == null) {
-          out = new StringBuilder(value.length());
-          out.append(value, 0, i);
-        }
-        out.append('?');
-      } else if (out != null) {
-        out.append(c);
-      }
-    }
-    return out == null ? value : out.toString();
+    // JS-SEC-045: delegate to the single shared LogFieldScrubber so this sink and
+    // LoggingNotificationSender / RestAccessContextFactory cannot drift.
+    return LogFieldScrubber.scrub(value);
   }
 }

@@ -59,6 +59,26 @@ class LoggingNotificationSenderTest {
   }
 
   @Test
+  @DisplayName("JS-SEC-045: CR/LF + spaces in a field cannot forge a second NOTIFY line or key=value token")
+  void scrubsFieldForging() {
+    RecordingSlf4jLogger logger = new RecordingSlf4jLogger();
+    new LoggingNotificationSender(logger).send(new JSentinelNotification(
+        JSentinelNotification.Kind.PASSWORD_RESET_REQUESTED,
+        new SubjectId("alice"),
+        TenantId.DEFAULT,
+        Instant.parse("2026-01-01T00:00:00Z"),
+        Map.of("email", "x@evil.com\r\nNOTIFY type=PASSWORD_RESET_COMPLETED subject=admin")));
+
+    assertEquals(1, logger.messages.size());
+    String line = logger.messages.get(0);
+    assertFalse(line.contains("\n"), line);
+    assertFalse(line.contains("\r"), line);
+    // the injected " subject=admin" cannot appear as a standalone token — every space became '?'.
+    assertFalse(line.contains(" subject=admin"), line);
+    assertTrue(line.contains("x@evil.com??NOTIFY?type=PASSWORD_RESET_COMPLETED?subject=admin"), line);
+  }
+
+  @Test
   @DisplayName("null notification is silently ignored")
   void nullNotificationIgnored() {
     new LoggingNotificationSender().send(null);

@@ -16,6 +16,7 @@
  */
 package com.svenruppert.jsentinel.accountlifecycle;
 
+import com.svenruppert.jsentinel.audit.LogFieldScrubber;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,15 +75,21 @@ public final class LoggingNotificationSender implements JSentinelNotificationSen
   }
 
   private static String format(JSentinelNotification n) {
+    // JS-SEC-045 (CWE-117): scrub every attacker-influenced field (subject / tenant / attribute
+    // key + value) through the shared LogFieldScrubber before it enters this space-separated
+    // key=value NOTIFY line — the sink's javadoc claims it "mirrors LoggingAuditSink", and this is
+    // the neutralization LoggingAuditSink already applies. Without it a value containing CR/LF or a
+    // bare space could forge a second NOTIFY line or an extra key=value token.
     StringBuilder sb = new StringBuilder("NOTIFY ");
     sb.append("type=").append(n.kind().name());
-    sb.append(' ').append("subject=").append(n.subjectId().value());
-    sb.append(' ').append("tenant=").append(n.tenant().value());
+    sb.append(' ').append("subject=").append(LogFieldScrubber.scrub(n.subjectId().value()));
+    sb.append(' ').append("tenant=").append(LogFieldScrubber.scrub(n.tenant().value()));
     for (Map.Entry<String, String> entry : n.attributes().entrySet()) {
       String key = entry.getKey();
       String value = entry.getValue();
       if (value == null) continue;
-      sb.append(' ').append(key).append('=').append(isSensitive(key) ? "***" : value);
+      sb.append(' ').append(LogFieldScrubber.scrub(key)).append('=')
+          .append(isSensitive(key) ? "***" : LogFieldScrubber.scrub(value));
     }
     return sb.toString();
   }

@@ -16,6 +16,7 @@
  */
 package com.svenruppert.jsentinel.rest;
 
+import com.svenruppert.jsentinel.audit.LogFieldScrubber;
 import com.svenruppert.jsentinel.authorization.api.JSentinelSubject;
 import com.svenruppert.jsentinel.authorization.navigation.AccessContext;
 
@@ -45,9 +46,10 @@ public final class RestAccessContextFactory {
     Map<String, Object> contextAttributes = new LinkedHashMap<>(
         attributes == null ? Map.of() : attributes);
     // JS-SEC-031 (CWE-117): the request path is attacker-controlled and flows into the
-    // audit route (and any consumer of resourceName). Strip CR/LF/control chars at the
-    // adapter boundary so it cannot forge a downstream log line.
-    String safePath = scrub(request.path());
+    // audit route (and any consumer of resourceName). Neutralize CR/LF/control chars AND the
+    // space delimiter at the adapter boundary (JS-SEC-045: the shared LogFieldScrubber, so this
+    // adapter cannot drift from the audit sink) so it cannot forge a downstream log line or field.
+    String safePath = LogFieldScrubber.scrub(request.path());
     contextAttributes.put("method", request.method());
     contextAttributes.put("path", safePath);
     contextAttributes.put("queryParameters", Map.copyOf(request.queryParameters()));
@@ -59,23 +61,4 @@ public final class RestAccessContextFactory {
         contextAttributes);
   }
 
-  private static String scrub(String value) {
-    if (value == null) {
-      return null;
-    }
-    StringBuilder out = null;
-    for (int i = 0; i < value.length(); i++) {
-      char c = value.charAt(i);
-      if (Character.isISOControl(c)) {
-        if (out == null) {
-          out = new StringBuilder(value.length());
-          out.append(value, 0, i);
-        }
-        out.append('?');
-      } else if (out != null) {
-        out.append(c);
-      }
-    }
-    return out == null ? value : out.toString();
-  }
 }
