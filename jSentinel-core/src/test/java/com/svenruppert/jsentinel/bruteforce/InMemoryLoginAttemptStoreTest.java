@@ -37,6 +37,19 @@ class InMemoryLoginAttemptStoreTest {
   }
 
   @Test
+  @DisplayName("JS-SEC-048: a distinct-key spray stays bounded (oldest-first eviction)")
+  void sprayBounded() {
+    int cap = 20;
+    InMemoryLoginAttemptStore bounded = new InMemoryLoginAttemptStore(cap);
+    Instant t0 = Instant.parse("2026-01-01T00:00:00Z");
+    for (int i = 0; i < cap * 3; i++) {
+      bounded.recordFailure(key("spray-" + i, "10.0.0.9"), t0.plusSeconds(i));
+    }
+    assertTrue(bounded.trackedKeyCount() <= cap,
+        "ledger map must stay bounded, was " + bounded.trackedKeyCount());
+  }
+
+  @Test
   @DisplayName("recordFailure increments the counter and stores the timestamp")
   void recordFailureIncrements() {
     Instant t0 = Instant.parse("2026-01-01T00:00:00Z");

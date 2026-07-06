@@ -20,6 +20,7 @@ import com.svenruppert.jsentinel.audit.BruteForceLimitReached;
 import com.svenruppert.jsentinel.audit.LoginFailed;
 import com.svenruppert.jsentinel.audit.JSentinelAuditService;
 import com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver;
+import com.svenruppert.jsentinel.util.CapacityBound;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -69,6 +70,7 @@ public final class InMemoryLoginAttemptPolicy implements LoginAttemptPolicy {
   private final LoginAttemptConfiguration config;
   private final Clock clock;
   private final JSentinelAuditService auditService;
+  private final int maxEntries;
   private final ConcurrentMap<String, State> byCombinedKey = new ConcurrentHashMap<>();
   private final ConcurrentMap<String, State> byUsername = new ConcurrentHashMap<>();
 
@@ -86,9 +88,31 @@ public final class InMemoryLoginAttemptPolicy implements LoginAttemptPolicy {
   public InMemoryLoginAttemptPolicy(LoginAttemptConfiguration config,
                                     Clock clock,
                                     JSentinelAuditService auditService) {
+    this(config, clock, auditService, CapacityBound.DEFAULT_MAX_ENTRIES);
+  }
+
+  /**
+   * JS-SEC-048 (CWE-770): additionally bound the per-key maps. Both maps are keyed on
+   * attacker-controlled username / client address, so a spray of distinct throwaway usernames would
+   * otherwise grow the heap without limit (a one-shot key at {@code failures=1} is reclaimed only by
+   * a valid {@code recordSuccess}). When a map is at capacity, a new key evicts a non-locked entry —
+   * never an in-force lockout (the RF01 invariant), so the throttle cannot be sprayed away.
+   *
+   * @param maxEntries per-map key cap (shared default {@link CapacityBound#DEFAULT_MAX_ENTRIES})
+   */
+  public InMemoryLoginAttemptPolicy(LoginAttemptConfiguration config,
+                                    Clock clock,
+                                    JSentinelAuditService auditService,
+                                    int maxEntries) {
     this.config = Objects.requireNonNull(config, "config");
     this.clock = Objects.requireNonNull(clock, "clock");
     this.auditService = auditService;
+    this.maxEntries = CapacityBound.requirePositiveCapacity(maxEntries);
+  }
+
+  /** Package-visible for tests: number of tracked combined-key entries (JS-SEC-048 bound). */
+  int trackedCombinedKeyCount() {
+    return byCombinedKey.size();
   }
 
   @Override
@@ -144,10 +168,32 @@ public final class InMemoryLoginAttemptPolicy implements LoginAttemptPolicy {
   }
 
   private State recordOn(ConcurrentMap<String, State> map, String key, Instant now) {
+    enforceBound(map, key, now);
     return map.compute(key, (k, current) -> {
       State state = current == null ? State.empty() : current.expireOldFailures(now, config.window());
       return state.addFailure(now, config);
     });
+  }
+
+  /**
+   * JS-SEC-048 (CWE-770) + RF01 invariant: when {@code map} is at capacity and {@code incomingKey}
+   * is new, evict entries that are NOT currently locked, back under the bound. An in-force lockout
+   * is never evicted (a distinct-username spray must not push a victim's lock out of the map); if
+   * every remaining entry is a live lockout a transient soft overshoot is accepted — locks are
+   * time-bounded and self-reclaim.
+   */
+  private void enforceBound(ConcurrentMap<String, State> map, String incomingKey, Instant now) {
+    if (map.size() < maxEntries || map.containsKey(incomingKey)) {
+      return;
+    }
+    var it = map.entrySet().iterator();
+    while (map.size() >= maxEntries && it.hasNext()) {
+      var entry = it.next();
+      if (entry.getKey().equals(incomingKey) || entry.getValue().isLocked(now)) {
+        continue;
+      }
+      it.remove();
+    }
   }
 
   private String combinedKey(LoginAttemptContext context) {

@@ -143,6 +143,33 @@ class InMemoryLoginAttemptPolicyTest {
   }
 
   @Test
+  @DisplayName("JS-SEC-048: a distinct-username spray stays bounded and never evicts an in-force lockout")
+  void sprayBoundedPreservesLockout() {
+    Instant t = Instant.parse("2026-05-08T10:00:00Z");
+    int cap = 20;
+    InMemoryLoginAttemptPolicy policy = new InMemoryLoginAttemptPolicy(
+        FAST_CONFIG, Clock.fixed(t, ZoneOffset.UTC), new RecordingAudit(), cap);
+
+    // lock the victim (threshold-many failures)
+    for (int i = 0; i < FAST_CONFIG.failureThreshold(); i++) {
+      policy.recordFailure(ctx("victim", "10.0.0.1", t));
+    }
+    assertInstanceOf(LoginAttemptDecision.LockedOut.class,
+        policy.beforeAttempt(ctx("victim", "10.0.0.1", t)));
+
+    // spray far past the cap across distinct usernames (one failure each → never locked)
+    for (int i = 0; i < cap * 3; i++) {
+      policy.recordFailure(ctx("spray-" + i, "10.0.0.9", t));
+    }
+
+    assertTrue(policy.trackedCombinedKeyCount() <= cap + 2,
+        "combined-key map must stay bounded, was " + policy.trackedCombinedKeyCount());
+    // the victim's in-force lockout survived the eviction pressure
+    assertInstanceOf(LoginAttemptDecision.LockedOut.class,
+        policy.beforeAttempt(ctx("victim", "10.0.0.1", t)));
+  }
+
+  @Test
   @DisplayName("recordFailure emits LOGIN_FAILURE audit on every call")
   void everyFailureIsAudited() {
     RecordingAudit audit = new RecordingAudit();
