@@ -491,6 +491,22 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
             publicClient, oauth2.pkceRequired(),
             oauth2.introspectionEndpoint() != null, introspectionCacheDisabled));
 
+    // JS-SEC-056 (CWE-1188): a public client with PKCE disabled is exposed to authorization-code
+    // interception (RFC 7636). Every other security misconfig in this method is an ERROR that STRICT
+    // turns into a boot failure; PKCE-off was only surfaced via the separately-called
+    // JSentinelDiagnostics.inspect(), so STRICT could boot green on a deliberate opt-out of a secure
+    // default. Gate it the same mode-dependent way (ERROR in STRICT/PRODUCTION, INFO in local dev).
+    if (publicClient && !oauth2.pkceRequired()) {
+      Severity sev = switch (state.mode()) {
+        case STRICT, PRODUCTION -> Severity.ERROR;
+        default -> Severity.INFO;
+      };
+      warnings.add(new JSentinelBootstrapWarning(sev, "oauth2/public-client-without-pkce",
+          "OAuth2 public client (no client authentication) has PKCE disabled.",
+          "Enable PKCE with .pkceRequired(true) — a public client without PKCE is exposed to "
+              + "authorization-code interception (RFC 7636)."));
+    }
+
     services.add(new RegisteredJSentinelService(
         OAuth2State.class, OAuth2State.class, "bootstrap-oauth2", false));
   }
@@ -563,6 +579,20 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
         new com.svenruppert.jsentinel.dx.diagnostics.OidcDiagnosticState.Snapshot(
             oidc.requireNonce(), oidc.userInfoEnabled(), oidc.logoutEnabled(),
             !oidc.acrValues().isEmpty()));
+
+    // JS-SEC-056 (CWE-1188): disabling the OIDC nonce removes the code-flow replay / login-CSRF
+    // defence. Like the PKCE gate above, STRICT/PRODUCTION must hard-fail this deliberate opt-out of
+    // a secure default rather than only surfacing it via JSentinelDiagnostics.inspect().
+    if (!oidc.requireNonce()) {
+      Severity sev = switch (state.mode()) {
+        case STRICT, PRODUCTION -> Severity.ERROR;
+        default -> Severity.INFO;
+      };
+      warnings.add(new JSentinelBootstrapWarning(sev, "oidc/nonce-disabled",
+          "OIDC nonce is disabled (.requireNonce(false)).",
+          "Keep the nonce enabled — it binds the id_token to this login and defends the code flow "
+              + "against id_token replay / login-CSRF."));
+    }
 
     services.add(new RegisteredJSentinelService(
         OidcState.class, OidcState.class, "bootstrap-oidc", false));
@@ -1128,37 +1158,46 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
     // and active". They are recorded in BootstrapState for adapter-DX modules
     // to consume; surface that honestly as an INFO instead of a fake
     // registration.
+    // JS-SEC-055 (CWE-684): .rateLimit(...) / .apiKeys(...) / .refreshTokens(...) are recorded but
+    // NOT consumed by any shipped jSentinel module — the earlier INFO falsely claimed "adapter-DX
+    // modules read it from the bootstrap state", so a developer who opted into rate-limiting could
+    // ship an inert control believing it active. State the truth, and raise the severity so it is
+    // loud (WARNING) and, in STRICT, a hard boot failure — a developer cannot silently ship an inert
+    // hardening control.
+    Severity recordedNotWired = switch (state.mode()) {
+      case STRICT -> Severity.ERROR;
+      default -> Severity.WARNING;
+    };
     if (state.rateLimitPolicy() != null) {
       warnings.add(new JSentinelBootstrapWarning(
-          Severity.INFO,
+          recordedNotWired,
           "dx/rate-limit-recorded-not-wired",
           "RateLimitPolicy (" + state.rateLimitPolicy().getClass().getName()
-              + ") was recorded via .rateLimit(...) but has no global resolver "
-              + "wiring; adapter-DX modules read it from the bootstrap state.",
-          "No action needed — consume it in your adapter, or drop the call "
-              + "if nothing reads it."));
+              + ") was recorded via .rateLimit(...) but is NOT consumed by any shipped jSentinel "
+              + "module — no enforcement is wired.",
+          "Read BootstrapState / JSentinelRuntime and wire enforcement yourself, or drop the "
+              + ".rateLimit(...) call so the control is not falsely assumed active."));
     }
     if (state.apiKeyAuthenticationService() != null) {
       warnings.add(new JSentinelBootstrapWarning(
-          Severity.INFO,
+          recordedNotWired,
           "dx/api-keys-recorded-not-wired",
           "ApiKeyAuthenticationService ("
               + state.apiKeyAuthenticationService().getClass().getName()
-              + ") was recorded via .apiKeys(...) but has no global resolver "
-              + "wiring; adapter-DX modules read it from the bootstrap state.",
-          "No action needed — consume it in your adapter, or drop the call "
-              + "if nothing reads it."));
+              + ") was recorded via .apiKeys(...) but is NOT consumed by any shipped jSentinel "
+              + "module — no enforcement is wired.",
+          "Read BootstrapState / JSentinelRuntime and wire enforcement yourself, or drop the "
+              + ".apiKeys(...) call."));
     }
     if (state.tokenService() != null) {
       warnings.add(new JSentinelBootstrapWarning(
-          Severity.INFO,
+          recordedNotWired,
           "dx/refresh-tokens-recorded-not-wired",
           "TokenService (" + state.tokenService().getClass().getName()
-              + ") was recorded via .refreshTokens(...) but has no global "
-              + "resolver wiring; adapter-DX modules read it from the bootstrap "
-              + "state.",
-          "No action needed — consume it in your adapter, or drop the call "
-              + "if nothing reads it."));
+              + ") was recorded via .refreshTokens(...) but is NOT consumed by any shipped "
+              + "jSentinel module — no enforcement is wired.",
+          "Read BootstrapState / JSentinelRuntime and wire enforcement yourself, or drop the "
+              + ".refreshTokens(...) call."));
     }
   }
 

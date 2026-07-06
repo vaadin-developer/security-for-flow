@@ -1,6 +1,7 @@
 package com.svenruppert.jsentinel.dx.bootstrap;
 
 import com.svenruppert.jsentinel.dx.internal.AbstractJSentinelBootstrap;
+import com.svenruppert.jsentinel.dx.runtime.JSentinelBootstrapMode;
 import com.svenruppert.jsentinel.dx.runtime.JSentinelBootstrapWarning;
 import com.svenruppert.jsentinel.dx.runtime.RegisteredJSentinelService;
 import com.svenruppert.jsentinel.dx.runtime.Severity;
@@ -106,4 +107,18 @@ class OAuth2BootstrapTest {
     assertTrue(bootstrap.services.stream().anyMatch(s -> "bootstrap-oauth2".equals(s.source())),
         "a complete RP config registers a bootstrap-oauth2 marker service");
   }
-}
+
+  @Test
+  @DisplayName("JS-SEC-056: a public client with PKCE disabled is a STRICT-class error")
+  void publicClientWithoutPkceIsStrictError() {
+    List<JSentinelBootstrapWarning> warnings = new TestBootstrap()
+        .mode(JSentinelBootstrapMode.STRICT)
+        .oauth2(o -> o.clientId("rp")
+            .tokenEndpoint(URI.create("https://idp.example/token"))
+            .redirectUri(URI.create("https://app.example/oauth2/callback"))
+            .scope("openid")
+            .pkceRequired(false)) // public client (no client auth) + PKCE off
+        .applyOauth2();
+    assertTrue(has(warnings, "oauth2/public-client-without-pkce", Severity.ERROR),
+        "STRICT must hard-fail a public client that opted out of PKCE");
+  }

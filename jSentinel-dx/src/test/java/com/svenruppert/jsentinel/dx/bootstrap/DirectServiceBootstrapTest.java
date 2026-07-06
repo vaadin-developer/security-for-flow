@@ -93,10 +93,11 @@ class DirectServiceBootstrapTest {
     assertFalse(runtime.services().stream()
         .anyMatch(s -> RateLimitPolicy.class.equals(s.spi())),
         "an unwired DX feature must not appear as a registered service");
+    // JS-SEC-055: raised from INFO to WARNING (loud) in non-STRICT modes.
     assertTrue(runtime.warnings().stream()
         .anyMatch(w -> "dx/rate-limit-recorded-not-wired".equals(w.code())
-            && w.severity() == Severity.INFO),
-        "an unwired DX feature must surface as an explicit INFO");
+            && w.severity() == Severity.WARNING),
+        "an unwired DX feature must surface as an explicit WARNING");
   }
 
   @Test
@@ -113,7 +114,7 @@ class DirectServiceBootstrapTest {
         .anyMatch(s -> ApiKeyAuthenticationService.class.equals(s.spi())));
     assertTrue(runtime.warnings().stream()
         .anyMatch(w -> "dx/api-keys-recorded-not-wired".equals(w.code())
-            && w.severity() == Severity.INFO));
+            && w.severity() == Severity.WARNING));
   }
 
   @Test
@@ -130,7 +131,7 @@ class DirectServiceBootstrapTest {
         .anyMatch(s -> TokenService.class.equals(s.spi())));
     assertTrue(runtime.warnings().stream()
         .anyMatch(w -> "dx/refresh-tokens-recorded-not-wired".equals(w.code())
-            && w.severity() == Severity.INFO));
+            && w.severity() == Severity.WARNING));
   }
 
   @Test
@@ -167,12 +168,21 @@ class DirectServiceBootstrapTest {
             || s.spi() == TokenService.class)
         .count(),
         "recorded-not-wired features must NOT register as services");
-    // The three recorded-not-wired features each surface as an INFO.
+    // The three recorded-not-wired features each surface as a WARNING (JS-SEC-055).
     assertEquals(3, runtime.warnings().stream()
-        .filter(w -> w.severity() == Severity.INFO
+        .filter(w -> w.severity() == Severity.WARNING
             && w.code().endsWith("-recorded-not-wired"))
         .count(),
         "rateLimit / apiKeys / refreshTokens must each surface as an INFO");
+  }
+
+  @Test
+  @DisplayName("JS-SEC-055: in STRICT mode a recorded-not-wired .rateLimit(...) is a hard boot failure")
+  void strictModeRateLimitThrows() {
+    RateLimitPolicy policy = new InMemoryRateLimitPolicy(
+        new InMemoryRateLimitStore(), new NoopJSentinelAuditService(), 50, Duration.ofMinutes(1));
+    assertThrows(JSentinelBootstrapException.class,
+        () -> new TestBootstrap().mode(JSentinelBootstrapMode.STRICT).rateLimit(policy).install());
   }
 
   @Test
