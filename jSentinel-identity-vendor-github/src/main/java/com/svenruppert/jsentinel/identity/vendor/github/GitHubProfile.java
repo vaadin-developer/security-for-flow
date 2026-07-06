@@ -18,6 +18,7 @@ package com.svenruppert.jsentinel.identity.vendor.github;
 
 import com.svenruppert.jsentinel.authorization.api.JSentinelSubject;
 import com.svenruppert.jsentinel.oidc.api.ClaimsToSubjectMapper;
+import com.svenruppert.jsentinel.oidc.api.UserInfoResponse;
 import com.svenruppert.jsentinel.oidc.api.VendorProfile;
 
 import java.util.Optional;
@@ -25,11 +26,18 @@ import java.util.Set;
 
 /**
  * The GitHub vendor profile (V00.79). GitHub speaks OAuth2 but issues no ID token,
- * so identity comes from the UserInfo (the {@code /user} API): {@code login} is the
- * stable subject, {@code name} (falling back to {@code login}) is the display name.
- * The subject id is prefixed {@code github#<login>} to avoid cross-provider
- * collisions. The ID-token argument is only used as a {@code sub} fallback when no
- * UserInfo is supplied.
+ * so identity comes from the UserInfo (the {@code /user} API).
+ *
+ * <p><strong>JS-SEC-039 (CWE-290):</strong> the subject id is anchored to GitHub's
+ * <em>immutable numeric account id</em> ({@code github#<id>}), never the mutable
+ * {@code login} (username). A GitHub {@code login} can be renamed at any time and,
+ * once relinquished, immediately reclaimed by any other account — keying identity on
+ * it would let an attacker who claims a freed username inherit the previous holder's
+ * local grants. The numeric id comes from the UserInfo {@code sub} (a correct GitHub
+ * UserInfo adapter maps the numeric {@code id} into {@code sub}), falling back to the
+ * raw numeric {@code id} claim, then the id_token {@code sub}. The mapper fails closed
+ * when no stable numeric id is available rather than silently keying on {@code login}.
+ * {@code name} (falling back to {@code login}) is display-only.
  */
 public final class GitHubProfile implements VendorProfile {
 
@@ -46,13 +54,22 @@ public final class GitHubProfile implements VendorProfile {
   @Override
   public Optional<ClaimsToSubjectMapper> subjectMapper() {
     return Optional.of((idToken, userInfo) -> {
+      // JS-SEC-039 (CWE-290): key on the immutable numeric account id, never the mutable
+      // `login`. Prefer the UserInfo `sub` (numeric id), then the raw numeric `id` claim
+      // (GitHub returns `id` as a JSON number, so read it as Number — claim("id",
+      // String.class) would silently return empty and fall back to login again), then the
+      // id_token sub. Fail closed if none is present.
+      String stableId = userInfo.map(UserInfoResponse::subject).filter(s -> !s.isBlank())
+          .or(() -> userInfo.flatMap(u -> u.claim("id", Number.class))
+              .map(n -> String.valueOf(n.longValue())))
+          .or(idToken::subject)
+          .orElseThrow(() -> new IllegalArgumentException(
+              "github: no stable numeric account id available (UserInfo sub / id / id_token sub)"));
       Optional<String> login = userInfo.flatMap(u -> u.claim("login", String.class));
-      String sub = login.or(idToken::subject).orElseThrow(
-          () -> new IllegalArgumentException("github: no login / sub available"));
       String displayName = userInfo.flatMap(u -> u.claim("name", String.class))
           .or(() -> login)
-          .orElse(sub);
-      return new JSentinelSubject("github#" + sub, displayName, Set.of(), Set.of());
+          .orElse(stableId);
+      return new JSentinelSubject("github#" + stableId, displayName, Set.of(), Set.of());
     });
   }
 }

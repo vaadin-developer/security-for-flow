@@ -44,14 +44,28 @@ class GitHubProfileTest {
   }
 
   @Test
-  @DisplayName("builds the subject from the GitHub login + name in UserInfo")
-  void buildsSubjectFromUserInfo() {
+  @DisplayName("JS-SEC-039: anchors the subject to the immutable numeric id (sub), login is display-only")
+  void anchorsSubjectToNumericIdNotLogin() {
     UserInfoResponse userInfo = new UserInfoResponse("12345",
         Map.of("sub", "12345", "login", "octocat", "name", "The Octocat"));
     JSentinelSubject subject = GitHubProfile.INSTANCE.subjectMapper().orElseThrow()
         .map(placeholderIdToken(), Optional.of(userInfo));
-    assertEquals("github#octocat", subject.subjectId());
+    // the principal keys on the numeric id, NOT the reclaimable login "octocat"
+    assertEquals("github#12345", subject.subjectId());
     assertEquals("The Octocat", subject.displayName());
     assertEquals("github", GitHubProfile.INSTANCE.id());
+  }
+
+  @Test
+  @DisplayName("JS-SEC-039: falls back to the raw numeric `id` claim when `sub` is blank")
+  void fallsBackToNumericIdClaim() {
+    // a GitHub UserInfo whose `sub` was not populated but which carries the numeric `id`
+    // as a JSON number — must still key on the id, not the login.
+    UserInfoResponse userInfo = new UserInfoResponse("",
+        Map.of("id", 12345, "login", "octocat"));
+    JSentinelSubject subject = GitHubProfile.INSTANCE.subjectMapper().orElseThrow()
+        .map(placeholderIdToken(), Optional.of(userInfo));
+    assertEquals("github#12345", subject.subjectId());
+    assertEquals("octocat", subject.displayName());
   }
 }
