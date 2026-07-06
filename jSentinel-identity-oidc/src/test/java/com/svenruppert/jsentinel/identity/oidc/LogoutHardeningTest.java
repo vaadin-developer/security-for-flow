@@ -127,7 +127,23 @@ class LogoutHardeningTest {
   }
 
   private DefaultLogoutTokenValidator validator() {
-    return new DefaultLogoutTokenValidator(jwtValidator(), new InMemoryJtiStore(1000, () -> NOW));
+    // JS-SEC-041: the validator's jti-retention window is anchored on ITS clock (first-seen),
+    // pinned here to NOW so both the validator and the jti store share one deterministic clock.
+    return new DefaultLogoutTokenValidator(
+        jwtValidator(), new InMemoryJtiStore(1000, () -> NOW), () -> NOW);
+  }
+
+  /** Like {@link #sign} but WITHOUT an issueTime — an iat-less logout token. */
+  private String signNoIat(JWTClaimsSet.Builder claims) {
+    try {
+      claims.issuer(ISSUER).audience(CLIENT).jwtID("jti-noiat");
+      SignedJWT jwt = new SignedJWT(
+          new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(KID).build(), claims.build());
+      jwt.sign(new RSASSASigner(rsa));
+      return jwt.serialize();
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   private String sign(JWTClaimsSet.Builder claims) {
@@ -223,6 +239,19 @@ class LogoutHardeningTest {
     DefaultLogoutTokenValidator v = validator();
     String token = sign(logoutClaims());
     assertTrue(v.validate(token).isSuccess());
+    var err = v.validate(token).fold(ok -> null, e -> e);
+    assertInstanceOf(LogoutTokenValidationError.Replay.class, err);
+  }
+
+  @Test
+  @DisplayName("JS-SEC-041: a replayed logout token WITHOUT iat is still caught (first-seen window, not iat/EPOCH)")
+  void replayRejectedForIatLessToken() {
+    DefaultLogoutTokenValidator v = validator();
+    String token = signNoIat(logoutClaims());
+    // an iat-less logout token still validates the first time (iat is not required by this config)...
+    assertTrue(v.validate(token).isSuccess());
+    // ...and its replay MUST be caught. Previously the window was iat.orElse(EPOCH)+10min → a past
+    // expiry, so the jti store never flagged the second use (replay protection silently off).
     var err = v.validate(token).fold(ok -> null, e -> e);
     assertInstanceOf(LogoutTokenValidationError.Replay.class, err);
   }

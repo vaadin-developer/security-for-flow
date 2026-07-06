@@ -57,6 +57,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Default {@link LogoutTokenValidator} (V00.79). Composition, not inheritance: it wraps
@@ -80,6 +81,7 @@ public final class DefaultLogoutTokenValidator implements LogoutTokenValidator {
 
   private final JwtValidator jwtValidator;
   private final Optional<JtiStore> jtiStore;
+  private final Supplier<Instant> clock;
 
   /**
    * Convenience constructor that installs an in-memory single-use {@code jti} store so
@@ -88,16 +90,23 @@ public final class DefaultLogoutTokenValidator implements LogoutTokenValidator {
    * {@link JtiStore} via {@link #DefaultLogoutTokenValidator(JwtValidator, JtiStore)}.
    */
   public DefaultLogoutTokenValidator(JwtValidator jwtValidator) {
-    this(jwtValidator, Optional.of(new InMemoryJtiStore()));
+    this(jwtValidator, Optional.of(new InMemoryJtiStore()), Instant::now);
   }
 
   public DefaultLogoutTokenValidator(JwtValidator jwtValidator, JtiStore jtiStore) {
-    this(jwtValidator, Optional.of(jtiStore));
+    this(jwtValidator, Optional.of(jtiStore), Instant::now);
   }
 
-  private DefaultLogoutTokenValidator(JwtValidator jwtValidator, Optional<JtiStore> jtiStore) {
+  /** Package-visible: inject a clock so the jti-retention window is testable. */
+  DefaultLogoutTokenValidator(JwtValidator jwtValidator, JtiStore jtiStore, Supplier<Instant> clock) {
+    this(jwtValidator, Optional.of(jtiStore), clock);
+  }
+
+  private DefaultLogoutTokenValidator(
+      JwtValidator jwtValidator, Optional<JtiStore> jtiStore, Supplier<Instant> clock) {
     this.jwtValidator = Objects.requireNonNull(jwtValidator, "jwtValidator");
     this.jtiStore = Objects.requireNonNull(jtiStore, "jtiStore");
+    this.clock = Objects.requireNonNull(clock, "clock");
   }
 
   @Override
@@ -138,7 +147,12 @@ public final class DefaultLogoutTokenValidator implements LogoutTokenValidator {
 
     String issuer = jwt.issuer().orElse("");
     if (jtiStore.isPresent()) {
-      Instant expiresAt = jwt.issuedAt().orElse(Instant.EPOCH).plus(JTI_RETENTION);
+      // JS-SEC-041 (CWE-294): anchor the replay-retention window on FIRST-SEEN time, not on the
+      // token's iat. Anchoring on iat let a jti-less-iat token expire at Instant.EPOCH+10min
+      // (already past), so the JtiStore never flagged the replay — replay protection silently off;
+      // and even with iat present, iat+retention shrank the window by the token's age. now+retention
+      // makes the window depend only on when we first accepted the jti.
+      Instant expiresAt = clock.get().plus(JTI_RETENTION);
       if (!jtiStore.get().record(jti.get(), expiresAt).isSuccess()) {
         return Result.failure(new LogoutTokenValidationError.Replay());
       }
