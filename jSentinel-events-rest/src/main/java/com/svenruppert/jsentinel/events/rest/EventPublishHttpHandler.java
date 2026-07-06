@@ -29,6 +29,7 @@ import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.dependencies.core.net.HttpStatus;
 import com.svenruppert.dependencies.core.net.MediaType;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
+import com.svenruppert.jsentinel.audit.LogFieldScrubber;
 import com.svenruppert.jsentinel.authorization.api.JSentinelSubject;
 import com.svenruppert.jsentinel.authorization.api.permissions.PermissionMatcher;
 import com.svenruppert.jsentinel.authorization.api.permissions.PermissionName;
@@ -123,7 +124,18 @@ public final class EventPublishHttpHandler implements HttpHandler, HasLogger {
       return;
     }
 
-    EventPublishOutcome outcome = publishService.publish(request.bodyAsUtf8());
+    // JS-SEC-054 (CWE-755) belt-and-braces: verify() is now a total function, but never let an
+    // unexpected RuntimeException escape handle() — that would abort the exchange (no clean status,
+    // exchange.close() skipped) and log a stack trace with un-scrubbed attacker input. Log a
+    // scrubbed message and return a clean 500 so exchange.close() always runs.
+    EventPublishOutcome outcome;
+    try {
+      outcome = publishService.publish(request.bodyAsUtf8());
+    } catch (RuntimeException unexpected) {
+      logger().warn("events-rest/publish-failed: {}", LogFieldScrubber.scrub(unexpected.toString()));
+      write(exchange, HttpStatus.INTERNAL_SERVER_ERROR.code(), "Publish failed");
+      return;
+    }
     write(exchange, outcome.statusCode(), outcome.body());
   }
 

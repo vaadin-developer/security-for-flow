@@ -32,6 +32,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("EventPublishService")
 class EventPublishServiceTest {
@@ -50,6 +51,18 @@ class EventPublishServiceTest {
     EventPublishOutcome outcome = service(fx.newConsumePipeline()).publish(wire.encode(env));
     assertEquals(HttpStatus.ACCEPTED.code(), outcome.statusCode());
     assertEquals(EventPublishBodies.ACCEPTED, outcome.body());
+  }
+
+  @Test
+  @DisplayName("JS-SEC-054: a bogus payloadHashAlgorithm yields a clean 4xx, not a thrown exception")
+  void bogusPayloadHashAlgorithmDoesNotThrow() {
+    EventsRestFixtures fx = new EventsRestFixtures();
+    // tamper the wire so the (attacker-influenced, any-non-blank) payloadHashAlgorithm is an
+    // unavailable JCA name — previously verify() threw an uncaught IllegalStateException here.
+    String tampered = wire.encode(fx.signedEnvelope()).replace("SHA-256", "NoSuchHashAlg-xyz");
+    EventPublishOutcome outcome = service(fx.newConsumePipeline()).publish(tampered);
+    assertTrue(outcome.statusCode() >= 400 && outcome.statusCode() < 500,
+        "a bogus hash algorithm must map to a clean 4xx, was " + outcome.statusCode());
   }
 
   @Test

@@ -116,15 +116,30 @@ public final class ConsumePipeline {
       return new JSentinelEventVerificationResult.UnknownKey(keyId);
     }
 
-    String recomputedHash = PayloadDigest.hash(envelope.payloadHashAlgorithm(),
-        envelope.canonicalPayload());
-    if (!recomputedHash.equals(envelope.canonicalPayloadHash())) {
+    // JS-SEC-054 (CWE-755): payloadHashAlgorithm / signatureAlgorithm accept any non-blank string at
+    // decode, so resolve them SOFTLY — an unavailable digest or an unregistered signature id must
+    // map to a fail-closed verification result, never an uncaught IllegalState/IAE escaping the
+    // documented-total verify(). An unavailable digest is treated as a hash mismatch (fail closed).
+    var recomputedHash = PayloadDigest.tryHash(
+        envelope.payloadHashAlgorithm(), envelope.canonicalPayload());
+    if (recomputedHash.isEmpty() || !recomputedHash.get().equals(envelope.canonicalPayloadHash())) {
       return new JSentinelEventVerificationResult.PayloadHashMismatch(envelope.envelopeId());
     }
 
-    SignatureAlgorithm algorithm = signatureAlgorithms.require(envelope.signatureAlgorithm());
+    var maybeAlgorithm = signatureAlgorithms.find(envelope.signatureAlgorithm());
+    if (maybeAlgorithm.isEmpty()) {
+      return new JSentinelEventVerificationResult.InvalidSignature("unsupported signature algorithm");
+    }
+    SignatureAlgorithm algorithm = maybeAlgorithm.get();
     byte[] signatureBase = EnvelopeSignatureBase.compute(envelope);
-    if (!algorithm.verify(signatureBase, envelope.signature(), publicKey.get())) {
+    boolean verified;
+    try {
+      verified = algorithm.verify(signatureBase, envelope.signature(), publicKey.get());
+    } catch (RuntimeException verifyFailure) {
+      // e.g. a key/algorithm-type mismatch surfaced as a SignatureOperationException — fail closed.
+      return new JSentinelEventVerificationResult.InvalidSignature("signature verification failed");
+    }
+    if (!verified) {
       return new JSentinelEventVerificationResult.InvalidSignature(
           "signature does not verify under key " + keyId.value());
     }

@@ -30,6 +30,7 @@ import com.svenruppert.jsentinel.events.api.PayloadHashAlgorithm;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.Optional;
 
 /**
  * Computes the canonical-payload hash bound into the envelope (Konzept §342).
@@ -46,6 +47,22 @@ final class PayloadDigest {
     } catch (NoSuchAlgorithmException e) {
       throw new IllegalStateException(
           "Payload hash algorithm unavailable: " + algorithm.value(), e);
+    }
+  }
+
+  /**
+   * JS-SEC-054 (CWE-755): soft variant for the verify path. The envelope carries an
+   * attacker-influenced {@code payloadHashAlgorithm} that accepts any non-blank string, so an
+   * unavailable JCA name must yield a fail-closed verification result rather than an uncaught
+   * {@link IllegalStateException} escaping the (documented-total) {@code verify()}.
+   *
+   * @return the hex digest, or empty if the algorithm is unavailable
+   */
+  static Optional<String> tryHash(PayloadHashAlgorithm algorithm, byte[] canonicalPayload) {
+    try {
+      return Optional.of(hash(algorithm, canonicalPayload));
+    } catch (RuntimeException unavailable) {
+      return Optional.empty();
     }
   }
 }
