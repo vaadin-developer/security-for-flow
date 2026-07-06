@@ -66,6 +66,34 @@ class StoreBackedRememberMeServiceTest {
   }
 
   @Test
+  @DisplayName("JS-SEC-057: a non-deterministic (salted) PasswordHasher is rejected loudly at construction")
+  void saltedHasherRejectedAtConstruction() {
+    InMemoryRememberMeTokenStore store = new InMemoryRememberMeTokenStore();
+    AtomicLong salt = new AtomicLong();
+    // a salted KDF returns a different hash for the same input each call — a remember-me token
+    // hashed at issue could then never be looked up at validate (silent persistent-login outage).
+    PasswordHasher salted = new PasswordHasher() {
+      @Override public String hash(char[] raw) {
+        return "s" + salt.incrementAndGet() + ":" + new String(raw);
+      }
+      @Override public boolean verify(char[] raw, String stored) {
+        return false;
+      }
+    };
+    assertThrows(IllegalArgumentException.class,
+        () -> new StoreBackedRememberMeService(store, salted),
+        "a non-deterministic hasher must fail at construction, not silently break every cookie");
+  }
+
+  @Test
+  @DisplayName("JS-SEC-057: a deterministic TokenHasher constructs without complaint")
+  void deterministicTokenHasherAccepted() {
+    InMemoryRememberMeTokenStore store = new InMemoryRememberMeTokenStore();
+    // does not throw
+    new StoreBackedRememberMeService(store, new com.svenruppert.jsentinel.credential.token.Sha256TokenHasher());
+  }
+
+  @Test
   @DisplayName("issue stores only the hash; plain token is returned exactly once")
   void issueStoresHash() {
     InMemoryRememberMeTokenStore store = new InMemoryRememberMeTokenStore();

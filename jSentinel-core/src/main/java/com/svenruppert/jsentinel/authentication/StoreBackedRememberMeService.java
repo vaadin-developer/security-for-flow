@@ -18,6 +18,8 @@ package com.svenruppert.jsentinel.authentication;
 
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.authorization.api.tenant.TenantId;
+import com.svenruppert.jsentinel.credential.token.TokenHasher;
+import com.svenruppert.jsentinel.credential.token.TokenHashers;
 import com.svenruppert.jsentinel.logout.SubjectId;
 
 import java.security.SecureRandom;
@@ -57,22 +59,21 @@ public final class StoreBackedRememberMeService {
   public static final int DEFAULT_TOKEN_BYTES = 32;
 
   private final RememberMeTokenStore store;
-  private final PasswordHasher hasher;
+  private final TokenHasher hasher;
   private final TenantId tenant;
   private final Clock clock;
   private final Supplier<String> tokenSource;
 
   /**
    * Convenience constructor: binds to {@link TenantId#DEFAULT},
-   * uses a system {@link Clock} and the default 256-bit token
-   * source.
+   * uses a system {@link Clock} and the default 256-bit token source.
    *
    * @param store  backing token store; non-null
-   * @param hasher password hasher used to hash tokens before
-   *               persisting them; non-null
+   * @param hasher deterministic {@link TokenHasher} (e.g. {@code Sha256TokenHasher})
+   *               used to hash tokens before persisting them; non-null
    */
   public StoreBackedRememberMeService(RememberMeTokenStore store,
-                                      PasswordHasher hasher) {
+                                      TokenHasher hasher) {
     this(store, hasher, TenantId.DEFAULT, Clock.systemUTC(), defaultTokenSource());
   }
 
@@ -80,17 +81,15 @@ public final class StoreBackedRememberMeService {
    * Full constructor.
    *
    * @param store       backing token store; non-null
-   * @param hasher      password hasher used to hash tokens before
-   *                    persisting them; non-null
-   * @param tenant      tenant scope; {@code null} becomes
-   *                    {@link TenantId#DEFAULT}
+   * @param hasher      deterministic {@link TokenHasher} used to hash tokens
+   *                    before persisting them; non-null
+   * @param tenant      tenant scope; {@code null} becomes {@link TenantId#DEFAULT}
    * @param clock       time source; non-null
-   * @param tokenSource supplier producing the plain token strings
-   *                    issued to clients; non-null and must return
-   *                    non-blank values
+   * @param tokenSource supplier producing the plain token strings issued to
+   *                    clients; non-null and must return non-blank values
    */
   public StoreBackedRememberMeService(RememberMeTokenStore store,
-                                      PasswordHasher hasher,
+                                      TokenHasher hasher,
                                       TenantId tenant,
                                       Clock clock,
                                       Supplier<String> tokenSource) {
@@ -99,6 +98,38 @@ public final class StoreBackedRememberMeService {
     this.tenant = tenant == null ? TenantId.DEFAULT : tenant;
     this.clock = requireNonNull(clock, "clock must not be null");
     this.tokenSource = requireNonNull(tokenSource, "tokenSource must not be null");
+  }
+
+  /**
+   * JS-SEC-057 (CWE-665): deprecated {@link PasswordHasher} overload. A remember-me token is looked
+   * up by its hash, so the hasher MUST be deterministic; a salted KDF would make {@code validate}
+   * recompute a different hash and silently fail every cookie. This routes through
+   * {@link TokenHashers#fromPasswordHasher(PasswordHasher)}, which rejects a non-deterministic hasher
+   * loudly at construction instead of a silent runtime outage — bringing this service to parity with
+   * the four V00.75.10 token services (ApiKey / Token / PasswordReset / EmailVerification).
+   *
+   * @deprecated pass a {@link TokenHasher} (e.g. {@code Sha256TokenHasher}) instead.
+   */
+  @Deprecated(since = "00.79.41", forRemoval = true)
+  public StoreBackedRememberMeService(RememberMeTokenStore store,
+                                      PasswordHasher hasher) {
+    this(store, TokenHashers.fromPasswordHasher(hasher),
+        TenantId.DEFAULT, Clock.systemUTC(), defaultTokenSource());
+  }
+
+  /**
+   * JS-SEC-057 (CWE-665): deprecated {@link PasswordHasher} full-constructor overload — see
+   * {@link #StoreBackedRememberMeService(RememberMeTokenStore, PasswordHasher)}.
+   *
+   * @deprecated pass a {@link TokenHasher} instead.
+   */
+  @Deprecated(since = "00.79.41", forRemoval = true)
+  public StoreBackedRememberMeService(RememberMeTokenStore store,
+                                      PasswordHasher hasher,
+                                      TenantId tenant,
+                                      Clock clock,
+                                      Supplier<String> tokenSource) {
+    this(store, TokenHashers.fromPasswordHasher(hasher), tenant, clock, tokenSource);
   }
 
   /**
