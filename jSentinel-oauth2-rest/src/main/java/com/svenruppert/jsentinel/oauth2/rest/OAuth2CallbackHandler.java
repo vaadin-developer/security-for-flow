@@ -43,8 +43,8 @@ package com.svenruppert.jsentinel.oauth2.rest;
 
 import com.svenruppert.functional.result.Result;
 import com.svenruppert.jsentinel.oauth2.api.AuthorizationCodeFlow;
+import com.svenruppert.jsentinel.oauth2.api.CallbackResult;
 import com.svenruppert.jsentinel.oauth2.api.OAuth2Error;
-import com.svenruppert.jsentinel.oauth2.api.TokenResponse;
 import com.svenruppert.jsentinel.rest.RestHandler;
 import com.svenruppert.jsentinel.rest.RestRequest;
 import com.svenruppert.jsentinel.rest.RestResponse;
@@ -76,10 +76,15 @@ import java.util.Optional;
  */
 public final class OAuth2CallbackHandler implements RestHandler {
 
-  /** Receives the obtained tokens (e.g. binds them into a session / store). */
+  /**
+   * Receives the callback outcome (e.g. binds the tokens into a session / store). JS-SEC-059: the
+   * argument is a {@link CallbackResult} — {@code result.tokens()} plus the stored {@code nonce()}
+   * and {@code resumeTarget()} — so a sink that validates the {@code id_token} can enforce the
+   * nonce via {@code IdTokenExpectations.of(issuer, audience, result.nonce())}.
+   */
   @FunctionalInterface
   public interface TokenSink {
-    void accept(TokenResponse tokens, RestRequest request);
+    void accept(CallbackResult result, RestRequest request);
   }
 
   private final AuthorizationCodeFlow flow;
@@ -102,7 +107,7 @@ public final class OAuth2CallbackHandler implements RestHandler {
     AuthorizationCodeFlow.CallbackParams params = new AuthorizationCodeFlow.CallbackParams(
         opt(query.get("code")), state, opt(query.get("error")), opt(query.get("error_description")));
 
-    Result<TokenResponse, OAuth2Error> result = flow.handleCallback(params);
+    Result<CallbackResult, OAuth2Error> result = flow.handleCallback(params);
     if (result.isSuccess()) {
       tokenSink.accept(result.toOptional().orElseThrow(), request);
       response.status(204);

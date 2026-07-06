@@ -53,7 +53,7 @@ import com.svenruppert.jsentinel.oauth2.JdkInMemoryStateStore;
 import com.svenruppert.jsentinel.oauth2.api.AuthorizationCodeFlow;
 import com.svenruppert.jsentinel.oauth2.api.ClientAuthentication;
 import com.svenruppert.jsentinel.oauth2.api.OAuth2ClientConfig;
-import com.svenruppert.jsentinel.oauth2.api.TokenResponse;
+import com.svenruppert.jsentinel.oauth2.api.CallbackResult;
 import com.svenruppert.jsentinel.rest.RestRequest;
 import com.svenruppert.jsentinel.rest.RestResponse;
 import com.sun.net.httpserver.HttpServer;
@@ -161,8 +161,8 @@ class OAuth2CallbackHandlerTest {
     AuthorizationCodeFlow flow = flow(store);
     String state = flow.startRequest(AuthorizationCodeFlow.StartRequestParams.empty()).stateKey();
 
-    AtomicReference<TokenResponse> captured = new AtomicReference<>();
-    OAuth2CallbackHandler handler = new OAuth2CallbackHandler(flow, (tokens, req) -> captured.set(tokens));
+    AtomicReference<CallbackResult> captured = new AtomicReference<>();
+    OAuth2CallbackHandler handler = new OAuth2CallbackHandler(flow, (result, req) -> captured.set(result));
 
     Map<String, String> query = new HashMap<>();
     query.put("code", "auth-code-xyz");
@@ -173,7 +173,8 @@ class OAuth2CallbackHandlerTest {
     assertEquals(204, response.status);
     assertNull(response.body, "tokens must never be written to the response body");
     assertNotNull(captured.get());
-    assertEquals("AT-rest", captured.get().accessToken());
+    // JS-SEC-059: the sink receives the CallbackResult (tokens + stored nonce/resumeTarget).
+    assertEquals("AT-rest", captured.get().tokens().accessToken());
   }
 
   @Test

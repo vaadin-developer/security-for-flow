@@ -47,7 +47,7 @@ import com.svenruppert.jsentinel.oauth2.api.ClientAuthentication;
 import com.svenruppert.jsentinel.oauth2.api.OAuth2ClientConfig;
 import com.svenruppert.jsentinel.oauth2.api.OAuth2Error;
 import com.svenruppert.jsentinel.oauth2.api.StateEntry;
-import com.svenruppert.jsentinel.oauth2.api.TokenResponse;
+import com.svenruppert.jsentinel.oauth2.api.CallbackResult;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,6 +66,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -144,14 +145,14 @@ class HttpAuthorizationCodeFlowTest {
     HttpAuthorizationCodeFlow flow = flow(store);
     String state = flow.startRequest(AuthorizationCodeFlow.StartRequestParams.empty()).stateKey();
 
-    Result<TokenResponse, OAuth2Error> r = flow.handleCallback(
+    Result<CallbackResult, OAuth2Error> r = flow.handleCallback(
         new AuthorizationCodeFlow.CallbackParams(Optional.of("auth-code"), state, Optional.empty(), Optional.empty()));
-    TokenResponse tr = r.toOptional().orElseThrow(() -> new AssertionError("expected success, got " + r));
-    assertTrue(tr.accessToken().equals("AT-flow"));
+    CallbackResult cr = r.toOptional().orElseThrow(() -> new AssertionError("expected success, got " + r));
+    assertTrue(cr.tokens().accessToken().equals("AT-flow"));
     assertTrue(store.size() == 0, "state must be consumed");
 
     // replay the same state -> StateInvalid (single-use)
-    Result<TokenResponse, OAuth2Error> replay = flow.handleCallback(
+    Result<CallbackResult, OAuth2Error> replay = flow.handleCallback(
         new AuthorizationCodeFlow.CallbackParams(Optional.of("auth-code"), state, Optional.empty(), Optional.empty()));
     assertInstanceOf(OAuth2Error.StateInvalid.class, replay.map(t -> (OAuth2Error) null).getOrElse(e -> e));
   }
@@ -160,9 +161,28 @@ class HttpAuthorizationCodeFlowTest {
   @DisplayName("an error on the callback maps to AuthorizationDenied without a token-endpoint call")
   void callbackErrorMapsToDenied() {
     JdkInMemoryStateStore store = new JdkInMemoryStateStore(100, () -> NOW);
-    Result<TokenResponse, OAuth2Error> r = flow(store).handleCallback(
+    Result<CallbackResult, OAuth2Error> r = flow(store).handleCallback(
         new AuthorizationCodeFlow.CallbackParams(Optional.empty(), "any", Optional.of("access_denied"), Optional.empty()));
     assertInstanceOf(OAuth2Error.AuthorizationDenied.class, r.map(t -> (OAuth2Error) null).getOrElse(e -> e));
+  }
+
+  @Test
+  @DisplayName("JS-SEC-059: handleCallback surfaces the stored nonce + resumeTarget for id_token binding")
+  void handleCallbackSurfacesNonceAndResumeTarget() {
+    JdkInMemoryStateStore store = new JdkInMemoryStateStore(100, () -> NOW);
+    HttpAuthorizationCodeFlow flow = flow(store);
+    java.net.URI resume = java.net.URI.create("/dashboard");
+    String state = flow.startRequest(new AuthorizationCodeFlow.StartRequestParams(
+        java.util.Set.of(), Map.of(), Optional.of("nonce-abc"), Optional.of(resume))).stateKey();
+
+    CallbackResult cr = flow.handleCallback(new AuthorizationCodeFlow.CallbackParams(
+            Optional.of("auth-code"), state, Optional.empty(), Optional.empty()))
+        .toOptional().orElseThrow();
+    // the nonce (and resumeTarget) sent to the OP survive the single-use state consumption, so the
+    // caller can enforce id_token nonce binding — previously both were silently dropped.
+    assertEquals(Optional.of("nonce-abc"), cr.nonce());
+    assertEquals(Optional.of(resume), cr.resumeTarget());
+    assertEquals("AT-flow", cr.tokens().accessToken());
   }
 
   @Test

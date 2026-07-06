@@ -44,6 +44,7 @@ package com.svenruppert.jsentinel.oauth2;
 import com.svenruppert.functional.result.Result;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.oauth2.api.AuthorizationCodeFlow;
+import com.svenruppert.jsentinel.oauth2.api.CallbackResult;
 import com.svenruppert.jsentinel.oauth2.api.OAuth2ClientConfig;
 import com.svenruppert.jsentinel.oauth2.api.OAuth2Error;
 import com.svenruppert.jsentinel.oauth2.api.PkceChallenge;
@@ -51,7 +52,6 @@ import com.svenruppert.jsentinel.oauth2.api.PkceVerifier;
 import com.svenruppert.jsentinel.oauth2.api.StateEntry;
 import com.svenruppert.jsentinel.oauth2.api.StateStore;
 import com.svenruppert.jsentinel.oauth2.api.TokenEndpointClient;
-import com.svenruppert.jsentinel.oauth2.api.TokenResponse;
 
 import java.net.URI;
 import java.net.URLEncoder;
@@ -139,7 +139,7 @@ public final class HttpAuthorizationCodeFlow implements AuthorizationCodeFlow {
   }
 
   @Override
-  public Result<TokenResponse, OAuth2Error> handleCallback(CallbackParams params) {
+  public Result<CallbackResult, OAuth2Error> handleCallback(CallbackParams params) {
     Objects.requireNonNull(params, "params");
     if (params.error().isPresent()) {
       return Result.failure(new OAuth2Error.AuthorizationDenied(params.error().get()));
@@ -151,10 +151,15 @@ public final class HttpAuthorizationCodeFlow implements AuthorizationCodeFlow {
     if (params.code().isEmpty()) {
       return Result.failure(new OAuth2Error.StateInvalid("callback carried neither code nor error"));
     }
+    // JS-SEC-059: the single-use state was just consumed, so this is the only point the stored
+    // nonce + resumeTarget can be recovered — surface them alongside the tokens so the caller can
+    // bind the id_token to the nonce (IdTokenExpectations.of(iss, aud, nonce)).
+    StateEntry state = entry.get();
     return tokenEndpoint.exchangeCode(
-        params.code().get(),
-        config.redirectUri().orElseThrow(),
-        PkceVerifier.of(entry.get().pkceVerifier()));
+            params.code().get(),
+            config.redirectUri().orElseThrow(),
+            PkceVerifier.of(state.pkceVerifier()))
+        .map(tokens -> new CallbackResult(tokens, state.nonce(), state.resumeTarget()));
   }
 
   private static String randomToken() {

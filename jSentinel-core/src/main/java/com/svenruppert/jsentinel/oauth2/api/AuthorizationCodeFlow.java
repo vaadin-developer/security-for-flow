@@ -38,8 +38,14 @@ public interface AuthorizationCodeFlow {
   /** Builds the authorization request (redirect URI + the state key bound in the store). */
   AuthorizationRequest startRequest(StartRequestParams params);
 
-  /** Validates + consumes the callback state and exchanges the code for tokens. */
-  Result<TokenResponse, OAuth2Error> handleCallback(CallbackParams params);
+  /**
+   * Validates + consumes the callback state and exchanges the code for tokens.
+   *
+   * <p>JS-SEC-059: returns a {@link CallbackResult} rather than a bare {@link TokenResponse} so the
+   * stored OIDC {@code nonce} and {@code resumeTarget} survive the single-use state consumption and
+   * the caller can bind the {@code id_token} to the nonce.
+   */
+  Result<CallbackResult, OAuth2Error> handleCallback(CallbackParams params);
 
   /** Inputs for {@link #startRequest}. */
   record StartRequestParams(

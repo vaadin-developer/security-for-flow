@@ -43,8 +43,8 @@ package com.svenruppert.jsentinel.oauth2.vaadin;
 
 import com.svenruppert.functional.result.Result;
 import com.svenruppert.jsentinel.oauth2.api.AuthorizationCodeFlow;
+import com.svenruppert.jsentinel.oauth2.api.CallbackResult;
 import com.svenruppert.jsentinel.oauth2.api.OAuth2Error;
-import com.svenruppert.jsentinel.oauth2.api.TokenResponse;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
@@ -71,8 +71,13 @@ public abstract class AbstractOAuth2CallbackView extends Div implements BeforeEn
   /** @return the configured authorization-code flow (state store + token client). */
   protected abstract AuthorizationCodeFlow flow();
 
-  /** Binds the obtained tokens (e.g. into the session / subject store). */
-  protected abstract void onTokens(TokenResponse tokens);
+  /**
+   * Binds the callback outcome (e.g. into the session / subject store). JS-SEC-059: the argument is
+   * a {@link CallbackResult} — {@code result.tokens()} plus the stored {@code nonce()} and
+   * {@code resumeTarget()} — so an overriding view that validates the {@code id_token} can enforce
+   * the nonce via {@code IdTokenExpectations.of(issuer, audience, result.nonce())}.
+   */
+  protected abstract void onTokens(CallbackResult result);
 
   /** @return the route to forward to after a successful login. */
   protected abstract String successTarget();
@@ -94,7 +99,7 @@ public abstract class AbstractOAuth2CallbackView extends Div implements BeforeEn
         opt(first(query, "code")), state, opt(first(query, "error")),
         opt(first(query, "error_description")));
 
-    Result<TokenResponse, OAuth2Error> result = flow().handleCallback(params);
+    Result<CallbackResult, OAuth2Error> result = flow().handleCallback(params);
     if (result.isSuccess()) {
       onTokens(result.toOptional().orElseThrow());
       event.forwardTo(successTarget());
