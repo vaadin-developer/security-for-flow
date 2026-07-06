@@ -50,4 +50,24 @@ class OAuth2JsonScopeTest {
     assertEquals(Set.of(), OAuth2Json.parseScopes(null));
     assertEquals(Set.of(), OAuth2Json.parseScopes("   "));
   }
+
+  @Test
+  @DisplayName("JS-SEC-043: stringOrArray reads a scalar `aud` as a single-element set")
+  void audScalar() {
+    assertEquals(Set.of("rs-a"),
+        OAuth2Json.stringOrArray("{\"active\":true,\"aud\":\"rs-a\"}", "aud"));
+  }
+
+  @Test
+  @DisplayName("JS-SEC-043: stringOrArray reads an array-form `aud` as all its elements (was silently dropped)")
+  void audArray() {
+    assertEquals(Set.of("rs-a", "rs-b"),
+        OAuth2Json.stringOrArray("{\"active\":true,\"aud\":[\"rs-a\",\"rs-b\"],\"iss\":\"op\"}", "aud"));
+  }
+
+  @Test
+  @DisplayName("JS-SEC-043: an absent `aud` yields an empty set (consumers must fail closed)")
+  void audAbsent() {
+    assertEquals(Set.of(), OAuth2Json.stringOrArray("{\"active\":true}", "aud"));
+  }
 }

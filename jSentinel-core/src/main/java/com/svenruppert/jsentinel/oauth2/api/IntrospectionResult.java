@@ -37,7 +37,7 @@ public record IntrospectionResult(
     Optional<Instant> expiresAt,
     Optional<Instant> issuedAt,
     Optional<String> tokenType,
-    Optional<String> audience,
+    Set<String> audience,
     Optional<String> issuer,
     Optional<String> jti) {
 
@@ -48,7 +48,11 @@ public record IntrospectionResult(
     Objects.requireNonNull(expiresAt, "expiresAt");
     Objects.requireNonNull(issuedAt, "issuedAt");
     Objects.requireNonNull(tokenType, "tokenType");
-    Objects.requireNonNull(audience, "audience");
+    // JS-SEC-043 (CWE-20): audience is a Set, not Optional<String> — RFC 7662 §2.2 permits `aud`
+    // as a JSON string OR an array of strings (Keycloak/Auth0/Okta emit the array), which an
+    // Optional<String> silently dropped. A consumer that enforces audience must treat an EMPTY
+    // set as fail-closed for its own resource server, not accept-if-absent.
+    audience = Set.copyOf(Objects.requireNonNull(audience, "audience"));
     Objects.requireNonNull(issuer, "issuer");
     Objects.requireNonNull(jti, "jti");
   }
@@ -56,7 +60,7 @@ public record IntrospectionResult(
   /** An inactive (rejected) introspection result. */
   public static IntrospectionResult inactive() {
     return new IntrospectionResult(false, Set.of(), Optional.empty(), Optional.empty(),
-        Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),
+        Optional.empty(), Optional.empty(), Optional.empty(), Set.of(),
         Optional.empty(), Optional.empty());
   }
 }

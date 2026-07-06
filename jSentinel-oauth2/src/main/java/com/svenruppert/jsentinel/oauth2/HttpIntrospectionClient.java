@@ -159,7 +159,7 @@ public final class HttpIntrospectionClient implements IntrospectionClient {
         OAuth2Json.longValue(body, "exp").map(Instant::ofEpochSecond),
         OAuth2Json.longValue(body, "iat").map(Instant::ofEpochSecond),
         OAuth2Json.string(body, "token_type"),
-        OAuth2Json.string(body, "aud"),
+        OAuth2Json.stringOrArray(body, "aud"),
         OAuth2Json.string(body, "iss"),
         OAuth2Json.string(body, "jti"));
   }

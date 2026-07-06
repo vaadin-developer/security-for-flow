@@ -107,6 +107,83 @@ public final class OAuth2Json {
         .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
+  /**
+   * JS-SEC-043 (CWE-20): reads a top-level claim that RFC 7662 / RFC 7519 permit as EITHER a JSON
+   * string OR an array of strings (notably {@code aud}). A scalar string yields a single-element
+   * set; an array yields all of its string elements (non-string elements skipped); an absent or
+   * otherwise-shaped value yields an empty set. Mirrors the String-or-array tolerance the JWT
+   * {@code aud} path already has, so the opaque-token introspection path no longer silently drops
+   * an array-form audience.
+   *
+   * @param body the JSON body
+   * @param key  the top-level key
+   * @return the audience values, never {@code null}
+   */
+  public static Set<String> stringOrArray(String body, String key) {
+    Optional<String> scalar = string(body, key);
+    if (scalar.isPresent()) {
+      return Set.of(scalar.get());
+    }
+    return arrayStrings(body, key);
+  }
+
+  private static Set<String> arrayStrings(String body, String key) {
+    if (body == null) {
+      return Set.of();
+    }
+    int n = body.length();
+    int i = body.indexOf('{');
+    if (i < 0) {
+      return Set.of();
+    }
+    i++;
+    int depth = 1;
+    int[] end = new int[1];
+    while (i < n && depth >= 1) {
+      char c = body.charAt(i);
+      if (c == '"') {
+        String token = readString(body, i, end);
+        int j = end[0];
+        if (depth == 1) {
+          int k = skipWs(body, j);
+          if (k < n && body.charAt(k) == ':' && token.equals(key)) {
+            int v = skipWs(body, k + 1);
+            return (v < n && body.charAt(v) == '[') ? readStringArray(body, v + 1) : Set.of();
+          }
+        }
+        i = j;
+        continue;
+      }
+      if (c == '{' || c == '[') {
+        depth++;
+      } else if (c == '}' || c == ']') {
+        depth--;
+      }
+      i++;
+    }
+    return Set.of();
+  }
+
+  private static Set<String> readStringArray(String body, int at) {
+    int n = body.length();
+    Set<String> out = new LinkedHashSet<>();
+    int[] end = new int[1];
+    int i = at;
+    while (i < n) {
+      char c = body.charAt(i);
+      if (c == ']') {
+        break;
+      }
+      if (c == '"') {
+        out.add(readString(body, i, end));
+        i = end[0];
+        continue;
+      }
+      i++;
+    }
+    return Set.copyOf(out);
+  }
+
   private static Optional<String> topLevelValue(String body, String key, boolean wantString) {
     if (body == null) {
       return Optional.empty();
