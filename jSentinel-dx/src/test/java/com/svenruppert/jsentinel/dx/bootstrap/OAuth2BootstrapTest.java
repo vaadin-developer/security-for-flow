@@ -122,3 +122,4 @@ class OAuth2BootstrapTest {
     assertTrue(has(warnings, "oauth2/public-client-without-pkce", Severity.ERROR),
         "STRICT must hard-fail a public client that opted out of PKCE");
   }
+}

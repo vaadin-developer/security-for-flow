@@ -17,6 +17,7 @@
 package com.svenruppert.jsentinel.authentication;
 
 import com.svenruppert.jsentinel.authorization.api.tenant.TenantId;
+import com.svenruppert.jsentinel.credential.token.TokenHasher;
 import com.svenruppert.jsentinel.logout.SubjectId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -234,7 +235,7 @@ class StoreBackedRememberMeServiceTest {
     assertThrows(NullPointerException.class,
         () -> new StoreBackedRememberMeService(null, hasher));
     assertThrows(NullPointerException.class,
-        () -> new StoreBackedRememberMeService(store, null));
+        () -> new StoreBackedRememberMeService(store, (TokenHasher) null));
     assertThrows(NullPointerException.class,
         () -> service.issue(null, Duration.ofMinutes(1)));
     assertThrows(NullPointerException.class,
