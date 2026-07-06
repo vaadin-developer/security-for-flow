@@ -51,14 +51,12 @@ public final class PassThroughStrategy implements OutboundTokenStrategy {
   @Override
   public Optional<HeaderValue> resolve(OutboundCall call,
                                        Optional<TokenCredential> inbound) {
-    if (inbound.isEmpty()) {
+    // JS-SEC-044 (CWE-522): only forward access-token-shaped credentials; a RefreshToken / ApiKey
+    // (Class-A secrets) must never leave as a bearer header. Defer to the single shared decision on
+    // TokenCredential so this strategy cannot drift from TokenExchangeStrategy.
+    if (inbound.isEmpty() || !inbound.get().isForwardableAsSubjectToken()) {
       return Optional.empty();
     }
-    return switch (inbound.get()) {
-      case BearerToken b -> Optional.of(new HeaderValue("Authorization", "Bearer " + b.value()));
-      case OidcAccessToken o -> Optional.of(new HeaderValue("Authorization", "Bearer " + o.value()));
-      case RefreshToken r -> Optional.empty();
-      case ApiKey a -> Optional.empty();
-    };
+    return Optional.of(new HeaderValue("Authorization", "Bearer " + inbound.get().value()));
   }
 }

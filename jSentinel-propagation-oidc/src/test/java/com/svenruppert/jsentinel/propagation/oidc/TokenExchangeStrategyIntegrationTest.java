@@ -13,6 +13,7 @@ package com.svenruppert.jsentinel.propagation.oidc;
 import com.svenruppert.jsentinel.credential.propagation.BearerToken;
 import com.svenruppert.jsentinel.credential.propagation.HeaderValue;
 import com.svenruppert.jsentinel.credential.propagation.OutboundCall;
+import com.svenruppert.jsentinel.credential.propagation.RefreshToken;
 import com.svenruppert.jsentinel.propagation.oidc.cache.InMemoryTokenExchangeCache;
 import com.svenruppert.jsentinel.propagation.oidc.cache.TokenExchangeCache;
 import com.svenruppert.jsentinel.propagation.oidc.strategy.JSentinelPropagationException;
@@ -34,6 +35,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("TokenExchangeStrategy — integration against StubTokenEndpoint")
 class TokenExchangeStrategyIntegrationTest {
@@ -61,6 +63,19 @@ class TokenExchangeStrategyIntegrationTest {
         new OutboundCall("svc", "m", "api.example.com", Map.of()),
         Optional.of(new BearerToken("subject-token")));
     assertEquals(new HeaderValue("Authorization", "Bearer minted-abc"), header.orElseThrow());
+  }
+
+  @Test
+  @DisplayName("JS-SEC-044: a RefreshToken is never forwarded as subject_token (Class-A secret, no exchange)")
+  void refreshTokenNotForwarded() {
+    TokenExchangeStrategy strategy = new TokenExchangeStrategy(
+        stub.tokenEndpoint(), "cid", "csecret",
+        HttpClient.newHttpClient(), new InMemoryTokenExchangeCache());
+    Optional<HeaderValue> header = strategy.resolve(
+        new OutboundCall("svc", "m", "api.example.com", Map.of()),
+        Optional.of(new RefreshToken("refresh-secret",
+            Optional.empty(), Optional.empty(), Optional.empty())));
+    assertTrue(header.isEmpty(), "a Class-A refresh secret must not be exchanged / forwarded");
   }
 
   @Test

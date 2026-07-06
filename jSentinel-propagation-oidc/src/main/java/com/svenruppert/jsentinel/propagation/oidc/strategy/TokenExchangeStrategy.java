@@ -95,7 +95,12 @@ public final class TokenExchangeStrategy implements OutboundTokenStrategy, HasLo
 
   @Override
   public Optional<HeaderValue> resolve(OutboundCall call, Optional<TokenCredential> inbound) {
-    if (inbound.isEmpty()) return Optional.empty();
+    // JS-SEC-044 (CWE-522): a Class-A RefreshToken / ApiKey must never be sent to the token endpoint
+    // as an RFC 8693 subject_token — it would leak (mislabeled as an access_token) via the outbound
+    // call. Defer to the single shared decision on TokenCredential, matching PassThroughStrategy.
+    if (inbound.isEmpty() || !inbound.get().isForwardableAsSubjectToken()) {
+      return Optional.empty();
+    }
     String subject = inbound.get().value();
     String key = cacheKey(subject, call.declaredAudience());
     Optional<TokenExchangeCache.CachedEntry> cached = cache.get(key);

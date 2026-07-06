@@ -63,6 +63,21 @@ public sealed interface TokenCredential
   String value();
 
   /**
+   * JS-SEC-044 (CWE-522): whether this credential may be forwarded to a downstream service or a
+   * token-exchange endpoint as a bearer / {@code subject_token}. The two Class-A secrets —
+   * {@link RefreshToken} and {@link ApiKey} — must <strong>never</strong> be forwarded (they would
+   * leak via the outbound call, and mislabeling a refresh secret as an access token is worse); only
+   * access-token-shaped credentials ({@link BearerToken}, {@link OidcAccessToken}) are forwardable.
+   * This is the single source of truth every propagation strategy consults, so the pass-through and
+   * token-exchange strategies cannot drift.
+   *
+   * @return {@code true} if this credential is safe to forward as a bearer subject token
+   */
+  default boolean isForwardableAsSubjectToken() {
+    return this instanceof BearerToken || this instanceof OidcAccessToken;
+  }
+
+  /**
    * @return wall-clock expiry of the token, if known
    */
   Optional<Instant> expiresAt();
