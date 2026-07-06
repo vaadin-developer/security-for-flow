@@ -18,6 +18,7 @@ package com.svenruppert.jsentinel.replay.impl;
 
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.replay.api.NonceStore;
+import com.svenruppert.jsentinel.util.CapacityBound;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -38,6 +39,7 @@ public final class InMemoryNonceStore implements NonceStore {
   }
 
   private final Supplier<Instant> clock;
+  private final int maxEntries;
   private final Map<String, Bound> bindings = new ConcurrentHashMap<>();
 
   public InMemoryNonceStore() {
@@ -45,7 +47,26 @@ public final class InMemoryNonceStore implements NonceStore {
   }
 
   public InMemoryNonceStore(Supplier<Instant> clock) {
+    this(clock, CapacityBound.DEFAULT_MAX_ENTRIES);
+  }
+
+  /**
+   * JS-SEC-051 (CWE-770): additionally bound the bindings map. {@code requestKey} is
+   * attacker-controlled and an initiated-but-never-consumed binding persists for the process
+   * lifetime, so an attacker repeatedly initiating flows without completing the callback would leak
+   * one entry per un-completed flow without limit. On a full map {@link #bind} first purges expired
+   * bindings and, if still full, throws — matching the {@code JdkInMemoryStateStore} sibling.
+   *
+   * @param maxEntries binding cap (shared default {@link CapacityBound#DEFAULT_MAX_ENTRIES})
+   */
+  public InMemoryNonceStore(Supplier<Instant> clock, int maxEntries) {
     this.clock = Objects.requireNonNull(clock, "clock");
+    this.maxEntries = CapacityBound.requirePositiveCapacity(maxEntries);
+  }
+
+  /** Package-visible for tests: number of tracked bindings (JS-SEC-051 bound). */
+  int trackedKeyCount() {
+    return bindings.size();
   }
 
   @Override
@@ -53,7 +74,19 @@ public final class InMemoryNonceStore implements NonceStore {
     Objects.requireNonNull(requestKey, "requestKey");
     Objects.requireNonNull(nonce, "nonce");
     Objects.requireNonNull(ttl, "ttl");
+    if (bindings.size() >= maxEntries && !bindings.containsKey(requestKey)) {
+      purgeExpired();
+      if (bindings.size() >= maxEntries) {
+        throw new IllegalStateException(
+            CapacityBound.capacityExceededCode("replay/nonce-store") + ": " + maxEntries);
+      }
+    }
     bindings.put(requestKey, new Bound(nonce, clock.get().plus(ttl)));
+  }
+
+  private void purgeExpired() {
+    Instant now = clock.get();
+    bindings.values().removeIf(b -> now.isAfter(b.expiresAt()));
   }
 
   @Override
