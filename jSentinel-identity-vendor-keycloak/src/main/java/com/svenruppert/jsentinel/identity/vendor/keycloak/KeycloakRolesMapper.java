@@ -31,27 +31,87 @@ import java.util.Set;
  * Maps Keycloak's role claims to {@link RoleName}s (V00.79). Keycloak puts realm
  * roles in {@code realm_access.roles} and per-client roles in
  * {@code resource_access.<client-id>.roles}; both are nested
- * <code>{"roles":[...]}</code> objects. This mapper extracts the realm roles and
- * — by default — the roles of every client in {@code resource_access}, reading
- * only the signed ID-token claims (never UserInfo, which Keycloak does not use for
- * roles). Vendor claim shapes that are absent or of the wrong type yield no roles.
+ * <code>{"roles":[...]}</code> objects, read only from the signed ID token.
+ *
+ * <p><strong>JS-SEC-042 (CWE-269):</strong> by default this mapper is
+ * <em>client-scoped</em> — it emits the realm roles plus only <em>this
+ * application's own</em> client roles (the client resolved from an explicit
+ * {@code clientId}, else the token's {@code azp}, else a single-valued
+ * {@code aud}). Flattening <em>every</em> client's roles un-namespaced would erase
+ * Keycloak's client boundary: in a shared realm a user holding client role
+ * {@code admin} on an unrelated client would satisfy {@code @RequiresRole("admin")}
+ * here — cross-client privilege escalation. Use {@link #allClients()} to opt into
+ * including every client's roles; those foreign-client roles are then
+ * <em>namespaced</em> ({@code <client>:<role>}) so they cannot collide with this
+ * app's roles. Absent / wrong-typed claim shapes yield no roles.
  */
 public final class KeycloakRolesMapper implements ClaimsToRolesMapper {
 
+  private final Optional<String> clientId;
+  private final boolean allClients;
+
+  /** Client-scoped to this app's own client, resolved from the token's {@code azp}/{@code aud}. */
   public KeycloakRolesMapper() {
+    this(Optional.empty(), false);
+  }
+
+  /** Client-scoped to the explicitly-supplied own client id. */
+  public KeycloakRolesMapper(String clientId) {
+    this(Optional.of(clientId), false);
+  }
+
+  private KeycloakRolesMapper(Optional<String> clientId, boolean allClients) {
+    this.clientId = clientId;
+    this.allClients = allClients;
+  }
+
+  /**
+   * Opt-in mapper that includes every client's roles from {@code resource_access};
+   * foreign-client roles are namespaced {@code <client>:<role>} to avoid collisions.
+   */
+  public static KeycloakRolesMapper allClients() {
+    return new KeycloakRolesMapper(Optional.empty(), true);
   }
 
   @Override
   public Set<RoleName> mapRoles(ValidatedIdToken idToken, Optional<UserInfoResponse> userInfo) {
     Map<String, Object> claims = idToken.jwt().claims();
     Set<RoleName> roles = new LinkedHashSet<>();
+    // Realm roles are application-independent — always included, unqualified.
     rolesOf(claims.get("realm_access")).forEach(r -> roles.add(new RoleName(r)));
     if (claims.get("resource_access") instanceof Map<?, ?> resourceAccess) {
-      for (Object client : resourceAccess.values()) {
-        rolesOf(client).forEach(r -> roles.add(new RoleName(r)));
+      if (allClients) {
+        // opt-in: every client's roles, NAMESPACED so a foreign `admin` cannot collide.
+        for (Map.Entry<?, ?> entry : resourceAccess.entrySet()) {
+          String client = String.valueOf(entry.getKey());
+          rolesOf(entry.getValue()).forEach(r -> roles.add(new RoleName(client + ":" + r)));
+        }
+      } else {
+        // default: only THIS app's own client roles, unqualified — Keycloak's boundary preserved.
+        ownClient(claims).ifPresent(client ->
+            rolesOf(resourceAccess.get(client)).forEach(r -> roles.add(new RoleName(r))));
       }
     }
     return roles;
+  }
+
+  /** Resolves this app's own client id: explicit &rarr; {@code azp} &rarr; single-valued {@code aud}. */
+  private Optional<String> ownClient(Map<String, Object> claims) {
+    if (clientId.isPresent()) {
+      return clientId;
+    }
+    if (claims.get("azp") instanceof String azp && !azp.isBlank()) {
+      return Optional.of(azp);
+    }
+    Object aud = claims.get("aud");
+    if (aud instanceof String s && !s.isBlank()) {
+      return Optional.of(s);
+    }
+    if (aud instanceof List<?> list && list.size() == 1
+        && list.get(0) instanceof String s && !s.isBlank()) {
+      return Optional.of(s);
+    }
+    return Optional.empty();
   }
 
   /** Extracts the {@code roles} string list from a Keycloak {@code {"roles":[...]}} block. */

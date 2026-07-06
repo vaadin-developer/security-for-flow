@@ -17,6 +17,7 @@
 package com.svenruppert.jsentinel.identity.vendor.keycloak;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.svenruppert.jsentinel.authorization.api.roles.RoleName;
@@ -92,16 +93,50 @@ class KeycloakProfileTest {
   @Test
   @DisplayName("realm_access + resource_access roles are extracted into RoleNames")
   void extractsRealmAndClientRoles() {
+    // the app's own client is "rp" (the token audience), so its client roles live under
+    // resource_access.rp — the client-scoped default (JS-SEC-042) picks them up.
     String idToken = idp.signIdToken(Map.of(
         "iss", idp.issuer(), "sub", "alice", "aud", "rp",
         "iat", clock.get().getEpochSecond(), "exp", clock.get().plusSeconds(300).getEpochSecond(),
         "realm_access", Map.of("roles", java.util.List.of("admin", "user")),
-        "resource_access", Map.of("my-client", Map.of("roles", java.util.List.of("editor")))));
+        "resource_access", Map.of("rp", Map.of("roles", java.util.List.of("editor")))));
     ValidatedIdToken vit = validate(idToken);
 
     Set<RoleName> roles = KeycloakProfile.INSTANCE.rolesMapper().orElseThrow()
         .mapRoles(vit, Optional.empty());
     assertEquals(Set.of(new RoleName("admin"), new RoleName("user"), new RoleName("editor")), roles);
+  }
+
+  @Test
+  @DisplayName("JS-SEC-042: a foreign client's role is NOT granted un-namespaced (client-scoped default)")
+  void foreignClientRoleNotGrantedByDefault() {
+    // mallory holds `admin` on the unrelated `reporting-tool` client and only `viewer` on our
+    // own `rp` client. The default client-scoped mapper must not grant a bare `admin`.
+    String idToken = idp.signIdToken(Map.of(
+        "iss", idp.issuer(), "sub", "mallory", "aud", "rp",
+        "iat", clock.get().getEpochSecond(), "exp", clock.get().plusSeconds(300).getEpochSecond(),
+        "resource_access", Map.of(
+            "rp", Map.of("roles", java.util.List.of("viewer")),
+            "reporting-tool", Map.of("roles", java.util.List.of("admin")))));
+    Set<RoleName> roles = new KeycloakRolesMapper().mapRoles(validate(idToken), Optional.empty());
+    assertTrue(roles.contains(new RoleName("viewer")), "own client's role is granted");
+    assertFalse(roles.contains(new RoleName("admin")),
+        "a foreign client's admin must NOT collide with this app's admin");
+  }
+
+  @Test
+  @DisplayName("JS-SEC-042: allClients() includes every client's roles, namespaced")
+  void allClientsIncludesNamespacedRoles() {
+    String idToken = idp.signIdToken(Map.of(
+        "iss", idp.issuer(), "sub", "mallory", "aud", "rp",
+        "iat", clock.get().getEpochSecond(), "exp", clock.get().plusSeconds(300).getEpochSecond(),
+        "resource_access", Map.of(
+            "rp", Map.of("roles", java.util.List.of("viewer")),
+            "reporting-tool", Map.of("roles", java.util.List.of("admin")))));
+    Set<RoleName> roles = KeycloakRolesMapper.allClients().mapRoles(validate(idToken), Optional.empty());
+    assertTrue(roles.contains(new RoleName("rp:viewer")));
+    assertTrue(roles.contains(new RoleName("reporting-tool:admin")));
+    assertFalse(roles.contains(new RoleName("admin")), "foreign roles are namespaced, never bare");
   }
 
   @Test
