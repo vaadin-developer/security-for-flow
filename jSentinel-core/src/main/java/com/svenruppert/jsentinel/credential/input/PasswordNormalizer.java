@@ -63,7 +63,15 @@ public final class PasswordNormalizer {
     Objects.requireNonNull(input, "input");
     Objects.requireNonNull(policy, "policy");
     if (!policy.unicodeNormalisationEnabled()) {
-      return SecretValue.ofChars(input.asChars());
+      // JS-SEC-047 (CWE-226): input.asChars() returns a fresh plaintext copy that ofChars copies
+      // again; zero this transient in a finally block, mirroring the enabled branch below, so the
+      // class honours its own "zero every temporary it constructs" contract.
+      char[] passthrough = input.asChars();
+      try {
+        return SecretValue.ofChars(passthrough);
+      } finally {
+        Arrays.fill(passthrough, '\0');
+      }
     }
     char[] chars = input.asChars();
     char[] normalisedChars = null;

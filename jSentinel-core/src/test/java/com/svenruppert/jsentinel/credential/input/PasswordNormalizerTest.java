@@ -65,13 +65,16 @@ class PasswordNormalizerTest {
   }
 
   @Test
-  @DisplayName("Disabled normalisation copies the input verbatim")
+  @DisplayName("JS-SEC-047: disabled normalisation copies verbatim into an independent SecretValue and leaves the input intact")
   void disabledNormalisationCopiesVerbatim() {
     PasswordInputPolicy noNorm = new PasswordInputPolicy(
         1, 1024, false, Normalizer.Form.NFC, false);
     SecretValue input = SecretValue.ofChars(A_DIAERESIS_DECOMPOSED);
     SecretValue out = normalizer.normalize(input, noNorm);
     assertArrayEquals(A_DIAERESIS_DECOMPOSED, out.asChars());
+    // ofChars copies, so zeroing the pass-through transient (JS-SEC-047) leaves the returned value
+    // and the source input untouched — the input must still read back verbatim.
+    assertArrayEquals(A_DIAERESIS_DECOMPOSED, input.asChars());
   }
 
   @Test
