@@ -95,6 +95,32 @@ class JSentinelAnnotationScannerTest {
     assertInstanceOf(StubRestriction.class, result.get().annotation());
   }
 
+  @Test
+  @DisplayName("JS-SEC-040: a routed subclass inherits the superclass restriction (walk, not @Inherited)")
+  void subclassInheritsSuperclassRestriction() {
+    // StubRestriction is deliberately NOT @Inherited, so this exercises the explicit
+    // superclass walk that generalizes inheritance to consumer-defined restriction annotations.
+    var result = scanner.scan(SubclassOfProtected.class);
+    assertTrue(result.isPresent(),
+        "a subclass of a @StubRestriction base must inherit the restriction, not scan as public");
+    assertInstanceOf(StubRestriction.class, result.get().annotation());
+  }
+
+  @Test
+  @DisplayName("JS-SEC-040: the most-derived restriction wins over an inherited one")
+  void mostDerivedRestrictionWins() {
+    var result = scanner.scan(OverridingSubclass.class);
+    assertTrue(result.isPresent());
+    assertInstanceOf(AnotherRestriction.class, result.get().annotation(),
+        "the subclass's own restriction must win over the inherited base restriction");
+  }
+
+  @Test
+  @DisplayName("JS-SEC-040: a plain subclass of a plain base still scans as empty")
+  void plainSubclassStillEmpty() {
+    assertTrue(scanner.scan(PlainSubclass.class).isEmpty());
+  }
+
   // ── Test fixtures ─────────────────────────────────────────────
 
   @Retention(RetentionPolicy.RUNTIME)
@@ -136,5 +162,18 @@ class JSentinelAnnotationScannerTest {
     @StubRestriction
     void delete() {
     }
+  }
+
+  // JS-SEC-040: subclass of a restriction-annotated base — inherits via the scanner walk.
+  static class SubclassOfProtected extends ProtectedView {
+  }
+
+  // JS-SEC-040: subclass with its OWN restriction — most-derived wins over the base's.
+  @AnotherRestriction
+  static class OverridingSubclass extends ProtectedView {
+  }
+
+  // JS-SEC-040: subclass of a plain (unannotated) base stays empty.
+  static class PlainSubclass extends PlainView {
   }
 }

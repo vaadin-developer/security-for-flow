@@ -19,6 +19,7 @@ package com.svenruppert.jsentinel.authorization.annotations;
 import com.svenruppert.jsentinel.authorization.api.AuthorizationEvaluator;
 import com.svenruppert.jsentinel.authorization.api.ProtectedByEvaluator;
 
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -29,6 +30,7 @@ import static java.lang.annotation.ElementType.TYPE;
 /**
  * Delegates evaluation to a project-provided {@link AuthorizationEvaluator}.
  */
+@Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({TYPE, METHOD})
 @JSentinelAnnotation(ProtectedByEvaluator.class)

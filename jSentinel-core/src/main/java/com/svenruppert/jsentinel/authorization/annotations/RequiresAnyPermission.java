@@ -19,6 +19,7 @@ package com.svenruppert.jsentinel.authorization.annotations;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.authorization.api.permissions.RequiresAnyPermissionEvaluator;
 
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -38,6 +39,7 @@ import static java.lang.annotation.ElementType.TYPE;
  * AND-semantics that {@code @RequiresPermission} also offers.
  */
 @ExperimentalJSentinelApi
+@Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({TYPE, METHOD})
 @JSentinelAnnotation(RequiresAnyPermissionEvaluator.class)

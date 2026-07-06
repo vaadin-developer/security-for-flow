@@ -84,7 +84,32 @@ public final class JSentinelAnnotationScanner {
   }
 
   private Optional<AnnotationAccessEvaluatorPair<Annotation>> doScan(AnnotatedElement element) {
-    List<Annotation> list = stream(element.getAnnotations())
+    Optional<AnnotationAccessEvaluatorPair<Annotation>> declared = scanDeclared(element);
+    if (declared.isPresent()) {
+      return declared;
+    }
+    // JS-SEC-040 (CWE-863): a routed subclass of a security-annotated superclass must inherit
+    // the restriction (most-derived wins) — otherwise the subclass scans as unprotected and,
+    // under allow-by-omission, falls through to unguarded dispatch. `@Inherited` (added to the
+    // shipped restriction annotations) already surfaces via getAnnotations() above, but it does
+    // NOT cover consumer-defined restriction annotations; walking the superclass chain here
+    // generalizes inheritance to any @JSentinelAnnotation-meta-annotated annotation. Methods do
+    // not inherit annotations, so only Class elements are walked.
+    if (element instanceof Class<?> clazz) {
+      Class<?> superClass = clazz.getSuperclass();
+      if (superClass != null && superClass != Object.class) {
+        return doScan(superClass);
+      }
+    }
+    return Optional.empty();
+  }
+
+  private Optional<AnnotationAccessEvaluatorPair<Annotation>> scanDeclared(AnnotatedElement element) {
+    // Only the element's OWN restriction annotations — getDeclaredAnnotations() excludes
+    // @Inherited annotations surfaced from a superclass, so the explicit superclass walk in
+    // doScan() stays the single, authoritative inheritance mechanism (most-derived wins) and a
+    // subclass that overrides its base's restriction is never counted as "more than one".
+    List<Annotation> list = stream(element.getDeclaredAnnotations())
         .filter(a -> a.annotationType().isAnnotationPresent(JSentinelAnnotation.class))
         .toList();
 
