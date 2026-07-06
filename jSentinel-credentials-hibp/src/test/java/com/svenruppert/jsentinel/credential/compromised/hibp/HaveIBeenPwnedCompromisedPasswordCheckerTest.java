@@ -216,14 +216,34 @@ class HaveIBeenPwnedCompromisedPasswordCheckerTest {
   }
 
   @Test
-  @DisplayName("Empty response body yields Clean (no entries in the range)")
-  void emptyBodyClean() {
+  @DisplayName("JS-SEC-046: an empty 2xx body fails CLOSED (CheckFailed), not Clean (a stripped body must not pass a breached password)")
+  void emptyBodyFailsClosed() {
     HaveIBeenPwnedCompromisedPasswordChecker checker =
         new HaveIBeenPwnedCompromisedPasswordChecker(
             prefix -> new HaveIBeenPwnedCompromisedPasswordChecker.RangeResponse(
                 "", null));
-    assertSame(CompromisedPasswordResult.Clean.INSTANCE,
+    // with Add-Padding a real range response is never empty; an empty body means a hostile/broken
+    // mirror, so we must not silently accept the password.
+    assertInstanceOf(CompromisedPasswordResult.CheckFailed.class,
         checker.check(SecretValue.ofString("hunter222")));
+  }
+
+  @Test
+  @DisplayName("JS-SEC-046: usingJdkHttpClient rejects a non-loopback http:// endpoint")
+  void rejectsPlainHttpEndpoint() {
+    assertThrows(IllegalArgumentException.class, () ->
+        HaveIBeenPwnedCompromisedPasswordChecker.usingJdkHttpClient(
+            java.net.URI.create("http://mirror.example.com/range/"), java.time.Duration.ofSeconds(2)));
+  }
+
+  @Test
+  @DisplayName("JS-SEC-046: usingJdkHttpClient accepts https and loopback http")
+  void acceptsHttpsAndLoopbackHttp() {
+    // neither throws at construction
+    HaveIBeenPwnedCompromisedPasswordChecker.usingJdkHttpClient(
+        java.net.URI.create("https://api.pwnedpasswords.com/range/"), java.time.Duration.ofSeconds(2));
+    HaveIBeenPwnedCompromisedPasswordChecker.usingJdkHttpClient(
+        java.net.URI.create("http://127.0.0.1:8080/range/"), java.time.Duration.ofSeconds(2));
   }
 
   @Test

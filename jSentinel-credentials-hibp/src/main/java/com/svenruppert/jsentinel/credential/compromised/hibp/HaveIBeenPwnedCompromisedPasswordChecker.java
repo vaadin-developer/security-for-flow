@@ -95,6 +95,11 @@ public final class HaveIBeenPwnedCompromisedPasswordChecker
       URI endpoint, Duration timeout) {
     Objects.requireNonNull(endpoint, "endpoint");
     Objects.requireNonNull(timeout, "timeout");
+    // JS-SEC-046 (CWE-319): the operator-supplied endpoint must be https (loopback http allowed for
+    // a local mirror / test). A plaintext hop would expose the 5-char SHA-1 prefix of every
+    // candidate password (eroding the documented k-anonymity guarantee) and let a MITM strip the
+    // body to force every breached password to 'Clean'. Mirrors HttpJwksClient.requireHttpsOrLoopback.
+    requireHttpsOrLoopback(endpoint);
     // R12 (V00.76.10): cap the response body so a hostile / compromised mirror
     // (operators may repoint the endpoint) cannot return a multi-GB body and OOM
     // the verifying JVM. A padded HIBP range response is a few tens of KB; 1 MiB
@@ -154,6 +159,29 @@ public final class HaveIBeenPwnedCompromisedPasswordChecker
     return new HaveIBeenPwnedCompromisedPasswordChecker(lookup);
   }
 
+  /**
+   * JS-SEC-046 (CWE-319): enforce https for any non-loopback endpoint; loopback http is allowed for
+   * a local mirror / test stub. Mirrors {@code HttpJwksClient.requireHttpsOrLoopback}.
+   */
+  private static void requireHttpsOrLoopback(URI endpoint) {
+    String scheme = endpoint.getScheme();
+    if ("https".equalsIgnoreCase(scheme)) {
+      return;
+    }
+    if ("http".equalsIgnoreCase(scheme) && isLoopback(endpoint.getHost())) {
+      return;
+    }
+    throw new IllegalArgumentException(
+        "hibp/endpoint-not-https: the HIBP endpoint must use https:// (got: " + endpoint + ")");
+  }
+
+  private static boolean isLoopback(String host) {
+    return "localhost".equalsIgnoreCase(host)
+        || "127.0.0.1".equals(host)
+        || "::1".equals(host)
+        || "[::1]".equals(host);
+  }
+
   @Override
   public CompromisedPasswordResult check(SecretValue password) {
     Objects.requireNonNull(password, "password");
@@ -167,6 +195,13 @@ public final class HaveIBeenPwnedCompromisedPasswordChecker
       RangeResponse response = rangeLookup.apply(prefix);
       if (response.failure() != null) {
         return new CompromisedPasswordResult.CheckFailed(response.failure());
+      }
+      // JS-SEC-046 (CWE-319): with Add-Padding a legitimate range response is never empty, so a 2xx
+      // with an empty/blank body means a hostile or broken mirror. Fail CLOSED (CheckFailed) rather
+      // than treating it as Clean, so a stripped body cannot silently pass a breached password.
+      if (response.body() == null || response.body().isBlank()) {
+        return new CompromisedPasswordResult.CheckFailed(
+            CompromisedPasswordResult.FailureReason.NETWORK);
       }
       return scan(response.body(), suffix);
     } catch (RuntimeException unexpected) {
