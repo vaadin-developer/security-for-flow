@@ -84,4 +84,14 @@ public interface EnvelopeStoreContract {
     assertTrue(store.findByEnvelopeId(EventEnvelopeId.of("x")).isPresent());
     assertTrue(store.findByEnvelopeId(EventEnvelopeId.of("missing")).isEmpty());
   }
+
+  @Test
+  @DisplayName("JS-SEC-058: findAfter with a Long.MAX_VALUE cursor returns an empty page, not an overflow throw")
+  default void findAfterOutOfRangeCursorIsEmpty() {
+    JSentinelEventEnvelopeStore store = newEnvelopeStore();
+    store.append(TestkitEnvelopes.envelope("a"));
+    // an at/after-end (here far-out-of-range) cursor must yield "nothing after it" rather than
+    // throwing from the position+1 overflow.
+    assertTrue(store.findAfter(JSentinelEventCursor.at(Long.MAX_VALUE), 10).isEmpty());
+  }
 }

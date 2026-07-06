@@ -72,7 +72,14 @@ final class EclipseStoreEnvelopeStore implements JSentinelEventEnvelopeStore {
     try {
       List<SignedJSentinelEventEnvelope> envelopes = storage.root().envelopes;
       List<StoredEnvelope> page = new ArrayList<>();
-      for (long position = cursor.position() + 1;
+      // JS-SEC-058 (CWE-190): an at/after-end cursor returns an empty page, making the `position + 1`
+      // overflow (Long.MAX_VALUE -> Long.MIN_VALUE, which would throw from JSentinelEventCursor.at)
+      // unreachable.
+      long from = cursor.position();
+      if (from >= envelopes.size()) {
+        return page;
+      }
+      for (long position = from + 1;
            position <= envelopes.size() && page.size() < limit; position++) {
         page.add(new StoredEnvelope(
             JSentinelEventCursor.at(position), envelopes.get((int) (position - 1))));

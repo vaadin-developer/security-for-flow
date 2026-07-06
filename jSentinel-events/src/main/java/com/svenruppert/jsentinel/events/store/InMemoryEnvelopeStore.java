@@ -58,8 +58,16 @@ public final class InMemoryEnvelopeStore implements JSentinelEventEnvelopeStore 
       throw new IllegalArgumentException("limit must be >= 0, was " + limit);
     }
     List<StoredEnvelope> page = new ArrayList<>();
+    // JS-SEC-058 (CWE-190): return an empty page for an at/after-end cursor, which also makes the
+    // `position + 1` overflow unreachable — a Long.MAX_VALUE cursor (only position >= 0 is validated)
+    // would otherwise overflow to Long.MIN_VALUE, enter the loop, and throw from
+    // JSentinelEventCursor.at(Long.MIN_VALUE) instead of returning "nothing after it".
+    long from = cursor.position();
+    if (from >= envelopes.size()) {
+      return page;
+    }
     // positions are 1-based; index i holds position i+1
-    for (long position = cursor.position() + 1; position <= envelopes.size(); position++) {
+    for (long position = from + 1; position <= envelopes.size(); position++) {
       if (page.size() >= limit) {
         break;
       }
