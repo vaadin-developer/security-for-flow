@@ -7,6 +7,28 @@
 > Incident-faehige Integrationen auf Basis des Security Event Bus aus
 > `v00.75.00`.
 
+> **Umsetzungsstand (Stand V00.79.41) — Review-Gate 2026-07-09.** Dieses
+> Konzept entstand vor dem Identity-Stack (V00.76–V00.79) und vor dem
+> V00.73-Rebrand; mehrere Kernziele sind bereits ausgeliefert:
+>
+> - **Ziel 3 (OIDC/OAuth2 Bridge): weitgehend erledigt** — `jSentinel-jwt`,
+>   `-oauth2` (+rest/+vaadin), `-identity-oidc` (+rest/+vaadin), `-dpop` und
+>   sechs Vendor-Adapter (Auth0/Entra/GitHub/Google/Keycloak/Okta) übersetzen
+>   externe Claims bereits in interne Subjects/Rollen/Tenants
+>   (`ClaimsToSubjectMapper`, `ClaimsToRolesMapper`).
+> - **Ziel 6 (Password Hardening): erledigt in V00.71** — Argon2id/bcrypt/
+>   scrypt (`jSentinel-crypto-bc`), `PepperService`, Policy-Versionierung,
+>   Rehash-Migration, HIBP-Blocklist (`jSentinel-credentials-hibp`).
+> - **Ziel 8 EventBus-Basis: erledigt in V00.75** — signierte Envelopes,
+>   Replay-Schutz, Sequencing, REST/SSE-Bridge (`jSentinel-events*`).
+>
+> **Festgelegter V00.80.00-Scope = „Betrieb & Forensik"**: Ziel 9 (Betrieb
+> und Monitoring) + Ziel 8 (Security-Event-Integrationen / Exporter) + Ziel 7
+> (Tamper-Evident Audit). Alle übrigen Ziele (1 MFA/Step-Up, 2 WebAuthn,
+> 4 Device/Remember-Me, 5 Risk-Based Auth, 10 Strict-Mode-Ausbau,
+> 11 Supply-Chain, 12 CSRF, 13 Privacy/Retention) sind auf spätere
+> Sub-Releases (V00.80.x / V00.81+) verschoben.
+
 ## Leitmotiv
 
 `v00.70.00` macht Policies, Persistenz und aktive Sessions
@@ -486,29 +508,27 @@ sinnvoll.
 ## Empfohlene Modulstruktur
 
 ```text
-security-core
-security-vaadin
-security-rest
-security-standalone
+# Bereits vorhanden (Stand V00.79.41) — jSentinel-* nach V00.73-Rebrand:
+jSentinel-core  jSentinel-vaadin  jSentinel-rest  jSentinel-standalone
+jSentinel-persistence-eclipsestore
+jSentinel-events  jSentinel-events-rest  jSentinel-events-testkit
+jSentinel-events-persistence-eclipsestore
+jSentinel-identity-oidc (+rest/+vaadin), jSentinel-oauth2, jSentinel-jwt,
+jSentinel-dpop, 6x jSentinel-identity-vendor-*   (Ziel 3 — geliefert V00.76–79)
+jSentinel-crypto-bc, jSentinel-credentials-hibp   (Ziel 6 — geliefert V00.71)
 
-security-persistence-eclipsestore
+# Neu in V00.80.00 (Scope „Betrieb & Forensik"):
+jSentinel-monitoring                (Ziel 9 — Metrics/Health/Diagnostics)
+jSentinel-events-webhook            (Ziel 8 — WebhookEventPublisher)
+jSentinel-events-opentelemetry     (Ziel 8 — OpenTelemetryEventPublisher)
+jSentinel-events-siem              (Ziel 8 — SiemEventExporter)
+jSentinel-audit-integrity          (Ziel 7 — AuditChainStore / SignedAuditBatch)
 
-security-events
-security-events-rest
-security-events-testkit
-security-events-persistence-eclipsestore
-
-security-mfa-api
-security-mfa-totp
-security-webauthn
-security-identity-oidc
-security-monitoring
-security-events-opentelemetry
-security-events-webhook
-security-events-siem
-security-audit-integrity
-security-privacy
-security-web-hardening
+# Auf spätere Sub-Releases verschoben (V00.80.x / V00.81+):
+jSentinel-mfa-api, jSentinel-mfa-totp   (Ziel 1)
+jSentinel-webauthn                       (Ziel 2)
+jSentinel-privacy                        (Ziel 13)
+jSentinel-web-hardening                  (Ziel 12)
 ```
 
 Die Modulgrenzen sollten pragmatisch bleiben. APIs, die nur Interfaces
