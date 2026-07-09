@@ -1,0 +1,67 @@
+package {{BASE_PACKAGE}}.security.oidc;
+
+import com.svenruppert.jsentinel.identity.oidc.InMemorySessionRegistry;
+import com.svenruppert.jsentinel.oidc.api.SessionRegistry;
+import com.vaadin.flow.server.WrappedSession;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Vaadin-side {@link SessionRegistry} for OIDC Back-Channel Logout. The jSentinel SPI is
+ * sessionId-string-based; this pairs it with a live {@code sessionId → WrappedSession}
+ * map so {@link #terminate} can invalidate the actual Vaadin session out-of-band (from
+ * the unauthenticated back-channel thread). {@link WrappedSession#invalidate()} is
+ * thread-safe; the user's next Vaadin request fails and forces re-authentication.
+ *
+ * <p>Register at login with {@link #register(String, String, Optional, WrappedSession)};
+ * call {@link #forget(String)} from a session-destroy listener to avoid leaking
+ * references.
+ */
+public final class VaadinBackChannelSessionRegistry implements SessionRegistry {
+
+  private static final Map<String, WrappedSession> SESSIONS = new ConcurrentHashMap<>();
+  private static final InMemorySessionRegistry KEYS = new InMemorySessionRegistry();
+  private static final VaadinBackChannelSessionRegistry INSTANCE = new VaadinBackChannelSessionRegistry();
+
+  private VaadinBackChannelSessionRegistry() {
+  }
+
+  public static VaadinBackChannelSessionRegistry instance() {
+    return INSTANCE;
+  }
+
+  /** Login hook: binds the live Vaadin session so a later back-channel logout can kill it. */
+  public static void register(String issuer, String subject, Optional<String> sid, WrappedSession session) {
+    SESSIONS.put(session.getId(), session);
+    KEYS.register(issuer, subject, sid, session.getId());
+  }
+
+  /** Session-destroy hook: drop the reference to a session that ended on its own. */
+  public static void forget(String sessionId) {
+    SESSIONS.remove(sessionId);
+  }
+
+  @Override
+  public void register(String issuer, String subject, Optional<String> sid, String sessionId) {
+    KEYS.register(issuer, subject, sid, sessionId);
+  }
+
+  @Override
+  public Set<String> terminate(String issuer, Optional<String> subject, Optional<String> sid) {
+    Set<String> ids = KEYS.terminate(issuer, subject, sid);
+    for (String id : ids) {
+      WrappedSession session = SESSIONS.remove(id);
+      if (session != null) {
+        try {
+          session.invalidate();
+        } catch (RuntimeException ignored) {
+          // session already gone / concurrently invalidated — nothing to do
+        }
+      }
+    }
+    return ids;
+  }
+}

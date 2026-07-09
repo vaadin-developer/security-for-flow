@@ -1,0 +1,43 @@
+package {{BASE_PACKAGE}}.security.oidc;
+
+import com.svenruppert.jsentinel.identity.oidc.BackChannelLogoutReceiver;
+import com.svenruppert.jsentinel.oidc.api.BackChannelLogoutOutcome;
+import com.vaadin.flow.server.RequestHandler;
+import com.vaadin.flow.server.VaadinRequest;
+import com.vaadin.flow.server.VaadinResponse;
+import com.vaadin.flow.server.VaadinSession;
+
+import java.io.IOException;
+
+/**
+ * OIDC Back-Channel Logout endpoint (OIDC BCL 1.0 §2.5–2.7) as a Vaadin
+ * {@link RequestHandler}: intercepts {@code POST {{BACKCHANNEL_PATH}}}, reads the
+ * {@code logout_token} form parameter, and runs the {@link BackChannelLogoutReceiver}
+ * (which validates the token — signature/iss/aud/events/sub-sid/jti, nonce-absent — and
+ * terminates the matching Vaadin sessions). Responds {@code 200} for an accepted token,
+ * {@code 400} otherwise (§2.7). It dereferences no URL from the token, so there is no SSRF.
+ */
+public final class BackChannelLogoutHandler implements RequestHandler {
+
+  private static final String PATH = "{{BACKCHANNEL_PATH}}";
+
+  private final BackChannelLogoutReceiver receiver;
+
+  public BackChannelLogoutHandler(BackChannelLogoutReceiver receiver) {
+    this.receiver = receiver;
+  }
+
+  @Override
+  public boolean handleRequest(VaadinSession session, VaadinRequest request, VaadinResponse response)
+      throws IOException {
+    if (!PATH.equals(request.getPathInfo()) || !"POST".equalsIgnoreCase(request.getMethod())) {
+      return false; // not the back-channel endpoint — let Vaadin handle it
+    }
+    String logoutToken = request.getParameter("logout_token");
+    boolean accepted = logoutToken != null
+        && receiver.receive(logoutToken) instanceof BackChannelLogoutOutcome.Accepted;
+    response.setStatus(accepted ? 200 : 400);
+    response.getOutputStream().close();
+    return true;
+  }
+}

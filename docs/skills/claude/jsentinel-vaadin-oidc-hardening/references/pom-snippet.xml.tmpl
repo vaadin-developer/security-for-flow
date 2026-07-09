@@ -1,0 +1,13 @@
+<!-- jsentinel-vaadin-oidc-hardening dependencies.
+     Merge into <dependencies>; idempotent (skip any already present).
+     mTLS / JWE / Back-Channel Logout need NO new module — they reuse jSentinel-oauth2
+     (MutualTls), jSentinel-jwt (JweUnwrappingJwtValidator / NimbusJweDecoder) and
+     jSentinel-identity-oidc (BackChannelLogoutReceiver / DefaultLogoutTokenValidator /
+     InMemorySessionRegistry) + jSentinel-core (JtiStore / InMemoryJtiStore), all already
+     on the classpath from the jsentinel-vaadin-oidc run.
+     Only DPoP adds a module: -->
+<dependency>
+    <groupId>com.svenruppert.jsentinel</groupId>
+    <artifactId>jSentinel-dpop</artifactId>
+    <version>${jsentinel.version}</version>
+</dependency>
