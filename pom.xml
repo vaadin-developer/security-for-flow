@@ -116,6 +116,7 @@
         <module>jSentinel-events-opentelemetry</module>
         <module>jSentinel-events-siem</module>
         <module>jSentinel-audit-integrity</module>
+        <module>jSentinel-audit-integrity-testkit</module>
         <module>demo-rest-shared</module>
         <module>demo-vaadin</module>
         <module>demo-rest</module>
