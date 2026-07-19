@@ -16,8 +16,10 @@
  */
 package com.svenruppert.jsentinel.audit;
 
+import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.authorization.api.tenant.TenantId;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,15 +41,21 @@ import static java.util.Objects.requireNonNull;
  *
  * <p>Failures propagating from the underlying store are swallowed in
  * {@link #publish(AuditEvent)} so audit failure cannot break the
- * security flow that emitted the event. {@link #query(AuditQuery)}
+ * security flow that emitted the event — but they are logged at
+ * {@code WARN} ({@code audit/store-append-failure}) because a failing
+ * store is a persistent-audit-trail gap. {@link #query(AuditQuery)}
  * does propagate them — read-side failures are an explicit caller
- * concern.
+ * concern. The {@code (Logger)} constructor is a test / injection seam
+ * mirroring {@link LoggingAuditSink}.
  */
 @ExperimentalJSentinelApi
 public final class StoreBackedJSentinelAuditService implements JSentinelAuditService {
 
+  private static final Logger DEFAULT_LOGGER = HasLogger.staticLogger();
+
   private final AuditEventStore store;
   private final TenantId tenant;
+  private final Logger logger;
 
   /**
    * Builds a service that operates against {@link TenantId#DEFAULT}.
@@ -66,8 +74,23 @@ public final class StoreBackedJSentinelAuditService implements JSentinelAuditSer
    *               {@code null} becomes {@link TenantId#DEFAULT}
    */
   public StoreBackedJSentinelAuditService(AuditEventStore store, TenantId tenant) {
+    this(store, tenant, DEFAULT_LOGGER);
+  }
+
+  /**
+   * Test / injection seam mirroring the {@link LoggingAuditSink}
+   * {@code (Logger)} constructor: routes the
+   * {@code audit/store-append-failure} WARN through the supplied logger.
+   *
+   * @param store  backing store; must not be {@code null}
+   * @param tenant tenant scope for every published / queried event;
+   *               {@code null} becomes {@link TenantId#DEFAULT}
+   * @param logger receiver of the store-failure WARN; must not be {@code null}
+   */
+  public StoreBackedJSentinelAuditService(AuditEventStore store, TenantId tenant, Logger logger) {
     this.store = requireNonNull(store, "store must not be null");
     this.tenant = tenant == null ? TenantId.DEFAULT : tenant;
+    this.logger = requireNonNull(logger, "logger must not be null");
   }
 
   @Override
@@ -77,8 +100,14 @@ public final class StoreBackedJSentinelAuditService implements JSentinelAuditSer
     }
     try {
       store.append(tenant, event);
-    } catch (RuntimeException ignored) {
-      // Audit failure must never break the security flow.
+    } catch (RuntimeException ex) {
+      // R036: never propagate — audit failure must not interrupt the security
+      // flow — but a failing store is a persistent-audit-trail gap, so log it
+      // at WARN. No secrets: only the store class, the event type and the
+      // exception summary — never event field values.
+      logger.warn(
+          "audit/store-append-failure: store {} threw on a {} event; the event was not persisted ({})",
+          store.getClass().getName(), event.getClass().getSimpleName(), ex.toString(), ex);
     }
   }
 

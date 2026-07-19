@@ -19,11 +19,13 @@ package com.svenruppert.jsentinel.audit;
 import com.svenruppert.jsentinel.authorization.api.tenant.TenantId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.event.Level;
 
 import java.time.Instant;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -60,19 +62,43 @@ class StoreBackedJSentinelAuditServiceTest {
   @Test
   @DisplayName("publish swallows store failures — audit must never break the security flow")
   void publishSwallowsStoreFailures() {
-    AuditEventStore failingStore = new AuditEventStore() {
-      @Override public AuditEnvelope append(TenantId tenant, AuditEvent event) {
-        throw new RuntimeException("simulated store failure");
-      }
-      @Override public List<AuditEnvelope> query(TenantId tenant, AuditQuery query) {
-        return List.of();
-      }
-      @Override public int purgeOlderThan(Instant cutoff) { return 0; }
-    };
     StoreBackedJSentinelAuditService service =
-        new StoreBackedJSentinelAuditService(failingStore);
+        new StoreBackedJSentinelAuditService(new ThrowingAuditEventStore());
     service.publish(loginSucceededAt(Instant.now(), "alice"));
     // no exception escaped — that is the contract
+  }
+
+  @Test
+  @DisplayName("R10: a swallowed store failure is logged at WARN as audit/store-append-failure "
+      + "without event field values")
+  void publishLogsSwallowedStoreFailureAtWarn() {
+    ThrowingAuditEventStore failingStore = new ThrowingAuditEventStore();
+    RecordingSlf4jLogger logger = new RecordingSlf4jLogger();
+    StoreBackedJSentinelAuditService service =
+        new StoreBackedJSentinelAuditService(failingStore, TenantId.DEFAULT, logger);
+
+    service.publish(loginSucceededAt(Instant.now(), "alice"));
+
+    String line = logger.firstMessage();
+    assertEquals(Level.WARN, logger.levels.getFirst());
+    assertTrue(line.contains("audit/store-append-failure"), line);
+    assertTrue(line.contains(ThrowingAuditEventStore.class.getName()), line);
+    assertTrue(line.contains("LoginSucceeded"), line);
+    assertTrue(line.contains("IllegalStateException: simulated store failure"), line);
+    // no secrets / PII: event field values must never reach the log line
+    assertFalse(line.contains("alice"), line);
+    assertFalse(line.contains("127.0.0.1"), line);
+  }
+
+  /** Hand-written failing-store double (no mock framework). */
+  private static final class ThrowingAuditEventStore implements AuditEventStore {
+    @Override public AuditEnvelope append(TenantId tenant, AuditEvent event) {
+      throw new IllegalStateException("simulated store failure");
+    }
+    @Override public List<AuditEnvelope> query(TenantId tenant, AuditQuery query) {
+      return List.of();
+    }
+    @Override public int purgeOlderThan(Instant cutoff) { return 0; }
   }
 
   @Test
@@ -115,11 +141,13 @@ class StoreBackedJSentinelAuditServiceTest {
   }
 
   @Test
-  @DisplayName("null store / query is rejected")
+  @DisplayName("null store / logger / query is rejected")
   void rejectNulls() {
     assertThrows(NullPointerException.class,
         () -> new StoreBackedJSentinelAuditService(null));
     InMemoryAuditEventStore store = new InMemoryAuditEventStore();
+    assertThrows(NullPointerException.class,
+        () -> new StoreBackedJSentinelAuditService(store, TenantId.DEFAULT, null));
     StoreBackedJSentinelAuditService service = new StoreBackedJSentinelAuditService(store);
     assertThrows(NullPointerException.class, () -> service.query(null));
   }

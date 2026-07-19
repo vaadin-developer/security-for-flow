@@ -37,6 +37,7 @@ import java.util.List;
 public class RecordingSlf4jLogger extends AbstractLogger {
 
   public final List<String> messages = new ArrayList<>();
+  public final List<Level> levels = new ArrayList<>();
 
   public RecordingSlf4jLogger() {
     this.name = "recording";
@@ -50,6 +51,7 @@ public class RecordingSlf4jLogger extends AbstractLogger {
   @Override
   protected void handleNormalizedLoggingCall(Level level, Marker marker,
       String messagePattern, Object[] arguments, Throwable throwable) {
+    levels.add(level);
     messages.add(arguments == null || arguments.length == 0
         ? messagePattern
         : MessageFormatter.basicArrayFormat(messagePattern, arguments));
