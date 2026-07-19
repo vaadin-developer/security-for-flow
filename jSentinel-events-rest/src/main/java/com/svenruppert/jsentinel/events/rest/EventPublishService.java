@@ -29,6 +29,7 @@ import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.dependencies.core.net.HttpStatus;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.events.api.SignedJSentinelEventEnvelope;
+import com.svenruppert.jsentinel.events.bus.ConsumeFailureHandler;
 import com.svenruppert.jsentinel.events.bus.ConsumePipeline;
 import com.svenruppert.jsentinel.events.bus.JSentinelEventVerificationResult;
 import com.svenruppert.jsentinel.events.store.JSentinelEventCursor;
@@ -57,15 +58,33 @@ public final class EventPublishService implements HasLogger {
   private final JSentinelEventEnvelopeStore envelopeStore;
   private final SseEventBroadcaster broadcaster;
   private final Supplier<Instant> clock;
+  private final ConsumeFailureHandler failureHandler;
 
   public EventPublishService(EnvelopeWireCodec wireCodec, ConsumePipeline consumePipeline,
       JSentinelEventEnvelopeStore envelopeStore, SseEventBroadcaster broadcaster,
       Supplier<Instant> clock) {
+    this(wireCodec, consumePipeline, envelopeStore, broadcaster, clock, null);
+  }
+
+  /**
+   * V00.80.00 (P012): variant with the strict-mode failure wiring — every
+   * verification failure additionally flows through the
+   * {@link ConsumeFailureHandler} (self-observability event, optional dead
+   * letter, operator log). The HTTP outcome mapping is byte-identical with
+   * and without a handler.
+   *
+   * @param failureHandler the failure wiring; {@code null} skips it
+   * @since 00.80.00
+   */
+  public EventPublishService(EnvelopeWireCodec wireCodec, ConsumePipeline consumePipeline,
+      JSentinelEventEnvelopeStore envelopeStore, SseEventBroadcaster broadcaster,
+      Supplier<Instant> clock, ConsumeFailureHandler failureHandler) {
     this.wireCodec = Objects.requireNonNull(wireCodec, "wireCodec");
     this.consumePipeline = Objects.requireNonNull(consumePipeline, "consumePipeline");
     this.envelopeStore = envelopeStore; // optional
     this.broadcaster = broadcaster; // optional
     this.clock = Objects.requireNonNull(clock, "clock");
+    this.failureHandler = failureHandler; // optional
   }
 
   /**
@@ -86,6 +105,12 @@ public final class EventPublishService implements HasLogger {
 
   private EventPublishOutcome verifyAndMap(SignedJSentinelEventEnvelope envelope) {
     JSentinelEventVerificationResult result = consumePipeline.verify(envelope, clock.get());
+    if (failureHandler != null
+        && !(result instanceof JSentinelEventVerificationResult.Valid)) {
+      // P012: event + metric seam + optional dead letter — the handler is
+      // total and never changes the HTTP outcome below.
+      failureHandler.handle(envelope, result);
+    }
     return switch (result) {
       case JSentinelEventVerificationResult.Valid v -> accept(v.envelope());
       case JSentinelEventVerificationResult.InvalidSignature ignored ->
