@@ -38,9 +38,14 @@ import java.util.TreeMap;
  * fractional part. The engine handles exactly the value shapes the canonical
  * payload needs: objects, strings and non-negative integers.
  *
+ * <p>Public since 00.80.00 (V00.80 P010): the audit-integrity export codec
+ * reuses this hardened engine (depth cap, deterministic escaping) instead of
+ * duplicating a JSON writer.
+ *
  * @since 00.75.00
  */
-final class CanonicalJson {
+@com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi
+public final class CanonicalJson {
 
   private CanonicalJson() {
   }
@@ -50,7 +55,7 @@ final class CanonicalJson {
    * as an object with sorted keys), {@link String}, {@link Integer} /
    * {@link Long}.
    */
-  static void write(StringBuilder out, Object value) {
+  public static void write(StringBuilder out, Object value) {
     switch (value) {
       case null -> throw new PayloadCodecException("canonical JSON does not encode null");
       case Map<?, ?> map -> writeObject(out, map);
@@ -109,7 +114,7 @@ final class CanonicalJson {
    * Parses a canonical JSON document into {@link Map} / {@link String} /
    * {@link Long} values.
    */
-  static Object parse(String json) {
+  public static Object parse(String json) {
     Parser parser = new Parser(json);
     parser.skipWhitespace();
     Object value = parser.parseValue();
