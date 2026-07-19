@@ -30,6 +30,7 @@ import com.svenruppert.jsentinel.events.api.JSentinelEvent;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.RecordComponent;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -41,11 +42,22 @@ import java.util.TreeMap;
  *
  * <p>Works for every framework event (all records) and for application events
  * declared as records. Non-record events contribute no extra attributes.
+ * A {@code null} top-level component is omitted from the attribute map, and
+ * nested record components render length-prefixed (R01) — see
+ * {@code renderRecord} for the injectivity rationale.
  *
  * @since 00.75.00
  */
 @ExperimentalJSentinelApi
 public final class RecordReflectionCanonicalizer implements JSentinelEventCanonicalizer {
+
+  /**
+   * Marker emitted for a {@code null} nested-record component. It is emitted
+   * bare — outside the length-prefixed {@code <utf8len>:value} form — so no
+   * String value can collide with it: every non-null value carries its length
+   * prefix (R01).
+   */
+  private static final String NULL_COMPONENT = "null";
 
   @Override
   public CanonicalJSentinelEventPayload canonicalize(JSentinelEvent event) {
@@ -55,7 +67,16 @@ public final class RecordReflectionCanonicalizer implements JSentinelEventCanoni
         if ("metadata".equals(component.getName())) {
           continue;
         }
-        attributes.put(component.getName(), readComponent(event, component));
+        Object value = readAccessor(event, component);
+        if (value == null) {
+          // R01: a null top-level component is OMITTED instead of rendering the
+          // string "null" — presence vs. absence of the attribute key is
+          // unambiguous in the encoded map, whereas the old "null" rendering
+          // collided with a genuine "null" String value. Non-null values render
+          // exactly as before, so flat-record payloads stay byte-identical.
+          continue;
+        }
+        attributes.put(component.getName(), render(component.getName(), value));
       }
     }
     return new CanonicalJSentinelEventPayload(
@@ -70,10 +91,6 @@ public final class RecordReflectionCanonicalizer implements JSentinelEventCanoni
         attributes);
   }
 
-  private static String readComponent(Object record, RecordComponent component) {
-    return render(component.getName(), readAccessor(record, component));
-  }
-
   private static Object readAccessor(Object record, RecordComponent component) {
     try {
       return component.getAccessor().invoke(record);
@@ -85,16 +102,17 @@ public final class RecordReflectionCanonicalizer implements JSentinelEventCanoni
   }
 
   /**
-   * Renders a single component value to a deterministic string. R016: only
-   * value-typed components whose textual form is stable across JVMs and restarts
-   * are accepted. {@code String.valueOf} on an array / collection / arbitrary
-   * object yields an identity hash ({@code [B@1a2b3c}) or an order-dependent
-   * rendering, which would silently change the signature base and break
-   * verification. Such components are rejected loudly instead.
+   * Renders a single non-null component value to a deterministic string. R016:
+   * only value-typed components whose textual form is stable across JVMs and
+   * restarts are accepted. {@code String.valueOf} on an array / collection /
+   * arbitrary object yields an identity hash ({@code [B@1a2b3c}) or an
+   * order-dependent rendering, which would silently change the signature base
+   * and break verification. Such components are rejected loudly instead.
+   * {@code null} handling is the caller's concern (omission at top level, the
+   * bare {@link #NULL_COMPONENT} marker inside nested-record framing).
    */
   private static String render(String componentName, Object value) {
     return switch (value) {
-      case null -> "null";
       case String s -> s;
       case Boolean b -> b.toString();
       case Character c -> c.toString();
@@ -110,13 +128,24 @@ public final class RecordReflectionCanonicalizer implements JSentinelEventCanoni
   }
 
   /**
-   * Renders a nested value-record deterministically: components sorted by name,
-   * each rendered recursively, as {@code (name=value;…)}.
+   * Renders a nested value-record deterministically and injectively: components
+   * sorted by name, each non-null value emitted length-prefixed as
+   * {@code name=<utf8-byte-length>:value} (the same framing idea as the
+   * envelope signature base), parts joined with {@code ';'} inside
+   * {@code (...)}. The explicit byte length makes the rendering unambiguous for
+   * any value content — a value containing {@code ';'} or {@code '='} cannot be
+   * reframed as a different component set, closing the R01 collision where
+   * {@code R(a="x;b=y", b="z")} and {@code R(a="x", b="y;b=z")} rendered
+   * identically. A {@code null} component renders as the bare
+   * {@code name=null} marker outside the length-prefixed form, which no String
+   * value can produce (a genuine {@code "null"} String frames as
+   * {@code name=4:null}).
    */
   private static String renderRecord(Record record) {
     TreeMap<String, String> parts = new TreeMap<>();
     for (RecordComponent component : record.getClass().getRecordComponents()) {
-      parts.put(component.getName(), readComponent(record, component));
+      Object value = readAccessor(record, component);
+      parts.put(component.getName(), frame(component.getName(), value));
     }
     StringBuilder sb = new StringBuilder("(");
     boolean first = true;
@@ -128,5 +157,15 @@ public final class RecordReflectionCanonicalizer implements JSentinelEventCanoni
       sb.append(e.getKey()).append('=').append(e.getValue());
     }
     return sb.append(')').toString();
+  }
+
+  /** Frames one nested-record component value: bare null marker or length-prefixed rendering. */
+  private static String frame(String componentName, Object value) {
+    if (value == null) {
+      return NULL_COMPONENT;
+    }
+    String rendered = render(componentName, value);
+    int utf8Length = rendered.getBytes(StandardCharsets.UTF_8).length;
+    return utf8Length + ":" + rendered;
   }
 }

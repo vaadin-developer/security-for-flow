@@ -43,6 +43,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 /**
@@ -125,7 +126,17 @@ public final class DefaultJSentinelEventBus implements JSentinelEventBus, HasLog
     Subscription subscription = new Subscription(eventType,
         (JSentinelEventListener<? super JSentinelEvent>) listener, options);
     subscriptions.add(subscription);
-    return () -> subscriptions.remove(subscription);
+    // R02: Subscription is a value record, so two subscribe() calls with the
+    // same arguments create equal-but-distinct entries. The registration must
+    // (a) remove by identity, so it can only ever detach ITS OWN entry, and
+    // (b) remove at most once, so closing the same registration twice can
+    // never detach an equal sibling subscription.
+    AtomicBoolean closed = new AtomicBoolean();
+    return () -> {
+      if (closed.compareAndSet(false, true)) {
+        subscriptions.removeIf(s -> s == subscription);
+      }
+    };
   }
 
   private void dispatch(JSentinelEvent event) {

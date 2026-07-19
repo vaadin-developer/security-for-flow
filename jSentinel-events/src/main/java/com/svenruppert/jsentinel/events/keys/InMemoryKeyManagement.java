@@ -54,12 +54,18 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class InMemoryKeyManagement
     implements JSentinelEventSigningKeyProvider, JSentinelEventVerificationKeyResolver {
 
+  // R00: id and key pair live in ONE immutable holder behind a single volatile
+  // reference, so a reader can never observe the new id paired with the old key
+  // material (or vice versa) — the previous two separate volatile stores made
+  // exactly that interleaving possible during rotate().
+  private record CurrentKey(KeyId keyId, KeyPair keyPair) {
+  }
+
   private final SignatureAlgorithm algorithm;
   private final Map<KeyId, PublicKey> verificationKeys = new ConcurrentHashMap<>();
   private final Set<KeyId> revoked = ConcurrentHashMap.newKeySet();
 
-  private volatile KeyId currentKeyId;
-  private volatile KeyPair currentKeyPair;
+  private volatile CurrentKey current;
 
   /**
    * Creates a manager with a freshly generated initial key pair.
@@ -71,24 +77,31 @@ public final class InMemoryKeyManagement
     this.algorithm = Objects.requireNonNull(algorithm, "algorithm");
     Objects.requireNonNull(initialKeyId, "initialKeyId");
     KeyPair pair = algorithm.generateKeyPair();
-    this.currentKeyId = initialKeyId;
-    this.currentKeyPair = pair;
     verificationKeys.put(initialKeyId, pair.getPublic());
+    this.current = new CurrentKey(initialKeyId, pair);
   }
 
   @Override
   public KeyId currentKeyId() {
-    return currentKeyId;
+    return current.keyId();
   }
 
   @Override
   public PrivateKey currentSigningKey() {
-    return currentKeyPair.getPrivate();
+    return current.keyPair().getPrivate();
   }
 
   @Override
   public SignatureAlgorithm currentAlgorithm() {
     return algorithm;
+  }
+
+  @Override
+  public SigningKeySnapshot signingSnapshot() {
+    // One volatile read — keyId and private key are guaranteed to belong to
+    // the same key generation even while rotate() runs concurrently (R00).
+    CurrentKey snapshot = current;
+    return new SigningKeySnapshot(snapshot.keyId(), algorithm, snapshot.keyPair().getPrivate());
   }
 
   @Override
@@ -105,7 +118,7 @@ public final class InMemoryKeyManagement
     if (!verificationKeys.containsKey(keyId)) {
       return KeyStatus.UNKNOWN;
     }
-    return keyId.equals(currentKeyId)
+    return keyId.equals(current.keyId())
         ? KeyStatus.ACTIVE
         : KeyStatus.ACCEPTED_FOR_VERIFICATION;
   }
@@ -119,9 +132,11 @@ public final class InMemoryKeyManagement
   public synchronized void rotate(KeyId newKeyId) {
     Objects.requireNonNull(newKeyId, "newKeyId");
     KeyPair pair = algorithm.generateKeyPair();
-    this.currentKeyId = newKeyId;
-    this.currentKeyPair = pair;
+    // Publish the verification key BEFORE swapping the holder, so any reader
+    // that already sees the new current key can also resolve it (R00). The
+    // holder itself is swapped in a single volatile store.
     verificationKeys.put(newKeyId, pair.getPublic());
+    this.current = new CurrentKey(newKeyId, pair);
   }
 
   /**

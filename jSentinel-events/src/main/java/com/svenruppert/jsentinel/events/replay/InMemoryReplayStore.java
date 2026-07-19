@@ -27,6 +27,7 @@ package com.svenruppert.jsentinel.events.replay;
 
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.events.api.EventEnvelopeId;
+import com.svenruppert.jsentinel.util.CapacityBound;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -52,9 +53,6 @@ import java.util.TreeMap;
 @ExperimentalJSentinelApi
 public final class InMemoryReplayStore implements JSentinelEventReplayStore {
 
-  /** Default bound on the number of retained envelope ids. */
-  public static final int DEFAULT_CAPACITY = 100_000;
-
   private final Map<EventEnvelopeId, Instant> seen = new HashMap<>();
   // R08 (V00.76.10): a secondary expiry-ordered index so soonest-to-expire
   // eviction and purge are O(log n) / O(k) instead of a full O(n) min-scan on
@@ -64,15 +62,23 @@ public final class InMemoryReplayStore implements JSentinelEventReplayStore {
   private final NavigableMap<Instant, LinkedHashSet<EventEnvelopeId>> byExpiry = new TreeMap<>();
   private final int capacity;
 
+  /**
+   * Creates a store bounded to {@link CapacityBound#DEFAULT_MAX_ENTRIES}
+   * retained envelope ids — the single-home capacity contract shared by every
+   * attacker-keyed in-memory store (R06, CWE-770).
+   */
   public InMemoryReplayStore() {
-    this(DEFAULT_CAPACITY);
+    this(CapacityBound.DEFAULT_MAX_ENTRIES);
   }
 
+  /**
+   * Creates a store bounded to {@code capacity} retained envelope ids.
+   *
+   * @param capacity the upper bound; must be positive
+   * @throws IllegalArgumentException if {@code capacity < 1}
+   */
   public InMemoryReplayStore(int capacity) {
-    if (capacity < 1) {
-      throw new IllegalArgumentException("capacity must be >= 1, was " + capacity);
-    }
-    this.capacity = capacity;
+    this.capacity = CapacityBound.requirePositiveCapacity(capacity);
   }
 
   @Override

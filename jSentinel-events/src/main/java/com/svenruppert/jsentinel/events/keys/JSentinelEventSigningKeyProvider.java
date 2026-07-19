@@ -55,4 +55,24 @@ public interface JSentinelEventSigningKeyProvider {
    * @return the signature algorithm bound to the current key
    */
   SignatureAlgorithm currentAlgorithm();
+
+  /**
+   * Captures the current signing key as one self-consistent snapshot — key id,
+   * algorithm and private key belonging to the same key generation. The publish
+   * pipeline calls this exactly once per publish and uses the snapshot for both
+   * the envelope's {@code keyId} stamp and the signing operation (R00).
+   *
+   * <p>The {@code default} implementation is <strong>not</strong> atomic: it
+   * composes {@link #currentKeyId()}, {@link #currentAlgorithm()} and
+   * {@link #currentSigningKey()} as three separate reads. A provider whose
+   * current key can change concurrently (rotation) <strong>must</strong>
+   * override this method to build the snapshot from one consistent internal
+   * read; immutable providers can rely on the default.
+   *
+   * @return a self-consistent snapshot of the current signing key
+   * @since 00.80.00
+   */
+  default SigningKeySnapshot signingSnapshot() {
+    return new SigningKeySnapshot(currentKeyId(), currentAlgorithm(), currentSigningKey());
+  }
 }

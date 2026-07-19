@@ -63,6 +63,29 @@ class DefaultJSentinelEventBusTest {
   }
 
   @Test
+  @DisplayName("R02: closing one registration twice never detaches an equal sibling subscription")
+  void doubleCloseKeepsSiblingSubscription() {
+    DefaultJSentinelEventBus bus = bus(ListenerErrorStrategy.ISOLATE_AND_CONTINUE);
+    AtomicInteger count = new AtomicInteger();
+    // Same listener instance + same (default) options: the two Subscription
+    // records are equal but distinct — the old equality-based remove() plus a
+    // double close() silently killed the second subscription.
+    JSentinelEventListener<LoginSucceededEvent> listener = e -> count.incrementAndGet();
+    Registration first = bus.subscribe(LoginSucceededEvent.class, listener);
+    Registration second = bus.subscribe(LoginSucceededEvent.class, listener);
+
+    first.close();
+    first.close(); // idempotent — must not remove anything on the second call
+
+    bus.publish(BusFixtures.event());
+    assertEquals(1, count.get(), "the second subscription must still receive events");
+
+    second.close();
+    bus.publish(BusFixtures.event());
+    assertEquals(1, count.get(), "after closing the second registration nothing listens");
+  }
+
+  @Test
   @DisplayName("listeners only receive events of their subscribed type")
   void typeFiltering() {
     DefaultJSentinelEventBus bus = bus(ListenerErrorStrategy.ISOLATE_AND_CONTINUE);

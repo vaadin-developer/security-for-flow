@@ -53,12 +53,16 @@ import java.util.Optional;
  * as read-only gates first — resolve key, check key status, check payload hash,
  * verify signature, check time window, replay {@code hasSeen}, sequence
  * decision, producer policy — and only when every gate passes are the two side
- * effects committed (replay {@code markSeen}, sequence update). An envelope is
+ * effects committed (sequence compare-and-advance first, then replay
+ * {@code markSeen}). An envelope is
  * {@link JSentinelEventVerificationResult.Valid} only when every gate passes.
  *
  * <p>Committing the side effects last (V00.75.10) means an envelope that fails a
  * later gate never poisons the replay store nor advances the per-producer
- * sequence.
+ * sequence. Within the commit, the sequence CAS runs first and {@code markSeen}
+ * only after a successful CAS (V00.80.00, R04): a CAS-losing envelope is
+ * rejected without a replay-store entry, so its later legitimate reprocessing
+ * is not misclassified as {@code ReplayDetected}.
  *
  * @since 00.75.00
  */
@@ -173,23 +177,33 @@ public final class ConsumePipeline {
           producerId, envelope.eventType(), tenantId);
     }
 
-    // Every gate passed — now commit the side effects. markSeen stays atomic to
-    // settle a concurrent duplicate that slipped past the read-only hasSeen
-    // check above.
-    if (!replayStore.markSeen(envelope.envelopeId(), envelope.expiresAt())) {
-      return new JSentinelEventVerificationResult.ReplayDetected(envelope.envelopeId());
-    }
-    // R016 (V00.76.10): advance the per-producer sequence with an atomic
-    // compare-and-advance against the value we observed at line `last = ...`. If
-    // a concurrent envelope advanced the sequence between our read and this
-    // commit, the CAS fails and we reject this one as a SequenceViolation —
-    // closing the check-then-act race where two distinct envelopes both claiming
-    // the same next sequence could both pass and both commit (lost update /
+    // Every gate passed — now commit the side effects: sequence CAS FIRST,
+    // markSeen only on CAS success (R04). The previous order (markSeen before
+    // the CAS) poisoned the replay store for a CAS-losing envelope — it was
+    // rejected as SequenceViolation with its id already marked seen, so its
+    // legitimate redelivery was forever misclassified as ReplayDetected.
+    //
+    // R016 (V00.76.10): the CAS advances the per-producer sequence atomically
+    // against the value we observed at line `last = ...`. If a concurrent
+    // envelope advanced the sequence between our read and this commit, the CAS
+    // fails and we reject this one as a SequenceViolation — closing the
+    // check-then-act race where two distinct envelopes both claiming the same
+    // next sequence could both pass and both commit (lost update /
     // monotonicity break).
     if (!sequenceStore.compareAndAdvance(tenantId, producerId, last, envelope.sequence())) {
       EventSequence expected = last.map(EventSequence::next).orElse(EventSequence.FIRST);
       return new JSentinelEventVerificationResult.SequenceViolation(
           tenantId, producerId, expected, envelope.sequence());
+    }
+    // markSeen stays atomic to settle a concurrent duplicate that slipped past
+    // the read-only hasSeen check above. Residual crash-window semantics (R04):
+    // if the process dies between the successful CAS and this markSeen, the
+    // sequence is advanced but the id is not recorded — a redelivery of the
+    // same envelope is then rejected via SequenceViolation (its sequence is
+    // already consumed), which is still fail-closed and leaves the replay
+    // store unpoisoned.
+    if (!replayStore.markSeen(envelope.envelopeId(), envelope.expiresAt())) {
+      return new JSentinelEventVerificationResult.ReplayDetected(envelope.envelopeId());
     }
 
     return new JSentinelEventVerificationResult.Valid(envelope);

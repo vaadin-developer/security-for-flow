@@ -32,6 +32,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.security.PublicKey;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -82,5 +85,51 @@ class InMemoryKeyManagementTest {
     InMemoryKeyManagement km = new InMemoryKeyManagement(algorithm, K1);
     assertEquals(KeyStatus.UNKNOWN, km.keyStatus(KeyId.of("nope")));
     assertTrue(km.resolveVerificationKey(KeyId.of("nope")).isEmpty());
+  }
+
+  @Test
+  @DisplayName("R00: signingSnapshot reflects the current key and signs verifiably under its own id")
+  void signingSnapshotIsSelfConsistent() {
+    InMemoryKeyManagement km = new InMemoryKeyManagement(algorithm, K1);
+    km.rotate(K2);
+    SigningKeySnapshot snapshot = km.signingSnapshot();
+    assertEquals(K2, snapshot.keyId());
+    byte[] data = "base".getBytes(StandardCharsets.UTF_8);
+    byte[] signature = snapshot.algorithm().sign(data, snapshot.privateKey());
+    assertTrue(snapshot.algorithm().verify(data, signature,
+        km.resolveVerificationKey(snapshot.keyId()).orElseThrow()));
+  }
+
+  @Test
+  @DisplayName("R00: signingSnapshot stays self-consistent while rotate() runs concurrently")
+  void snapshotSelfConsistentUnderConcurrentRotation() throws InterruptedException {
+    // No mock, no fake interleave: a real rotation loop hammers the manager
+    // while snapshots are taken. Every snapshot must sign verifiably under its
+    // OWN keyId — with the old two-volatile-store layout a reader could
+    // observe the new id paired with the old private key, and this invariant
+    // would fail.
+    InMemoryKeyManagement km = new InMemoryKeyManagement(algorithm, K1);
+    byte[] data = "base".getBytes(StandardCharsets.UTF_8);
+    AtomicBoolean stop = new AtomicBoolean();
+    AtomicInteger rotations = new AtomicInteger();
+    Thread rotator = new Thread(() -> {
+      while (!stop.get()) {
+        km.rotate(KeyId.of("rotated-" + rotations.incrementAndGet()));
+      }
+    });
+    rotator.start();
+    try {
+      for (int i = 0; i < 100; i++) {
+        SigningKeySnapshot snapshot = km.signingSnapshot();
+        byte[] signature = snapshot.algorithm().sign(data, snapshot.privateKey());
+        PublicKey verificationKey =
+            km.resolveVerificationKey(snapshot.keyId()).orElseThrow();
+        assertTrue(snapshot.algorithm().verify(data, signature, verificationKey),
+            "snapshot keyId and private key must always belong together");
+      }
+    } finally {
+      stop.set(true);
+      rotator.join();
+    }
   }
 }

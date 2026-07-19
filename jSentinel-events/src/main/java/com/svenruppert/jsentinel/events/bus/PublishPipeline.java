@@ -39,6 +39,7 @@ import com.svenruppert.jsentinel.events.codec.CanonicalJSentinelEventPayload;
 import com.svenruppert.jsentinel.events.codec.JSentinelEventCanonicalizer;
 import com.svenruppert.jsentinel.events.codec.PayloadCodec;
 import com.svenruppert.jsentinel.events.keys.JSentinelEventSigningKeyProvider;
+import com.svenruppert.jsentinel.events.keys.SigningKeySnapshot;
 import com.svenruppert.jsentinel.events.producer.JSentinelEventProducerPolicy;
 import com.svenruppert.jsentinel.events.replay.JSentinelEventReplayStore;
 import com.svenruppert.jsentinel.events.sequence.JSentinelEventSequenceStore;
@@ -112,6 +113,11 @@ public final class PublishPipeline {
     String canonicalPayloadHash = PayloadDigest.hash(hashAlgorithm, canonicalPayload);
 
     Instant now = clock.get();
+    // R00: exactly ONE key snapshot per publish — the keyId stamp and the
+    // signing key come from the same consistent read, so a concurrent key
+    // rotation between the builder stage and the sign stage can never yield an
+    // envelope stamped keyId=OLD but signed with NEW private material.
+    SigningKeySnapshot signingKey = signingKeyProvider.signingSnapshot();
     SignedJSentinelEventEnvelopeBuilder builder = SignedJSentinelEventEnvelopeBuilder.create()
         .envelopeId(EventEnvelopeId.random())
         .eventId(event.eventId())
@@ -124,8 +130,8 @@ public final class PublishPipeline {
         .expiresAt(now.plus(ttl))
         .correlationId(CorrelationId.random())
         .sequence(sequence)
-        .keyId(signingKeyProvider.currentKeyId())
-        .signatureAlgorithm(signingKeyProvider.currentAlgorithm().id())
+        .keyId(signingKey.keyId())
+        .signatureAlgorithm(signingKey.algorithm().id())
         .payloadContentType(codec.contentType())
         .payloadHashAlgorithm(hashAlgorithm)
         .canonicalPayloadHash(canonicalPayloadHash)
@@ -133,8 +139,7 @@ public final class PublishPipeline {
         .signature(new byte[]{0});
 
     byte[] signatureBase = EnvelopeSignatureBase.compute(builder.build());
-    byte[] signature = signingKeyProvider.currentAlgorithm()
-        .sign(signatureBase, signingKeyProvider.currentSigningKey());
+    byte[] signature = signingKey.algorithm().sign(signatureBase, signingKey.privateKey());
     SignedJSentinelEventEnvelope envelope = builder.signature(signature).build();
 
     replayStore.markSeen(envelope.envelopeId(), envelope.expiresAt());

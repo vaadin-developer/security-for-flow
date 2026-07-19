@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("InMemoryReplayStore")
@@ -117,6 +118,13 @@ class InMemoryReplayStoreTest {
       store.markSeen(EventEnvelopeId.of("env-" + i), future);
     }
     assertEquals(3, store.size());
+  }
+
+  @Test
+  @DisplayName("R06: a capacity below 1 is rejected via the shared CapacityBound guard")
+  void rejectsNonPositiveCapacity() {
+    assertThrows(IllegalArgumentException.class, () -> new InMemoryReplayStore(0));
+    assertThrows(IllegalArgumentException.class, () -> new InMemoryReplayStore(-1));
   }
 
   @Test
