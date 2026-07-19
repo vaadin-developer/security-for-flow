@@ -672,4 +672,40 @@ Alle Module grün.
 - **proxybuilder 00.11.00** (`com.svenruppert:proxybuilder` +
   `proxybuilder-annotations`) für den Compile-Time-Processor
 - **Lizenz:** EUPL v1.2
-- **Aktuelle Version:** `00.70.00` (feature-complete, vor Release-Tag)
+- **Aktuelle Version:** `00.80.00` (Betrieb & Forensik — siehe § 18; §1–§17 dokumentieren den V00.70.00-Kernstand)
+
+---
+
+## 18. V00.80.00 — Betrieb & Forensik (Delta zu §1–§17)
+
+> Die Abschnitte 1–17 beschreiben den V00.70.00-Stand; die Releases
+> V00.71–V00.79.41 sind in den jeweiligen `RELEASE-NOTES-*.md` inventarisiert.
+> V00.80.00 liefert Konzept-Ziel 9 (Betrieb & Monitoring), Ziel 8
+> (Event-Integrationen) und Ziel 7 (Tamper-Evident Audit) — sieben neue
+> Module plus Erweiterungen in `jSentinel-events`/`jSentinel-events-rest`.
+
+### Neue Module (Reaktor: 61)
+
+| Modul | Zweck |
+|---|---|
+| `jSentinel-monitoring` | ⚠️ Ziel 9: `JSentinelMetricsPublisher`-SPI (Counter/Gauges, never-throw) + `JSentinelMetricNames`-Katalog (9 Konzept-Namen `security.eventbus.*` verbatim + auth/session/audit-Namen) + `MetricsEventBusListener`-Bridge (rejected.total als Umbrella + Drilldowns) + `JSentinelHealthIndicator`/`JSentinelHealthCheck` (dx-`HealthFinding`-Modell) + `MonitoringDiagnosticContributor` |
+| `jSentinel-events-webhook` | ⚠️ Ziel 8: `WebhookEventPublisher` — signierte Envelopes per JDK-HttpClient (bounded Queue + Virtual-Thread-Worker, Retry/Backoff+Jitter, Dead-Drop-Counter, Bearer via Supplier nie geloggt, https-Pflicht außer Loopback, bewusst KEIN zweiter HMAC-Layer) |
+| `jSentinel-events-opentelemetry` | ⚠️ Ziel 8: `OpenTelemetryEventPublisher` — Envelope → OTel-LogRecord via Logs-Bridge-API (api-only, noop-safe); `jsentinel.*`-Attribut-Vokabular ohne Payload/Signatur |
+| `jSentinel-events-siem` | ⚠️ Ziel 8: `SiemEventExporter` (Appendable-basiert — Framework liefert nur Formatting) + `CefEnvelopeFormatter` (CEF:0) / `LeefEnvelopeFormatter` (LEEF 2.0) / `JsonLinesEnvelopeFormatter` (NDJSON, Full-Mode als Opt-in) |
+| `jSentinel-audit-integrity` | ⚠️ Ziel 7: `AuditChainStore`-SPI (append-only, Linkage-CAS) + `AuditChainEntryHasher` (`jsentinel-audit-chain/v1`, H(prev‖entry)) + `AuditChainAppender` + `InMemoryAuditChainStore` + `AuditIntegrityVerifier` (sealed Result, 5 Break-Reasons, fail-closed) + `SignedAuditBatch`/`AuditBatchSigner`/`AuditBatchVerifier` (events-Key-SPIs, kein zweiter Signing-Stack) + `AuditExportService`/`AuditExportNdjsonCodec` (verifizierbare NDJSON-Exporte) + `AuditIntegrityListener`/`AuditRelevancePolicy`/`HashChainingAuditSink` |
+| `jSentinel-audit-integrity-testkit` | ⚠️ `AuditChainStoreContract` (`@Test default`-Suite) + `TestkitChainEntries` (korrekt gehashte Ketten-Fixtures inkl. `tampered(...)`) |
+| `jSentinel-audit-integrity-persistence-eclipsestore` | ⚠️ `EclipseStoreAuditChainStorage.openAt(Path)` — restart-sichere Kette (StorageTreeHardening, RW-Lock); Kette verifiziert über Prozess-Grenzen hinweg |
+
+### Erweiterungen in `jSentinel-events` / `jSentinel-events-rest`
+
+- ⚠️ **Envelope-Tap**: `SignedEnvelopePublisher`-SPI + `JSentinelEventBus.subscribeEnvelope(...)` — EIN Kontrakt für alle Exporter; Fan-out nach Store-Append, Fehler-isoliert (`envelopePublisherFailureCount()`).
+- ⚠️ **In-Tree-Publisher**: `LoggingEventPublisher` (named Stream `com.svenruppert.jsentinel.events`), `EventStreamPublisher` (`java.util.concurrent.Flow`), `JSentinelAlert`/`JSentinelAlertSink`/`LoggingAlertSink`/`JSentinelAlertPublisher` (Schwelle default ERROR — kritische Verifikationsfehler erzeugen Alerts).
+- ⚠️ **Self-Observability**: Marker `EventBusSelfObservabilityEvent` (die 6 INTEGRITY-Records), `EventBusObservabilityPublisher` (direct-dispatch, nie durch die signierte Pipeline → strukturell rekursionsfrei), `SelfObservabilityEvents.fromVerification(...)` (genau EIN Event pro Fehler; Replay → CRITICAL), `DeadLetterRecorder`.
+- ⚠️ **Strict-Mode-Consume-Wiring**: `ConsumeFailureAction`/`ConsumeFailurePolicy` (`strict()` fail-closed / `operationalDefaults()` / Builder) + `ConsumeFailureHandler` (Event + Metrik-Seam + optional Dead-Letter + Operator-Log mit stabilen `events/...`-Codes; Fehlkonfiguration scheitert beim Wiring); `EventPublishService` mit optionalem Handler-Parameter, HTTP-Mapping unverändert.
+- ⚠️ **Wire-Codec-Umzug**: `EnvelopeWireCodec`/`EventWireException` jetzt in `com.svenruppert.jsentinel.events.wire` (+ `encodeMetadata(...)`-Projektion ohne Payload/Signatur); events-rest behält einen `@Deprecated(forRemoval)`-Delegator für ein Release. `CanonicalJson` ist public (Export-Codec-Reuse).
+
+### Guides
+
+- `docs/dx/5-minute-setup-monitoring.md`
+- `docs/dx/5-minute-setup-event-exporters.md`
+- `docs/dx/5-minute-setup-audit-integrity.md`
