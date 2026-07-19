@@ -26,8 +26,10 @@ package com.svenruppert.jsentinel.events.rest;
  */
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
+import com.svenruppert.jsentinel.audit.LogFieldScrubber;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.events.store.StoredEnvelope;
+import org.slf4j.Logger;
 
 import java.util.Objects;
 import java.util.Set;
@@ -57,11 +59,30 @@ public final class SseEventBroadcaster implements HasLogger {
   static final long DROP_LOG_INTERVAL = 100L;
 
   private final EnvelopeWireCodec wireCodec;
+  private final Logger logger;
   private final Set<SseSubscriber> subscribers = ConcurrentHashMap.newKeySet();
   private final AtomicLong droppedFrames = new AtomicLong();
 
   public SseEventBroadcaster(EnvelopeWireCodec wireCodec) {
+    this(wireCodec, HasLogger.staticLogger());
+  }
+
+  /**
+   * R07: {@code (Logger)} test/injection seam, mirroring
+   * {@code LoggingAuditSink} in jSentinel-core — lets tests pin the scrubbed
+   * drop-WARN line without a mock framework.
+   *
+   * @param wireCodec the frame codec
+   * @param logger the target SLF4J logger
+   */
+  public SseEventBroadcaster(EnvelopeWireCodec wireCodec, Logger logger) {
     this.wireCodec = Objects.requireNonNull(wireCodec, "wireCodec");
+    this.logger = Objects.requireNonNull(logger, "logger");
+  }
+
+  @Override
+  public Logger logger() {
+    return logger;
   }
 
   /**
@@ -92,10 +113,13 @@ public final class SseEventBroadcaster implements HasLogger {
         // R041: count every drop; rate-limit the WARN (1st + every Nth) so a
         // persistently-slow consumer cannot flood the log.
         if (dropped % DROP_LOG_INTERVAL == 1) {
+          // R07 (CWE-117, sibling of JS-SEC-019): the envelopeId is only validated
+          // non-blank and the wire decode path can materialize real CR/LF into it —
+          // scrub before logging so an authorized publisher cannot forge log lines.
           logger().warn(
               "events-rest/sse-drop: subscriber queue full, dropped frame for {} "
                   + "(total dropped={})",
-              stored.envelope().envelopeId().value(), dropped);
+              LogFieldScrubber.scrub(stored.envelope().envelopeId().value()), dropped);
         }
       }
     }

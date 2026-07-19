@@ -46,9 +46,10 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
-@DisplayName("SseStreamHttpHandler — disconnect handling")
+@DisplayName("SseStreamHttpHandler")
 class SseStreamHttpHandlerTest {
 
   @Test
@@ -56,14 +57,14 @@ class SseStreamHttpHandlerTest {
   void disconnectRemovesSubscription() {
     assertTimeoutPreemptively(java.time.Duration.ofSeconds(5), () -> {
       SseEventBroadcaster broadcaster = new SseEventBroadcaster(new EnvelopeWireCodec());
-      // keepAliveSeconds=0 → streamLive writes a keep-alive on the first idle
+      // keepAliveSeconds=1 → streamLive writes a keep-alive after the first idle
       // poll; the throwing OutputStream makes that first write fail, simulating
       // a client that has gone away. No envelope store → no replay.
       RestSubjectResolver authorized = req -> Optional.of(new JSentinelSubject(
           "u", "U", Set.of(), Set.of(new PermissionName(EventsRestRoutes.STREAM_PERMISSION))));
       SseStreamHttpHandler handler = new SseStreamHttpHandler(
           broadcaster, null, new EnvelopeWireCodec(), authorized,
-          EventsRestRoutes.STREAM_PERMISSION, 0L, 100);
+          EventsRestRoutes.STREAM_PERMISSION, 1L, 100);
 
       handler.handle(new DisconnectedExchange());
 
@@ -79,7 +80,7 @@ class SseStreamHttpHandlerTest {
     RestSubjectResolver noSubject = req -> Optional.empty();
     SseStreamHttpHandler handler = new SseStreamHttpHandler(
         broadcaster, null, new EnvelopeWireCodec(), noSubject,
-        EventsRestRoutes.STREAM_PERMISSION, 0L, 100);
+        EventsRestRoutes.STREAM_PERMISSION, 1L, 100);
 
     CapturingExchange ex = new CapturingExchange();
     handler.handle(ex);
@@ -97,7 +98,7 @@ class SseStreamHttpHandlerTest {
         "u", "U", Set.of(), Set.of(new PermissionName(EventsRestRoutes.PUBLISH_PERMISSION))));
     SseStreamHttpHandler handler = new SseStreamHttpHandler(
         broadcaster, null, new EnvelopeWireCodec(), wrongPerm,
-        EventsRestRoutes.STREAM_PERMISSION, 0L, 100);
+        EventsRestRoutes.STREAM_PERMISSION, 1L, 100);
 
     CapturingExchange ex = new CapturingExchange();
     handler.handle(ex);
@@ -116,7 +117,7 @@ class SseStreamHttpHandlerTest {
           "u", "U", Set.of(), Set.of(new PermissionName("events:*"))));
       SseStreamHttpHandler handler = new SseStreamHttpHandler(
           broadcaster, null, new EnvelopeWireCodec(), wildcard,
-          EventsRestRoutes.STREAM_PERMISSION, 0L, 100);
+          EventsRestRoutes.STREAM_PERMISSION, 1L, 100);
 
       CapturingExchange ex = new CapturingExchange();
       handler.handle(ex);
@@ -160,6 +161,27 @@ class SseStreamHttpHandlerTest {
 
       first.interrupt();
     });
+  }
+
+  @Test
+  @DisplayName("R08: keepAliveSeconds < 1 is rejected at construction (poll(0) would busy-spin)")
+  void keepAliveSecondsGuard() {
+    assertThrows(IllegalArgumentException.class, () -> newHandler(0L, 100));
+    assertThrows(IllegalArgumentException.class, () -> newHandler(-1L, 100));
+  }
+
+  @Test
+  @DisplayName("R08: replayBatch < 1 is rejected at construction (invalid findAfter page size)")
+  void replayBatchGuard() {
+    assertThrows(IllegalArgumentException.class, () -> newHandler(1L, 0));
+    assertThrows(IllegalArgumentException.class, () -> newHandler(1L, -1));
+  }
+
+  private static SseStreamHttpHandler newHandler(long keepAliveSeconds, int replayBatch) {
+    return new SseStreamHttpHandler(
+        new SseEventBroadcaster(new EnvelopeWireCodec()), null, new EnvelopeWireCodec(),
+        req -> Optional.empty(), EventsRestRoutes.STREAM_PERMISSION,
+        keepAliveSeconds, replayBatch);
   }
 
   /** Fake exchange whose response body throws on the first write (dead client). */

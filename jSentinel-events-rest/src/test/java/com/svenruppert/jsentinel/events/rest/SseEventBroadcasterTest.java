@@ -25,6 +25,7 @@ package com.svenruppert.jsentinel.events.rest;
  * #L%
  */
 
+import com.svenruppert.jsentinel.events.api.EventEnvelopeId;
 import com.svenruppert.jsentinel.events.api.SignedJSentinelEventEnvelope;
 import com.svenruppert.jsentinel.events.store.JSentinelEventCursor;
 import com.svenruppert.jsentinel.events.store.StoredEnvelope;
@@ -94,5 +95,34 @@ class SseEventBroadcasterTest {
 
     assertEquals(2L, broadcaster.droppedFrameCount(),
         "each dropped frame must increment the backpressure counter");
+  }
+
+  @Test
+  @DisplayName("R07: CR/LF in the dropped envelope's id is scrubbed in the drop-WARN (no forged log line)")
+  void dropWarnScrubsEnvelopeId() {
+    RecordingSlf4jLogger logger = new RecordingSlf4jLogger();
+    SseEventBroadcaster broadcaster = new SseEventBroadcaster(wire, logger);
+    // a subscriber that is always full → the first broadcast drops and WARNs
+    broadcaster.register(frame -> false);
+
+    SignedJSentinelEventEnvelope env = new EventsRestFixtures().signedEnvelope();
+    SignedJSentinelEventEnvelope evil = withEnvelopeId(env, "evil\r\nfake=INJECTED");
+    broadcaster.broadcast(new StoredEnvelope(JSentinelEventCursor.at(1), evil));
+
+    String line = logger.firstMessage();
+    assertFalse(line.contains("\n"), "log line must not contain a newline: " + line);
+    assertFalse(line.contains("\r"), "log line must not contain a CR: " + line);
+    assertTrue(line.contains("evil??fake=INJECTED"), line);
+  }
+
+  /** Copy of {@code env} with the given envelopeId — EventEnvelopeId only rejects blank values. */
+  private static SignedJSentinelEventEnvelope withEnvelopeId(
+      SignedJSentinelEventEnvelope env, String envelopeId) {
+    return new SignedJSentinelEventEnvelope(EventEnvelopeId.of(envelopeId), env.eventId(),
+        env.eventType(), env.tenantId(), env.subjectId(), env.producerId(), env.occurredAt(),
+        env.issuedAt(), env.expiresAt(), env.correlationId(), env.causationId(), env.sequence(),
+        env.keyId(), env.signatureAlgorithm(), env.payloadContentType(),
+        env.payloadHashAlgorithm(), env.canonicalPayloadHash(), env.canonicalPayload(),
+        env.signature());
   }
 }

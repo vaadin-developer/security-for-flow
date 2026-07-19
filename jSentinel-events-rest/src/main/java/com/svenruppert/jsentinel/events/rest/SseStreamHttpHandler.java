@@ -27,6 +27,7 @@ package com.svenruppert.jsentinel.events.rest;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.dependencies.core.net.HttpStatus;
+import com.svenruppert.jsentinel.audit.LogFieldScrubber;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.authorization.api.JSentinelSubject;
 import com.svenruppert.jsentinel.authorization.api.permissions.PermissionMatcher;
@@ -104,7 +105,16 @@ public final class SseStreamHttpHandler implements HttpHandler, HasLogger {
     this.subjectResolver = Objects.requireNonNull(subjectResolver, "subjectResolver");
     this.requiredPermission = new PermissionName(
         Objects.requireNonNull(requiredPermission, "requiredPermission"));
+    // R08 (CWE-400): keepAliveSeconds <= 0 would busy-spin streamLive() (poll(0) is a tight
+    // loop writing keep-alive frames), and replayBatch <= 0 would reach findAfter(...) as an
+    // invalid page size — reject both at construction, symmetric with maxSubscribers below.
+    if (keepAliveSeconds < 1) {
+      throw new IllegalArgumentException("keepAliveSeconds must be >= 1");
+    }
     this.keepAliveSeconds = keepAliveSeconds;
+    if (replayBatch < 1) {
+      throw new IllegalArgumentException("replayBatch must be >= 1");
+    }
     this.replayBatch = replayBatch;
     if (maxSubscribers < 1) {
       throw new IllegalArgumentException("maxSubscribers must be >= 1");
@@ -180,11 +190,15 @@ public final class SseStreamHttpHandler implements HttpHandler, HasLogger {
         replaySince(resumeCursor(exchange), out);
         streamLive(subscriber, out);
       } catch (IOException disconnected) {
-        logger().info("events-rest/sse-disconnect: {}", disconnected.toString());
+        // R07 (CWE-117): exception texts on these two paths can carry client-influenced or
+        // envelope-derived content — scrub before logging, matching the publish sibling's
+        // JS-SEC-054 treatment of unexpected.toString().
+        logger().info("events-rest/sse-disconnect: {}",
+            LogFieldScrubber.scrub(disconnected.toString()));
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       } catch (Exception e) {
-        logger().warn("events-rest/sse-error: {}", e.toString());
+        logger().warn("events-rest/sse-error: {}", LogFieldScrubber.scrub(e.toString()));
       } finally {
         exchange.close();
       }
@@ -200,7 +214,11 @@ public final class SseStreamHttpHandler implements HttpHandler, HasLogger {
     }
     try {
       return JSentinelEventCursor.at(Long.parseLong(header.get(0).trim()));
-    } catch (NumberFormatException e) {
+    } catch (IllegalArgumentException invalid) {
+      // R05: a malformed value (NumberFormatException) and a negative position (the
+      // cursor's own IllegalArgumentException) both degrade to a full replay from the
+      // start — a client-supplied "-1" must behave exactly like a missing header
+      // instead of aborting the stream.
       return JSentinelEventCursor.start();
     }
   }

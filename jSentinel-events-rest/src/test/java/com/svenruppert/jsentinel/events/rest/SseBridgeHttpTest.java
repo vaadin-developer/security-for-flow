@@ -166,4 +166,36 @@ class SseBridgeHttpTest {
       assertEquals(2, dataLines, "both stored envelopes were replayed");
     });
   }
+
+  @Test
+  @DisplayName("R05: GET /stream with Last-Event-ID: -1 behaves like a missing header (full replay)")
+  void sseNegativeLastEventIdReplaysFromStart() {
+    store.append(fx.signedEnvelope());
+    store.append(fx.signedEnvelope());
+
+    assertTimeoutPreemptively(Duration.ofSeconds(8), () -> {
+      // "-1" parses as a long but is an invalid cursor position — it must degrade to
+      // a replay from the beginning instead of aborting the stream (R05).
+      HttpRequest req = HttpRequest.newBuilder(URI.create(base + EventsRestRoutes.STREAM))
+          .header("Authorization", "Bearer admin")
+          .header("Last-Event-ID", "-1")
+          .GET().build();
+      HttpResponse<InputStream> resp =
+          client.send(req, HttpResponse.BodyHandlers.ofInputStream());
+      assertEquals(HttpStatus.OK.code(), resp.statusCode());
+
+      int dataLines = 0;
+      try (BufferedReader reader = new BufferedReader(
+          new InputStreamReader(resp.body(), StandardCharsets.UTF_8))) {
+        String line;
+        while (dataLines < 2 && (line = reader.readLine()) != null) {
+          if (line.startsWith("data: {")) {
+            dataLines++;
+          }
+        }
+      }
+      assertEquals(2, dataLines,
+          "a negative Last-Event-ID must replay from the beginning, exactly like a missing header");
+    });
+  }
 }
