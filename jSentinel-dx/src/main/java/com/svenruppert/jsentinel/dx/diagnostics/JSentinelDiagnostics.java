@@ -21,10 +21,13 @@ import com.svenruppert.jsentinel.session.SessionStore;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Standalone diagnostic API for the V00.72 DX layer. May be invoked at
@@ -33,11 +36,18 @@ import java.util.Set;
  * Sweep:
  * <ol>
  *   <li>Enumerate core-visible SPIs through {@link ServiceLoader} and
- *       record discovered / missing / duplicate entries.</li>
+ *       record discovered / missing / duplicate entries. A broken
+ *       {@code META-INF/services} entry (missing or non-assignable
+ *       class) surfaces as a
+ *       {@code "diagnostics/provider-load-failure"} warning instead of
+ *       aborting the sweep — one bad entry does not hide the healthy
+ *       ones.</li>
  *   <li>Apply core detection rules (missing-authentication-service,
  *       missing-authorization-service, duplicates,
  *       security-version-without-subject-id-resolver).</li>
- *   <li>Discover {@link DiagnosticContributor}s via {@code ServiceLoader},
+ *   <li>Discover {@link DiagnosticContributor}s via {@code ServiceLoader}
+ *       (broken registrations become
+ *       {@code "diagnostics/provider-load-failure"} warnings too),
  *       invoke each in sorted {@link DiagnosticContributor#id()} order,
  *       and catch any throwable as a
  *       {@code "diagnostics/contributor-failure"} warning.</li>
@@ -74,12 +84,19 @@ public final class JSentinelDiagnostics {
     if (cl == null) {
       cl = JSentinelDiagnostics.class.getClassLoader();
     }
+    return inspect(cl);
+  }
 
+  /**
+   * Test / injection seam: runs the sweep against the supplied loader
+   * instead of the thread context ClassLoader.
+   */
+  static JSentinelServiceReport inspect(ClassLoader cl) {
     InternalBuilder builder = new InternalBuilder();
 
     // 1. core SPI sweep
     for (Class<?> spi : CORE_SPIS) {
-      List<Class<?>> impls = enumerate(spi, cl);
+      List<Class<?>> impls = enumerate(spi, cl, builder);
       String loaderStr = cl.toString();
 
       for (Class<?> impl : impls) {
@@ -118,18 +135,17 @@ public final class JSentinelDiagnostics {
 
     // 3. adapter contributors
     List<DiagnosticContributor> contributors = new ArrayList<>();
-    for (DiagnosticContributor c : ServiceLoader.load(DiagnosticContributor.class, cl)) {
-      contributors.add(c);
-    }
-    contributors.sort(Comparator.comparing(DiagnosticContributor::id));
+    drainResilient(ServiceLoader.load(DiagnosticContributor.class, cl).iterator(),
+        DiagnosticContributor.class, contributors::add, builder);
+    contributors.sort(Comparator.comparing(JSentinelDiagnostics::safeContributorId));
     for (DiagnosticContributor c : contributors) {
       try {
         c.contribute(builder);
       } catch (RuntimeException | Error e) {
         builder.addWarning(new ServiceWarning(
             "diagnostics/contributor-failure",
-            "Contributor '" + c.id() + "' failed: " + e.getClass().getSimpleName()
-                + ": " + e.getMessage(),
+            "Contributor '" + safeContributorId(c) + "' failed: "
+                + e.getClass().getSimpleName() + ": " + e.getMessage(),
             "Inspect the contributor implementation; it must not throw."));
       }
     }
@@ -144,7 +160,7 @@ public final class JSentinelDiagnostics {
     return builder.build();
   }
 
-  private static List<Class<?>> enumerate(Class<?> spi, ClassLoader cl) {
+  private static List<Class<?>> enumerate(Class<?> spi, ClassLoader cl, InternalBuilder builder) {
     // R030: iterating ServiceLoader instantiates every provider (running its
     // constructor), which violates inspect()'s side-effect-free contract.
     // stream() + Provider.type() yields the implementation CLASS without
@@ -152,10 +168,56 @@ public final class JSentinelDiagnostics {
     // the same SPI is counted once (only genuinely distinct impls drive the
     // duplicate-service rule).
     LinkedHashSet<Class<?>> distinct = new LinkedHashSet<>();
-    ServiceLoader.load(spi, cl).stream()
-        .map(ServiceLoader.Provider::type)
-        .forEach(distinct::add);
+    drainResilient(ServiceLoader.load(spi, cl).stream().iterator(),
+        spi, provider -> distinct.add(provider.type()), builder);
     return new ArrayList<>(distinct);
+  }
+
+  /**
+   * R09: drains a {@code ServiceLoader} iterator with a per-element
+   * try/catch so a broken {@code META-INF/services} entry (missing class,
+   * non-assignable class, missing no-arg constructor, …) becomes a
+   * {@code "diagnostics/provider-load-failure"} warning instead of a
+   * {@link ServiceConfigurationError} crashing the sweep. The JDK lookup
+   * iterator consumes the offending entry before it throws, so retrying
+   * resumes with the next entry and healthy providers behind a broken one
+   * are still collected. If the exact same failure message repeats, the
+   * loader is not advancing — stop instead of spinning (the warning is
+   * already recorded, and everything collected so far is kept).
+   */
+  private static <T> void drainResilient(Iterator<? extends T> source, Class<?> spi,
+      Consumer<? super T> collector, InternalBuilder builder) {
+    Set<String> seenFailures = new LinkedHashSet<>();
+    while (true) {
+      try {
+        if (!source.hasNext()) {
+          return;
+        }
+        collector.accept(source.next());
+      } catch (ServiceConfigurationError e) {
+        if (!seenFailures.add(String.valueOf(e.getMessage()))) {
+          return;
+        }
+        builder.addWarning(new ServiceWarning(
+            "diagnostics/provider-load-failure",
+            "A " + spi.getSimpleName() + " provider failed to load: " + e.getMessage(),
+            "Remove or correct the broken META-INF/services/" + spi.getName() + " entry."));
+      }
+    }
+  }
+
+  /**
+   * R09: a contributor whose {@code id()} throws (or returns {@code null})
+   * must neither kill the deterministic sort nor the failure-report path —
+   * fall back to the implementation class name.
+   */
+  private static String safeContributorId(DiagnosticContributor c) {
+    try {
+      String id = c.id();
+      return id == null ? c.getClass().getName() : id;
+    } catch (RuntimeException | Error e) {
+      return c.getClass().getName();
+    }
   }
 
   private static String summarise(List<Class<?>> impls) {
