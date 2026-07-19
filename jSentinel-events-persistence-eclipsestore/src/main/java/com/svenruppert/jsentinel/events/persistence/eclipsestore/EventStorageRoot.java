@@ -45,7 +45,11 @@ final class EventStorageRoot {
   /** envelopeId -> expiry epoch-milli, for replay protection. */
   final Map<String, Long> seenEnvelopes = new LinkedHashMap<>();
 
-  /** {@code tenant|producer} -> last accepted sequence value. */
+  /**
+   * Framed {@code v2:<utf8-len>:<tenant>|<utf8-len>:<producer>} key -> last
+   * accepted sequence value (R03; legacy raw {@code tenant|producer} keys are
+   * migrated at open by {@code EclipseStoreSequenceStore}).
+   */
   final Map<String, Long> sequences = new LinkedHashMap<>();
 
   /** Append-ordered envelope store; index + 1 is the cursor position. */

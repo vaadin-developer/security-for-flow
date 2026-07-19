@@ -87,7 +87,17 @@ public final class EclipseStoreEventStorage implements AutoCloseable, HasLogger 
       manager.storeRoot();
     }
     migrateResolvedDeadLetters(manager, root);
-    return new EclipseStoreEventStorage(manager, root);
+    EclipseStoreEventStorage storage = new EclipseStoreEventStorage(manager, root);
+    // R03: rewrite legacy raw tenant|producer sequence keys to the framed v2 format —
+    // exactly once per open, under the storage write lock (same discipline as every
+    // sequence-store mutation), before the facade is handed out.
+    storage.lock.writeLock().lock();
+    try {
+      EclipseStoreSequenceStore.migrateLegacySequenceKeys(manager, root);
+    } finally {
+      storage.lock.writeLock().unlock();
+    }
+    return storage;
   }
 
   /**
