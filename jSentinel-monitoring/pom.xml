@@ -44,6 +44,11 @@
       <artifactId>jSentinel-events</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-dx</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>org.junit.jupiter</groupId>
