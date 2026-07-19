@@ -34,6 +34,7 @@ import com.svenruppert.jsentinel.events.bus.JSentinelEventVerificationResult;
 import com.svenruppert.jsentinel.events.store.JSentinelEventCursor;
 import com.svenruppert.jsentinel.events.store.JSentinelEventEnvelopeStore;
 import com.svenruppert.jsentinel.events.store.StoredEnvelope;
+import com.svenruppert.jsentinel.events.wire.EnvelopeWireCodec;
 
 import java.time.Instant;
 import java.util.Objects;

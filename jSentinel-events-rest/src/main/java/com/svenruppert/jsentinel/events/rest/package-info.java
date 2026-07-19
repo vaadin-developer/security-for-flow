@@ -36,8 +36,11 @@
  *       {@code POST /api/events}: permission-gated, runs the consume pipeline
  *       through the framework-light {@link
  *       com.svenruppert.jsentinel.events.rest.EventPublishService}.</li>
- *   <li>{@link com.svenruppert.jsentinel.events.rest.EnvelopeWireCodec} —
- *       envelope ⇄ flat JSON (Base64 binaries), no Jackson.</li>
+ *   <li>{@link com.svenruppert.jsentinel.events.wire.EnvelopeWireCodec} —
+ *       envelope ⇄ flat JSON (Base64 binaries), no Jackson. Moved to
+ *       {@code jSentinel-events} in V00.80.00; the deprecated
+ *       {@code events.rest.EnvelopeWireCodec} delegator remains for one
+ *       release.</li>
  * </ul>
  *
  * <p>The bridge does not encrypt the channel — that is delegated to HTTPS /

@@ -35,6 +35,7 @@ import com.svenruppert.jsentinel.authorization.api.permissions.PermissionName;
 import com.svenruppert.jsentinel.events.store.JSentinelEventCursor;
 import com.svenruppert.jsentinel.events.store.JSentinelEventEnvelopeStore;
 import com.svenruppert.jsentinel.events.store.StoredEnvelope;
+import com.svenruppert.jsentinel.events.wire.EnvelopeWireCodec;
 import com.svenruppert.jsentinel.rest.RestSubjectResolver;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;

@@ -27,6 +27,7 @@ package com.svenruppert.jsentinel.events.bus;
 
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.events.api.JSentinelEvent;
+import com.svenruppert.jsentinel.events.publisher.SignedEnvelopePublisher;
 
 import java.util.concurrent.CompletionStage;
 
@@ -78,4 +79,17 @@ public interface JSentinelEventBus {
   <E extends JSentinelEvent> Registration subscribe(
       Class<E> eventType, JSentinelEventListenerOptions options,
       JSentinelEventListener<? super E> listener);
+
+  /**
+   * Subscribes an envelope tap that receives every signed envelope this bus
+   * publishes — after the envelope-store append (when a store is configured),
+   * on the publish thread, synchronously. Only signed-pipeline envelopes
+   * reach the tap: self-observability events are dispatched directly and
+   * carry no envelope, so they never fan out here.
+   *
+   * @param publisher the envelope tap
+   * @return a registration that unsubscribes when closed
+   * @since 00.80.00
+   */
+  Registration subscribeEnvelope(SignedEnvelopePublisher publisher);
 }

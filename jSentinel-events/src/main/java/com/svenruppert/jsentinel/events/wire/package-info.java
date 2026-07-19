@@ -1,8 +1,6 @@
-package com.svenruppert.jsentinel.events.rest;
-
 /*-
  * #%L
- * jSentinel Events — REST / SSE bridge
+ * jSentinel Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
@@ -25,27 +23,17 @@ package com.svenruppert.jsentinel.events.rest;
  * #L%
  */
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
-
 /**
- * Thrown when an envelope cannot be (de)serialized for the wire.
+ * Wire codec for signed envelopes: {@link
+ * com.svenruppert.jsentinel.events.wire.EnvelopeWireCodec} serializes a
+ * {@link com.svenruppert.jsentinel.events.api.SignedJSentinelEventEnvelope}
+ * to and from a flat JSON object (Base64 binaries, no Jackson) and offers a
+ * secret-free {@code encodeMetadata} projection for logging / SIEM-style
+ * consumers. Moved here from {@code jSentinel-events-rest} in V00.80.00 so
+ * transport-independent consumers (log publishers, monitoring) can encode
+ * without a REST dependency; the REST module keeps a deprecated delegator
+ * for one release.
  *
- * @since 00.75.00
+ * @since 00.80.00
  */
-@ExperimentalJSentinelApi
-public final class EventWireException extends RuntimeException {
-
-  public EventWireException(String message) {
-    super(message);
-  }
-
-  /**
-   * @param message the detail message
-   * @param cause   the underlying parser failure (e.g. a JDK
-   *                {@code NumberFormatException}) being wrapped
-   * @since 00.75.10
-   */
-  public EventWireException(String message, Throwable cause) {
-    super(message, cause);
-  }
-}
+package com.svenruppert.jsentinel.events.wire;

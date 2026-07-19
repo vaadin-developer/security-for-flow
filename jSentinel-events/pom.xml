@@ -40,6 +40,12 @@
       <artifactId>jSentinel-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!-- V00.80.00: typed fallible returns (Result) for the wire codec moved
+         here from jSentinel-events-rest. -->
+    <dependency>
+      <groupId>com.svenruppert</groupId>
+      <artifactId>functional-reactive</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.junit.jupiter</groupId>

@@ -26,6 +26,7 @@ package com.svenruppert.jsentinel.events.rest;
  */
 
 import com.svenruppert.dependencies.core.net.HttpStatus;
+import com.svenruppert.jsentinel.events.wire.EnvelopeWireCodec;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;

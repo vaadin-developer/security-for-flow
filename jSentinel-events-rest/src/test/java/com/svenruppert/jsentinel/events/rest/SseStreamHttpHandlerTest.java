@@ -26,6 +26,7 @@ package com.svenruppert.jsentinel.events.rest;
  */
 
 import com.svenruppert.jsentinel.authorization.api.JSentinelSubject;
+import com.svenruppert.jsentinel.events.wire.EnvelopeWireCodec;
 import com.svenruppert.jsentinel.authorization.api.permissions.PermissionName;
 import com.svenruppert.jsentinel.rest.RestSubjectResolver;
 import com.sun.net.httpserver.Headers;

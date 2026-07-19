@@ -29,6 +29,7 @@ import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.jsentinel.audit.LogFieldScrubber;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.events.store.StoredEnvelope;
+import com.svenruppert.jsentinel.events.wire.EnvelopeWireCodec;
 import org.slf4j.Logger;
 
 import java.util.Objects;

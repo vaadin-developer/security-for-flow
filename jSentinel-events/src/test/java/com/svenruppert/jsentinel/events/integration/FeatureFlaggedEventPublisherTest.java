@@ -33,6 +33,7 @@ import com.svenruppert.jsentinel.events.bus.JSentinelEventBus;
 import com.svenruppert.jsentinel.events.bus.JSentinelEventListener;
 import com.svenruppert.jsentinel.events.bus.JSentinelEventListenerOptions;
 import com.svenruppert.jsentinel.events.bus.Registration;
+import com.svenruppert.jsentinel.events.publisher.SignedEnvelopePublisher;
 import com.svenruppert.jsentinel.events.types.SessionRevokedEvent;
 import com.svenruppert.jsentinel.logout.SubjectId;
 import org.junit.jupiter.api.DisplayName;
@@ -76,6 +77,11 @@ class FeatureFlaggedEventPublisherTest {
     public <E extends JSentinelEvent> Registration subscribe(
         Class<E> eventType, JSentinelEventListenerOptions options,
         JSentinelEventListener<? super E> listener) {
+      return () -> { };
+    }
+
+    @Override
+    public Registration subscribeEnvelope(SignedEnvelopePublisher publisher) {
       return () -> { };
     }
   }

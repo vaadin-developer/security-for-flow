@@ -1,8 +1,8 @@
-package com.svenruppert.jsentinel.events.testkit;
+package com.svenruppert.jsentinel.events.publisher;
 
 /*-
  * #%L
- * jSentinel Events — Contract testkit
+ * jSentinel Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
@@ -25,8 +25,8 @@ package com.svenruppert.jsentinel.events.testkit;
  * #L%
  */
 
-import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.authorization.api.tenant.TenantId;
+import com.svenruppert.jsentinel.events.api.CausationId;
 import com.svenruppert.jsentinel.events.api.CorrelationId;
 import com.svenruppert.jsentinel.events.api.EventEnvelopeId;
 import com.svenruppert.jsentinel.events.api.EventId;
@@ -37,7 +37,6 @@ import com.svenruppert.jsentinel.events.api.KeyId;
 import com.svenruppert.jsentinel.events.api.PayloadContentType;
 import com.svenruppert.jsentinel.events.api.PayloadHashAlgorithm;
 import com.svenruppert.jsentinel.events.api.SignatureAlgorithmId;
-import com.svenruppert.jsentinel.events.api.SignedJSentinelEventEnvelope;
 import com.svenruppert.jsentinel.events.api.SignedJSentinelEventEnvelopeBuilder;
 import com.svenruppert.jsentinel.logout.SubjectId;
 
@@ -45,62 +44,42 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 
 /**
- * Shared, fully-valid envelope fixtures for the store contract suites. No mocks
- * — every component is a real domain object.
- *
- * @since 00.75.00
+ * Deterministic, fully-valid envelope fixtures for the publisher tests — no
+ * mocks, every value a real domain object, chosen so log lines can be pinned
+ * as literals. (The events testkit is not on this module's test classpath —
+ * it depends on jSentinel-events, so the fixtures live module-locally.)
  */
-@ExperimentalJSentinelApi
-public final class TestkitEnvelopes {
+final class PublisherFixtures {
 
-  private TestkitEnvelopes() {
-  }
+  static final Instant OCCURRED = Instant.parse("2026-06-24T10:15:30Z");
 
-  /** A reference instant the fixtures are anchored to. */
-  public static final Instant AT = Instant.parse("2026-06-24T10:15:30Z");
-
-  /**
-   * Builds a valid signed envelope identified by {@code envelopeId}.
-   *
-   * @param envelopeId the envelope id (and seed for derived ids)
-   * @return a fully-populated envelope
-   */
-  public static SignedJSentinelEventEnvelope envelope(String envelopeId) {
-    return envelope(envelopeId,
-        ("{\"id\":\"" + envelopeId + "\"}").getBytes(StandardCharsets.UTF_8));
+  private PublisherFixtures() {
   }
 
   /**
-   * Builds a valid signed envelope identified by {@code envelopeId} carrying
-   * the given canonical payload bytes — e.g. a payload with raw newline bytes
-   * for the {@code EnvelopePublisherContract}'s log-safety case.
-   *
-   * @param envelopeId the envelope id (and seed for derived ids)
-   * @param canonicalPayload the canonical payload bytes
-   * @return a fully-populated envelope
-   * @since 00.80.00
+   * @return a builder with every mandatory field populated deterministically
+   *     and a valid optional {@code causationId}
    */
-  public static SignedJSentinelEventEnvelope envelope(String envelopeId,
-      byte[] canonicalPayload) {
+  static SignedJSentinelEventEnvelopeBuilder validBuilder() {
     return SignedJSentinelEventEnvelopeBuilder.create()
-        .envelopeId(EventEnvelopeId.of(envelopeId))
-        .eventId(EventId.of("evt-" + envelopeId))
+        .envelopeId(EventEnvelopeId.of("env-1"))
+        .eventId(EventId.of("evt-1"))
         .eventType(EventType.of("LoginSucceeded"))
         .tenantId(TenantId.DEFAULT)
         .subjectId(SubjectId.of("alice"))
         .producerId(EventProducerId.of("rest-service-primary"))
-        .occurredAt(AT)
-        .issuedAt(AT)
-        .expiresAt(AT.plusSeconds(300))
-        .correlationId(CorrelationId.of("corr-" + envelopeId))
-        .sequence(EventSequence.of(1))
+        .occurredAt(OCCURRED)
+        .issuedAt(OCCURRED)
+        .expiresAt(OCCURRED.plusSeconds(300))
+        .correlationId(CorrelationId.of("corr-1"))
+        .causationId(CausationId.of("cause-1"))
+        .sequence(EventSequence.of(7))
         .keyId(KeyId.of("key-1"))
         .signatureAlgorithm(SignatureAlgorithmId.ED25519)
         .payloadContentType(PayloadContentType.CANONICAL_JSON)
         .payloadHashAlgorithm(PayloadHashAlgorithm.SHA_256)
-        .canonicalPayloadHash("hash-" + envelopeId)
-        .canonicalPayload(canonicalPayload)
-        .signature(new byte[]{1, 2, 3})
-        .build();
+        .canonicalPayloadHash("abc123")
+        .canonicalPayload("{\"k\":\"TOPSECRET-PAYLOAD\"}".getBytes(StandardCharsets.UTF_8))
+        .signature(new byte[]{1, 2, 3, 4});
   }
 }

@@ -26,12 +26,14 @@ package com.svenruppert.jsentinel.events.bus;
  */
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
+import com.svenruppert.jsentinel.audit.LogFieldScrubber;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.authorization.api.tenant.TenantId;
 import com.svenruppert.jsentinel.events.api.EventMetadata;
 import com.svenruppert.jsentinel.events.api.JSentinelEvent;
 import com.svenruppert.jsentinel.events.api.JSentinelEventSeverity;
 import com.svenruppert.jsentinel.events.api.SignedJSentinelEventEnvelope;
+import com.svenruppert.jsentinel.events.publisher.SignedEnvelopePublisher;
 import com.svenruppert.jsentinel.events.store.JSentinelEventEnvelopeStore;
 import com.svenruppert.jsentinel.events.types.EnvelopeRejectedEvent;
 import com.svenruppert.jsentinel.events.types.EventBusSelfObservabilityEvent;
@@ -46,13 +48,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 /**
  * Default in-process {@link JSentinelEventBus}. Publishing runs the
  * {@link PublishPipeline} (build + sign + replay-mark), optionally appends the
- * signed envelope to an envelope store, then dispatches the event to matching
- * local listeners under the configured {@link ListenerErrorStrategy}.
+ * signed envelope to an envelope store, fans the envelope out to the
+ * registered {@link SignedEnvelopePublisher} taps, then dispatches the event
+ * to matching local listeners under the configured
+ * {@link ListenerErrorStrategy}.
  *
  * <p>A non-critical listener failure is isolated, logged, and reported as a
  * {@link ListenerFailedEvent} dispatched directly to its listeners (never
@@ -78,12 +83,27 @@ public final class DefaultJSentinelEventBus
       JSentinelEventListenerOptions options) {
   }
 
+  // Same identity trick as Subscription (R02): the wrapper record gives every
+  // subscribeEnvelope() call its own entry object, so registering the same
+  // (or an equal) publisher twice yields separable registrations.
+  private record EnvelopePublisherEntry(SignedEnvelopePublisher publisher) {
+  }
+
+  /**
+   * The envelope-publisher-failure WARN is emitted on the 1st failure and
+   * every Nth failure thereafter, mirroring the SSE broadcaster's drop-log
+   * policy so a persistently-failing tap cannot flood the log.
+   */
+  static final long ENVELOPE_PUBLISHER_FAILURE_LOG_INTERVAL = 100L;
+
   private final PublishPipeline publishPipeline;
   private final JSentinelEventEnvelopeStore envelopeStore;
   private final ListenerErrorStrategy errorStrategy;
   private final Executor executor;
   private final Supplier<Instant> clock;
   private final List<Subscription> subscriptions = new CopyOnWriteArrayList<>();
+  private final List<EnvelopePublisherEntry> envelopePublishers = new CopyOnWriteArrayList<>();
+  private final AtomicLong envelopePublisherFailures = new AtomicLong();
 
   public DefaultJSentinelEventBus(PublishPipeline publishPipeline,
       JSentinelEventEnvelopeStore envelopeStore, ListenerErrorStrategy errorStrategy,
@@ -117,6 +137,7 @@ public final class DefaultJSentinelEventBus
     if (envelopeStore != null) {
       envelopeStore.append(envelope);
     }
+    fanOutEnvelope(envelope);
     dispatch(event);
   }
 
@@ -184,6 +205,50 @@ public final class DefaultJSentinelEventBus
         subscriptions.removeIf(s -> s == subscription);
       }
     };
+  }
+
+  @Override
+  public Registration subscribeEnvelope(SignedEnvelopePublisher publisher) {
+    Objects.requireNonNull(publisher, "publisher");
+    EnvelopePublisherEntry entry = new EnvelopePublisherEntry(publisher);
+    envelopePublishers.add(entry);
+    // Identity-based removal with a once-guard, exactly like subscribe():
+    // closing this registration detaches ITS OWN entry, at most once.
+    AtomicBoolean closed = new AtomicBoolean();
+    return () -> {
+      if (closed.compareAndSet(false, true)) {
+        envelopePublishers.removeIf(e -> e == entry);
+      }
+    };
+  }
+
+  /**
+   * @return the number of {@link SignedEnvelopePublisher} invocations that
+   *     threw and were isolated, over this bus's lifetime
+   */
+  public long envelopePublisherFailureCount() {
+    return envelopePublisherFailures.get();
+  }
+
+  // Runs after the envelope-store append and before typed dispatch. A
+  // publisher failure is isolated per entry: counted, WARN-logged
+  // (rate-limited), and never breaks the publish or the remaining taps.
+  private void fanOutEnvelope(SignedJSentinelEventEnvelope envelope) {
+    for (EnvelopePublisherEntry entry : envelopePublishers) {
+      try {
+        entry.publisher().onEnvelope(envelope);
+      } catch (RuntimeException failure) {
+        long failures = envelopePublisherFailures.incrementAndGet();
+        if (failures % ENVELOPE_PUBLISHER_FAILURE_LOG_INTERVAL == 1) {
+          // CWE-117: the envelopeId is only validated non-blank — scrub it so
+          // a hostile id cannot forge log lines. Never payload or signature
+          // bytes here.
+          logger().warn("events/envelope-publisher-failed: publisher {} threw on envelope {} ({})",
+              entry.publisher().getClass().getName(),
+              LogFieldScrubber.scrub(envelope.envelopeId().value()), failure.toString());
+        }
+      }
+    }
   }
 
   private void dispatch(JSentinelEvent event) {

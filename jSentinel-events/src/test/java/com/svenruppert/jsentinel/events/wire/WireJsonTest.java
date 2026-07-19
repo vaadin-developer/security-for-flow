@@ -1,8 +1,8 @@
-package com.svenruppert.jsentinel.events.rest;
+package com.svenruppert.jsentinel.events.wire;
 
 /*-
  * #%L
- * jSentinel Events — REST / SSE bridge
+ * jSentinel Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%

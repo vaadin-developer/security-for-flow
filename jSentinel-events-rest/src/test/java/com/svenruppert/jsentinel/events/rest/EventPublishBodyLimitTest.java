@@ -28,6 +28,7 @@ package com.svenruppert.jsentinel.events.rest;
 import com.svenruppert.dependencies.core.net.HttpStatus;
 import com.svenruppert.jsentinel.authorization.api.JSentinelSubject;
 import com.svenruppert.jsentinel.authorization.api.permissions.PermissionName;
+import com.svenruppert.jsentinel.events.wire.EnvelopeWireCodec;
 import com.svenruppert.jsentinel.events.bus.ConsumePipeline;
 import com.svenruppert.jsentinel.events.store.InMemoryEnvelopeStore;
 import com.svenruppert.jsentinel.rest.RestSubjectResolver;

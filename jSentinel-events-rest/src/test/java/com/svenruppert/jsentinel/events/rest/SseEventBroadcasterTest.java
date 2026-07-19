@@ -25,6 +25,7 @@ package com.svenruppert.jsentinel.events.rest;
  * #L%
  */
 
+import com.svenruppert.jsentinel.events.wire.EnvelopeWireCodec;
 import com.svenruppert.jsentinel.events.api.EventEnvelopeId;
 import com.svenruppert.jsentinel.events.api.SignedJSentinelEventEnvelope;
 import com.svenruppert.jsentinel.events.store.JSentinelEventCursor;
