@@ -168,4 +168,13 @@
     <Class name="~com\.svenruppert\.jsentinel\.demo\..*"/>
     <Bug pattern="UPM_UNCALLED_PRIVATE_METHOD"/>
   </Match>
+
+  <!-- V00.80.00: the webhook retry-backoff jitter spreads delivery timing to
+       avoid thundering herds; it carries no security relevance (no secrets,
+       no tokens, no key material derive from it), so ThreadLocalRandom is
+       the correct, cheap choice. Documented in WebhookEventPublisher. -->
+  <Match>
+    <Class name="com.svenruppert.jsentinel.events.webhook.WebhookEventPublisher"/>
+    <Bug pattern="PREDICTABLE_RANDOM"/>
+  </Match>
 </FindBugsFilter>
