@@ -29,7 +29,7 @@ import com.svenruppert.jsentinel.audit.integrity.api.AuditChainEntry;
 import com.svenruppert.jsentinel.audit.integrity.chain.AuditChainAppender;
 import com.svenruppert.jsentinel.audit.integrity.chain.AuditChainException;
 import com.svenruppert.jsentinel.audit.integrity.chain.InMemoryAuditChainStore;
-import com.svenruppert.jsentinel.audit.integrity.testkit.TestkitChainEntries;
+import com.svenruppert.jsentinel.audit.integrity.ChainTestFixtures;
 import com.svenruppert.jsentinel.events.api.KeyId;
 import com.svenruppert.jsentinel.events.keys.InMemoryKeyManagement;
 import com.svenruppert.jsentinel.events.signature.Ed25519SignatureAlgorithm;
@@ -60,7 +60,7 @@ class AuditExportNdjsonCodecTest {
       appender.append("test/v1", ("payload-" + i).getBytes(StandardCharsets.UTF_8));
     }
     return new AuditExportService(store,
-        new AuditBatchSigner(keys, () -> TestkitChainEntries.AT))
+        new AuditBatchSigner(keys, () -> ChainTestFixtures.AT))
         .exportAll().orElseThrow();
   }
 
@@ -96,9 +96,9 @@ class AuditExportNdjsonCodecTest {
   @Test
   @DisplayName("golden entry line — changing it is a wire-format break")
   void goldenEntryLine() {
-    AuditChainEntry entry = TestkitChainEntries.chain(1).get(0);
+    AuditChainEntry entry = ChainTestFixtures.chain(1).get(0);
     AuditChainExport export = new AuditChainExport(
-        new AuditBatchSigner(keys, () -> TestkitChainEntries.AT).sign(List.of(entry)),
+        new AuditBatchSigner(keys, () -> ChainTestFixtures.AT).sign(List.of(entry)),
         List.of(entry));
     String entryLine = codec.encode(export).split("\n")[1];
     assertEquals("{\"algorithm\":\"SHA-256\""

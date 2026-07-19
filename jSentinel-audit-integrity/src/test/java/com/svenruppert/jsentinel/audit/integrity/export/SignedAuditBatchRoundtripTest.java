@@ -28,7 +28,7 @@ package com.svenruppert.jsentinel.audit.integrity.export;
 import com.svenruppert.jsentinel.audit.integrity.api.AuditChainEntry;
 import com.svenruppert.jsentinel.audit.integrity.chain.AuditChainAppender;
 import com.svenruppert.jsentinel.audit.integrity.chain.InMemoryAuditChainStore;
-import com.svenruppert.jsentinel.audit.integrity.testkit.TestkitChainEntries;
+import com.svenruppert.jsentinel.audit.integrity.ChainTestFixtures;
 import com.svenruppert.jsentinel.events.api.KeyId;
 import com.svenruppert.jsentinel.events.keys.InMemoryKeyManagement;
 import com.svenruppert.jsentinel.events.signature.EcdsaP256SignatureAlgorithm;
@@ -53,7 +53,7 @@ class SignedAuditBatchRoundtripTest {
   private final InMemoryKeyManagement keys =
       new InMemoryKeyManagement(new Ed25519SignatureAlgorithm(), AUDIT_KEY);
   private final AuditBatchSigner signer =
-      new AuditBatchSigner(keys, () -> TestkitChainEntries.AT);
+      new AuditBatchSigner(keys, () -> ChainTestFixtures.AT);
   private final AuditBatchVerifier verifier =
       new AuditBatchVerifier(keys, SignatureAlgorithms.defaults());
 
@@ -100,7 +100,7 @@ class SignedAuditBatchRoundtripTest {
     List<AuditChainEntry> chain = realChain(4);
     SignedAuditBatch batch = signer.sign(chain);
     List<AuditChainEntry> tampered = new ArrayList<>(chain);
-    tampered.set(1, TestkitChainEntries.tampered(chain.get(1), payload -> {
+    tampered.set(1, ChainTestFixtures.tampered(chain.get(1), payload -> {
       payload[0] ^= 0x01;
       return payload;
     }));

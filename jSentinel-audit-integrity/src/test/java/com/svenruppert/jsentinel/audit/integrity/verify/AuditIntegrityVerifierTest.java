@@ -27,7 +27,7 @@ package com.svenruppert.jsentinel.audit.integrity.verify;
 
 import com.svenruppert.jsentinel.audit.integrity.api.AuditChainEntry;
 import com.svenruppert.jsentinel.audit.integrity.chain.InMemoryAuditChainStore;
-import com.svenruppert.jsentinel.audit.integrity.testkit.TestkitChainEntries;
+import com.svenruppert.jsentinel.audit.integrity.ChainTestFixtures;
 import com.svenruppert.jsentinel.audit.integrity.verify.AuditChainVerificationResult.Broken;
 import com.svenruppert.jsentinel.audit.integrity.verify.AuditChainVerificationResult.Empty;
 import com.svenruppert.jsentinel.audit.integrity.verify.AuditChainVerificationResult.Valid;
@@ -49,7 +49,7 @@ class AuditIntegrityVerifierTest {
   @Test
   @DisplayName("a valid chain verifies with count and head hash — paged and as range")
   void validChain() {
-    List<AuditChainEntry> chain = TestkitChainEntries.chain(7);
+    List<AuditChainEntry> chain = ChainTestFixtures.chain(7);
     InMemoryAuditChainStore store = new InMemoryAuditChainStore();
     chain.forEach(store::append);
 
@@ -66,8 +66,8 @@ class AuditIntegrityVerifierTest {
   @Test
   @DisplayName("a mutated payload breaks at exactly its index (ENTRY_HASH_MISMATCH)")
   void mutatedPayloadDetected() {
-    List<AuditChainEntry> chain = new ArrayList<>(TestkitChainEntries.chain(5));
-    chain.set(2, TestkitChainEntries.tampered(chain.get(2), payload -> {
+    List<AuditChainEntry> chain = new ArrayList<>(ChainTestFixtures.chain(5));
+    chain.set(2, ChainTestFixtures.tampered(chain.get(2), payload -> {
       payload[0] ^= 0x01;
       return payload;
     }));
@@ -81,10 +81,10 @@ class AuditIntegrityVerifierTest {
   @Test
   @DisplayName("a spliced (re-hashed) replacement entry breaks its successor's link")
   void splicedEntryDetectedAtSuccessor() {
-    List<AuditChainEntry> chain = new ArrayList<>(TestkitChainEntries.chain(5));
+    List<AuditChainEntry> chain = new ArrayList<>(ChainTestFixtures.chain(5));
     // A forged entry 2 that is self-consistent (correctly hashed) but carries
     // different content — entry 3 still links to the ORIGINAL hash.
-    AuditChainEntry forged = TestkitChainEntries.entry(2,
+    AuditChainEntry forged = ChainTestFixtures.entry(2,
         chain.get(1).entryHash(), "forged".getBytes(java.nio.charset.StandardCharsets.UTF_8));
     chain.set(2, forged);
 
@@ -97,7 +97,7 @@ class AuditIntegrityVerifierTest {
   @Test
   @DisplayName("a removed entry surfaces as INDEX_GAP")
   void removedEntryDetected() {
-    List<AuditChainEntry> chain = new ArrayList<>(TestkitChainEntries.chain(5));
+    List<AuditChainEntry> chain = new ArrayList<>(ChainTestFixtures.chain(5));
     chain.remove(2);
 
     Broken broken = assertInstanceOf(Broken.class,
@@ -109,7 +109,7 @@ class AuditIntegrityVerifierTest {
   @Test
   @DisplayName("a chain not anchored to the expected genesis violates the anchor")
   void genesisViolation() {
-    List<AuditChainEntry> chain = List.of(TestkitChainEntries.entry(0,
+    List<AuditChainEntry> chain = List.of(ChainTestFixtures.entry(0,
         "1111111111111111111111111111111111111111111111111111111111111111",
         "p".getBytes(java.nio.charset.StandardCharsets.UTF_8)));
 
@@ -122,10 +122,10 @@ class AuditIntegrityVerifierTest {
   @Test
   @DisplayName("an unavailable digest fails closed as ALGORITHM_UNAVAILABLE")
   void unavailableAlgorithmFailsClosed() {
-    AuditChainEntry bogus = new AuditChainEntry(0, TestkitChainEntries.AT,
+    AuditChainEntry bogus = new AuditChainEntry(0, ChainTestFixtures.AT,
         PayloadHashAlgorithm.of("NO-SUCH-DIGEST"),
         AuditChainEntry.GENESIS_PREVIOUS_HASH, "deadbeef",
-        TestkitChainEntries.PAYLOAD_TYPE,
+        ChainTestFixtures.PAYLOAD_TYPE,
         "p".getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
     Broken broken = assertInstanceOf(Broken.class,
@@ -144,7 +144,7 @@ class AuditIntegrityVerifierTest {
   @Test
   @DisplayName("a mid-chain range verifies against its predecessor's head hash")
   void midChainRange() {
-    List<AuditChainEntry> chain = TestkitChainEntries.chain(6);
+    List<AuditChainEntry> chain = ChainTestFixtures.chain(6);
     Valid result = assertInstanceOf(Valid.class,
         verifier.verifyEntries(chain.subList(2, 5), chain.get(1).entryHash()));
     assertEquals(3, result.entryCount());
