@@ -151,6 +151,13 @@ public final class WebhookEventPublisher
                 + "(total dropped={})",
             LogFieldScrubber.scrub(envelope.envelopeId().value()), total);
       }
+      return;
+    }
+    // RF00: close() may have drained the queue between the closed check
+    // above and the offer — reclaim the stranded envelope so the drop
+    // accounting stays exact.
+    if (closed.get() && queue.remove(envelope)) {
+      dropped.incrementAndGet();
     }
   }
 

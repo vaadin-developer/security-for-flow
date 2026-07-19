@@ -109,7 +109,9 @@ public final class AuditExportNdjsonCodec {
   }
 
   /**
-   * Strict parse of the NDJSON form.
+   * Strict parse of the NDJSON form. One trailing line terminator is
+   * tolerated (RF01): POSIX tools and the SIEM exporter terminate text
+   * files with a newline, and a file round-trip must decode.
    *
    * @param ndjson the export text
    * @return the reconstructed export
@@ -118,7 +120,14 @@ public final class AuditExportNdjsonCodec {
    */
   public AuditChainExport decode(String ndjson) {
     Objects.requireNonNull(ndjson, "ndjson");
-    String[] lines = ndjson.split("\n", -1);
+    String document = ndjson;
+    if (document.endsWith("\n")) {
+      document = document.substring(0, document.length() - 1);
+    }
+    if (document.endsWith("\r")) {
+      document = document.substring(0, document.length() - 1);
+    }
+    String[] lines = document.split("\n", -1);
     if (lines.length < 2) {
       throw malformed("an export needs a batch line and at least one entry line");
     }

@@ -74,6 +74,17 @@ class AuditExportNdjsonCodecTest {
   }
 
   @Test
+  @DisplayName("RF01: a single trailing line terminator (file round-trip) is tolerated")
+  void trailingNewlineTolerated() {
+    AuditChainExport export = export(2);
+    assertEquals(export.entries(),
+        codec.decode(codec.encode(export) + "\n").entries());
+    assertEquals(export.entries(),
+        codec.decode(codec.encode(export) + "\r\n").entries());
+    assertMalformed(codec.encode(export) + "\n\n");
+  }
+
+  @Test
   @DisplayName("a decoded export re-verifies with public material only")
   void decodedExportReVerifies() {
     AuditChainExport decoded = codec.decode(codec.encode(export(3)));
