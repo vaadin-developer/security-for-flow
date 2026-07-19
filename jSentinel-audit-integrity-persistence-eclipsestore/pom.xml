@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright © 2018 Sven Ruppert (sven.ruppert@gmail.com)
+
+    Licensed under the EUPL, Version 1.2 or - as soon they will be
+    approved by the European Commission - subsequent versions of the
+    EUPL (the "Licence"); You may not use this work except in
+    compliance with the Licence. You may obtain a copy of the Licence at:
+
+    https://joinup.ec.europa.eu/software/page/eupl
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <groupId>com.svenruppert.jsentinel</groupId>
+    <artifactId>jSentinel-parent</artifactId>
+    <version>00.80.00-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>jSentinel-audit-integrity-persistence-eclipsestore</artifactId>
+  <name>jSentinel Audit Integrity — Eclipse-Store persistence</name>
+  <description>
+    V00.80.00 (Konzept goal 7) JVM-restart-safe AuditChainStore behind the
+    EclipseStoreAuditChainStorage facade (one embedded storage,
+    write-lock-serialized, storage tree hardened owner-only). The chain
+    survives restarts and re-verifies across process lifetimes.
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-audit-integrity</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- StorageTreeHardening (JS-SEC-037) + the eclipse-store dependency. -->
+    <dependency>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-persistence-eclipsestore</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-audit-integrity-testkit</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>

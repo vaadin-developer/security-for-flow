@@ -117,6 +117,7 @@
         <module>jSentinel-events-siem</module>
         <module>jSentinel-audit-integrity</module>
         <module>jSentinel-audit-integrity-testkit</module>
+        <module>jSentinel-audit-integrity-persistence-eclipsestore</module>
         <module>demo-rest-shared</module>
         <module>demo-vaadin</module>
         <module>demo-rest</module>
