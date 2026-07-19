@@ -24,8 +24,13 @@
   <artifactId>jSentinel-events-opentelemetry</artifactId>
   <name>jSentinel Events — OpenTelemetry exporter</name>
   <description>
-    V00.80.00 (Konzept goal 8) EventBus integration: OpenTelemetryEventPublisher maps signed Security-Event envelopes to OpenTelemetry signals (opt-in; OTel dependency added by its implementation prompt). Skeleton opened with the V00.80.00 release window.
+    V00.80.00 (Konzept goal 8) EventBus integration: OpenTelemetryEventPublisher maps signed Security-Event envelopes to OpenTelemetry log records via the Logs Bridge API (opt-in, api-only at compile scope, noop-safe by construction).
   </description>
+
+  <properties>
+    <!-- Not managed by the parent BOM — this property is the single version home. -->
+    <opentelemetry.version>1.49.0</opentelemetry.version>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -33,7 +38,31 @@
       <artifactId>jSentinel-events</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-api</artifactId>
+      <version>${opentelemetry.version}</version>
+    </dependency>
 
+    <!-- Tests run against a real in-memory SDK logger provider, no mocks. -->
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-sdk-logs</artifactId>
+      <version>${opentelemetry.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-sdk-common</artifactId>
+      <version>${opentelemetry.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.svenruppert.jsentinel</groupId>
+      <artifactId>jSentinel-events-testkit</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
