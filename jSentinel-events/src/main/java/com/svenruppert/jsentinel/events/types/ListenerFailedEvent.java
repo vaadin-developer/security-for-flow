@@ -28,13 +28,13 @@ package com.svenruppert.jsentinel.events.types;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.events.api.EventMetadata;
 import com.svenruppert.jsentinel.events.api.EventType;
-import com.svenruppert.jsentinel.events.api.JSentinelEvent;
 import com.svenruppert.jsentinel.events.api.JSentinelEventCategory;
 
 import java.util.Objects;
 
 /**
- * A listener threw while handling an event (Konzept §292, §780). Publishing
+ * A listener threw while handling an event (Konzept §292, §780). Short name
+ * for the Konzept's {@code JSentinelEventListenerFailedEvent}. Publishing
  * this event must never recurse into itself (Konzept §789).
  *
  * @param metadata variable per-instance metadata
@@ -44,7 +44,7 @@ import java.util.Objects;
  */
 @ExperimentalJSentinelApi
 public record ListenerFailedEvent(EventMetadata metadata, String listenerName, String failureCode)
-    implements JSentinelEvent {
+    implements EventBusSelfObservabilityEvent {
 
   public static final EventType TYPE = EventType.of("ListenerFailed");
 

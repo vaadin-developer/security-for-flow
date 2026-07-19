@@ -28,13 +28,18 @@ package com.svenruppert.jsentinel.events.types;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.events.api.EventMetadata;
 import com.svenruppert.jsentinel.events.api.EventType;
-import com.svenruppert.jsentinel.events.api.JSentinelEvent;
 import com.svenruppert.jsentinel.events.api.JSentinelEventCategory;
 
 import java.util.Objects;
 
 /**
- * An envelope signature failed verification (Konzept §290).
+ * An envelope signature failed verification (Konzept §290). Short name for the
+ * Konzept's {@code JSentinelEventSignatureInvalidEvent}.
+ *
+ * <p>This covers every failure of the envelope's cryptographic content
+ * binding: an invalid signature as well as a canonical-payload hash mismatch
+ * (the payload is bound to the signed metadata through its hash, so a
+ * mismatch means the signed content did not verify either).
  *
  * @param metadata variable per-instance metadata
  * @param envelopeId the envelope whose signature was invalid
@@ -42,7 +47,7 @@ import java.util.Objects;
  */
 @ExperimentalJSentinelApi
 public record SignatureInvalidEvent(EventMetadata metadata, String envelopeId)
-    implements JSentinelEvent {
+    implements EventBusSelfObservabilityEvent {
 
   public static final EventType TYPE = EventType.of("SignatureInvalid");
 

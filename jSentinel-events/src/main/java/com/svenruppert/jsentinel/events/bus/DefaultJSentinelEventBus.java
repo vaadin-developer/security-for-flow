@@ -33,6 +33,8 @@ import com.svenruppert.jsentinel.events.api.JSentinelEvent;
 import com.svenruppert.jsentinel.events.api.JSentinelEventSeverity;
 import com.svenruppert.jsentinel.events.api.SignedJSentinelEventEnvelope;
 import com.svenruppert.jsentinel.events.store.JSentinelEventEnvelopeStore;
+import com.svenruppert.jsentinel.events.types.EnvelopeRejectedEvent;
+import com.svenruppert.jsentinel.events.types.EventBusSelfObservabilityEvent;
 import com.svenruppert.jsentinel.events.types.ListenerFailedEvent;
 
 import java.time.Instant;
@@ -57,10 +59,19 @@ import java.util.function.Supplier;
  * re-published through the signing pipeline, so a failure in the failure event
  * cannot loop — Konzept §789). A critical listener's failure always propagates.
  *
+ * <p>The bus is its own {@link EventBusObservabilityPublisher}: every
+ * {@link EventBusSelfObservabilityEvent} is dispatched through
+ * {@link #publishObservability(EventBusSelfObservabilityEvent)}, which never
+ * touches the pipeline or the envelope store and treats listener failures as
+ * log-only. A publish-side pipeline rejection additionally emits an
+ * {@link EnvelopeRejectedEvent} before the {@link EventPublishException}
+ * propagates unchanged.
+ *
  * @since 00.75.00
  */
 @ExperimentalJSentinelApi
-public final class DefaultJSentinelEventBus implements JSentinelEventBus, HasLogger {
+public final class DefaultJSentinelEventBus
+    implements JSentinelEventBus, EventBusObservabilityPublisher, HasLogger {
 
   private record Subscription(Class<? extends JSentinelEvent> type,
       JSentinelEventListener<? super JSentinelEvent> listener,
@@ -96,17 +107,53 @@ public final class DefaultJSentinelEventBus implements JSentinelEventBus, HasLog
   @Override
   public void publish(JSentinelEvent event) {
     Objects.requireNonNull(event, "event");
-    SignedJSentinelEventEnvelope envelope = publishPipeline.toEnvelope(event);
+    SignedJSentinelEventEnvelope envelope;
+    try {
+      envelope = publishPipeline.toEnvelope(event);
+    } catch (EventPublishException rejection) {
+      reportPublishRejected(event);
+      throw rejection;
+    }
     if (envelopeStore != null) {
       envelopeStore.append(envelope);
     }
     dispatch(event);
   }
 
+  // publishAsync delegates to publish() on the executor, so a pipeline
+  // rejection emits the same EnvelopeRejectedEvent there and the future
+  // completes exceptionally with the unchanged EventPublishException.
   @Override
   public CompletionStage<Void> publishAsync(JSentinelEvent event) {
     Objects.requireNonNull(event, "event");
     return CompletableFuture.runAsync(() -> publish(event), executor);
+  }
+
+  /**
+   * Dispatches a bus self-observability event <em>directly</em> to matching
+   * listeners — never through the {@link PublishPipeline}, never into the
+   * envelope store (see {@link EventBusSelfObservabilityEvent}). A listener
+   * failure on this path is log-only: it is never reported as a
+   * {@link ListenerFailedEvent}, so observability dispatch cannot cascade.
+   * Consequently this method honors the never-throws contract of
+   * {@link EventBusObservabilityPublisher} for every listener, critical ones
+   * included.
+   */
+  @Override
+  public void publishObservability(EventBusSelfObservabilityEvent event) {
+    Objects.requireNonNull(event, "event");
+    for (Subscription subscription : subscriptions) {
+      if (!subscription.type().isInstance(event)) {
+        continue;
+      }
+      try {
+        subscription.listener().onJSentinelEvent(event);
+      } catch (RuntimeException failure) {
+        logger().warn("events/observability-listener-failed: listener {} threw on {} ({})",
+            subscription.listener().getClass().getName(), event.eventType().value(),
+            failure.toString());
+      }
+    }
   }
 
   @Override
@@ -167,22 +214,27 @@ public final class DefaultJSentinelEventBus implements JSentinelEventBus, HasLog
 
   private void reportListenerFailure(String listenerName, RuntimeException failure,
       JSentinelEvent failedOn) {
-    if (failedOn instanceof ListenerFailedEvent) {
-      return; // never report a failure about the failure event itself
+    if (failedOn instanceof EventBusSelfObservabilityEvent) {
+      // Generalized recursion guard: a listener throwing on ANY observability
+      // event (not just ListenerFailedEvent) must never spawn a
+      // ListenerFailedEvent cascade about it.
+      return;
     }
     EventMetadata meta = EventMetadata.create(TenantId.DEFAULT,
         JSentinelEvent.SYSTEM_SUBJECT, clock.get(), JSentinelEventSeverity.ERROR);
-    ListenerFailedEvent report = new ListenerFailedEvent(meta, listenerName,
-        failure.getClass().getSimpleName());
-    for (Subscription subscription : subscriptions) {
-      if (subscription.type().isInstance(report)) {
-        try {
-          subscription.listener().onJSentinelEvent(report);
-        } catch (RuntimeException nested) {
-          logger().warn("events/listener-failed-report: reporting listener {} threw ({})",
-              subscription.listener().getClass().getName(), nested.toString());
-        }
-      }
-    }
+    publishObservability(new ListenerFailedEvent(meta, listenerName,
+        failure.getClass().getSimpleName()));
+  }
+
+  // No envelope exists on the publish side — the pipeline rejected before
+  // building one — so the event id doubles as the rejectedEnvelopeId (see
+  // SelfObservabilityEvents). The producer-policy denial in
+  // PublishPipeline.toEnvelope is the only publish-side rejection cause,
+  // hence the fixed reason.
+  private void reportPublishRejected(JSentinelEvent event) {
+    EventMetadata meta = EventMetadata.create(event.tenantId(),
+        JSentinelEvent.SYSTEM_SUBJECT, clock.get(), JSentinelEventSeverity.ERROR);
+    publishObservability(new EnvelopeRejectedEvent(meta, event.eventId().value(),
+        SelfObservabilityEvents.REASON_PRODUCER_NOT_ALLOWED));
   }
 }

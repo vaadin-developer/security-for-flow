@@ -28,7 +28,6 @@ package com.svenruppert.jsentinel.events.types;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.events.api.EventMetadata;
 import com.svenruppert.jsentinel.events.api.EventType;
-import com.svenruppert.jsentinel.events.api.JSentinelEvent;
 import com.svenruppert.jsentinel.events.api.JSentinelEventCategory;
 
 import java.util.Objects;
@@ -43,7 +42,7 @@ import java.util.Objects;
  */
 @ExperimentalJSentinelApi
 public record ReplayDetectedEvent(EventMetadata metadata, String replayedEnvelopeId)
-    implements JSentinelEvent {
+    implements EventBusSelfObservabilityEvent {
 
   public static final EventType TYPE = EventType.of("ReplayDetected");
 

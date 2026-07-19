@@ -28,13 +28,13 @@ package com.svenruppert.jsentinel.events.types;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.events.api.EventMetadata;
 import com.svenruppert.jsentinel.events.api.EventType;
-import com.svenruppert.jsentinel.events.api.JSentinelEvent;
 import com.svenruppert.jsentinel.events.api.JSentinelEventCategory;
 
 import java.util.Objects;
 
 /**
  * A per-(tenant, producer) sequence violation was detected (Konzept §291).
+ * Short name for the Konzept's {@code JSentinelEventSequenceViolationEvent}.
  *
  * @param metadata variable per-instance metadata
  * @param producerId the producer whose sequence was violated
@@ -45,7 +45,7 @@ import java.util.Objects;
 @ExperimentalJSentinelApi
 public record SequenceViolationEvent(
     EventMetadata metadata, String producerId, long expected, long actual)
-    implements JSentinelEvent {
+    implements EventBusSelfObservabilityEvent {
 
   public static final EventType TYPE = EventType.of("SequenceViolation");
 

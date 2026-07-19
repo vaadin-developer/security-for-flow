@@ -28,13 +28,13 @@ package com.svenruppert.jsentinel.events.types;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.events.api.EventMetadata;
 import com.svenruppert.jsentinel.events.api.EventType;
-import com.svenruppert.jsentinel.events.api.JSentinelEvent;
 import com.svenruppert.jsentinel.events.api.JSentinelEventCategory;
 
 import java.util.Objects;
 
 /**
- * An envelope was moved to the dead-letter store (Konzept §293).
+ * An envelope was moved to the dead-letter store (Konzept §293). Short name
+ * for the Konzept's {@code JSentinelEventDeadLetteredEvent}.
  *
  * @param metadata variable per-instance metadata
  * @param envelopeId the dead-lettered envelope id
@@ -43,7 +43,7 @@ import java.util.Objects;
  */
 @ExperimentalJSentinelApi
 public record DeadLetteredEvent(EventMetadata metadata, String envelopeId, String reason)
-    implements JSentinelEvent {
+    implements EventBusSelfObservabilityEvent {
 
   public static final EventType TYPE = EventType.of("DeadLettered");
 

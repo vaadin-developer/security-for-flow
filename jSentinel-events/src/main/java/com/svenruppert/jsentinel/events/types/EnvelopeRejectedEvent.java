@@ -28,13 +28,13 @@ package com.svenruppert.jsentinel.events.types;
 import com.svenruppert.jsentinel.authorization.api.ExperimentalJSentinelApi;
 import com.svenruppert.jsentinel.events.api.EventMetadata;
 import com.svenruppert.jsentinel.events.api.EventType;
-import com.svenruppert.jsentinel.events.api.JSentinelEvent;
 import com.svenruppert.jsentinel.events.api.JSentinelEventCategory;
 
 import java.util.Objects;
 
 /**
- * An incoming envelope was rejected during verification (Konzept §288).
+ * An incoming envelope was rejected during verification (Konzept §288). Short
+ * name for the Konzept's {@code JSentinelEventEnvelopeRejectedEvent}.
  *
  * @param metadata variable per-instance metadata
  * @param rejectedEnvelopeId the rejected envelope id
@@ -43,7 +43,7 @@ import java.util.Objects;
  */
 @ExperimentalJSentinelApi
 public record EnvelopeRejectedEvent(EventMetadata metadata, String rejectedEnvelopeId, String reason)
-    implements JSentinelEvent {
+    implements EventBusSelfObservabilityEvent {
 
   public static final EventType TYPE = EventType.of("EnvelopeRejected");
 
