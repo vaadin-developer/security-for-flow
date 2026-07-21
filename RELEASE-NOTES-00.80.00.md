@@ -1,7 +1,7 @@
 # Release Notes — jSentinel V00.80.00
 
-**Theme:** Betrieb & Forensik — the operations and forensics release: runtime
-metrics and health export points (Konzept goal 9), production-grade event
+**Theme:** Operations & Forensics — the operations and forensics release: runtime
+metrics and health export points (concept goal 9), production-grade event
 integrations on the signed envelope base (goal 8), and a tamper-evident,
 independently verifiable audit hash chain (goal 7), plus the strict-mode
 wiring of the consume-side verification failure paths (goal 10 subset).
@@ -40,7 +40,7 @@ A failing integration is isolated and counted — it can never break
 
 ## What's new in detail
 
-### Goal 9 — Betrieb & Monitoring (`jSentinel-monitoring`, P001–P003 + P002)
+### Goal 9 — Operations & Monitoring (`jSentinel-monitoring`, P001–P003 + P002)
 
 | Piece | Delivered |
 |---|---|
@@ -144,13 +144,13 @@ comparison per the ≤ 3 pp acceptance bar; new modules set new baselines.
 - ✅ All 13 feature prompts implemented, tested (no mocks — real
   implementations, recording doubles, real HttpServer/SDK/storage), each
   green at commit time.
-- ✅ Konzept goal-7 acceptance: tamper-evident chains verify — including
+- ✅ concept goal-7 acceptance: tamper-evident chains verify — including
   across process restarts and via signed NDJSON exports with public
   material only.
-- ✅ Konzept goal-8 acceptance: all exporters consume signed envelopes;
+- ✅ concept goal-8 acceptance: all exporters consume signed envelopes;
   critical verification failures produce alerts
   (`JSentinelAlertPublisher` end-to-end test).
-- ✅ Konzept goal-9 acceptance: the 9 concept metric names ship verbatim and
+- ✅ concept goal-9 acceptance: the 9 concept metric names ship verbatim and
   are emitted by the bridge (pinned literally by tests).
 - ✅ Strict-mode failure paths: Reject + Event + Metric seam + operator
   codes, fail-closed profile default.

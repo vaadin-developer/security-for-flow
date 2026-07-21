@@ -47,7 +47,7 @@ three adapter facades inherit it). The DX layer only **records + STRICT-validate
 the RP configuration — the HTTP clients are assembled adapter-side, so
 `jSentinel-dx` stays free of any JOSE / HTTP-client compile dependency.
 
-STRICT-mode validation codes (additive, Konzept §13.2):
+STRICT-mode validation codes (additive, concept §13.2):
 
 | Code | Trigger | STRICT |
 |---|---|:---:|
@@ -146,7 +146,7 @@ V00.77.x follow-up.
 
 ## Known limitations / follow-ups
 
-- The full `demo-vaadin` Keycloak login (Konzept Phase 9) needs a running external
+- The full `demo-vaadin` Keycloak login (concept Phase 9) needs a running external
   IdP and is deferred to a follow-up; the end-to-end RP mechanics are already
   proven no-mock by the REST callback test, the auth-code flow tests and the
   standalone device-code demo.

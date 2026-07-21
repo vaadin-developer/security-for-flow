@@ -6,7 +6,7 @@ after V00.75.00 (Security Event Bus), before the JWT/OAuth2/OIDC arc
 was guarded only by comments, nails down untested fail-paths, hardens the manual
 parsers, and turns a deliberately defensive eye on the freshly-shipped event bus.
 
-It ships **two layers**: the six Konzept hardening blocks **H1–H6**, and four
+It ships **two layers**: the six concept hardening blocks **H1–H6**, and four
 **urgent review findings** (R002–R005) on the just-released event bus and the
 Eclipse-Store persistence that were pulled in alongside.
 
@@ -31,7 +31,7 @@ security-critical core modules.
 
 ---
 
-## H1 – H6 (Konzept hardening blocks)
+## H1 – H6 (concept hardening blocks)
 
 ### H1 — Token-digest type safety
 
@@ -45,7 +45,7 @@ V00.75.10 makes it a type:
   adapter in `jSentinel-core/credential/token`.
 - `TokenService`, `accountlifecycle.PasswordResetService`,
   `EmailVerificationService` **and** `ApiKeyAuthenticationService` (the 4th
-  service with the identical bug — included by decision over the Konzept's three)
+  service with the identical bug — included by decision over the concept's three)
   now take a `TokenHasher`. The old `PasswordHasher` constructors are
   `@Deprecated(forRemoval = true)` and delegate through the adapter, which runs a
   **determinism probe at construction** and rejects a salted KDF (CWE-208 /
@@ -105,7 +105,7 @@ static signature, now delegating to a process-wide
 `private static final JSentinelContext DEFAULT` (46 delegations) and adds
 `current()`. Parallel tests and multi-app embedding become possible; the static
 facade is **not** deprecated — it stays the convenient single-app default.
-Threading the context through the adapters is out of scope (Konzept §4.5).
+Threading the context through the adapters is out of scope (concept §4.5).
 
 ---
 

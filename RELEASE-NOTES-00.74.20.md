@@ -85,7 +85,7 @@ try (JSentinelStoragePair pair = JSentinelStorageFactory.openAt(Path.of("data"))
 | `StorageLayout(String frameworkSubdir, String appSubdir)` | Sub-directory names underneath the pair's parent. `DEFAULT = ("jsentinel-store", "app-store")`. Compact constructor rejects null / blank / path-separator / NUL bytes and same-subdir collisions. |
 | `JSentinelStoragePair` | 5-component record (`framework`, `app`, `parent`, `layout`, internal `closedFlag`) implementing `AutoCloseable, HasLogger`. Two-phase `close()` with `addSuppressed` discipline + idempotency guard. |
 | `JSentinelStorageFactory.openAt(Path parent)` | Convenience overload using `StorageLayout.DEFAULT`. |
-| `JSentinelStorageFactory.openAt(Path parent, StorageLayout layout)` | Real factory; validates parent (Konzept §6 codes `persistence/storage-pair-parent-not-directory`, `…-parent-not-writable`); rolls back any half-opened manager on failure. |
+| `JSentinelStorageFactory.openAt(Path parent, StorageLayout layout)` | Real factory; validates parent (concept §6 codes `persistence/storage-pair-parent-not-directory`, `…-parent-not-writable`); rolls back any half-opened manager on failure. |
 
 All four types carry `@ExperimentalJSentinelApi` until V00.75 confirms
 the shape. The existing `EclipseStoreJSentinelStorage.openAt(Path)`
@@ -124,7 +124,7 @@ JSentinelStoragePair.close():
        └──────────────────────────────┘
 ```
 
-Konzept §6 audit/log codes emitted by the pair:
+Concept §6 audit/log codes emitted by the pair:
 
 - `persistence/storage-pair-parent-not-directory` (IAE)
 - `persistence/storage-pair-parent-not-writable` (IAE)
@@ -135,7 +135,7 @@ Konzept §6 audit/log codes emitted by the pair:
 
 ### What V00.74.20 does NOT do
 
-Per Konzept §7:
+Per concept §7:
 
 - **No atomic cross-store transaction.** Framework commit + app commit
   are independent. Consumers needing cross-store consistency must
@@ -309,7 +309,7 @@ V00.74.20 — Storage-Pair is orthogonal to identity-federation.
 
 **Footnotes:**
 
-- Konzept: `Konzept-V00.74.20.md`.
+- Concept: `Konzept-V00.74.20.md`.
 - Implementation plan: `Implementierungsplan-V00.74.20.md`.
 - 17 of 19 prompts shipped: 000–015 + 017–018 ✓; 016 partial (54 %
   vs 65 % target, documented).

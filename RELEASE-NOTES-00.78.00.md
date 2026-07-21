@@ -55,7 +55,7 @@ types:
 `CommonJSentinelBootstrap` gains a declarative `.oidc(...)` sub-builder (all three
 adapter facades inherit it). The DX layer only records + STRICT-validates,
 referencing only the JOSE-free `oidc/api` + `oauth2/api` core types — no JOSE / HTTP
-compile dependency. STRICT codes (Konzept §11.4):
+compile dependency. STRICT codes (concept §11.4):
 
 | Code | Trigger |
 |---|---|

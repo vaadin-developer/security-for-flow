@@ -135,7 +135,7 @@ the fluent bootstrap surface for production use:
 4. **`@SecureRoute(policy = "…")`** — was deny-by-default in V00.72;
    V00.73 evaluates the policy and maps `Allowed` /
    `Denied` / `StepUpRequired` to `AuthorizationDecision`.
-5. **`SecureRouteDiscovery` SPI** (opt-in) — Konzept §8.5. Enables
+5. **`SecureRouteDiscovery` SPI** (opt-in) — concept §8.5. Enables
    deterministic STRICT cross-validation of
    `@SecureRoute(policy="…")` annotations against the policy names
    registered via `.policies(...)`. Default is off; preserves V00.72
@@ -145,9 +145,9 @@ the fluent bootstrap surface for production use:
 
 | Module | Type | Notes |
 |---|---|---|
-| `jSentinel-dx` | `AuditState`, `SessionState`, `RoleState`, `CredentialState`, `PolicyState` | Sub-aggregates split out of `BootstrapState` (Konzept §5) |
+| `jSentinel-dx` | `AuditState`, `SessionState`, `RoleState`, `CredentialState`, `PolicyState` | Sub-aggregates split out of `BootstrapState` (concept §5) |
 | `jSentinel-dx` | `AuditBootstrapImpl`, `SessionBootstrapImpl`, `RoleBootstrapImpl`, `CredentialBootstrapImpl`, `PolicyBootstrapImpl` | Real V00.73 implementations replacing the V00.72 Recording* placeholders |
-| `jSentinel-dx` | `TeeingJSentinelAuditService` | Internal helper for `audit(...)` mixed setups (Konzept §6.2) |
+| `jSentinel-dx` | `TeeingJSentinelAuditService` | Internal helper for `audit(...)` mixed setups (concept §6.2) |
 | `jSentinel-dx` | `WrapperIndexFormat` | Package-private constants shared with `jSentinel-processor` |
 | `jSentinel-dx-vaadin` | `SessionManagementContext`, `SessionManagementRoute` | Adapter-owned `@Route` for the V00.70 `SessionManagementView` Composite |
 | `jSentinel-dx-vaadin` | `SecureRouteDiscovery` | New SPI (returns `Stream<String>` of policy names) |
@@ -155,7 +155,7 @@ the fluent bootstrap surface for production use:
 | `jSentinel-vaadin-starter` | `PolicyVisibility` (package-private) | Backs `SecuredUi.requiresPolicy(...)` |
 | `jSentinel-vaadin-starter` | `VaadinJSentinelBootstrap.discoverSecureRoutes(...)` overloads | Opt-in for the discovery hook |
 
-## Adapter symmetry (Konzept §4.1)
+## Adapter symmetry (concept §4.1)
 
 | Sub-builder | Vaadin | REST | Standalone |
 |---|:---:|:---:|:---:|
@@ -165,7 +165,7 @@ the fluent bootstrap surface for production use:
 | `.roles(...)` | ✓ | ✓ | ✓ |
 | `.credentials(...)` | ✓ | ✓ | ✓ |
 
-## Diagnostic codes (Konzept §13)
+## Diagnostic codes (concept §13)
 
 V00.73 splits the diagnostic codes into two semantically distinct
 classes.
@@ -207,7 +207,7 @@ calls are not affected.
 | `secure-route/discovery-disabled` | `.discoverSecureRoutes(true)` not set | INFO |
 | `secure-route/discovery-unavailable` | discovery requested but no impl on classpath | ✓ |
 
-## Stable-API audit (P14 — Konzept §12)
+## Stable-API audit (P14 — concept §12)
 
 V00.73 promotes **every** public DX type to stable. The
 `@ExperimentalJSentinelApi` annotation is removed from 40 types across
@@ -218,7 +218,7 @@ six modules (`jSentinel-dx`, `jSentinel-dx-vaadin`, `jSentinel-dx-rest`,
 The promotion accepts the following SemVer commitments:
 
 - **Interfaces grow only via `default` methods.** The V00.75 sixth
-  sub-builder (`.eventBus(...)` per Konzept §17) and any future
+  sub-builder (`.eventBus(...)` per concept §17) and any future
   additions to `CommonJSentinelBootstrap<B>` or the five sub-builders
   ship as default methods with sensible no-op or fail-closed
   behaviour. This keeps existing implementations source- and
@@ -279,9 +279,9 @@ implementations.
   unconditionally. The flag is preserved so V00.75 can wire per-channel
   filtering without changing the API shape.
 - `RolePermissionMapping` is intentionally NOT exposed through
-  `RoleBootstrap` (Konzept §9). V00.71 has no resolver setter for it.
+  `RoleBootstrap` (concept §9). V00.71 has no resolver setter for it.
 - `SessionStore` is intentionally NOT registered through a global
-  `JSentinelServiceResolver` setter (Konzept §7). The configured
+  `JSentinelServiceResolver` setter (concept §7). The configured
   store stays in DX state and is consumed by adapter-DX code
   (Vaadin: `SessionManagementContext` / `SessionManagementRoute`).
 - Mutation-coverage (PIT) was re-run for the six modules touched in
@@ -307,7 +307,7 @@ above. Consumers running V00.72 in `COMMUNITY_DEFAULTS`,
 - `demo-vaadin`, `demo-rest`, `demo-standalone` — V00.72 fluent
   bootstrap calls continue to work unchanged. Migrating their
   initialisation listeners to the new sub-builders is staged as an
-  optional follow-up (Konzept §14 Phase 5).
+  optional follow-up (concept §14 Phase 5).
 
 ## Mutation coverage (V00.73)
 
@@ -345,8 +345,8 @@ code with not yet matching test depth (the six new
 follow-up for V00.73.1 — kill-rate improvements rather than feature
 work.
 
-Konzept §15 acceptance criterion — "Mutation Coverage der V00.71-Module
-sinkt durch V00.73 nicht" — is honoured for every untouched V00.71 module
+Concept §15 acceptance criterion — "the mutation coverage of the V00.71 modules
+must not drop through V00.73" — is honoured for every untouched V00.71 module
 by construction. The single V00.71 module touched in V00.73 is
 `jSentinel-processor`; absolute mutation kills there went **up**
 (23 → 46), the percentage drop is purely a denominator effect from

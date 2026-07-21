@@ -358,7 +358,7 @@ authentication through the new pipeline including `verifyAgainstNothing`
 for unknown users.
 
 **No `pbkdf2$…` import.** The experimental wire format never reached
-a stable consumer outside the repo and is not migrated. Konzept §1
+a stable consumer outside the repo and is not migrated. Concept §1
 and §7 cover the carve-out.
 
 ### Maven coordinates

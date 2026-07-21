@@ -100,7 +100,7 @@ JSentinelEventVerificationResult r = consumePipeline.verify(envelope, Instant.no
   dependency runs events → core only (core must not depend on events). A host
   wires them into its core service code paths; concrete call-site insertion is a
   host/follow-up concern, gated by `jsentinel.events.bus.enabled` (default off).
-- **Naming.** The release follows the authoritative Konzept's `JSentinel*`
+- **Naming.** The release follows the authoritative concept's `JSentinel*`
   surface (and the V00.73 rebrand rule), not the draft plan's shorthand
   `SecurityEvent`.
 
@@ -117,7 +117,7 @@ V00.74 baselines by construction (no source change).
 | `jSentinel-events-testkit` | n/a | — | Contract suites verified through their consumers. |
 | `jSentinel-events-persistence-eclipsestore` | n/a (re-measure deferred) | — | Storage-layer profile; verified via testkit contracts + a restart test. |
 
-The Konzept §15 acceptance criterion — "mutation coverage of the V00.71 modules
+The concept §15 acceptance criterion — "mutation coverage of the V00.71 modules
 does not drop through V00.75" — is satisfied for every pre-existing module by
 construction: V00.75 changes no existing source.
 
@@ -148,6 +148,6 @@ tamper-evident audit as a separate listener, and streaming transports
 
 ---
 
-**Footnotes:** Konzept `Konzept-V00.75.00.md`; plan
+**Footnotes:** concept `Konzept-V00.75.00.md`; plan
 `Implementierungsplan-V00.75.00.md`; 5-minute setup
 `docs/dx/5-minute-setup-eventbus.md`.

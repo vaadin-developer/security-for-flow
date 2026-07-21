@@ -117,7 +117,7 @@ blocks. `jSentinel-core` stays exactly where V00.71 left it.
 | `jSentinel-rest` | no | unchanged |
 | `jSentinel-standalone` | no | unchanged |
 | `jSentinel-test` | no | DX-specific fixtures (Prompt 003a) reuse existing fakes; no API changes |
-| `jSentinel-processor` | no | behaviour unchanged (Konzept §10.2); wrapper-index *writer* staged for V00.73 |
+| `jSentinel-processor` | no | behaviour unchanged (concept §10.2); wrapper-index *writer* staged for V00.73 |
 | `jSentinel-persistence-testkit` | no | unchanged |
 | `jSentinel-persistence-eclipsestore` | no | unchanged |
 | `jSentinel-crypto-bc` | no | unchanged from V00.71 |
@@ -196,7 +196,7 @@ promotes them to stable.
 - `CommonJSentinelBootstrap<B>` interface and `AbstractJSentinelBootstrap`
   abstract skeleton (shared by all three adapter facades). Sub-builders
   `audit / sessions / policies / roles / credentials` record callbacks
-  for V00.73 wiring (Konzept §6).
+  for V00.73 wiring (concept §6).
 - `JSentinelDiagnostics.inspect()` — standalone, callable at any time,
   side-effect free; returns `JSentinelServiceReport` with detected
   missing / duplicate / dangling SPIs.
@@ -272,7 +272,7 @@ promotes them to stable.
   empty-policy) at `build()` time.
 - `@SecureRoute(roles = …, permissions = …, policy = …)` —
   optional class-level annotation for routes. Semantics
-  (Konzept §9.2): most-restrictive-wins combination of all populated
+  (concept §9.2): most-restrictive-wins combination of all populated
   axes. Resolved by `SecureRouteEvaluator` over the existing
   scanner / evaluator chain — no parallel decision engine.
 - Three profiles, each implementing
@@ -301,7 +301,7 @@ promotes them to stable.
   is on the classpath but the index carries no matching wrapper.
   `PRODUCTION` records it as a warning; `STRICT` raises
   `JSentinelBootstrapException`.
-- Konzept §10.2 invariant preserved: the *writer* in
+- concept §10.2 invariant preserved: the *writer* in
   `jSentinel-processor` is staged for V00.73. Until V00.73 ships, the
   reader surfaces no entries unless a consumer (or a test harness)
   manually places an index file.

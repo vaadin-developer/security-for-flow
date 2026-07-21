@@ -102,8 +102,8 @@ it removes no source — so existing kills cannot regress).
 | `jSentinel-core` | baseline (87 %) | — | additive `jwt/api` + `OidcAccessToken` field; new types fully tested |
 | `jSentinel-dx`, `jSentinel-events`, `jSentinel-events-rest`, `jSentinel-crypto-bc`, `jSentinel-events-persistence-eclipsestore`, `jSentinel-propagation-oidc`, `jSentinel-dx-rest`, `jSentinel-rest` | baseline | — | additive changes, each landed with a dedicated test |
 
-Konzept §15 acceptance ("Mutation Coverage der V00.71–V00.75-Module sinkt durch
-V00.76 nicht") is satisfied by construction for every touched module.
+Concept §15 acceptance ("the mutation coverage of the V00.71–V00.75 modules must not drop
+through V00.76") is satisfied by construction for every touched module.
 
 ## Acceptance summary
 

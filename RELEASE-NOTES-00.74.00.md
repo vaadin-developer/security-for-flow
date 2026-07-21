@@ -78,7 +78,7 @@ Strictly opt-in. Mirrors the V00.71 `jSentinel-crypto-bc` /
 - `TokenExchangeCache` SPI + `InMemoryTokenExchangeCache` default
   (30-second skew on the advertised `expiresAt`).
 - `JSentinelPropagationException` — hard failure with the IDP HTTP
-  status. **No silent downgrade** (Konzept §13.2).
+  status. **No silent downgrade** (concept §13.2).
 - `StubTokenEndpoint` test fixture for V00.74 integration tests and
   downstream demos.
 - Maven Enforcer rule actively bans
@@ -130,7 +130,7 @@ optional sixth field, `kind` (`secured` / `propagating`).
 
 ---
 
-## Validation codes (Konzept §13.2)
+## Validation codes (concept §13.2)
 
 Documented codes the V00.74 diagnostic surface emits:
 
@@ -148,7 +148,7 @@ Documented codes the V00.74 diagnostic surface emits:
 
 ## What V00.74 does NOT do
 
-Tracking the Konzept §3.2 non-scope explicitly:
+Tracking the concept §3.2 non-scope explicitly:
 
 - **No OIDC inbound stack.** Authorization-code flow, Discovery,
   JWKS refresh, ID-token validation stay in V00.80.

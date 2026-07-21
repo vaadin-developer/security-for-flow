@@ -155,9 +155,9 @@ Two deferred V00.71 items previously listed a target of "V00.72"
 even though neither V00.72 nor V00.73 implemented them (both were
 DX-scope releases). The rows now correctly read:
 
-- `Konzept V00.71 §10 — Foreign Hash Import → V00.71 Prompt 036
+- `concept V00.71 §10 — Foreign Hash Import → V00.71 Prompt 036
   (still open)`.
-- `Konzept V00.71 §3 — Password Strength Estimator → TBD — no
+- `concept V00.71 §3 — Password Strength Estimator → TBD — no
   committed version`.
 
 ### `scripts/clean-bundle-for-central.sh`
@@ -175,7 +175,7 @@ PIT was re-run against the V00.74.10 reactor as part of release
 preparation. The numbers below are the **measured** mutation scores
 on the V00.74.10 tip, not aspirational targets:
 
-| Module | V00.74.10 measured | Plan-target (Konzept §4.1) | Status |
+| Module | V00.74.10 measured | Plan-target (concept §4.1) | Status |
 |---|---:|---:|---|
 | `jSentinel-dx-standalone` | **63 %** | ≥ 65 % | within 2 pp of target |
 | `jSentinel-autoservice-processor` | **52 %** | ≥ 65 % | deferred — see below |
@@ -183,7 +183,7 @@ on the V00.74.10 tip, not aspirational targets:
 | `jSentinel-dx-vaadin` | **53 %** | ≥ 75 % | deferred — see below |
 | `jSentinel-vaadin-starter` | **38 %** | ≥ 75 % | deferred — see below |
 
-### Scope reduction vs. original Konzept §9
+### Scope reduction vs. original concept §9
 
 The Konzept-V00.74.10 §4.1 lift targets were estimated against the
 V00.74.00 baseline numbers carried in `CLAUDE.md`. Re-measuring against
@@ -197,7 +197,7 @@ feature value.
 V00.74.10 therefore **delivers the Tooling-API feature lift (Phase 1)
 and the framework-feedback fixes (Phase 4) but defers the aggressive
 mutation lift to a follow-up release**. The deferred lift remains a
-documented backlog item (see Konzept §4.1; numbers carry over to the
+documented backlog item (see concept §4.1; numbers carry over to the
 V00.74.11 / V00.75 planning window).
 
 ### What V00.74.10 still guarantees on PIT
@@ -338,7 +338,7 @@ it is purely informational for UI consumers.
 
 ## Demos
 
-V00.74.10 ships **no new demo wiring** for the Tooling API. The Konzept
+V00.74.10 ships **no new demo wiring** for the Tooling API. The concept
 listed an optional admin `HealthView` for
 `demo-jsentinel-vaadin-hardening` — that demo plus the other nine
 `demo-jsentinel-*` modules currently carry a parent-pom version of
@@ -372,7 +372,7 @@ health (V00.74.10)".
   re-evaluation, builder-discipline break, and risk of consumer
   drift to the wrong pattern. The shipping `hideWhenDenied()` /
   `disableWhenDenied()` set stays the recommended path.
-- **No federation work.** V00.76 – V00.79 Konzept documents land
+- **No federation work.** V00.76 – V00.79 concept documents land
   alongside this release as roadmap forecast; their implementation
   remains future work.
 
