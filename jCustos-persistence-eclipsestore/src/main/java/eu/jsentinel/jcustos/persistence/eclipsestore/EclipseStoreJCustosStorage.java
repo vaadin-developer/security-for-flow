@@ -36,6 +36,7 @@ import java.nio.file.Path;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.util.Objects.requireNonNull;
+import org.eclipse.store.afs.nio.types.NioFileSystem;
 
 /**
  * Lifecycle handle for an Eclipse-Store-backed security persistence
@@ -147,6 +148,35 @@ public final class EclipseStoreJCustosStorage implements AutoCloseable {
       manager.shutdown();
     } finally {
       lock.writeLock().unlock();
+    }
+  }
+
+  /**
+   * Exports a consistent full backup of the live storage into
+   * {@code targetDirectory}: every channel data file, the transaction
+   * logs and the persistence type dictionary — the result is a bootable
+   * storage directory that {@code EmbeddedStorage.start(...)} can open
+   * directly. The storage keeps serving while the export runs; Eclipse
+   * Store guarantees the exported file set is consistent.
+   *
+   * <p>The target directory must be empty (or absent — it is created);
+   * a non-empty target fails with the underlying storage exception.
+   *
+   * @param targetDirectory directory the backup is exported into
+   * @throws IllegalStateException when the storage is already closed
+   * @since 00.82.00
+   */
+  public void issueFullBackup(Path targetDirectory) {
+    requireNonNull(targetDirectory, "targetDirectory must not be null");
+    lock.readLock().lock();
+    try {
+      if (closed) {
+        throw new IllegalStateException("storage is closed — no backup possible");
+      }
+      manager.issueFullBackup(
+          NioFileSystem.New().ensureDirectory(targetDirectory));
+    } finally {
+      lock.readLock().unlock();
     }
   }
 
