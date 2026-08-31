@@ -1,0 +1,40 @@
+/**
+ * Copyright © 2017 Sven Ruppert (sven.ruppert@gmail.com)
+ *
+ * Licensed under the EUPL, Version 1.2 or - as soon they will be
+ * approved by the European Commission - subsequent versions of the
+ * EUPL (the "Licence"); You may not use this work except in
+ * compliance with the Licence. You may obtain a copy of the Licence at:
+ *
+ * https://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the Licence is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
+ */
+package eu.jsentinel.jcustos.replay.api;
+
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+
+import java.time.Duration;
+import java.util.Optional;
+
+/**
+ * A short-lived nonce store keyed by a request key (V00.79) — e.g. binding a DPoP
+ * server nonce (RFC 9449 §8) or an OIDC nonce to a request context until it is
+ * consumed once. {@link #consume(String)} is single-use + TTL-checked.
+ * Implementations MUST be thread-safe.
+ *
+ * @since 00.79.10
+ */
+@ExperimentalJSentinelApi
+public interface NonceStore {
+
+  /** Binds {@code nonce} to {@code requestKey} for {@code ttl}. */
+  void bind(String requestKey, String nonce, Duration ttl);
+
+  /** Single-use, TTL-checked lookup: returns + removes the bound nonce, if still valid. */
+  Optional<String> consume(String requestKey);
+}

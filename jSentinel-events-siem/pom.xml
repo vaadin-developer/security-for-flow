@@ -15,7 +15,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
-    <groupId>com.svenruppert.jsentinel</groupId>
+    <groupId>eu.jsentinel.jcustos</groupId>
     <artifactId>jSentinel-parent</artifactId>
     <version>00.81.10-SNAPSHOT</version>
   </parent>
@@ -29,13 +29,13 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.svenruppert.jsentinel</groupId>
+      <groupId>eu.jsentinel.jcustos</groupId>
       <artifactId>jSentinel-events</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>com.svenruppert.jsentinel</groupId>
+      <groupId>eu.jsentinel.jcustos</groupId>
       <artifactId>jSentinel-events-testkit</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>

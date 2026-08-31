@@ -1,0 +1,41 @@
+package eu.jsentinel.jcustos.demo.skill.rest.security.bootstrap;
+
+import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.SubjectIdResolver;
+import eu.jsentinel.jcustos.credential.password.bouncycastle.BouncyCastleHashingServices;
+import eu.jsentinel.jcustos.dx.bootstrap.CredentialBootstrap;
+import eu.jsentinel.jcustos.dx.bootstrap.SessionBootstrap;
+import eu.jsentinel.jcustos.session.JSentinelVersionStore;
+
+import java.util.Optional;
+
+/**
+ * Hardening-layer extension. Contributes Argon2id hashing and
+ * Phase-4c drift-detection wiring to the layer-1 bootstrap chain.
+ *
+ * <p>{@link #order()} returns 20 so this runs after persistence's
+ * {@code storeBacked(...)} session-store wire stays in effect while
+ * hardening adds the version-store binding on top.
+ */
+public final class HardeningBootstrapExtension implements BootstrapExtension {
+
+  @Override
+  public void contributeCredentials(CredentialBootstrap c) {
+    c.hashing(BouncyCastleHashingServices.modern());
+  }
+
+  @Override
+  public void contributeSessions(SessionBootstrap s) {
+    Optional<JSentinelVersionStore> versionStore =
+        JSentinelServiceResolver.findJSentinelVersionStore();
+    Optional<SubjectIdResolver<Object>> resolver =
+        JSentinelServiceResolver.findSubjectIdResolver();
+    versionStore.ifPresent(s::securityVersion);
+    resolver.ifPresent(s::subjectIdResolver);
+  }
+
+  @Override
+  public int order() {
+    return 20;
+  }
+}

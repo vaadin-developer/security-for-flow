@@ -1,0 +1,46 @@
+package eu.jsentinel.jcustos.demo.skill.rest.security.bootstrap;
+
+import eu.jsentinel.jcustos.dx.bootstrap.AuditBootstrap;
+import eu.jsentinel.jcustos.dx.bootstrap.SessionBootstrap;
+import eu.jsentinel.jcustos.persistence.eclipsestore.EclipseStoreJSentinelStorage;
+
+/**
+ * Persistence-layer extension. Contributes Eclipse-Store-backed
+ * audit + session stores to the layer-1 bootstrap chain.
+ *
+ * <p>Registered via
+ * {@code META-INF/services/eu.jsentinel.jcustos.demo.skill.rest.security.bootstrap.BootstrapExtension}.
+ * Loaded by {@code BootstrapBuilder.apply(...)} together with every
+ * other registered extension; the contributions stack additively on
+ * the same {@code .audit / .sessions / .credentials} sub-builders,
+ * so hardening (or any later layer) can configure further aspects
+ * without overwriting these.
+ *
+ * <p>The static initialiser eagerly opens the storage backend and
+ * triggers {@link BootstrapWiring#instance()} so the bootstrap token
+ * is generated / persisted before the first request.
+ */
+public final class PersistenceBootstrapExtension implements BootstrapExtension {
+
+  private static final EclipseStoreJSentinelStorage STORAGE;
+
+  static {
+    STORAGE = JSentinelStorageProvider.storage();
+    BootstrapWiring.instance();
+  }
+
+  @Override
+  public void contributeAudit(AuditBootstrap a) {
+    a.storeBacked(STORAGE.auditEventStore()).logging();
+  }
+
+  @Override
+  public void contributeSessions(SessionBootstrap s) {
+    s.storeBacked(STORAGE.sessionStore());
+  }
+
+  @Override
+  public int order() {
+    return 10;
+  }
+}

@@ -1,0 +1,2 @@
+eu.jsentinel.jcustos.events.signature.Ed25519SignatureAlgorithm
+eu.jsentinel.jcustos.events.signature.EcdsaP256SignatureAlgorithm

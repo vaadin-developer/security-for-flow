@@ -1,0 +1,3 @@
+eu.jsentinel.jcustos.demo.skill.vaadin.security.bootstrap.DefaultBootstrapExtension
+eu.jsentinel.jcustos.demo.skill.vaadin.security.bootstrap.PersistenceBootstrapExtension
+eu.jsentinel.jcustos.demo.skill.vaadin.security.bootstrap.HardeningBootstrapExtension

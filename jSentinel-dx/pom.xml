@@ -15,7 +15,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
-    <groupId>com.svenruppert.jsentinel</groupId>
+    <groupId>eu.jsentinel.jcustos</groupId>
     <artifactId>jSentinel-parent</artifactId>
     <version>00.81.10-SNAPSHOT</version>
   </parent>
@@ -32,13 +32,13 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.svenruppert.jsentinel</groupId>
+      <groupId>eu.jsentinel.jcustos</groupId>
       <artifactId>jSentinel-core</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>com.svenruppert.jsentinel</groupId>
+      <groupId>eu.jsentinel.jcustos</groupId>
       <artifactId>jSentinel-test</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
@@ -51,7 +51,7 @@
       Runtime users decide for themselves whether to ship bc.
     -->
     <dependency>
-      <groupId>com.svenruppert.jsentinel</groupId>
+      <groupId>eu.jsentinel.jcustos</groupId>
       <artifactId>jSentinel-crypto-bc</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
@@ -92,7 +92,7 @@
       <!--
         V00.74.10 Phase 1 — Konzept-V00.74.10 §3 invariant 1: no JSON
         library on the jSentinel-dx compile/runtime classpath. The
-        in-tree JsonEncoder (com.svenruppert.jsentinel.dx.runtime.internal)
+        in-tree JsonEncoder (eu.jsentinel.jcustos.dx.runtime.internal)
         is the only JSON code path. Test scope is allowed so the
         Phase-1 smoke test can use Jackson as an independent parser.
       -->

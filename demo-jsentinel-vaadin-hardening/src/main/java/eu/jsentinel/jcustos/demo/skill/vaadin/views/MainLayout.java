@@ -1,0 +1,153 @@
+package eu.jsentinel.jcustos.demo.skill.vaadin.views;
+
+import com.svenruppert.dependencies.core.logger.HasLogger;
+import eu.jsentinel.jcustos.authorization.api.SubjectStores;
+import eu.jsentinel.jcustos.logout.LogoutScope;
+import eu.jsentinel.jcustos.logout.LogoutService;
+import eu.jsentinel.jcustos.logout.SubjectId;
+import eu.jsentinel.jcustos.logout.vaadin.DefaultVaadinLogoutGateway;
+import eu.jsentinel.jcustos.logout.vaadin.VaadinLogoutService;
+import eu.jsentinel.jcustos.starter.ui.SecuredUi;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.applayout.AppLayout;
+import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.RouterLink;
+import eu.jsentinel.jcustos.demo.skill.vaadin.security.model.User;
+import eu.jsentinel.jcustos.demo.skill.vaadin.views.admin.AdminRolesView;
+import eu.jsentinel.jcustos.demo.skill.vaadin.views.admin.AuditView;
+import eu.jsentinel.jcustos.demo.skill.vaadin.views.admin.SessionsView;
+
+/**
+ * Application shell — pure layout, no own {@code @Route}.
+ *
+ * <p>Hosts every route registered with {@code layout = MainLayout.class}.
+ * The drawer carries two strands:
+ *
+ * <ul>
+ *   <li><b>Public</b> — a plain {@link RouterLink} to
+ *       {@link PublicHomeView}; visible to every visitor, signed in
+ *       or not, because the link has no permission requirement.</li>
+ *   <li><b>Private</b> — {@link SecuredUi#link()} entries pointing at
+ *       {@link DashboardView} (any logged-in user) and the admin
+ *       views (permission-protected). Each entry hides itself when
+ *       the subject lacks the required permission, so anonymous
+ *       visitors see only "Home".</li>
+ * </ul>
+ *
+ * <p>The navbar carries a single auth action button — "Sign in" for
+ * anonymous visitors, "Sign out" for logged-in users — rebuilt on
+ * every navigation via {@link #beforeEnter(BeforeEnterEvent)}. The
+ * button lives inside a {@link Div} "slot" so the rebuild only swaps
+ * the button instance, not the navbar layout.
+ */
+public class MainLayout extends AppLayout implements HasLogger, BeforeEnterObserver {
+
+  private static final LogoutService LOGOUT_SERVICE =
+      new VaadinLogoutService<>(
+          SubjectStores.subjectStore(), User.class,
+          new DefaultVaadinLogoutGateway(),
+          "/" + MyLoginView.NAV,
+          /* closeVaadinSession= */ true,
+          /* invalidateHttpSession= */ true);
+
+  /** Navbar slot — swapped between "Sign in" and "Sign out" on every navigation. */
+  private final Div authActionSlot = new Div();
+
+  public MainLayout() {
+    Span appTitle = new Span("jSentinel Vaadin Demo");
+    appTitle.getStyle().set("font-weight", "600");
+
+    authActionSlot.add(buildAuthActionButton());
+
+    addToNavbar(new DrawerToggle(), appTitle);
+    addToNavbar(true, authActionSlot);
+
+    addToDrawer(buildDrawer());
+  }
+
+  @Override
+  public void beforeEnter(BeforeEnterEvent event) {
+    // Auth state may have flipped since this layout instance was
+    // constructed (e.g. logout → next navigation to public page).
+    // Rebuild the slot's content so the button matches the current
+    // subject.
+    authActionSlot.removeAll();
+    authActionSlot.add(buildAuthActionButton());
+  }
+
+  private VerticalLayout buildDrawer() {
+    VerticalLayout drawer = new VerticalLayout();
+    drawer.setSpacing(false);
+    drawer.getThemeList().add("spacing-xs");
+
+    drawer.add(new Span("Public"));
+    drawer.add(new RouterLink("Home", PublicHomeView.class));
+
+    drawer.add(new Span("My area"));
+    drawer.add(SecuredUi.link()
+        .to(DashboardView.class)
+        .text("Dashboard")
+        .requiresPermission("app:view")
+        .hideWhenDenied()
+        .build());
+
+    drawer.add(new Span("Admin"));
+    drawer.add(SecuredUi.link()
+        .to(AuditView.class)
+        .text("Audit log")
+        .requiresPermission("audit:read")
+        .hideWhenDenied()
+        .build());
+    drawer.add(SecuredUi.link()
+        .to(SessionsView.class)
+        .text("Active sessions")
+        .requiresPermission("admin:sessions")
+        .hideWhenDenied()
+        .build());
+    drawer.add(SecuredUi.link()
+        .to(AdminRolesView.class)
+        .text("Role administration")
+        .requiresPermission("admin:roles")
+        .hideWhenDenied()
+        .build());
+    return drawer;
+  }
+
+  /**
+   * Builds the navbar's auth-action button based on the current
+   * subject.
+   *
+   * <ul>
+   *   <li>Subject present → "Sign out" → drives {@link #logout()}.</li>
+   *   <li>Subject absent → "Sign in" → navigates to the login route.</li>
+   * </ul>
+   */
+  private static Button buildAuthActionButton() {
+    boolean loggedIn = SubjectStores.subjectStore()
+        .currentSubject(User.class).isPresent();
+    if (loggedIn) {
+      Button signOut = new Button("Sign out", VaadinIcon.SIGN_OUT.create(), e -> logout());
+      signOut.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
+      return signOut;
+    }
+    Button signIn = new Button("Sign in", VaadinIcon.SIGN_IN.create(),
+        e -> UI.getCurrent().navigate(MyLoginView.class));
+    signIn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SMALL);
+    return signIn;
+  }
+
+  private static void logout() {
+    SubjectId subjectId = SubjectStores.subjectStore().currentSubject(User.class)
+        .map(u -> SubjectId.of(String.valueOf(u.id())))
+        .orElse(SubjectId.of("anonymous"));
+    LOGOUT_SERVICE.logout(subjectId, LogoutScope.CurrentSession);
+  }
+}

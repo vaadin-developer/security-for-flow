@@ -2,7 +2,7 @@
 # V00.74 added an optional sixth field `kind`; this fixture exercises both
 # the V00.73-shape (5 fields → default SECURED) and a V00.74 explicit
 # `propagating` entry to lock in the forward-compat contract.
-com.svenruppert.jsentinel.dx.diagnostics.fixture.FixtureSourceType:com.svenruppert.jsentinel.dx.diagnostics.fixture.FixtureSourceTypeSecured:test-processor:00.11.00:doWork
+eu.jsentinel.jcustos.dx.diagnostics.fixture.FixtureSourceType:eu.jsentinel.jcustos.dx.diagnostics.fixture.FixtureSourceTypeSecured:test-processor:00.11.00:doWork
 com.example.UnknownSourceType:com.example.UnknownSourceTypeSecured:test-processor:00.11.00:
 java.lang.String:java.lang.Object:test-processor:00.11.00:length
-com.svenruppert.jsentinel.dx.diagnostics.fixture.FixturePropagatingSource:com.svenruppert.jsentinel.dx.diagnostics.fixture.FixturePropagatingSourcePropagating:test-processor:00.11.00:load:propagating
+eu.jsentinel.jcustos.dx.diagnostics.fixture.FixturePropagatingSource:eu.jsentinel.jcustos.dx.diagnostics.fixture.FixturePropagatingSourcePropagating:test-processor:00.11.00:load:propagating

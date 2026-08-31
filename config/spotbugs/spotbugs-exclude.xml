@@ -22,19 +22,19 @@
   <Match><Bug pattern="BC_VACUOUS_INSTANCEOF"/></Match>
   <Match><Bug pattern="DCN_NULLPOINTER_EXCEPTION"/></Match>
   <Match>
-    <Class name="com.svenruppert.jsentinel.credential.password.dummy.DefaultDummyVerificationService"/>
+    <Class name="eu.jsentinel.jcustos.credential.password.dummy.DefaultDummyVerificationService"/>
     <Bug pattern="HARD_CODE_PASSWORD"/>
   </Match>
   <Match>
-    <Class name="com.svenruppert.jsentinel.credential.password.pepper.PepperApplicator"/>
+    <Class name="eu.jsentinel.jcustos.credential.password.pepper.PepperApplicator"/>
     <Bug pattern="DMI_RANDOM_USED_ONLY_ONCE"/>
   </Match>
   <Match>
-    <Class name="com.svenruppert.jsentinel.session.NoopSessionPolicy"/>
+    <Class name="eu.jsentinel.jcustos.session.NoopSessionPolicy"/>
     <Bug pattern="SING_SINGLETON_HAS_NONPRIVATE_CONSTRUCTOR"/>
   </Match>
   <Match>
-    <Class name="com.svenruppert.jsentinel.rest.RestJSentinelVersionFilter"/>
+    <Class name="eu.jsentinel.jcustos.rest.RestJSentinelVersionFilter"/>
     <Bug pattern="NP_NULL_PARAM_DEREF"/>
   </Match>
   <!--
@@ -47,7 +47,7 @@
     MS_EXPOSE_REP). Scoped to this one method so the rule stays strict elsewhere.
   -->
   <Match>
-    <Class name="com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver"/>
+    <Class name="eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver"/>
     <Method name="current"/>
     <Bug pattern="MS_EXPOSE_REP"/>
   </Match>
@@ -70,10 +70,10 @@
   -->
   <Match>
     <Or>
-      <Class name="com.svenruppert.jsentinel.authorization.impl.AuthorizationListener"/>
-      <Class name="com.svenruppert.jsentinel.components.SecuredButton"/>
-      <Class name="com.svenruppert.jsentinel.components.SecuredRouterLink"/>
-      <Class name="com.svenruppert.jsentinel.session.vaadin.JSentinelVersionEnforcerListener"/>
+      <Class name="eu.jsentinel.jcustos.authorization.impl.AuthorizationListener"/>
+      <Class name="eu.jsentinel.jcustos.components.SecuredButton"/>
+      <Class name="eu.jsentinel.jcustos.components.SecuredRouterLink"/>
+      <Class name="eu.jsentinel.jcustos.session.vaadin.JSentinelVersionEnforcerListener"/>
     </Or>
     <Bug pattern="SE_BAD_FIELD"/>
   </Match>
@@ -88,7 +88,7 @@
        breaking the HIBP contract. Scoped to the single (single-purpose) class.
   -->
   <Match>
-    <Class name="com.svenruppert.jsentinel.credential.compromised.hibp.HaveIBeenPwnedCompromisedPasswordChecker"/>
+    <Class name="eu.jsentinel.jcustos.credential.compromised.hibp.HaveIBeenPwnedCompromisedPasswordChecker"/>
     <Bug pattern="WEAK_MESSAGE_DIGEST_SHA1"/>
   </Match>
 
@@ -122,12 +122,12 @@
     rebrand; surfaced when the demo reactor was rebuilt under -Pstatic-analysis.)
   -->
   <Match>
-    <Class name="com.svenruppert.jsentinel.demo.app.security.model.DemoUserDirectoryProvider"/>
+    <Class name="eu.jsentinel.jcustos.demo.app.security.model.DemoUserDirectoryProvider"/>
     <Method name="directory"/>
     <Bug pattern="MS_EXPOSE_REP"/>
   </Match>
   <Match>
-    <Class name="com.svenruppert.jsentinel.demo.app.security.services.DemoSessionStoreProvider"/>
+    <Class name="eu.jsentinel.jcustos.demo.app.security.services.DemoSessionStoreProvider"/>
     <Method name="sessionStore"/>
     <Bug pattern="MS_EXPOSE_REP"/>
   </Match>
@@ -174,7 +174,7 @@
        no tokens, no key material derive from it), so ThreadLocalRandom is
        the correct, cheap choice. Documented in WebhookEventPublisher. -->
   <Match>
-    <Class name="com.svenruppert.jsentinel.events.webhook.WebhookEventPublisher"/>
+    <Class name="eu.jsentinel.jcustos.events.webhook.WebhookEventPublisher"/>
     <Bug pattern="PREDICTABLE_RANDOM"/>
   </Match>
 </FindBugsFilter>

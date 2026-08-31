@@ -15,7 +15,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>com.svenruppert.jsentinel</groupId>
+        <groupId>eu.jsentinel.jcustos</groupId>
         <artifactId>jSentinel-parent</artifactId>
         <version>00.81.10-SNAPSHOT</version>
     </parent>
@@ -33,17 +33,17 @@
     </properties>
     <dependencies>
         <dependency>
-            <groupId>com.svenruppert.jsentinel</groupId>
+            <groupId>eu.jsentinel.jcustos</groupId>
             <artifactId>jSentinel-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.svenruppert.jsentinel</groupId>
+            <groupId>eu.jsentinel.jcustos</groupId>
             <artifactId>jSentinel-autoservice-annotations</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.svenruppert.jsentinel</groupId>
+            <groupId>eu.jsentinel.jcustos</groupId>
             <artifactId>jSentinel-vaadin</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -53,17 +53,17 @@
             Vaadin service init and prints the JSentinelRuntime.log() banner.
         -->
         <dependency>
-            <groupId>com.svenruppert.jsentinel</groupId>
+            <groupId>eu.jsentinel.jcustos</groupId>
             <artifactId>jSentinel-dx</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.svenruppert.jsentinel</groupId>
+            <groupId>eu.jsentinel.jcustos</groupId>
             <artifactId>jSentinel-dx-vaadin</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.svenruppert.jsentinel</groupId>
+            <groupId>eu.jsentinel.jcustos</groupId>
             <artifactId>jSentinel-vaadin-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -123,7 +123,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.svenruppert.jsentinel</groupId>
+            <groupId>eu.jsentinel.jcustos</groupId>
             <artifactId>jSentinel-test</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
@@ -151,17 +151,17 @@
                     -->
                     <annotationProcessorPaths>
                         <path>
-                            <groupId>com.svenruppert.jsentinel</groupId>
+                            <groupId>eu.jsentinel.jcustos</groupId>
                             <artifactId>jSentinel-processor</artifactId>
                             <version>${project.version}</version>
                         </path>
                         <path>
-                            <groupId>com.svenruppert.jsentinel</groupId>
+                            <groupId>eu.jsentinel.jcustos</groupId>
                             <artifactId>jSentinel-autoservice-processor</artifactId>
                             <version>${project.version}</version>
                         </path>
                         <path>
-                            <groupId>com.svenruppert.jsentinel</groupId>
+                            <groupId>eu.jsentinel.jcustos</groupId>
                             <artifactId>jSentinel-autoservice-annotations</artifactId>
                             <version>${project.version}</version>
                         </path>

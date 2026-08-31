@@ -1,3 +1,0 @@
-com.svenruppert.jsentinel.demo.skill.standalone.security.bootstrap.DefaultBootstrapExtension
-com.svenruppert.jsentinel.demo.skill.standalone.security.bootstrap.PersistenceBootstrapExtension
-com.svenruppert.jsentinel.demo.skill.standalone.security.bootstrap.HardeningBootstrapExtension

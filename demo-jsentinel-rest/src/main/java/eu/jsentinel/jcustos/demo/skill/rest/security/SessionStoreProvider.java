@@ -1,0 +1,21 @@
+package eu.jsentinel.jcustos.demo.skill.rest.security;
+
+import eu.jsentinel.jcustos.session.InMemorySessionStore;
+import eu.jsentinel.jcustos.session.SessionStore;
+
+/**
+ * Lazy singleton {@link SessionStore} — backs the framework's
+ * built-in session bookkeeping. Layer 2 swaps in the Eclipse-Store
+ * variant. Demo-only — in-memory.
+ */
+public final class SessionStoreProvider {
+
+  private static final SessionStore INSTANCE = new InMemorySessionStore();
+
+  private SessionStoreProvider() {
+  }
+
+  public static SessionStore sessionStore() {
+    return INSTANCE;
+  }
+}

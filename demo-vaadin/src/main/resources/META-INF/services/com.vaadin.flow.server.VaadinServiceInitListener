@@ -1,2 +1,2 @@
-com.svenruppert.jsentinel.demo.app.security.bootstrap.BootstrapServiceInitListener
-com.svenruppert.jsentinel.demo.app.security.bootstrap.JSentinelVersionInitListener
+eu.jsentinel.jcustos.demo.app.security.bootstrap.BootstrapServiceInitListener
+eu.jsentinel.jcustos.demo.app.security.bootstrap.JSentinelVersionInitListener

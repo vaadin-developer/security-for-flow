@@ -15,7 +15,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
-    <groupId>com.svenruppert.jsentinel</groupId>
+    <groupId>eu.jsentinel.jcustos</groupId>
     <artifactId>jSentinel-parent</artifactId>
     <version>00.81.10-SNAPSHOT</version>
   </parent>
@@ -38,12 +38,12 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.svenruppert.jsentinel</groupId>
+      <groupId>eu.jsentinel.jcustos</groupId>
       <artifactId>jSentinel-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.svenruppert.jsentinel</groupId>
+      <groupId>eu.jsentinel.jcustos</groupId>
       <artifactId>jSentinel-rest</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -53,17 +53,17 @@
       banner before the server starts serving requests.
     -->
     <dependency>
-      <groupId>com.svenruppert.jsentinel</groupId>
+      <groupId>eu.jsentinel.jcustos</groupId>
       <artifactId>jSentinel-dx</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.svenruppert.jsentinel</groupId>
+      <groupId>eu.jsentinel.jcustos</groupId>
       <artifactId>jSentinel-dx-rest</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.svenruppert.jsentinel</groupId>
+      <groupId>eu.jsentinel.jcustos</groupId>
       <artifactId>demo-rest-shared</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -81,7 +81,7 @@
          Nimbus-signed JwtIssuerStub. Test scope only — the demo server's main
          code uses the core JwtValidator SPI, not Nimbus. -->
     <dependency>
-      <groupId>com.svenruppert.jsentinel</groupId>
+      <groupId>eu.jsentinel.jcustos</groupId>
       <artifactId>jSentinel-jwt</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
@@ -118,7 +118,7 @@
         <artifactId>exec-maven-plugin</artifactId>
         <version>3.5.0</version>
         <configuration>
-          <mainClass>com.svenruppert.jsentinel.demo.rest.server.DemoRestServer</mainClass>
+          <mainClass>eu.jsentinel.jcustos.demo.rest.server.DemoRestServer</mainClass>
         </configuration>
       </plugin>
     </plugins>

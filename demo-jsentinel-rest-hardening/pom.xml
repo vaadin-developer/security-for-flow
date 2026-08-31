@@ -3,7 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
-    <groupId>com.svenruppert.jsentinel</groupId>
+    <groupId>eu.jsentinel.jcustos</groupId>
     <artifactId>jSentinel-parent</artifactId>
     <version>00.81.10-SNAPSHOT</version>
   </parent>
@@ -21,7 +21,7 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.svenruppert.jsentinel</groupId>
+      <groupId>eu.jsentinel.jcustos</groupId>
       <artifactId>jSentinel-core</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -30,37 +30,37 @@
       <artifactId>core</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.svenruppert.jsentinel</groupId>
+      <groupId>eu.jsentinel.jcustos</groupId>
       <artifactId>jSentinel-autoservice-annotations</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.svenruppert.jsentinel</groupId>
+      <groupId>eu.jsentinel.jcustos</groupId>
       <artifactId>jSentinel-rest</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.svenruppert.jsentinel</groupId>
+      <groupId>eu.jsentinel.jcustos</groupId>
       <artifactId>jSentinel-dx</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.svenruppert.jsentinel</groupId>
+      <groupId>eu.jsentinel.jcustos</groupId>
       <artifactId>jSentinel-dx-rest</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.svenruppert.jsentinel</groupId>
+      <groupId>eu.jsentinel.jcustos</groupId>
       <artifactId>jSentinel-persistence-eclipsestore</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.svenruppert.jsentinel</groupId>
+      <groupId>eu.jsentinel.jcustos</groupId>
       <artifactId>jSentinel-crypto-bc</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.svenruppert.jsentinel</groupId>
+      <groupId>eu.jsentinel.jcustos</groupId>
       <artifactId>jSentinel-credentials-hibp</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -84,12 +84,12 @@
         <configuration>
           <annotationProcessorPaths>
             <path>
-              <groupId>com.svenruppert.jsentinel</groupId>
+              <groupId>eu.jsentinel.jcustos</groupId>
               <artifactId>jSentinel-autoservice-processor</artifactId>
               <version>${project.version}</version>
             </path>
             <path>
-              <groupId>com.svenruppert.jsentinel</groupId>
+              <groupId>eu.jsentinel.jcustos</groupId>
               <artifactId>jSentinel-autoservice-annotations</artifactId>
               <version>${project.version}</version>
             </path>

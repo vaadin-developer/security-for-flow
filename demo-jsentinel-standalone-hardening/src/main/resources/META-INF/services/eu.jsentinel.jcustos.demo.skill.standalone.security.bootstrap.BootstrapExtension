@@ -1,0 +1,3 @@
+eu.jsentinel.jcustos.demo.skill.standalone.security.bootstrap.DefaultBootstrapExtension
+eu.jsentinel.jcustos.demo.skill.standalone.security.bootstrap.PersistenceBootstrapExtension
+eu.jsentinel.jcustos.demo.skill.standalone.security.bootstrap.HardeningBootstrapExtension

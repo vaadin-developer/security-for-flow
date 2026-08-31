@@ -23,7 +23,7 @@
         <version>06.02.04</version>
     </parent>
 
-    <groupId>com.svenruppert.jsentinel</groupId>
+    <groupId>eu.jsentinel.jcustos</groupId>
     <artifactId>jSentinel-parent</artifactId>
     <version>00.81.10-SNAPSHOT</version>
     <packaging>pom</packaging>
