@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ClientCredentialsStrategyIntegrationTest {
 
   @BeforeAll
-  static void enableDev() { System.setProperty("jsentinel.dev", "true"); }
+  static void enableDev() { System.setProperty("jcustos.dev", "true"); }
 
   private StubTokenEndpoint stub;
 

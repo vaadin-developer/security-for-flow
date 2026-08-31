@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Verifies WrapperIndexReader + JCustosDiagnostics integration. The
- * src/test/resources/META-INF/jsentinel/generated-wrappers.idx
+ * src/test/resources/META-INF/jcustos/generated-wrappers.idx
  * fixture contains one valid entry plus two failure cases.
  */
 class WrapperIndexReaderTest {
@@ -75,7 +75,7 @@ class WrapperIndexReaderTest {
 
   @Test
   void resourcePathConstantIsStable() {
-    assertEquals("META-INF/jsentinel/generated-wrappers.idx",
+    assertEquals("META-INF/jcustos/generated-wrappers.idx",
         WrapperIndexReader.internalsForTesting().get("path"));
   }
 

@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TokenExchangeStrategyIntegrationTest {
 
   @BeforeAll
-  static void enableDev() { System.setProperty("jsentinel.dev", "true"); }
+  static void enableDev() { System.setProperty("jcustos.dev", "true"); }
 
   private StubTokenEndpoint stub;
 
@@ -112,13 +112,13 @@ class TokenExchangeStrategyIntegrationTest {
   @Test
   @DisplayName("HTTPS-only validation rejects plain HTTP outside dev mode")
   void httpsOnly() {
-    System.clearProperty("jsentinel.dev");
+    System.clearProperty("jcustos.dev");
     try {
       assertThrows(IllegalArgumentException.class,
           () -> new TokenExchangeStrategy(
               java.net.URI.create("http://example.com/token"), "cid", "csecret"));
     } finally {
-      System.setProperty("jsentinel.dev", "true");
+      System.setProperty("jcustos.dev", "true");
     }
   }
 

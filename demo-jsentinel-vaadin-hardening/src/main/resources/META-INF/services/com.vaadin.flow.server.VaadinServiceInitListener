@@ -1,2 +1,2 @@
-eu.jsentinel.jcustos.demo.skill.vaadin.security.bootstrap.JSentinelBootstrapInitListener
-eu.jsentinel.jcustos.demo.skill.vaadin.security.bootstrap.JSentinelVersionInitListener
+eu.jsentinel.jcustos.demo.skill.vaadin.security.bootstrap.JCustosBootstrapInitListener
+eu.jsentinel.jcustos.demo.skill.vaadin.security.bootstrap.JCustosVersionInitListener

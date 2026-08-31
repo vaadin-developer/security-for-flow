@@ -61,7 +61,7 @@ class StubIdentityProviderTest {
 
   @BeforeEach
   void start() {
-    System.setProperty("jsentinel.dev", "true");
+    System.setProperty("jcustos.dev", "true");
     idp = StubIdentityProvider.start("rp", clock)
         .withIdTokenClaims(Map.of("sub", "alice", "nonce", "n-1"))
         .withUserInfoClaims(Map.of("sub", "alice", "email", "alice@example.com", "name", "Alice"));
@@ -70,7 +70,7 @@ class StubIdentityProviderTest {
   @AfterEach
   void stop() {
     idp.close();
-    System.clearProperty("jsentinel.dev");
+    System.clearProperty("jcustos.dev");
   }
 
   private NimbusJwtValidator jwtValidator() {

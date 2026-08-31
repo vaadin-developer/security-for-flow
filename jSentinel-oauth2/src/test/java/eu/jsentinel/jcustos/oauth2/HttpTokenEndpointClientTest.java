@@ -68,13 +68,13 @@ class HttpTokenEndpointClientTest {
     });
     server.start();
     tokenEndpoint = URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/token");
-    System.setProperty("jsentinel.dev", "true"); // allow http://localhost in tests
+    System.setProperty("jcustos.dev", "true"); // allow http://localhost in tests
   }
 
   @AfterEach
   void stop() {
     server.stop(0);
-    System.clearProperty("jsentinel.dev");
+    System.clearProperty("jcustos.dev");
   }
 
   private HttpTokenEndpointClient client(ClientAuthentication auth) {
@@ -161,7 +161,7 @@ class HttpTokenEndpointClientTest {
   @Test
   @DisplayName("a non-https, non-loopback token endpoint is refused at construction")
   void httpsEnforced() {
-    System.clearProperty("jsentinel.dev");
+    System.clearProperty("jcustos.dev");
     IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
         new HttpTokenEndpointClient(URI.create("http://idp.example/token"),
             new ClientAuthentication.NoneAuthentication("svc"), HttpClient.newHttpClient()));

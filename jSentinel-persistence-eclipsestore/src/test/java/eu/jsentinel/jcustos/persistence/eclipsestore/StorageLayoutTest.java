@@ -20,7 +20,7 @@ class StorageLayoutTest {
 
   @Test
   void default_hasExpectedSubdirs() {
-    assertEquals("jsentinel-store", StorageLayout.DEFAULT.frameworkSubdir());
+    assertEquals("jcustos-store", StorageLayout.DEFAULT.frameworkSubdir());
     assertEquals("app-store", StorageLayout.DEFAULT.appSubdir());
   }
 

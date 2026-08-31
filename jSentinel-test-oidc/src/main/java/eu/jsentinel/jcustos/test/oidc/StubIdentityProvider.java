@@ -49,7 +49,7 @@ import java.util.function.Supplier;
  * to exercise vendor profiles end-to-end.
  *
  * <p>The issuer is {@code http://127.0.0.1:<port>}, so tests run with
- * {@code -Djsentinel.dev=true} (the framework's loopback-http carve-out).
+ * {@code -Djcustos.dev=true} (the framework's loopback-http carve-out).
  */
 public final class StubIdentityProvider implements AutoCloseable {
 

@@ -48,33 +48,33 @@ public final class OtelEnvelopeAttributes {
   public static final String INSTRUMENTATION_SCOPE = "eu.jsentinel.jcustos.events";
 
   public static final AttributeKey<String> ENVELOPE_ID =
-      AttributeKey.stringKey("jsentinel.envelope.id");
+      AttributeKey.stringKey("jcustos.envelope.id");
   public static final AttributeKey<String> EVENT_ID =
-      AttributeKey.stringKey("jsentinel.event.id");
+      AttributeKey.stringKey("jcustos.event.id");
   public static final AttributeKey<String> EVENT_TYPE =
-      AttributeKey.stringKey("jsentinel.event.type");
+      AttributeKey.stringKey("jcustos.event.type");
   public static final AttributeKey<String> TENANT_ID =
-      AttributeKey.stringKey("jsentinel.tenant.id");
+      AttributeKey.stringKey("jcustos.tenant.id");
   public static final AttributeKey<String> SUBJECT_ID =
-      AttributeKey.stringKey("jsentinel.subject.id");
+      AttributeKey.stringKey("jcustos.subject.id");
   public static final AttributeKey<String> PRODUCER_ID =
-      AttributeKey.stringKey("jsentinel.producer.id");
+      AttributeKey.stringKey("jcustos.producer.id");
   public static final AttributeKey<Long> SEQUENCE =
-      AttributeKey.longKey("jsentinel.sequence");
+      AttributeKey.longKey("jcustos.sequence");
   public static final AttributeKey<String> CORRELATION_ID =
-      AttributeKey.stringKey("jsentinel.correlation.id");
+      AttributeKey.stringKey("jcustos.correlation.id");
   public static final AttributeKey<String> CAUSATION_ID =
-      AttributeKey.stringKey("jsentinel.causation.id");
+      AttributeKey.stringKey("jcustos.causation.id");
   public static final AttributeKey<String> KEY_ID =
-      AttributeKey.stringKey("jsentinel.key.id");
+      AttributeKey.stringKey("jcustos.key.id");
   public static final AttributeKey<String> SIGNATURE_ALGORITHM =
-      AttributeKey.stringKey("jsentinel.signature.algorithm");
+      AttributeKey.stringKey("jcustos.signature.algorithm");
   public static final AttributeKey<String> PAYLOAD_CONTENT_TYPE =
-      AttributeKey.stringKey("jsentinel.payload.content_type");
+      AttributeKey.stringKey("jcustos.payload.content_type");
   public static final AttributeKey<String> PAYLOAD_HASH_ALGORITHM =
-      AttributeKey.stringKey("jsentinel.payload.hash_algorithm");
+      AttributeKey.stringKey("jcustos.payload.hash_algorithm");
   public static final AttributeKey<String> PAYLOAD_HASH =
-      AttributeKey.stringKey("jsentinel.payload.hash");
+      AttributeKey.stringKey("jcustos.payload.hash");
 
   private OtelEnvelopeAttributes() {
   }

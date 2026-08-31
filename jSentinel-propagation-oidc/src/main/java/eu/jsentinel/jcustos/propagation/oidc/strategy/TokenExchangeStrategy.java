@@ -38,7 +38,7 @@ import java.util.Optional;
  *
  * <p>HTTPS-only by default; the constructor accepts plain
  * {@code http://localhost} when the system property
- * {@code jsentinel.dev=true} is set (development carve-out).
+ * {@code jcustos.dev=true} is set (development carve-out).
  *
  * <p>Hard-fails on 4xx / 5xx via {@link JCustosPropagationException}
  * — there is no silent fallback to the no-header path.
@@ -79,13 +79,13 @@ public final class TokenExchangeStrategy implements OutboundTokenStrategy, HasLo
   private static void validateHttps(URI endpoint) {
     String scheme = endpoint.getScheme();
     if ("https".equalsIgnoreCase(scheme)) return;
-    boolean devMode = Boolean.getBoolean("jsentinel.dev");
+    boolean devMode = Boolean.getBoolean("jcustos.dev");
     boolean localhost = "localhost".equalsIgnoreCase(endpoint.getHost())
         || "127.0.0.1".equals(endpoint.getHost());
     if (devMode && localhost && "http".equalsIgnoreCase(scheme)) return;
     throw new IllegalArgumentException(
         "propagation/endpoint-not-https: token endpoint must use https:// "
-            + "(got: " + endpoint + "). Use http://localhost only with -Djsentinel.dev=true.");
+            + "(got: " + endpoint + "). Use http://localhost only with -Djcustos.dev=true.");
   }
 
   @Override

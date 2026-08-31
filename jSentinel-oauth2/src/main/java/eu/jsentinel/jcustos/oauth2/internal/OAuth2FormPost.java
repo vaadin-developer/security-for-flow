@@ -55,13 +55,13 @@ public final class OAuth2FormPost {
     throw new AssertionError("no instances");
   }
 
-  /** Enforces https (loopback http only with {@code -Djsentinel.dev=true}). */
+  /** Enforces https (loopback http only with {@code -Djcustos.dev=true}). */
   public static URI requireHttps(URI endpoint, String code) {
     String scheme = endpoint.getScheme();
     if ("https".equalsIgnoreCase(scheme)) {
       return endpoint;
     }
-    boolean devLoopback = Boolean.getBoolean("jsentinel.dev")
+    boolean devLoopback = Boolean.getBoolean("jcustos.dev")
         && "http".equalsIgnoreCase(scheme)
         && ("localhost".equalsIgnoreCase(endpoint.getHost()) || "127.0.0.1".equals(endpoint.getHost()));
     if (devLoopback) {

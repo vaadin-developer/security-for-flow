@@ -70,13 +70,13 @@ class HttpOidcDiscoveryClientTest {
       }
     });
     server.start();
-    System.setProperty("jsentinel.dev", "true");
+    System.setProperty("jcustos.dev", "true");
   }
 
   @AfterEach
   void stop() {
     server.stop(0);
-    System.clearProperty("jsentinel.dev");
+    System.clearProperty("jcustos.dev");
   }
 
   @Test
@@ -114,7 +114,7 @@ class HttpOidcDiscoveryClientTest {
   @Test
   @DisplayName("a non-https, non-loopback issuer is refused")
   void httpsEnforced() {
-    System.clearProperty("jsentinel.dev");
+    System.clearProperty("jcustos.dev");
     assertThrows(IllegalArgumentException.class, () ->
         new HttpOidcDiscoveryClient(HttpClient.newHttpClient()).discover(URI.create("http://idp.example")));
   }

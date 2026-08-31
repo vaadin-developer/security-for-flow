@@ -60,13 +60,13 @@ class HttpUserInfoClientTest {
     });
     server.start();
     endpoint = URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/userinfo");
-    System.setProperty("jsentinel.dev", "true");
+    System.setProperty("jcustos.dev", "true");
   }
 
   @AfterEach
   void stop() {
     server.stop(0);
-    System.clearProperty("jsentinel.dev");
+    System.clearProperty("jcustos.dev");
   }
 
   @Test
@@ -92,7 +92,7 @@ class HttpUserInfoClientTest {
   @Test
   @DisplayName("a non-https, non-loopback endpoint is refused at construction")
   void httpsEnforced() {
-    System.clearProperty("jsentinel.dev");
+    System.clearProperty("jcustos.dev");
     assertThrows(IllegalArgumentException.class, () ->
         new HttpUserInfoClient(HttpClient.newHttpClient(), URI.create("http://idp.example/userinfo")));
   }

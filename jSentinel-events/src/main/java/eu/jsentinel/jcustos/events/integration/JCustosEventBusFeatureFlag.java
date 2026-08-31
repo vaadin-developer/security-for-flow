@@ -41,7 +41,7 @@ public final class JCustosEventBusFeatureFlag {
   }
 
   /** System property controlling bus emission. */
-  public static final String PROPERTY = "jsentinel.events.bus.enabled";
+  public static final String PROPERTY = "jcustos.events.bus.enabled";
 
   /**
    * @return {@code true} if bus emission is enabled (default {@code false})

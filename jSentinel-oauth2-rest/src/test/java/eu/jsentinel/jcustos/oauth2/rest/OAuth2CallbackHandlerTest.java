@@ -74,13 +74,13 @@ class OAuth2CallbackHandlerTest {
     });
     server.start();
     tokenEndpoint = URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/token");
-    System.setProperty("jsentinel.dev", "true");
+    System.setProperty("jcustos.dev", "true");
   }
 
   @AfterEach
   void stop() {
     server.stop(0);
-    System.clearProperty("jsentinel.dev");
+    System.clearProperty("jcustos.dev");
   }
 
   private AuthorizationCodeFlow flow(JdkInMemoryStateStore store) {

@@ -93,7 +93,7 @@ public final class WebhookEventPublisher
   /** Mirrors the drop-log policy of the SSE broadcaster (R041). */
   private static final int DROP_LOG_INTERVAL = 100;
   private static final Duration CLOSE_JOIN_TIMEOUT = Duration.ofSeconds(5);
-  private static final String WORKER_THREAD_NAME = "jsentinel-webhook-delivery";
+  private static final String WORKER_THREAD_NAME = "jcustos-webhook-delivery";
   private static final double JITTER_RATIO = 0.2;
 
   private final WebhookPublisherConfig config;

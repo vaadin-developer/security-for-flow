@@ -54,7 +54,7 @@ import java.util.function.Supplier;
  * {@link TokenResponse} or a non-secret {@link OAuth2Error}.
  *
  * <p>Discipline: HTTPS is enforced (loopback {@code http} only with
- * {@code -Djsentinel.dev=true}); the response body is capped at 1 MiB and read
+ * {@code -Djcustos.dev=true}); the response body is capped at 1 MiB and read
  * via the depth-aware {@link OAuth2Json} scanner; a missing {@code access_token}
  * on a 2xx is a {@code malformed-response}; a 4xx with an {@code error} field is
  * a {@code protocol-error}; any other non-2xx is an {@code endpoint-error}.
@@ -234,7 +234,7 @@ public final class HttpTokenEndpointClient implements TokenEndpointClient {
     if ("https".equalsIgnoreCase(scheme)) {
       return endpoint;
     }
-    boolean devLoopback = Boolean.getBoolean("jsentinel.dev")
+    boolean devLoopback = Boolean.getBoolean("jcustos.dev")
         && "http".equalsIgnoreCase(scheme)
         && ("localhost".equalsIgnoreCase(endpoint.getHost()) || "127.0.0.1".equals(endpoint.getHost()));
     if (devLoopback) {

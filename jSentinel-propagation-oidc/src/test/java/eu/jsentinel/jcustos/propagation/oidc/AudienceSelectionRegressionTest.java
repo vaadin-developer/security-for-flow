@@ -63,7 +63,7 @@ class AudienceSelectionRegressionTest {
 
   @BeforeAll
   static void enableDev() {
-    System.setProperty("jsentinel.dev", "true");
+    System.setProperty("jcustos.dev", "true");
   }
 
   private HttpServer server;
@@ -93,7 +93,7 @@ class AudienceSelectionRegressionTest {
       }
     });
     server.start();
-    // the https guard exempts the literal localhost host only (with jsentinel.dev=true)
+    // the https guard exempts the literal localhost host only (with jcustos.dev=true)
     tokenEndpoint = URI.create("http://localhost:" + server.getAddress().getPort() + "/token");
   }
 

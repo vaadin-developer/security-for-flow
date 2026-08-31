@@ -65,13 +65,13 @@ class DeviceCodeDemoTest {
     int port = server.getAddress().getPort();
     deviceEndpoint = URI.create("http://127.0.0.1:" + port + "/device");
     tokenEndpoint = URI.create("http://127.0.0.1:" + port + "/token");
-    System.setProperty("jsentinel.dev", "true");
+    System.setProperty("jcustos.dev", "true");
   }
 
   @AfterEach
   void stop() {
     server.stop(0);
-    System.clearProperty("jsentinel.dev");
+    System.clearProperty("jcustos.dev");
   }
 
   private static void respond(com.sun.net.httpserver.HttpExchange exchange, int status, String body)

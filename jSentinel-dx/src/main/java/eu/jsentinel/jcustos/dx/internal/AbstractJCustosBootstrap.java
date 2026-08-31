@@ -998,7 +998,7 @@ public abstract class AbstractJCustosBootstrap<B extends CommonJCustosBootstrap<
                 + "  <dependency>\n"
                 + "    <groupId>eu.jsentinel.jcustos</groupId>\n"
                 + "    <artifactId>jCustos-crypto-bc</artifactId>\n"
-                + "    <version>${jsentinel.version}</version>\n"
+                + "    <version>${jcustos.version}</version>\n"
                 + "  </dependency>"));
         // do not register anything further when the explicit modern
         // request can't be honored

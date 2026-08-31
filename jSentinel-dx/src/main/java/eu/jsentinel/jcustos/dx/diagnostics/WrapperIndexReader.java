@@ -28,7 +28,7 @@ import java.util.Set;
 /**
  * Reads the generated-wrappers index emitted by {@code jCustos-processor}
  * into a {@link JCustosProcessorReport}. The index lives at
- * {@code META-INF/jsentinel/generated-wrappers.idx} on the
+ * {@code META-INF/jcustos/generated-wrappers.idx} on the
  * classpath; each non-blank, non-comment line follows the format:
  *
  * <pre>
@@ -196,7 +196,7 @@ final class WrapperIndexReader {
         + "  <path>\n"
         + "    <groupId>eu.jsentinel.jcustos</groupId>\n"
         + "    <artifactId>jCustos-processor</artifactId>\n"
-        + "    <version>${jsentinel.version}</version>\n"
+        + "    <version>${jcustos.version}</version>\n"
         + "  </path>";
   }
 

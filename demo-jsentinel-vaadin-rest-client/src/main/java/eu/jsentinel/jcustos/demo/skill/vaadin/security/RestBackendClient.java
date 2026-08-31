@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 public final class RestBackendClient {
 
   public static final String BASE_URL = "http://localhost:8081";
-  public static final String TOKEN_SESSION_KEY = "jsentinel.token";
+  public static final String TOKEN_SESSION_KEY = "jcustos.token";
 
   private static final HttpClient CLIENT = HttpClient.newBuilder()
       .connectTimeout(Duration.ofSeconds(5))

@@ -33,7 +33,7 @@
  *       core audit model with sink-failure isolation.</li>
  *   <li>{@link eu.jsentinel.jcustos.events.integration.JCustosEventBusFeatureFlag}
  *       + {@link eu.jsentinel.jcustos.events.integration.FeatureFlaggedEventPublisher}
- *       — gate event emission behind {@code jsentinel.events.bus.enabled} so
+ *       — gate event emission behind {@code jcustos.events.bus.enabled} so
  *       legacy direct-audit deployments are unaffected.</li>
  * </ul>
  *

@@ -76,7 +76,7 @@ public final class ClientCredentialsStrategy implements OutboundTokenStrategy, H
   private static void validateHttps(URI endpoint) {
     String scheme = endpoint.getScheme();
     if ("https".equalsIgnoreCase(scheme)) return;
-    boolean devMode = Boolean.getBoolean("jsentinel.dev");
+    boolean devMode = Boolean.getBoolean("jcustos.dev");
     boolean localhost = "localhost".equalsIgnoreCase(endpoint.getHost())
         || "127.0.0.1".equals(endpoint.getHost());
     if (devMode && localhost && "http".equalsIgnoreCase(scheme)) return;

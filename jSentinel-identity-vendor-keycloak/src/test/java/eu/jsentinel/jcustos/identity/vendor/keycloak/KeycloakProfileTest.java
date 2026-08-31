@@ -53,7 +53,7 @@ class KeycloakProfileTest {
 
   @BeforeEach
   void start() {
-    System.setProperty("jsentinel.dev", "true");
+    System.setProperty("jcustos.dev", "true");
     idp = StubIdentityProvider.start("rp", clock).withIdTokenClaims(Map.of(
         "sub", "alice",
         "realm_access", Map.of("roles", java.util.List.of("admin", "user")),
@@ -63,7 +63,7 @@ class KeycloakProfileTest {
   @AfterEach
   void stop() {
     idp.close();
-    System.clearProperty("jsentinel.dev");
+    System.clearProperty("jcustos.dev");
   }
 
   private ValidatedIdToken validate(String compact) {

@@ -27,7 +27,7 @@ import java.util.Objects;
  * application domain data.
  *
  * <p>The default layout (created via {@link #DEFAULT}) places the
- * framework data under {@code jsentinel-store/} and the application
+ * framework data under {@code jcustos-store/} and the application
  * data under {@code app-store/}. Consumers who already operate on a
  * V00.70 layout can opt into a legacy layout, e.g.
  * {@code new StorageLayout(".", "users")} to keep the framework data
@@ -50,11 +50,11 @@ import java.util.Objects;
 public record StorageLayout(String frameworkSubdir, String appSubdir) {
 
   /**
-   * Default layout placing framework data under {@code jsentinel-store/}
+   * Default layout placing framework data under {@code jcustos-store/}
    * and application data under {@code app-store/}.
    */
   public static final StorageLayout DEFAULT =
-      new StorageLayout("jsentinel-store", "app-store");
+      new StorageLayout("jcustos-store", "app-store");
 
   public StorageLayout {
     requireValidSubdirName(frameworkSubdir, "frameworkSubdir");

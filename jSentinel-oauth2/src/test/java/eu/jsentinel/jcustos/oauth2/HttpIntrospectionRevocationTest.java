@@ -79,13 +79,13 @@ class HttpIntrospectionRevocationTest {
     int port = server.getAddress().getPort();
     introspectEndpoint = URI.create("http://127.0.0.1:" + port + "/introspect");
     revokeEndpoint = URI.create("http://127.0.0.1:" + port + "/revoke");
-    System.setProperty("jsentinel.dev", "true");
+    System.setProperty("jcustos.dev", "true");
   }
 
   @AfterEach
   void stop() {
     server.stop(0);
-    System.clearProperty("jsentinel.dev");
+    System.clearProperty("jcustos.dev");
   }
 
   private static void respond(com.sun.net.httpserver.HttpExchange exchange, int status, String body)
@@ -191,7 +191,7 @@ class HttpIntrospectionRevocationTest {
   @Test
   @DisplayName("a non-https, non-loopback introspection endpoint is refused at construction")
   void httpsEnforced() {
-    System.clearProperty("jsentinel.dev");
+    System.clearProperty("jcustos.dev");
     IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
         new HttpIntrospectionClient(HttpClient.newHttpClient(),
             URI.create("http://idp.example/introspect"), auth()));
