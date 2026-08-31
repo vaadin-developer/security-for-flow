@@ -121,7 +121,7 @@ public interface VaadinJCustosBootstrap
 
   /**
    * V00.73 (Konzept §8.5): escape hatch — registers a custom
-   * {@link eu.jsentinel.jcustos.starter.routes.SecureRouteDiscovery}
+   * {@link eu.jsentinel.jcustos.dx.vaadin.routes.SecureRouteDiscovery}
    * instead of the default {@code VaadinRouterSecureRouteDiscovery}.
    * Useful for lazy-loading setups that do not have Vaadin's
    * {@code RouteConfiguration} available at install-time. Implies

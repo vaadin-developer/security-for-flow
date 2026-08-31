@@ -50,7 +50,7 @@ import java.util.stream.Collectors;
  *
  * <p><strong>Concrete classes only.</strong> For interfaces, use the
  * runtime path
- * {@link eu.jsentinel.jcustos.propagation.proxy.PropagatingProxy#wrap}
+ * {@code PropagatingProxy.wrap} (jCustos-propagation)
  * — interfaces don't have a sensible {@code super} call shape, and the
  * JDK Dynamic Proxy already covers that use case.
  *
@@ -67,6 +67,7 @@ public final class PropagateTokenProcessor extends AbstractProcessor {
   private Messager messager;
   private Types types;
 
+  /** Required by {@link javax.annotation.processing.Processor}; the compiler instantiates it. */
   public PropagateTokenProcessor() {
   }
 
