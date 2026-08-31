@@ -38,9 +38,8 @@
  *       com.svenruppert.jsentinel.events.rest.EventPublishService}.</li>
  *   <li>{@link com.svenruppert.jsentinel.events.wire.EnvelopeWireCodec} —
  *       envelope ⇄ flat JSON (Base64 binaries), no Jackson. Moved to
- *       {@code jSentinel-events} in V00.80.00; the deprecated
- *       {@code events.rest.EnvelopeWireCodec} delegator remains for one
- *       release.</li>
+ *       {@code jSentinel-events} in V00.80.00; the deprecated delegator at
+ *       the old location was removed in V00.81.00 as announced.</li>
  * </ul>
  *
  * <p>The bridge does not encrypt the channel — that is delegated to HTTPS /
