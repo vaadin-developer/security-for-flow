@@ -136,6 +136,15 @@ public interface CallbackStateBinding {
     if (cookieName.isBlank()) {
       throw new IllegalArgumentException("cookieName must not be blank");
     }
+    // RF-a (exit review): the NAME feeds the Set-Cookie header too — a control
+    // character or separator in it would be header injection just like in the
+    // value, so both sides get the same guard.
+    for (int i = 0; i < cookieName.length(); i++) {
+      char c = cookieName.charAt(i);
+      if (c < 0x21 || c == 0x7F || c == ';' || c == ',' || c == '=') {
+        throw new IllegalArgumentException("cookieName contains characters illegal in a cookie name");
+      }
+    }
     for (int i = 0; i < state.length(); i++) {
       char c = state.charAt(i);
       if (c < 0x20 || c == 0x7F || c == ';' || c == ',') {

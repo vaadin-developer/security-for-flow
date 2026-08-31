@@ -63,15 +63,16 @@ import java.util.Optional;
  * admin views calling {@link #findAll()} (e.g. {@code SessionManagementView})
  * then always see the policy-true lifecycle state.
  *
+ * <p>Concurrency: the EXPIRED transition is an idempotent upsert, but two
+ * threads sweeping the same stale record for the first time simultaneously
+ * may each emit the {@link SessionExpired} audit event — a deliberate trade:
+ * duplicate audit noise in a rare race beats a compare-and-set contract every
+ * {@link SessionStore} implementation would have to carry.
+ *
  * @since 00.81.00
  */
 @ExperimentalJSentinelApi
 public final class SweepingSessionStore implements SessionStore {
-
-  /** Audit reason emitted for an idle-timeout sweep — mirrors {@code TimeoutSessionPolicy}. */
-  static final String REASON_IDLE_TIMEOUT = "IdleTimeout";
-  /** Audit reason emitted for an absolute-lifetime sweep — mirrors {@code TimeoutSessionPolicy}. */
-  static final String REASON_ABSOLUTE_LIFETIME = "AbsoluteLifetimeExceeded";
 
   /** Default retention for terminal records: 30 days. */
   public static final Duration DEFAULT_TERMINAL_RETENTION = Duration.ofDays(30);
@@ -179,8 +180,8 @@ public final class SweepingSessionStore implements SessionStore {
 
   private static String reasonFor(SessionPolicyDecision decision) {
     return decision instanceof SessionPolicyDecision.AbsoluteLifetimeExceeded
-        ? REASON_ABSOLUTE_LIFETIME
-        : REASON_IDLE_TIMEOUT;
+        ? SessionExpired.REASON_ABSOLUTE_LIFETIME
+        : SessionExpired.REASON_IDLE_TIMEOUT;
   }
 
   private void publish(AuditEvent event) {

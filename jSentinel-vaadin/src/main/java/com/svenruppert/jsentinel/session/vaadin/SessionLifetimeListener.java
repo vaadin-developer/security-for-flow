@@ -161,9 +161,9 @@ public class SessionLifetimeListener
     switch (decision) {
       case SessionPolicyDecision.Active ignored -> session.setAttribute(LAST_ACTIVITY_ATTRIBUTE, now);
       case SessionPolicyDecision.IdleTimeout ignored ->
-          expire(event, store.get(), subjectId, "IdleTimeout");
+          expire(event, store.get(), subjectId, SessionExpired.REASON_IDLE_TIMEOUT);
       case SessionPolicyDecision.AbsoluteLifetimeExceeded ignored ->
-          expire(event, store.get(), subjectId, "AbsoluteLifetimeExceeded");
+          expire(event, store.get(), subjectId, SessionExpired.REASON_ABSOLUTE_LIFETIME);
     }
   }
 

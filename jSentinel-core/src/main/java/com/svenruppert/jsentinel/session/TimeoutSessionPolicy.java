@@ -149,14 +149,14 @@ public final class TimeoutSessionPolicy<U> implements SessionPolicy<U> {
     if (now.isAfter(context.createdAt().plus(config.absoluteLifetime()))) {
       publish(new SessionExpired(
           Instant.now(clock), subjectIdOf(context), context.sessionId(),
-          "AbsoluteLifetimeExceeded"));
+          SessionExpired.REASON_ABSOLUTE_LIFETIME));
       return new SessionDecision.Invalidate("Session lifetime exceeded", config.loginRoute());
     }
     Instant lastActivity = context.lastActivity() == null ? context.createdAt() : context.lastActivity();
     if (now.isAfter(lastActivity.plus(config.idleTimeout()))) {
       publish(new SessionExpired(
           Instant.now(clock), subjectIdOf(context), context.sessionId(),
-          "IdleTimeout"));
+          SessionExpired.REASON_IDLE_TIMEOUT));
       return new SessionDecision.Invalidate("Session idle timeout", config.loginRoute());
     }
     return SessionDecision.Continue.INSTANCE;

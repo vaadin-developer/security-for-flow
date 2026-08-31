@@ -277,6 +277,11 @@ class OAuth2CallbackHandlerTest {
         header);
     org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
         () -> CallbackStateBinding.hostCookieHeader("evil\r\nSet-Cookie: x=y"));
+    // RF-a: the cookie NAME side gets the same header-injection guard
+    org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+        () -> CallbackStateBinding.hostCookieHeader("evil\r\nX", "state-123"));
+    org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+        () -> CallbackStateBinding.hostCookieHeader("name=trick", "state-123"));
   }
 
   @Test

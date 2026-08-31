@@ -194,8 +194,8 @@ public final class RestAuthorizationFilter {
                                    SessionPolicyDecision decision) {
     String reason = switch (decision) {
       case SessionPolicyDecision.Active ignored -> "Active";
-      case SessionPolicyDecision.IdleTimeout ignored -> "IdleTimeout";
-      case SessionPolicyDecision.AbsoluteLifetimeExceeded ignored -> "AbsoluteLifetimeExceeded";
+      case SessionPolicyDecision.IdleTimeout ignored -> SessionExpired.REASON_IDLE_TIMEOUT;
+      case SessionPolicyDecision.AbsoluteLifetimeExceeded ignored -> SessionExpired.REASON_ABSOLUTE_LIFETIME;
     };
     JSentinelAuditService sink = auditService != null
         ? auditService

@@ -26,8 +26,8 @@ import java.util.Objects;
  * @param timestamp UTC creation time, never {@code null}
  * @param subjectId subject identifier, never {@code null}
  * @param sessionId session identifier, or {@code null} if not tracked
- * @param reason    {@code "IdleTimeout"} or
- *                  {@code "AbsoluteLifetimeExceeded"}, never {@code null}
+ * @param reason    {@link #REASON_IDLE_TIMEOUT} or
+ *                  {@link #REASON_ABSOLUTE_LIFETIME}, never {@code null}
  */
 public record SessionExpired(
     Instant timestamp,
@@ -35,6 +35,16 @@ public record SessionExpired(
     String sessionId,
     String reason
 ) implements AuditEvent {
+
+  /**
+   * Reason value for an idle-timeout expiry — the single home for the
+   * literal both producers ({@code TimeoutSessionPolicy},
+   * {@code SweepingSessionStore}) emit.
+   */
+  public static final String REASON_IDLE_TIMEOUT = "IdleTimeout";
+
+  /** Reason value for an absolute-lifetime expiry. */
+  public static final String REASON_ABSOLUTE_LIFETIME = "AbsoluteLifetimeExceeded";
 
   public SessionExpired {
     Objects.requireNonNull(timestamp, "timestamp");
