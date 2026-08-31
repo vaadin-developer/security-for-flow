@@ -16,6 +16,8 @@
  */
 package com.svenruppert.jsentinel.oauth2.rest;
 
+import com.svenruppert.dependencies.core.logger.HasLogger;
+import com.svenruppert.dependencies.core.net.HttpStatus;
 import com.svenruppert.functional.result.Result;
 import com.svenruppert.jsentinel.oauth2.api.AuthorizationCodeFlow;
 import com.svenruppert.jsentinel.oauth2.api.CallbackResult;
@@ -41,15 +43,20 @@ import java.util.Optional;
  * REST has no inherent per-browser store, so the default
  * {@code JdkInMemoryStateStore} is process-global: validating only that a
  * {@code state} exists does <em>not</em> prove the callback belongs to the
- * browser that started the flow. To prevent OAuth login-CSRF / session fixation,
- * the integrating application MUST tie {@code state} to the caller's session —
- * e.g. set the {@code state} in a {@code __Host-} cookie at
- * {@code startRequest(...)} time and reject the callback (in the {@link TokenSink}
- * or a wrapping filter) unless the callback {@code state} equals that cookie. The
- * Vaadin adapter's {@code VaadinSessionStateStore} already binds state to the
+ * browser that started the flow. Since V00.81 (BL01, CWE-352) the handler
+ * enforces this fail-closed through a {@link CallbackStateBinding} evaluated
+ * <em>before</em> the flow runs — a non-matching callback is a generic
+ * {@code 400} and the single-use {@code state} stays unconsumed. Use
+ * {@link CallbackStateBinding#hostCookie()} together with
+ * {@link CallbackStateBinding#hostCookieHeader(String)} on the start side.
+ * The two-argument constructor keeps the pre-V00.81 unbound behavior for
+ * integrations that bind state themselves (e.g. in the {@link TokenSink}) and
+ * logs the open login-CSRF surface once at construction
+ * ({@code oauth2/state-unbound}). The Vaadin adapter's
+ * {@code VaadinSessionStateStore} already binds state to the
  * {@code VaadinSession} and needs no extra step.
  */
-public final class OAuth2CallbackHandler implements RestHandler {
+public final class OAuth2CallbackHandler implements RestHandler, HasLogger {
 
   /**
    * Receives the callback outcome (e.g. binds the tokens into a session / store). JS-SEC-059: the
@@ -62,12 +69,41 @@ public final class OAuth2CallbackHandler implements RestHandler {
     void accept(CallbackResult result, RestRequest request);
   }
 
+  static final String INVALID_CALLBACK_BODY = "Invalid callback";
+
   private final AuthorizationCodeFlow flow;
   private final TokenSink tokenSink;
+  private final CallbackStateBinding stateBinding;
 
+  /**
+   * Pre-V00.81 constructor — no user-agent binding. Only for integrations that
+   * bind {@code state} to the caller themselves; logs the open login-CSRF
+   * surface once at construction.
+   *
+   * @param flow      the authorization-code flow
+   * @param tokenSink receives the callback outcome
+   */
   public OAuth2CallbackHandler(AuthorizationCodeFlow flow, TokenSink tokenSink) {
+    this(flow, tokenSink, CallbackStateBinding.unbound());
+    logger().warn("oauth2/state-unbound: callback state is not bound to the user-agent — "
+        + "any caller presenting a valid state completes the login (login-CSRF surface). "
+        + "Pass CallbackStateBinding.hostCookie() and emit "
+        + "CallbackStateBinding.hostCookieHeader(state) at startRequest(...) time, "
+        + "or keep binding state yourself in the TokenSink.");
+  }
+
+  /**
+   * @param flow         the authorization-code flow
+   * @param tokenSink    receives the callback outcome
+   * @param stateBinding binds the callback to the user-agent that started the
+   *                     flow; evaluated fail-closed before the flow runs
+   * @since 00.81.00
+   */
+  public OAuth2CallbackHandler(AuthorizationCodeFlow flow, TokenSink tokenSink,
+                               CallbackStateBinding stateBinding) {
     this.flow = Objects.requireNonNull(flow, "flow");
     this.tokenSink = Objects.requireNonNull(tokenSink, "tokenSink");
+    this.stateBinding = Objects.requireNonNull(stateBinding, "stateBinding");
   }
 
   @Override
@@ -75,8 +111,15 @@ public final class OAuth2CallbackHandler implements RestHandler {
     Map<String, String> query = request.queryParameters();
     String state = query.get("state");
     if (state == null || state.isBlank()) {
-      response.status(400);
-      response.body("Invalid callback");
+      response.status(HttpStatus.BAD_REQUEST.code());
+      response.body(INVALID_CALLBACK_BODY);
+      return;
+    }
+    // BL01 (CWE-352): reject an unbound callback BEFORE driving the flow — the
+    // single-use state stays unconsumed, so the legitimate browser still wins.
+    if (!stateBinding.matches(state, request)) {
+      response.status(HttpStatus.BAD_REQUEST.code());
+      response.body(INVALID_CALLBACK_BODY);
       return;
     }
     AuthorizationCodeFlow.CallbackParams params = new AuthorizationCodeFlow.CallbackParams(
@@ -85,7 +128,7 @@ public final class OAuth2CallbackHandler implements RestHandler {
     Result<CallbackResult, OAuth2Error> result = flow.handleCallback(params);
     if (result.isSuccess()) {
       tokenSink.accept(result.toOptional().orElseThrow(), request);
-      response.status(204);
+      response.status(HttpStatus.NO_CONTENT.code());
       return;
     }
     OAuth2Error error = result.fold(ok -> (OAuth2Error) null, e -> e);
@@ -99,10 +142,11 @@ public final class OAuth2CallbackHandler implements RestHandler {
 
   private static int statusFor(OAuth2Error error) {
     return switch (error) {
-      case OAuth2Error.AuthorizationDenied ignored -> 403;
-      case OAuth2Error.NetworkError ignored -> 502;
-      case OAuth2Error.EndpointError ignored -> 502;
-      default -> 400; // StateInvalid / ProtocolError / Malformed / ... → bad request
+      case OAuth2Error.AuthorizationDenied ignored -> HttpStatus.FORBIDDEN.code();
+      case OAuth2Error.NetworkError ignored -> HttpStatus.BAD_GATEWAY.code();
+      case OAuth2Error.EndpointError ignored -> HttpStatus.BAD_GATEWAY.code();
+      // StateInvalid / ProtocolError / Malformed / ... → bad request
+      default -> HttpStatus.BAD_REQUEST.code();
     };
   }
 

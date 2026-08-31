@@ -97,6 +97,10 @@ class OAuth2CallbackHandlerTest {
   }
 
   private static RestRequest request(Map<String, String> query) {
+    return request(query, Map.of());
+  }
+
+  private static RestRequest request(Map<String, String> query, Map<String, String> headers) {
     return new RestRequest() {
       @Override public String method() {
         return "GET";
@@ -107,7 +111,7 @@ class OAuth2CallbackHandlerTest {
       }
 
       @Override public Map<String, String> headers() {
-        return Map.of();
+        return headers;
       }
 
       @Override public Map<String, String> queryParameters() {
@@ -173,6 +177,106 @@ class OAuth2CallbackHandlerTest {
     CapturingResponse response = new CapturingResponse();
     handler.handle(request(query), response);
     assertEquals(400, response.status);
+  }
+
+  @Test
+  @DisplayName("BL01: host-cookie binding — matching __Host- cookie completes the flow (204)")
+  void boundCallbackWithMatchingCookieSucceeds() {
+    JdkInMemoryStateStore store = new JdkInMemoryStateStore(100, () -> NOW);
+    AuthorizationCodeFlow flow = flow(store);
+    String state = flow.startRequest(AuthorizationCodeFlow.StartRequestParams.empty()).stateKey();
+
+    AtomicReference<CallbackResult> captured = new AtomicReference<>();
+    OAuth2CallbackHandler handler = new OAuth2CallbackHandler(
+        flow, (result, req) -> captured.set(result), CallbackStateBinding.hostCookie());
+
+    Map<String, String> query = new HashMap<>();
+    query.put("code", "auth-code-xyz");
+    query.put("state", state);
+    CapturingResponse response = new CapturingResponse();
+    handler.handle(request(query,
+        Map.of("Cookie", CallbackStateBinding.DEFAULT_COOKIE_NAME + "=" + state)), response);
+
+    assertEquals(204, response.status);
+    assertNotNull(captured.get(), "sink must receive the bound callback");
+  }
+
+  @Test
+  @DisplayName("BL01: a callback without the binding cookie is rejected 400 and the state stays unconsumed")
+  void unboundCallbackIsRejectedWithoutConsumingState() {
+    JdkInMemoryStateStore store = new JdkInMemoryStateStore(100, () -> NOW);
+    AuthorizationCodeFlow flow = flow(store);
+    String state = flow.startRequest(AuthorizationCodeFlow.StartRequestParams.empty()).stateKey();
+
+    AtomicReference<CallbackResult> captured = new AtomicReference<>();
+    OAuth2CallbackHandler handler = new OAuth2CallbackHandler(
+        flow, (result, req) -> captured.set(result), CallbackStateBinding.hostCookie());
+
+    Map<String, String> query = new HashMap<>();
+    query.put("code", "auth-code-xyz");
+    query.put("state", state);
+
+    // attacker presents the (stolen) state without the victim's cookie
+    CapturingResponse attackerResponse = new CapturingResponse();
+    handler.handle(request(query), attackerResponse);
+    assertEquals(400, attackerResponse.status);
+    assertEquals("Invalid callback", attackerResponse.body, "generic body — no detail leak");
+    assertNull(captured.get(), "the flow must not run for an unbound callback");
+
+    // the legitimate browser (with cookie) still completes — state was NOT consumed
+    CapturingResponse victimResponse = new CapturingResponse();
+    handler.handle(request(query,
+        Map.of("Cookie", CallbackStateBinding.DEFAULT_COOKIE_NAME + "=" + state)), victimResponse);
+    assertEquals(204, victimResponse.status, "rejected binding must not burn the single-use state");
+    assertNotNull(captured.get());
+  }
+
+  @Test
+  @DisplayName("BL01: a wrong cookie value is rejected 400 (constant-time compare, fail-closed)")
+  void wrongCookieValueIsRejected() {
+    JdkInMemoryStateStore store = new JdkInMemoryStateStore(100, () -> NOW);
+    AuthorizationCodeFlow flow = flow(store);
+    String state = flow.startRequest(AuthorizationCodeFlow.StartRequestParams.empty()).stateKey();
+
+    OAuth2CallbackHandler handler = new OAuth2CallbackHandler(
+        flow, (t, r) -> { }, CallbackStateBinding.hostCookie());
+
+    Map<String, String> query = new HashMap<>();
+    query.put("code", "x");
+    query.put("state", state);
+    CapturingResponse response = new CapturingResponse();
+    handler.handle(request(query,
+        Map.of("Cookie", CallbackStateBinding.DEFAULT_COOKIE_NAME + "=not-the-state")), response);
+    assertEquals(400, response.status);
+  }
+
+  @Test
+  @DisplayName("BL01: the Cookie header is matched case-insensitively and among other cookies")
+  void cookieHeaderLookupIsRobust() {
+    JdkInMemoryStateStore store = new JdkInMemoryStateStore(100, () -> NOW);
+    AuthorizationCodeFlow flow = flow(store);
+    String state = flow.startRequest(AuthorizationCodeFlow.StartRequestParams.empty()).stateKey();
+
+    OAuth2CallbackHandler handler = new OAuth2CallbackHandler(
+        flow, (t, r) -> { }, CallbackStateBinding.hostCookie());
+
+    Map<String, String> query = new HashMap<>();
+    query.put("code", "auth-code-xyz");
+    query.put("state", state);
+    CapturingResponse response = new CapturingResponse();
+    handler.handle(request(query, Map.of("cookie",
+        "other=1; " + CallbackStateBinding.DEFAULT_COOKIE_NAME + "=" + state + "; more=2")), response);
+    assertEquals(204, response.status);
+  }
+
+  @Test
+  @DisplayName("BL01: hostCookieHeader pins the __Host- attributes and rejects control characters")
+  void hostCookieHeaderIsPinned() {
+    String header = CallbackStateBinding.hostCookieHeader("state-123");
+    assertEquals("__Host-JSentinelOAuth2State=state-123; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=300",
+        header);
+    org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+        () -> CallbackStateBinding.hostCookieHeader("evil\r\nSet-Cookie: x=y"));
   }
 
   @Test
