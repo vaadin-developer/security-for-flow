@@ -24,11 +24,11 @@
     </parent>
 
     <groupId>eu.jsentinel</groupId>
-    <artifactId>jCustos-parent</artifactId>
+    <artifactId>jCustos-community-parent</artifactId>
     <version>00.81.20-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>jCustos — Security for Vaadin Flow</name>
+    <name>jCustos Community — Security for Vaadin Flow</name>
     <description>A Core Java Security Framework for Vaadin</description>
     <inceptionYear>2018</inceptionYear>
     <organization>
