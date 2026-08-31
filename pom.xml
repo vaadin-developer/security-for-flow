@@ -286,6 +286,9 @@
                 <configuration>
                     <verbose>true</verbose>
                     <addSvnKeyWords>true</addSvnKeyWords>
+                    <!-- The plugin ships no EUPL 1.2 template (only eupl_v1_1), so the
+                         licence this project actually uses is defined here. -->
+                    <licenseResolver>file://${maven.multiModuleProjectDirectory}/src/license</licenseResolver>
                 </configuration>
                 <executions>
                     <execution>
@@ -295,7 +298,7 @@
                         </goals>
                         <phase>process-sources</phase>
                         <configuration>
-                            <licenseName>eupl_v1_1</licenseName>
+                            <licenseName>eupl_v1_2</licenseName>
                             <roots>
                                 <root>src/main/java</root>
                                 <root>src/test</root>
