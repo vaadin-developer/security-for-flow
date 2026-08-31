@@ -35,15 +35,15 @@
         <name>jCustos by Sven Ruppert</name>
         <url>https://jsentinel.eu</url>
     </organization>
-    <url>https://github.com/vaadin-developer/security-for-flow</url>
+    <url>https://github.com/jSentinel-eu/jCustos</url>
 
     <scm>
-        <url>https://github.com/vaadin-developer/security-for-flow</url>
+        <url>https://github.com/jSentinel-eu/jCustos</url>
         <connection>
-            scm:git:https://github.com/vaadin-developer/security-for-flow.git
+            scm:git:https://github.com/jSentinel-eu/jCustos.git
         </connection>
         <developerConnection>
-            scm:git:https://github.com/vaadin-developer/security-for-flow.git
+            scm:git:https://github.com/jSentinel-eu/jCustos.git
         </developerConnection>
         <tag>HEAD</tag>
     </scm>
@@ -60,7 +60,7 @@
     <issueManagement>
         <system>Github</system>
         <url>
-            https://github.com/vaadin-developer/security-for-flow/issues
+            https://github.com/jSentinel-eu/jCustos/issues
         </url>
     </issueManagement>
     <licenses>

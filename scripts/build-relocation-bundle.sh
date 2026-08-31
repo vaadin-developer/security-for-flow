@@ -96,7 +96,7 @@ for old in "${OLD_MODULES[@]}"; do
     </developer>
   </developers>
   <scm>
-    <url>https://github.com/vaadin-developer/security-for-flow</url>
+    <url>https://github.com/jSentinel-eu/jCustos</url>
   </scm>
   <distributionManagement>
     <relocation>
