@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright © 2018 Sven Ruppert (sven.ruppert@gmail.com)
+
+    Licensed under the EUPL, Version 1.2 or - as soon they will be
+    approved by the European Commission - subsequent versions of the
+    EUPL (the "Licence"); You may not use this work except in
+    compliance with the Licence. You may obtain a copy of the Licence at:
+
+    https://joinup.ec.europa.eu/software/page/eupl
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-parent</artifactId>
+    <version>00.81.10-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>jCustos-crypto-bc</artifactId>
+  <name>jCustos Crypto — BouncyCastle</name>
+  <description>
+    Optional Phase-1b extension that adds memory-hard and bcrypt-style
+    password hashing providers backed by BouncyCastle (Argon2id,
+    bcrypt, scrypt) on top of the V00.71 PasswordHashProvider SPI from
+    jCustos-core. Strictly opt-in: applications that do not depend on
+    this module never pull in bcprov. Loading the module also does not
+    touch the global JCA provider order — every algorithm is invoked
+    through the BouncyCastle low-level Bouncy Castle Crypto APIs.
+  </description>
+
+  <properties>
+    <!--
+      Pinned at 1.84 — first version that closes both V00.74.10-era
+      Dependabot advisories:
+        * GHSA-p93r-85wp-75v3 / CVE-2026-5598 — Covert timing channel
+          in FrodoEngine (post-quantum KEM). Affected: [1.71, 1.84).
+        * GHSA-c3fc-8qff-9hwx / CVE-2026-0636 — LDAP injection in
+          LDAPStoreHelper. Affected: [1.74, 1.84).
+      Neither code path is exercised by jCustos-crypto-bc (we only
+      use Argon2id / bcrypt / scrypt low-level primitives), so the
+      real exploitation surface is zero. The bump is the right hygiene
+      step anyway and keeps the SBOM clean.
+    -->
+    <bouncycastle.version>1.84</bouncycastle.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk18on</artifactId>
+      <version>${bouncycastle.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>

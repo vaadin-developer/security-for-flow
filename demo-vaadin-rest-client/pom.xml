@@ -15,15 +15,15 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
-    <groupId>eu.jsentinel.jcustos</groupId>
-    <artifactId>jSentinel-parent</artifactId>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-parent</artifactId>
     <version>00.81.10-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>demo-vaadin-rest-client</artifactId>
   <packaging>war</packaging>
-  <name>jSentinel - Vaadin REST-Client demo</name>
+  <name>jCustos - Vaadin REST-Client demo</name>
   <description>
     Vaadin Flow demo where the demo-rest server is the authoritative
     source for users, roles and permissions; the Vaadin UI authenticates
@@ -38,43 +38,43 @@
 
   <dependencies>
     <dependency>
-      <groupId>eu.jsentinel.jcustos</groupId>
-      <artifactId>jSentinel-core</artifactId>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>eu.jsentinel.jcustos</groupId>
-      <artifactId>jSentinel-autoservice-annotations</artifactId>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-autoservice-annotations</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>eu.jsentinel.jcustos</groupId>
-      <artifactId>jSentinel-vaadin</artifactId>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-vaadin</artifactId>
       <version>${project.version}</version>
     </dependency>
     <!--
       V00.72 fluent bootstrap. DemoPolicyInitListener.serviceInit() runs
       VaadinSecurity.bootstrap() once per JVM and logs the resulting
-      JSentinelRuntime.
+      JCustosRuntime.
     -->
     <dependency>
-      <groupId>eu.jsentinel.jcustos</groupId>
-      <artifactId>jSentinel-dx</artifactId>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-dx</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>eu.jsentinel.jcustos</groupId>
-      <artifactId>jSentinel-dx-vaadin</artifactId>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-dx-vaadin</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>eu.jsentinel.jcustos</groupId>
-      <artifactId>jSentinel-vaadin-starter</artifactId>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-vaadin-starter</artifactId>
       <version>${project.version}</version>
     </dependency>
     <!-- Transport-only — endpoint constants and tiny JSON helper -->
     <dependency>
-      <groupId>eu.jsentinel.jcustos</groupId>
+      <groupId>eu.jsentinel</groupId>
       <artifactId>demo-rest-shared</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -110,7 +110,7 @@
     <!-- Test-scope dependency on demo-rest so the backend-client test can
          start an in-process DemoRestServer. NOT a runtime dependency. -->
     <dependency>
-      <groupId>eu.jsentinel.jcustos</groupId>
+      <groupId>eu.jsentinel</groupId>
       <artifactId>demo-rest</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
@@ -130,13 +130,13 @@
         <configuration>
           <annotationProcessorPaths>
             <path>
-              <groupId>eu.jsentinel.jcustos</groupId>
-              <artifactId>jSentinel-autoservice-processor</artifactId>
+              <groupId>eu.jsentinel</groupId>
+              <artifactId>jCustos-autoservice-processor</artifactId>
               <version>${project.version}</version>
             </path>
             <path>
-              <groupId>eu.jsentinel.jcustos</groupId>
-              <artifactId>jSentinel-autoservice-annotations</artifactId>
+              <groupId>eu.jsentinel</groupId>
+              <artifactId>jCustos-autoservice-annotations</artifactId>
               <version>${project.version}</version>
             </path>
           </annotationProcessorPaths>

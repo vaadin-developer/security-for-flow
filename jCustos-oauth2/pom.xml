@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright © 2018 Sven Ruppert (sven.ruppert@gmail.com)
+
+    Licensed under the EUPL, Version 1.2 or - as soon they will be
+    approved by the European Commission - subsequent versions of the
+    EUPL (the "Licence"); You may not use this work except in
+    compliance with the Licence. You may obtain a copy of the Licence at:
+
+    https://joinup.ec.europa.eu/software/page/eupl
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-parent</artifactId>
+    <version>00.81.10-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>jCustos-oauth2</artifactId>
+  <name>jCustos OAuth2 — RP flows (token endpoint, auth-code, refresh, device)</name>
+  <description>
+    V00.77 opt-in module: OAuth2 Relying-Party HTTP flows — authorization-code
+    (+ PKCE), token endpoint with client authentication (basic / post /
+    secret-jwt / private-key-jwt / none), refresh-token rotation with
+    reuse-detection, revocation, introspection and device-authorization grant.
+    JDK HttpClient only; the in-tree JSON scanner parses responses (no JSON
+    library). private_key_jwt / client_secret_jwt sign via the jCustos-jwt
+    JwtSigner. Framework-neutral — no Vaadin / REST adapter types.
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- V00.77: private_key_jwt / client_secret_jwt client-assertion signing. -->
+    <dependency>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-jwt</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- V00.77: RefreshToken / OidcAccessToken TokenCredential output. -->
+    <dependency>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-propagation</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-events</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- V00.77: DiagnosticContributor SPI (same module->dx pattern as jCustos-jwt). -->
+    <dependency>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-dx</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-autoservice-annotations</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- V00.77: @JCustosAutoService -> META-INF/services for the
+           OAuth2TokenClientFactory + OAuth2DiagnosticContributor registrations. -->
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>eu.jsentinel</groupId>
+              <artifactId>jCustos-autoservice-processor</artifactId>
+              <version>${project.version}</version>
+            </path>
+            <path>
+              <groupId>eu.jsentinel</groupId>
+              <artifactId>jCustos-autoservice-annotations</artifactId>
+              <version>${project.version}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+      <!--
+        V00.77: ban Jackson / Gson / org.json on the compile/runtime classpath.
+        OAuth2 token/introspection responses are parsed by the in-tree
+        depth-aware JSON scanner; no transitive JSON library may take over.
+        (Nimbus JOSE arrives via jCustos-jwt for client-assertion signing and
+        is intentionally allowed here — it is not a JSON-wire library.)
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>ban-json-libraries</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <excludes>
+                    <exclude>com.fasterxml.jackson.core:jackson-databind</exclude>
+                    <exclude>com.google.code.gson:*</exclude>
+                    <exclude>org.json:json</exclude>
+                  </excludes>
+                  <includes>
+                    <include>com.fasterxml.jackson.core:*:*:*:test</include>
+                  </includes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

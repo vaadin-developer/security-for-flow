@@ -21,14 +21,16 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>demo-standalone</artifactId>
-  <name>jCustos - Standalone Demo</name>
-  <description>Demo CLI application showing how a plain Java program consumes the standalone security adapter.</description>
-
-  <properties>
-    <maven.deploy.skip>true</maven.deploy.skip>
-    <gpg.skip>true</gpg.skip>
-  </properties>
+  <artifactId>jCustos-identity-oidc</artifactId>
+  <name>jCustos OIDC — Relying-Party identity layer</name>
+  <description>
+    V00.78 opt-in module: OpenID Connect Relying-Party identity on top of the
+    V00.76 JWT and V00.77 OAuth2 building blocks — discovery, ID-token validation
+    (nonce / azp / at_hash / auth_time / acr), UserInfo, RP-initiated logout and
+    claims-to-subject mapping. JDK HttpClient only; the in-tree JSON scanner parses
+    responses (no JSON library). ID-token validation composes the jCustos-jwt
+    JwtValidator SPI. Framework-neutral — no Vaadin / REST adapter types.
+  </description>
 
   <dependencies>
     <dependency>
@@ -36,46 +38,24 @@
       <artifactId>jCustos-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!-- V00.78: ID-token validation composes the JwtValidator SPI (V00.76). -->
     <dependency>
       <groupId>eu.jsentinel</groupId>
-      <artifactId>jCustos-standalone</artifactId>
+      <artifactId>jCustos-jwt</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <!-- V00.77: OAuth2 device-code grant demo (CLI has no browser). -->
+    <!-- V00.78: consumes the OAuth2 auth-code flow / token endpoint (V00.77). -->
     <dependency>
       <groupId>eu.jsentinel</groupId>
       <artifactId>jCustos-oauth2</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <!--
-      Annotations module shipped by jCustos-processor's underlying
-      proxybuilder. The processor emits @GeneratedByProxyBuilder into
-      every wrapper class; consumers of the processor need the
-      annotation type on their compile classpath even though
-      RetentionPolicy.RUNTIME makes it stay around at runtime too
-      (and reflectable: tooling can detect generated wrappers).
-    -->
-    <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>proxybuilder-annotations</artifactId>
-      <version>00.11.00</version>
-    </dependency>
-    <!--
-      V00.72: @JCustosAutoService replaces the manual META-INF/services
-      files for DemoAuthenticationService and DemoAuthorizationService.
-      The processor is wired under annotationProcessorPaths below.
-    -->
     <dependency>
       <groupId>eu.jsentinel</groupId>
-      <artifactId>jCustos-autoservice-annotations</artifactId>
+      <artifactId>jCustos-events</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <!--
-      V00.72 fluent bootstrap. DemoApp.main() calls
-      StandaloneSecurity.bootstrap() to wire services into
-      JCustosServiceResolver and print the resulting JCustosRuntime
-      diagnostics line at startup.
-    -->
+    <!-- V00.78: DiagnosticContributor SPI (same module->dx pattern as jCustos-oauth2). -->
     <dependency>
       <groupId>eu.jsentinel</groupId>
       <artifactId>jCustos-dx</artifactId>
@@ -83,46 +63,29 @@
     </dependency>
     <dependency>
       <groupId>eu.jsentinel</groupId>
-      <artifactId>jCustos-dx-standalone</artifactId>
+      <artifactId>jCustos-autoservice-annotations</artifactId>
       <version>${project.version}</version>
     </dependency>
+
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>eu.jsentinel</groupId>
-      <artifactId>jCustos-test</artifactId>
-      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
 
   <build>
     <plugins>
+      <!-- V00.78: @JCustosAutoService -> META-INF/services registrations. -->
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <!--
-            Wire jCustos-processor as a compile-time annotation
-            processor. The processor expands @Secured-annotated classes
-            into a <Type>Secured subclass that routes every guarded
-            method through JCustosEnforcer before the super-call.
-          -->
           <annotationProcessorPaths>
-            <path>
-              <groupId>eu.jsentinel</groupId>
-              <artifactId>jCustos-processor</artifactId>
-              <version>${project.version}</version>
-            </path>
             <path>
               <groupId>eu.jsentinel</groupId>
               <artifactId>jCustos-autoservice-processor</artifactId>
               <version>${project.version}</version>
             </path>
-            <!-- Processor reads the @JCustosAutoService annotation class
-                 reflectively; make sure it is on the processor path too. -->
             <path>
               <groupId>eu.jsentinel</groupId>
               <artifactId>jCustos-autoservice-annotations</artifactId>
@@ -131,13 +94,35 @@
           </annotationProcessorPaths>
         </configuration>
       </plugin>
+      <!--
+        V00.78: ban Jackson / Gson / org.json. Discovery / UserInfo / ID-token
+        responses are parsed by the in-tree depth-aware JSON scanner; no transitive
+        JSON library may take over. (Nimbus JOSE arrives via jCustos-jwt for
+        signature validation and is intentionally allowed — not a JSON-wire library.)
+      -->
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>license-maven-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
         <executions>
           <execution>
-            <id>first</id>
-            <phase>none</phase>
+            <id>ban-json-libraries</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <excludes>
+                    <exclude>com.fasterxml.jackson.core:jackson-databind</exclude>
+                    <exclude>com.google.code.gson:*</exclude>
+                    <exclude>org.json:json</exclude>
+                  </excludes>
+                  <includes>
+                    <include>com.fasterxml.jackson.core:*:*:*:test</include>
+                  </includes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
           </execution>
         </executions>
       </plugin>

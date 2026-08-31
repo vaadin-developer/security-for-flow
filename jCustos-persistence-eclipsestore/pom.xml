@@ -21,38 +21,52 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>demo-rest-shared</artifactId>
-  <name>jCustos - REST Demo shared</name>
+  <artifactId>jCustos-persistence-eclipsestore</artifactId>
+  <name>jCustos Persistence — Eclipse Store</name>
   <description>
-    Transport-level constants and helpers shared between the demo-rest
-    server and any client (CLI, Vaadin REST client). Demo-only.
+    Eclipse-Store-backed implementations of every Phase-2 persistence
+    store (AuditEvent, Session, LoginAttempt, RoleAssignment,
+    BootstrapState, RememberMe / PasswordReset / EmailVerification
+    tokens, ApiKey, RefreshToken, RateLimit). Each implementation is
+    verified bit-for-bit against the contract shipped by
+    jCustos-persistence-testkit. The runtime root object
+    (EclipseStoreJCustosRoot) is package-private — applications
+    consume the stores through their existing Phase-2 SPIs and
+    control the lifecycle through the public
+    EclipseStoreJCustosStorage facade.
   </description>
 
   <properties>
-    <!--
-      Library-style demo module: do NOT push to a remote repository, but
-      DO install into the local ~/.m2 so demo-rest and
-      demo-vaadin-rest-client can resolve it outside of a reactor build.
-    -->
-    <maven.deploy.skip>true</maven.deploy.skip>
-    <gpg.skip>true</gpg.skip>
+    <eclipse-store.version>4.1.0</eclipse-store.version>
   </properties>
 
   <dependencies>
     <dependency>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.store</groupId>
+      <artifactId>storage-embedded</artifactId>
+      <version>${eclipse-store.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-persistence-testkit</artifactId>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
 
   <build>
     <plugins>
-      <!--
-        deploy is suppressed via the maven.deploy.skip property above —
-        no separate plugin block needed. install runs normally so the
-        artifact lands in ~/.m2 for non-reactor consumers.
-      -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>license-maven-plugin</artifactId>

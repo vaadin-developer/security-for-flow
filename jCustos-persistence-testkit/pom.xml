@@ -21,24 +21,35 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>demo-rest-shared</artifactId>
-  <name>jCustos - REST Demo shared</name>
+  <artifactId>jCustos-persistence-testkit</artifactId>
+  <name>jCustos Persistence Testkit</name>
   <description>
-    Transport-level constants and helpers shared between the demo-rest
-    server and any client (CLI, Vaadin REST client). Demo-only.
+    JUnit-5 contract interfaces that every concrete implementation of
+    the Phase-2 persistence stores must satisfy. Consumers (the
+    in-memory defaults and the Eclipse-Store-backed implementations
+    alike) write one tiny adapter class per store that returns a
+    freshly-constructed instance from newStore(); JUnit picks up the
+    @Test default methods of the contract interface as test methods on
+    the adapter.
   </description>
 
-  <properties>
-    <!--
-      Library-style demo module: do NOT push to a remote repository, but
-      DO install into the local ~/.m2 so demo-rest and
-      demo-vaadin-rest-client can resolve it outside of a reactor build.
-    -->
-    <maven.deploy.skip>true</maven.deploy.skip>
-    <gpg.skip>true</gpg.skip>
-  </properties>
-
   <dependencies>
+    <dependency>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!--
+      JUnit Jupiter API at compile scope so contract interfaces can
+      declare @Test default methods. Mirrors the approach already used
+      by jCustos-test for its lifecycle extension.
+    -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>${junit-jupiter.version}</version>
+      <scope>compile</scope>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
@@ -48,11 +59,6 @@
 
   <build>
     <plugins>
-      <!--
-        deploy is suppressed via the maven.deploy.skip property above —
-        no separate plugin block needed. install runs normally so the
-        artifact lands in ~/.m2 for non-reactor consumers.
-      -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>license-maven-plugin</artifactId>

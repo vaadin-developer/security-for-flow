@@ -1,16 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-
-    Copyright © 2018 Sven Ruppert (sven.ruppert@gmail.com)
-
-    Licensed under the EUPL, Version 1.2 or - as soon they will be
-    approved by the European Commission - subsequent versions of the
-    EUPL (the "Licence"); You may not use this work except in
-    compliance with the Licence. You may obtain a copy of the Licence at:
-
-    https://joinup.ec.europa.eu/software/page/eupl
-
--->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -21,16 +9,19 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>demo-vaadin</artifactId>
+    <artifactId>demo-jcustos-vaadin</artifactId>
     <packaging>war</packaging>
-    <name>jCustos - Vaadin Demo</name>
-    <description>Demo application for Vaadin view security, roles, permissions, and UI integration.</description>
+    <name>jCustos - Skill Demo: vaadin</name>
+    <description>Reference output of the jsentinel-vaadin skill applied
+        to a fresh Vaadin Flow module. Layer 1 — in-memory admin/admin
+        + user/user, Login + Roles + Audit + Sessions + Admin views.</description>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
         <maven.install.skip>true</maven.install.skip>
         <gpg.skip>true</gpg.skip>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>eu.jsentinel</groupId>
@@ -47,11 +38,6 @@
             <artifactId>jCustos-vaadin</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!--
-            V00.72 fluent bootstrap. BootstrapServiceInitListener now calls
-            VaadinSecurity.bootstrap() with .use(developmentDefaults()) at
-            Vaadin service init and prints the JCustosRuntime.log() banner.
-        -->
         <dependency>
             <groupId>eu.jsentinel</groupId>
             <artifactId>jCustos-dx</artifactId>
@@ -67,14 +53,23 @@
             <artifactId>jCustos-vaadin-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!--
-            Vaadin 25.1.1 mixes Jackson 3 (runtime, tools.jackson.core) and
-            Jackson 2 annotations: vaadin-maven-plugin:prepare-frontend still
-            references com.fasterxml.jackson.annotation.JsonSerializeAs and
-            fails with a NoClassDefFoundError if jackson-annotations:2.x is
-            absent. Keep both coordinate families on the classpath until
-            Vaadin drops the Jackson 2 reference.
-        -->
+        <!-- V00.79.20 B9: vendor-profile OIDC example (Keycloak / Entra / Auth0) -->
+        <dependency>
+            <groupId>eu.jsentinel</groupId>
+            <artifactId>jCustos-identity-vendor-keycloak</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>eu.jsentinel</groupId>
+            <artifactId>jCustos-identity-vendor-entra</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>eu.jsentinel</groupId>
+            <artifactId>jCustos-identity-vendor-auth0</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- Vaadin 25.1.1 Jackson 2-annotations transitive (see demo-vaadin) -->
         <dependency>
             <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
@@ -90,48 +85,15 @@
             <artifactId>jackson-annotations</artifactId>
             <version>2.21</version>
         </dependency>
-        <!--
-          Servlet API at compile time only (provided by the Jetty/servlet
-          container at runtime). Needed because com.vaadin.flow.server.VaadinSession
-          implements jakarta.servlet.http.HttpSessionBindingListener, so javac must
-          resolve that interface wherever VaadinSession is referenced (e.g.
-          MyLoginView.recordSession) even though the binding callbacks are never
-          called here. Mirrors demo-vaadin-rest-client.
-        -->
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
             <version>6.1.0</version>
             <scope>provided</scope>
         </dependency>
-        <!--
-          Annotations module shipped by jCustos-processor's underlying
-          proxybuilder. The processor emits @GeneratedByProxyBuilder and
-          @DelegatesTo into every generated wrapper class; consumers of
-          the processor need the annotation types on their compile
-          classpath even though RetentionPolicy.RUNTIME makes them stay
-          around at runtime too.
-        -->
-        <dependency>
-            <groupId>com.svenruppert</groupId>
-            <artifactId>proxybuilder-annotations</artifactId>
-            <version>00.11.00</version>
-        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>eu.jsentinel</groupId>
-            <artifactId>jCustos-test</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.vaadin</groupId>
-            <artifactId>browserless-test-junit6</artifactId>
-            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -142,19 +104,7 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <!--
-                      Wire jCustos-processor as a compile-time annotation
-                      processor. The processor expands @Secured-annotated
-                      classes into a <Type>Secured subclass that routes
-                      every guarded method through JCustosEnforcer before
-                      the super-call.
-                    -->
                     <annotationProcessorPaths>
-                        <path>
-                            <groupId>eu.jsentinel</groupId>
-                            <artifactId>jCustos-processor</artifactId>
-                            <version>${project.version}</version>
-                        </path>
                         <path>
                             <groupId>eu.jsentinel</groupId>
                             <artifactId>jCustos-autoservice-processor</artifactId>
@@ -175,8 +125,6 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
-            <!-- Skip the inherited license-maven-plugin: EUPL 1.2 headers are
-                 maintained directly in the source files. -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
@@ -197,12 +145,6 @@
                         <allowDuplicateFragmentNames>true</allowDuplicateFragmentNames>
                     </webApp>
                 </configuration>
-                <!--
-                    Force SLF4J 2.x onto the plugin's classloader. Jetty 12.1 internals
-                    call Logger.atDebug() (only exists in SLF4J 2.0+), but transitive
-                    Maven plugin deps still drag in slf4j-api 1.7.36, which otherwise
-                    wins at @Push teardown with a NoSuchMethodError.
-                -->
                 <dependencies>
                     <dependency>
                         <groupId>org.slf4j</groupId>
@@ -216,11 +158,6 @@
                     </dependency>
                 </dependencies>
             </plugin>
-            <!--
-                Take care of synchronizing java dependencies and imports in
-                package.json and main.js files.
-                It also creates webpack.config.js if not exists yet.
-            -->
             <plugin>
                 <groupId>com.vaadin</groupId>
                 <artifactId>vaadin-maven-plugin</artifactId>

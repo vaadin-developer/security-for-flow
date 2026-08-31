@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright © 2018 Sven Ruppert (sven.ruppert@gmail.com)
+
+    Licensed under the EUPL, Version 1.2 or - as soon they will be
+    approved by the European Commission - subsequent versions of the
+    EUPL (the "Licence"); You may not use this work except in
+    compliance with the Licence. You may obtain a copy of the Licence at:
+
+    https://joinup.ec.europa.eu/software/page/eupl
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-parent</artifactId>
+    <version>00.81.10-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>jCustos-dx</artifactId>
+  <name>jCustos DX</name>
+  <description>
+    V00.72 developer-experience core: common fluent-bootstrap contracts,
+    JCustosRuntime, diagnostics (JCustosDiagnostics + DiagnosticContributor SPI).
+    Adapter-specific bootstrap facades live in jCustos-dx-vaadin / -rest /
+    -standalone.
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-test</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!--
+      V00.73 P6: AbstractJCustosBootstrap.applyCredentialConfiguration
+      probes BouncyCastleHashingServices.modern() reflectively. The
+      probe must be tested against the real classpath with bc present;
+      hence jCustos-crypto-bc as a test-scope dependency only.
+      Runtime users decide for themselves whether to ship bc.
+    -->
+    <dependency>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-crypto-bc</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!--
+      V00.74.10 Phase 1: Jackson is permitted on TEST scope only — the
+      Phase-1 smoke test (JCustosRuntimePhase1SmokeTest) uses Jackson as
+      an independent JSON parser to cross-validate JCustosRuntime.toJson()
+      output against toMap(). The Maven Enforcer rule below blocks Jackson
+      (and any other JSON library) on compile/runtime scope, so the
+      runtime classpath stays JSON-library-free per Konzept §3 invariant 1.
+    -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.20.2</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>first</id>
+            <phase>none</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <!--
+        V00.74.10 Phase 1 — Konzept-V00.74.10 §3 invariant 1: no JSON
+        library on the jCustos-dx compile/runtime classpath. The
+        in-tree JsonEncoder (eu.jsentinel.jcustos.dx.runtime.internal)
+        is the only JSON code path. Test scope is allowed so the
+        Phase-1 smoke test can use Jackson as an independent parser.
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>ban-json-libraries-on-compile-runtime</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <excludes>
+                    <exclude>com.fasterxml.jackson.core:*</exclude>
+                    <exclude>com.fasterxml.jackson.databind:*</exclude>
+                    <exclude>com.google.code.gson:*</exclude>
+                    <exclude>org.json:json</exclude>
+                  </excludes>
+                  <includes>
+                    <!-- test scope is allowed -->
+                    <include>com.fasterxml.jackson.core:*:*:*:test</include>
+                    <include>com.fasterxml.jackson.databind:*:*:*:test</include>
+                  </includes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

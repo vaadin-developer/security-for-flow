@@ -15,14 +15,14 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
-    <groupId>eu.jsentinel.jcustos</groupId>
-    <artifactId>jSentinel-parent</artifactId>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-parent</artifactId>
     <version>00.81.10-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>demo-rest</artifactId>
-  <name>jSentinel - REST Demo</name>
+  <name>jCustos - REST Demo</name>
   <description>Demo application for REST security, permissions, protected handlers, and HTTP status mapping.</description>
 
   <properties>
@@ -38,32 +38,32 @@
 
   <dependencies>
     <dependency>
-      <groupId>eu.jsentinel.jcustos</groupId>
-      <artifactId>jSentinel-core</artifactId>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>eu.jsentinel.jcustos</groupId>
-      <artifactId>jSentinel-rest</artifactId>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-rest</artifactId>
       <version>${project.version}</version>
     </dependency>
     <!--
       V00.72 fluent bootstrap. DemoRestServer.main() calls
-      RestSecurity.bootstrap() and prints the JSentinelRuntime.log()
+      RestSecurity.bootstrap() and prints the JCustosRuntime.log()
       banner before the server starts serving requests.
     -->
     <dependency>
-      <groupId>eu.jsentinel.jcustos</groupId>
-      <artifactId>jSentinel-dx</artifactId>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-dx</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>eu.jsentinel.jcustos</groupId>
-      <artifactId>jSentinel-dx-rest</artifactId>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-dx-rest</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>eu.jsentinel.jcustos</groupId>
+      <groupId>eu.jsentinel</groupId>
       <artifactId>demo-rest-shared</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -81,8 +81,8 @@
          Nimbus-signed JwtIssuerStub. Test scope only — the demo server's main
          code uses the core JwtValidator SPI, not Nimbus. -->
     <dependency>
-      <groupId>eu.jsentinel.jcustos</groupId>
-      <artifactId>jSentinel-jwt</artifactId>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-jwt</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>

@@ -23,16 +23,16 @@
         <version>06.02.04</version>
     </parent>
 
-    <groupId>eu.jsentinel.jcustos</groupId>
-    <artifactId>jSentinel-parent</artifactId>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-parent</artifactId>
     <version>00.81.10-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>jSentinel — Security for Vaadin Flow</name>
+    <name>jCustos — Security for Vaadin Flow</name>
     <description>A Core Java Security Framework for Vaadin</description>
     <inceptionYear>2018</inceptionYear>
     <organization>
-        <name>jSentinel by Sven Ruppert</name>
+        <name>jCustos by Sven Ruppert</name>
         <url>https://jsentinel.eu</url>
     </organization>
     <url>https://github.com/vaadin-developer/security-for-flow</url>
@@ -72,67 +72,67 @@
     </licenses>
 
     <modules>
-        <module>jSentinel-core</module>
-        <module>jSentinel-vaadin</module>
-        <module>jSentinel-rest</module>
-        <module>jSentinel-standalone</module>
-        <module>jSentinel-test</module>
-        <module>jSentinel-processor</module>
-        <module>jSentinel-persistence-testkit</module>
-        <module>jSentinel-persistence-eclipsestore</module>
-        <module>jSentinel-crypto-bc</module>
-        <module>jSentinel-credentials-hibp</module>
-        <module>jSentinel-autoservice-annotations</module>
-        <module>jSentinel-autoservice-processor</module>
-        <module>jSentinel-dx</module>
-        <module>jSentinel-dx-vaadin</module>
-        <module>jSentinel-dx-rest</module>
-        <module>jSentinel-dx-standalone</module>
-        <module>jSentinel-vaadin-starter</module>
-        <module>jSentinel-propagation</module>
-        <module>jSentinel-propagation-processor</module>
-        <module>jSentinel-propagation-oidc</module>
-        <module>jSentinel-events</module>
-        <module>jSentinel-events-rest</module>
-        <module>jSentinel-events-testkit</module>
-        <module>jSentinel-events-persistence-eclipsestore</module>
-        <module>jSentinel-jwt</module>
-        <module>jSentinel-oauth2</module>
-        <module>jSentinel-oauth2-vaadin</module>
-        <module>jSentinel-oauth2-rest</module>
-        <module>jSentinel-identity-oidc</module>
-        <module>jSentinel-identity-oidc-vaadin</module>
-        <module>jSentinel-identity-oidc-rest</module>
-        <module>jSentinel-test-oidc</module>
-        <module>jSentinel-identity-vendor-keycloak</module>
-        <module>jSentinel-identity-vendor-entra</module>
-        <module>jSentinel-identity-vendor-auth0</module>
-        <module>jSentinel-identity-vendor-okta</module>
-        <module>jSentinel-identity-vendor-google</module>
-        <module>jSentinel-identity-vendor-github</module>
-        <module>jSentinel-dpop</module>
-        <module>jSentinel-monitoring</module>
-        <module>jSentinel-events-webhook</module>
-        <module>jSentinel-events-opentelemetry</module>
-        <module>jSentinel-events-siem</module>
-        <module>jSentinel-audit-integrity</module>
-        <module>jSentinel-audit-integrity-testkit</module>
-        <module>jSentinel-audit-integrity-persistence-eclipsestore</module>
+        <module>jCustos-core</module>
+        <module>jCustos-vaadin</module>
+        <module>jCustos-rest</module>
+        <module>jCustos-standalone</module>
+        <module>jCustos-test</module>
+        <module>jCustos-processor</module>
+        <module>jCustos-persistence-testkit</module>
+        <module>jCustos-persistence-eclipsestore</module>
+        <module>jCustos-crypto-bc</module>
+        <module>jCustos-credentials-hibp</module>
+        <module>jCustos-autoservice-annotations</module>
+        <module>jCustos-autoservice-processor</module>
+        <module>jCustos-dx</module>
+        <module>jCustos-dx-vaadin</module>
+        <module>jCustos-dx-rest</module>
+        <module>jCustos-dx-standalone</module>
+        <module>jCustos-vaadin-starter</module>
+        <module>jCustos-propagation</module>
+        <module>jCustos-propagation-processor</module>
+        <module>jCustos-propagation-oidc</module>
+        <module>jCustos-events</module>
+        <module>jCustos-events-rest</module>
+        <module>jCustos-events-testkit</module>
+        <module>jCustos-events-persistence-eclipsestore</module>
+        <module>jCustos-jwt</module>
+        <module>jCustos-oauth2</module>
+        <module>jCustos-oauth2-vaadin</module>
+        <module>jCustos-oauth2-rest</module>
+        <module>jCustos-identity-oidc</module>
+        <module>jCustos-identity-oidc-vaadin</module>
+        <module>jCustos-identity-oidc-rest</module>
+        <module>jCustos-test-oidc</module>
+        <module>jCustos-identity-vendor-keycloak</module>
+        <module>jCustos-identity-vendor-entra</module>
+        <module>jCustos-identity-vendor-auth0</module>
+        <module>jCustos-identity-vendor-okta</module>
+        <module>jCustos-identity-vendor-google</module>
+        <module>jCustos-identity-vendor-github</module>
+        <module>jCustos-dpop</module>
+        <module>jCustos-monitoring</module>
+        <module>jCustos-events-webhook</module>
+        <module>jCustos-events-opentelemetry</module>
+        <module>jCustos-events-siem</module>
+        <module>jCustos-audit-integrity</module>
+        <module>jCustos-audit-integrity-testkit</module>
+        <module>jCustos-audit-integrity-persistence-eclipsestore</module>
         <module>demo-rest-shared</module>
         <module>demo-vaadin</module>
         <module>demo-rest</module>
         <module>demo-vaadin-rest-client</module>
         <module>demo-standalone</module>
-        <module>demo-jsentinel-vaadin</module>
-        <module>demo-jsentinel-vaadin-persistence</module>
-        <module>demo-jsentinel-vaadin-hardening</module>
-        <module>demo-jsentinel-rest</module>
-        <module>demo-jsentinel-rest-persistence</module>
-        <module>demo-jsentinel-rest-hardening</module>
-        <module>demo-jsentinel-standalone</module>
-        <module>demo-jsentinel-standalone-persistence</module>
-        <module>demo-jsentinel-standalone-hardening</module>
-        <module>demo-jsentinel-vaadin-rest-client</module>
+        <module>demo-jcustos-vaadin</module>
+        <module>demo-jcustos-vaadin-persistence</module>
+        <module>demo-jcustos-vaadin-hardening</module>
+        <module>demo-jcustos-rest</module>
+        <module>demo-jcustos-rest-persistence</module>
+        <module>demo-jcustos-rest-hardening</module>
+        <module>demo-jcustos-standalone</module>
+        <module>demo-jcustos-standalone-persistence</module>
+        <module>demo-jcustos-standalone-hardening</module>
+        <module>demo-jcustos-vaadin-rest-client</module>
     </modules>
 
     <properties>
@@ -329,7 +329,7 @@
                     </execution>
                     <!--
                       V00.74.20 Phase 3 — Konzept §9 "No-Mocks-Disziplin":
-                      jSentinel tests are written against real
+                      jCustos tests are written against real
                       implementations (real EmbeddedStorageManager wrappers,
                       real subjects, real storage facades). Mocking-framework
                       tests obscure contract violations and make refactors
@@ -458,10 +458,10 @@
                     <outputName>CycloneDX-SBom</outputName>
                 </configuration>
             </plugin>
-            <!-- jSentinel-branded Javadoc: applies the project's theme skin
+            <!-- jCustos-branded Javadoc: applies the project's theme skin
                  (docs/javadoc/jsentinel.css) on top of the stock JDK
                  stylesheet at generation time, so every generated /
-                 published -javadoc.jar renders in the jSentinel design with
+                 published -javadoc.jar renders in the jCustos design with
                  the built-in JDK Light/Dark/System toggle driving the
                  lime palette.
 
@@ -482,8 +482,8 @@
                     </addStylesheets>
                     <doctitle>Sentinel for Java — ${project.version} API</doctitle>
                     <windowtitle>Sentinel for Java ${project.version} API</windowtitle>
-                    <!-- Cross-module {@link …} references (e.g. jSentinel-dx-vaadin
-                         linking into jSentinel-vaadin-starter, which it must not
+                    <!-- Cross-module {@link …} references (e.g. jCustos-dx-vaadin
+                         linking into jCustos-vaadin-starter, which it must not
                          depend on per the V00.72 module layering) don't resolve
                          per-module, so the javadoc tool emits hard "reference
                          not found" errors. We accept that — the rendered HTML

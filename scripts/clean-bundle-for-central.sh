@@ -33,11 +33,11 @@ set -euo pipefail
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 M2_REPO="${HOME}/.m2/repository"
-# V00.73 jSentinel rebrand: groupId moved from com.svenruppert to
-# com.svenruppert.jsentinel for every reactor artefact (external
-# com.svenruppert:* deps keep their groupId — those are not produced
-# here).
-GROUP_PATH="com/svenruppert/jsentinel"
+# Coordinates history: V00.73 moved the groupId com.svenruppert ->
+# com.svenruppert.jsentinel; the V00.81.10 jCustos rebrand moved it to
+# eu.jsentinel (external com.svenruppert:* deps keep their groupId —
+# those are not produced here).
+GROUP_PATH="eu/jsentinel"
 
 # Library modules that should appear on Maven Central. The demo modules
 # (demo-vaadin, demo-rest, demo-vaadin-rest-client, demo-standalone,
@@ -51,63 +51,64 @@ GROUP_PATH="com/svenruppert/jsentinel"
 #   V00.72 additions (7): dx, dx-vaadin, dx-rest, dx-standalone,
 #                         autoservice-annotations, autoservice-processor,
 #                         vaadin-starter
-#   V00.73 rename: all artefacts now use the jSentinel- prefix; parent
-#                  is jSentinel-parent (was security-for-flow-parent).
+#   V00.73 rename: artefacts took the jSentinel- prefix (parent was
+#                  security-for-flow-parent before that);
+#   V00.81.10 rename: all artefacts now use the jCustos- prefix.
 #   V00.74 additions (3): propagation, propagation-processor,
 #                         propagation-oidc — declarative token-forwarding
 #                         surface (Konzept-V00.74).
 #
-# Note on jSentinel-autoservice-processor: published even though
+# Note on jCustos-autoservice-processor: published even though
 # consumers wire it via <annotationProcessorPath> rather than as a
 # runtime dep. Central still needs the jar so the path can be resolved.
 MODULES=(
-    "jSentinel-parent"
-    "jSentinel-core"
-    "jSentinel-test"
-    "jSentinel-vaadin"
-    "jSentinel-rest"
-    "jSentinel-standalone"
-    "jSentinel-processor"
-    "jSentinel-persistence-testkit"
-    "jSentinel-persistence-eclipsestore"
-    "jSentinel-crypto-bc"
-    "jSentinel-credentials-hibp"
-    "jSentinel-dx"
-    "jSentinel-dx-vaadin"
-    "jSentinel-dx-rest"
-    "jSentinel-dx-standalone"
-    "jSentinel-autoservice-annotations"
-    "jSentinel-autoservice-processor"
-    "jSentinel-vaadin-starter"
-    "jSentinel-propagation"
-    "jSentinel-propagation-processor"
-    "jSentinel-propagation-oidc"
-    "jSentinel-events"
-    "jSentinel-events-rest"
-    "jSentinel-events-testkit"
-    "jSentinel-events-persistence-eclipsestore"
-    "jSentinel-monitoring"
-    "jSentinel-events-webhook"
-    "jSentinel-events-opentelemetry"
-    "jSentinel-events-siem"
-    "jSentinel-audit-integrity"
-    "jSentinel-audit-integrity-testkit"
-    "jSentinel-audit-integrity-persistence-eclipsestore"
-    "jSentinel-jwt"
-    "jSentinel-oauth2"
-    "jSentinel-oauth2-vaadin"
-    "jSentinel-oauth2-rest"
-    "jSentinel-identity-oidc"
-    "jSentinel-identity-oidc-vaadin"
-    "jSentinel-identity-oidc-rest"
-    "jSentinel-test-oidc"
-    "jSentinel-identity-vendor-keycloak"
-    "jSentinel-identity-vendor-entra"
-    "jSentinel-identity-vendor-auth0"
-    "jSentinel-identity-vendor-okta"
-    "jSentinel-identity-vendor-google"
-    "jSentinel-identity-vendor-github"
-    "jSentinel-dpop"
+    "jCustos-parent"
+    "jCustos-core"
+    "jCustos-test"
+    "jCustos-vaadin"
+    "jCustos-rest"
+    "jCustos-standalone"
+    "jCustos-processor"
+    "jCustos-persistence-testkit"
+    "jCustos-persistence-eclipsestore"
+    "jCustos-crypto-bc"
+    "jCustos-credentials-hibp"
+    "jCustos-dx"
+    "jCustos-dx-vaadin"
+    "jCustos-dx-rest"
+    "jCustos-dx-standalone"
+    "jCustos-autoservice-annotations"
+    "jCustos-autoservice-processor"
+    "jCustos-vaadin-starter"
+    "jCustos-propagation"
+    "jCustos-propagation-processor"
+    "jCustos-propagation-oidc"
+    "jCustos-events"
+    "jCustos-events-rest"
+    "jCustos-events-testkit"
+    "jCustos-events-persistence-eclipsestore"
+    "jCustos-monitoring"
+    "jCustos-events-webhook"
+    "jCustos-events-opentelemetry"
+    "jCustos-events-siem"
+    "jCustos-audit-integrity"
+    "jCustos-audit-integrity-testkit"
+    "jCustos-audit-integrity-persistence-eclipsestore"
+    "jCustos-jwt"
+    "jCustos-oauth2"
+    "jCustos-oauth2-vaadin"
+    "jCustos-oauth2-rest"
+    "jCustos-identity-oidc"
+    "jCustos-identity-oidc-vaadin"
+    "jCustos-identity-oidc-rest"
+    "jCustos-test-oidc"
+    "jCustos-identity-vendor-keycloak"
+    "jCustos-identity-vendor-entra"
+    "jCustos-identity-vendor-auth0"
+    "jCustos-identity-vendor-okta"
+    "jCustos-identity-vendor-google"
+    "jCustos-identity-vendor-github"
+    "jCustos-dpop"
 )
 
 if [ $# -ge 1 ]; then
@@ -131,7 +132,7 @@ BUNDLE="$BUNDLE_DIR/central-bundle.zip"
 
 # Minimum acceptable size (bytes) for a -javadoc.jar. An empty javadoc jar
 # (only META-INF/MANIFEST.MF, no rendered HTML) is ~300 B; the smallest real
-# one we ship is ~111 KB (jSentinel-autoservice-annotations). 50 KB sits
+# one we ship is ~111 KB (jCustos-autoservice-annotations). 50 KB sits
 # safely between the two. This guard exists because 00.74.10 shipped EMPTY
 # javadoc jars to Central: the maven-javadoc-plugin's addStylesheet pointed
 # at the .gitignore'd build/javadoc/jsentinel.css, javadoc aborted, and
@@ -188,8 +189,8 @@ for module in "${MODULES[@]}"; do
     shopt -u nullglob
 
     # Guard: every non-parent module must carry a non-empty -javadoc.jar.
-    # jSentinel-parent is pom-packaging — it has no jar/javadoc at all.
-    if [ "$module" != "jSentinel-parent" ]; then
+    # jCustos-parent is pom-packaging — it has no jar/javadoc at all.
+    if [ "$module" != "jCustos-parent" ]; then
         jdoc="$dst/$module-$VERSION-javadoc.jar"
         if [ ! -f "$jdoc" ]; then
             echo "ERROR: $module $VERSION has no -javadoc.jar." >&2
@@ -239,5 +240,5 @@ Next steps:
     curl --request POST \\
       --user "\$CENTRAL_USER:\$CENTRAL_PASSWORD" \\
       --form bundle=@$BUNDLE \\
-      'https://central.sonatype.com/api/v1/publisher/upload?name=jSentinel-V${VERSION}&publishingType=USER_MANAGED'
+      'https://central.sonatype.com/api/v1/publisher/upload?name=jCustos-V${VERSION}&publishingType=USER_MANAGED'
 EOF

@@ -21,14 +21,13 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>demo-standalone</artifactId>
-  <name>jCustos - Standalone Demo</name>
-  <description>Demo CLI application showing how a plain Java program consumes the standalone security adapter.</description>
-
-  <properties>
-    <maven.deploy.skip>true</maven.deploy.skip>
-    <gpg.skip>true</gpg.skip>
-  </properties>
+  <artifactId>jCustos-dx-rest</artifactId>
+  <name>jCustos DX – REST Adapter</name>
+  <description>
+    V00.72 REST-specific fluent bootstrap: RestSecurity.bootstrap()
+    facade and the RestJCustosBootstrap builder. Hosts the
+    RestDiagnosticContributor (added in Prompt 014b).
+  </description>
 
   <dependencies>
     <dependency>
@@ -38,44 +37,9 @@
     </dependency>
     <dependency>
       <groupId>eu.jsentinel</groupId>
-      <artifactId>jCustos-standalone</artifactId>
+      <artifactId>jCustos-rest</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <!-- V00.77: OAuth2 device-code grant demo (CLI has no browser). -->
-    <dependency>
-      <groupId>eu.jsentinel</groupId>
-      <artifactId>jCustos-oauth2</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <!--
-      Annotations module shipped by jCustos-processor's underlying
-      proxybuilder. The processor emits @GeneratedByProxyBuilder into
-      every wrapper class; consumers of the processor need the
-      annotation type on their compile classpath even though
-      RetentionPolicy.RUNTIME makes it stay around at runtime too
-      (and reflectable: tooling can detect generated wrappers).
-    -->
-    <dependency>
-      <groupId>com.svenruppert</groupId>
-      <artifactId>proxybuilder-annotations</artifactId>
-      <version>00.11.00</version>
-    </dependency>
-    <!--
-      V00.72: @JCustosAutoService replaces the manual META-INF/services
-      files for DemoAuthenticationService and DemoAuthorizationService.
-      The processor is wired under annotationProcessorPaths below.
-    -->
-    <dependency>
-      <groupId>eu.jsentinel</groupId>
-      <artifactId>jCustos-autoservice-annotations</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <!--
-      V00.72 fluent bootstrap. DemoApp.main() calls
-      StandaloneSecurity.bootstrap() to wire services into
-      JCustosServiceResolver and print the resulting JCustosRuntime
-      diagnostics line at startup.
-    -->
     <dependency>
       <groupId>eu.jsentinel</groupId>
       <artifactId>jCustos-dx</artifactId>
@@ -83,18 +47,19 @@
     </dependency>
     <dependency>
       <groupId>eu.jsentinel</groupId>
-      <artifactId>jCustos-dx-standalone</artifactId>
+      <artifactId>jCustos-autoservice-annotations</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <scope>test</scope>
-    </dependency>
+
     <dependency>
       <groupId>eu.jsentinel</groupId>
       <artifactId>jCustos-test</artifactId>
       <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -104,25 +69,12 @@
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <!--
-            Wire jCustos-processor as a compile-time annotation
-            processor. The processor expands @Secured-annotated classes
-            into a <Type>Secured subclass that routes every guarded
-            method through JCustosEnforcer before the super-call.
-          -->
           <annotationProcessorPaths>
-            <path>
-              <groupId>eu.jsentinel</groupId>
-              <artifactId>jCustos-processor</artifactId>
-              <version>${project.version}</version>
-            </path>
             <path>
               <groupId>eu.jsentinel</groupId>
               <artifactId>jCustos-autoservice-processor</artifactId>
               <version>${project.version}</version>
             </path>
-            <!-- Processor reads the @JCustosAutoService annotation class
-                 reflectively; make sure it is on the processor path too. -->
             <path>
               <groupId>eu.jsentinel</groupId>
               <artifactId>jCustos-autoservice-annotations</artifactId>
@@ -143,4 +95,5 @@
       </plugin>
     </plugins>
   </build>
+
 </project>
