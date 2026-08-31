@@ -676,7 +676,7 @@ clean-bundle-for-central.sh
   - Bundle size: <MB> MB, <N> primary files × <M> modules
   - Validation: <N> errors, <N> warnings
   - Artefacts: https://repo1.maven.org/maven2/com/svenruppert/jsentinel/
-  - GitHub release: https://github.com/jSentinel-eu/jCustos/releases/tag/vXX.YY.ZZ
+  - GitHub release: https://github.com/jSentinel-eu/jCustos-community/releases/tag/vXX.YY.ZZ
 ```
 
 ### 5.7 Custom-Field `Bewertung` (seit 2026-06-24)
@@ -914,7 +914,7 @@ gh release create vXX.YY.ZZ \
 ```
 
 `--latest` setzt das neue Release als „Latest" auf der GitHub-Releases-
-Übersicht. URL `https://github.com/jSentinel-eu/jCustos/releases/tag/vXX.YY.ZZ`
+Übersicht. URL `https://github.com/jSentinel-eu/jCustos-community/releases/tag/vXX.YY.ZZ`
 zurück an Sven melden.
 
 ### 8.3 Implementierungsplan auf COMPLETED setzen (ClickUp)

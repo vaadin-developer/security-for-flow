@@ -96,7 +96,7 @@ for old in "${OLD_MODULES[@]}"; do
     </developer>
   </developers>
   <scm>
-    <url>https://github.com/jSentinel-eu/jCustos</url>
+    <url>https://github.com/jSentinel-eu/jCustos-community</url>
   </scm>
   <distributionManagement>
     <relocation>

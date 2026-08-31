@@ -35,15 +35,15 @@
         <name>jCustos by Sven Ruppert</name>
         <url>https://jsentinel.eu</url>
     </organization>
-    <url>https://github.com/jSentinel-eu/jCustos</url>
+    <url>https://github.com/jSentinel-eu/jCustos-community</url>
 
     <scm>
-        <url>https://github.com/jSentinel-eu/jCustos</url>
+        <url>https://github.com/jSentinel-eu/jCustos-community</url>
         <connection>
-            scm:git:https://github.com/jSentinel-eu/jCustos.git
+            scm:git:https://github.com/jSentinel-eu/jCustos-community.git
         </connection>
         <developerConnection>
-            scm:git:https://github.com/jSentinel-eu/jCustos.git
+            scm:git:https://github.com/jSentinel-eu/jCustos-community.git
         </developerConnection>
         <tag>HEAD</tag>
     </scm>
@@ -60,7 +60,7 @@
     <issueManagement>
         <system>Github</system>
         <url>
-            https://github.com/jSentinel-eu/jCustos/issues
+            https://github.com/jSentinel-eu/jCustos-community/issues
         </url>
     </issueManagement>
     <licenses>
