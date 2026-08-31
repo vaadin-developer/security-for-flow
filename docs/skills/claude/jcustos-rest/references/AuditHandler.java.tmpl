@@ -1,0 +1,45 @@
+package {{BASE_PACKAGE}}.handlers;
+
+import eu.jsentinel.jcustos.audit.AuditEvent;
+import eu.jsentinel.jcustos.audit.AuditQuery;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
+import com.sun.net.httpserver.HttpExchange;
+import {{BASE_PACKAGE}}.Json;
+import {{BASE_PACKAGE}}.Router;
+
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * {@code GET /api/audit} — returns the audit ring buffer as a JSON
+ * array (newest first).
+ *
+ * <p>Requires permission {@code audit:read} (enforced by the router).
+ */
+public final class AuditHandler {
+
+  private AuditHandler() {
+  }
+
+  public static void list(HttpExchange exchange, JCustosSubject subject) throws IOException {
+    JCustosAuditService audit = JCustosServiceResolver.securityAuditService();
+    List<AuditEvent> events = audit.query(AuditQuery.all());
+    List<Map<String, Object>> body = events.stream()
+        .map(AuditHandler::project)
+        .toList()
+        .reversed();
+    Router.respondJson(exchange, 200, Json.encode(body));
+  }
+
+  private static Map<String, Object> project(AuditEvent event) {
+    Map<String, Object> out = new LinkedHashMap<>();
+    out.put("timestamp", event.timestamp().toString());
+    out.put("type", event.getClass().getSimpleName());
+    out.put("detail", event.toString());
+    return out;
+  }
+}

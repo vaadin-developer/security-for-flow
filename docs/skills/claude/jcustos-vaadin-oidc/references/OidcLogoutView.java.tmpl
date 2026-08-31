@@ -1,0 +1,44 @@
+package {{BASE_PACKAGE}}.views;
+
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
+import eu.jsentinel.jcustos.authorization.vaadin.VaadinSessionSubjectStore;
+import eu.jsentinel.jcustos.identity.oidc.vaadin.AbstractOidcLogoutView;
+import eu.jsentinel.jcustos.oidc.api.LogoutRequest;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.VaadinSession;
+
+import {{BASE_PACKAGE}}.security.oidc.OidcClients;
+
+import java.net.URI;
+import java.util.Optional;
+
+/**
+ * RP-initiated logout (OIDC RP-Initiated Logout 1.0): clears the local session subject,
+ * then redirects the browser to the IdP {@code end_session_endpoint} with the stored ID
+ * token as {@code id_token_hint} and the post-logout redirect back to the app.
+ */
+@Route("logout")
+public class OidcLogoutView extends AbstractOidcLogoutView {
+
+  @Override
+  protected URI endSessionEndpoint() {
+    return OidcClients.get().metadata().endSessionEndpoint().orElseThrow(
+        () -> new IllegalStateException("IdP discovery has no end_session_endpoint"));
+  }
+
+  @Override
+  protected LogoutRequest logoutRequest() {
+    Object stored = VaadinSession.getCurrent().getAttribute("oidc.id_token");
+    String idTokenHint = stored == null ? "" : stored.toString(); // LogoutRequest requires non-null
+    return new LogoutRequest(
+        idTokenHint,
+        Optional.of(URI.create(OidcClients.POST_LOGOUT_URI)),
+        Optional.empty());
+  }
+
+  @Override
+  protected void onBeforeLogout() {
+    new VaadinSessionSubjectStore().deleteCurrentSubject(JCustosSubject.class);
+    VaadinSession.getCurrent().setAttribute("oidc.id_token", null);
+  }
+}

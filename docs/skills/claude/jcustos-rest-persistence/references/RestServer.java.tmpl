@@ -1,0 +1,107 @@
+package {{BASE_PACKAGE}};
+
+import com.svenruppert.dependencies.core.logger.HasLogger;
+import eu.jsentinel.jcustos.dx.rest.bootstrap.RestSecurity;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapMode;
+import eu.jsentinel.jcustos.dx.runtime.JCustosRuntime;
+import com.sun.net.httpserver.HttpServer;
+import {{BASE_PACKAGE}}.handlers.AuditHandler;
+import {{BASE_PACKAGE}}.handlers.AuthHandler;
+import {{BASE_PACKAGE}}.handlers.BootstrapHandler;
+import {{BASE_PACKAGE}}.handlers.SessionsHandler;
+import {{BASE_PACKAGE}}.handlers.UsersHandler;
+import {{BASE_PACKAGE}}.security.bootstrap.BootstrapBuilder;
+import {{BASE_PACKAGE}}.security.bootstrap.BootstrapWiring;
+import {{BASE_PACKAGE}}.security.{{SUBJECT_PREFIX}}RestSubjectResolver;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.List;
+
+/**
+ * Persistence-layer REST server — same bootstrap-chain mechanism as
+ * layer 1 (delegates audit / sessions / credentials to
+ * {@link BootstrapBuilder#apply(eu.jsentinel.jcustos.dx.rest.bootstrap.RestJCustosBootstrap)}),
+ * but adds the {@code /api/setup} route + a bootstrap-required guard
+ * that returns 503 on every other endpoint until the first admin is
+ * provisioned.
+ *
+ * <p>Bootstrap-chain configuration is contributed by
+ * {@code PersistenceBootstrapExtension} (Eclipse-Store storeBacked
+ * for audit + sessions). Hardening, if applied, adds a separate
+ * {@code HardeningBootstrapExtension} that stacks alongside this
+ * one — both contribute to the same {@code .audit / .sessions /
+ * .credentials} sub-builders, no conflict.
+ */
+public final class RestServer implements HasLogger {
+
+  public static final int DEFAULT_PORT = {{REST_PORT}};
+
+  private final HttpServer http;
+  private final int port;
+
+  private RestServer(HttpServer http, int port) {
+    this.http = http;
+    this.port = port;
+  }
+
+  public static RestServer start(int port) throws IOException {
+    {{SUBJECT_PREFIX}}RestSubjectResolver resolver = new {{SUBJECT_PREFIX}}RestSubjectResolver();
+
+    JCustosRuntime runtime = BootstrapBuilder.apply(
+        RestSecurity.bootstrap()
+            .mode(JCustosBootstrapMode.{{BOOTSTRAP_PROFILE}})
+            .subjectResolver(resolver)
+    ).install();
+    System.out.println(runtime.log());
+
+    List<Router.Route> routes = new Router.Builder()
+        .addPublic("POST", "/api/setup", BootstrapHandler::setup)
+        .addPublic("POST", "/api/auth/login", AuthHandler::login)
+        .addPublic("POST", "/api/auth/logout", AuthHandler::logout)
+        .add("GET", "/api/whoami", "api:view", AuthHandler::whoami)
+        .add("GET", "/api/audit", "audit:read", AuditHandler::list)
+        .add("GET", "/api/sessions", "admin:sessions", SessionsHandler::list)
+        .add("DELETE", "/api/sessions", "admin:sessions", SessionsHandler::revoke)
+        .add("GET", "/api/users", "admin:roles", UsersHandler::list)
+        .add("POST", "/api/users", "admin:roles", UsersHandler::create)
+        .add("DELETE", "/api/users", "admin:roles", UsersHandler::delete)
+        .add("POST", "/api/users", "admin:roles", UsersHandler::assignRole)
+        .add("DELETE", "/api/users", "admin:roles", UsersHandler::revokeRole)
+        .build();
+    Router router = new Router(resolver, routes);
+    com.sun.net.httpserver.HttpHandler guarded = exchange -> {
+      String path = exchange.getRequestURI().getPath();
+      if (BootstrapWiring.instance().stateService().bootstrapRequired()
+          && !path.equals("/api/setup")) {
+        Router.respondJson(exchange, 503, Json.encode(java.util.Map.of(
+            "error", "bootstrap required",
+            "setupEndpoint", "POST /api/setup")));
+        return;
+      }
+      router.handle(exchange);
+    };
+
+    HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+    server.createContext("/api", guarded);
+    server.start();
+    return new RestServer(server, server.getAddress().getPort());
+  }
+
+  public int port() {
+    return port;
+  }
+
+  public void stop() {
+    http.stop(0);
+  }
+
+  public static void main(String[] args) throws IOException {
+    int port = args.length > 0 ? Integer.parseInt(args[0]) : DEFAULT_PORT;
+    RestServer server = start(port);
+    System.out.println("REST server listening on http://localhost:" + server.port());
+    System.out.println("First start? Look on stdout for the bootstrap token,");
+    System.out.println("then POST it to /api/setup with the admin's chosen username/password.");
+    Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
+  }
+}

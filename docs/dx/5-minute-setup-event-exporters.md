@@ -1,12 +1,12 @@
-# 5-Minute Setup — jSentinel Event Exporters (V00.80)
+# 5-Minute Setup — jCustos Event Exporters (V00.80)
 
 Ship signed Security-Event envelopes to your ops world — log stream,
 in-process consumers, webhooks, OpenTelemetry, SIEM — in five minutes.
 Konzept goal 8: the signed envelope from V00.75 stays the ONE integration
 base; every exporter below consumes the same
-`SignedJSentinelEventEnvelope` through the same tap.
+`SignedJCustosEventEnvelope` through the same tap.
 
-## 1. The envelope tap (V00.80, in `jSentinel-events`)
+## 1. The envelope tap (V00.80, in `jCustos-events`)
 
 ```java
 Registration tap = bus.subscribeEnvelope(envelope -> {
@@ -19,28 +19,28 @@ Registration tap = bus.subscribeEnvelope(envelope -> {
 All four V00.80 publishers implement `SignedEnvelopePublisher`, so wiring is
 always the same: `bus.subscribeEnvelope(publisher)`.
 
-## 2. In-tree publishers (`jSentinel-events`)
+## 2. In-tree publishers (`jCustos-events`)
 
 ```java
-// Grep-friendly EVENT lines on the named stream com.svenruppert.jsentinel.events
+// Grep-friendly EVENT lines on the named stream eu.jsentinel.jcustos.events
 bus.subscribeEnvelope(new LoggingEventPublisher());
 
 // In-process reactive tap (dashboards, custom pipelines) — java.util.concurrent.Flow
 var stream = new EventStreamPublisher();
 bus.subscribeEnvelope(stream);
-stream.subscribe(mySubscriber);   // Flow.Subscriber<SignedJSentinelEventEnvelope>
+stream.subscribe(mySubscriber);   // Flow.Subscriber<SignedJCustosEventEnvelope>
 
 // Alerts: severity-filtered typed listener (default threshold ERROR)
-var alerts = new JSentinelAlertPublisher(new LoggingAlertSink());
-alerts.subscribeTo(bus);          // pager/ticket/chat sinks implement JSentinelAlertSink
+var alerts = new JCustosAlertPublisher(new LoggingAlertSink());
+alerts.subscribeTo(bus);          // pager/ticket/chat sinks implement JCustosAlertSink
 ```
 
-## 3. Webhook (`jSentinel-events-webhook`)
+## 3. Webhook (`jCustos-events-webhook`)
 
 ```xml
 <dependency>
-  <groupId>com.svenruppert.jsentinel</groupId>
-  <artifactId>jSentinel-events-webhook</artifactId>
+  <groupId>eu.jsentinel</groupId>
+  <artifactId>jCustos-events-webhook</artifactId>
   <version>00.80.00</version>
 </dependency>
 ```
@@ -59,12 +59,12 @@ retry with backoff + jitter, dead-drop counters, bearer token via supplier
 (never logged), `https` mandatory for non-loopback targets. Close it on
 shutdown: `webhook.close()`.
 
-## 4. OpenTelemetry (`jSentinel-events-opentelemetry`)
+## 4. OpenTelemetry (`jCustos-events-opentelemetry`)
 
 ```xml
 <dependency>
-  <groupId>com.svenruppert.jsentinel</groupId>
-  <artifactId>jSentinel-events-opentelemetry</artifactId>
+  <groupId>eu.jsentinel</groupId>
+  <artifactId>jCustos-events-opentelemetry</artifactId>
   <version>00.80.00</version>
 </dependency>
 ```
@@ -75,16 +75,16 @@ bus.subscribeEnvelope(new OpenTelemetryEventPublisher(openTelemetry.getLogsBridg
 
 One log record per envelope (Logs Bridge API, api-only at compile scope,
 noop-safe — `LoggerProvider.noop()` makes it free). Attributes are the
-`jsentinel.*` vocabulary from `OtelEnvelopeAttributes`; severity grades come
+`jcustos.*` vocabulary from `OtelEnvelopeAttributes`; severity grades come
 from the event type (replay → `ERROR2`); payload and signature bytes never
 become attributes.
 
-## 5. SIEM (`jSentinel-events-siem`)
+## 5. SIEM (`jCustos-events-siem`)
 
 ```xml
 <dependency>
-  <groupId>com.svenruppert.jsentinel</groupId>
-  <artifactId>jSentinel-events-siem</artifactId>
+  <groupId>eu.jsentinel</groupId>
+  <artifactId>jCustos-events-siem</artifactId>
   <version>00.80.00</version>
 </dependency>
 ```
@@ -121,5 +121,5 @@ var service = new EventPublishService(wireCodec, consumePipeline,
 
 `ConsumeFailurePolicy.operationalDefaults()` additionally dead-letters
 sequence violations and expired envelopes for operator review — it requires
-a `JSentinelEventDeadLetterStore` and fails at WIRING time without one.
+a `JCustosEventDeadLetterStore` and fails at WIRING time without one.
 The HTTP outcomes do not change either way.

@@ -1,7 +1,7 @@
 # 5-Minute Setup — Vaadin
 
-Goal: a Vaadin Flow application that uses `jSentinel` V00.73 with
-the fluent bootstrap, `@JSentinelAutoService` and the Vaadin starter.
+Goal: a Vaadin Flow application that uses `jCustos` V00.73 with
+the fluent bootstrap, `@JCustosAutoService` and the Vaadin starter.
 V00.73 closes the two V00.72 carve-outs — the `.audit(...)` /
 `.sessions(...)` / `.policies(...)` / `.roles(...)` / `.credentials(...)`
 sub-builders are real, and `SecuredUi.requiresPolicy(...)` /
@@ -12,19 +12,19 @@ sub-builders are real, and `SecuredUi.requiresPolicy(...)` /
 
 ```xml
 <dependency>
-  <groupId>com.svenruppert.jsentinel</groupId>
-  <artifactId>jSentinel-vaadin</artifactId>
-  <version>${jsentinel.version}</version>
+  <groupId>eu.jsentinel</groupId>
+  <artifactId>jCustos-vaadin</artifactId>
+  <version>${jcustos.version}</version>
 </dependency>
 <dependency>
-  <groupId>com.svenruppert.jsentinel</groupId>
-  <artifactId>jSentinel-vaadin-starter</artifactId>
-  <version>${jsentinel.version}</version>
+  <groupId>eu.jsentinel</groupId>
+  <artifactId>jCustos-vaadin-starter</artifactId>
+  <version>${jcustos.version}</version>
 </dependency>
 <dependency>
-  <groupId>com.svenruppert.jsentinel</groupId>
-  <artifactId>jSentinel-autoservice-annotations</artifactId>
-  <version>${jsentinel.version}</version>
+  <groupId>eu.jsentinel</groupId>
+  <artifactId>jCustos-autoservice-annotations</artifactId>
+  <version>${jcustos.version}</version>
 </dependency>
 ```
 
@@ -34,14 +34,14 @@ sub-builders are real, and `SecuredUi.requiresPolicy(...)` /
   <configuration>
     <annotationProcessorPaths>
       <path>
-        <groupId>com.svenruppert.jsentinel</groupId>
-        <artifactId>jSentinel-autoservice-processor</artifactId>
-        <version>${jsentinel.version}</version>
+        <groupId>eu.jsentinel</groupId>
+        <artifactId>jCustos-autoservice-processor</artifactId>
+        <version>${jcustos.version}</version>
       </path>
       <path>
-        <groupId>com.svenruppert.jsentinel</groupId>
-        <artifactId>jSentinel-autoservice-annotations</artifactId>
-        <version>${jsentinel.version}</version>
+        <groupId>eu.jsentinel</groupId>
+        <artifactId>jCustos-autoservice-annotations</artifactId>
+        <version>${jcustos.version}</version>
       </path>
     </annotationProcessorPaths>
   </configuration>
@@ -51,13 +51,13 @@ sub-builders are real, and `SecuredUi.requiresPolicy(...)` /
 ## 2. Annotate your SPI implementations
 
 ```java
-import com.svenruppert.jsentinel.autoservice.api.JSentinelAutoService;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 
-@JSentinelAutoService(AuthenticationService.class)
+@JCustosAutoService(AuthenticationService.class)
 public final class MyAuthenticationService
     implements AuthenticationService<Credentials, MyUser> { /* ... */ }
 
-@JSentinelAutoService(AuthorizationService.class)
+@JCustosAutoService(AuthorizationService.class)
 public final class MyAuthorizationService
     implements AuthorizationService<MyUser> { /* ... */ }
 ```
@@ -65,15 +65,15 @@ public final class MyAuthorizationService
 ## 3. Bootstrap the app
 
 ```java
-import com.svenruppert.jsentinel.dx.vaadin.bootstrap.VaadinSecurity;
-import com.svenruppert.jsentinel.policy.api.Policy;
-import com.svenruppert.jsentinel.policy.api.SubjectPredicates;
-import com.svenruppert.jsentinel.starter.profile.VaadinJSentinelStarter;
+import eu.jsentinel.jcustos.dx.vaadin.bootstrap.VaadinSecurity;
+import eu.jsentinel.jcustos.policy.api.Policy;
+import eu.jsentinel.jcustos.policy.api.SubjectPredicates;
+import eu.jsentinel.jcustos.starter.profile.VaadinJCustosStarter;
 
-public final class JSentinelInit {
+public final class JCustosInit {
   public static void install() {
     var runtime = VaadinSecurity.bootstrap()
-        .use(VaadinJSentinelStarter.developmentDefaults())
+        .use(VaadinJCustosStarter.developmentDefaults())
         .subjectType(MyUser.class)
         .policies(p -> p
             .register(Policy.named("documents.editor-or-admin")
@@ -111,7 +111,7 @@ failure (`secure-route/unknown-policy`).
 ## 5. Done
 
 `runtime.log()` prints every registered service and any diagnostic
-warning. Switch to `VaadinJSentinelStarter.productionDefaults()` (or
+warning. Switch to `VaadinJCustosStarter.productionDefaults()` (or
 `.strictDefaults()`) when going to production. STRICT now breaks on the
 three V00.72-to-V00.73 promoted codes
 (`secure-route/unknown-policy`,
@@ -141,22 +141,22 @@ runtime.toJson();
 `healthCheck()` classifies any `ERROR` finding as `FAILED`, any
 `WARNING` (without errors) as `DEGRADED`, and `INFO`-only or empty as
 `HEALTHY` — `INFO` findings intentionally do not degrade. The
-`toJson()` encoder is jSentinel's own — Maven Enforcer on
-`jSentinel-dx` blocks Jackson, Gson and `org.json` on compile/runtime
+`toJson()` encoder is jCustos's own — Maven Enforcer on
+`jCustos-dx` blocks Jackson, Gson and `org.json` on compile/runtime
 scope so consumer projects do not inherit a JSON library through the
 DX classpath. All four methods are marked
-`@ExperimentalJSentinelApi` until V00.76 confirms the shape.
+`@ExperimentalJCustosApi` until V00.76 confirms the shape.
 
 ## 7. Persistence pair (V00.74.20)
 
 When you also want Eclipse-Store persistence (audit log + sessions +
-your own domain data), open a `JSentinelStoragePair` at process start
+your own domain data), open a `JCustosStoragePair` at process start
 and feed its framework half into the bootstrap. The pair manages both
 storages — framework + app — under one parent directory with a single
 two-phase shutdown:
 
 ```java
-try (JSentinelStoragePair pair = JSentinelStorageFactory.openAt(Path.of("data"))) {
+try (JCustosStoragePair pair = JCustosStorageFactory.openAt(Path.of("data"))) {
   VaadinSecurity.bootstrap()
       .audit(a    -> a.storeBacked(pair.framework().auditEventStore()))
       .sessions(s -> s.storeBacked(pair.framework().sessionStore()))

@@ -1,12 +1,12 @@
-# jSentinel — Feature Catalogue
+# jCustos — Feature Catalogue
 
 Vollständige Auflistung aller Funktionen und Erweiterungspunkte
-in jSentinel 00.70.00 (Stand 2026-05-31, **V00.70.00
+in jCustos 00.70.00 (Stand 2026-05-31, **V00.70.00
 feature-complete** — alle acht Phasen aus `Konzept-V00.70.00.md` sind
 gemerged: Tenant/Resource-Modell, 11 Persistence-Store-SPIs, Contract-
-Testkit + Eclipse-Store-Referenz-Impl, `JSentinelVersion`-Drift-
+Testkit + Eclipse-Store-Referenz-Impl, `JCustosVersion`-Drift-
 Detection inkl. automatischem Capture im `LoginView`, Policy-API +
-`jSentinel-processor`, RoleHierarchy + Any/All-Permission-Annotationen,
+`jCustos-processor`, RoleHierarchy + Any/All-Permission-Annotationen,
 Account-Lifecycle / API-Keys / RefreshTokens / Rate-Limit, Phase-8
 Secured-Komponenten + `SessionManagementView` + OpenAPI-Metadaten).
 Geordnet nach Reaktor-Modul und Funktionsbereich. Jeder Eintrag nennt
@@ -14,7 +14,7 @@ das Modul, den vollqualifizierten Java-Namen und — wo sinnvoll — die
 SPI-Datei unter `META-INF/services/`.
 
 > Konventionen: ✅ = ausgeliefert, voll abgedeckt; ⚠️ = experimentell
-> (`@ExperimentalJSentinelApi`); ❌ = bewusst nicht im Scope (siehe
+> (`@ExperimentalJCustosApi`); ❌ = bewusst nicht im Scope (siehe
 > § "Was nicht im Scope ist" am Ende).
 
 ---
@@ -23,14 +23,14 @@ SPI-Datei unter `META-INF/services/`.
 
 | Modul | Artefakt | Zweck |
 |---|---|---|
-| `jSentinel-core` | `jSentinel-core` | Framework-neutrale Kern-Typen, alle SPIs, alle 11 Persistence-Store-Interfaces (Phase 2), `JSentinelVersion`-Stack (Phase 4), Audit-Pipeline (27 Variants), Bootstrap, `JSentinelEnforcer`, Account-Lifecycle- / Token- / RateLimit-Services (Phase 7) |
-| `jSentinel-vaadin` | `jSentinel-vaadin` | Vaadin-Flow-Adapter: Navigation, Login, Session, Logout — plus Phase-8 `SecuredButton` / `SecuredRouterLink` / `SecuredMenuItem` / `SessionManagementView` und Phase-4c `JSentinelVersionEnforcerListener` |
-| `jSentinel-rest` | `jSentinel-rest` | Framework-light REST-Adapter (Filter, BearerToken, HTTP-Status-Mapping, Step-Up `WWW-Authenticate`) — plus Phase-4c `RestJSentinelVersionFilter` und Phase-8d `OpenApiJSentinelMetadataGenerator` |
-| `jSentinel-standalone` | `jSentinel-standalone` | Plain-Java / Desktop / CLI Adapter (ThreadLocal-Subject, `SecuredProxy` Dynamic-Proxy) |
-| `jSentinel-test` | `jSentinel-test` | Wiederverwendbare Test-Fixtures: `FakeAuthenticationService`, `FakeAuthorizationService`, `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5-`JSentinelTestExtension`. Test-Scope-Dependency. |
-| `jSentinel-processor` | `jSentinel-processor` | Compile-Time-Annotation-Processor: erzeugt `<Type>Secured`-Subklassen für `@Secured`-annotierte konkrete Klassen. Wird als `<annotationProcessorPath>` eingebunden. Basiert auf `com.svenruppert:proxybuilder:00.11.00` + `proxybuilder-annotations:00.11.00`. |
-| `jSentinel-persistence-testkit` | `jSentinel-persistence-testkit` | ⚠️ Contract-Test-Suites für jede Persistence-Store-SPI: `@Test default`-Methoden-Interfaces, die ein eigener Store-Adapter implementiert, um automatisch gegen den Library-Persistence-Kontrakt verifiziert zu werden. Persistence-Tech-agnostisch. |
-| `jSentinel-persistence-eclipsestore` | `jSentinel-persistence-eclipsestore` | ⚠️ Eclipse-Store (`org.eclipse.store:storage-embedded:4.1.0`) Referenz-Impl jeder Persistence-Store-SPI; besteht dieselbe 95+ Contract-Suite wie die In-Memory-Defaults. Drop-in für durable Persistence. |
+| `jCustos-core` | `jCustos-core` | Framework-neutrale Kern-Typen, alle SPIs, alle 11 Persistence-Store-Interfaces (Phase 2), `JCustosVersion`-Stack (Phase 4), Audit-Pipeline (27 Variants), Bootstrap, `JCustosEnforcer`, Account-Lifecycle- / Token- / RateLimit-Services (Phase 7) |
+| `jCustos-vaadin` | `jCustos-vaadin` | Vaadin-Flow-Adapter: Navigation, Login, Session, Logout — plus Phase-8 `SecuredButton` / `SecuredRouterLink` / `SecuredMenuItem` / `SessionManagementView` und Phase-4c `JCustosVersionEnforcerListener` |
+| `jCustos-rest` | `jCustos-rest` | Framework-light REST-Adapter (Filter, BearerToken, HTTP-Status-Mapping, Step-Up `WWW-Authenticate`) — plus Phase-4c `RestJCustosVersionFilter` und Phase-8d `OpenApiJCustosMetadataGenerator` |
+| `jCustos-standalone` | `jCustos-standalone` | Plain-Java / Desktop / CLI Adapter (ThreadLocal-Subject, `SecuredProxy` Dynamic-Proxy) |
+| `jCustos-test` | `jCustos-test` | Wiederverwendbare Test-Fixtures: `FakeAuthenticationService`, `FakeAuthorizationService`, `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5-`JCustosTestExtension`. Test-Scope-Dependency. |
+| `jCustos-processor` | `jCustos-processor` | Compile-Time-Annotation-Processor: erzeugt `<Type>Secured`-Subklassen für `@Secured`-annotierte konkrete Klassen. Wird als `<annotationProcessorPath>` eingebunden. Basiert auf `com.svenruppert:proxybuilder:00.11.00` + `proxybuilder-annotations:00.11.00`. |
+| `jCustos-persistence-testkit` | `jCustos-persistence-testkit` | ⚠️ Contract-Test-Suites für jede Persistence-Store-SPI: `@Test default`-Methoden-Interfaces, die ein eigener Store-Adapter implementiert, um automatisch gegen den Library-Persistence-Kontrakt verifiziert zu werden. Persistence-Tech-agnostisch. |
+| `jCustos-persistence-eclipsestore` | `jCustos-persistence-eclipsestore` | ⚠️ Eclipse-Store (`org.eclipse.store:storage-embedded:4.1.0`) Referenz-Impl jeder Persistence-Store-SPI; besteht dieselbe 95+ Contract-Suite wie die In-Memory-Defaults. Drop-in für durable Persistence. |
 | `demo-rest-shared` | `demo-rest-shared` | Transport-Konstanten + JSON-Helper für REST-Demos |
 | `demo-vaadin` | `demo-vaadin` | Vollständige Vaadin-Demo mit lokaler User-Verwaltung |
 | `demo-rest` | `demo-rest` | JDK-`HttpServer` + interaktive CLI |
@@ -42,7 +42,7 @@ SPI-Datei unter `META-INF/services/`.
 ## 2. SPI-Contracts (ServiceLoader-basiert)
 
 Alle SPIs werden über `META-INF/services/<FQN>` registriert und über
-`com.svenruppert.jsentinel.authorization.api.JSentinelServiceResolver`
+`eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver`
 aufgelöst (cached AtomicReference + lazy ServiceLoader-Resolution).
 
 ### Authentifizierung & Autorisierung
@@ -62,7 +62,7 @@ aufgelöst (cached AtomicReference + lazy ServiceLoader-Resolution).
 
 | SPI | Modul | Default | Zweck |
 |---|---|---|---|
-| `JSentinelAuditService` | core | `DefaultCompositeAuditService` | Audit-Service mit `publish(AuditEvent)` + `query(AuditQuery)` |
+| `JCustosAuditService` | core | `DefaultCompositeAuditService` | Audit-Service mit `publish(AuditEvent)` + `query(AuditQuery)` |
 | `AuditSink` | core | `RingBufferAuditSink` + `LoggingAuditSink` | Write-only-Sink für Audit-Pipeline |
 
 ### Brute-Force & Sessions
@@ -103,13 +103,13 @@ aufgelöst (cached AtomicReference + lazy ServiceLoader-Resolution).
 
 | SPI | Modul | Zweck |
 |---|---|---|
-| `RestSubjectResolver` | rest | Request → `Optional<JSentinelSubject>` + `SessionMetadata` + (Phase 4c) optionaler `RestJSentinelVersionContext` |
+| `RestSubjectResolver` | rest | Request → `Optional<JCustosSubject>` + `SessionMetadata` + (Phase 4c) optionaler `RestJCustosVersionContext` |
 
-### Persistence-Stores (Phase 2 — alle 11 ⚠️ `@ExperimentalJSentinelApi`)
+### Persistence-Stores (Phase 2 — alle 11 ⚠️ `@ExperimentalJCustosApi`)
 
-Jeder Store hat ein `InMemory*Store`-Default in `jSentinel-core` und
-eine Eclipse-Store-Referenz-Impl in `jSentinel-persistence-eclipsestore`,
-beide verifiziert über `jSentinel-persistence-testkit`-Contract-Tests.
+Jeder Store hat ein `InMemory*Store`-Default in `jCustos-core` und
+eine Eclipse-Store-Referenz-Impl in `jCustos-persistence-eclipsestore`,
+beide verifiziert über `jCustos-persistence-testkit`-Contract-Tests.
 
 | Store | Modul / Package | Record / Key | Zweck |
 |---|---|---|---|
@@ -125,20 +125,20 @@ beide verifiziert über `jSentinel-persistence-testkit`-Contract-Tests.
 | `RefreshTokenStore` | core/authentication | `RefreshTokenRecord` (hash-only, rotating mit `markReplaced`) | Rotating Refresh-Tokens mit Replay-Defense |
 | `RateLimitStore` | core/ratelimiting | Events unter `RateLimitKey(tenant, scope)` | Event-basierter Sliding-Window-Counter |
 
-### JSentinelVersion / Drift Detection (Phase 4 — ⚠️)
+### JCustosVersion / Drift Detection (Phase 4 — ⚠️)
 
 | SPI / Klasse | Modul | Default | Zweck |
 |---|---|---|---|
-| `JSentinelVersionStore` | core/session | `InMemoryJSentinelVersionStore` + Eclipse-Store-Impl | Monotonic counter pro `(TenantId, SubjectId)`; `current` / `increment` / `reset` |
-| `JSentinelVersionCheck` | core/session | — (pure helper) | Vergleicht Session-Snapshot vs. Store-Current → `JSentinelVersionStatus(Current \| Drifted)` |
-| `JSentinelVersionEnforcer` | core/session | — (pure helper) | Adapter-neutral; emittiert `SessionStale`-Audit; `EnforcementOutcome(Continue \| SessionStale)` |
+| `JCustosVersionStore` | core/session | `InMemoryJCustosVersionStore` + Eclipse-Store-Impl | Monotonic counter pro `(TenantId, SubjectId)`; `current` / `increment` / `reset` |
+| `JCustosVersionCheck` | core/session | — (pure helper) | Vergleicht Session-Snapshot vs. Store-Current → `JCustosVersionStatus(Current \| Drifted)` |
+| `JCustosVersionEnforcer` | core/session | — (pure helper) | Adapter-neutral; emittiert `SessionStale`-Audit; `EnforcementOutcome(Continue \| SessionStale)` |
 
 ### Account Lifecycle / Notifications (Phase 7 — ⚠️)
 
 | SPI / Klasse | Modul | Default | Zweck |
 |---|---|---|---|
-| `JSentinelNotificationSender` | core/accountlifecycle | `LoggingNotificationSender` | Dispatcher für Reset/Verify-Benachrichtigungen; Apps verdrahten Mail/SMS-Transports |
-| `JSentinelNotification` (record) + `Kind` (enum, 4 Werte) | core/accountlifecycle | — | `PASSWORD_RESET_REQUESTED` / `PASSWORD_RESET_COMPLETED` / `EMAIL_VERIFICATION_REQUESTED` / `EMAIL_VERIFIED` |
+| `JCustosNotificationSender` | core/accountlifecycle | `LoggingNotificationSender` | Dispatcher für Reset/Verify-Benachrichtigungen; Apps verdrahten Mail/SMS-Transports |
+| `JCustosNotification` (record) + `Kind` (enum, 4 Werte) | core/accountlifecycle | — | `PASSWORD_RESET_REQUESTED` / `PASSWORD_RESET_COMPLETED` / `EMAIL_VERIFICATION_REQUESTED` / `EMAIL_VERIFIED` |
 | `PasswordResetService` | core/accountlifecycle | — | `request(SubjectId, ttl)` / `validate(plain)` / `consume(plain)` (single-use, hash-only) |
 | `EmailVerificationService` | core/accountlifecycle | — | Wie PasswordReset, plus Email-Adresse am Record |
 
@@ -163,9 +163,9 @@ sie die Security-Flow-Auswertung nie blockieren.
 
 | Service | Modul | Backing-Store |
 |---|---|---|
-| `StoreBackedJSentinelAuditService` | core/audit | `AuditEventStore` |
+| `StoreBackedJCustosAuditService` | core/audit | `AuditEventStore` |
 | `StoreBackedLoginAttemptPolicy` | core/bruteforce | `LoginAttemptStore` (flacher Lockout) |
-| `StoreBackedSubjectSessionRegistry` | core/logout | `SessionStore` + optionaler `JSentinelVersionStore` (Phase-4c-Snapshot beim Register) |
+| `StoreBackedSubjectSessionRegistry` | core/logout | `SessionStore` + optionaler `JCustosVersionStore` (Phase-4c-Snapshot beim Register) |
 | `StoreBackedRoleAuthorizationService<U>` | core/authorization/api/roles | `RoleAssignmentStore` (generic über Subject-Type) |
 | `StoreBackedRememberMeService` | core/authentication | `RememberMeTokenStore` + `PasswordHasher` |
 | `StoreBackedBootstrapStateService` | core/bootstrap | `BootstrapStateStore` (idempotentes `markCompleted`) |
@@ -182,12 +182,12 @@ sie die Security-Flow-Auswertung nie blockieren.
 | `@RequiresAnyPermission({"a", "b"})` | core | `RequiresAnyPermissionEvaluator` | OR-Semantik — mindestens eine Permission reicht |
 | `@RequiresPolicy("doc.owner-or-admin")` ⚠️ | core | `RequiresPolicyEvaluator` | Benannte Policy aus `PolicyRegistry`, mit Step-Up-Support |
 | `@ProtectedBy(class.class)` | core | `ProtectedByEvaluator` | Eigene Logik via `AccessEvaluator`-Klasse |
-| `@JSentinelAnnotation(MyEvaluator.class)` | core | — (Meta-Annotation) | Bindet eine projekt-eigene Annotation an einen Evaluator |
-| `@Secured` | core | — (Compile-Time-Trigger) | Markiert eine konkrete Klasse, damit `jSentinel-processor` einen `<Type>Secured`-Wrapper generiert (RetentionPolicy.SOURCE) |
-| `@ExperimentalJSentinelApi(reason)` | core | — | Markiert API als experimentell |
+| `@JCustosAnnotation(MyEvaluator.class)` | core | — (Meta-Annotation) | Bindet eine projekt-eigene Annotation an einen Evaluator |
+| `@Secured` | core | — (Compile-Time-Trigger) | Markiert eine konkrete Klasse, damit `jCustos-processor` einen `<Type>Secured`-Wrapper generiert (RetentionPolicy.SOURCE) |
+| `@ExperimentalJCustosApi(reason)` | core | — | Markiert API als experimentell |
 
 Projekt-eigene Annotationen (Beispiele aus den Demos): `@VisibleFor`
-(demo-vaadin), `@CustomCheck` (jSentinel-vaadin Tests).
+(demo-vaadin), `@CustomCheck` (jCustos-vaadin Tests).
 
 ---
 
@@ -274,14 +274,14 @@ Projekt-eigene Annotationen (Beispiele aus den Demos): `@VisibleFor`
 | `InvalidUsername` | `reason` |
 | `InternalError` | `reason` |
 
-### `JSentinelVersionStatus` (Phase 4c)
+### `JCustosVersionStatus` (Phase 4c)
 
 | Variant | Felder | Bedeutung |
 |---|---|---|
 | `Current` | `at` | Session-Snapshot == Store-Current |
 | `Drifted` | `snapshot`, `current` | Snapshot != Current; Session muss re-validiert werden |
 
-### `JSentinelVersionEnforcer.EnforcementOutcome` (Phase 4c)
+### `JCustosVersionEnforcer.EnforcementOutcome` (Phase 4c)
 
 | Variant | Felder | Bedeutung |
 |---|---|---|
@@ -329,7 +329,7 @@ Alle implementieren `AuditEvent` (sealed interface) und sind über
 
 | Event | Wichtige Felder | Wird emittiert von |
 |---|---|---|
-| `SessionStale` | `subjectId`, `sessionId`, `route`, `snapshotVersion`, `currentVersion` | `JSentinelVersionEnforcer` bei Drift (Phase 4c) |
+| `SessionStale` | `subjectId`, `sessionId`, `route`, `snapshotVersion`, `currentVersion` | `JCustosVersionEnforcer` bei Drift (Phase 4c) |
 | `PasswordResetRequested` | `subjectId`, `tokenHash` | `PasswordResetService.request` (Phase 7a) |
 | `PasswordResetCompleted` | `subjectId`, `tokenHash` | `PasswordResetService.consume` |
 | `EmailVerificationRequested` | `subjectId`, `email`, `tokenHash` | `EmailVerificationService.request` |
@@ -349,9 +349,9 @@ und `LoggingAuditSink` decken alle 27 Varianten ab.
 
 | Klasse | Modul | Rolle |
 |---|---|---|
-| `JSentinelAuditService` (Interface) | core | API: `publish(AuditEvent)` + `query(AuditQuery)` |
+| `JCustosAuditService` (Interface) | core | API: `publish(AuditEvent)` + `query(AuditQuery)` |
 | `AuditSink` (Interface) | core | Write-only, single-method, never-throws |
-| `NoopJSentinelAuditService` | core | Default-Fallback wenn keine SPI registriert |
+| `NoopJCustosAuditService` | core | Default-Fallback wenn keine SPI registriert |
 | `CompositeAuditService` | core | RingBuffer + zusätzliche Sinks; query gegen den RingBuffer |
 | `DefaultCompositeAuditService` | core | No-arg, SPI-registrierbar; RingBuffer + LoggingAuditSink |
 | `RingBufferAuditSink` | core | Default-Cap 256 Events, älteste fliegen raus, thread-safe |
@@ -376,7 +376,7 @@ und `LoggingAuditSink` decken alle 27 Varianten ab.
 | `VaadinLogoutGateway` / `DefaultVaadinLogoutGateway` | Thin Wrapper über `UI.getPage().setLocation`, `VaadinSession.close`, `WrappedSession.invalidate` |
 | `VaadinAccessContextFactory` | Baut `AccessContext` aus `BeforeEnterEvent` |
 | `VaadinAccessDecisionMapper` / `VaadinNavigationAccessDecisionMapper` | Mappen `AccessDecision` / `NavigationAccessDecision` auf Vaadin-Navigation |
-| `JSentinelAnnotationScanner` | Scannt Class/Method/AnnotatedElement nach `@JSentinelAnnotation`-Meta-Annotation (cached) |
+| `JCustosAnnotationScanner` | Scannt Class/Method/AnnotatedElement nach `@JCustosAnnotation`-Meta-Annotation (cached) |
 
 ### Login-View-Features
 
@@ -384,20 +384,20 @@ und `LoggingAuditSink` decken alle 27 Varianten ab.
 - Custom-Element-Slot via `setCustomElements(Component)` / `clearCustomElements()`
 - LUMO-Theme-Variants vorverdrahtet
 - `notifyOnLogin()` konsultiert `SessionPolicy.onLogin` und führt B3-Rotation auf `Invalidate` aus
-- `captureJSentinelVersionSnapshot()` (Phase 4c-Followup): wenn sowohl `JSentinelVersionStore` als auch `SubjectIdResolver` als SPI registriert sind, liest die View beim erfolgreichen Login die aktuelle `JSentinelVersion` und schreibt sie in den `VaadinJSentinelVersionContext`. Strict-no-op + exception-swallowing, blockiert den Login-Flow nie.
+- `captureJCustosVersionSnapshot()` (Phase 4c-Followup): wenn sowohl `JCustosVersionStore` als auch `SubjectIdResolver` als SPI registriert sind, liest die View beim erfolgreichen Login die aktuelle `JCustosVersion` und schreibt sie in den `VaadinJCustosVersionContext`. Strict-no-op + exception-swallowing, blockiert den Login-Flow nie.
 
-### Phase-4c JSentinelVersion-Enforcement (⚠️)
-
-| Klasse | Zweck |
-|---|---|
-| `VaadinJSentinelVersionContext` (Package `session/vaadin`) | Per-VaadinSession Snapshot-Carrier (`record(subjectId, tenant, snapshot, sessionId)` / `current()` / `clear()`). Survives Session-Rotation. |
-| `JSentinelVersionEnforcerListener` (`@ListenerPriority(Integer.MAX_VALUE)`) | BeforeEnter-Listener vor `AuthorizationListener`. On Drift: clear snapshot + reroute zur konfigurierten LoginView-Klasse. |
-
-### Phase-8a/b Components (`jSentinel-vaadin/components/` — ⚠️)
+### Phase-4c JCustosVersion-Enforcement (⚠️)
 
 | Klasse | Zweck |
 |---|---|
-| `SecuredVisibility` + `SecuredVisibilityMode` (HIDE / DISABLE) | Zentraler Decision-Point. `Requirement(requiredRoles, requiredPermissions)` (AND-composed), `Target`-Interface, `apply()` + `isAllowed()`. SPI-backed `currentJSentinelView()` resolved via `AuthenticationService.subjectType()` + `SubjectStore` + `AuthorizationService`. Missing SPI → denial. |
+| `VaadinJCustosVersionContext` (Package `session/vaadin`) | Per-VaadinSession Snapshot-Carrier (`record(subjectId, tenant, snapshot, sessionId)` / `current()` / `clear()`). Survives Session-Rotation. |
+| `JCustosVersionEnforcerListener` (`@ListenerPriority(Integer.MAX_VALUE)`) | BeforeEnter-Listener vor `AuthorizationListener`. On Drift: clear snapshot + reroute zur konfigurierten LoginView-Klasse. |
+
+### Phase-8a/b Components (`jCustos-vaadin/components/` — ⚠️)
+
+| Klasse | Zweck |
+|---|---|
+| `SecuredVisibility` + `SecuredVisibilityMode` (HIDE / DISABLE) | Zentraler Decision-Point. `Requirement(requiredRoles, requiredPermissions)` (AND-composed), `Target`-Interface, `apply()` + `isAllowed()`. SPI-backed `currentJCustosView()` resolved via `AuthenticationService.subjectType()` + `SubjectStore` + `AuthorizationService`. Missing SPI → denial. |
 | `SecuredButton` (Default DISABLE) | Vaadin-Button-Subklasse. Checkt auf Konstruktor und onAttach; `refresh()` für manuelle Re-Checks. |
 | `SecuredRouterLink` (Default HIDE) | Vaadin-RouterLink-Subklasse. Router-explicit Konstruktor für headless tests. |
 | `SecuredMenuItem.bind(MenuItem, Requirement, …)` | Binding-Helper, da MenuItem vom Parent-MenuBar erzeugt wird (kein Subclass-Pattern möglich). |
@@ -418,15 +418,15 @@ und `LoggingAuditSink` decken alle 27 Varianten ab.
 | `HttpStatusDecisionMapper` | `AuthorizationDecision` → HTTP-Status |
 | `BootstrapRestStatusMapper` | Bootstrap-spezifisches Status-Mapping |
 | `RestHeaders` | Helper für Header-Lookup |
-| `RestJSentinelVersionContext` + `RestJSentinelVersionFilter` (Phase 4c, ⚠️) | Drift-Filter; `RestSubjectResolver.resolveJSentinelVersionContext` als opt-in Default-Methode. Bei Drift: `401 + WWW-Authenticate: SessionStale` (RFC 7235-Style) und Audit-Event. |
+| `RestJCustosVersionContext` + `RestJCustosVersionFilter` (Phase 4c, ⚠️) | Drift-Filter; `RestSubjectResolver.resolveJCustosVersionContext` als opt-in Default-Methode. Bei Drift: `401 + WWW-Authenticate: SessionStale` (RFC 7235-Style) und Audit-Event. |
 
-### Phase-8d OpenAPI-Metadaten (`jSentinel-rest/openapi/` — ⚠️)
+### Phase-8d OpenAPI-Metadaten (`jCustos-rest/openapi/` — ⚠️)
 
 | Klasse | Zweck |
 |---|---|
-| `OpenApiJSentinelMetadataGenerator.generate(Class<?>)` | Extrahiert die fünf framework-supplied `@Requires…`-Annotationen aus Handler-Klassen. Produziert eine JSON-freie `HandlerJSentinelMetadata`-Struktur, die Apps in ihren eigenen OpenAPI-Build mergen. Custom `@JSentinelAnnotation`-Annotationen werden bewusst nicht exportiert (App-spezifische Semantik). |
-| `JSentinelRequirement` (Record + sealed `Scheme(PERMISSION \| ROLE \| POLICY)` + `Operator(ALL \| ANY)`) | Ein einzelnes Security-Requirement |
-| `HandlerJSentinelMetadata` (Record) | Class-level + per-method `JSentinelRequirement`-Listen |
+| `OpenApiJCustosMetadataGenerator.generate(Class<?>)` | Extrahiert die fünf framework-supplied `@Requires…`-Annotationen aus Handler-Klassen. Produziert eine JSON-freie `HandlerJCustosMetadata`-Struktur, die Apps in ihren eigenen OpenAPI-Build mergen. Custom `@JCustosAnnotation`-Annotationen werden bewusst nicht exportiert (App-spezifische Semantik). |
+| `JCustosRequirement` (Record + sealed `Scheme(PERMISSION \| ROLE \| POLICY)` + `Operator(ALL \| ANY)`) | Ein einzelnes Security-Requirement |
+| `HandlerJCustosMetadata` (Record) | Class-level + per-method `JCustosRequirement`-Listen |
 
 ---
 
@@ -436,20 +436,20 @@ und `LoggingAuditSink` decken alle 27 Varianten ab.
 |---|---|
 | `ThreadLocalSubjectStore` | `SubjectStore`-Default — per-Thread-Bindings, **nicht** inherited |
 | `StandaloneLoginFlow<T, U>` | Login-Treiber: konsultiert `LoginAttemptPolicy` → `AuthenticationService` → bindet Subject → emittiert `LoginSucceeded`/`LoginFailed` |
-| `SecuredProxy.wrap(Interface, impl)` | JDK Dynamic Proxy — enforce per Methode oder Klasse via `JSentinelEnforcer.enforce(method, declaringClass)` |
+| `SecuredProxy.wrap(Interface, impl)` | JDK Dynamic Proxy — enforce per Methode oder Klasse via `JCustosEnforcer.enforce(method, declaringClass)` |
 | `SecuredProxy.requireAllowed(Class, methodName)` | Single-shot Enforcement für Lambdas/Callbacks |
 | `LoginResult<U>` (sealed) | `Success` / `Rejected` / `LockedOut` |
 
 ---
 
-## 10b. Method Security via Annotation Processor (`jSentinel-processor`)
+## 10b. Method Security via Annotation Processor (`jCustos-processor`)
 
 | Klasse / Datei | Zweck |
 |---|---|
-| `@Secured` (in jSentinel-core, `…/authorization/annotations`) | Compile-Time-Trigger — markiert eine **konkrete Klasse** für die Wrapper-Erzeugung. `RetentionPolicy.SOURCE`, Target `TYPE`. |
-| `SecuredAnnotationProcessor` | `BasicStaticProxyAnnotationProcessor<Secured>` aus `com.svenruppert:proxybuilder:00.11.00`. Generiert `<Type>Secured extends <Type>` und ersetzt jede annotierte Methode durch `JSentinelEnforcer.require…(…)` + `super.<method>(…)`. Marker am Wrapper: `@GeneratedByProxyBuilder(processor, sourceClass, proxyBuilderVersion="00.11.00", date, comments)` (RUNTIME-reflectable via `proxybuilder-annotations`) + `@DelegatesTo("Owner#method(params)")` pro generierter Methode. |
+| `@Secured` (in jCustos-core, `…/authorization/annotations`) | Compile-Time-Trigger — markiert eine **konkrete Klasse** für die Wrapper-Erzeugung. `RetentionPolicy.SOURCE`, Target `TYPE`. |
+| `SecuredAnnotationProcessor` | `BasicStaticProxyAnnotationProcessor<Secured>` aus `com.svenruppert:proxybuilder:00.11.00`. Generiert `<Type>Secured extends <Type>` und ersetzt jede annotierte Methode durch `JCustosEnforcer.require…(…)` + `super.<method>(…)`. Marker am Wrapper: `@GeneratedByProxyBuilder(processor, sourceClass, proxyBuilderVersion="00.11.00", date, comments)` (RUNTIME-reflectable via `proxybuilder-annotations`) + `@DelegatesTo("Owner#method(params)")` pro generierter Methode. |
 | `META-INF/services/javax.annotation.processing.Processor` | Registriert den Processor für `javac` / Maven-Compiler. |
-| `JSentinelEnforcer` (in jSentinel-core) | Zentrale Enforcement-API, geteilt mit `SecuredProxy`. Methoden: `requirePermission`, `requireAllPermissions`, `requireAnyPermission`, `requireRole`, `requireAnyRole`, `requirePolicy`; plus die Generic-`enforce(Method, Class)` für den Dynamic-Proxy-Pfad. Wirft `AccessDeniedException` on deny. |
+| `JCustosEnforcer` (in jCustos-core) | Zentrale Enforcement-API, geteilt mit `SecuredProxy`. Methoden: `requirePermission`, `requireAllPermissions`, `requireAnyPermission`, `requireRole`, `requireAnyRole`, `requirePolicy`; plus die Generic-`enforce(Method, Class)` für den Dynamic-Proxy-Pfad. Wirft `AccessDeniedException` on deny. |
 
 Konsumenten binden das Modul über `<annotationProcessorPaths>` in
 `maven-compiler-plugin` ein — nie als reguläre Compile-Dependency, da
@@ -463,18 +463,18 @@ Annotation-Mapping (Method-Level wins über Class-Level):
 
 | Annotation | Generierter Enforcer-Call |
 |---|---|
-| `@RequiresPermission("a")` | `JSentinelEnforcer.requirePermission("a")` |
-| `@RequiresPermission({"a","b"})` | `JSentinelEnforcer.requireAllPermissions("a","b")` |
-| `@RequiresAllPermissions({"a","b"})` | `JSentinelEnforcer.requireAllPermissions("a","b")` |
-| `@RequiresAnyPermission({"a","b"})` | `JSentinelEnforcer.requireAnyPermission("a","b")` |
-| `@RequiresRole("ADMIN")` | `JSentinelEnforcer.requireRole("ADMIN")` |
-| `@RequiresRole({"A","B"})` | `JSentinelEnforcer.requireAnyRole("A","B")` |
-| `@RequiresPolicy("p")` | `JSentinelEnforcer.requirePolicy("p")` |
+| `@RequiresPermission("a")` | `JCustosEnforcer.requirePermission("a")` |
+| `@RequiresPermission({"a","b"})` | `JCustosEnforcer.requireAllPermissions("a","b")` |
+| `@RequiresAllPermissions({"a","b"})` | `JCustosEnforcer.requireAllPermissions("a","b")` |
+| `@RequiresAnyPermission({"a","b"})` | `JCustosEnforcer.requireAnyPermission("a","b")` |
+| `@RequiresRole("ADMIN")` | `JCustosEnforcer.requireRole("ADMIN")` |
+| `@RequiresRole({"A","B"})` | `JCustosEnforcer.requireAnyRole("A","B")` |
+| `@RequiresPolicy("p")` | `JCustosEnforcer.requirePolicy("p")` |
 
 Diagnostics für `@Secured` auf `final` Klassen oder Method-Security-
 Annotationen auf `final`/`private`/`static`-Methoden werden vom
 proxybuilder-Base-Processor als `Diagnostic.Kind.ERROR` emittiert —
-kein Code in `jSentinel-processor` selbst nötig.
+kein Code in `jCustos-processor` selbst nötig.
 
 ---
 
@@ -571,7 +571,7 @@ Bücher (`LibraryService`) werden via `SecuredProxy.wrap(...)` gesichert
 (JDK Dynamic Proxy auf das Interface). Members (`MemberDirectory`)
 werden via `new MemberDirectorySecured()` instanziiert — die Klasse
 wird zur Compile-Zeit vom `SecuredAnnotationProcessor` generiert.
-Beide Pfade landen im selben `JSentinelEnforcer`.
+Beide Pfade landen im selben `JCustosEnforcer`.
 
 ---
 
@@ -579,9 +579,9 @@ Beide Pfade landen im selben `JSentinelEnforcer`.
 
 | Toolchain | Modul | Zweck |
 |---|---|---|
-| `jSentinel-test` (eigenes Modul) | core / vaadin / rest / standalone / demo-vaadin / demo-standalone | Wiederverwendbare Fakes (`FakeAuthenticationService`, `FakeAuthorizationService`), `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5-`JSentinelTestExtension`, `AccessContexts` / `JSentinelSubjects` / `SyntheticAnnotations`-Helper. Konsumiert per `<scope>test</scope>`. |
+| `jCustos-test` (eigenes Modul) | core / vaadin / rest / standalone / demo-vaadin / demo-standalone | Wiederverwendbare Fakes (`FakeAuthenticationService`, `FakeAuthorizationService`), `InMemorySubjectStore`, `RecordingAuditSink`, JUnit-5-`JCustosTestExtension`, `AccessContexts` / `JCustosSubjects` / `SyntheticAnnotations`-Helper. Konsumiert per `<scope>test</scope>`. |
 | Vaadin Browserless Testing 1.0.0 (`com.vaadin:browserless-test-junit6`) | vaadin / demo-vaadin | UI-Adapter-Tests ohne Browser; `BrowserlessTest`-Basisklasse, `navigate(Class)`, `$view(Class)`, typed Tester (`ButtonTester`, `GridTester`, `ComboBoxTester`, `NotificationTester`, `ConfirmDialogTester`) |
-| `com.google.testing.compile:compile-testing` 0.21.0 | jSentinel-processor | Annotation-Processor-Tests: `Compiler.javac().withProcessors(...).compile(...)`, `assertThat(compilation).succeeded()`, `generatedSourceFile(...).contentsAsUtf8String().contains(...)`. |
+| `com.google.testing.compile:compile-testing` 0.21.0 | jCustos-processor | Annotation-Processor-Tests: `Compiler.javac().withProcessors(...).compile(...)`, `assertThat(compilation).succeeded()`, `generatedSourceFile(...).contentsAsUtf8String().contains(...)`. |
 | JUnit Jupiter 6.1.0-M1 | alle | Test-Framework |
 | PIT 1.x | alle | Mutation Testing |
 
@@ -589,7 +589,7 @@ Beide Pfade landen im selben `JSentinelEnforcer`.
 
 PIT-Re-Runs für die V00.70-Stacks. Die Library-Module liegen alle
 bei ≥ 79 %, drei davon ≥ 95 %. Die nicht voll erreichte
-jSentinel-vaadin-Marke kommt überwiegend von `VoidMethodCallMutator`-
+jCustos-vaadin-Marke kommt überwiegend von `VoidMethodCallMutator`-
 Mutationen auf Vaadin-Component-Settern in den Phase-8-UI-Klassen
 (`SessionManagementView`, `SecuredButton`-Konstruktor-Setup etc.) —
 das Entfernen eines `setSizeFull()` / `addClassName(…)` / `add(…)`-
@@ -598,14 +598,14 @@ Das Mutations-Surface ohne UI-Konstruktion liegt deutlich höher.
 
 | Modul | Coverage | Kommentar |
 |---|---:|---|
-| jSentinel-core | **86 %** (1191/1381) | Up from 79 % historisch / 82 % erste V00.70-Messung. `LoggingAuditSinkAllVariantsTest`, `CompositeAuditServiceTest`, `DefaultCompositeAuditServiceTest` ergänzt — Audit-Paket von 39 % auf solid. |
-| jSentinel-vaadin | **79 %** (242/305) | UI-Konstruktion-Mutationen (`VoidMethodCallMutator` auf Vaadin-Settern in `SessionManagementView` etc.) dominieren die Lücke; Phase-4c `session.vaadin`-Paket bei 91 %, `authorization.impl` bei 91 %. |
-| jSentinel-rest | **95 %** (86/91) | Unverändert hoch. Phase-4c-Filter + Phase-8d-OpenAPI-Generator vollständig gecovert. |
-| jSentinel-standalone | **97 %** (33/34) | Unverändert. |
-| jSentinel-test | (kein PIT-Run; Tests prüfen ihre Fakes direkt) | |
-| jSentinel-processor | (PIT-Run noch offen — Phase 5c-Followup) | |
-| jSentinel-persistence-testkit | (kein PIT-Run; Contracts werden über Consumer verifiziert) | |
-| jSentinel-persistence-eclipsestore | (PIT-Re-Run nach Phase 4a noch offen) | |
+| jCustos-core | **86 %** (1191/1381) | Up from 79 % historisch / 82 % erste V00.70-Messung. `LoggingAuditSinkAllVariantsTest`, `CompositeAuditServiceTest`, `DefaultCompositeAuditServiceTest` ergänzt — Audit-Paket von 39 % auf solid. |
+| jCustos-vaadin | **79 %** (242/305) | UI-Konstruktion-Mutationen (`VoidMethodCallMutator` auf Vaadin-Settern in `SessionManagementView` etc.) dominieren die Lücke; Phase-4c `session.vaadin`-Paket bei 91 %, `authorization.impl` bei 91 %. |
+| jCustos-rest | **95 %** (86/91) | Unverändert hoch. Phase-4c-Filter + Phase-8d-OpenAPI-Generator vollständig gecovert. |
+| jCustos-standalone | **97 %** (33/34) | Unverändert. |
+| jCustos-test | (kein PIT-Run; Tests prüfen ihre Fakes direkt) | |
+| jCustos-processor | (PIT-Run noch offen — Phase 5c-Followup) | |
+| jCustos-persistence-testkit | (kein PIT-Run; Contracts werden über Consumer verifiziert) | |
+| jCustos-persistence-eclipsestore | (PIT-Re-Run nach Phase 4a noch offen) | |
 | demo-vaadin | 70 % | (alte Messung, vor V00.70-Demo-Glue) |
 | demo-rest | 49 % | |
 | demo-vaadin-rest-client | 10 % | |
@@ -621,11 +621,11 @@ finden (sämtliche Mutationen "no coverage"). Bei V00.70 auf
 
 | Modul | Tests |
 |---|---:|
-| jSentinel-core | 921 |
-| jSentinel-vaadin | 172 |
-| jSentinel-rest | 71 |
-| jSentinel-standalone | 30 |
-| jSentinel-persistence-eclipsestore | 104 |
+| jCustos-core | 921 |
+| jCustos-vaadin | 172 |
+| jCustos-rest | 71 |
+| jCustos-standalone | 30 |
+| jCustos-persistence-eclipsestore | 104 |
 
 Alle Module grün.
 
@@ -635,13 +635,13 @@ Alle Module grün.
 
 | Static | Modul | Zweck |
 |---|---|---|
-| `JSentinelServiceResolver.<service>()` / `.find<Service>()` / `.set<Service>(...)` / `.resetAll()` | core | Zentrale SPI-Lookup-Fassade |
+| `JCustosServiceResolver.<service>()` / `.find<Service>()` / `.set<Service>(...)` / `.resetAll()` | core | Zentrale SPI-Lookup-Fassade |
 | `SubjectStores.subjectStore()` / `.findSubjectStore()` / `.setSubjectStore(...)` / `.reset()` | core | SubjectStore-Resolver |
 | `LoginListeners.loginListener()` / `.findLoginListener()` / `.setLoginListener(...)` / `.reset()` | vaadin | LoginListener-Resolver |
 | `RolePermissionResolver.permissionsForRoles(roles, mapping)` | core | Merge-Helper |
 | `RoleMatcher.containsAny(...)` / `.containsAll(...)` | core | Rollen-Matching |
 | `PermissionMatcher.matches(...)` / `.containsAll(...)` | core | Permission-Matching (mit Wildcard `resource:*`) |
-| `JSentinelAnnotationScanner.scan(Class/Method/AnnotatedElement)` | core | Annotation-Resolution mit Cache |
+| `JCustosAnnotationScanner.scan(Class/Method/AnnotatedElement)` | core | Annotation-Resolution mit Cache |
 | `Secured.wrap(Class, impl)` / `Secured.requireAllowed(Class, methodName)` | standalone | Dynamic-Proxy-Enforcement |
 
 ---
@@ -657,7 +657,7 @@ Alle Module grün.
 - ❌ **Policy-Composing-DSL** — Annotationen und Code sind die
   Konfigurations-Schicht.
 - ❌ **`security-javafx`** — geplant, wartet auf realen JavaFX-Bedarf.
-  `jSentinel-standalone` deckt funktional Swing / JavaFX / CLI ab.
+  `jCustos-standalone` deckt funktional Swing / JavaFX / CLI ab.
 
 ---
 
@@ -668,7 +668,7 @@ Alle Module grün.
 - **Jetty 12.1.8 EE11** als Dev-Server für die Vaadin-Demos
 - **Maven 4** (pinned via `./mvnw`; Minimum `4.0.0-rc-5`)
 - **Eclipse Store 4.1.0** (`org.eclipse.store:storage-embedded`) für
-  die durable Persistence-Referenz in `jSentinel-persistence-eclipsestore`
+  die durable Persistence-Referenz in `jCustos-persistence-eclipsestore`
 - **proxybuilder 00.11.00** (`com.svenruppert:proxybuilder` +
   `proxybuilder-annotations`) für den Compile-Time-Processor
 - **Lizenz:** EUPL v1.2
@@ -682,27 +682,27 @@ Alle Module grün.
 > V00.71–V00.79.41 sind in den jeweiligen `RELEASE-NOTES-*.md` inventarisiert.
 > V00.80.00 liefert Konzept-Ziel 9 (Betrieb & Monitoring), Ziel 8
 > (Event-Integrationen) und Ziel 7 (Tamper-Evident Audit) — sieben neue
-> Module plus Erweiterungen in `jSentinel-events`/`jSentinel-events-rest`.
+> Module plus Erweiterungen in `jCustos-events`/`jCustos-events-rest`.
 
 ### Neue Module (Reaktor: 61)
 
 | Modul | Zweck |
 |---|---|
-| `jSentinel-monitoring` | ⚠️ Ziel 9: `JSentinelMetricsPublisher`-SPI (Counter/Gauges, never-throw) + `JSentinelMetricNames`-Katalog (9 Konzept-Namen `security.eventbus.*` verbatim + auth/session/audit-Namen) + `MetricsEventBusListener`-Bridge (rejected.total als Umbrella + Drilldowns) + `JSentinelHealthIndicator`/`JSentinelHealthCheck` (dx-`HealthFinding`-Modell) + `MonitoringDiagnosticContributor` |
-| `jSentinel-events-webhook` | ⚠️ Ziel 8: `WebhookEventPublisher` — signierte Envelopes per JDK-HttpClient (bounded Queue + Virtual-Thread-Worker, Retry/Backoff+Jitter, Dead-Drop-Counter, Bearer via Supplier nie geloggt, https-Pflicht außer Loopback, bewusst KEIN zweiter HMAC-Layer) |
-| `jSentinel-events-opentelemetry` | ⚠️ Ziel 8: `OpenTelemetryEventPublisher` — Envelope → OTel-LogRecord via Logs-Bridge-API (api-only, noop-safe); `jsentinel.*`-Attribut-Vokabular ohne Payload/Signatur |
-| `jSentinel-events-siem` | ⚠️ Ziel 8: `SiemEventExporter` (Appendable-basiert — Framework liefert nur Formatting) + `CefEnvelopeFormatter` (CEF:0) / `LeefEnvelopeFormatter` (LEEF 2.0) / `JsonLinesEnvelopeFormatter` (NDJSON, Full-Mode als Opt-in) |
-| `jSentinel-audit-integrity` | ⚠️ Ziel 7: `AuditChainStore`-SPI (append-only, Linkage-CAS) + `AuditChainEntryHasher` (`jsentinel-audit-chain/v1`, H(prev‖entry)) + `AuditChainAppender` + `InMemoryAuditChainStore` + `AuditIntegrityVerifier` (sealed Result, 5 Break-Reasons, fail-closed) + `SignedAuditBatch`/`AuditBatchSigner`/`AuditBatchVerifier` (events-Key-SPIs, kein zweiter Signing-Stack) + `AuditExportService`/`AuditExportNdjsonCodec` (verifizierbare NDJSON-Exporte) + `AuditIntegrityListener`/`AuditRelevancePolicy`/`HashChainingAuditSink` |
-| `jSentinel-audit-integrity-testkit` | ⚠️ `AuditChainStoreContract` (`@Test default`-Suite) + `TestkitChainEntries` (korrekt gehashte Ketten-Fixtures inkl. `tampered(...)`) |
-| `jSentinel-audit-integrity-persistence-eclipsestore` | ⚠️ `EclipseStoreAuditChainStorage.openAt(Path)` — restart-sichere Kette (StorageTreeHardening, RW-Lock); Kette verifiziert über Prozess-Grenzen hinweg |
+| `jCustos-monitoring` | ⚠️ Ziel 9: `JCustosMetricsPublisher`-SPI (Counter/Gauges, never-throw) + `JCustosMetricNames`-Katalog (9 Konzept-Namen `security.eventbus.*` verbatim + auth/session/audit-Namen) + `MetricsEventBusListener`-Bridge (rejected.total als Umbrella + Drilldowns) + `JCustosHealthIndicator`/`JCustosHealthCheck` (dx-`HealthFinding`-Modell) + `MonitoringDiagnosticContributor` |
+| `jCustos-events-webhook` | ⚠️ Ziel 8: `WebhookEventPublisher` — signierte Envelopes per JDK-HttpClient (bounded Queue + Virtual-Thread-Worker, Retry/Backoff+Jitter, Dead-Drop-Counter, Bearer via Supplier nie geloggt, https-Pflicht außer Loopback, bewusst KEIN zweiter HMAC-Layer) |
+| `jCustos-events-opentelemetry` | ⚠️ Ziel 8: `OpenTelemetryEventPublisher` — Envelope → OTel-LogRecord via Logs-Bridge-API (api-only, noop-safe); `jcustos.*`-Attribut-Vokabular ohne Payload/Signatur |
+| `jCustos-events-siem` | ⚠️ Ziel 8: `SiemEventExporter` (Appendable-basiert — Framework liefert nur Formatting) + `CefEnvelopeFormatter` (CEF:0) / `LeefEnvelopeFormatter` (LEEF 2.0) / `JsonLinesEnvelopeFormatter` (NDJSON, Full-Mode als Opt-in) |
+| `jCustos-audit-integrity` | ⚠️ Ziel 7: `AuditChainStore`-SPI (append-only, Linkage-CAS) + `AuditChainEntryHasher` (`jsentinel-audit-chain/v1`, H(prev‖entry)) + `AuditChainAppender` + `InMemoryAuditChainStore` + `AuditIntegrityVerifier` (sealed Result, 5 Break-Reasons, fail-closed) + `SignedAuditBatch`/`AuditBatchSigner`/`AuditBatchVerifier` (events-Key-SPIs, kein zweiter Signing-Stack) + `AuditExportService`/`AuditExportNdjsonCodec` (verifizierbare NDJSON-Exporte) + `AuditIntegrityListener`/`AuditRelevancePolicy`/`HashChainingAuditSink` |
+| `jCustos-audit-integrity-testkit` | ⚠️ `AuditChainStoreContract` (`@Test default`-Suite) + `TestkitChainEntries` (korrekt gehashte Ketten-Fixtures inkl. `tampered(...)`) |
+| `jCustos-audit-integrity-persistence-eclipsestore` | ⚠️ `EclipseStoreAuditChainStorage.openAt(Path)` — restart-sichere Kette (StorageTreeHardening, RW-Lock); Kette verifiziert über Prozess-Grenzen hinweg |
 
-### Erweiterungen in `jSentinel-events` / `jSentinel-events-rest`
+### Erweiterungen in `jCustos-events` / `jCustos-events-rest`
 
-- ⚠️ **Envelope-Tap**: `SignedEnvelopePublisher`-SPI + `JSentinelEventBus.subscribeEnvelope(...)` — EIN Kontrakt für alle Exporter; Fan-out nach Store-Append, Fehler-isoliert (`envelopePublisherFailureCount()`).
-- ⚠️ **In-Tree-Publisher**: `LoggingEventPublisher` (named Stream `com.svenruppert.jsentinel.events`), `EventStreamPublisher` (`java.util.concurrent.Flow`), `JSentinelAlert`/`JSentinelAlertSink`/`LoggingAlertSink`/`JSentinelAlertPublisher` (Schwelle default ERROR — kritische Verifikationsfehler erzeugen Alerts).
+- ⚠️ **Envelope-Tap**: `SignedEnvelopePublisher`-SPI + `JCustosEventBus.subscribeEnvelope(...)` — EIN Kontrakt für alle Exporter; Fan-out nach Store-Append, Fehler-isoliert (`envelopePublisherFailureCount()`).
+- ⚠️ **In-Tree-Publisher**: `LoggingEventPublisher` (named Stream `eu.jsentinel.jcustos.events`), `EventStreamPublisher` (`java.util.concurrent.Flow`), `JCustosAlert`/`JCustosAlertSink`/`LoggingAlertSink`/`JCustosAlertPublisher` (Schwelle default ERROR — kritische Verifikationsfehler erzeugen Alerts).
 - ⚠️ **Self-Observability**: Marker `EventBusSelfObservabilityEvent` (die 6 INTEGRITY-Records), `EventBusObservabilityPublisher` (direct-dispatch, nie durch die signierte Pipeline → strukturell rekursionsfrei), `SelfObservabilityEvents.fromVerification(...)` (genau EIN Event pro Fehler; Replay → CRITICAL), `DeadLetterRecorder`.
 - ⚠️ **Strict-Mode-Consume-Wiring**: `ConsumeFailureAction`/`ConsumeFailurePolicy` (`strict()` fail-closed / `operationalDefaults()` / Builder) + `ConsumeFailureHandler` (Event + Metrik-Seam + optional Dead-Letter + Operator-Log mit stabilen `events/...`-Codes; Fehlkonfiguration scheitert beim Wiring); `EventPublishService` mit optionalem Handler-Parameter, HTTP-Mapping unverändert.
-- ⚠️ **Wire-Codec-Umzug**: `EnvelopeWireCodec`/`EventWireException` jetzt in `com.svenruppert.jsentinel.events.wire` (+ `encodeMetadata(...)`-Projektion ohne Payload/Signatur); events-rest behält einen `@Deprecated(forRemoval)`-Delegator für ein Release. `CanonicalJson` ist public (Export-Codec-Reuse).
+- ⚠️ **Wire-Codec-Umzug**: `EnvelopeWireCodec`/`EventWireException` jetzt in `eu.jsentinel.jcustos.events.wire` (+ `encodeMetadata(...)`-Projektion ohne Payload/Signatur); events-rest behält einen `@Deprecated(forRemoval)`-Delegator für ein Release. `CanonicalJson` ist public (Export-Codec-Reuse).
 
 ### Guides
 

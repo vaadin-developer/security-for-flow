@@ -1,0 +1,34 @@
+<!-- jcustos-vaadin-oidc: OIDC federated-login dependencies.
+     Merge into <dependencies>; idempotent (skip any already present).
+     Reuses the existing <jcustos.version> property from the jcustos-vaadin run. -->
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-jwt</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-oauth2</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-oauth2-vaadin</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-identity-oidc</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-identity-oidc-vaadin</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<!-- one vendor module — {{VENDOR}} ∈ keycloak | entra | auth0 | okta | google | github -->
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-identity-vendor-{{VENDOR}}</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>

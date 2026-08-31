@@ -1,0 +1,31 @@
+package {{BASE_PACKAGE}}.security.services;
+
+import eu.jsentinel.jcustos.authorization.api.SubjectIdResolver;
+import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
+import eu.jsentinel.jcustos.logout.SubjectId;
+import {{BASE_PACKAGE}}.security.model.{{SUBJECT_TYPE}};
+
+/**
+ * Maps the application's typed {@link {{SUBJECT_TYPE}}} to the framework's
+ * {@link SubjectId} key. Required for Phase-4c drift detection: the
+ * {@code LoginView} needs to derive a stable {@code SubjectId} from
+ * the just-authenticated subject to capture a
+ * {@code JCustosVersion} snapshot, and the
+ * {@code VersionBumper} needs the same mapping to increment that
+ * key on role changes.
+ *
+ * <p>SPI-registered via
+ * {@code META-INF/services/eu.jsentinel.jcustos.authorization.api.SubjectIdResolver}.
+ */
+public final class SubjectIdResolverImpl implements SubjectIdResolver<{{SUBJECT_TYPE}}> {
+
+  @Override
+  public SubjectId resolve({{SUBJECT_TYPE}} subject) {
+    return SubjectId.of(String.valueOf(subject.id()));
+  }
+
+  @Override
+  public TenantId tenantFor({{SUBJECT_TYPE}} subject) {
+    return TenantId.DEFAULT;
+  }
+}

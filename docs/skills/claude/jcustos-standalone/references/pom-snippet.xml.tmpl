@@ -1,0 +1,46 @@
+<!--
+  jCustos — Standalone / CLI integration.
+-->
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-core</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-autoservice-annotations</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-standalone</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-dx</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-dx-standalone</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+
+<plugin>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <annotationProcessorPaths>
+            <path>
+                <groupId>eu.jsentinel</groupId>
+                <artifactId>jCustos-autoservice-processor</artifactId>
+                <version>${jcustos.version}</version>
+            </path>
+            <path>
+                <groupId>eu.jsentinel</groupId>
+                <artifactId>jCustos-autoservice-annotations</artifactId>
+                <version>${jcustos.version}</version>
+            </path>
+        </annotationProcessorPaths>
+    </configuration>
+</plugin>

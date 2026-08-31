@@ -9,53 +9,53 @@ thread-local `SubjectStore`).
 
 ```xml
 <dependency>
-  <groupId>com.svenruppert.jsentinel</groupId>
-  <artifactId>jSentinel-standalone</artifactId>
-  <version>${jsentinel.version}</version>
+  <groupId>eu.jsentinel</groupId>
+  <artifactId>jCustos-standalone</artifactId>
+  <version>${jcustos.version}</version>
 </dependency>
 <dependency>
-  <groupId>com.svenruppert.jsentinel</groupId>
-  <artifactId>jSentinel-dx-standalone</artifactId>
-  <version>${jsentinel.version}</version>
+  <groupId>eu.jsentinel</groupId>
+  <artifactId>jCustos-dx-standalone</artifactId>
+  <version>${jcustos.version}</version>
 </dependency>
 <dependency>
-  <groupId>com.svenruppert.jsentinel</groupId>
-  <artifactId>jSentinel-autoservice-annotations</artifactId>
-  <version>${jsentinel.version}</version>
+  <groupId>eu.jsentinel</groupId>
+  <artifactId>jCustos-autoservice-annotations</artifactId>
+  <version>${jcustos.version}</version>
 </dependency>
 ```
 
 ```xml
 <annotationProcessorPaths>
   <path>
-    <groupId>com.svenruppert.jsentinel</groupId>
-    <artifactId>jSentinel-autoservice-processor</artifactId>
-    <version>${jsentinel.version}</version>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-autoservice-processor</artifactId>
+    <version>${jcustos.version}</version>
   </path>
   <path>
-    <groupId>com.svenruppert.jsentinel</groupId>
-    <artifactId>jSentinel-autoservice-annotations</artifactId>
-    <version>${jsentinel.version}</version>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-autoservice-annotations</artifactId>
+    <version>${jcustos.version}</version>
   </path>
 </annotationProcessorPaths>
 ```
 
 ```java
-@JSentinelAutoService(AuthenticationService.class)
+@JCustosAutoService(AuthenticationService.class)
 public final class DemoAuthenticationService
     implements AuthenticationService<Credentials, User> { /* ... */ }
 
-@JSentinelAutoService(AuthorizationService.class)
+@JCustosAutoService(AuthorizationService.class)
 public final class DemoAuthorizationService
     implements AuthorizationService<User> { /* ... */ }
 ```
 
 ```java
-import com.svenruppert.jsentinel.dx.standalone.bootstrap.StandaloneSecurity;
-import com.svenruppert.jsentinel.dx.runtime.JSentinelBootstrapMode;
+import eu.jsentinel.jcustos.dx.standalone.bootstrap.StandaloneSecurity;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapMode;
 
 var runtime = StandaloneSecurity.bootstrap()
-    .mode(JSentinelBootstrapMode.DEVELOPMENT)
+    .mode(JCustosBootstrapMode.DEVELOPMENT)
     .audit(a -> a.logging().ringBuffer(128))
     .install();
 System.out.println(runtime.log());
@@ -67,14 +67,14 @@ one with `.subjectStore(...)` if you have background workers.
 ## Method-level security and the wrapper index
 
 Method-level security on a concrete class without an interface uses the
-compile-time `<Type>Secured` wrapper (`@Secured` + `jSentinel-processor`).
-V00.73 completes the wrapper-index pipeline: `jSentinel-processor` now
-writes `META-INF/jsentinel/generated-wrappers.idx` after each
+compile-time `<Type>Secured` wrapper (`@Secured` + `jCustos-processor`).
+V00.73 completes the wrapper-index pipeline: `jCustos-processor` now
+writes `META-INF/jcustos/generated-wrappers.idx` after each
 compile (the V00.72 reader path was already in place). One line per
 generated wrapper, format
 `sourceFqn:generatedFqn:processor:proxyBuilderVer:method1,method2,...`.
 
-`JSentinelDiagnostics.inspect()` reports every generated wrapper visible
+`JCustosDiagnostics.inspect()` reports every generated wrapper visible
 through that file. Running `./mvnw -pl :demo-standalone -am compile`
 produces an entry for `MemberDirectorySecured`.
 
@@ -106,17 +106,17 @@ if (health.hasErrors()) {
 `HEALTHY` — `INFO` findings intentionally do not degrade. The
 `toJson()` encoder is internal — no Jackson, Gson or `org.json`
 dependency lands on the standalone classpath. All four methods are
-marked `@ExperimentalJSentinelApi` until V00.76.
+marked `@ExperimentalJCustosApi` until V00.76.
 
 ## Persistence pair (V00.74.20)
 
 When the CLI / desktop app needs Eclipse-Store persistence (audit log
-+ sessions + application data), open a `JSentinelStoragePair` once
++ sessions + application data), open a `JCustosStoragePair` once
 and feed its framework half into the bootstrap:
 
 ```java
-JSentinelStoragePair pair = JSentinelStorageFactory.openAt(Path.of("data"));
-Runtime.getRuntime().addShutdownHook(new Thread(pair::close, "jsentinel-pair-close"));
+JCustosStoragePair pair = JCustosStorageFactory.openAt(Path.of("data"));
+Runtime.getRuntime().addShutdownHook(new Thread(pair::close, "jcustos-pair-close"));
 
 StandaloneSecurity.bootstrap()
     .audit(a    -> a.storeBacked(pair.framework().auditEventStore()))

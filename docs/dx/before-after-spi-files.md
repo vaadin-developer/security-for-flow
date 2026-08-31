@@ -1,25 +1,25 @@
-# Before / After — manual `META-INF/services` vs `@JSentinelAutoService`
+# Before / After — manual `META-INF/services` vs `@JCustosAutoService`
 
 A concrete diff from `demo-standalone` introduced in V00.72/014.
-The `@JSentinelAutoService` annotation, the processor and the
+The `@JCustosAutoService` annotation, the processor and the
 `META-INF/services/...` emission are unchanged in V00.73.
 
 ## Before
 
 ```text
 demo-standalone/src/main/resources/META-INF/services/
-  ├── com.svenruppert.jsentinel.authentication.AuthenticationService
-  └── com.svenruppert.jsentinel.authorization.api.AuthorizationService
+  ├── eu.jsentinel.jcustos.authentication.AuthenticationService
+  └── eu.jsentinel.jcustos.authorization.api.AuthorizationService
 ```
 
 ```text
-# com.svenruppert.jsentinel.authentication.AuthenticationService
-com.svenruppert.jsentinel.demo.standalone.DemoAuthenticationService
+# eu.jsentinel.jcustos.authentication.AuthenticationService
+eu.jsentinel.jcustos.demo.standalone.DemoAuthenticationService
 ```
 
 ```text
-# com.svenruppert.jsentinel.authorization.api.AuthorizationService
-com.svenruppert.jsentinel.demo.standalone.DemoAuthorizationService
+# eu.jsentinel.jcustos.authorization.api.AuthorizationService
+eu.jsentinel.jcustos.demo.standalone.DemoAuthorizationService
 ```
 
 ## After
@@ -27,11 +27,11 @@ com.svenruppert.jsentinel.demo.standalone.DemoAuthorizationService
 The two files above are deleted. The two classes carry an annotation:
 
 ```java
-@JSentinelAutoService(AuthenticationService.class)
+@JCustosAutoService(AuthenticationService.class)
 public final class DemoAuthenticationService
     implements AuthenticationService<Credentials, User> { /* ... */ }
 
-@JSentinelAutoService(AuthorizationService.class)
+@JCustosAutoService(AuthorizationService.class)
 public final class DemoAuthorizationService
     implements AuthorizationService<User> { /* ... */ }
 ```

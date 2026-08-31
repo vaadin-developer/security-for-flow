@@ -1,0 +1,131 @@
+package {{BASE_PACKAGE}}.security.oidc;
+
+import eu.jsentinel.jcustos.credential.secret.SecretValue;
+import eu.jsentinel.jcustos.identity.oidc.DefaultClaimsToSubjectMapper;
+import eu.jsentinel.jcustos.identity.oidc.DefaultIdTokenValidator;
+import eu.jsentinel.jcustos.identity.oidc.EmptyPermissionsMapper;
+import eu.jsentinel.jcustos.identity.oidc.EmptyRolesMapper;
+import eu.jsentinel.jcustos.identity.oidc.HttpOidcDiscoveryClient;
+import eu.jsentinel.jcustos.jwt.api.AlgorithmProfile;
+import eu.jsentinel.jcustos.jwt.api.ClaimExpectations;
+import eu.jsentinel.jcustos.jwt.api.ClockSkewPolicy;
+import eu.jsentinel.jcustos.jwt.impl.HttpJwksClient;
+import eu.jsentinel.jcustos.jwt.impl.NimbusJwtValidator;
+import eu.jsentinel.jcustos.oauth2.HttpAuthorizationCodeFlow;
+import eu.jsentinel.jcustos.oauth2.HttpTokenEndpointClient;
+import eu.jsentinel.jcustos.oauth2.api.AuthorizationCodeFlow;
+import eu.jsentinel.jcustos.oauth2.api.ClientAuthentication;
+import eu.jsentinel.jcustos.oauth2.api.OAuth2ClientConfig;
+import eu.jsentinel.jcustos.oauth2.vaadin.VaadinSessionStateStore;
+import eu.jsentinel.jcustos.oidc.api.ClaimsToSubjectMapper;
+import eu.jsentinel.jcustos.oidc.api.IdTokenValidator;
+import eu.jsentinel.jcustos.oidc.api.OidcProviderMetadata;
+import eu.jsentinel.jcustos.oidc.api.VendorProfile;
+
+import {{VENDOR_PROFILE_PKG}}.{{VENDOR_PROFILE}};
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Optional;
+import java.util.Set;
+
+/**
+ * Central OIDC wiring for the relying party. The declarative slots ({@link #ISSUER},
+ * {@link #CLIENT_ID}, ...) are also recorded into the fluent bootstrap by
+ * {@code OidcBootstrapExtension}; the runtime clients here (discovery, authorization-code
+ * flow, ID-token validator, claims mapper) are built once, lazily, from the issuer's
+ * {@code .well-known/openid-configuration}.
+ *
+ * <p>UserInfo is opt-in and off by default — if the IdP needs UserInfo for roles, add an
+ * {@code HttpUserInfoClient(metadata.userinfoEndpoint().get(), HTTP)} and pass its result
+ * to {@code claimsMapper().map(idToken, userInfo)} in the callback.
+ */
+public final class OidcClients {
+
+  public static final String ISSUER = "{{ISSUER}}";
+  public static final String CLIENT_ID = "{{CLIENT_ID}}";
+  public static final String REDIRECT_URI = "{{REDIRECT_URI}}";
+  public static final String POST_LOGOUT_URI = "{{POST_LOGOUT_URI}}";
+
+  private static final HttpClient HTTP = HttpClient.newHttpClient();
+  private static volatile OidcClients instance;
+
+  private final OidcProviderMetadata metadata;
+  private final AuthorizationCodeFlow flow;
+  private final IdTokenValidator idTokenValidator;
+  private final ClaimsToSubjectMapper claimsMapper;
+
+  private OidcClients() {
+    this.metadata = new HttpOidcDiscoveryClient(HTTP).discover(URI.create(ISSUER)).getOrThrow();
+
+    HttpTokenEndpointClient tokenClient =
+        new HttpTokenEndpointClient(metadata.tokenEndpoint(), clientAuth(), HTTP);
+    OAuth2ClientConfig config = new OAuth2ClientConfig(
+        clientAuth(),
+        Optional.of(metadata.authorizationEndpoint()),
+        metadata.tokenEndpoint(),
+        Optional.empty(),               // revocation
+        Optional.empty(),               // introspection
+        Optional.empty(),               // device-authorization
+        Optional.of(URI.create(REDIRECT_URI)),
+        Set.of({{SCOPES}}),
+        true,                           // PKCE (always for an RP)
+        false,                          // refresh-token rotation
+        Duration.ofMinutes(5));         // state TTL
+    this.flow = new HttpAuthorizationCodeFlow(config, tokenClient, new VaadinSessionStateStore());
+
+    NimbusJwtValidator jwt = new NimbusJwtValidator(
+        AlgorithmProfile.STRICT_MODERN.toAllowList(),
+        new HttpJwksClient(metadata.jwksUri()),
+        new ClaimExpectations(Optional.of(ISSUER), Set.of(CLIENT_ID),
+            true, false, true, false, ClockSkewPolicy.DEFAULT, Optional.empty()),
+        Instant::now);
+    this.idTokenValidator = new DefaultIdTokenValidator(jwt);
+
+    VendorProfile vp = {{VENDOR_PROFILE}}.INSTANCE;
+    this.claimsMapper = vp.subjectMapper().orElseGet(() -> new DefaultClaimsToSubjectMapper(
+        vp.rolesMapper().orElse(EmptyRolesMapper.INSTANCE),
+        vp.permissionsMapper().orElse(EmptyPermissionsMapper.INSTANCE)));
+  }
+
+  public static OidcClients get() {
+    OidcClients local = instance;
+    if (local == null) {
+      synchronized (OidcClients.class) {
+        local = instance;
+        if (local == null) {
+          local = new OidcClients();
+          instance = local;
+        }
+      }
+    }
+    return local;
+  }
+
+  /**
+   * Confidential client. For a PUBLIC client (SPA / no secret) return
+   * {@code new ClientAuthentication.NoneAuthentication(CLIENT_ID)} instead and rely on
+   * PKCE — never embed a secret in a public client.
+   */
+  public static ClientAuthentication clientAuth() {
+    return new ClientAuthentication.ClientSecretBasic(CLIENT_ID, SecretValue.ofString("{{CLIENT_SECRET}}"));
+  }
+
+  public OidcProviderMetadata metadata() {
+    return metadata;
+  }
+
+  public AuthorizationCodeFlow flow() {
+    return flow;
+  }
+
+  public IdTokenValidator idTokenValidator() {
+    return idTokenValidator;
+  }
+
+  public ClaimsToSubjectMapper claimsMapper() {
+    return claimsMapper;
+  }
+}

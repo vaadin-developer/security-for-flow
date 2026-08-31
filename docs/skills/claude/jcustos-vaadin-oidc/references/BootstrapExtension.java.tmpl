@@ -1,0 +1,42 @@
+package {{BASE_PACKAGE}}.security.bootstrap;
+
+import eu.jsentinel.jcustos.dx.bootstrap.AuditBootstrap;
+import eu.jsentinel.jcustos.dx.bootstrap.CredentialBootstrap;
+import eu.jsentinel.jcustos.dx.bootstrap.OidcBootstrap;
+import eu.jsentinel.jcustos.dx.bootstrap.SessionBootstrap;
+
+/**
+ * Layered bootstrap SPI. The jcustos-vaadin skill generated this with audit /
+ * sessions / credentials channels; the jcustos-vaadin-oidc skill adds the
+ * {@link #contributeOidc(OidcBootstrap)} channel (+ {@link #wantsOidc()} guard) so an
+ * OIDC layer can plug federated-login config into the same additive chain.
+ */
+public interface BootstrapExtension {
+
+  String SERVICE_NAME = "{{BASE_PACKAGE}}.security.bootstrap.BootstrapExtension";
+
+  default void contributeAudit(AuditBootstrap a) {
+  }
+
+  default void contributeSessions(SessionBootstrap s) {
+  }
+
+  default void contributeCredentials(CredentialBootstrap c) {
+  }
+
+  /** V00.79 OIDC: contribute federated-login config. Only invoked when {@link #wantsOidc()} is true. */
+  default void contributeOidc(OidcBootstrap o) {
+  }
+
+  /**
+   * True if this extension configures OIDC. Guards the {@code .oidc(...)} call so a
+   * project without an OIDC layer never triggers STRICT's "issuer required" check.
+   */
+  default boolean wantsOidc() {
+    return false;
+  }
+
+  default int order() {
+    return 0;
+  }
+}

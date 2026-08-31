@@ -1,0 +1,15 @@
+<!--
+  jCustos hardening — V00.71 production features.
+  Add both deps if {{HIBP_ENABLED}}=true; only the first one otherwise.
+-->
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-crypto-bc</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<!-- {{HIBP_ENABLED}} == true ? include : skip -->
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-credentials-hibp</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>

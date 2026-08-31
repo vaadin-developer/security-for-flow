@@ -1,4 +1,4 @@
-# 5-Minute Setup — jSentinel Audit Integrity (V00.80)
+# 5-Minute Setup — jCustos Audit Integrity (V00.80)
 
 Give your audit trail tamper evidence in five minutes. Konzept goal 7: the
 Security Event Bus signature protects an event in TRANSPORT; the audit hash
@@ -9,14 +9,14 @@ V00.70 persistent audit — it does not replace it.
 
 ```xml
 <dependency>
-  <groupId>com.svenruppert.jsentinel</groupId>
-  <artifactId>jSentinel-audit-integrity</artifactId>
+  <groupId>eu.jsentinel</groupId>
+  <artifactId>jCustos-audit-integrity</artifactId>
   <version>00.80.00</version>
 </dependency>
 <!-- production store (restart-safe): -->
 <dependency>
-  <groupId>com.svenruppert.jsentinel</groupId>
-  <artifactId>jSentinel-audit-integrity-persistence-eclipsestore</artifactId>
+  <groupId>eu.jsentinel</groupId>
+  <artifactId>jCustos-audit-integrity-persistence-eclipsestore</artifactId>
   <version>00.80.00</version>
 </dependency>
 ```
@@ -93,6 +93,6 @@ stays checkable after rotation; revoked keys do not.
 - Dev/test store: `new InMemoryAuditChainStore()` (throws when full —
   evicting would sever the genesis anchor).
 - Store implementations run the shared `AuditChainStoreContract` from
-  `jSentinel-audit-integrity-testkit`.
+  `jCustos-audit-integrity-testkit`.
 - One chain per store in V1; per-tenant chains are a candidate for a later
   release.

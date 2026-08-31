@@ -16,13 +16,13 @@ Eine einzelne Frage erspart neunzig Prozent der Grenzdiskussion:
 > erneuert, weitergegeben oder widerrufen werden — oder hat es mit
 > *Kalenderdaten* zu tun?**
 
-- **Tokens → Framework (jSentinel).** Sicherheits-Concern, querschnittlich,
+- **Tokens → Framework (jCustos).** Sicherheits-Concern, querschnittlich,
   von vielen Apps geteilt, von Google bis Microsoft Graph generalisierbar.
 - **Kalenderdaten → Anwendung.** Domain-Concern, fachlich spezifisch,
   nicht wiederverwendbar in Apps, die keinen Kalender haben.
 
 Daraus ergibt sich der größte Anti-Pattern automatisch:
-**Niemals `GoogleCalendarClient` in `jSentinel-*`**. Sobald die Library
+**Niemals `GoogleCalendarClient` in `jCustos-*`**. Sobald die Library
 einen Calendar-Client kennt, hat sie zugleich auch ein Drive-Datenmodell,
 ein Gmail-Modell, ein Sheets-Modell — und ist plötzlich Google-Workspace-
 SDK statt Security-Framework. Das gleiche gilt für Microsoft Graph,
@@ -32,16 +32,16 @@ GitHub-API, Slack-API.
 
 ## 2. Die scharfe Grenze (Tabelle)
 
-| Verantwortung | jSentinel (Framework) | Anwendung |
+| Verantwortung | jCustos (Framework) | Anwendung |
 |---|---|---|
-| **Authorization-Code-Flow + PKCE** | ✅ V00.77 `jSentinel-oauth2` | — |
+| **Authorization-Code-Flow + PKCE** | ✅ V00.77 `jCustos-oauth2` | — |
 | **OIDC Discovery** (`.well-known/openid-configuration`) | ✅ V00.78 `OidcDiscoveryClient` | — |
 | **ID-Token-Validierung** (Signatur, `iss`, `aud`, `nonce`, `azp`) | ✅ V00.76 `JwtValidator` + V00.78 `IdTokenValidator` | — |
-| **Google-Vendor-Profil** (Endpoints, `access_type=offline`, `prompt=consent`, `hd`-Claim) | ✅ V00.79 `jSentinel-identity-vendor-google` | — |
-| **`TokenCredentialStore`** (Access-Token + Refresh-Token pro Subject) | ✅ V00.74 `jSentinel-core` | — |
+| **Google-Vendor-Profil** (Endpoints, `access_type=offline`, `prompt=consent`, `hd`-Claim) | ✅ V00.79 `jCustos-identity-vendor-google` | — |
+| **`TokenCredentialStore`** (Access-Token + Refresh-Token pro Subject) | ✅ V00.74 `jCustos-core` | — |
 | **Refresh-Token-Rotation** | ✅ V00.76 `RefreshableTokenCredentialStore` | — |
 | **Outbound-Header-Injection** (`Authorization: Bearer <token>`) | ✅ V00.74 `PassThroughStrategy` + `OutboundHeaderContext` | — |
-| **`@PropagateToken`-Annotation** + Proxy/Processor | ✅ V00.74 `jSentinel-propagation` + `-processor` | — |
+| **`@PropagateToken`-Annotation** + Proxy/Processor | ✅ V00.74 `jCustos-propagation` + `-processor` | — |
 | **Token-Revocation bei Logout** | ✅ V00.78 / V00.79 (RP-initiated Logout + Revoke-Endpoint) | — |
 | **Audit-Events** (`TokenPropagated`, `TokenRefreshed`, `OidcLoginCompleted` …) | ✅ V00.78 | — |
 | **HTTPS-Erzwingung** auf Token-Endpoint-URIs | ✅ V00.74 | — |
@@ -57,7 +57,7 @@ GitHub-API, Slack-API.
 | **Auswahl, *welche* Calendar-API-Version** (v3 vs. künftige v4) | — | ✅ Anwendung |
 | **Google-Cloud-Console-Project-Wechsel, Service-Account-Setup** | — | ✅ Betrieb |
 
-**Kurz:** jSentinel besorgt das Token, übergibt es; die Anwendung benutzt
+**Kurz:** jCustos besorgt das Token, übergibt es; die Anwendung benutzt
 es. Niemand greift in den fremden Hof.
 
 ---
@@ -70,7 +70,7 @@ Die App muss `.scope("openid", "email", "profile", "https://www.googleapis.com/a
 generisch (gleiche Strings überall), andererseits Google-spezifisch.
 
 **Empfehlung:** Konstanten-Klasse `GoogleScopes` in
-`jSentinel-identity-vendor-google` (V00.79) anbieten — aber **nur die
+`jCustos-identity-vendor-google` (V00.79) anbieten — aber **nur die
 ~ 20 häufigsten**, und mit klar dokumentiertem "this is convenience, the
 authoritative list lives at developers.google.com".
 
@@ -116,13 +116,13 @@ Strategie an. App deklariert *einmal* pro Service-Methode via
 (Google-403-Fallback) — der Check kostet Tipparbeit auf App-Seite und
 ist nicht jedem das wert.
 
-### 3.3 `JSentinelHttpClient` mit eingebauten Auth-Headers
+### 3.3 `JCustosHttpClient` mit eingebauten Auth-Headers
 
-Verlockend: ein vorkonfigurierter `JSentinelHttpClient`, der
+Verlockend: ein vorkonfigurierter `JCustosHttpClient`, der
 automatisch das Bearer-Token einfügt, HTTPS erzwingt, Refresh
 versucht.
 
-**Empfehlung: nein.** jSentinel verlässt sich ganz bewusst auf den
+**Empfehlung: nein.** jCustos verlässt sich ganz bewusst auf den
 JDK-`HttpClient` plus ein zweizeiliges Interceptor-Pattern. Aus
 `Konzept-V00.74` §6:
 
@@ -141,13 +141,13 @@ HTTP-Stack, sie schreibt nur Header-Werte.
 
 ## 4. Konkretes Code-Split-Beispiel
 
-### 4.1 Framework-Stück (jSentinel-Bibliotheks-Code)
+### 4.1 Framework-Stück (jCustos-Bibliotheks-Code)
 
 Nichts. Was V00.74 (released) und V00.76 – V00.79 (Konzept) bauen, ist
 **ohne weiteren Calendar-spezifischen Code** ausreichend. Wenn V00.79
 das Google-Vendor-Profil liefert, kann eine Anwendung Calendar-API-
 Calls absetzen, ohne dass eine einzige Zeile Calendar-Code in
-`jSentinel-*` liegt.
+`jCustos-*` liegt.
 
 ### 4.2 App-Stück (in der Anwendung)
 
@@ -155,8 +155,8 @@ Calls absetzen, ohne dass eine einzige Zeile Calendar-Code in
 // 1. Bootstrap — die einzige Stelle, wo "Google" und "Calendar" zusammen auftauchen
 public final class CalendarApp {
   public static void main(String[] args) throws Exception {
-    JSentinelRuntime runtime = VaadinSecurity.bootstrap()
-        .use(VaadinJSentinelStarter.productionDefaults())
+    JCustosRuntime runtime = VaadinSecurity.bootstrap()
+        .use(VaadinJCustosStarter.productionDefaults())
         .oidc(o -> o
             .vendor(VendorProfiles.google())
             .clientId(env("GOOGLE_CLIENT_ID"))
@@ -240,8 +240,8 @@ Das Modell lässt sich 1:1 übertragen.
 
 | Provider | Framework-Anteil | App-Anteil |
 |---|---|---|
-| **Microsoft Graph** (Outlook, OneDrive, Teams) | `jSentinel-identity-vendor-microsoft` (V00.79 oder später) mit Endpoints, `v2.0`-Pfaden, Multi-Tenant-Quirks, `appid_acr`-Claim | `MicrosoftGraphClient` in der App, `@PropagateToken(audience = "graph.microsoft.com")` |
-| **GitHub-API** | `jSentinel-identity-vendor-github` mit Endpoints, Token-Format (`gho_...` Pattern), Fine-Grained-PAT-Unterstützung | `GitHubClient` in der App |
+| **Microsoft Graph** (Outlook, OneDrive, Teams) | `jCustos-identity-vendor-microsoft` (V00.79 oder später) mit Endpoints, `v2.0`-Pfaden, Multi-Tenant-Quirks, `appid_acr`-Claim | `MicrosoftGraphClient` in der App, `@PropagateToken(audience = "graph.microsoft.com")` |
+| **GitHub-API** | `jCustos-identity-vendor-github` mit Endpoints, Token-Format (`gho_...` Pattern), Fine-Grained-PAT-Unterstützung | `GitHubClient` in der App |
 | **Slack-API** | Vendor-Profil — oder *Provider als reiner OAuth2-RP-Konfiguration* ohne dediziertes Modul | `SlackClient` in der App |
 | **Beliebiger interner SaaS** | Sofern OAuth2/OIDC-fähig: gar kein Vendor-Modul, direkt `.oauth2(o -> o.issuer(...))` im Bootstrap | Eigener HTTP-Client |
 
@@ -257,10 +257,10 @@ nutzt.
 
 | Anti-Pattern | Warum schlecht |
 |---|---|
-| `GoogleCalendarClient` in `jSentinel-vendor-google` einbauen | Macht die Library zur Google-SDK-Konkurrenz; jede Calendar-API-Änderung erzwingt jSentinel-Release |
-| `JSentinelHttpClient` als eigener HTTP-Client mit Auth-Wiring | Connection-Pool, Retry, HTTP/2, mTLS — alles parallel zu JDK-`HttpClient` zu pflegen; nie eine gute Idee |
+| `GoogleCalendarClient` in `jCustos-vendor-google` einbauen | Macht die Library zur Google-SDK-Konkurrenz; jede Calendar-API-Änderung erzwingt jCustos-Release |
+| `JCustosHttpClient` als eigener HTTP-Client mit Auth-Wiring | Connection-Pool, Retry, HTTP/2, mTLS — alles parallel zu JDK-`HttpClient` zu pflegen; nie eine gute Idee |
 | `getAccessToken()`-Methode im App-Code | Bricht die Cross-Cutting-Idee von V00.74; sobald *eine* Stelle `getAccessToken()` aufruft, gibt es kein zentrales Audit-Wiring mehr |
-| App parst ID-Tokens manuell mit Nimbus-Jose-JWT | Bypassed `jSentinel-jwt` (V00.76); kein zentraler Algorithm-Allow-List, kein Cache-Wiring, kein Audit. Verboten via Maven-Enforcer-Ban analog `jSentinel-propagation-oidc` |
+| App parst ID-Tokens manuell mit Nimbus-Jose-JWT | Bypassed `jCustos-jwt` (V00.76); kein zentraler Algorithm-Allow-List, kein Cache-Wiring, kein Audit. Verboten via Maven-Enforcer-Ban analog `jCustos-propagation-oidc` |
 | App implementiert eigene Refresh-Token-Logik (Cron-Job o. ä.) | Race-Conditions gegen `RefreshableTokenCredentialStore`; doppelte Refresh-Calls bei Google → Token-Rotation invalidiert das eigene Refresh-Token |
 | Library führt einen `CalendarEvent`-Type ein | Schiefer Layer — Domain-Daten in der Security-Library. Was kommt als nächstes? `MailMessage`? `DriveFile`? Endet als "Spring Boot, aber schlechter" |
 | App speichert Access-Token in ihrem eigenen DB-Schema (z. B. `User.googleAccessToken`) | Bypassed `TokenCredentialStore`-Disziplin (hash-only? in-memory? rotation?); kein zentraler Refresh; kein Logout-Revoke |
@@ -282,7 +282,7 @@ Wenn unklar ist, in welche Schicht etwas gehört, hilft diese
    → "Wie reist": Framework.
    → "Was enthält": Anwendung.
 
-3. **Wenn morgen Google die API-URL ändert — muss jSentinel ein
+3. **Wenn morgen Google die API-URL ändert — muss jCustos ein
    Release machen?**
    → Ja: dann ist die URL fälschlich in der Library. App holen.
    → Nein: gut, gehört da nicht hin.
@@ -296,7 +296,7 @@ Wenn unklar ist, in welche Schicht etwas gehört, hilft diese
 
 ## 8. Zusammenfassung in einem Satz
 
-> jSentinel besorgt das Google-Token, sorgt für seine Frische und legt
+> jCustos besorgt das Google-Token, sorgt für seine Frische und legt
 > es als `Authorization`-Header in den Outbound-Request — alles andere
 > ist Calendar-Domäne und gehört in die Anwendung.
 
@@ -305,6 +305,6 @@ Wenn unklar ist, in welche Schicht etwas gehört, hilft diese
 **Verwandte Dokumente:**
 - `docs/estimates/google-login-effort-estimate.md` — was Login alleine kostet
 - `docs/estimates/google-calendar-integration-effort-and-concept.md` — Login + Calendar als Konzept-Skizze
-- `docs/dx/decision-table.md` — bestehende Schnittpunkte (`SecuredProxy` / `@Secured` / `SecuredUi` / `@JSentinelAutoService` / Bootstrap-Facades)
+- `docs/dx/decision-table.md` — bestehende Schnittpunkte (`SecuredProxy` / `@Secured` / `SecuredUi` / `@JCustosAutoService` / Bootstrap-Facades)
 - `Konzept-V00.74.00.md` — Outbound-Token-Propagation
 - `Konzept-V00.79.00.md` §6 — Vendor-Profile (Google explizit erwähnt)

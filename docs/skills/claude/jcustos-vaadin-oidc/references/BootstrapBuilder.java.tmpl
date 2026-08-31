@@ -1,0 +1,40 @@
+package {{BASE_PACKAGE}}.security.bootstrap;
+
+import eu.jsentinel.jcustos.dx.vaadin.bootstrap.VaadinJCustosBootstrap;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.ServiceLoader;
+
+/**
+ * Applies every registered {@link BootstrapExtension} (ordered) onto the fluent
+ * builder. The OIDC channel is chained only when at least one extension declares
+ * {@link BootstrapExtension#wantsOidc()} — calling {@code .oidc(...)} with no issuer
+ * would fail STRICT validation, so projects without an OIDC layer stay untouched.
+ */
+public final class BootstrapBuilder {
+
+  private BootstrapBuilder() {
+  }
+
+  public static VaadinJCustosBootstrap apply(VaadinJCustosBootstrap builder) {
+    List<BootstrapExtension> extensions = new ArrayList<>();
+    ServiceLoader.load(BootstrapExtension.class).forEach(extensions::add);
+    extensions.sort(Comparator.comparingInt(BootstrapExtension::order));
+
+    builder = builder
+        .audit(a -> extensions.forEach(e -> e.contributeAudit(a)))
+        .sessions(s -> extensions.forEach(e -> e.contributeSessions(s)))
+        .credentials(c -> extensions.forEach(e -> e.contributeCredentials(c)));
+
+    if (extensions.stream().anyMatch(BootstrapExtension::wantsOidc)) {
+      builder = builder.oidc(o -> extensions.forEach(e -> {
+        if (e.wantsOidc()) {
+          e.contributeOidc(o);
+        }
+      }));
+    }
+    return builder;
+  }
+}

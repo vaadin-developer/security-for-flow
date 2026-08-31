@@ -1,0 +1,61 @@
+<!--
+  jCustos — REST integration (JDK HttpServer based).
+  Merge these stanzas into your module's pom.xml.
+
+  Required <properties>:
+    <jcustos.version>00.73.00</jcustos.version>
+
+  Required <dependencies>:
+-->
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-core</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-autoservice-annotations</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-rest</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-dx</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-dx-rest</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<dependency>
+    <groupId>jakarta.servlet</groupId>
+    <artifactId>jakarta.servlet-api</artifactId>
+    <version>6.1.0</version>
+    <scope>provided</scope>
+</dependency>
+
+<!--
+  Required <build><plugins><plugin>:
+-->
+<plugin>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <annotationProcessorPaths>
+            <path>
+                <groupId>eu.jsentinel</groupId>
+                <artifactId>jCustos-autoservice-processor</artifactId>
+                <version>${jcustos.version}</version>
+            </path>
+            <path>
+                <groupId>eu.jsentinel</groupId>
+                <artifactId>jCustos-autoservice-annotations</artifactId>
+                <version>${jcustos.version}</version>
+            </path>
+        </annotationProcessorPaths>
+    </configuration>
+</plugin>

@@ -1,8 +1,8 @@
-# 5-Minute Setup — jSentinel Monitoring (V00.80)
+# 5-Minute Setup — jCustos Monitoring (V00.80)
 
-Wire runtime metrics and health signals into any jSentinel app in five
+Wire runtime metrics and health signals into any jCustos app in five
 minutes. Konzept goal 9: clean export points, no bundled monitoring stack —
-`jSentinel-monitoring` gives you one counter/gauge SPI, one canonical
+`jCustos-monitoring` gives you one counter/gauge SPI, one canonical
 metric-name catalog, one event-bus bridge and one health aggregator; the
 backend (Micrometer, OpenTelemetry, Prometheus client, StatsD) stays your
 choice.
@@ -11,8 +11,8 @@ choice.
 
 ```xml
 <dependency>
-  <groupId>com.svenruppert.jsentinel</groupId>
-  <artifactId>jSentinel-monitoring</artifactId>
+  <groupId>eu.jsentinel</groupId>
+  <artifactId>jCustos-monitoring</artifactId>
   <version>00.80.00</version>
 </dependency>
 ```
@@ -21,7 +21,7 @@ choice.
 
 ```java
 // Adapter to whatever your ops stack speaks. The contract: NEVER throw.
-public final class MicrometerMetricsPublisher implements JSentinelMetricsPublisher {
+public final class MicrometerMetricsPublisher implements JCustosMetricsPublisher {
 
   private final MeterRegistry registry;
 
@@ -41,8 +41,8 @@ public final class MicrometerMetricsPublisher implements JSentinelMetricsPublish
 }
 ```
 
-No adapter yet? `NoOpJSentinelMetricsPublisher.INSTANCE` is free and silent,
-and `JSentinelMetricsPublishers.discover()` falls back to it when no
+No adapter yet? `NoOpJCustosMetricsPublisher.INSTANCE` is free and silent,
+and `JCustosMetricsPublishers.discover()` falls back to it when no
 implementation is registered via `META-INF/services`.
 
 ## 3. Count the event stream — the bridge
@@ -61,39 +61,39 @@ Verification failures land on the umbrella
 `security.eventbus.rejected.total` plus their drill-down
 (`…replay.detected.total`, `…signature.invalid.total`,
 `…sequence.violation.total`); dead letters and listener failures have their
-own counters. All names live in `JSentinelMetricNames` — the constants are
+own counters. All names live in `JCustosMetricNames` — the constants are
 API, dashboards can rely on them.
 
 Gauges are state, not events — push them from where the state lives:
 
 ```java
-metrics.gauge(JSentinelMetricNames.SESSION_ACTIVE, sessionStore.activeCount());
-metrics.gauge(JSentinelMetricNames.EVENTBUS_SSE_CONNECTIONS_ACTIVE,
+metrics.gauge(JCustosMetricNames.SESSION_ACTIVE, sessionStore.activeCount());
+metrics.gauge(JCustosMetricNames.EVENTBUS_SSE_CONNECTIONS_ACTIVE,
     sseHandler.activeStreamCount());
-metrics.gauge(JSentinelMetricNames.AUDIT_STORE_LAG, ringBufferSink.size());
+metrics.gauge(JCustosMetricNames.AUDIT_STORE_LAG, ringBufferSink.size());
 ```
 
 ## 4. Health
 
 ```java
-HealthStatus status = JSentinelHealthCheck.check(List.of(
+HealthStatus status = JCustosHealthCheck.check(List.of(
         new DiagnosticsHealthIndicator(),                  // missing/duplicate SPIs
         new AuditStoreSaturationHealthIndicator(ringBufferSink)),  // audit-store lag
     Instant::now);
 // status.overall(): HEALTHY | DEGRADED | FAILED — same rules as
-// JSentinelRuntime.healthCheck(); findings carry stable codes such as
+// JCustosRuntime.healthCheck(); findings carry stable codes such as
 // diagnostics/missing-service or monitoring/audit-store-saturation.
 ```
 
-Custom checks implement `JSentinelHealthIndicator` (`id()` +
+Custom checks implement `JCustosHealthIndicator` (`id()` +
 `check(): List<HealthFinding>` — cheap, no I/O, never throw);
-`JSentinelHealthCheck.discoverAndCheck()` picks up `META-INF/services`
+`JCustosHealthCheck.discoverAndCheck()` picks up `META-INF/services`
 registrations.
 
 ## 5. Diagnostics
 
-`jSentinel-monitoring` registers a `DiagnosticContributor` (id
-`monitoring`): `JSentinelDiagnostics.inspect()` now reports discovered
+`jCustos-monitoring` registers a `DiagnosticContributor` (id
+`monitoring`): `JCustosDiagnostics.inspect()` now reports discovered
 metrics publishers and health indicators — and warns
 `monitoring/no-metrics-publisher` when metrics would silently go to the
 no-op.

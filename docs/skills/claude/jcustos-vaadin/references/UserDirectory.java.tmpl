@@ -1,0 +1,45 @@
+package {{BASE_PACKAGE}}.security.model;
+
+import eu.jsentinel.jcustos.authentication.PasswordHasher;
+import {{BASE_PACKAGE}}.security.roles.AuthorizationRole;
+
+import java.util.Optional;
+import java.util.stream.Stream;
+
+/**
+ * Application user store. Decoupled from the concrete in-memory
+ * implementation so a future backend swap (DB, LDAP, IAM) does not
+ * touch consumers.
+ */
+public interface UserDirectory {
+
+  Optional<{{SUBJECT_TYPE}}> findByCredentials(Credentials credentials);
+
+  default boolean checkCredentials(Credentials credentials) {
+    return findByCredentials(credentials).isPresent();
+  }
+
+  Optional<{{SUBJECT_TYPE}}> findById(Long id);
+
+  Stream<{{SUBJECT_TYPE}}> all();
+
+  void addUser(String username, String plaintextPassword, {{SUBJECT_TYPE}} user);
+
+  /**
+   * Adds a user whose password was already hashed elsewhere (typically
+   * the bootstrap flow's {@code InitialAdminBootstrapService}). Bypasses
+   * the directory's own hasher.
+   */
+  void registerWithHashedPassword(String username, String passwordHash, {{SUBJECT_TYPE}} user);
+
+  void deleteUser(Long id);
+
+  /** @return {@code true} if at least one user has the {@code ADMIN} role */
+  boolean hasAnyAdministrator();
+
+  void assignRole(Long id, AuthorizationRole role);
+
+  void revokeRole(Long id, AuthorizationRole role);
+
+  PasswordHasher passwordHasher();
+}

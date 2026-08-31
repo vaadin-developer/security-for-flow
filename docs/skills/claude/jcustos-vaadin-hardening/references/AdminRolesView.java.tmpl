@@ -1,0 +1,232 @@
+package {{BASE_PACKAGE}}.views.admin;
+
+import eu.jsentinel.jcustos.authorization.annotations.RequiresPermission;
+import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.PasswordField;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.Route;
+import {{BASE_PACKAGE}}.security.model.UserDirectory;
+import {{BASE_PACKAGE}}.security.model.UserDirectoryProvider;
+import {{BASE_PACKAGE}}.security.model.{{SUBJECT_TYPE}};
+import {{BASE_PACKAGE}}.security.roles.AuthorizationRole;
+import {{BASE_PACKAGE}}.security.services.PasswordPreflight;
+import {{BASE_PACKAGE}}.security.services.VersionBumper;
+import {{BASE_PACKAGE}}.views.HomeButton;
+import {{BASE_PACKAGE}}.views.MainLayout;
+
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.List;
+
+/**
+ * Hardening-skill replacement: same UI, but every mutation now calls
+ * {@link VersionBumper#bump(Object)} so the affected user's open
+ * sessions reroute to login on the next navigation, and new passwords
+ * pass through {@link PasswordPreflight}.
+ */
+@Route(value = AdminRolesView.NAV, layout = MainLayout.class)
+@RequiresPermission("admin:roles")
+public class AdminRolesView extends Composite<VerticalLayout> {
+
+  public static final String NAV = "admin/roles";
+
+  private final Grid<{{SUBJECT_TYPE}}> grid = new Grid<>({{SUBJECT_TYPE}}.class, false);
+
+  public AdminRolesView() {
+    VerticalLayout root = getContent();
+    root.setSizeFull();
+    root.setSpacing(false);
+    root.getThemeList().add("spacing-s");
+
+    root.add(new H1("Role administration"));
+    root.add(new Paragraph(
+        "Admin-only. Mutations emit RoleAssigned / RoleRevoked / UserCreated "
+            + "/ UserDeleted audit events and bump the per-subject JCustosVersion — "
+            + "the affected user is forced back to login on their next navigation."));
+
+    grid.setSizeFull();
+    grid.setPageSize(50);
+    grid.addColumn({{SUBJECT_TYPE}}::id).setHeader("Id").setWidth("4em").setFlexGrow(0);
+    grid.addColumn({{SUBJECT_TYPE}}::name).setHeader("Name").setWidth("14em").setFlexGrow(0);
+    grid.addColumn(u -> u.roles().stream().map(Enum::name).sorted().toList().toString())
+        .setHeader("Roles").setFlexGrow(1);
+    grid.addComponentColumn(this::buildRoleEditor).setHeader("Modify").setWidth("28em").setFlexGrow(0);
+    grid.addComponentColumn(this::buildDeleteButton).setHeader("Delete").setWidth("7em").setFlexGrow(0);
+
+    Button newUser = new Button("New user", VaadinIcon.PLUS_CIRCLE.create(), e -> openCreateUserDialog());
+    newUser.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+    HorizontalLayout toolbar = new HorizontalLayout(newUser);
+    HomeButton.forStandalone(getClass()).ifPresent(toolbar::add);
+    toolbar.setSpacing(true);
+    root.add(toolbar);
+    root.add(grid);
+    root.setFlexGrow(1, grid);
+    refresh();
+  }
+
+  private HorizontalLayout buildRoleEditor({{SUBJECT_TYPE}} user) {
+    ComboBox<AuthorizationRole> select = new ComboBox<>();
+    select.setItems(AuthorizationRole.values());
+    select.setItemLabelGenerator(Enum::name);
+    select.setPlaceholder("role");
+
+    Button assign = new Button("Assign", VaadinIcon.PLUS.create(), e -> {
+      AuthorizationRole role = select.getValue();
+      if (role == null) {
+        warn("Pick a role first.");
+        return;
+      }
+      if (user.roles().contains(role)) {
+        warn("Already assigned.");
+        return;
+      }
+      UserDirectoryProvider.directory().assignRole(user.id(), role);
+      VersionBumper.bump(user);
+      success("Granted " + role.name() + " to " + user.name()
+          + " — their session will reroute to login on the next click.");
+      refresh();
+    });
+    assign.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SMALL);
+
+    Button revoke = new Button("Revoke", VaadinIcon.MINUS.create(), e -> {
+      AuthorizationRole role = select.getValue();
+      if (role == null) {
+        warn("Pick a role first.");
+        return;
+      }
+      if (!user.roles().contains(role)) {
+        warn("Not assigned.");
+        return;
+      }
+      UserDirectoryProvider.directory().revokeRole(user.id(), role);
+      VersionBumper.bump(user);
+      success("Revoked " + role.name() + " from " + user.name()
+          + " — their session will reroute to login on the next click.");
+      refresh();
+    });
+    revoke.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
+
+    HorizontalLayout row = new HorizontalLayout(select, assign, revoke);
+    row.setSpacing(true);
+    return row;
+  }
+
+  private Button buildDeleteButton({{SUBJECT_TYPE}} user) {
+    Button delete = new Button(VaadinIcon.TRASH.create(), e -> confirmDelete(user));
+    delete.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_TERTIARY,
+        ButtonVariant.LUMO_SMALL);
+    return delete;
+  }
+
+  private void confirmDelete({{SUBJECT_TYPE}} user) {
+    ConfirmDialog dialog = new ConfirmDialog();
+    dialog.setHeader("Delete user");
+    dialog.setText("Permanently remove '" + user.name() + "' (id=" + user.id() + ")?");
+    dialog.setCancelable(true);
+    dialog.setConfirmText("Delete");
+    dialog.setConfirmButtonTheme("error primary");
+    dialog.addConfirmListener(e -> {
+      UserDirectoryProvider.directory().deleteUser(user.id());
+      VersionBumper.bump(user);
+      success("Deleted user " + user.name() + ".");
+      refresh();
+    });
+    dialog.open();
+  }
+
+  private void openCreateUserDialog() {
+    Dialog dialog = new Dialog();
+    dialog.setHeaderTitle("Create user");
+
+    TextField username = new TextField("Username");
+    username.setRequiredIndicatorVisible(true);
+    PasswordField password = new PasswordField("Password");
+    password.setRequiredIndicatorVisible(true);
+    TextField displayName = new TextField("Display name");
+    displayName.setPlaceholder("(defaults to username)");
+    ComboBox<AuthorizationRole> role = new ComboBox<>("Initial role");
+    role.setItems(AuthorizationRole.values());
+    role.setItemLabelGenerator(Enum::name);
+    role.setRequiredIndicatorVisible(true);
+    role.setValue(AuthorizationRole.USER);
+
+    FormLayout form = new FormLayout(username, password, displayName, role);
+    dialog.add(new H3("New user"), form);
+
+    Button save = new Button("Create", VaadinIcon.CHECK.create(), e -> {
+      String u = username.getValue() == null ? "" : username.getValue().trim();
+      String p = password.getValue() == null ? "" : password.getValue();
+      AuthorizationRole r = role.getValue();
+      if (u.isEmpty() || p.isEmpty() || r == null) {
+        warn("Username, password and initial role are required.");
+        return;
+      }
+      // V00.71 password-preflight: local blocklist + (optional) HIBP.
+      // Generic rejection message — never name the dictionary (CWE-209).
+      if (!PasswordPreflight.isAcceptable(p)) {
+        warn("Password rejected: this password is on a known-bad list. Choose another.");
+        return;
+      }
+      String display = displayName.getValue() == null || displayName.getValue().isBlank()
+          ? u : displayName.getValue();
+      {{SUBJECT_TYPE}} created = new {{SUBJECT_TYPE}}(nextId(), display,
+          EnumSet.of(AuthorizationRole.USER, r));
+      try {
+        UserDirectoryProvider.directory().addUser(u, p, created);
+        success("Created user " + u + ".");
+        dialog.close();
+        refresh();
+      } catch (RuntimeException failure) {
+        warn("Could not create user: " + failure.getMessage());
+      }
+    });
+    save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+    Button cancel = new Button("Cancel", e -> dialog.close());
+    cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+    dialog.getFooter().add(cancel, save);
+    dialog.open();
+  }
+
+  private static Long nextId() {
+    return UserDirectoryProvider.directory().all()
+        .mapToLong({{SUBJECT_TYPE}}::id)
+        .max()
+        .orElse(0L) + 1L;
+  }
+
+  private void refresh() {
+    UserDirectory directory = UserDirectoryProvider.directory();
+    List<{{SUBJECT_TYPE}}> users = directory.all()
+        .sorted(Comparator.comparing({{SUBJECT_TYPE}}::id))
+        .toList();
+    grid.setItems(users);
+  }
+
+  private static void success(String message) {
+    Notification n = Notification.show(message, 2500, Notification.Position.BOTTOM_END);
+    n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+  }
+
+  private static void warn(String message) {
+    Notification n = Notification.show(message, 3000, Notification.Position.BOTTOM_END);
+    n.addThemeVariants(NotificationVariant.LUMO_WARNING);
+  }
+}

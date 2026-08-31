@@ -1,6 +1,6 @@
-# jSentinel Implementation Cycle — Process Reference
+# jCustos Implementation Cycle — Process Reference
 
-**Geltungsbereich:** `vaadin-developer/security-for-flow` (jSentinel).
+**Geltungsbereich:** `vaadin-developer/security-for-flow` (jCustos).
 **Stand:** 2026-06-24 (V00.75.00 Security Event Bus released to Maven Central;
 00.75.10 maintenance line open). §3.4 Standards-Compliance-Pass +
 §3.6 Abarbeitungsreihenfolge (Risiko-zuerst) + §3.7 Final Production-Review
@@ -26,7 +26,7 @@ Plan.
 
 ## 1. Big Picture — der Release-Zyklus
 
-Ein jSentinel-Release `VXX.YY.ZZ` durchläuft fünf Stufen:
+Ein jCustos-Release `VXX.YY.ZZ` durchläuft fünf Stufen:
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -139,11 +139,11 @@ Falls der Plan neue Reactor-Module einführt:
 
 1. Verzeichnisstruktur:
    ```bash
-   mkdir -p jSentinel-<modul>/src/main/java/<package>
-   mkdir -p jSentinel-<modul>/src/test/java
+   mkdir -p jCustos-<modul>/src/main/java/<package>
+   mkdir -p jCustos-<modul>/src/test/java
    ```
 2. `pom.xml` pro Modul mit:
-   - Parent: `jSentinel-parent:VXX.YY.ZZ-SNAPSHOT`
+   - Parent: `jCustos-parent:VXX.YY.ZZ-SNAPSHOT`
    - Beschreibung im `<description>`-Block (was das Modul macht)
    - JUnit 5 als Test-Dependency
    - Modul-spezifische Sibling-Deps
@@ -188,7 +188,7 @@ die Mechanik *pro* Prompt; §3.6 ist die Reihenfolge *zwischen* den Prompts.
 │    - Neue Files anlegen (Write)                                  │
 │    - Bestehende Files editieren (Edit)                           │
 │    - Tests mit echten Implementierungen (NO MOCKS, siehe §6.1)   │
-│    - JavaDoc + @ExperimentalJSentinelApi + @since VXX.YY         │
+│    - JavaDoc + @ExperimentalJCustosApi + @since VXX.YY         │
 │                                                                  │
 │ 4. Acceptance                                                    │
 │    - Modul-Test: ./mvnw -pl <modul> test                         │
@@ -515,7 +515,7 @@ Maven Central immutable wird.
 
 | Prefix | Wann | Beispiel |
 |---|---|---|
-| `dx` | Feature-/SPI-Implementierung pro Prompt | `dx(00.74.20/005): JSentinelStorageFactory.openAt(...) implementation` |
+| `dx` | Feature-/SPI-Implementierung pro Prompt | `dx(00.74.20/005): JCustosStorageFactory.openAt(...) implementation` |
 | `chore` | Pom-Bumps, Module-Skeletons, dependency-Updates | `chore(00.74.20): bump bcprov 1.78.1 → 1.84` |
 | `docs` | Konzept / Plan / RELEASE-NOTES / 5-min-setup / Skills | `docs(00.74.20/008-010): persistence skill templates` |
 | `release` | Release-spezifische Stages (Notes, Finalize, Hotfix) | `release(00.74.20): finalize 00.74.20 release` |
@@ -550,9 +550,9 @@ Drei relevante ClickUp-Listen (Memory `project_clickup_tracker`):
 
 | Liste-ID | Name | Inhalt |
 |---|---|---|
-| `901524055126` | `jSentinel-SecurityFramework` | Implementation Plans + Per-Prompt-Subtasks + Maven-Central-Deploy-Subtasks |
-| `901524061399` | `jSentinel-SecurityFramework-Concepts` | Konzept-Tasks (1 pro Release) |
-| `901524061359` | `jSentinel-SecurityFramework-Features` | Feature-Tracking (release-übergreifend) |
+| `901524055126` | `jCustos-SecurityFramework` | Implementation Plans + Per-Prompt-Subtasks + Maven-Central-Deploy-Subtasks |
+| `901524061399` | `jCustos-SecurityFramework-Concepts` | Konzept-Tasks (1 pro Release) |
+| `901524061359` | `jCustos-SecurityFramework-Features` | Feature-Tracking (release-übergreifend) |
 
 ### 5.2 Task-Hierarchie pro Release
 
@@ -644,7 +644,7 @@ to confirm reactor still resolves.
   - Acceptance: `./mvnw clean install -q -DskipTests` green.
   - Note: Plan estimate was "17 modules + demos" (~32 poms); actual
     count was 36 because the V00.74.20 demo-pom-bump folded the 10
-    `demo-jsentinel-*` modules in. Pure doc-drift, no functional impact.
+    `demo-jcustos-*` modules in. Pure doc-drift, no functional impact.
 ```
 
 ### 5.5 Parent-Task — KEIN Completion-Log
@@ -692,7 +692,7 @@ Empfehlung). Es ergänzt — ersetzt nicht — den Prompt-Body, der die
 anlegen** — nur Werte auf bestehende Felder setzen
 (`clickup_create_task` / `clickup_update_task` → `custom_fields: [{id,
 value}]`). Das Feld `Bewertung` muss daher **einmalig manuell in der
-ClickUp-UI** auf der Liste `jSentinel-SecurityFramework` angelegt werden
+ClickUp-UI** auf der Liste `jCustos-SecurityFramework` angelegt werden
 (Typ: Text). Danach wird seine Feld-ID via `clickup_get_custom_fields`
 aufgelöst und pro Issue gesetzt.
 
@@ -722,7 +722,7 @@ das eigenständige Freitext-Feld für die Gesamteinschätzung.
 
 `docs/security/credentials/standards/serialization-policy.md`:
 
-- **Keine** `ObjectInputStream` / `ObjectOutputStream` in jSentinel-Code.
+- **Keine** `ObjectInputStream` / `ObjectOutputStream` in jCustos-Code.
 - Vier legitime `Serializable`-Shapes dokumentiert (Vaadin-Lifecycle +
   `Throwable`-Heritage).
 - Codec-Wahl: Eclipse-Store-Binary für Persistence, Canonical JSON für
@@ -730,8 +730,8 @@ das eigenständige Freitext-Feld für die Gesamteinschätzung.
 
 ### 6.3 JSON-Library-Bans
 
-Pro Modul, das in-tree JSON braucht (V00.74.10 `jSentinel-dx`,
-V00.75.00 `jSentinel-events`):
+Pro Modul, das in-tree JSON braucht (V00.74.10 `jCustos-dx`,
+V00.75.00 `jCustos-events`):
 
 ```xml
 <bannedDependencies>
@@ -757,14 +757,14 @@ V00.75.00 `jSentinel-events`):
   `docs/dx/google-*.md` — bleiben uncommitted, bis Sven explizit sagt
   „jetzt committen".
 - Scripts wie `scripts/download-clickup-prompts.py` — Sven's
-  Werkzeugkasten, nicht jSentinel-Library-Code.
+  Werkzeugkasten, nicht jCustos-Library-Code.
 
 ### 6.5 Annotations + JavaDoc
 
 Neue public Types eines Cycle bekommen standardmäßig:
 
 ```java
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record StorageLayout(...) { ... }
 ```
 
@@ -833,7 +833,7 @@ Commit-Message: `release(VXX.YY.ZZ): finalize VXX.YY.ZZ release`.
 ### 7.4 Tag
 
 ```bash
-git tag vXX.YY.ZZ -m "jSentinel VXX.YY.ZZ — <theme>"
+git tag vXX.YY.ZZ -m "jCustos VXX.YY.ZZ — <theme>"
 ```
 
 **Lokal**, am Finalize-Commit. Push separat in Stufe E.
@@ -863,7 +863,7 @@ curl -s --request POST \
   --user "$CENTRAL_USER:$CENTRAL_PASSWORD" \
   --form bundle=@target/central-publishing/central-bundle.zip \
   -w "\nHTTP_STATUS:%{http_code}" \
-  'https://central.sonatype.com/api/v1/publisher/upload?name=jSentinel-VXX.YY.ZZ&publishingType=USER_MANAGED'
+  'https://central.sonatype.com/api/v1/publisher/upload?name=jCustos-VXX.YY.ZZ&publishingType=USER_MANAGED'
 ```
 
 HTTP 201 → Deployment-ID im Response-Body merken.
@@ -884,7 +884,7 @@ Polling-Intervall 30 s. Erwartete Übergänge: `VALIDATING` → `VALIDATED`
 Sonatype-Central-UI:
 
 1. https://central.sonatype.com/publishing/deployments
-2. Eintrag `jSentinel-VXX.YY.ZZ` finden (Status `VALIDATED`)
+2. Eintrag `jCustos-VXX.YY.ZZ` finden (Status `VALIDATED`)
 3. Grünen **Publish**-Button klicken
 4. ~10 Minuten warten bis `PUBLISHED`
 5. Spätestens 30 Minuten später sichtbar auf
@@ -907,7 +907,7 @@ git push origin vXX.YY.ZZ
 
 ```bash
 gh release create vXX.YY.ZZ \
-  --title "jSentinel VXX.YY.ZZ — <theme>" \
+  --title "jCustos VXX.YY.ZZ — <theme>" \
   --notes-file RELEASE-NOTES-VXX.YY.ZZ.md \
   --verify-tag \
   --latest
@@ -927,7 +927,7 @@ genau dieser eine Abschluss-Marker ist erlaubt):
 1. Status-Banner oben in die `markdown_description` des Parent-Tasks:
    ```markdown
    **Status:** ✅ **COMPLETED** — released to Maven Central as
-   `com.svenruppert.jsentinel:*:VXX.YY.ZZ` on YYYY-MM-DD.
+   `eu.jsentinel.jcustos:*:VXX.YY.ZZ` on YYYY-MM-DD.
    **Deployment ID:** `<id>`
    **Tag:** `vXX.YY.ZZ` at commit `<hash>`.
    **Scope shipped:** <N> of <M> prompts (XXX-YYY full; PZZZ partial: <reason>).

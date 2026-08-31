@@ -1,0 +1,27 @@
+package {{BASE_PACKAGE}}.security.permissions;
+
+import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
+
+/**
+ * Permission catalog for the standalone CLI demo.
+ *
+ * <p>The CLI exposes four operations; each maps to one permission.
+ * The {@code AuthorizationService} grants ADMIN every permission and
+ * USER only {@code doc:list}.
+ */
+public enum AppPermission {
+  DOC_LIST("doc:list"),
+  DOC_CREATE("doc:create"),
+  DOC_DELETE("doc:delete"),
+  AUDIT_READ("audit:read");
+
+  private final PermissionName permissionName;
+
+  AppPermission(String value) {
+    this.permissionName = new PermissionName(value);
+  }
+
+  public PermissionName permissionName() {
+    return permissionName;
+  }
+}

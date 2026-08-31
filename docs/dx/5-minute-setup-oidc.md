@@ -11,8 +11,8 @@ no Jakarta Security.
 ## 1. Minimal OIDC login (≈5 lines)
 
 ```java
-JSentinelRuntime runtime = VaadinSecurity.bootstrap()
-    .mode(JSentinelBootstrapMode.PRODUCTION)
+JCustosRuntime runtime = VaadinSecurity.bootstrap()
+    .mode(JCustosBootstrapMode.PRODUCTION)
     .oidc(o -> o
         .issuer("https://idp.example.com/realms/app")
         .clientId("my-rp")
@@ -39,12 +39,12 @@ so you don't wire each by hand. Add the vendor module and call `.vendor(...)`:
 
 | IdP | Module | Profile |
 |---|---|---|
-| Keycloak | `jSentinel-identity-vendor-keycloak` | `KeycloakProfile.INSTANCE` |
-| Entra ID | `jSentinel-identity-vendor-entra` | `EntraProfile.INSTANCE` |
-| Auth0 | `jSentinel-identity-vendor-auth0` | `Auth0Profile.INSTANCE` |
-| Okta | `jSentinel-identity-vendor-okta` | `OktaProfile.INSTANCE` |
-| Google | `jSentinel-identity-vendor-google` | `GoogleProfile.INSTANCE` |
-| GitHub | `jSentinel-identity-vendor-github` | `GitHubProfile.INSTANCE` |
+| Keycloak | `jCustos-identity-vendor-keycloak` | `KeycloakProfile.INSTANCE` |
+| Entra ID | `jCustos-identity-vendor-entra` | `EntraProfile.INSTANCE` |
+| Auth0 | `jCustos-identity-vendor-auth0` | `Auth0Profile.INSTANCE` |
+| Okta | `jCustos-identity-vendor-okta` | `OktaProfile.INSTANCE` |
+| Google | `jCustos-identity-vendor-google` | `GoogleProfile.INSTANCE` |
+| GitHub | `jCustos-identity-vendor-github` | `GitHubProfile.INSTANCE` |
 
 An explicit `.rolesMapper(...)` after `.vendor(...)` still wins. Vendor mappers
 trust **signed** ID-token claims only (never an unverified UserInfo `sub`).
@@ -118,7 +118,7 @@ TLS 1.3 throughout. Full matrix: [`fips-profile.md`](../security/credentials/sta
 
 ## 5. STRICT mode
 
-`JSentinelBootstrapMode.STRICT` turns missing critical wiring into a startup
+`JCustosBootstrapMode.STRICT` turns missing critical wiring into a startup
 exception instead of a warning (e.g. `jwt/jwe-without-decryption-key`,
 `oauth2/mtls-keystore-empty`, `oauth2/par-without-endpoint`). Run STRICT in CI to
 catch misconfiguration before production.

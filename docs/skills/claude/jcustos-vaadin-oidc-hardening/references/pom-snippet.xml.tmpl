@@ -1,0 +1,13 @@
+<!-- jcustos-vaadin-oidc-hardening dependencies.
+     Merge into <dependencies>; idempotent (skip any already present).
+     mTLS / JWE / Back-Channel Logout need NO new module — they reuse jCustos-oauth2
+     (MutualTls), jCustos-jwt (JweUnwrappingJwtValidator / NimbusJweDecoder) and
+     jCustos-identity-oidc (BackChannelLogoutReceiver / DefaultLogoutTokenValidator /
+     InMemorySessionRegistry) + jCustos-core (JtiStore / InMemoryJtiStore), all already
+     on the classpath from the jcustos-vaadin-oidc run.
+     Only DPoP adds a module: -->
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-dpop</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>

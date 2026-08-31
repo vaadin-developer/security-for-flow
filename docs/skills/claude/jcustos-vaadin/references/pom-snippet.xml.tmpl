@@ -1,0 +1,74 @@
+<!--
+  jCustos — Vaadin Flow integration.
+  Merge these stanzas into your module's pom.xml. Do NOT overwrite the file.
+
+  Required <properties>:
+    <jcustos.version>00.73.00</jcustos.version>
+
+  Required <dependencies>:
+-->
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-core</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-autoservice-annotations</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-vaadin</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-dx</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-dx-vaadin</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<dependency>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-vaadin-starter</artifactId>
+    <version>${jcustos.version}</version>
+</dependency>
+<!--
+  Required transitively by jCustos-vaadin's HttpSessionBindingListener
+  reference; vaadin-core does not expose servlet-api compile-scope.
+-->
+<dependency>
+    <groupId>jakarta.servlet</groupId>
+    <artifactId>jakarta.servlet-api</artifactId>
+    <version>6.1.0</version>
+    <scope>provided</scope>
+</dependency>
+
+<!--
+  Required <build><plugins><plugin>:
+-->
+<plugin>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <!--
+          Path order matters on JDK 21+: *-processor BEFORE *-annotations.
+          Reversed order causes silent no-emit of META-INF/services entries.
+        -->
+        <annotationProcessorPaths>
+            <path>
+                <groupId>eu.jsentinel</groupId>
+                <artifactId>jCustos-autoservice-processor</artifactId>
+                <version>${jcustos.version}</version>
+            </path>
+            <path>
+                <groupId>eu.jsentinel</groupId>
+                <artifactId>jCustos-autoservice-annotations</artifactId>
+                <version>${jcustos.version}</version>
+            </path>
+        </annotationProcessorPaths>
+    </configuration>
+</plugin>

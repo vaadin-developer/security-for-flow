@@ -3,59 +3,59 @@
 V00.73 fluent bootstrap for the REST adapter. The V00.72 carve-out is
 gone: `.audit(...)`, `.policies(...)`, `.roles(...)` and
 `.credentials(...)` are real. `.sessions(...)` on REST consumes
-`SessionPolicy` / `JSentinelVersionStore` / `SubjectIdResolver` only;
+`SessionPolicy` / `JCustosVersionStore` / `SubjectIdResolver` only;
 `.storeBacked(...)` records the INFO code `rest/session-store-unused`.
 
 ```xml
 <dependency>
-  <groupId>com.svenruppert.jsentinel</groupId>
-  <artifactId>jSentinel-rest</artifactId>
-  <version>${jsentinel.version}</version>
+  <groupId>eu.jsentinel</groupId>
+  <artifactId>jCustos-rest</artifactId>
+  <version>${jcustos.version}</version>
 </dependency>
 <dependency>
-  <groupId>com.svenruppert.jsentinel</groupId>
-  <artifactId>jSentinel-dx-rest</artifactId>
-  <version>${jsentinel.version}</version>
+  <groupId>eu.jsentinel</groupId>
+  <artifactId>jCustos-dx-rest</artifactId>
+  <version>${jcustos.version}</version>
 </dependency>
 <dependency>
-  <groupId>com.svenruppert.jsentinel</groupId>
-  <artifactId>jSentinel-autoservice-annotations</artifactId>
-  <version>${jsentinel.version}</version>
+  <groupId>eu.jsentinel</groupId>
+  <artifactId>jCustos-autoservice-annotations</artifactId>
+  <version>${jcustos.version}</version>
 </dependency>
 ```
 
 ```xml
 <annotationProcessorPaths>
   <path>
-    <groupId>com.svenruppert.jsentinel</groupId>
-    <artifactId>jSentinel-autoservice-processor</artifactId>
-    <version>${jsentinel.version}</version>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-autoservice-processor</artifactId>
+    <version>${jcustos.version}</version>
   </path>
   <path>
-    <groupId>com.svenruppert.jsentinel</groupId>
-    <artifactId>jSentinel-autoservice-annotations</artifactId>
-    <version>${jsentinel.version}</version>
+    <groupId>eu.jsentinel</groupId>
+    <artifactId>jCustos-autoservice-annotations</artifactId>
+    <version>${jcustos.version}</version>
   </path>
 </annotationProcessorPaths>
 ```
 
 ```java
-@JSentinelAutoService(AuthenticationService.class)
+@JCustosAutoService(AuthenticationService.class)
 public final class TokenAuth implements AuthenticationService<Token, User> { /* ... */ }
 
-@JSentinelAutoService(AuthorizationService.class)
+@JCustosAutoService(AuthorizationService.class)
 public final class Authz implements AuthorizationService<User> { /* ... */ }
 
-@JSentinelAutoService(RestSubjectResolver.class)
+@JCustosAutoService(RestSubjectResolver.class)
 public final class HeaderResolver implements RestSubjectResolver { /* ... */ }
 ```
 
 ```java
-import com.svenruppert.jsentinel.dx.rest.bootstrap.RestSecurity;
-import com.svenruppert.jsentinel.dx.runtime.JSentinelBootstrapMode;
+import eu.jsentinel.jcustos.dx.rest.bootstrap.RestSecurity;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapMode;
 
 var runtime = RestSecurity.bootstrap()
-    .mode(JSentinelBootstrapMode.PRODUCTION)
+    .mode(JCustosBootstrapMode.PRODUCTION)
     .audit(a -> a.logging().ringBuffer(256))
     .policies(p -> p.register(myDocumentPolicy()))
     .install();
@@ -69,11 +69,11 @@ to `HttpStatusDecisionMapper` and a generic-strings error body strategy.
 
 | Sub-builder | REST behaviour |
 |---|---|
-| `.audit(...)` | Full — composes `LoggingAuditSink`, `RingBufferAuditSink`, `StoreBackedJSentinelAuditService` as in Vaadin |
+| `.audit(...)` | Full — composes `LoggingAuditSink`, `RingBufferAuditSink`, `StoreBackedJCustosAuditService` as in Vaadin |
 | `.policies(...)` | Full — registers policies and resource resolvers into `PolicyRegistry` |
 | `.roles(...)` | `.hierarchy(...)` only (V00.73 deliberately keeps `RolePermissionMapping` out) |
-| `.credentials(...)` | Full — `.passwordHasher(...)` (legacy resolver), `.hashing(...)` / `.pepper(...)` / `.credentialStore(...)` (V00.71 pipeline). `.modern()` requires `jSentinel-crypto-bc` |
-| `.sessions(...)` | `SessionPolicy` / `JSentinelVersionStore` / `SubjectIdResolver` only. `.storeBacked(...)` records `rest/session-store-unused` INFO — REST has no concept of a session store |
+| `.credentials(...)` | Full — `.passwordHasher(...)` (legacy resolver), `.hashing(...)` / `.pepper(...)` / `.credentialStore(...)` (V00.71 pipeline). `.modern()` requires `jCustos-crypto-bc` |
+| `.sessions(...)` | `SessionPolicy` / `JCustosVersionStore` / `SubjectIdResolver` only. `.storeBacked(...)` records `rest/session-store-unused` INFO — REST has no concept of a session store |
 
 ## STRICT mode
 
@@ -95,8 +95,8 @@ import com.svenruppert.dependencies.core.net.HttpStatus;
 import com.svenruppert.dependencies.core.net.MediaType;
 
 public final class HealthHandler implements RestHandler {
-  private final JSentinelRuntime runtime;
-  public HealthHandler(JSentinelRuntime runtime) {
+  private final JCustosRuntime runtime;
+  public HealthHandler(JCustosRuntime runtime) {
     this.runtime = runtime;
   }
   @Override public void handle(RestRequest req, RestResponse resp) {
@@ -114,17 +114,17 @@ public final class HealthHandler implements RestHandler {
 `runtime.toMap()` returns the same data as `toJson()` but as an
 unmodifiable, insertion-ordered `Map<String, Object>` so you can route
 through any serialiser already on your classpath. All four methods
-are marked `@ExperimentalJSentinelApi` until V00.76.
+are marked `@ExperimentalJCustosApi` until V00.76.
 
 ## Persistence pair (V00.74.20)
 
 When the REST service should persist audit / sessions / application
-domain data, open a `JSentinelStoragePair` at startup and feed its
+domain data, open a `JCustosStoragePair` at startup and feed its
 framework half into the bootstrap:
 
 ```java
-JSentinelStoragePair pair = JSentinelStorageFactory.openAt(Path.of("data"));
-Runtime.getRuntime().addShutdownHook(new Thread(pair::close, "jsentinel-pair-close"));
+JCustosStoragePair pair = JCustosStorageFactory.openAt(Path.of("data"));
+Runtime.getRuntime().addShutdownHook(new Thread(pair::close, "jcustos-pair-close"));
 
 RestSecurity.bootstrap()
     .audit(a    -> a.storeBacked(pair.framework().auditEventStore()))
@@ -141,7 +141,7 @@ even if app shutdown throws.
 
 ## JWT validation (V00.76)
 
-Add `jSentinel-jwt` to the classpath and wire `.jwt(...)` to validate inbound
+Add `jCustos-jwt` to the classpath and wire `.jwt(...)` to validate inbound
 JWT bearer tokens against a JWKS endpoint. The DX layer never compiles against a
 JOSE library — it discovers the Nimbus `JwtValidatorFactory` via `ServiceLoader`:
 
@@ -160,7 +160,7 @@ RestSecurity.bootstrap()
 A `RestSubjectResolver` then validates the token via the resolver SPI:
 
 ```java
-JwtValidator validator = JSentinelServiceResolver.findJwtValidator().orElseThrow();
+JwtValidator validator = JCustosServiceResolver.findJwtValidator().orElseThrow();
 return new BearerTokenExtractor().extract(req)
     .flatMap(raw -> validator.validate(raw).toOptional())
     .map(validated -> {

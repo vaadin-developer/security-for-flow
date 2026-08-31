@@ -1,0 +1,32 @@
+package {{BASE_PACKAGE}}.security;
+
+import eu.jsentinel.jcustos.authorization.LoginListener;
+import eu.jsentinel.jcustos.authorization.LoginView;
+import com.vaadin.flow.component.Component;
+import {{BASE_PACKAGE}}.security.model.{{SUBJECT_TYPE}};
+import {{BASE_PACKAGE}}.views.DashboardView;
+import {{BASE_PACKAGE}}.views.{{SUBJECT_PREFIX}}LoginView;
+
+/**
+ * Wires the framework's authentication-phase navigation listener to
+ * the application's login and default route classes. Registered via
+ * {@code META-INF/services/eu.jsentinel.jcustos.authorization.LoginListener}.
+ */
+public class {{SUBJECT_PREFIX}}LoginListener extends LoginListener<{{SUBJECT_TYPE}}> {
+
+  @Override
+  public void notARestrictedTarget(Class<?> navigationTarget) {
+    logger().info("Unrestricted navigation target — no login required: {}",
+        navigationTarget.getSimpleName());
+  }
+
+  @Override
+  public Class<? extends LoginView> loginNavigationTarget() {
+    return {{SUBJECT_PREFIX}}LoginView.class;
+  }
+
+  @Override
+  public Class<? extends Component> defaultNavigationTarget() {
+    return DashboardView.class;
+  }
+}

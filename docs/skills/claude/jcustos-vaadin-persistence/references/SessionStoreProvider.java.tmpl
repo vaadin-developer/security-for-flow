@@ -1,0 +1,23 @@
+package {{BASE_PACKAGE}}.security.services;
+
+import eu.jsentinel.jcustos.session.SessionStore;
+import {{BASE_PACKAGE}}.security.bootstrap.JCustosStorageProvider;
+
+/**
+ * Replacement for the {@code vaadin-jsentinel} provider — now
+ * delegates to the Eclipse-Store-backed
+ * {@link eu.jsentinel.jcustos.persistence.eclipsestore.EclipseStoreJCustosStorage}
+ * via {@link JCustosStorageProvider}.
+ *
+ * <p>Session records survive JVM restarts as long as the
+ * {@code {{STORAGE_DIR}}} directory survives.
+ */
+public final class SessionStoreProvider {
+
+  private SessionStoreProvider() {
+  }
+
+  public static SessionStore sessionStore() {
+    return JCustosStorageProvider.storage().sessionStore();
+  }
+}

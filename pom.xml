@@ -459,7 +459,7 @@
                 </configuration>
             </plugin>
             <!-- jCustos-branded Javadoc: applies the project's theme skin
-                 (docs/javadoc/jsentinel.css) on top of the stock JDK
+                 (docs/javadoc/jcustos.css) on top of the stock JDK
                  stylesheet at generation time, so every generated /
                  published -javadoc.jar renders in the jCustos design with
                  the built-in JDK Light/Dark/System toggle driving the
@@ -478,7 +478,7 @@
                 <configuration>
                     <javadocDirectory>${maven.multiModuleProjectDirectory}/docs/javadoc</javadocDirectory>
                     <addStylesheets>
-                        <addStylesheet>jsentinel.css</addStylesheet>
+                        <addStylesheet>jcustos.css</addStylesheet>
                     </addStylesheets>
                     <doctitle>Sentinel for Java — ${project.version} API</doctitle>
                     <windowtitle>Sentinel for Java ${project.version} API</windowtitle>
@@ -490,8 +490,8 @@
                          shows the unlinked classname instead, every other tag is
                          still validated, and the -javadoc.jar still ships. -->
                     <failOnError>false</failOnError>
-                    <top><![CDATA[<div style="background:#15161a;padding:.4em .9em;font:600 13px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif"><a href="https://jsentinel.eu/" style="color:#a3e635;text-decoration:none">&#8592; jsentinel.eu</a> <span style="color:#9aa0aa">&middot; Sentinel for Java API</span></div>]]></top>
-                    <bottom><![CDATA[Sentinel for Java &middot; ${project.version} &middot; EUPL&nbsp;1.2 &middot; <a href="https://jsentinel.eu/">jsentinel.eu</a>]]></bottom>
+                    <top><![CDATA[<div style="background:#15161a;padding:.4em .9em;font:600 13px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif"><a href="https://jsentinel.eu/" style="color:#a3e635;text-decoration:none">&#8592; jsentinel.eu</a> <span style="color:#9aa0aa">&middot; jCustos API</span></div>]]></top>
+                    <bottom><![CDATA[jCustos &middot; ${project.version} &middot; EUPL&nbsp;1.2 &middot; <a href="https://jsentinel.eu/">jsentinel.eu</a>]]></bottom>
                     <notimestamp>true</notimestamp>
                     <!-- Register the three JEP 8068562 / JDK 9+ documentation
                          tags so the release-profile's failOnError doesn't
