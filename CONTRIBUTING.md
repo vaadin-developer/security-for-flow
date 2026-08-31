@@ -18,6 +18,28 @@ To sign, add this line to your pull request:
 
 Contributing on behalf of an employer? Use `CLA-CORPORATE.md`.
 
+## Where the code lives, and how your pull request gets in
+
+Development happens on **https://git.jsentinel.eu/jSentinel/jCustos-community**.
+The GitHub repository is a **mirror of it** — so pull requests are welcome
+there, but they are not merged with the button.
+
+What happens instead: the maintainer picks your commits up, applies them on the
+development side, and the mirror carries them back to GitHub. Your pull request
+is then closed with a pointer to the commit that carries your work. Authorship
+is preserved — the commit stays yours.
+
+Two consequences worth knowing:
+
+- Your branch may show as "closed" rather than "merged" even though the change
+  shipped. Check the referenced commit, not the badge.
+- Because the mirror overwrites GitHub branches, do not expect a maintainer to
+  push fixups onto your branch there. Review feedback comes as comments; push
+  the follow-up yourself.
+
+If you would rather work where the code is developed, an account on
+git.jsentinel.eu works too — pull requests there follow the ordinary flow.
+
 ## Working on the code
 
 ```bash
