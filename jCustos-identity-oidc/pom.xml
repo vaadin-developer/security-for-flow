@@ -50,11 +50,6 @@
       <artifactId>jCustos-oauth2</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>eu.jsentinel</groupId>
-      <artifactId>jCustos-events</artifactId>
-      <version>${project.version}</version>
-    </dependency>
     <!-- V00.78: DiagnosticContributor SPI (same module->dx pattern as jCustos-oauth2). -->
     <dependency>
       <groupId>eu.jsentinel</groupId>

@@ -51,11 +51,6 @@
       <artifactId>jCustos-propagation</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>eu.jsentinel</groupId>
-      <artifactId>jCustos-events</artifactId>
-      <version>${project.version}</version>
-    </dependency>
     <!-- V00.77: DiagnosticContributor SPI (same module->dx pattern as jCustos-jwt). -->
     <dependency>
       <groupId>eu.jsentinel</groupId>

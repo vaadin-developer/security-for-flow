@@ -29,7 +29,7 @@
     plus the JwtDiagnosticContributor. Framework-neutral — no Vaadin, no REST
     framework. The JOSE-free SPI contracts and result types live in
     jCustos-core/jwt/api; this module is the only place a JOSE library is on
-    the classpath. JWT/JWKS event types are published to jCustos-events.
+    the classpath.
   </description>
 
   <properties>
@@ -40,11 +40,6 @@
     <dependency>
       <groupId>eu.jsentinel</groupId>
       <artifactId>jCustos-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>eu.jsentinel</groupId>
-      <artifactId>jCustos-events</artifactId>
       <version>${project.version}</version>
     </dependency>
     <!-- V00.76: DiagnosticContributor SPI for JwtDiagnosticContributor (same
