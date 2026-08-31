@@ -12,7 +12,7 @@
     <artifactId>demo-jcustos-vaadin-persistence</artifactId>
     <packaging>war</packaging>
     <name>jCustos - Skill Demo: vaadin + persistence</name>
-    <description>Reference output of jsentinel-vaadin + jsentinel-vaadin-persistence skills. Layer 1+2 — Eclipse-Store persistence + token-based first-admin bootstrap (SetupView).</description>
+    <description>Reference output of jcustos-vaadin + jcustos-vaadin-persistence skills. Layer 1+2 — Eclipse-Store persistence + token-based first-admin bootstrap (SetupView).</description>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>

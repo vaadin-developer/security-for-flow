@@ -30,7 +30,7 @@ import java.time.Instant;
 import static eu.jsentinel.jcustos.demo.skill.vaadin.views.MyLoginView.NAV;
 
 /**
- * Replacement for the {@code vaadin-jsentinel} login view —
+ * Replacement for the {@code vaadin-jcustos} login view —
  * additionally forwards to {@link SetupView} when no administrator
  * exists yet ({@link BootstrapWiring#stateService bootstrapRequired}).
  */

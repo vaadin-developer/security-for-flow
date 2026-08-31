@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 
 /**
  * Bearer-token store. Demo-grade — in-memory only. Layer 2
- * (jsentinel-rest-persistence) swaps this for the Eclipse-Store-backed
+ * (jcustos-rest-persistence) swaps this for the Eclipse-Store-backed
  * {@code SessionStore}.
  *
  * <p>Each successful login generates a fresh UUID and stores the

@@ -12,7 +12,7 @@
     <artifactId>demo-jcustos-vaadin-rest-client</artifactId>
     <packaging>war</packaging>
     <name>jCustos - Skill Demo: vaadin-rest-client</name>
-    <description>Reference output of the jsentinel-vaadin skill applied
+    <description>Reference output of the jcustos-vaadin skill applied
         to a fresh Vaadin Flow module. Layer 1 — in-memory admin/admin
         + user/user, Login + Roles + Audit + Sessions + Admin views.</description>
 

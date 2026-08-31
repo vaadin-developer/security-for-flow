@@ -6,7 +6,7 @@ import eu.jsentinel.jcustos.demo.skill.rest.security.bootstrap.JCustosStoragePro
 import java.util.Objects;
 
 /**
- * Replacement for the layer-1 {@code jsentinel-rest} provider.
+ * Replacement for the layer-1 {@code jcustos-rest} provider.
  *
  * <p>Default wires an {@link EclipseStoreUserDirectoryPersistence}
  * around the app-side storage manager exposed by

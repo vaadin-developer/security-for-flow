@@ -8,7 +8,7 @@ import eu.jsentinel.jcustos.dx.bootstrap.SessionBootstrap;
  * Project-local SPI for additive bootstrap configuration.
  *
  * <p>Layer-1 (this skill) defines the contract. Higher layers
- * ({@code jsentinel-vaadin-persistence}, {@code jsentinel-vaadin-hardening},
+ * ({@code jcustos-vaadin-persistence}, {@code jcustos-vaadin-hardening},
  * future {@code -mfa} / {@code -multi-tenant} etc.) each ship one
  * implementation registered via
  * {@code META-INF/services/{@value #SERVICE_NAME}}.

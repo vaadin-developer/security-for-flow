@@ -54,7 +54,7 @@
 
   <!--
     V00.76.10 H2 — reactor-wide SpotBugs rollout (the gate moved from 5 modules
-    into jSentinel-parent, so 20 more modules now run it). Three justified
+    into jCustos-parent, so 20 more modules now run it). Three justified
     excludes surfaced by that rollout:
 
     1) SE_BAD_FIELD on the Vaadin adapter classes. These are Serializable ONLY
@@ -106,7 +106,7 @@
        Scoped to the processor class.
   -->
   <Match>
-    <Class name="~com\.svenruppert\.jsentinel\.propagation\.processor\.PropagateTokenProcessor.*"/>
+    <Class name="~eu\.jsentinel\.jcustos\.propagation\.processor\.PropagateTokenProcessor.*"/>
     <Bug pattern="POTENTIAL_XML_INJECTION"/>
   </Match>
 
@@ -140,32 +140,32 @@
     a static write from the demo bootstrap init listener). These are demo-only,
     are NEVER part of the Central bundle (the bundle ships library modules only),
     and were latent because the fail-fast reactor died at the first failing demo
-    module before reaching the rest. Scoped to the `…jsentinel.demo.` package so
+    module before reaching the rest. Scoped to the `…jcustos.demo.` package so
     the gate stays strict for every library module. See the project memory
     "demo-reactor debt". Cleaning the demo code itself is a separate task.
   -->
   <Match>
-    <Class name="~com\.svenruppert\.jsentinel\.demo\..*"/>
+    <Class name="~eu\.jsentinel\.jcustos\.demo\..*"/>
     <Bug pattern="MS_EXPOSE_REP"/>
   </Match>
   <Match>
-    <Class name="~com\.svenruppert\.jsentinel\.demo\..*"/>
+    <Class name="~eu\.jsentinel\.jcustos\.demo\..*"/>
     <Bug pattern="REC_CATCH_EXCEPTION"/>
   </Match>
   <Match>
-    <Class name="~com\.svenruppert\.jsentinel\.demo\..*"/>
+    <Class name="~eu\.jsentinel\.jcustos\.demo\..*"/>
     <Bug pattern="DE_MIGHT_IGNORE"/>
   </Match>
   <Match>
-    <Class name="~com\.svenruppert\.jsentinel\.demo\..*"/>
+    <Class name="~eu\.jsentinel\.jcustos\.demo\..*"/>
     <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
   </Match>
   <Match>
-    <Class name="~com\.svenruppert\.jsentinel\.demo\..*"/>
+    <Class name="~eu\.jsentinel\.jcustos\.demo\..*"/>
     <Bug pattern="DMI_RANDOM_USED_ONLY_ONCE"/>
   </Match>
   <Match>
-    <Class name="~com\.svenruppert\.jsentinel\.demo\..*"/>
+    <Class name="~eu\.jsentinel\.jcustos\.demo\..*"/>
     <Bug pattern="UPM_UNCALLED_PRIVATE_METHOD"/>
   </Match>
 

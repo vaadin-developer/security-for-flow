@@ -11,7 +11,7 @@
 
   <artifactId>demo-jcustos-standalone-persistence</artifactId>
   <name>jCustos - Skill Demo: standalone + persistence</name>
-  <description>Reference output of the jsentinel-standalone skill — minimal CLI with admin/admin + user/user, SecuredProxy.wrap(...) enforcement.</description>
+  <description>Reference output of the jcustos-standalone skill — minimal CLI with admin/admin + user/user, SecuredProxy.wrap(...) enforcement.</description>
 
   <properties>
     <maven.deploy.skip>true</maven.deploy.skip>

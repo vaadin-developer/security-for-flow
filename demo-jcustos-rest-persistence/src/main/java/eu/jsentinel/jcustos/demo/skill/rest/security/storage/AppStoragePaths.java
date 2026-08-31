@@ -23,7 +23,7 @@ import java.nio.file.Path;
 /**
  * Single source of truth for the application's on-disk storage base.
  *
- * <p>Production runs use {@code ./data/jsentinel-rest-persistence} as
+ * <p>Production runs use {@code ./data/jcustos-rest-persistence} as
  * the base. Tests, CI and any deployment that wants to redirect
  * persistence elsewhere override the base via
  * {@code -Dapp.storage.dir=/some/path}.
@@ -38,7 +38,7 @@ public final class AppStoragePaths {
   public static final String PROPERTY = "app.storage.dir";
 
   /** Built-in default when nothing was configured. */
-  public static final String DEFAULT = "./data/jsentinel-rest-persistence";
+  public static final String DEFAULT = "./data/jcustos-rest-persistence";
 
   private AppStoragePaths() {
   }

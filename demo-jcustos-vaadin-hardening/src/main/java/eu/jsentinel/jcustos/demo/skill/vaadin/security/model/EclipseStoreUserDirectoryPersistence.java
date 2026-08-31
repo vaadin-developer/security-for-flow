@@ -14,14 +14,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Eclipse-Store-backed {@link UserDirectoryPersistence}.
  *
  * <p>Runs in its own {@link EmbeddedStorageManager} under
- * {@code ./data/jsentinel-vaadin-persistence/users} — <strong>independent of the
+ * {@code ./data/jcustos-vaadin-persistence/users} — <strong>independent of the
  * jCustos-framework storage</strong>. Consequence:
  *
  * <ul>
  *   <li>Corrupting the framework storage doesn't take the app users
  *       with it; reverse also true.</li>
  *   <li>Backups / restores / resets are per-concern. Wipe
- *       {@code ./data/jsentinel-vaadin-persistence/users} → fresh user set, framework
+ *       {@code ./data/jcustos-vaadin-persistence/users} → fresh user set, framework
  *       state intact (and vice versa).</li>
  *   <li>Eclipse-Store's own type-mapping handles record-header
  *       evolution — adding / renaming / reordering a

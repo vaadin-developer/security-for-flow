@@ -11,7 +11,7 @@
 
   <artifactId>demo-jcustos-rest-persistence</artifactId>
   <name>jCustos - Skill Demo: rest + persistence</name>
-  <description>Reference output of the jsentinel-rest skill applied to a fresh REST module. Layer 1 — in-memory admin/admin + user/user, Bearer-token sessions, JDK HttpServer.</description>
+  <description>Reference output of the jcustos-rest skill applied to a fresh REST module. Layer 1 — in-memory admin/admin + user/user, Bearer-token sessions, JDK HttpServer.</description>
 
   <properties>
     <maven.deploy.skip>true</maven.deploy.skip>

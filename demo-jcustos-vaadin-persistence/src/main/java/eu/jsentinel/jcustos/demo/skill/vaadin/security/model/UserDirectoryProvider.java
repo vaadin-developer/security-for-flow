@@ -6,7 +6,7 @@ import eu.jsentinel.jcustos.demo.skill.vaadin.security.bootstrap.JCustosStorageP
 import java.util.Objects;
 
 /**
- * Replacement for the layer-1 {@code jsentinel-vaadin} provider.
+ * Replacement for the layer-1 {@code jcustos-vaadin} provider.
  *
  * <p>Default wires an {@link EclipseStoreUserDirectoryPersistence}
  * around the app-side storage manager exposed by

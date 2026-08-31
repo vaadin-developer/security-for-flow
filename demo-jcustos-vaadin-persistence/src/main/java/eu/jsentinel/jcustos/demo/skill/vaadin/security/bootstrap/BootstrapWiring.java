@@ -29,21 +29,21 @@ import java.time.Clock;
  *       decide whether the system is uninitialised.</li>
  *   <li>{@link BootstrapStartup#initializeIfRequired} generates a
  *       one-time token on first start, persists it to
- *       {@code ./data/jsentinel-vaadin-persistence/bootstrap.token} and prints both the path and
+ *       {@code ./data/jcustos-vaadin-persistence/bootstrap.token} and prints both the path and
  *       the token to stdout.</li>
  *   <li>{@link InitialAdminBootstrapService} validates the token from
  *       the {@code SetupView} form and creates the admin via the
  *       {@link AdministratorAccountStoreImpl} adapter.</li>
  * </ol>
  *
- * <p>The token file lives at {@code ./data/jsentinel-vaadin-persistence/bootstrap.token} —
+ * <p>The token file lives at {@code ./data/jcustos-vaadin-persistence/bootstrap.token} —
  * delete it (and any admin row in the persistent storage) to force
  * a re-bootstrap.
  */
 public final class BootstrapWiring {
 
   public static final BootstrapMode DEFAULT_MODE = BootstrapMode.PERSISTENT_FILE;
-  public static final Path DEFAULT_TOKEN_FILE = Path.of("./data/jsentinel-vaadin-persistence/bootstrap.token");
+  public static final Path DEFAULT_TOKEN_FILE = Path.of("./data/jcustos-vaadin-persistence/bootstrap.token");
 
   private static volatile BootstrapWiring current;
 

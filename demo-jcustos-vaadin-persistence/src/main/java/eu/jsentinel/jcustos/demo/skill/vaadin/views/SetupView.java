@@ -25,7 +25,7 @@ import eu.jsentinel.jcustos.demo.skill.vaadin.security.bootstrap.BootstrapWiring
  * {@code MyLoginView}.
  *
  * <p>The bootstrap token is shown on the server console / written to
- * {@code ./data/jsentinel-vaadin-persistence/bootstrap.token} by {@link BootstrapWiring} at JVM
+ * {@code ./data/jcustos-vaadin-persistence/bootstrap.token} by {@link BootstrapWiring} at JVM
  * start. The operator pastes it here together with a chosen admin
  * username + password.
  *

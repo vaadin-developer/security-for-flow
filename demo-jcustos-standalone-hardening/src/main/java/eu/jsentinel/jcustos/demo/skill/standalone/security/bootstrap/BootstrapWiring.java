@@ -27,7 +27,7 @@ import java.time.Clock;
 public final class BootstrapWiring {
 
   public static final BootstrapMode DEFAULT_MODE = BootstrapMode.PERSISTENT_FILE;
-  public static final Path DEFAULT_TOKEN_FILE = Path.of("./data/jsentinel-standalone-persistence/bootstrap.token");
+  public static final Path DEFAULT_TOKEN_FILE = Path.of("./data/jcustos-standalone-persistence/bootstrap.token");
 
   private static volatile BootstrapWiring current;
 

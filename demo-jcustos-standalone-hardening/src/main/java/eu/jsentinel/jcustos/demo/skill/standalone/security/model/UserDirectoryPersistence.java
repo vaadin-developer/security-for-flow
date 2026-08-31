@@ -16,7 +16,7 @@ import java.util.Map;
  *   <li>{@link EclipseStoreUserDirectoryPersistence} — default,
  *       persistent, uses its own
  *       {@code EmbeddedStorageManager} under
- *       {@code ./data/jsentinel-standalone-persistence/users}. Independent of the framework
+ *       {@code ./data/jcustos-standalone-persistence/users}. Independent of the framework
  *       storage, so a framework-storage corruption doesn't take the
  *       app storage with it.</li>
  *   <li>{@link InMemoryUserDirectoryPersistence} — test seam, no

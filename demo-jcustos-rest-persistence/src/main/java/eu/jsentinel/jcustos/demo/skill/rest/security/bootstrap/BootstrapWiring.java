@@ -30,14 +30,14 @@ import java.time.Clock;
  *       decide whether the system is uninitialised.</li>
  *   <li>{@link BootstrapStartup#initializeIfRequired} generates a
  *       one-time token on first start, persists it to
- *       {@code ./data/jsentinel-rest-persistence/bootstrap.token} and prints both the path and
+ *       {@code ./data/jcustos-rest-persistence/bootstrap.token} and prints both the path and
  *       the token to stdout.</li>
  *   <li>{@link InitialAdminBootstrapService} validates the token from
  *       the {@code SetupView} form and creates the admin via the
  *       {@link AdministratorAccountStoreImpl} adapter.</li>
  * </ol>
  *
- * <p>The token file lives at {@code ./data/jsentinel-rest-persistence/bootstrap.token} —
+ * <p>The token file lives at {@code ./data/jcustos-rest-persistence/bootstrap.token} —
  * delete it (and any admin row in the persistent storage) to force
  * a re-bootstrap.
  */
@@ -46,8 +46,8 @@ public final class BootstrapWiring {
   public static final BootstrapMode DEFAULT_MODE = BootstrapMode.PERSISTENT_FILE;
   /**
    * Default token-file location. Reads {@link AppStoragePaths#PROPERTY}
-   * so test forks land in {@code target/test-data/jsentinel/bootstrap.token}
-   * instead of the repo-rooted {@code ./data/jsentinel-rest-persistence/bootstrap.token}.
+   * so test forks land in {@code target/test-data/jcustos/bootstrap.token}
+   * instead of the repo-rooted {@code ./data/jcustos-rest-persistence/bootstrap.token}.
    */
   public static final Path DEFAULT_TOKEN_FILE =
       AppStoragePaths.bootstrapTokenFile();

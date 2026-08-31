@@ -40,7 +40,7 @@ public final class JCustosStorageProvider {
           if (live != null) {
             live.close();
           }
-        }, "jsentinel-storage-pair-shutdown"));
+        }, "jcustos-storage-pair-shutdown"));
       }
       return current;
     }

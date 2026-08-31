@@ -31,7 +31,7 @@ import java.nio.file.Path;
 public final class JCustosStorageProvider {
 
   public static final Path DEFAULT_STORAGE_DIR =
-      Path.of("./data/jsentinel-vaadin-persistence");
+      Path.of("./data/jcustos-vaadin-persistence");
 
   private static volatile JCustosStoragePair current;
 
@@ -49,7 +49,7 @@ public final class JCustosStorageProvider {
           if (live != null) {
             live.close();
           }
-        }, "jsentinel-storage-pair-shutdown"));
+        }, "jcustos-storage-pair-shutdown"));
       }
       return current;
     }

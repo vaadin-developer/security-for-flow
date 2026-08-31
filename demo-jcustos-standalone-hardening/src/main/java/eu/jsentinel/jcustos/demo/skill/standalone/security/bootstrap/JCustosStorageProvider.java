@@ -8,7 +8,7 @@ import java.nio.file.Path;
  * Lazy singleton holder for {@link EclipseStoreJCustosStorage}.
  *
  * <p>The first call to {@link #storage()} opens (or creates) the
- * Eclipse-Store layer at {@code ./data/jsentinel-standalone-persistence} and registers a
+ * Eclipse-Store layer at {@code ./data/jcustos-standalone-persistence} and registers a
  * shutdown hook so the storage is closed cleanly on JVM exit.
  *
  * <p>Concurrency: a {@code synchronized} double-checked-locking
@@ -21,7 +21,7 @@ import java.nio.file.Path;
  */
 public final class JCustosStorageProvider {
 
-  public static final Path DEFAULT_STORAGE_DIR = Path.of("./data/jsentinel-standalone-persistence");
+  public static final Path DEFAULT_STORAGE_DIR = Path.of("./data/jcustos-standalone-persistence");
 
   private static volatile EclipseStoreJCustosStorage current;
 
@@ -39,7 +39,7 @@ public final class JCustosStorageProvider {
           if (live != null) {
             live.close();
           }
-        }, "jsentinel-storage-shutdown"));
+        }, "jcustos-storage-shutdown"));
       }
       return current;
     }

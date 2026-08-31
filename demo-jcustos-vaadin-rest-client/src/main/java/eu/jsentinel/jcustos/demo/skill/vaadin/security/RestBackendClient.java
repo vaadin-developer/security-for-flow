@@ -15,7 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Thin HTTP client wrapping the {@code jsentinel-rest} backend. Used
+ * Thin HTTP client wrapping the {@code jcustos-rest} backend. Used
  * by {@code AuthenticationService} (login → token) and
  * {@code AuthorizationService} (whoami → roles + permissions).
  */

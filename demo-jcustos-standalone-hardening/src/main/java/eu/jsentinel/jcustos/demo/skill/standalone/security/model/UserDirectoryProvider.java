@@ -6,10 +6,10 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 /**
- * Replacement for the layer-1 {@code jsentinel-vaadin} provider.
+ * Replacement for the layer-1 {@code jcustos-vaadin} provider.
  *
  * <p>Default wires an {@link EclipseStoreUserDirectoryPersistence}
- * under {@code ./data/jsentinel-standalone-persistence/users}, then injects it into a
+ * under {@code ./data/jcustos-standalone-persistence/users}, then injects it into a
  * {@link PersistentUserDirectory}. The Eclipse-Store-backed
  * persistence runs in its own {@code EmbeddedStorageManager}
  * independent of the framework storage.
@@ -20,7 +20,7 @@ import java.util.Objects;
  */
 public final class UserDirectoryProvider {
 
-  public static final Path USERS_STORAGE_DIR = Path.of("./data/jsentinel-standalone-persistence/users");
+  public static final Path USERS_STORAGE_DIR = Path.of("./data/jcustos-standalone-persistence/users");
 
   private static volatile UserDirectory directory = buildDefault();
 
