@@ -14,6 +14,7 @@ import eu.jsentinel.jcustos.dx.bootstrap.CommonJCustosBootstrap;
 import eu.jsentinel.jcustos.rest.RestSubjectResolver;
 
 import java.util.function.Consumer;
+import eu.jsentinel.jcustos.dx.rest.handlers.RestHandlerDiscovery;
 
 /**
  * REST-specific fluent bootstrap. Entry point:
@@ -70,4 +71,31 @@ public interface RestJCustosBootstrap
    * @since 00.74.00
    */
   RestJCustosBootstrap openApiMetadata(Consumer<RestOpenApiMetadataBuilder> consumer);
+
+  /**
+   * V00.82: Registers the handler enumeration used for the deny-by-default
+   * startup check (CWE-862).
+   *
+   * <p>With deny-by-default on, a handler carrying no security annotation is
+   * refused at runtime. That is the right outcome, but a REST application only
+   * discovered it when a request arrived — Vaadin reports it at startup because
+   * its router can enumerate routes, and REST has no such registry. Naming your
+   * handler classes here restores the startup check:
+   *
+   * <pre>{@code
+   * RestSecurity.bootstrap()
+   *     .discoverHandlers(new ClassScanningRestHandlerDiscovery(DocumentHandlers.class))
+   *     .mode(JCustosBootstrapMode.STRICT)
+   *     .install();
+   * }</pre>
+   *
+   * <p>Each unprotected handler becomes an ERROR finding, so STRICT refuses to
+   * boot rather than serving an unguarded endpoint. Without deny-by-default the
+   * enumeration is not consulted at all.
+   *
+   * @param discovery non-null enumeration of the application's handlers
+   * @return this builder
+   * @since 00.82.00
+   */
+  RestJCustosBootstrap discoverHandlers(RestHandlerDiscovery discovery);
 }

@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import eu.jsentinel.jcustos.dx.rest.handlers.RestHandlerDiscovery;
 
 /**
  * Package-private implementation of {@link RestJCustosBootstrap}.
@@ -37,6 +38,7 @@ final class RestJCustosBootstrapImpl
     implements RestJCustosBootstrap {
 
   private RestSubjectResolver subjectResolver;
+  private RestHandlerDiscovery handlerDiscovery;
   private RestDecisionMapper decisionMapper;
   private RestErrorBodyStrategy errorBodies;
   private RestCorsConfiguration corsConfiguration;
@@ -90,6 +92,54 @@ final class RestJCustosBootstrapImpl
     consumer.accept(builder);
     this.openApiMetadata = builder.toMetadata();
     return this;
+  }
+
+
+  @Override
+  public RestJCustosBootstrap discoverHandlers(RestHandlerDiscovery discovery) {
+    this.handlerDiscovery = Objects.requireNonNull(discovery, "discovery");
+    return this;
+  }
+
+  /**
+   * Deny-by-default startup check (CWE-862). Mirrors what Vaadin does from its
+   * router; REST needs the application to supply the handler list because it
+   * has no registry to walk.
+   *
+   * <p>Only consulted when deny-by-default is on — without it an unannotated
+   * handler is served by design, and reporting it would be noise.
+   */
+  private void crossCheckHandlers(List<JCustosBootstrapWarning> warnings) {
+    if (!JCustosServiceResolver.isDenyByDefault()) {
+      return;
+    }
+    if (handlerDiscovery == null) {
+      warnings.add(new JCustosBootstrapWarning(
+          Severity.INFO,
+          "deny-by-default/discovery-disabled",
+          "Deny-by-default is on, but no handler discovery is configured — unprotected "
+              + "handlers surface on the first request instead of at startup.",
+          "Pass .discoverHandlers(new ClassScanningRestHandlerDiscovery(YourHandlers.class))."));
+      return;
+    }
+    if (!handlerDiscovery.handlersAvailable()) {
+      // "Could not check" must not look like "checked, nothing found".
+      warnings.add(new JCustosBootstrapWarning(
+          Severity.ERROR,
+          "deny-by-default/discovery-unavailable",
+          "Handler discovery reported it could not enumerate handlers, so unprotected "
+              + "handlers cannot be ruled out.",
+          "Ensure the discovery has the handler classes available at bootstrap time."));
+      return;
+    }
+    handlerDiscovery.discoverUnannotatedHandlerNames().forEach(name ->
+        warnings.add(new JCustosBootstrapWarning(
+            Severity.ERROR,
+            "deny-by-default/unannotated-handler",
+            "Handler '" + name + "' carries no security annotation and is not marked "
+                + "@PublicRoute — deny-by-default refuses every request to it.",
+            "Annotate it (@RequiresPermission / @RequiresRole / …) or mark it @PublicRoute "
+                + "if it is meant to be reachable without a subject.")));
   }
 
   @Override
@@ -215,6 +265,8 @@ final class RestJCustosBootstrapImpl
           RestOpenApiContext.class, RestOpenApiMetadata.class,
           "bootstrap-openapi-metadata", false));
     }
+
+    crossCheckHandlers(warnings);
 
     JCustosBootstrapMode mode = state.mode();
     if (mode == JCustosBootstrapMode.STRICT && warningsContainError(warnings)) {
