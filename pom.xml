@@ -72,6 +72,7 @@
     </licenses>
 
     <modules>
+        <module>jCustos-bom</module>
         <module>jCustos-core</module>
         <module>jCustos-vaadin</module>
         <module>jCustos-rest</module>
@@ -164,6 +165,22 @@
         <slf4j-api.version>2.0.17</slf4j-api.version>
         <junit-jupiter.version>6.1.0</junit-jupiter.version>
     </properties>
+
+    <!-- Second source next to Maven Central. Central itself is published through
+         the bundle script, not through mvn deploy, so pointing the deploy target at
+         repo.jsentinel.eu does not collide with the release path. Enterprise
+         consumers need these artifacts resolvable: the enterprise poms import
+         jCustos-bom, so an unpublished community reactor breaks their build. -->
+    <distributionManagement>
+        <repository>
+            <id>jsentinel-releases</id>
+            <url>https://repo.jsentinel.eu/releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>jsentinel-snapshots</id>
+            <url>https://repo.jsentinel.eu/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
 
     <repositories>
         <!-- The order of definitions matters. Explicitly defining central here to make sure it has the highest priority. -->
