@@ -25,7 +25,7 @@
 
     <groupId>eu.jsentinel</groupId>
     <artifactId>jCustos-parent</artifactId>
-    <version>00.81.10</version>
+    <version>00.81.20-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>jCustos — Security for Vaadin Flow</name>
@@ -93,9 +93,7 @@
         <module>jCustos-propagation-processor</module>
         <module>jCustos-propagation-oidc</module>
         <module>jCustos-events</module>
-        <module>jCustos-events-rest</module>
         <module>jCustos-events-testkit</module>
-        <module>jCustos-events-persistence-eclipsestore</module>
         <module>jCustos-jwt</module>
         <module>jCustos-oauth2</module>
         <module>jCustos-oauth2-vaadin</module>
@@ -111,13 +109,6 @@
         <module>jCustos-identity-vendor-google</module>
         <module>jCustos-identity-vendor-github</module>
         <module>jCustos-dpop</module>
-        <module>jCustos-monitoring</module>
-        <module>jCustos-events-webhook</module>
-        <module>jCustos-events-opentelemetry</module>
-        <module>jCustos-events-siem</module>
-        <module>jCustos-audit-integrity</module>
-        <module>jCustos-audit-integrity-testkit</module>
-        <module>jCustos-audit-integrity-persistence-eclipsestore</module>
         <module>demo-rest-shared</module>
         <module>demo-vaadin</module>
         <module>demo-rest</module>
