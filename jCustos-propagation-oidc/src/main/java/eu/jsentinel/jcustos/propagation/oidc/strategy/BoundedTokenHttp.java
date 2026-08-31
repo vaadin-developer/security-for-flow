@@ -16,8 +16,7 @@
  */
 package eu.jsentinel.jcustos.propagation.oidc.strategy;
 
-import java.io.IOException;
-import java.io.InputStream;
+import eu.jsentinel.jcustos.util.BoundedHttpBody;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -44,24 +43,22 @@ final class BoundedTokenHttp {
 
   /** Sends {@code request} and reads the body bounded to {@link #MAX_BODY_BYTES}. */
   static Response send(HttpClient http, HttpRequest request) {
-    HttpResponse<InputStream> response;
+    HttpResponse<byte[]> response;
     try {
-      response = http.send(request, HttpResponse.BodyHandlers.ofInputStream());
+      // Materialising handler: send() returns only once the body is complete, so
+      // the request timeout bounds the transfer. Reading the body afterwards
+      // would leave a slow trickle unbounded in time (CWE-400).
+      response = http.send(request, BoundedHttpBody.ofByteArray(MAX_BODY_BYTES + 1));
     } catch (Exception e) {
       throw new JCustosPropagationException(0,
           "Token endpoint call failed: " + e.getMessage(), e);
     }
-    try (InputStream in = response.body()) {
-      byte[] bytes = in.readNBytes(MAX_BODY_BYTES + 1);
-      if (bytes.length > MAX_BODY_BYTES) {
-        throw new JCustosPropagationException(response.statusCode(),
-            "Token endpoint response exceeds " + MAX_BODY_BYTES + " bytes");
-      }
-      return new Response(response.statusCode(), new String(bytes, StandardCharsets.UTF_8));
-    } catch (IOException e) {
+    byte[] bytes = response.body();
+    if (bytes.length > MAX_BODY_BYTES) {
       throw new JCustosPropagationException(response.statusCode(),
-          "Token endpoint response read failed: " + e.getMessage(), e);
+          "Token endpoint response exceeds " + MAX_BODY_BYTES + " bytes");
     }
+    return new Response(response.statusCode(), new String(bytes, StandardCharsets.UTF_8));
   }
 
   /** Status + fully-read (bounded) body, mirroring {@code HttpResponse} accessors. */

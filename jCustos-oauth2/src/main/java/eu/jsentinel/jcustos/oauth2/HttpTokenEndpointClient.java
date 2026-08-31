@@ -41,6 +41,7 @@ package eu.jsentinel.jcustos.oauth2;
  * #L%
  */
 
+import eu.jsentinel.jcustos.util.BoundedHttpBody;
 import com.svenruppert.functional.result.Result;
 import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.credential.secret.SecretValue;
@@ -54,7 +55,6 @@ import eu.jsentinel.jcustos.oauth2.internal.JwtSigners;
 import eu.jsentinel.jcustos.oauth2.internal.OAuth2Json;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -158,10 +158,10 @@ public final class HttpTokenEndpointClient implements TokenEndpointClient {
         .header("Content-Type", "application/x-www-form-urlencoded");
     applyClientAuth(form, request);
 
-    HttpResponse<InputStream> response;
+    HttpResponse<byte[]> response;
     try {
       response = http.send(request.POST(HttpRequest.BodyPublishers.ofString(encode(form))).build(),
-          HttpResponse.BodyHandlers.ofInputStream());
+          BoundedHttpBody.ofByteArray(MAX_BYTES + 1));
     } catch (java.net.http.HttpTimeoutException e) {
       return Result.failure(new OAuth2Error.NetworkError("timeout"));
     } catch (IOException e) {
@@ -172,15 +172,11 @@ public final class HttpTokenEndpointClient implements TokenEndpointClient {
     }
 
     String body;
-    try (InputStream in = response.body()) {
-      byte[] bytes = in.readNBytes(MAX_BYTES + 1);
-      if (bytes.length > MAX_BYTES) {
-        return Result.failure(new OAuth2Error.MalformedResponse("body exceeds the size cap"));
-      }
-      body = new String(bytes, StandardCharsets.UTF_8);
-    } catch (IOException e) {
-      return Result.failure(new OAuth2Error.NetworkError(e.getClass().getSimpleName()));
+    byte[] bytes = response.body();
+    if (bytes.length > MAX_BYTES) {
+      return Result.failure(new OAuth2Error.MalformedResponse("body exceeds the size cap"));
     }
+    body = new String(bytes, StandardCharsets.UTF_8);
 
     int status = response.statusCode();
     if (status / 100 == 2) {

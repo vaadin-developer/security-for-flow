@@ -25,6 +25,7 @@ package eu.jsentinel.jcustos.jwt.impl;
  * #L%
  */
 
+import eu.jsentinel.jcustos.util.BoundedHttpBody;
 import com.nimbusds.jose.jwk.AsymmetricJWK;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -35,7 +36,6 @@ import eu.jsentinel.jcustos.jwt.api.JwksRefreshResult;
 import eu.jsentinel.jcustos.jwt.api.JwsAlgorithm;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -215,20 +215,16 @@ public final class HttpJwksClient implements JwksClient, HasLogger {
     Instant now = clock.get();
     try {
       HttpRequest request = HttpRequest.newBuilder(jwksUri).timeout(HTTP_TIMEOUT).GET().build();
-      HttpResponse<InputStream> response =
-          httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
+      HttpResponse<byte[]> response =
+          httpClient.send(request, BoundedHttpBody.ofByteArray(MAX_JWKS_BYTES + 1));
       if (response.statusCode() / 100 != 2) {
-        response.body().close();
         logger().warn("jwks/refresh-non-2xx: status={}", response.statusCode());
         return new FetchOutcome(new JwksRefreshResult(0, now, NEGATIVE_TTL,
             Optional.of("Non2xxResponse")), null);
       }
       // RF01: read at most MAX_JWKS_BYTES + 1; a larger body is rejected before parsing
       // (the 10s timeout caps time, not size).
-      byte[] bytes;
-      try (InputStream in = response.body()) {
-        bytes = in.readNBytes(MAX_JWKS_BYTES + 1);
-      }
+      byte[] bytes = response.body();
       if (bytes.length > MAX_JWKS_BYTES) {
         logger().warn("jwks/refresh-oversized: body exceeds {} bytes", MAX_JWKS_BYTES);
         return new FetchOutcome(new JwksRefreshResult(0, now, NEGATIVE_TTL,

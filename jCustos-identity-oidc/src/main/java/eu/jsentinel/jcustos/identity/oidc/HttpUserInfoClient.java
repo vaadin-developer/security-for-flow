@@ -41,6 +41,7 @@ package eu.jsentinel.jcustos.identity.oidc;
  * #L%
  */
 
+import eu.jsentinel.jcustos.util.BoundedHttpBody;
 import com.svenruppert.functional.result.Result;
 import eu.jsentinel.jcustos.identity.oidc.internal.OidcJson;
 import eu.jsentinel.jcustos.oauth2.api.OAuth2Error;
@@ -49,7 +50,6 @@ import eu.jsentinel.jcustos.oidc.api.UserInfoClient;
 import eu.jsentinel.jcustos.oidc.api.UserInfoResponse;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -87,12 +87,12 @@ public final class HttpUserInfoClient implements UserInfoClient {
   @Override
   public Result<UserInfoResponse, OAuth2Error> fetch(String accessToken) {
     Objects.requireNonNull(accessToken, "accessToken");
-    HttpResponse<InputStream> response;
+    HttpResponse<byte[]> response;
     try {
       response = http.send(HttpRequest.newBuilder(endpoint).timeout(TIMEOUT)
           .header("Accept", "application/json")
           .header("Authorization", "Bearer " + accessToken)
-          .GET().build(), HttpResponse.BodyHandlers.ofInputStream());
+          .GET().build(), BoundedHttpBody.ofByteArray(MAX_BYTES + 1));
     } catch (java.net.http.HttpTimeoutException e) {
       return Result.failure(new OAuth2Error.NetworkError("timeout"));
     } catch (IOException e) {
@@ -106,15 +106,11 @@ public final class HttpUserInfoClient implements UserInfoClient {
     }
 
     String body;
-    try (InputStream in = response.body()) {
-      byte[] bytes = in.readNBytes(MAX_BYTES + 1);
-      if (bytes.length > MAX_BYTES) {
-        return Result.failure(new OAuth2Error.MalformedResponse("userinfo body exceeds the size cap"));
-      }
-      body = new String(bytes, StandardCharsets.UTF_8);
-    } catch (IOException e) {
-      return Result.failure(new OAuth2Error.NetworkError(e.getClass().getSimpleName()));
+    byte[] bytes = response.body();
+    if (bytes.length > MAX_BYTES) {
+      return Result.failure(new OAuth2Error.MalformedResponse("userinfo body exceeds the size cap"));
     }
+    body = new String(bytes, StandardCharsets.UTF_8);
 
     Map<String, Object> json;
     try {
