@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.audit;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 
 import java.time.Instant;
@@ -39,7 +39,7 @@ import static java.util.Objects.requireNonNull;
  * insertion order (oldest first); retention is implemented via
  * {@link #purgeOlderThan(Instant)}.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class InMemoryAuditEventStore implements AuditEventStore {
 
   private final List<AuditEnvelope> envelopes = new ArrayList<>();

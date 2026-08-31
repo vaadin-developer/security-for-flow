@@ -18,7 +18,7 @@ package eu.jsentinel.jcustos.demo.app.security.services;
 
 import eu.jsentinel.jcustos.action.ActionPermission;
 import eu.jsentinel.jcustos.authorization.api.AccessDeniedException;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.demo.app.security.model.MyUser;
 import eu.jsentinel.jcustos.demo.app.security.permissions.DemoPermission;
 import eu.jsentinel.jcustos.demo.app.security.roles.AuthorizationRole;
@@ -50,13 +50,13 @@ class DemoActionAuthorizationServiceTest {
 
   @BeforeEach
   void wire() {
-    JSentinelServiceResolver.resetAll();
-    JSentinelServiceResolver.setJSentinelAuditService(audit);
+    JCustosServiceResolver.resetAll();
+    JCustosServiceResolver.setJCustosAuditService(audit);
   }
 
   @AfterEach
   void reset() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   @Test

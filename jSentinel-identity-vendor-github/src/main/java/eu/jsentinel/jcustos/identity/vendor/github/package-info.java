@@ -15,7 +15,7 @@
  * limitations under the Licence.
  */
 /**
- * V00.79 Github vendor profile for the jSentinel OIDC RP.
+ * V00.79 Github vendor profile for the jCustos OIDC RP.
  *
  * @since 00.79.00
  */

@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.testkit;
 
 /*-
  * #%L
- * jSentinel Events — Contract testkit
+ * jCustos Events — Contract testkit
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,8 +25,8 @@ package eu.jsentinel.jcustos.events.testkit;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.events.publisher.SignedEnvelopePublisher;
 
 import java.util.List;
@@ -43,14 +43,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class RecordingEnvelopePublisher implements SignedEnvelopePublisher {
 
-  private final List<SignedJSentinelEventEnvelope> received = new CopyOnWriteArrayList<>();
+  private final List<SignedJCustosEventEnvelope> received = new CopyOnWriteArrayList<>();
   private volatile RuntimeException failure;
 
   @Override
-  public void onEnvelope(SignedJSentinelEventEnvelope envelope) {
+  public void onEnvelope(SignedJCustosEventEnvelope envelope) {
     received.add(envelope);
     RuntimeException toThrow = failure;
     if (toThrow != null) {
@@ -61,7 +61,7 @@ public final class RecordingEnvelopePublisher implements SignedEnvelopePublisher
   /**
    * @return a defensive copy of every envelope delivered so far, in order
    */
-  public List<SignedJSentinelEventEnvelope> received() {
+  public List<SignedJCustosEventEnvelope> received() {
     return List.copyOf(received);
   }
 

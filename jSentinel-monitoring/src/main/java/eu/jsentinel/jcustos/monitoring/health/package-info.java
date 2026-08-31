@@ -1,10 +1,10 @@
 /*-
  * #%L
- * jSentinel Monitoring — metrics, health and diagnostics export points
+ * jCustos Monitoring — metrics, health and diagnostics export points
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,15 +25,15 @@
 
 /**
  * Health export point: the
- * {@link eu.jsentinel.jcustos.monitoring.health.JSentinelHealthIndicator}
+ * {@link eu.jsentinel.jcustos.monitoring.health.JCustosHealthIndicator}
  * SPI, the
- * {@link eu.jsentinel.jcustos.monitoring.health.JSentinelHealthCheck}
+ * {@link eu.jsentinel.jcustos.monitoring.health.JCustosHealthCheck}
  * aggregator (reusing the dx
  * {@link eu.jsentinel.jcustos.dx.runtime.HealthStatus} /
  * {@link eu.jsentinel.jcustos.dx.runtime.HealthFinding} report
  * model — no parallel type zoo) and two built-in indicators:
  * {@link eu.jsentinel.jcustos.monitoring.health.DiagnosticsHealthIndicator}
- * over {@code JSentinelDiagnostics.inspect()} and
+ * over {@code JCustosDiagnostics.inspect()} and
  * {@link eu.jsentinel.jcustos.monitoring.health.AuditStoreSaturationHealthIndicator}
  * over the {@code RingBufferAuditSink} fill level.
  *

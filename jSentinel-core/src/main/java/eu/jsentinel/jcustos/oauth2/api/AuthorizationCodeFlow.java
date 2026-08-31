@@ -29,7 +29,7 @@ import java.util.Set;
  * {@link #startRequest} produces the browser-redirect URI (and stores the PKCE
  * verifier + state in the {@link StateStore}); {@link #handleCallback} validates
  * the returned {@code state}, consumes it single-use, and exchanges the code for
- * tokens. JOSE-free; the HTTP implementation lives in {@code jSentinel-oauth2}.
+ * tokens. JOSE-free; the HTTP implementation lives in {@code jCustos-oauth2}.
  *
  * @since 00.77.00
  */

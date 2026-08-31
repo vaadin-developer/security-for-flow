@@ -10,8 +10,8 @@
  */
 package eu.jsentinel.jcustos.annotations;
 
-import eu.jsentinel.jcustos.authorization.annotations.JSentinelAnnotation;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.annotations.JCustosAnnotation;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.credential.propagation.PropagateTokenAdvisor;
 
 import java.lang.annotation.ElementType;
@@ -26,8 +26,8 @@ import java.lang.annotation.Target;
  * {@code TokenExchangeStrategy}).
  *
  * <p>Meta-annotated with
- * {@link JSentinelAnnotation @JSentinelAnnotation(PropagateTokenAdvisor.class)}
- * so the V00.70 {@code JSentinelAnnotationScanner} discovers it
+ * {@link JCustosAnnotation @JCustosAnnotation(PropagateTokenAdvisor.class)}
+ * so the V00.70 {@code JCustosAnnotationScanner} discovers it
  * through the same cache as {@code @RequiresRole} /
  * {@code @RequiresPermission}.
  *
@@ -49,10 +49,10 @@ import java.lang.annotation.Target;
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi("V00.74 token propagation; stable promotion staged for V00.76")
+@ExperimentalJCustosApi("V00.74 token propagation; stable promotion staged for V00.76")
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})
-@JSentinelAnnotation(PropagateTokenAdvisor.class)
+@JCustosAnnotation(PropagateTokenAdvisor.class)
 public @interface PropagateToken {
 
   /** Lookup key against the named strategies. Default {@code "pass-through"}. */

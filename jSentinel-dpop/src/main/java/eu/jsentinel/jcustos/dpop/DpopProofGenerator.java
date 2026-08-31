@@ -29,7 +29,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.net.URI;
 import java.security.MessageDigest;
@@ -50,7 +50,7 @@ import java.util.function.Supplier;
  *
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class DpopProofGenerator {
 
   /** RFC 9449 §4.2: the DPoP-proof JOSE {@code typ}. */

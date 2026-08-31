@@ -48,18 +48,18 @@ final class BoundedTokenHttp {
     try {
       response = http.send(request, HttpResponse.BodyHandlers.ofInputStream());
     } catch (Exception e) {
-      throw new JSentinelPropagationException(0,
+      throw new JCustosPropagationException(0,
           "Token endpoint call failed: " + e.getMessage(), e);
     }
     try (InputStream in = response.body()) {
       byte[] bytes = in.readNBytes(MAX_BODY_BYTES + 1);
       if (bytes.length > MAX_BODY_BYTES) {
-        throw new JSentinelPropagationException(response.statusCode(),
+        throw new JCustosPropagationException(response.statusCode(),
             "Token endpoint response exceeds " + MAX_BODY_BYTES + " bytes");
       }
       return new Response(response.statusCode(), new String(bytes, StandardCharsets.UTF_8));
     } catch (IOException e) {
-      throw new JSentinelPropagationException(response.statusCode(),
+      throw new JCustosPropagationException(response.statusCode(),
           "Token endpoint response read failed: " + e.getMessage(), e);
     }
   }

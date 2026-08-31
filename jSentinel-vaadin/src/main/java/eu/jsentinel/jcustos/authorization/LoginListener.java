@@ -17,13 +17,13 @@
 package eu.jsentinel.jcustos.authorization;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
-import eu.jsentinel.jcustos.authorization.impl.JSentinelAnnotationScanner;
+import eu.jsentinel.jcustos.authorization.impl.JCustosAnnotationScanner;
 import eu.jsentinel.jcustos.authorization.impl.VaadinNavigationAccessDecisionMapper;
 import eu.jsentinel.jcustos.authorization.navigation.NavigationAccessDecision;
 import eu.jsentinel.jcustos.authorization.navigation.NavigationAccessDecisionService;
-import eu.jsentinel.jcustos.authorization.navigation.NavigationJSentinelContext;
+import eu.jsentinel.jcustos.authorization.navigation.NavigationJCustosContext;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterListener;
@@ -47,7 +47,7 @@ public abstract class LoginListener<U>
   private final NavigationAccessDecisionService decisionService = new NavigationAccessDecisionService();
 
   /** Scanner for framework security annotations. */
-  private final JSentinelAnnotationScanner scanner = new JSentinelAnnotationScanner();
+  private final JCustosAnnotationScanner scanner = new JCustosAnnotationScanner();
 
   /** Maps authentication-phase decisions to Vaadin navigation operations. */
   private final VaadinNavigationAccessDecisionMapper decisionMapper =
@@ -66,7 +66,7 @@ public abstract class LoginListener<U>
         .currentSubject(subjectType())
         .isPresent();
 
-    NavigationJSentinelContext ctx = new NavigationJSentinelContext(
+    NavigationJCustosContext ctx = new NavigationJCustosContext(
         navigationTarget, isRestricted, subjectAvailable, isLoginView);
 
     NavigationAccessDecision decision = decisionService.evaluateAuthentication(ctx);
@@ -121,7 +121,7 @@ public abstract class LoginListener<U>
 
   @SuppressWarnings("unchecked")
   private Class<U> subjectType() {
-    return (Class<U>) JSentinelServiceResolver
+    return (Class<U>) JCustosServiceResolver
         .<Object, Object>authenticationService()
         .subjectType();
   }

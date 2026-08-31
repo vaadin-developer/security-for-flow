@@ -11,7 +11,7 @@
 package eu.jsentinel.jcustos.starter.routes;
 
 import eu.jsentinel.jcustos.authorization.api.AuthorizationDecision;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleName;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
@@ -55,7 +55,7 @@ class SecureRouteEvaluatorTest {
 
   @Test
   void permissionsAreAllOf() {
-    JSentinelSubject sub = subject(Set.of(),
+    JCustosSubject sub = subject(Set.of(),
         Set.of(new PermissionName("doc:read")));
     // Subject has only "doc:read"; annotation needs read+write.
     AuthorizationDecision d = evaluator.evaluate(ctx(Optional.of(sub)),
@@ -66,7 +66,7 @@ class SecureRouteEvaluatorTest {
   @Test
   void combinedRolesAndPermissions_grantedOnlyWhenBoth() {
     // Subject has role ADMIN but not permission doc:write
-    JSentinelSubject sub = subject(Set.of(new RoleName("ADMIN")), Set.of());
+    JCustosSubject sub = subject(Set.of(new RoleName("ADMIN")), Set.of());
     AuthorizationDecision d = evaluator.evaluate(ctx(Optional.of(sub)),
         ann(new String[]{"ADMIN"}, new String[]{"doc:write"}, ""));
     assertInstanceOf(AuthorizationDecision.Forbidden.class, d);
@@ -86,7 +86,7 @@ class SecureRouteEvaluatorTest {
   void emptyAnnotation_grantsAuthenticatedSubject() {
     // R035: with a subject bound, a constraint-less @SecureRoute means
     // "authenticated required" and admits any authenticated user.
-    JSentinelSubject sub = subject(Set.of(), Set.of());
+    JCustosSubject sub = subject(Set.of(), Set.of());
     AuthorizationDecision d = evaluator.evaluate(
         ctx(Optional.of(sub)),
         ann(new String[]{}, new String[]{}, ""));
@@ -95,7 +95,7 @@ class SecureRouteEvaluatorTest {
 
   @Test
   void policyAlone_isForbidden_v0072Limitation() {
-    JSentinelSubject sub = subject(Set.of(), Set.of());
+    JCustosSubject sub = subject(Set.of(), Set.of());
     AuthorizationDecision d = evaluator.evaluate(ctx(Optional.of(sub)),
         ann(new String[]{}, new String[]{}, "doc.owner-or-admin"));
     assertInstanceOf(AuthorizationDecision.Forbidden.class, d);
@@ -116,17 +116,17 @@ class SecureRouteEvaluatorTest {
     };
   }
 
-  private static JSentinelSubject subject(Set<RoleName> roles, Set<PermissionName> perms) {
-    return new JSentinelSubject("u1", "Test User", roles, perms);
+  private static JCustosSubject subject(Set<RoleName> roles, Set<PermissionName> perms) {
+    return new JCustosSubject("u1", "Test User", roles, perms);
   }
 
-  private static AccessContext ctx(Optional<JSentinelSubject> sub) {
+  private static AccessContext ctx(Optional<JCustosSubject> sub) {
     return new AccessContext(sub, "vaadin-route", "/test", "view", Map.of());
   }
 
   @Test
   void granted_whenSubjectHasAllPermissions() {
-    JSentinelSubject sub = subject(Set.of(),
+    JCustosSubject sub = subject(Set.of(),
         Set.of(new PermissionName("doc:read"), new PermissionName("doc:write")));
     AuthorizationDecision d = evaluator.evaluate(ctx(Optional.of(sub)),
         ann(new String[]{}, new String[]{"doc:read", "doc:write"}, ""));

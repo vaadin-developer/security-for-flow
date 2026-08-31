@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.publisher;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -26,7 +26,7 @@ package eu.jsentinel.jcustos.events.publisher;
  */
 
 import eu.jsentinel.jcustos.events.api.EventEnvelopeId;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Marker;
@@ -78,7 +78,7 @@ class LoggingEventPublisherTest {
   @DisplayName("CWE-117: a hostile envelope id is scrubbed before logging")
   void hostileEnvelopeIdIsScrubbed() {
     RecordingSlf4jLogger logger = new RecordingSlf4jLogger();
-    SignedJSentinelEventEnvelope hostile = PublisherFixtures.validBuilder()
+    SignedJCustosEventEnvelope hostile = PublisherFixtures.validBuilder()
         .envelopeId(EventEnvelopeId.of("env\nEVENT forged=line"))
         .build();
     new LoggingEventPublisher(logger).onEnvelope(hostile);

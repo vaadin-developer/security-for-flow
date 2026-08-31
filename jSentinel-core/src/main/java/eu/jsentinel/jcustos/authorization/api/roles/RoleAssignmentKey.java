@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authorization.api.roles;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.logout.SubjectId;
 
@@ -34,7 +34,7 @@ import static java.util.Objects.requireNonNull;
  * @param tenant    tenant scope; {@code null} becomes {@link TenantId#DEFAULT}
  * @param subjectId subject identifier; non-null
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record RoleAssignmentKey(TenantId tenant, SubjectId subjectId) {
 
   /**

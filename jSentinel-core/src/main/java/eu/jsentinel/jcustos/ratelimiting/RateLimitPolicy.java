@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.ratelimiting;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 /**
  * Pluggable rate-limiting decision point — separate from
@@ -38,7 +38,7 @@ import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
  *
  * <p>Implementations must be thread-safe.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 @FunctionalInterface
 public interface RateLimitPolicy {
 

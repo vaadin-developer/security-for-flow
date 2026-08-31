@@ -1,6 +1,6 @@
 package eu.jsentinel.jcustos.demo.skill.vaadin.security.bootstrap;
 
-import eu.jsentinel.jcustos.dx.vaadin.bootstrap.VaadinJSentinelBootstrap;
+import eu.jsentinel.jcustos.dx.vaadin.bootstrap.VaadinJCustosBootstrap;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,8 +18,8 @@ import java.util.ServiceLoader;
  * additive: any number of skills can each ship one extension; none
  * of them touches the entry-point listener.
  *
- * <p>Defaults are registered by {@link JSentinelBootstrapInitListener}'s
- * static initialiser before the first {@link #apply(VaadinJSentinelBootstrap)}
+ * <p>Defaults are registered by {@link JCustosBootstrapInitListener}'s
+ * static initialiser before the first {@link #apply(VaadinJCustosBootstrap)}
  * call.
  */
 public final class BootstrapBuilder {
@@ -38,7 +38,7 @@ public final class BootstrapBuilder {
    *                loginRoute} etc.)
    * @return the same builder, for chaining {@code .install()}
    */
-  public static VaadinJSentinelBootstrap apply(VaadinJSentinelBootstrap builder) {
+  public static VaadinJCustosBootstrap apply(VaadinJCustosBootstrap builder) {
     List<BootstrapExtension> extensions = new ArrayList<>();
     ServiceLoader.load(BootstrapExtension.class).forEach(extensions::add);
     extensions.sort(Comparator.comparingInt(BootstrapExtension::order));

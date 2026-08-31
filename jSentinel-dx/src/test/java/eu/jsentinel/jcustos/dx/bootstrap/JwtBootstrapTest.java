@@ -1,13 +1,13 @@
 package eu.jsentinel.jcustos.dx.bootstrap;
 
 import com.svenruppert.functional.result.Result;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.dx.internal.AbstractJSentinelBootstrap;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.dx.internal.AbstractJCustosBootstrap;
 import eu.jsentinel.jcustos.dx.internal.JwtState;
 import eu.jsentinel.jcustos.dx.internal.RecordingJwtBootstrap;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapMode;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapWarning;
-import eu.jsentinel.jcustos.dx.runtime.RegisteredJSentinelService;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapMode;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapWarning;
+import eu.jsentinel.jcustos.dx.runtime.RegisteredJCustosService;
 import eu.jsentinel.jcustos.dx.runtime.Severity;
 import eu.jsentinel.jcustos.jwt.api.AlgorithmProfile;
 import eu.jsentinel.jcustos.jwt.api.JwtValidationError;
@@ -34,10 +34,10 @@ class JwtBootstrapTest {
       Result.failure(new JwtValidationError.MalformedJwt("noop"));
 
   /** Test-only bootstrap exposing the protected apply pass. */
-  static final class TestBootstrap extends AbstractJSentinelBootstrap<TestBootstrap> {
-    List<JSentinelBootstrapWarning> applyJwt() {
-      List<RegisteredJSentinelService> services = new ArrayList<>();
-      List<JSentinelBootstrapWarning> warnings = new ArrayList<>();
+  static final class TestBootstrap extends AbstractJCustosBootstrap<TestBootstrap> {
+    List<JCustosBootstrapWarning> applyJwt() {
+      List<RegisteredJCustosService> services = new ArrayList<>();
+      List<JCustosBootstrapWarning> warnings = new ArrayList<>();
       applyJwtConfiguration(services, warnings);
       return warnings;
     }
@@ -45,15 +45,15 @@ class JwtBootstrapTest {
 
   @AfterEach
   void reset() {
-    JSentinelServiceResolver.setJwtValidator(null);
+    JCustosServiceResolver.setJwtValidator(null);
   }
 
-  private static boolean hasError(List<JSentinelBootstrapWarning> warnings, String code) {
+  private static boolean hasError(List<JCustosBootstrapWarning> warnings, String code) {
     return warnings.stream().anyMatch(w ->
         w.code().equals(code) && w.severity() == Severity.ERROR);
   }
 
-  private static boolean hasInfo(List<JSentinelBootstrapWarning> warnings, String code) {
+  private static boolean hasInfo(List<JCustosBootstrapWarning> warnings, String code) {
     return warnings.stream().anyMatch(w ->
         w.code().equals(code) && w.severity() == Severity.INFO);
   }
@@ -62,7 +62,7 @@ class JwtBootstrapTest {
   @DisplayName("an explicit .validator(...) is installed into the resolver")
   void explicitValidatorInstalled() {
     new TestBootstrap().jwt(j -> j.validator(NOOP_VALIDATOR)).applyJwt();
-    assertSame(NOOP_VALIDATOR, JSentinelServiceResolver.findJwtValidator().orElseThrow());
+    assertSame(NOOP_VALIDATOR, JCustosServiceResolver.findJwtValidator().orElseThrow());
   }
 
   @Test
@@ -86,7 +86,7 @@ class JwtBootstrapTest {
   @Test
   @DisplayName(".jwksUri(...) without a profile or allow-list is a STRICT-class error")
   void jwksUriWithoutAllowListIsError() {
-    List<JSentinelBootstrapWarning> warnings = new TestBootstrap()
+    List<JCustosBootstrapWarning> warnings = new TestBootstrap()
         .jwt(j -> j.jwksUri(URI.create("https://idp.example/jwks"))).applyJwt();
     assertTrue(hasError(warnings, "jwt/no-algorithm-allow-list"));
   }
@@ -94,7 +94,7 @@ class JwtBootstrapTest {
   @Test
   @DisplayName("neither .validator(...) nor .jwksUri(...) is a STRICT-class error")
   void missingJwksUriOrValidatorIsError() {
-    List<JSentinelBootstrapWarning> warnings = new TestBootstrap()
+    List<JCustosBootstrapWarning> warnings = new TestBootstrap()
         .jwt(j -> j.issuer("https://idp.example/")).applyJwt();
     assertTrue(hasError(warnings, "jwt/missing-jwks-uri-or-validator"));
   }
@@ -102,7 +102,7 @@ class JwtBootstrapTest {
   @Test
   @DisplayName("JS-SEC-005: .jwt(...) without .audience(...) emits the claims/audience-empty INFO")
   void audienceEmptyEmitsInfo() {
-    List<JSentinelBootstrapWarning> warnings = new TestBootstrap()
+    List<JCustosBootstrapWarning> warnings = new TestBootstrap()
         .jwt(j -> j.jwksUri(URI.create("https://idp.example/jwks"))
             .algorithmAllowList(AlgorithmProfile.STRICT_MODERN.toAllowList())
             .issuer("https://idp.example/"))
@@ -113,7 +113,7 @@ class JwtBootstrapTest {
   @Test
   @DisplayName("JS-SEC-005: .jwt(...) with an .audience(...) does not emit claims/audience-empty")
   void audienceSetSuppressesInfo() {
-    List<JSentinelBootstrapWarning> warnings = new TestBootstrap()
+    List<JCustosBootstrapWarning> warnings = new TestBootstrap()
         .jwt(j -> j.jwksUri(URI.create("https://idp.example/jwks"))
             .algorithmAllowList(AlgorithmProfile.STRICT_MODERN.toAllowList())
             .issuer("https://idp.example/")
@@ -125,8 +125,8 @@ class JwtBootstrapTest {
   @Test
   @DisplayName("a non-https JWKS URI is a STRICT-class error in STRICT mode")
   void nonHttpsJwksUriIsErrorInStrict() {
-    List<JSentinelBootstrapWarning> warnings = new TestBootstrap()
-        .mode(JSentinelBootstrapMode.STRICT)
+    List<JCustosBootstrapWarning> warnings = new TestBootstrap()
+        .mode(JCustosBootstrapMode.STRICT)
         .jwt(j -> j.jwksUri(URI.create("http://idp.example/jwks"))
             .algorithmProfile(AlgorithmProfile.STRICT_MODERN))
         .applyJwt();
@@ -146,8 +146,8 @@ class JwtBootstrapTest {
   @Test
   @DisplayName("R11: a non-https JWKS URI is also an ERROR in PRODUCTION mode (was WARNING)")
   void nonHttpsJwksUriIsErrorInProduction() {
-    List<JSentinelBootstrapWarning> warnings = new TestBootstrap()
-        .mode(JSentinelBootstrapMode.PRODUCTION)
+    List<JCustosBootstrapWarning> warnings = new TestBootstrap()
+        .mode(JCustosBootstrapMode.PRODUCTION)
         .jwt(j -> j.jwksUri(URI.create("http://idp.example/jwks"))
             .algorithmProfile(AlgorithmProfile.STRICT_MODERN))
         .applyJwt();
@@ -158,8 +158,8 @@ class JwtBootstrapTest {
   @Test
   @DisplayName("R11: a non-https JWKS URI is NOT an error in DEVELOPMENT (loopback http stays allowed)")
   void nonHttpsJwksUriIsNotErrorInDevelopment() {
-    List<JSentinelBootstrapWarning> warnings = new TestBootstrap()
-        .mode(JSentinelBootstrapMode.DEVELOPMENT)
+    List<JCustosBootstrapWarning> warnings = new TestBootstrap()
+        .mode(JCustosBootstrapMode.DEVELOPMENT)
         .jwt(j -> j.jwksUri(URI.create("http://localhost/jwks"))
             .algorithmProfile(AlgorithmProfile.STRICT_MODERN))
         .applyJwt();
@@ -170,9 +170,9 @@ class JwtBootstrapTest {
   @Test
   @DisplayName("the jwksUri path needs a JwtValidatorFactory — absent in dx itself (Nimbus-free)")
   void factoryMissingWhenJwtModuleAbsent() {
-    // jSentinel-dx does not depend on jSentinel-jwt, so no factory is on the
+    // jCustos-dx does not depend on jCustos-jwt, so no factory is on the
     // classpath here — proving the DX layer stays JOSE-free.
-    List<JSentinelBootstrapWarning> warnings = new TestBootstrap()
+    List<JCustosBootstrapWarning> warnings = new TestBootstrap()
         .jwt(j -> j.jwksUri(URI.create("https://idp.example/jwks"))
             .algorithmProfile(AlgorithmProfile.STRICT_MODERN).issuer("https://idp.example/"))
         .applyJwt();
@@ -182,7 +182,7 @@ class JwtBootstrapTest {
   @Test
   @DisplayName("the CUSTOM profile without an explicit allow-list fails gracefully, not by exception (RF02)")
   void customProfileFailsGracefully() {
-    List<JSentinelBootstrapWarning> warnings = new TestBootstrap()
+    List<JCustosBootstrapWarning> warnings = new TestBootstrap()
         .jwt(j -> j.jwksUri(URI.create("https://idp.example/jwks"))
             .algorithmProfile(AlgorithmProfile.CUSTOM))
         .applyJwt();

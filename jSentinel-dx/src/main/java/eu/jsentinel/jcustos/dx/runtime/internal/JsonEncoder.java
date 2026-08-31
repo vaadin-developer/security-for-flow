@@ -20,7 +20,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Minimal RFC 8259 JSON encoder for {@link eu.jsentinel.jcustos.dx.runtime.JSentinelRuntime#toJson()}.
+ * Minimal RFC 8259 JSON encoder for {@link eu.jsentinel.jcustos.dx.runtime.JCustosRuntime#toJson()}.
  * <p>
  * Supported value types: {@code null}, {@link Boolean}, {@link Number},
  * {@link CharSequence}, {@link Map} and {@link Iterable}. Maps and
@@ -48,8 +48,8 @@ import java.util.Map;
  * <p>This class lives in the {@code eu.jsentinel.jcustos.dx.runtime.internal}
  * package — by convention, classes in {@code internal} packages are
  * <strong>not</strong> part of the public API surface. The public entry
- * point is {@link eu.jsentinel.jcustos.dx.runtime.JSentinelRuntime#toJson()}.
- * The Maven Enforcer rule on {@code jSentinel-dx} blocks every third-party
+ * point is {@link eu.jsentinel.jcustos.dx.runtime.JCustosRuntime#toJson()}.
+ * The Maven Enforcer rule on {@code jCustos-dx} blocks every third-party
  * JSON library on compile/runtime scope precisely so this stays the only
  * JSON code path on the DX classpath (compare V00.74.10 §3 invariant 1).
  *

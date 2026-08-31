@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.monitoring.bus;
 
 /*-
  * #%L
- * jSentinel Monitoring — metrics, health and diagnostics export points
+ * jCustos Monitoring — metrics, health and diagnostics export points
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -26,10 +26,10 @@ package eu.jsentinel.jcustos.monitoring.bus;
  */
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.api.JSentinelEvent;
-import eu.jsentinel.jcustos.events.bus.JSentinelEventBus;
-import eu.jsentinel.jcustos.events.bus.JSentinelEventListener;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.api.JCustosEvent;
+import eu.jsentinel.jcustos.events.bus.JCustosEventBus;
+import eu.jsentinel.jcustos.events.bus.JCustosEventListener;
 import eu.jsentinel.jcustos.events.bus.Registration;
 import eu.jsentinel.jcustos.events.types.BruteForceThresholdReachedEvent;
 import eu.jsentinel.jcustos.events.types.DeadLetteredEvent;
@@ -45,38 +45,38 @@ import eu.jsentinel.jcustos.events.types.SequenceViolationEvent;
 import eu.jsentinel.jcustos.events.types.SessionCreatedEvent;
 import eu.jsentinel.jcustos.events.types.SessionRevokedEvent;
 import eu.jsentinel.jcustos.events.types.SignatureInvalidEvent;
-import eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames;
-import eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricsPublisher;
+import eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames;
+import eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricsPublisher;
 
 import java.util.Objects;
 
 /**
  * Bus listener that turns security events into counter increments on a
- * {@link JSentinelMetricsPublisher} (Konzept-V00.80.00 goal 9). Metrics sit
+ * {@link JCustosMetricsPublisher} (Konzept-V00.80.00 goal 9). Metrics sit
  * <em>on top of</em> the bus as a consumer; this listener is the bridge —
  * the framework core never talks to a metrics backend directly.
  *
  * <p><strong>Umbrella contract.</strong>
- * {@link JSentinelMetricNames#EVENTBUS_REJECTED_TOTAL} counts the whole
+ * {@link JCustosMetricNames#EVENTBUS_REJECTED_TOTAL} counts the whole
  * rejection family: every {@link EnvelopeRejectedEvent},
  * {@link ReplayDetectedEvent}, {@link SignatureInvalidEvent} and
  * {@link SequenceViolationEvent} increments it, while the per-cause
  * drilldown counters ({@code replay.detected} / {@code signature.invalid} /
  * {@code sequence.violation}) are strict subsets of it. A
  * {@link DeadLetteredEvent} increments only
- * {@link JSentinelMetricNames#EVENTBUS_DEADLETTER_TOTAL} — the rejection
+ * {@link JCustosMetricNames#EVENTBUS_DEADLETTER_TOTAL} — the rejection
  * that routed the envelope into the dead-letter store was already counted
  * when its rejection event fired, so counting it again here would
  * double-count the same failure.
  *
  * <p><strong>published.total is domain-only.</strong> Bus
  * self-observability events ({@link EventBusSelfObservabilityEvent}) never
- * increment {@link JSentinelMetricNames#EVENTBUS_PUBLISHED_TOTAL}: they are
+ * increment {@link JCustosMetricNames#EVENTBUS_PUBLISHED_TOTAL}: they are
  * dispatched directly by the bus, bypassing the publish pipeline, and
  * counting them would inflate the published series with the bus's own
  * failure reporting. This mapping relies on the V00.80 (P004)
  * exactly-one-event-per-failure contract of
- * {@code DefaultJSentinelEventBus.publishObservability}: the bus emits
+ * {@code DefaultJCustosEventBus.publishObservability}: the bus emits
  * exactly one self-observability event per detected failure and never
  * re-publishes observability events through the pipeline, so each counter
  * increment corresponds to exactly one real occurrence.
@@ -85,16 +85,16 @@ import java.util.Objects;
  * ({@code sse.connections.active}, {@code session.active},
  * {@code audit.store.lag}) represent <em>state</em>, not events — an
  * event-driven bridge cannot know the current size of a store it does not
- * own. They are application-wired per the {@link JSentinelMetricNames}
+ * own. They are application-wired per the {@link JCustosMetricNames}
  * catalog Javadoc.
  *
  * <p><strong>Mapping judgment calls</strong> (types that exist in
- * {@code jSentinel-events} but are intentionally left at
+ * {@code jCustos-events} but are intentionally left at
  * {@code published.total} only):
  * <ul>
  *   <li>{@code RateLimitExceededEvent} — a rate-limit hit is throttling,
  *       not an account lockout;
- *       {@link JSentinelMetricNames#AUTH_LOCKOUT_TOTAL} would be
+ *       {@link JCustosMetricNames#AUTH_LOCKOUT_TOTAL} would be
  *       dishonest.</li>
  *   <li>{@code SessionExpiredEvent} — natural end-of-life is not a
  *       revocation; the {@code session.revoked.total} catalog entry
@@ -108,25 +108,25 @@ import java.util.Objects;
  *       local login is expected to also publish a
  *       {@link LoginSucceededEvent}; mapping both would double-count.</li>
  *   <li>{@code StepUpRequiredEvent} — a step-up challenge is not a denial;
- *       {@link JSentinelMetricNames#AUTHZ_DENIED_TOTAL} counts only
+ *       {@link JCustosMetricNames#AUTHZ_DENIED_TOTAL} counts only
  *       {@link PermissionDeniedEvent} and {@link PolicyDeniedEvent}.</li>
  * </ul>
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class MetricsEventBusListener
-    implements JSentinelEventListener<JSentinelEvent>, HasLogger {
+    implements JCustosEventListener<JCustosEvent>, HasLogger {
 
-  private final JSentinelMetricsPublisher publisher;
+  private final JCustosMetricsPublisher publisher;
 
-  public MetricsEventBusListener(JSentinelMetricsPublisher publisher) {
+  public MetricsEventBusListener(JCustosMetricsPublisher publisher) {
     this.publisher = Objects.requireNonNull(publisher, "publisher");
   }
 
   /**
    * Maps the event onto counter increments. Never throws: the
-   * {@link JSentinelMetricsPublisher} contract already obliges publishers
+   * {@link JCustosMetricsPublisher} contract already obliges publishers
    * to swallow backend failures internally, so the catch below is
    * belt-and-suspenders for a misbehaving publisher implementation — a
    * metrics bug must never break security event dispatch.
@@ -134,12 +134,12 @@ public final class MetricsEventBusListener
    * @param event the delivered event
    */
   @Override
-  public void onJSentinelEvent(JSentinelEvent event) {
+  public void onJCustosEvent(JCustosEvent event) {
     try {
       if (event instanceof EventBusSelfObservabilityEvent observability) {
         mapObservability(observability);
       } else {
-        publisher.increment(JSentinelMetricNames.EVENTBUS_PUBLISHED_TOTAL);
+        publisher.increment(JCustosMetricNames.EVENTBUS_PUBLISHED_TOTAL);
         mapDomainEvent(event);
       }
     } catch (RuntimeException publisherFailure) {
@@ -159,13 +159,13 @@ public final class MetricsEventBusListener
    * security event dispatch for every listener behind it. A metrics bug
    * must never have that power, so this bridge always subscribes
    * non-critically and additionally never throws (see
-   * {@link #onJSentinelEvent(JSentinelEvent)}).
+   * {@link #onJCustosEvent(JCustosEvent)}).
    *
    * @param bus the event bus
    * @return the subscription registration
    */
-  public Registration subscribeTo(JSentinelEventBus bus) {
-    return bus.subscribe(JSentinelEvent.class, this);
+  public Registration subscribeTo(JCustosEventBus bus) {
+    return bus.subscribe(JCustosEvent.class, this);
   }
 
   // Self-observability mapping: no published.total (see class Javadoc).
@@ -176,25 +176,25 @@ public final class MetricsEventBusListener
   private void mapObservability(EventBusSelfObservabilityEvent event) {
     switch (event) {
       case EnvelopeRejectedEvent rejected ->
-          publisher.increment(JSentinelMetricNames.EVENTBUS_REJECTED_TOTAL);
+          publisher.increment(JCustosMetricNames.EVENTBUS_REJECTED_TOTAL);
       case ReplayDetectedEvent replay -> {
-        publisher.increment(JSentinelMetricNames.EVENTBUS_REJECTED_TOTAL);
-        publisher.increment(JSentinelMetricNames.EVENTBUS_REPLAY_DETECTED_TOTAL);
+        publisher.increment(JCustosMetricNames.EVENTBUS_REJECTED_TOTAL);
+        publisher.increment(JCustosMetricNames.EVENTBUS_REPLAY_DETECTED_TOTAL);
       }
       case SignatureInvalidEvent signature -> {
-        publisher.increment(JSentinelMetricNames.EVENTBUS_REJECTED_TOTAL);
-        publisher.increment(JSentinelMetricNames.EVENTBUS_SIGNATURE_INVALID_TOTAL);
+        publisher.increment(JCustosMetricNames.EVENTBUS_REJECTED_TOTAL);
+        publisher.increment(JCustosMetricNames.EVENTBUS_SIGNATURE_INVALID_TOTAL);
       }
       case SequenceViolationEvent sequence -> {
-        publisher.increment(JSentinelMetricNames.EVENTBUS_REJECTED_TOTAL);
-        publisher.increment(JSentinelMetricNames.EVENTBUS_SEQUENCE_VIOLATION_TOTAL);
+        publisher.increment(JCustosMetricNames.EVENTBUS_REJECTED_TOTAL);
+        publisher.increment(JCustosMetricNames.EVENTBUS_SEQUENCE_VIOLATION_TOTAL);
       }
       // No rejected.total: the rejection that dead-lettered this envelope
       // already fired its own rejection event and was counted there.
       case DeadLetteredEvent deadLettered ->
-          publisher.increment(JSentinelMetricNames.EVENTBUS_DEADLETTER_TOTAL);
+          publisher.increment(JCustosMetricNames.EVENTBUS_DEADLETTER_TOTAL);
       case ListenerFailedEvent listenerFailed ->
-          publisher.increment(JSentinelMetricNames.EVENTBUS_LISTENER_FAILURE_TOTAL);
+          publisher.increment(JCustosMetricNames.EVENTBUS_LISTENER_FAILURE_TOTAL);
       default -> {
         // forward-compatible silence
       }
@@ -204,22 +204,22 @@ public final class MetricsEventBusListener
   // Domain mapping on top of published.total. Types without a dedicated
   // counter (and the judgment-call omissions in the class Javadoc) fall
   // through the default arm — published.total already counted them.
-  private void mapDomainEvent(JSentinelEvent event) {
+  private void mapDomainEvent(JCustosEvent event) {
     switch (event) {
       case LoginSucceededEvent login ->
-          publisher.increment(JSentinelMetricNames.AUTH_LOGIN_SUCCESS_TOTAL);
+          publisher.increment(JCustosMetricNames.AUTH_LOGIN_SUCCESS_TOTAL);
       case LoginFailedEvent login ->
-          publisher.increment(JSentinelMetricNames.AUTH_LOGIN_FAILURE_TOTAL);
+          publisher.increment(JCustosMetricNames.AUTH_LOGIN_FAILURE_TOTAL);
       case BruteForceThresholdReachedEvent lockout ->
-          publisher.increment(JSentinelMetricNames.AUTH_LOCKOUT_TOTAL);
+          publisher.increment(JCustosMetricNames.AUTH_LOCKOUT_TOTAL);
       case PermissionDeniedEvent denied ->
-          publisher.increment(JSentinelMetricNames.AUTHZ_DENIED_TOTAL);
+          publisher.increment(JCustosMetricNames.AUTHZ_DENIED_TOTAL);
       case PolicyDeniedEvent denied ->
-          publisher.increment(JSentinelMetricNames.AUTHZ_DENIED_TOTAL);
+          publisher.increment(JCustosMetricNames.AUTHZ_DENIED_TOTAL);
       case SessionCreatedEvent session ->
-          publisher.increment(JSentinelMetricNames.SESSION_CREATED_TOTAL);
+          publisher.increment(JCustosMetricNames.SESSION_CREATED_TOTAL);
       case SessionRevokedEvent session ->
-          publisher.increment(JSentinelMetricNames.SESSION_REVOKED_TOTAL);
+          publisher.increment(JCustosMetricNames.SESSION_REVOKED_TOTAL);
       default -> {
         // counted by published.total only
       }

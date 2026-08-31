@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.ratelimiting;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 
 /**
@@ -40,7 +40,7 @@ import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
  * @param tenant tenant scope; {@code null} becomes {@link TenantId#DEFAULT}
  * @param scope  non-blank dimension string
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record RateLimitKey(TenantId tenant, String scope) {
 
   /**

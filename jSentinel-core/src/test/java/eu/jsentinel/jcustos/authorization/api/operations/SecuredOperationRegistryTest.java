@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authorization.api.operations;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleName;
 import org.junit.jupiter.api.DisplayName;
@@ -74,7 +74,7 @@ class SecuredOperationRegistryTest {
     registry.register(op("delete", Set.of(del)));
     OperationVisibilityService service = new OperationVisibilityService(registry);
 
-    JSentinelSubject viewer = new JSentinelSubject("u", "Viewer",
+    JCustosSubject viewer = new JCustosSubject("u", "Viewer",
         Set.of(new RoleName("ROLE_VIEWER")), Set.of(read));
     List<SecuredOperationDescriptor> visible = service.visibleFor(viewer);
     assertEquals(1, visible.size());
@@ -97,7 +97,7 @@ class SecuredOperationRegistryTest {
     registry.register(op("ping", Set.of()));
     OperationVisibilityService service = new OperationVisibilityService(registry);
 
-    JSentinelSubject anon = new JSentinelSubject("u", "Any", Set.of(), Set.of());
+    JCustosSubject anon = new JCustosSubject("u", "Any", Set.of(), Set.of());
     assertEquals(1, service.visibleFor(anon).size());
   }
 
@@ -141,7 +141,7 @@ class SecuredOperationRegistryTest {
     registry.register(opWithRole("admin-only", new RoleName("ROLE_ADMIN")));
     OperationVisibilityService service = new OperationVisibilityService(registry);
 
-    JSentinelSubject viewer = new JSentinelSubject("u", "Viewer",
+    JCustosSubject viewer = new JCustosSubject("u", "Viewer",
         Set.of(new RoleName("ROLE_VIEWER")), Set.of());
     assertTrue(service.visibleFor(viewer).isEmpty());
   }
@@ -154,7 +154,7 @@ class SecuredOperationRegistryTest {
     registry.register(opWithRole("admin-only", admin));
     OperationVisibilityService service = new OperationVisibilityService(registry);
 
-    JSentinelSubject adminSubject = new JSentinelSubject("u", "Admin",
+    JCustosSubject adminSubject = new JCustosSubject("u", "Admin",
         Set.of(admin), Set.of());
     assertEquals(1, service.visibleFor(adminSubject).size());
   }

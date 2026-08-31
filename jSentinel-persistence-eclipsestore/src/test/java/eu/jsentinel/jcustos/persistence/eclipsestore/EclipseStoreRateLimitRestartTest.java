@@ -42,16 +42,16 @@ class EclipseStoreRateLimitRestartTest {
   @DisplayName("multiple recorded events survive a close/reopen")
   void recordedEventsSurviveRestart() {
     // The 2nd and 3rd recordEvent mutate an already-persisted set in place.
-    try (EclipseStoreJSentinelStorage storage =
-             EclipseStoreJSentinelStorage.openAt(tempDir)) {
+    try (EclipseStoreJCustosStorage storage =
+             EclipseStoreJCustosStorage.openAt(tempDir)) {
       RateLimitStore store = storage.rateLimitStore();
       store.recordEvent(KEY, T0);
       store.recordEvent(KEY, T0.plusSeconds(1));
       store.recordEvent(KEY, T0.plusSeconds(2));
       assertEquals(3, store.countSince(KEY, T0));
     }
-    try (EclipseStoreJSentinelStorage reopened =
-             EclipseStoreJSentinelStorage.openAt(tempDir)) {
+    try (EclipseStoreJCustosStorage reopened =
+             EclipseStoreJCustosStorage.openAt(tempDir)) {
       assertEquals(3, reopened.rateLimitStore().countSince(KEY, T0),
           "all recorded events must survive a restart");
     }
@@ -61,8 +61,8 @@ class EclipseStoreRateLimitRestartTest {
   @DisplayName("a purge survives a close/reopen")
   void purgeSurvivesRestart() {
     Instant cutoff = T0.plusSeconds(10);
-    try (EclipseStoreJSentinelStorage storage =
-             EclipseStoreJSentinelStorage.openAt(tempDir)) {
+    try (EclipseStoreJCustosStorage storage =
+             EclipseStoreJCustosStorage.openAt(tempDir)) {
       RateLimitStore store = storage.rateLimitStore();
       store.recordEvent(KEY, T0);                 // before cutoff
       store.recordEvent(KEY, T0.plusSeconds(1));  // before cutoff
@@ -70,8 +70,8 @@ class EclipseStoreRateLimitRestartTest {
       assertEquals(2, store.purgeOlderThan(cutoff));
       assertEquals(1, store.countSince(KEY, T0));
     }
-    try (EclipseStoreJSentinelStorage reopened =
-             EclipseStoreJSentinelStorage.openAt(tempDir)) {
+    try (EclipseStoreJCustosStorage reopened =
+             EclipseStoreJCustosStorage.openAt(tempDir)) {
       RateLimitStore store = reopened.rateLimitStore();
       assertEquals(1, store.countSince(KEY, T0),
           "exactly one event must remain after the purge survives a restart");

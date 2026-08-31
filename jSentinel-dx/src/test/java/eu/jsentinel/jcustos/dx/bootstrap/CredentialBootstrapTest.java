@@ -12,14 +12,14 @@ package eu.jsentinel.jcustos.dx.bootstrap;
 
 import eu.jsentinel.jcustos.authentication.PasswordHasher;
 import eu.jsentinel.jcustos.authentication.Pbkdf2PasswordHasher;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.credential.password.PasswordHashingService;
 import eu.jsentinel.jcustos.credential.password.PasswordHashingServices;
-import eu.jsentinel.jcustos.dx.internal.AbstractJSentinelBootstrap;
-import eu.jsentinel.jcustos.dx.runtime.RegisteredJSentinelService;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapMode;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapWarning;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelRuntime;
+import eu.jsentinel.jcustos.dx.internal.AbstractJCustosBootstrap;
+import eu.jsentinel.jcustos.dx.runtime.RegisteredJCustosService;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapMode;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapWarning;
+import eu.jsentinel.jcustos.dx.runtime.JCustosRuntime;
 import eu.jsentinel.jcustos.dx.runtime.Severity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,20 +41,20 @@ class CredentialBootstrapTest {
   @BeforeEach
   @AfterEach
   void resetResolver() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   @Test
   @DisplayName(".passwordHasher(...) registers via legacy resolver setter")
   void passwordHasherWiresLegacyResolver() {
-    // JSentinelServiceResolver.findPasswordHashingService() treats
+    // JCustosServiceResolver.findPasswordHashingService() treats
     // Pbkdf2PasswordHasher as the default fallback and returns empty.
     // Use a non-PBKDF2 stub to verify the registration.
     PasswordHasher hasher = new RecordingPasswordHasher();
-    JSentinelRuntime runtime = new TestBootstrap()
+    JCustosRuntime runtime = new TestBootstrap()
         .credentials(c -> c.passwordHasher(hasher))
         .install();
-    assertSame(hasher, JSentinelServiceResolver.findPasswordHashingService().orElseThrow());
+    assertSame(hasher, JCustosServiceResolver.findPasswordHashingService().orElseThrow());
     assertTrue(runtime.services().stream()
         .anyMatch(s -> PasswordHasher.class.equals(s.spi())));
   }
@@ -71,19 +71,19 @@ class CredentialBootstrapTest {
   @DisplayName(".hashing(...) appears in runtime but is NOT passed to the legacy setter")
   void hashingServiceNotWiredThroughLegacy() {
     PasswordHashingService pipeline = PasswordHashingServices.defaults();
-    JSentinelRuntime runtime = new TestBootstrap()
+    JCustosRuntime runtime = new TestBootstrap()
         .credentials(c -> c.hashing(pipeline))
         .install();
     assertTrue(runtime.services().stream()
         .anyMatch(s -> PasswordHashingService.class.equals(s.spi())));
-    assertFalse(JSentinelServiceResolver.findPasswordHashingService().isPresent(),
+    assertFalse(JCustosServiceResolver.findPasswordHashingService().isPresent(),
         "V00.71 PasswordHashingService must never be stuffed into the legacy PasswordHasher setter");
   }
 
   @Test
   @DisplayName(".pbkdf2Defaults() sets BOTH the legacy hasher and the V00.71 pipeline")
   void pbkdf2DefaultsSetsBothWorlds() {
-    JSentinelRuntime runtime = new TestBootstrap()
+    JCustosRuntime runtime = new TestBootstrap()
         .credentials(c -> c.pbkdf2Defaults())
         .install();
     // findPasswordHashingService() returns empty for Pbkdf2 (treated as
@@ -101,7 +101,7 @@ class CredentialBootstrapTest {
   void modernUsesBouncyCastleWhenAvailable() {
     // security-crypto-bc IS on the test classpath via the security-dx
     // test dependency tree, so this verifies the happy path.
-    JSentinelRuntime runtime = new TestBootstrap()
+    JCustosRuntime runtime = new TestBootstrap()
         .credentials(c -> c.modern())
         .install();
     boolean pipelinePresent = runtime.services().stream()
@@ -112,7 +112,7 @@ class CredentialBootstrapTest {
   @Test
   @DisplayName(".credentialStore(...) without .hashing(...) is fine; only change/reset trigger missing-hashing")
   void credentialStoreAloneIsOk() {
-    JSentinelRuntime runtime = new TestBootstrap()
+    JCustosRuntime runtime = new TestBootstrap()
         .credentials(c -> c.credentialStore(
             new eu.jsentinel.jcustos.credential.store.InMemoryCredentialStore()))
         .install();
@@ -139,21 +139,21 @@ class CredentialBootstrapTest {
   // ── adapter test double ──────────────────────────────────────────
 
   private static final class TestBootstrap
-      extends AbstractJSentinelBootstrap<TestBootstrap> {
+      extends AbstractJCustosBootstrap<TestBootstrap> {
     @Override
-    public JSentinelRuntime install() {
-      List<RegisteredJSentinelService> services = new ArrayList<>();
-      List<JSentinelBootstrapWarning> warnings = new ArrayList<>();
+    public JCustosRuntime install() {
+      List<RegisteredJCustosService> services = new ArrayList<>();
+      List<JCustosBootstrapWarning> warnings = new ArrayList<>();
       applyAuditConfiguration(services, warnings);
       applySessionConfiguration(AdapterKind.VAADIN, services, warnings);
       applyRoleConfiguration(services, warnings);
       applyCredentialConfiguration(services, warnings);
-      JSentinelBootstrapMode mode = state.mode();
-      if (mode == JSentinelBootstrapMode.STRICT
+      JCustosBootstrapMode mode = state.mode();
+      if (mode == JCustosBootstrapMode.STRICT
           && warnings.stream().anyMatch(w -> w.severity() == Severity.ERROR)) {
-        throw new JSentinelBootstrapException(warnings);
+        throw new JCustosBootstrapException(warnings);
       }
-      return new JSentinelRuntime(services, warnings, mode);
+      return new JCustosRuntime(services, warnings, mode);
     }
   }
 }

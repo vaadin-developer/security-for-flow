@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.types;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,11 +25,11 @@ package eu.jsentinel.jcustos.events.types;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.events.api.EventMetadata;
 import eu.jsentinel.jcustos.events.api.EventType;
-import eu.jsentinel.jcustos.events.api.JSentinelEvent;
-import eu.jsentinel.jcustos.events.api.JSentinelEventCategory;
+import eu.jsentinel.jcustos.events.api.JCustosEvent;
+import eu.jsentinel.jcustos.events.api.JCustosEventCategory;
 
 import java.util.Objects;
 
@@ -42,9 +42,9 @@ import java.util.Objects;
  * @param errorCode the stable kebab-case validation error code
  * @since 00.78.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record IdTokenValidationFailedEvent(EventMetadata metadata, String errorCode)
-    implements JSentinelEvent {
+    implements JCustosEvent {
 
   public static final EventType TYPE = EventType.of("IdTokenValidationFailed");
 
@@ -59,7 +59,7 @@ public record IdTokenValidationFailedEvent(EventMetadata metadata, String errorC
   }
 
   @Override
-  public JSentinelEventCategory category() {
-    return JSentinelEventCategory.TOKEN;
+  public JCustosEventCategory category() {
+    return JCustosEventCategory.TOKEN;
   }
 }

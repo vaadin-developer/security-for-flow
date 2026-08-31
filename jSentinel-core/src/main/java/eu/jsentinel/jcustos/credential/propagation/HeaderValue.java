@@ -10,7 +10,7 @@
  */
 package eu.jsentinel.jcustos.credential.propagation;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Objects;
 
@@ -30,7 +30,7 @@ import java.util.Objects;
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record HeaderValue(String name, String value) {
 
   public HeaderValue {

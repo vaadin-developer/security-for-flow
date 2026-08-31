@@ -19,7 +19,7 @@ package eu.jsentinel.jcustos.logout;
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
 import eu.jsentinel.jcustos.audit.LogoutPerformed;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authorization.api.SubjectStore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -176,7 +176,7 @@ class SubjectClearingLogoutServiceTest {
     }
   }
 
-  static final class RecordingAudit implements JSentinelAuditService {
+  static final class RecordingAudit implements JCustosAuditService {
     final List<AuditEvent> events = new ArrayList<>();
 
     @Override public void publish(AuditEvent event) {

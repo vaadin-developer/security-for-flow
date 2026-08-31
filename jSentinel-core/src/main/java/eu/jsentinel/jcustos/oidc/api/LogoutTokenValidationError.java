@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.oidc.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.jwt.api.JwtValidationError;
 
 /**
@@ -26,7 +26,7 @@ import eu.jsentinel.jcustos.jwt.api.JwtValidationError;
  *
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public sealed interface LogoutTokenValidationError {
 
   String code();

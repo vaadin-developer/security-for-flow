@@ -28,9 +28,9 @@ import static java.util.Objects.requireNonNull;
 /** Eclipse-Store-backed {@link RoleAssignmentStore}. */
 final class EclipseStoreRoleAssignmentStore implements RoleAssignmentStore {
 
-  private final EclipseStoreJSentinelStorage storage;
+  private final EclipseStoreJCustosStorage storage;
 
-  EclipseStoreRoleAssignmentStore(EclipseStoreJSentinelStorage storage) {
+  EclipseStoreRoleAssignmentStore(EclipseStoreJCustosStorage storage) {
     this.storage = storage;
   }
 

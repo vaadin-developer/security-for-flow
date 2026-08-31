@@ -3,7 +3,7 @@ package eu.jsentinel.jcustos.demo.skill.vaadin.security.roles;
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.authorization.api.AccessEvaluator;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleName;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
@@ -48,7 +48,7 @@ public class RoleAccessEvaluator
     }
 
     AuthorizationService<User> authorizationService =
-        JSentinelServiceResolver.authorizationService();
+        JCustosServiceResolver.authorizationService();
     boolean hasRole = authorizationService.rolesFor(currentSubject.get())
         .roleNames()
         .stream()

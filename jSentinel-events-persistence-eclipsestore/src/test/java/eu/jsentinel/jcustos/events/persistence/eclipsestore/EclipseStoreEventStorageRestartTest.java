@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.persistence.eclipsestore;
 
 /*-
  * #%L
- * jSentinel Events — Eclipse-Store persistence
+ * jCustos Events — Eclipse-Store persistence
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -29,7 +29,7 @@ import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventEnvelopeId;
 import eu.jsentinel.jcustos.events.api.EventProducerId;
 import eu.jsentinel.jcustos.events.api.EventSequence;
-import eu.jsentinel.jcustos.events.store.JSentinelEventDeadLetter;
+import eu.jsentinel.jcustos.events.store.JCustosEventDeadLetter;
 import eu.jsentinel.jcustos.events.store.RejectionReason;
 import eu.jsentinel.jcustos.events.testkit.TestkitEnvelopes;
 import org.junit.jupiter.api.DisplayName;
@@ -54,7 +54,7 @@ class EclipseStoreEventStorageRestartTest {
         TestkitEnvelopes.AT.plusSeconds(300));
     first.sequenceStore().updateSequence(TenantId.DEFAULT, PRODUCER, EventSequence.of(99));
     first.envelopeStore().append(TestkitEnvelopes.envelope("env-stored"));
-    first.deadLetterStore().store(JSentinelEventDeadLetter.of(
+    first.deadLetterStore().store(JCustosEventDeadLetter.of(
         TestkitEnvelopes.envelope("env-dl"), RejectionReason.INVALID_SIGNATURE,
         TestkitEnvelopes.AT));
     first.close();

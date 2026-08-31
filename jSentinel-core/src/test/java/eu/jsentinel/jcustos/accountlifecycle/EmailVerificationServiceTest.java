@@ -20,7 +20,7 @@ import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
 import eu.jsentinel.jcustos.audit.EmailVerificationRequested;
 import eu.jsentinel.jcustos.audit.EmailVerified;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authentication.PasswordHasher;
 import eu.jsentinel.jcustos.authentication.Pbkdf2PasswordHasher;
 import eu.jsentinel.jcustos.credential.token.TokenHasher;
@@ -139,8 +139,8 @@ class EmailVerificationServiceTest {
     assertEquals("alice", event.subjectId());
     assertEquals(ALICE_EMAIL, event.email());
 
-    JSentinelNotification n = sender.received.get(0);
-    assertEquals(JSentinelNotification.Kind.EMAIL_VERIFICATION_REQUESTED, n.kind());
+    JCustosNotification n = sender.received.get(0);
+    assertEquals(JCustosNotification.Kind.EMAIL_VERIFICATION_REQUESTED, n.kind());
     assertEquals("tok-1", n.attributes().get("tokenPlain"));
     assertEquals(ALICE_EMAIL, n.attributes().get("email"));
   }
@@ -203,7 +203,7 @@ class EmailVerificationServiceTest {
     assertEquals(ALICE_EMAIL, verified.email());
 
     assertEquals(2, sender.received.size());
-    assertEquals(JSentinelNotification.Kind.EMAIL_VERIFIED, sender.received.get(1).kind());
+    assertEquals(JCustosNotification.Kind.EMAIL_VERIFIED, sender.received.get(1).kind());
     assertEquals(ALICE_EMAIL, sender.received.get(1).attributes().get("email"));
   }
 
@@ -231,11 +231,11 @@ class EmailVerificationServiceTest {
   @DisplayName("audit + notification failures do not block the lifecycle flow")
   void sinkFailuresSwallowed() {
     InMemoryEmailVerificationTokenStore store = new InMemoryEmailVerificationTokenStore();
-    JSentinelAuditService throwingAudit = new JSentinelAuditService() {
+    JCustosAuditService throwingAudit = new JCustosAuditService() {
       @Override public void publish(AuditEvent event) { throw new RuntimeException("boom"); }
       @Override public List<AuditEvent> query(AuditQuery query) { return List.of(); }
     };
-    JSentinelNotificationSender throwingSender = n -> { throw new RuntimeException("boom"); };
+    JCustosNotificationSender throwingSender = n -> { throw new RuntimeException("boom"); };
     EmailVerificationService service = new EmailVerificationService(
         store, new FakeHasher(), throwingAudit, throwingSender,
         TenantId.DEFAULT, steppingClock(T0, Duration.ofSeconds(1)),
@@ -293,15 +293,15 @@ class EmailVerificationServiceTest {
     assertEquals(43, issued.plainToken().length());
   }
 
-  private static final class CollectingAuditService implements JSentinelAuditService {
+  private static final class CollectingAuditService implements JCustosAuditService {
     final List<AuditEvent> published = new ArrayList<>();
     @Override public void publish(AuditEvent event) { published.add(event); }
     @Override public List<AuditEvent> query(AuditQuery query) { return List.copyOf(published); }
   }
 
-  private static final class RecordingNotificationSender implements JSentinelNotificationSender {
-    final List<JSentinelNotification> received = new ArrayList<>();
-    @Override public void send(JSentinelNotification n) { received.add(n); }
+  private static final class RecordingNotificationSender implements JCustosNotificationSender {
+    final List<JCustosNotification> received = new ArrayList<>();
+    @Override public void send(JCustosNotification n) { received.add(n); }
   }
 
   // ── V00.74.10 / L2 — audit-sink WARN log discipline ─────────────────
@@ -316,11 +316,11 @@ class EmailVerificationServiceTest {
       InMemoryEmailVerificationTokenStore store = new InMemoryEmailVerificationTokenStore();
       RuntimeException auditBoom = new RuntimeException("audit-boom");
       RuntimeException senderBoom = new RuntimeException("sender-boom");
-      JSentinelAuditService throwingAudit = new JSentinelAuditService() {
+      JCustosAuditService throwingAudit = new JCustosAuditService() {
         @Override public void publish(AuditEvent event) { throw auditBoom; }
         @Override public List<AuditEvent> query(AuditQuery query) { return List.of(); }
       };
-      JSentinelNotificationSender throwingSender = n -> { throw senderBoom; };
+      JCustosNotificationSender throwingSender = n -> { throw senderBoom; };
       EmailVerificationService service = new EmailVerificationService(
           store, new FakeHasher(), throwingAudit, throwingSender,
           TenantId.DEFAULT, steppingClock(T0, Duration.ofSeconds(1)),

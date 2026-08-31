@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.testkit;
 
 /*-
  * #%L
- * jSentinel Events — Contract testkit
+ * jCustos Events — Contract testkit
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,11 +25,11 @@ package eu.jsentinel.jcustos.events.testkit;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventProducerId;
 import eu.jsentinel.jcustos.events.api.EventType;
-import eu.jsentinel.jcustos.events.producer.JSentinelEventProducerPolicy;
+import eu.jsentinel.jcustos.events.producer.JCustosEventProducerPolicy;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -37,18 +37,18 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Reusable contract for {@link JSentinelEventProducerPolicy} implementations.
+ * Reusable contract for {@link JCustosEventProducerPolicy} implementations.
  * The implementer supplies a policy plus the {@code (producer, eventType,
  * tenant)} triples it allows and denies.
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
-@DisplayName("JSentinelEventProducerPolicy — contract")
+@ExperimentalJCustosApi
+@DisplayName("JCustosEventProducerPolicy — contract")
 public interface ProducerPolicyContract {
 
   /** @return the policy under test. */
-  JSentinelEventProducerPolicy newPolicy();
+  JCustosEventProducerPolicy newPolicy();
 
   /** @return a triple the policy must allow. */
   Allowed allowed();

@@ -21,7 +21,7 @@ import com.svenruppert.functional.result.Result;
 /**
  * Token introspection (RFC 7662, V00.77) — the RP asks the authorization server
  * whether an opaque access token is active and what it carries. JOSE-free; the
- * HTTP implementation (with caching) lives in {@code jSentinel-oauth2}.
+ * HTTP implementation (with caching) lives in {@code jCustos-oauth2}.
  *
  * @since 00.77.00
  */

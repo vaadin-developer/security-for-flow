@@ -10,7 +10,7 @@
  */
 package eu.jsentinel.jcustos.credential.propagation;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -23,7 +23,7 @@ import java.util.Optional;
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record ApiKey(
     String value,
     Optional<Instant> expiresAt,

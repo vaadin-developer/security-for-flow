@@ -23,7 +23,7 @@
 package eu.jsentinel.jcustos.credential.token;
 
 import eu.jsentinel.jcustos.authentication.PasswordHasher;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Objects;
 
@@ -32,11 +32,11 @@ import java.util.Objects;
  *
  * @since 00.75.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class TokenHashers {
 
   private static final char[] DETERMINISM_PROBE =
-      "jSentinel-token-hasher-determinism-probe".toCharArray();
+      "jCustos-token-hasher-determinism-probe".toCharArray();
 
   private TokenHashers() {
   }

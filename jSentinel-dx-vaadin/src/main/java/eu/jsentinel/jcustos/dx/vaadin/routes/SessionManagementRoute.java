@@ -26,7 +26,7 @@ import com.vaadin.flow.router.Route;
  * path can subclass and override {@code @Route(...)}.
  *
  * <p><strong>Activation prerequisite.</strong> The route is only
- * useful when {@code VaadinJSentinelBootstrap.sessionManagementView()}
+ * useful when {@code VaadinJCustosBootstrap.sessionManagementView()}
  * was called and {@code .sessions(s -> s.storeBacked(...))}
  * configured a {@link SessionStore}. Without the store, the bootstrap
  * emits {@code session-management-view-without-session-store}

@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.bus;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,17 +25,17 @@ package eu.jsentinel.jcustos.events.bus;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventProducerId;
 import eu.jsentinel.jcustos.events.api.EventSequence;
 import eu.jsentinel.jcustos.events.api.KeyId;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
-import eu.jsentinel.jcustos.events.keys.JSentinelEventVerificationKeyResolver;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
+import eu.jsentinel.jcustos.events.keys.JCustosEventVerificationKeyResolver;
 import eu.jsentinel.jcustos.events.keys.KeyStatus;
-import eu.jsentinel.jcustos.events.producer.JSentinelEventProducerPolicy;
-import eu.jsentinel.jcustos.events.replay.JSentinelEventReplayStore;
-import eu.jsentinel.jcustos.events.sequence.JSentinelEventSequenceStore;
+import eu.jsentinel.jcustos.events.producer.JCustosEventProducerPolicy;
+import eu.jsentinel.jcustos.events.replay.JCustosEventReplayStore;
+import eu.jsentinel.jcustos.events.sequence.JCustosEventSequenceStore;
 import eu.jsentinel.jcustos.events.sequence.SequenceDecision;
 import eu.jsentinel.jcustos.events.sequence.SequenceValidator;
 import eu.jsentinel.jcustos.events.sequence.SequenceViolationStrategy;
@@ -49,13 +49,13 @@ import java.util.Optional;
 
 /**
  * The consume pipeline (Konzept §849-§871): verifies an incoming envelope and
- * returns a differentiated {@link JSentinelEventVerificationResult}. Stages run
+ * returns a differentiated {@link JCustosEventVerificationResult}. Stages run
  * as read-only gates first — resolve key, check key status, check payload hash,
  * verify signature, check time window, replay {@code hasSeen}, sequence
  * decision, producer policy — and only when every gate passes are the two side
  * effects committed (sequence compare-and-advance first, then replay
  * {@code markSeen}). An envelope is
- * {@link JSentinelEventVerificationResult.Valid} only when every gate passes.
+ * {@link JCustosEventVerificationResult.Valid} only when every gate passes.
  *
  * <p>Committing the side effects last (V00.75.10) means an envelope that fails a
  * later gate never poisons the replay store nor advances the per-producer
@@ -66,21 +66,21 @@ import java.util.Optional;
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class ConsumePipeline {
 
-  private final JSentinelEventVerificationKeyResolver keyResolver;
+  private final JCustosEventVerificationKeyResolver keyResolver;
   private final SignatureAlgorithms signatureAlgorithms;
-  private final JSentinelEventReplayStore replayStore;
-  private final JSentinelEventSequenceStore sequenceStore;
+  private final JCustosEventReplayStore replayStore;
+  private final JCustosEventSequenceStore sequenceStore;
   private final SequenceValidator sequenceValidator;
   private final SequenceViolationStrategy sequenceStrategy;
-  private final JSentinelEventProducerPolicy producerPolicy;
+  private final JCustosEventProducerPolicy producerPolicy;
 
-  public ConsumePipeline(JSentinelEventVerificationKeyResolver keyResolver,
-      SignatureAlgorithms signatureAlgorithms, JSentinelEventReplayStore replayStore,
-      JSentinelEventSequenceStore sequenceStore, SequenceValidator sequenceValidator,
-      SequenceViolationStrategy sequenceStrategy, JSentinelEventProducerPolicy producerPolicy) {
+  public ConsumePipeline(JCustosEventVerificationKeyResolver keyResolver,
+      SignatureAlgorithms signatureAlgorithms, JCustosEventReplayStore replayStore,
+      JCustosEventSequenceStore sequenceStore, SequenceValidator sequenceValidator,
+      SequenceViolationStrategy sequenceStrategy, JCustosEventProducerPolicy producerPolicy) {
     this.keyResolver = Objects.requireNonNull(keyResolver, "keyResolver");
     this.signatureAlgorithms = Objects.requireNonNull(signatureAlgorithms, "signatureAlgorithms");
     this.replayStore = Objects.requireNonNull(replayStore, "replayStore");
@@ -97,7 +97,7 @@ public final class ConsumePipeline {
    * @param now the current instant (for the expiry check)
    * @return the verification result
    */
-  public JSentinelEventVerificationResult verify(SignedJSentinelEventEnvelope envelope,
+  public JCustosEventVerificationResult verify(SignedJCustosEventEnvelope envelope,
       Instant now) {
     Objects.requireNonNull(envelope, "envelope");
     Objects.requireNonNull(now, "now");
@@ -105,19 +105,19 @@ public final class ConsumePipeline {
     KeyId keyId = envelope.keyId();
     Optional<PublicKey> publicKey = keyResolver.resolveVerificationKey(keyId);
     if (publicKey.isEmpty()) {
-      return new JSentinelEventVerificationResult.UnknownKey(keyId);
+      return new JCustosEventVerificationResult.UnknownKey(keyId);
     }
     KeyStatus keyStatus = keyResolver.keyStatus(keyId);
     if (keyStatus == KeyStatus.REVOKED) {
-      return new JSentinelEventVerificationResult.KeyRevoked(keyId);
+      return new JCustosEventVerificationResult.KeyRevoked(keyId);
     }
     if (keyStatus == KeyStatus.EXPIRED) {
-      return new JSentinelEventVerificationResult.KeyExpired(keyId);
+      return new JCustosEventVerificationResult.KeyExpired(keyId);
     }
     if (keyStatus != KeyStatus.ACTIVE && keyStatus != KeyStatus.ACCEPTED_FOR_VERIFICATION) {
       // Any other status (incl. UNKNOWN reported alongside a resolvable key) is
       // not usable for verification — fail closed rather than accept.
-      return new JSentinelEventVerificationResult.UnknownKey(keyId);
+      return new JCustosEventVerificationResult.UnknownKey(keyId);
     }
 
     // JS-SEC-054 (CWE-755): payloadHashAlgorithm / signatureAlgorithm accept any non-blank string at
@@ -127,12 +127,12 @@ public final class ConsumePipeline {
     var recomputedHash = PayloadDigest.tryHash(
         envelope.payloadHashAlgorithm(), envelope.canonicalPayload());
     if (recomputedHash.isEmpty() || !recomputedHash.get().equals(envelope.canonicalPayloadHash())) {
-      return new JSentinelEventVerificationResult.PayloadHashMismatch(envelope.envelopeId());
+      return new JCustosEventVerificationResult.PayloadHashMismatch(envelope.envelopeId());
     }
 
     var maybeAlgorithm = signatureAlgorithms.find(envelope.signatureAlgorithm());
     if (maybeAlgorithm.isEmpty()) {
-      return new JSentinelEventVerificationResult.InvalidSignature("unsupported signature algorithm");
+      return new JCustosEventVerificationResult.InvalidSignature("unsupported signature algorithm");
     }
     SignatureAlgorithm algorithm = maybeAlgorithm.get();
     byte[] signatureBase = EnvelopeSignatureBase.compute(envelope);
@@ -141,21 +141,21 @@ public final class ConsumePipeline {
       verified = algorithm.verify(signatureBase, envelope.signature(), publicKey.get());
     } catch (RuntimeException verifyFailure) {
       // e.g. a key/algorithm-type mismatch surfaced as a SignatureOperationException — fail closed.
-      return new JSentinelEventVerificationResult.InvalidSignature("signature verification failed");
+      return new JCustosEventVerificationResult.InvalidSignature("signature verification failed");
     }
     if (!verified) {
-      return new JSentinelEventVerificationResult.InvalidSignature(
+      return new JCustosEventVerificationResult.InvalidSignature(
           "signature does not verify under key " + keyId.value());
     }
 
     if (envelope.isExpiredAt(now)) {
-      return new JSentinelEventVerificationResult.Expired(envelope.expiresAt());
+      return new JCustosEventVerificationResult.Expired(envelope.expiresAt());
     }
 
     // Replay: read-only check first, so a genuine duplicate is reported as
     // ReplayDetected even when a stricter sequence policy would also reject it.
     if (replayStore.hasSeen(envelope.envelopeId())) {
-      return new JSentinelEventVerificationResult.ReplayDetected(envelope.envelopeId());
+      return new JCustosEventVerificationResult.ReplayDetected(envelope.envelopeId());
     }
 
     // Sequence + producer policy are read-only gates here — decide, but record
@@ -168,12 +168,12 @@ public final class ConsumePipeline {
         sequenceStrategy);
     if (!decision.accepted()) {
       EventSequence expected = last.map(EventSequence::next).orElse(EventSequence.FIRST);
-      return new JSentinelEventVerificationResult.SequenceViolation(
+      return new JCustosEventVerificationResult.SequenceViolation(
           tenantId, producerId, expected, envelope.sequence());
     }
 
     if (!producerPolicy.mayPublish(producerId, envelope.eventType(), tenantId)) {
-      return new JSentinelEventVerificationResult.ProducerNotAllowed(
+      return new JCustosEventVerificationResult.ProducerNotAllowed(
           producerId, envelope.eventType(), tenantId);
     }
 
@@ -192,7 +192,7 @@ public final class ConsumePipeline {
     // monotonicity break).
     if (!sequenceStore.compareAndAdvance(tenantId, producerId, last, envelope.sequence())) {
       EventSequence expected = last.map(EventSequence::next).orElse(EventSequence.FIRST);
-      return new JSentinelEventVerificationResult.SequenceViolation(
+      return new JCustosEventVerificationResult.SequenceViolation(
           tenantId, producerId, expected, envelope.sequence());
     }
     // markSeen stays atomic to settle a concurrent duplicate that slipped past
@@ -203,9 +203,9 @@ public final class ConsumePipeline {
     // already consumed), which is still fail-closed and leaves the replay
     // store unpoisoned.
     if (!replayStore.markSeen(envelope.envelopeId(), envelope.expiresAt())) {
-      return new JSentinelEventVerificationResult.ReplayDetected(envelope.envelopeId());
+      return new JCustosEventVerificationResult.ReplayDetected(envelope.envelopeId());
     }
 
-    return new JSentinelEventVerificationResult.Valid(envelope);
+    return new JCustosEventVerificationResult.Valid(envelope);
   }
 }

@@ -1,6 +1,6 @@
 package eu.jsentinel.jcustos.jwt.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.net.URI;
 import java.util.Objects;
@@ -10,7 +10,7 @@ import java.util.Objects;
  * validator: where to fetch keys ({@code jwksUri}), which algorithms to accept
  * ({@code allowList}) and what to require of the claims ({@code expectations}).
  *
- * <p>This is the seam that keeps {@code jSentinel-dx} JOSE-free: the DX bootstrap
+ * <p>This is the seam that keeps {@code jCustos-dx} JOSE-free: the DX bootstrap
  * builds a spec from the {@code .jwt(...)} sub-builder and hands it to the
  * ServiceLoader-discovered factory, never touching a Nimbus type itself.
  *
@@ -19,7 +19,7 @@ import java.util.Objects;
  * @param expectations the claim expectations
  * @since 00.76.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record JwtValidatorSpec(
     URI jwksUri,
     AlgorithmAllowList allowList,

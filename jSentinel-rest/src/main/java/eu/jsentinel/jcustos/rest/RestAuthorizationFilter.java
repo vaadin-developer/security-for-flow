@@ -21,14 +21,14 @@ import eu.jsentinel.jcustos.audit.AccessDenied;
 import eu.jsentinel.jcustos.audit.AccessGranted;
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.SessionExpired;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.audit.StepUpChallenged;
 import eu.jsentinel.jcustos.authorization.annotations.PublicRoute;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationDecision;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationEvaluator;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
-import eu.jsentinel.jcustos.authorization.impl.JSentinelAnnotationScanner;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
+import eu.jsentinel.jcustos.authorization.impl.JCustosAnnotationScanner;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 import eu.jsentinel.jcustos.session.SessionMetadata;
 import eu.jsentinel.jcustos.session.SessionPolicy;
@@ -49,10 +49,10 @@ import java.util.Optional;
 public final class RestAuthorizationFilter {
 
   private final RestSubjectResolver subjectResolver;
-  private final JSentinelAnnotationScanner scanner;
+  private final JCustosAnnotationScanner scanner;
   private final RestAccessContextFactory contextFactory;
   private final HttpStatusDecisionMapper decisionMapper;
-  private final JSentinelAuditService auditService;
+  private final JCustosAuditService auditService;
 
   /**
    * Creates a REST authorization filter.
@@ -62,7 +62,7 @@ public final class RestAuthorizationFilter {
   public RestAuthorizationFilter(RestSubjectResolver subjectResolver) {
     this(
         subjectResolver,
-        new JSentinelAnnotationScanner(),
+        new JCustosAnnotationScanner(),
         new RestAccessContextFactory(),
         new HttpStatusDecisionMapper(),
         null);
@@ -70,7 +70,7 @@ public final class RestAuthorizationFilter {
 
   RestAuthorizationFilter(
       RestSubjectResolver subjectResolver,
-      JSentinelAnnotationScanner scanner,
+      JCustosAnnotationScanner scanner,
       RestAccessContextFactory contextFactory,
       HttpStatusDecisionMapper decisionMapper) {
     this(subjectResolver, scanner, contextFactory, decisionMapper, null);
@@ -78,10 +78,10 @@ public final class RestAuthorizationFilter {
 
   RestAuthorizationFilter(
       RestSubjectResolver subjectResolver,
-      JSentinelAnnotationScanner scanner,
+      JCustosAnnotationScanner scanner,
       RestAccessContextFactory contextFactory,
       HttpStatusDecisionMapper decisionMapper,
-      JSentinelAuditService auditService) {
+      JCustosAuditService auditService) {
     this.subjectResolver = subjectResolver;
     this.scanner = scanner;
     this.contextFactory = contextFactory;
@@ -146,8 +146,8 @@ public final class RestAuthorizationFilter {
       // JS-SEC-024 (CWE-862): fail closed on an un-annotated handler when
       // deny-by-default is enabled, unless the element opts back in via
       // @PublicRoute. The default (allow-by-omission) keeps the handler public.
-      if (JSentinelServiceResolver.isDenyByDefault() && !isPublicRoute(securedElement)) {
-        Optional<JSentinelSubject> denySubject = subjectResolver.resolveSubject(request);
+      if (JCustosServiceResolver.isDenyByDefault() && !isPublicRoute(securedElement)) {
+        Optional<JCustosSubject> denySubject = subjectResolver.resolveSubject(request);
         AccessContext denyContext =
             contextFactory.create(request, denySubject, operation, attributes);
         // RF (exit-review): a missing subject is Unauthenticated (401 + a re-auth
@@ -165,12 +165,12 @@ public final class RestAuthorizationFilter {
       return;
     }
 
-    Optional<JSentinelSubject> subject = subjectResolver.resolveSubject(request);
+    Optional<JCustosSubject> subject = subjectResolver.resolveSubject(request);
 
     if (subject.isPresent()) {
       Optional<SessionMetadata> metadata = subjectResolver.resolveSessionMetadata(request);
       if (metadata.isPresent()) {
-        SessionPolicy<Object> policy = JSentinelServiceResolver.sessionPolicy();
+        SessionPolicy<Object> policy = JCustosServiceResolver.sessionPolicy();
         SessionPolicyDecision sessionDecision = policy.evaluate(metadata.get());
         if (!(sessionDecision instanceof SessionPolicyDecision.Active)) {
           auditSessionExpired(metadata.get(), subject.get(), sessionDecision);
@@ -190,16 +190,16 @@ public final class RestAuthorizationFilter {
   }
 
   private void auditSessionExpired(SessionMetadata metadata,
-                                   JSentinelSubject subject,
+                                   JCustosSubject subject,
                                    SessionPolicyDecision decision) {
     String reason = switch (decision) {
       case SessionPolicyDecision.Active ignored -> "Active";
       case SessionPolicyDecision.IdleTimeout ignored -> SessionExpired.REASON_IDLE_TIMEOUT;
       case SessionPolicyDecision.AbsoluteLifetimeExceeded ignored -> SessionExpired.REASON_ABSOLUTE_LIFETIME;
     };
-    JSentinelAuditService sink = auditService != null
+    JCustosAuditService sink = auditService != null
         ? auditService
-        : JSentinelServiceResolver.securityAuditService();
+        : JCustosServiceResolver.securityAuditService();
     try {
       sink.publish(new SessionExpired(
           Instant.now(Clock.systemUTC()),
@@ -213,12 +213,12 @@ public final class RestAuthorizationFilter {
 
   private void audit(AuthorizationDecision decision,
                      AccessContext context,
-                     Optional<JSentinelSubject> subject) {
-    JSentinelAuditService sink = auditService != null
+                     Optional<JCustosSubject> subject) {
+    JCustosAuditService sink = auditService != null
         ? auditService
-        : JSentinelServiceResolver.securityAuditService();
+        : JCustosServiceResolver.securityAuditService();
 
-    String subjectId = subject.map(JSentinelSubject::subjectId).orElse(null);
+    String subjectId = subject.map(JCustosSubject::subjectId).orElse(null);
     String route = context.resourceName();
     Instant now = Instant.now(Clock.systemUTC());
 

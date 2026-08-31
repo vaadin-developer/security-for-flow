@@ -1,10 +1,10 @@
 /*-
  * #%L
- * jSentinel JWT — standardized JWT validation
+ * jCustos JWT — standardized JWT validation
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -24,14 +24,14 @@
  */
 
 /**
- * V00.76 Nimbus JOSE+JWT-backed implementations of the jSentinel-core JWT
+ * V00.76 Nimbus JOSE+JWT-backed implementations of the jCustos-core JWT
  * SPIs (Konzept-V00.76.00 §6/§7/§9): {@code NimbusJwtValidator},
  * {@code HttpJwksClient} and the {@code NimbusJwtValidatorFactory} that the
  * {@code .jwt(...)} bootstrap discovers via {@link java.util.ServiceLoader}.
  *
  * <p>This is the only module on the reactor where a JOSE library is on the
  * classpath; the JOSE-free SPI contracts and sealed result types live in
- * {@code eu.jsentinel.jcustos.jwt.api} inside {@code jSentinel-core}.
+ * {@code eu.jsentinel.jcustos.jwt.api} inside {@code jCustos-core}.
  *
  * @since 00.76.00
  */

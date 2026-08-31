@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.publisher;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -28,7 +28,7 @@ package eu.jsentinel.jcustos.events.publisher;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventId;
 import eu.jsentinel.jcustos.events.api.EventType;
-import eu.jsentinel.jcustos.events.api.JSentinelEventSeverity;
+import eu.jsentinel.jcustos.events.api.JCustosEventSeverity;
 import eu.jsentinel.jcustos.logout.SubjectId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,9 +45,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("LoggingAlertSink")
 class LoggingAlertSinkTest {
 
-  private static JSentinelAlert alert(String detail) {
-    return new JSentinelAlert(EventType.of("SignatureInvalid"),
-        JSentinelEventSeverity.CRITICAL, TenantId.DEFAULT, SubjectId.of("system"),
+  private static JCustosAlert alert(String detail) {
+    return new JCustosAlert(EventType.of("SignatureInvalid"),
+        JCustosEventSeverity.CRITICAL, TenantId.DEFAULT, SubjectId.of("system"),
         EventId.of("evt-1"), Instant.parse("2026-06-24T10:15:30Z"), detail);
   }
 

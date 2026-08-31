@@ -24,7 +24,7 @@ package eu.jsentinel.jcustos.credential;
 
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.credential.change.PasswordChangeCommand;
 import eu.jsentinel.jcustos.credential.change.PasswordChangeResult;
 import eu.jsentinel.jcustos.credential.change.PasswordChangeService;
@@ -84,7 +84,7 @@ class Phase3IntegrationTest {
   private static final Instant T0 = Instant.parse("2026-06-01T12:00:00Z");
   private static final Duration TTL = Duration.ofMinutes(15);
 
-  private static final class RecordingAudit implements JSentinelAuditService {
+  private static final class RecordingAudit implements JCustosAuditService {
     final List<AuditEvent> events = new ArrayList<>();
     @Override public void publish(AuditEvent event) { events.add(event); }
     @Override public List<AuditEvent> query(AuditQuery q) { return List.copyOf(events); }

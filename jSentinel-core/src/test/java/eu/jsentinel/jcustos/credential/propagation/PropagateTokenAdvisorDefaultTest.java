@@ -11,7 +11,7 @@
 package eu.jsentinel.jcustos.credential.propagation;
 
 import eu.jsentinel.jcustos.annotations.PropagateToken;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,15 +33,15 @@ class PropagateTokenAdvisorDefaultTest {
   private final TokenCredentialStore store = new InMemoryTokenCredentialStore();
 
   @BeforeEach
-  void resetStrategies() { JSentinelServiceResolver.resetAll(); }
+  void resetStrategies() { JCustosServiceResolver.resetAll(); }
 
   @AfterEach
-  void cleanup() { JSentinelServiceResolver.resetAll(); store.clear(); }
+  void cleanup() { JCustosServiceResolver.resetAll(); store.clear(); }
 
   @Test
   @DisplayName("Registered pass-through strategy + bearer token → Authorization header")
   void registeredStrategyHappyPath() {
-    JSentinelServiceResolver.registerOutboundTokenStrategy(
+    JCustosServiceResolver.registerOutboundTokenStrategy(
         PassThroughStrategy.NAME, PassThroughStrategy.INSTANCE);
     store.bind(new BearerToken("abc"));
 
@@ -63,7 +63,7 @@ class PropagateTokenAdvisorDefaultTest {
   @Test
   @DisplayName("Empty store + registered strategy → empty")
   void emptyStoreReturnsEmpty() {
-    JSentinelServiceResolver.registerOutboundTokenStrategy(
+    JCustosServiceResolver.registerOutboundTokenStrategy(
         PassThroughStrategy.NAME, PassThroughStrategy.INSTANCE);
     Optional<HeaderValue> h = PropagateTokenAdvisor.Default.INSTANCE
         .adviseFor(annotation("pass-through", "", "", ""), CALL, store);
@@ -73,7 +73,7 @@ class PropagateTokenAdvisorDefaultTest {
   @Test
   @DisplayName("header() override rewrites the header name, value preserved")
   void headerOverride() {
-    JSentinelServiceResolver.registerOutboundTokenStrategy(
+    JCustosServiceResolver.registerOutboundTokenStrategy(
         PassThroughStrategy.NAME, PassThroughStrategy.INSTANCE);
     store.bind(new BearerToken("abc"));
 

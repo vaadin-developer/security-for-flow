@@ -21,7 +21,7 @@ import eu.jsentinel.jcustos.oauth2.api.OAuth2Error;
 
 /**
  * Pulls claims from the OIDC UserInfo endpoint with the access token (OIDC Core
- * §5.3, V00.78). The HTTP implementation ({@code jSentinel-identity-oidc}) sends a
+ * §5.3, V00.78). The HTTP implementation ({@code jCustos-identity-oidc}) sends a
  * Bearer-authenticated GET, optionally validates a signed-JWT UserInfo response via
  * the {@code JwtValidator}, and may cache by access-token hash. JOSE-free contract;
  * reuses the OAuth2 transport error type.

@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.oauth2.api;
 
 import com.svenruppert.functional.result.Result;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Map;
 
@@ -31,7 +31,7 @@ import java.util.Map;
  *
  * @since 00.79.20
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface PushedAuthorizationRequestClient {
 
   Result<PushedAuthorizationResponse, OAuth2Error> push(Map<String, String> authorizationRequestParams);

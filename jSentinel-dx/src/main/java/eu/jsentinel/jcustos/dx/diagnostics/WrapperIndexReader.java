@@ -26,8 +26,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Reads the generated-wrappers index emitted by {@code jSentinel-processor}
- * into a {@link JSentinelProcessorReport}. The index lives at
+ * Reads the generated-wrappers index emitted by {@code jCustos-processor}
+ * into a {@link JCustosProcessorReport}. The index lives at
  * {@code META-INF/jsentinel/generated-wrappers.idx} on the
  * classpath; each non-blank, non-comment line follows the format:
  *
@@ -38,7 +38,7 @@ import java.util.Set;
  * <p>The reader does NOT scan arbitrary classes. The processor owns the
  * authoritative view; the reader merely surfaces it.
  * <p>The reader path shipped in V00.72; the corresponding writer in
- * {@code jSentinel-processor} shipped in V00.73. The reader returns an empty
+ * {@code jCustos-processor} shipped in V00.73. The reader returns an empty
  * report when no index file is on the classpath (e.g. a module that does not
  * use the processor, or a hand-authored index).
  *
@@ -55,12 +55,12 @@ final class WrapperIndexReader {
    * @return the merged processor report from every visible index file
    *         on the given class loader.
    */
-  static JSentinelProcessorReport read(ClassLoader cl) {
+  static JCustosProcessorReport read(ClassLoader cl) {
     if (cl == null) {
-      return JSentinelProcessorReport.empty();
+      return JCustosProcessorReport.empty();
     }
 
-    List<GeneratedJSentinelWrapper> wrappers = new ArrayList<>();
+    List<GeneratedJCustosWrapper> wrappers = new ArrayList<>();
     List<ProcessorWarning> warnings = new ArrayList<>();
     Set<String> seenKeys = new LinkedHashSet<>();
 
@@ -71,8 +71,8 @@ final class WrapperIndexReader {
       warnings.add(new ProcessorWarning(
           "processor/index-malformed",
           "Failed to enumerate generated-wrappers.idx: " + io.getMessage(),
-          "Inspect the jSentinel-processor build configuration."));
-      return new JSentinelProcessorReport(wrappers, warnings);
+          "Inspect the jCustos-processor build configuration."));
+      return new JCustosProcessorReport(wrappers, warnings);
     }
 
     while (indexResources.hasMoreElements()) {
@@ -90,14 +90,14 @@ final class WrapperIndexReader {
         warnings.add(new ProcessorWarning(
             "processor/index-malformed",
             "Failed to read " + url + ": " + io.getMessage(),
-            "Inspect the jSentinel-processor build configuration."));
+            "Inspect the jCustos-processor build configuration."));
       }
     }
-    return new JSentinelProcessorReport(wrappers, warnings);
+    return new JCustosProcessorReport(wrappers, warnings);
   }
 
   private static void parseLine(String line,
-                                List<GeneratedJSentinelWrapper> wrappers,
+                                List<GeneratedJCustosWrapper> wrappers,
                                 List<ProcessorWarning> warnings,
                                 Set<String> seenKeys,
                                 ClassLoader cl,
@@ -121,7 +121,7 @@ final class WrapperIndexReader {
         ? Collections.emptyList()
         : new ArrayList<>(Arrays.asList(parts[4].split(WrapperIndexFormat.METHOD_SEPARATOR)));
     methods.replaceAll(String::trim);
-    GeneratedJSentinelWrapper.Kind kind = parseKind(parts, sourceUrl, line, warnings);
+    GeneratedJCustosWrapper.Kind kind = parseKind(parts, sourceUrl, line, warnings);
 
     String key = sourceFqn + "|" + generatedFqn;
     if (!seenKeys.add(key)) {
@@ -147,7 +147,7 @@ final class WrapperIndexReader {
       return;
     }
 
-    String expectedSuffix = kind == GeneratedJSentinelWrapper.Kind.PROPAGATING
+    String expectedSuffix = kind == GeneratedJCustosWrapper.Kind.PROPAGATING
         ? "Propagating" : "Secured";
     String expectedWrapperFqn = sourceFqn + expectedSuffix;
     if (!expectedWrapperFqn.equals(generatedFqn)) {
@@ -158,29 +158,29 @@ final class WrapperIndexReader {
           fixSnippet()));
     }
 
-    wrappers.add(new GeneratedJSentinelWrapper(
+    wrappers.add(new GeneratedJCustosWrapper(
         sourceType, generatedType, processor, version, methods, kind));
   }
 
-  private static GeneratedJSentinelWrapper.Kind parseKind(String[] parts,
+  private static GeneratedJCustosWrapper.Kind parseKind(String[] parts,
                                                           String sourceUrl,
                                                           String line,
                                                           List<ProcessorWarning> warnings) {
     if (parts.length < 6 || parts[5] == null || parts[5].isBlank()) {
-      return GeneratedJSentinelWrapper.Kind.SECURED;
+      return GeneratedJCustosWrapper.Kind.SECURED;
     }
     String raw = parts[5].trim();
     if (WrapperIndexFormat.KIND_PROPAGATING.equals(raw)) {
-      return GeneratedJSentinelWrapper.Kind.PROPAGATING;
+      return GeneratedJCustosWrapper.Kind.PROPAGATING;
     }
     if (WrapperIndexFormat.KIND_SECURED.equals(raw)) {
-      return GeneratedJSentinelWrapper.Kind.SECURED;
+      return GeneratedJCustosWrapper.Kind.SECURED;
     }
     warnings.add(new ProcessorWarning(
         "processor/index-malformed",
         "Unknown wrapper kind '" + raw + "' in " + sourceUrl + ": " + line,
         "Use 'secured' or 'propagating' as the sixth field; defaulting to SECURED."));
-    return GeneratedJSentinelWrapper.Kind.SECURED;
+    return GeneratedJCustosWrapper.Kind.SECURED;
   }
 
   private static Class<?> loadOrNull(ClassLoader cl, String fqn, List<ProcessorWarning> warnings) {
@@ -192,10 +192,10 @@ final class WrapperIndexReader {
   }
 
   private static String fixSnippet() {
-    return "Add jSentinel-processor to <annotationProcessorPaths>:\n"
+    return "Add jCustos-processor to <annotationProcessorPaths>:\n"
         + "  <path>\n"
         + "    <groupId>eu.jsentinel.jcustos</groupId>\n"
-        + "    <artifactId>jSentinel-processor</artifactId>\n"
+        + "    <artifactId>jCustos-processor</artifactId>\n"
         + "    <version>${jsentinel.version}</version>\n"
         + "  </path>";
   }

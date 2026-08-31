@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.codec;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -28,9 +28,9 @@ package eu.jsentinel.jcustos.events.codec;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventMetadata;
 import eu.jsentinel.jcustos.events.api.EventType;
-import eu.jsentinel.jcustos.events.api.JSentinelEvent;
-import eu.jsentinel.jcustos.events.api.JSentinelEventCategory;
-import eu.jsentinel.jcustos.events.api.JSentinelEventSeverity;
+import eu.jsentinel.jcustos.events.api.JCustosEvent;
+import eu.jsentinel.jcustos.events.api.JCustosEventCategory;
+import eu.jsentinel.jcustos.events.api.JCustosEventSeverity;
 import eu.jsentinel.jcustos.logout.SubjectId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -52,22 +52,22 @@ class RecordReflectionCanonicalizerTest {
 
   private static EventMetadata meta() {
     return EventMetadata.create(
-        TenantId.DEFAULT, SubjectId.of("alice"), AT, JSentinelEventSeverity.INFO);
+        TenantId.DEFAULT, SubjectId.of("alice"), AT, JCustosEventSeverity.INFO);
   }
 
   /** A deterministic value-record used as a nested component. */
   record Coords(int x, int y) {
   }
 
-  record NestedEvent(EventMetadata metadata, Coords where) implements JSentinelEvent {
+  record NestedEvent(EventMetadata metadata, Coords where) implements JCustosEvent {
     @Override
     public EventType eventType() {
       return EventType.of("NestedTest");
     }
 
     @Override
-    public JSentinelEventCategory category() {
-      return JSentinelEventCategory.RATE_LIMIT;
+    public JCustosEventCategory category() {
+      return JCustosEventCategory.RATE_LIMIT;
     }
   }
 
@@ -75,41 +75,41 @@ class RecordReflectionCanonicalizerTest {
   record Pair(String a, String b) {
   }
 
-  record PairEvent(EventMetadata metadata, Pair pair) implements JSentinelEvent {
+  record PairEvent(EventMetadata metadata, Pair pair) implements JCustosEvent {
     @Override
     public EventType eventType() {
       return EventType.of("PairTest");
     }
 
     @Override
-    public JSentinelEventCategory category() {
-      return JSentinelEventCategory.RATE_LIMIT;
+    public JCustosEventCategory category() {
+      return JCustosEventCategory.RATE_LIMIT;
     }
   }
 
   /** An event with a nullable top-level String component. */
-  record MaybeEvent(EventMetadata metadata, String detail) implements JSentinelEvent {
+  record MaybeEvent(EventMetadata metadata, String detail) implements JCustosEvent {
     @Override
     public EventType eventType() {
       return EventType.of("MaybeTest");
     }
 
     @Override
-    public JSentinelEventCategory category() {
-      return JSentinelEventCategory.RATE_LIMIT;
+    public JCustosEventCategory category() {
+      return JCustosEventCategory.RATE_LIMIT;
     }
   }
 
   /** A non-deterministic component: byte[] renders as an identity hash. */
-  record BadEvent(EventMetadata metadata, byte[] blob) implements JSentinelEvent {
+  record BadEvent(EventMetadata metadata, byte[] blob) implements JCustosEvent {
     @Override
     public EventType eventType() {
       return EventType.of("BadTest");
     }
 
     @Override
-    public JSentinelEventCategory category() {
-      return JSentinelEventCategory.RATE_LIMIT;
+    public JCustosEventCategory category() {
+      return JCustosEventCategory.RATE_LIMIT;
     }
   }
 

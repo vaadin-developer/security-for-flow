@@ -18,7 +18,7 @@ package eu.jsentinel.jcustos.persistence.eclipsestore;
 
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptKey;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptStore;
-import eu.jsentinel.jcustos.persistence.eclipsestore.EclipseStoreJSentinelRoot.LoginAttemptLedger;
+import eu.jsentinel.jcustos.persistence.eclipsestore.EclipseStoreJCustosRoot.LoginAttemptLedger;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -28,9 +28,9 @@ import static java.util.Objects.requireNonNull;
 /** Eclipse-Store-backed {@link LoginAttemptStore}. */
 final class EclipseStoreLoginAttemptStore implements LoginAttemptStore {
 
-  private final EclipseStoreJSentinelStorage storage;
+  private final EclipseStoreJCustosStorage storage;
 
-  EclipseStoreLoginAttemptStore(EclipseStoreJSentinelStorage storage) {
+  EclipseStoreLoginAttemptStore(EclipseStoreJCustosStorage storage) {
     this.storage = storage;
   }
 

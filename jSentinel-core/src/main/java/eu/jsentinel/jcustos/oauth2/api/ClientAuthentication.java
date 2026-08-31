@@ -24,7 +24,7 @@ import java.util.Objects;
 
 /**
  * How the RP authenticates to the token endpoint (RFC 6749 §2.3 + RFC 7523,
- * V00.77). A pure data type — the {@code jSentinel-oauth2} HTTP module
+ * V00.77). A pure data type — the {@code jCustos-oauth2} HTTP module
  * interprets it (Basic header / body fields / signed client assertion), so this
  * stays HTTP- and JOSE-free. Secret material is held in {@link SecretValue} /
  * {@link JwtSigningKey} and never logged.

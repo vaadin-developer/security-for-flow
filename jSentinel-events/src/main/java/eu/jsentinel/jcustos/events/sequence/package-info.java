@@ -1,10 +1,10 @@
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,7 +25,7 @@
 
 /**
  * V00.75 sequence-tracking SPI (Konzept §650-§674): the {@link
- * eu.jsentinel.jcustos.events.sequence.JSentinelEventSequenceStore}
+ * eu.jsentinel.jcustos.events.sequence.JCustosEventSequenceStore}
  * (last monotone sequence per {@code tenantId + producerId}) with an in-memory
  * default, the {@link
  * eu.jsentinel.jcustos.events.sequence.SequenceViolationStrategy}, and a

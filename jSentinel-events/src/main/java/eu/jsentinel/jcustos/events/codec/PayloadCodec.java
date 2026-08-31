@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.codec;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,11 +25,11 @@ package eu.jsentinel.jcustos.events.codec;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.events.api.PayloadContentType;
 
 /**
- * SPI for serializing a {@link CanonicalJSentinelEventPayload} to and from the
+ * SPI for serializing a {@link CanonicalJCustosEventPayload} to and from the
  * deterministic byte form that gets hashed and signed (Konzept §536).
  *
  * <p>The codec id ({@link #contentType()}) is recorded on the envelope so a
@@ -39,7 +39,7 @@ import eu.jsentinel.jcustos.events.api.PayloadContentType;
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface PayloadCodec {
 
   /**
@@ -51,12 +51,12 @@ public interface PayloadCodec {
    * @param payload the canonical payload
    * @return deterministic encoded bytes
    */
-  byte[] encode(CanonicalJSentinelEventPayload payload);
+  byte[] encode(CanonicalJCustosEventPayload payload);
 
   /**
    * @param bytes encoded bytes produced by this codec
    * @return the decoded canonical payload
    * @throws PayloadCodecException if the bytes are not valid for this codec
    */
-  CanonicalJSentinelEventPayload decode(byte[] bytes);
+  CanonicalJCustosEventPayload decode(byte[] bytes);
 }

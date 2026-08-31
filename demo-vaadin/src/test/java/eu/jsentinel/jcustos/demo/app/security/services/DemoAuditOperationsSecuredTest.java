@@ -19,7 +19,7 @@ package eu.jsentinel.jcustos.demo.app.security.services;
 import com.svenruppert.proxybuilder.annotations.DelegatesTo;
 import com.svenruppert.proxybuilder.annotations.GeneratedByProxyBuilder;
 import eu.jsentinel.jcustos.authorization.api.AccessDeniedException;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.demo.app.security.model.MyUser;
 import eu.jsentinel.jcustos.demo.app.security.roles.AuthorizationRole;
@@ -66,7 +66,7 @@ class DemoAuditOperationsSecuredTest {
   @AfterEach
   void tearDown() {
     SubjectStores.reset();
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   @Test
@@ -103,7 +103,7 @@ class DemoAuditOperationsSecuredTest {
   void listEventsDeniedWithoutSubject() {
     DemoAuditOperationsSecured wrapper = new DemoAuditOperationsSecured();
     assertThrows(AccessDeniedException.class, wrapper::listEvents,
-        "no current subject → JSentinelEnforcer must refuse audit:read");
+        "no current subject → JCustosEnforcer must refuse audit:read");
   }
 
   @Test

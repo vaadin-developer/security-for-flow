@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.rest;
 
 /*-
  * #%L
- * jSentinel Events — REST / SSE bridge
+ * jCustos Events — REST / SSE bridge
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,8 +27,8 @@ package eu.jsentinel.jcustos.events.rest;
 
 import eu.jsentinel.jcustos.events.wire.EnvelopeWireCodec;
 import eu.jsentinel.jcustos.events.api.EventEnvelopeId;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
-import eu.jsentinel.jcustos.events.store.JSentinelEventCursor;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
+import eu.jsentinel.jcustos.events.store.JCustosEventCursor;
 import eu.jsentinel.jcustos.events.store.StoredEnvelope;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -53,8 +53,8 @@ class SseEventBroadcasterTest {
     broadcaster.register(subscriber);
     assertEquals(1, broadcaster.subscriberCount());
 
-    SignedJSentinelEventEnvelope env = new EventsRestFixtures().signedEnvelope();
-    broadcaster.broadcast(new StoredEnvelope(JSentinelEventCursor.at(7), env));
+    SignedJCustosEventEnvelope env = new EventsRestFixtures().signedEnvelope();
+    broadcaster.broadcast(new StoredEnvelope(JCustosEventCursor.at(7), env));
 
     String frame = subscriber.poll(1, TimeUnit.SECONDS);
     assertNotNull(frame);
@@ -90,9 +90,9 @@ class SseEventBroadcasterTest {
     broadcaster.register(frame -> false);
     assertEquals(0L, broadcaster.droppedFrameCount());
 
-    SignedJSentinelEventEnvelope env = new EventsRestFixtures().signedEnvelope();
-    broadcaster.broadcast(new StoredEnvelope(JSentinelEventCursor.at(1), env));
-    broadcaster.broadcast(new StoredEnvelope(JSentinelEventCursor.at(2), env));
+    SignedJCustosEventEnvelope env = new EventsRestFixtures().signedEnvelope();
+    broadcaster.broadcast(new StoredEnvelope(JCustosEventCursor.at(1), env));
+    broadcaster.broadcast(new StoredEnvelope(JCustosEventCursor.at(2), env));
 
     assertEquals(2L, broadcaster.droppedFrameCount(),
         "each dropped frame must increment the backpressure counter");
@@ -106,9 +106,9 @@ class SseEventBroadcasterTest {
     // a subscriber that is always full → the first broadcast drops and WARNs
     broadcaster.register(frame -> false);
 
-    SignedJSentinelEventEnvelope env = new EventsRestFixtures().signedEnvelope();
-    SignedJSentinelEventEnvelope evil = withEnvelopeId(env, "evil\r\nfake=INJECTED");
-    broadcaster.broadcast(new StoredEnvelope(JSentinelEventCursor.at(1), evil));
+    SignedJCustosEventEnvelope env = new EventsRestFixtures().signedEnvelope();
+    SignedJCustosEventEnvelope evil = withEnvelopeId(env, "evil\r\nfake=INJECTED");
+    broadcaster.broadcast(new StoredEnvelope(JCustosEventCursor.at(1), evil));
 
     String line = logger.firstMessage();
     assertFalse(line.contains("\n"), "log line must not contain a newline: " + line);
@@ -117,9 +117,9 @@ class SseEventBroadcasterTest {
   }
 
   /** Copy of {@code env} with the given envelopeId — EventEnvelopeId only rejects blank values. */
-  private static SignedJSentinelEventEnvelope withEnvelopeId(
-      SignedJSentinelEventEnvelope env, String envelopeId) {
-    return new SignedJSentinelEventEnvelope(EventEnvelopeId.of(envelopeId), env.eventId(),
+  private static SignedJCustosEventEnvelope withEnvelopeId(
+      SignedJCustosEventEnvelope env, String envelopeId) {
+    return new SignedJCustosEventEnvelope(EventEnvelopeId.of(envelopeId), env.eventId(),
         env.eventType(), env.tenantId(), env.subjectId(), env.producerId(), env.occurredAt(),
         env.issuedAt(), env.expiresAt(), env.correlationId(), env.causationId(), env.sequence(),
         env.keyId(), env.signatureAlgorithm(), env.payloadContentType(),

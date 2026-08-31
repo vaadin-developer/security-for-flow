@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Verifies WrapperIndexReader + JSentinelDiagnostics integration. The
+ * Verifies WrapperIndexReader + JCustosDiagnostics integration. The
  * src/test/resources/META-INF/jsentinel/generated-wrappers.idx
  * fixture contains one valid entry plus two failure cases.
  */
@@ -28,7 +28,7 @@ class WrapperIndexReaderTest {
 
   @Test
   void inspectsValidWrapperEntry() {
-    JSentinelServiceReport report = JSentinelDiagnostics.inspect();
+    JCustosServiceReport report = JCustosDiagnostics.inspect();
 
     boolean found = report.processorReport().wrappers().stream()
         .anyMatch(w -> w.sourceType() == FixtureSourceType.class
@@ -43,7 +43,7 @@ class WrapperIndexReaderTest {
 
   @Test
   void unknownSourceProducesSecuredWithoutWrapperWarning() {
-    JSentinelServiceReport report = JSentinelDiagnostics.inspect();
+    JCustosServiceReport report = JCustosDiagnostics.inspect();
 
     boolean found = report.warnings().stream()
         .anyMatch(w -> "secured-without-wrapper".equals(w.code())
@@ -53,7 +53,7 @@ class WrapperIndexReaderTest {
 
   @Test
   void mismatchedWrapperFqnProducesSecuredWithoutWrapperWarning() {
-    JSentinelServiceReport report = JSentinelDiagnostics.inspect();
+    JCustosServiceReport report = JCustosDiagnostics.inspect();
 
     boolean found = report.warnings().stream()
         .anyMatch(w -> "secured-without-wrapper".equals(w.code())
@@ -64,7 +64,7 @@ class WrapperIndexReaderTest {
 
   @Test
   void warningsAlsoSurfaceInProcessorReport() {
-    JSentinelServiceReport report = JSentinelDiagnostics.inspect();
+    JCustosServiceReport report = JCustosDiagnostics.inspect();
 
     long processorWarnings = report.processorReport().warnings().stream()
         .filter(w -> "secured-without-wrapper".equals(w.code()))
@@ -81,24 +81,24 @@ class WrapperIndexReaderTest {
 
   @Test
   void v0073ShapedEntryDefaultsToSecuredKind() {
-    JSentinelServiceReport report = JSentinelDiagnostics.inspect();
+    JCustosServiceReport report = JCustosDiagnostics.inspect();
 
     boolean found = report.processorReport().wrappers().stream()
         .anyMatch(w -> w.sourceType() == FixtureSourceType.class
             && w.generatedType() == FixtureSourceTypeSecured.class
-            && w.kind() == GeneratedJSentinelWrapper.Kind.SECURED);
+            && w.kind() == GeneratedJCustosWrapper.Kind.SECURED);
 
     assertTrue(found, "5-field V00.73 line must parse with kind=SECURED");
   }
 
   @Test
   void v0074PropagatingKindIsRecognised() {
-    JSentinelServiceReport report = JSentinelDiagnostics.inspect();
+    JCustosServiceReport report = JCustosDiagnostics.inspect();
 
     boolean found = report.processorReport().wrappers().stream()
         .anyMatch(w -> w.sourceType() == FixturePropagatingSource.class
             && w.generatedType() == FixturePropagatingSourcePropagating.class
-            && w.kind() == GeneratedJSentinelWrapper.Kind.PROPAGATING
+            && w.kind() == GeneratedJCustosWrapper.Kind.PROPAGATING
             && w.delegatedMethods().contains("load"));
 
     assertTrue(found, "V00.74 :propagating line must yield kind=PROPAGATING; got: "

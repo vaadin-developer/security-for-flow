@@ -17,8 +17,8 @@
 package eu.jsentinel.jcustos.logout;
 
 import eu.jsentinel.jcustos.audit.LogoutPerformed;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStore;
 
 import java.time.Clock;
@@ -49,7 +49,7 @@ public final class SubjectClearingLogoutService<U> implements LogoutService {
   private final SubjectStore subjectStore;
   private final Class<U> subjectType;
   private final SubjectSessionRegistry registry;
-  private final JSentinelAuditService auditService;
+  private final JCustosAuditService auditService;
   private final List<LogoutListener> listeners = new CopyOnWriteArrayList<>();
 
   /**
@@ -70,14 +70,14 @@ public final class SubjectClearingLogoutService<U> implements LogoutService {
    * @param registry     session registry consulted for
    *                     {@link LogoutScope#AllSessionsOfSubject}
    * @param auditService audit sink, or {@code null} to resolve from
-   *                     {@link JSentinelServiceResolver#securityAuditService()}
+   *                     {@link JCustosServiceResolver#securityAuditService()}
    *                     at logout time
    */
   public SubjectClearingLogoutService(
       SubjectStore subjectStore,
       Class<U> subjectType,
       SubjectSessionRegistry registry,
-      JSentinelAuditService auditService) {
+      JCustosAuditService auditService) {
     this.subjectStore = Objects.requireNonNull(subjectStore, "subjectStore");
     this.subjectType = Objects.requireNonNull(subjectType, "subjectType");
     this.registry = Objects.requireNonNull(registry, "registry");
@@ -131,9 +131,9 @@ public final class SubjectClearingLogoutService<U> implements LogoutService {
   }
 
   private void audit(SubjectId subjectId, String sessionId, LogoutScope scope) {
-    JSentinelAuditService sink = auditService != null
+    JCustosAuditService sink = auditService != null
         ? auditService
-        : JSentinelServiceResolver.securityAuditService();
+        : JCustosServiceResolver.securityAuditService();
     try {
       sink.publish(new LogoutPerformed(
           Instant.now(Clock.systemUTC()), subjectId.value(), sessionId, scope));

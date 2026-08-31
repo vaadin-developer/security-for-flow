@@ -1,10 +1,10 @@
 /*-
  * #%L
- * jSentinel Monitoring — metrics, health and diagnostics export points
+ * jCustos Monitoring — metrics, health and diagnostics export points
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,14 +25,14 @@
 
 /**
  * Metrics export point: the
- * {@link eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricsPublisher}
+ * {@link eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricsPublisher}
  * SPI (counters + push-style gauges, deliberately no tags / histograms
  * in V1), the
- * {@link eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames}
+ * {@link eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames}
  * catalog (single source of truth — names are API), the zero-cost
- * {@link eu.jsentinel.jcustos.monitoring.metrics.NoOpJSentinelMetricsPublisher}
+ * {@link eu.jsentinel.jcustos.monitoring.metrics.NoOpJCustosMetricsPublisher}
  * default and the {@code ServiceLoader}-backed
- * {@link eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricsPublishers#discover()}
+ * {@link eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricsPublishers#discover()}
  * resolution.
  *
  * @since 00.80.00

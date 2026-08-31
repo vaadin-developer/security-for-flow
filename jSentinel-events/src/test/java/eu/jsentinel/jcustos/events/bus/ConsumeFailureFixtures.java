@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.bus;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -36,8 +36,8 @@ import eu.jsentinel.jcustos.events.api.KeyId;
 import eu.jsentinel.jcustos.events.api.PayloadContentType;
 import eu.jsentinel.jcustos.events.api.PayloadHashAlgorithm;
 import eu.jsentinel.jcustos.events.api.SignatureAlgorithmId;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelopeBuilder;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelopeBuilder;
 import eu.jsentinel.jcustos.logout.SubjectId;
 
 import java.nio.charset.StandardCharsets;
@@ -51,8 +51,8 @@ final class ConsumeFailureFixtures {
   private ConsumeFailureFixtures() {
   }
 
-  static SignedJSentinelEventEnvelope envelope() {
-    return SignedJSentinelEventEnvelopeBuilder.create()
+  static SignedJCustosEventEnvelope envelope() {
+    return SignedJCustosEventEnvelopeBuilder.create()
         .envelopeId(EventEnvelopeId.of("env-cf"))
         .eventId(EventId.of("evt-cf"))
         .eventType(EventType.of("LoginSucceeded"))

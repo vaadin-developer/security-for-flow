@@ -10,10 +10,10 @@
  */
 package eu.jsentinel.jcustos.starter.profile;
 
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapMode;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapMode;
 
 /** Development profile — verbose diagnostics, DEVELOPMENT mode default. */
-public final class DevelopmentDefaults implements VaadinJSentinelStarter {
+public final class DevelopmentDefaults implements VaadinJCustosStarter {
 
   static final DevelopmentDefaults INSTANCE = new DevelopmentDefaults();
 
@@ -21,7 +21,7 @@ public final class DevelopmentDefaults implements VaadinJSentinelStarter {
   }
 
   @Override
-  public JSentinelBootstrapMode preferredMode() {
-    return JSentinelBootstrapMode.DEVELOPMENT;
+  public JCustosBootstrapMode preferredMode() {
+    return JCustosBootstrapMode.DEVELOPMENT;
   }
 }

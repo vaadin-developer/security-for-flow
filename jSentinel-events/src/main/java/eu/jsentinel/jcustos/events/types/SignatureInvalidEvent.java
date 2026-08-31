@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.types;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,16 +25,16 @@ package eu.jsentinel.jcustos.events.types;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.events.api.EventMetadata;
 import eu.jsentinel.jcustos.events.api.EventType;
-import eu.jsentinel.jcustos.events.api.JSentinelEventCategory;
+import eu.jsentinel.jcustos.events.api.JCustosEventCategory;
 
 import java.util.Objects;
 
 /**
  * An envelope signature failed verification (Konzept §290). Short name for the
- * Konzept's {@code JSentinelEventSignatureInvalidEvent}.
+ * Konzept's {@code JCustosEventSignatureInvalidEvent}.
  *
  * <p>This covers every failure of the envelope's cryptographic content
  * binding: an invalid signature as well as a canonical-payload hash mismatch
@@ -45,7 +45,7 @@ import java.util.Objects;
  * @param envelopeId the envelope whose signature was invalid
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record SignatureInvalidEvent(EventMetadata metadata, String envelopeId)
     implements EventBusSelfObservabilityEvent {
 
@@ -61,7 +61,7 @@ public record SignatureInvalidEvent(EventMetadata metadata, String envelopeId)
   }
 
   @Override
-  public JSentinelEventCategory category() {
-    return JSentinelEventCategory.INTEGRITY;
+  public JCustosEventCategory category() {
+    return JCustosEventCategory.INTEGRITY;
   }
 }

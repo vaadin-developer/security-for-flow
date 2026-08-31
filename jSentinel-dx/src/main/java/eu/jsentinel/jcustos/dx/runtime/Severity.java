@@ -11,11 +11,11 @@
 package eu.jsentinel.jcustos.dx.runtime;
 
 /**
- * Severity level of a {@link JSentinelBootstrapWarning}.
+ * Severity level of a {@link JCustosBootstrapWarning}.
  * <p>
  * In {@code STRICT} mode, {@link #ERROR} entries are converted into a
- * {@code JSentinelBootstrapException}; {@link #WARNING} and {@link #INFO}
- * entries are attached to the resulting {@link JSentinelRuntime}.
+ * {@code JCustosBootstrapException}; {@link #WARNING} and {@link #INFO}
+ * entries are attached to the resulting {@link JCustosRuntime}.
  *
  * @since 00.72.00
  * @apiNote V00.73 — promoted to stable.

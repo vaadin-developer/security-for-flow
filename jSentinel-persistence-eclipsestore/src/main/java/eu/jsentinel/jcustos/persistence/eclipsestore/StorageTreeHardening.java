@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.persistence.eclipsestore;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,9 +31,9 @@ import java.util.Set;
  * storage directory (JS-SEC-017 / JS-SEC-037 / JS-SEC-038, CWE-276).
  *
  * <p>RF (exit-review, reuse): three byte-identical copies of this hardening previously
- * lived in {@link JSentinelStorageFactory} (as {@code hardenStorageTree} /
+ * lived in {@link JCustosStorageFactory} (as {@code hardenStorageTree} /
  * {@code createOwnerOnly} / {@code warnIfGroupOrOtherAccessible}),
- * {@link EclipseStoreJSentinelStorage} and the events module's
+ * {@link EclipseStoreJCustosStorage} and the events module's
  * {@code EclipseStoreEventStorage}. Duplicated security-critical code drifts — the next
  * permission-policy change would land in one copy and silently miss the others (exactly the
  * JS-SEC-017 → JS-SEC-038 regression class this line already had to patch twice). All three
@@ -42,7 +42,7 @@ import java.util.Set;
  *
  * @since 00.79.40
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class StorageTreeHardening {
 
   private StorageTreeHardening() {

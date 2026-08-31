@@ -11,7 +11,7 @@
 package eu.jsentinel.jcustos.dx.internal;
 
 import eu.jsentinel.jcustos.audit.AuditEventStore;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.dx.bootstrap.AuditBootstrap;
 
 import java.util.Objects;
@@ -20,10 +20,10 @@ import java.util.Objects;
  * Real V00.73 implementation of {@link AuditBootstrap}. Records every
  * selection into the {@link AuditState} held by {@link BootstrapState};
  * {@code install()} consumes the state and wires a single
- * {@link JSentinelAuditService} via {@code JSentinelServiceResolver}.
+ * {@link JCustosAuditService} via {@code JCustosServiceResolver}.
  *
  * <p>Package-private; instances are created exclusively by
- * {@link AbstractJSentinelBootstrap}.
+ * {@link AbstractJCustosBootstrap}.
  *
  * @since 00.73.00
  */
@@ -36,7 +36,7 @@ final class AuditBootstrapImpl implements AuditBootstrap {
   }
 
   @Override
-  public AuditBootstrap securityAuditService(JSentinelAuditService service) {
+  public AuditBootstrap securityAuditService(JCustosAuditService service) {
     state.directService(Objects.requireNonNull(service, "service"));
     return this;
   }

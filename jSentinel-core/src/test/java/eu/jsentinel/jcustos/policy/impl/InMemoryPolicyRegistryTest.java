@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.policy.impl;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleName;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InMemoryPolicyRegistryTest {
 
-  private static PolicyContext ctxWithSubject(JSentinelSubject subject, String policyName) {
+  private static PolicyContext ctxWithSubject(JCustosSubject subject, String policyName) {
     return new PolicyContext(
         new AccessContext(Optional.of(subject), "rest-endpoint", "/x", "read", Map.of()),
         policyName);
@@ -127,9 +127,9 @@ class InMemoryPolicyRegistryTest {
         .deny("must be ADMIN")
         .build());
 
-    JSentinelSubject admin = new JSentinelSubject(
+    JCustosSubject admin = new JCustosSubject(
         "u-1", "u-1", Set.of(new RoleName("ADMIN")), Set.of());
-    JSentinelSubject user = new JSentinelSubject(
+    JCustosSubject user = new JCustosSubject(
         "u-2", "u-2", Set.of(new RoleName("USER")), Set.of());
 
     assertInstanceOf(PolicyDecision.Allowed.class,
@@ -149,11 +149,11 @@ class InMemoryPolicyRegistryTest {
         .deny("must be admin or document:write holder")
         .build());
 
-    JSentinelSubject admin = new JSentinelSubject(
+    JCustosSubject admin = new JCustosSubject(
         "u-admin", "admin", Set.of(new RoleName("ADMIN")), Set.of());
-    JSentinelSubject writer = new JSentinelSubject(
+    JCustosSubject writer = new JCustosSubject(
         "u-writer", "writer", Set.of(), Set.of(new PermissionName("document:write")));
-    JSentinelSubject reader = new JSentinelSubject(
+    JCustosSubject reader = new JCustosSubject(
         "u-reader", "reader", Set.of(), Set.of(new PermissionName("document:read")));
 
     assertInstanceOf(PolicyDecision.Allowed.class, registry.evaluate(

@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.integration;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,11 +27,11 @@ package eu.jsentinel.jcustos.events.integration;
 
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventMetadata;
-import eu.jsentinel.jcustos.events.api.JSentinelEvent;
-import eu.jsentinel.jcustos.events.api.JSentinelEventSeverity;
-import eu.jsentinel.jcustos.events.bus.JSentinelEventBus;
-import eu.jsentinel.jcustos.events.bus.JSentinelEventListener;
-import eu.jsentinel.jcustos.events.bus.JSentinelEventListenerOptions;
+import eu.jsentinel.jcustos.events.api.JCustosEvent;
+import eu.jsentinel.jcustos.events.api.JCustosEventSeverity;
+import eu.jsentinel.jcustos.events.bus.JCustosEventBus;
+import eu.jsentinel.jcustos.events.bus.JCustosEventListener;
+import eu.jsentinel.jcustos.events.bus.JCustosEventListenerOptions;
 import eu.jsentinel.jcustos.events.bus.Registration;
 import eu.jsentinel.jcustos.events.publisher.SignedEnvelopePublisher;
 import eu.jsentinel.jcustos.events.types.SessionRevokedEvent;
@@ -53,30 +53,30 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class FeatureFlaggedEventPublisherTest {
 
   /** A real recording bus — not a mock. */
-  private static final class RecordingBus implements JSentinelEventBus {
-    final List<JSentinelEvent> published = new ArrayList<>();
+  private static final class RecordingBus implements JCustosEventBus {
+    final List<JCustosEvent> published = new ArrayList<>();
 
     @Override
-    public void publish(JSentinelEvent event) {
+    public void publish(JCustosEvent event) {
       published.add(event);
     }
 
     @Override
-    public CompletionStage<Void> publishAsync(JSentinelEvent event) {
+    public CompletionStage<Void> publishAsync(JCustosEvent event) {
       publish(event);
       return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    public <E extends JSentinelEvent> Registration subscribe(
-        Class<E> eventType, JSentinelEventListener<? super E> listener) {
+    public <E extends JCustosEvent> Registration subscribe(
+        Class<E> eventType, JCustosEventListener<? super E> listener) {
       return () -> { };
     }
 
     @Override
-    public <E extends JSentinelEvent> Registration subscribe(
-        Class<E> eventType, JSentinelEventListenerOptions options,
-        JSentinelEventListener<? super E> listener) {
+    public <E extends JCustosEvent> Registration subscribe(
+        Class<E> eventType, JCustosEventListenerOptions options,
+        JCustosEventListener<? super E> listener) {
       return () -> { };
     }
 
@@ -86,9 +86,9 @@ class FeatureFlaggedEventPublisherTest {
     }
   }
 
-  private static JSentinelEvent event() {
+  private static JCustosEvent event() {
     EventMetadata meta = EventMetadata.create(TenantId.DEFAULT, SubjectId.of("alice"),
-        Instant.parse("2026-06-24T10:00:00Z"), JSentinelEventSeverity.WARNING);
+        Instant.parse("2026-06-24T10:00:00Z"), JCustosEventSeverity.WARNING);
     return new SessionRevokedEvent(meta, "sid-1", "admin-revoked");
   }
 
@@ -113,13 +113,13 @@ class FeatureFlaggedEventPublisherTest {
   @Test
   @DisplayName("the feature flag defaults to disabled")
   void flagDefaultsDisabled() {
-    String previous = System.getProperty(JSentinelEventBusFeatureFlag.PROPERTY);
-    System.clearProperty(JSentinelEventBusFeatureFlag.PROPERTY);
+    String previous = System.getProperty(JCustosEventBusFeatureFlag.PROPERTY);
+    System.clearProperty(JCustosEventBusFeatureFlag.PROPERTY);
     try {
-      assertFalse(JSentinelEventBusFeatureFlag.enabled());
+      assertFalse(JCustosEventBusFeatureFlag.enabled());
     } finally {
       if (previous != null) {
-        System.setProperty(JSentinelEventBusFeatureFlag.PROPERTY, previous);
+        System.setProperty(JCustosEventBusFeatureFlag.PROPERTY, previous);
       }
     }
   }

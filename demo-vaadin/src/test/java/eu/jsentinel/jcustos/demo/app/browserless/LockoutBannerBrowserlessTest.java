@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.demo.app.browserless;
 
 import eu.jsentinel.jcustos.authorization.LoginView;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptContext;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptDecision;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptPolicy;
@@ -64,7 +64,7 @@ class LockoutBannerBrowserlessTest extends BrowserlessTest {
     System.setProperty("security.bootstrap.mode", "DISABLED");
     resetBootstrapWiringSingleton();
 
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
     // Seed an admin so the directory reports hasAnyAdministrator(), even
     // though with DISABLED mode the bootstrap flow no longer cares.
@@ -72,7 +72,7 @@ class LockoutBannerBrowserlessTest extends BrowserlessTest {
         new MyUser(1L, "Admin",
             EnumSet.of(AuthorizationRole.ADMIN, AuthorizationRole.USER)));
     // Stub policy: always locked out for any attempt.
-    JSentinelServiceResolver.setLoginAttemptPolicy(new AlwaysLockedPolicy(
+    JCustosServiceResolver.setLoginAttemptPolicy(new AlwaysLockedPolicy(
         Duration.ofMinutes(5), 7));
   }
 
@@ -85,7 +85,7 @@ class LockoutBannerBrowserlessTest extends BrowserlessTest {
 
   @AfterEach
   void tearDown() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
   }
 

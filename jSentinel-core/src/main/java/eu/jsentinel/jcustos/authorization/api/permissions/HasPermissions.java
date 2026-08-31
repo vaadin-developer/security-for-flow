@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authorization.api.permissions;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Collection;
 
@@ -25,7 +25,7 @@ import java.util.Collection;
  *
  * @see PermissionName
  */
-@ExperimentalJSentinelApi("Permission-based access is experimental. Use role-based access for stable production use.")
+@ExperimentalJCustosApi("Permission-based access is experimental. Use role-based access for stable production use.")
 public interface HasPermissions {
 
   /**

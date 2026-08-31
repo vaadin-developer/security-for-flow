@@ -19,7 +19,7 @@ package eu.jsentinel.jcustos.demo.skill.vaadin.security.oidc;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import eu.jsentinel.jcustos.demo.skill.vaadin.security.oidc.VendorProfileOidcExample.Idp;
-import eu.jsentinel.jcustos.dx.vaadin.bootstrap.VaadinJSentinelBootstrap;
+import eu.jsentinel.jcustos.dx.vaadin.bootstrap.VaadinJCustosBootstrap;
 
 import java.net.URI;
 
@@ -40,7 +40,7 @@ class VendorProfileOidcExampleTest {
   @EnumSource(Idp.class)
   @DisplayName("each vendor profile records a complete OIDC bootstrap")
   void eachVendorConfigures(Idp idp) {
-    VaadinJSentinelBootstrap bootstrap = VendorProfileOidcExample.configure(
+    VaadinJCustosBootstrap bootstrap = VendorProfileOidcExample.configure(
         idp, "https://idp.example.com/", "rp-client", "s3cret",
         URI.create("https://app.example.com/oauth2/callback"));
     assertNotNull(bootstrap, "vendor " + idp + " records a bootstrap");

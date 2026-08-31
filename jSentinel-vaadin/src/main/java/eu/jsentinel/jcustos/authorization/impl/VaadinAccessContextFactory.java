@@ -18,8 +18,8 @@ package eu.jsentinel.jcustos.authorization.impl;
 
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleName;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * events.
  * <p>
  * Reads the current authenticated subject (via {@link SubjectStores}) and
- * adapts it to a {@link JSentinelSubject} so generic
+ * adapts it to a {@link JCustosSubject} so generic
  * {@code AuthorizationEvaluator} implementations (such as
  * {@code RequiresRoleEvaluator} and {@code RequiresPermissionEvaluator}
  * shipped in {@code security-core}) see the subject's roles and
@@ -64,7 +64,7 @@ public final class VaadinAccessContextFactory {
     attributes.put("path", event.getLocation().getPath());
     attributes.put("target", event.getNavigationTarget());
     return new AccessContext(
-        currentJSentinelSubject(),
+        currentJCustosSubject(),
         "vaadin-view",
         event.getNavigationTarget().getSimpleName(),
         "navigate",
@@ -72,17 +72,17 @@ public final class VaadinAccessContextFactory {
   }
 
   /**
-   * Builds a {@link JSentinelSubject} snapshot for the current
+   * Builds a {@link JCustosSubject} snapshot for the current
    * Vaadin-session subject so generic evaluators can read roles and
    * permissions from the {@link AccessContext}. Returns
    * {@link Optional#empty()} if no subject is authenticated or the
    * security services are not (yet) wired.
    */
   @SuppressWarnings({"rawtypes", "unchecked"})
-  private static Optional<JSentinelSubject> currentJSentinelSubject() {
+  private static Optional<JCustosSubject> currentJCustosSubject() {
     Class subjectType;
     try {
-      AuthenticationService<?, ?> authentication = JSentinelServiceResolver.authenticationService();
+      AuthenticationService<?, ?> authentication = JCustosServiceResolver.authenticationService();
       if (authentication == null) return Optional.empty();
       subjectType = authentication.subjectType();
       if (subjectType == null) return Optional.empty();
@@ -95,7 +95,7 @@ public final class VaadinAccessContextFactory {
 
     AuthorizationService<Object> authorization;
     try {
-      authorization = JSentinelServiceResolver.authorizationService();
+      authorization = JCustosServiceResolver.authorizationService();
       if (authorization == null) return Optional.empty();
     } catch (RuntimeException e) {
       return Optional.empty();
@@ -116,6 +116,6 @@ public final class VaadinAccessContextFactory {
         + Integer.toHexString(System.identityHashCode(subject));
     String displayName = subject.toString();
     if (displayName == null || displayName.isBlank()) displayName = subjectId;
-    return Optional.of(new JSentinelSubject(subjectId, displayName, roles, permissions));
+    return Optional.of(new JCustosSubject(subjectId, displayName, roles, permissions));
   }
 }

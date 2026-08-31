@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.monitoring.health;
 
 /*-
  * #%L
- * jSentinel Monitoring — metrics, health and diagnostics export points
+ * jCustos Monitoring — metrics, health and diagnostics export points
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -26,7 +26,7 @@ package eu.jsentinel.jcustos.monitoring.health;
  */
 
 import eu.jsentinel.jcustos.audit.RingBufferAuditSink;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.dx.runtime.HealthFinding;
 import eu.jsentinel.jcustos.dx.runtime.Severity;
 
@@ -43,15 +43,15 @@ import java.util.Objects;
  * about to drop its oldest events, i.e. audit history is being lost.
  *
  * <p>The corresponding gauge
- * ({@link eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames#AUDIT_STORE_LAG
+ * ({@link eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames#AUDIT_STORE_LAG
  * security.audit.store.lag}) stays application-wired via the metrics
  * SPI — this indicator covers the pull-style {@code /health} view of
  * the same signal.</p>
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
-public final class AuditStoreSaturationHealthIndicator implements JSentinelHealthIndicator {
+@ExperimentalJCustosApi
+public final class AuditStoreSaturationHealthIndicator implements JCustosHealthIndicator {
 
   /** Stable indicator id. */
   public static final String ID = "audit-store";

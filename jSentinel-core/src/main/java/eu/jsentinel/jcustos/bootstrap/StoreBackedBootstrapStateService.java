@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 
 import java.time.Clock;
@@ -38,7 +38,7 @@ import static java.util.Objects.requireNonNull;
  * construction. Multi-tenant deployments instantiate one service
  * per tenant.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class StoreBackedBootstrapStateService {
 
   private final BootstrapStateStore store;

@@ -5,7 +5,7 @@ import java.util.Optional;
 /**
  * Holds the last non-secret OAuth2 Relying-Party configuration snapshot recorded
  * by {@code .oauth2(...)} (V00.77), so {@link OAuth2DiagnosticContributor} can
- * surface configuration risks in {@code JSentinelDiagnostics.inspect()}. Only
+ * surface configuration risks in {@code JCustosDiagnostics.inspect()}. Only
  * boolean flags are kept — never a client id, endpoint URI or any secret.
  */
 public final class OAuth2DiagnosticState {

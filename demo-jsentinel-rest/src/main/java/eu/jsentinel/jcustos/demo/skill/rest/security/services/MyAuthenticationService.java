@@ -1,11 +1,11 @@
 package eu.jsentinel.jcustos.demo.skill.rest.security.services;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.audit.LoginSucceeded;
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.autoservice.api.JSentinelAutoService;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 import eu.jsentinel.jcustos.demo.skill.rest.security.model.Credentials;
 import eu.jsentinel.jcustos.demo.skill.rest.security.model.User;
 import eu.jsentinel.jcustos.demo.skill.rest.security.model.UserDirectoryProvider;
@@ -18,7 +18,7 @@ import java.time.Instant;
  * minus the {@code VaadinRequest.getCurrent()} client-address lookup
  * (the REST handlers pass the address explicitly via the audit hook).
  */
-@JSentinelAutoService(AuthenticationService.class)
+@JCustosAutoService(AuthenticationService.class)
 public class MyAuthenticationService
     implements AuthenticationService<Credentials, User>, HasLogger {
 
@@ -45,7 +45,7 @@ public class MyAuthenticationService
   }
 
   private static void auditLoginSucceeded(String username) {
-    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
+    JCustosAuditService sink = JCustosServiceResolver.securityAuditService();
     try {
       sink.publish(new LoginSucceeded(
           Instant.now(Clock.systemUTC()), username, null, null));

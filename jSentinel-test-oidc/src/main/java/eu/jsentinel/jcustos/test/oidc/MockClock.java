@@ -23,7 +23,7 @@ import java.util.function.Supplier;
 /**
  * A controllable clock for deterministic OIDC tests (V00.79) — a
  * {@code Supplier<Instant>} whose value only changes when the test advances it.
- * The jSentinel time-dependent components (validators, pollers, caches) all take a
+ * The jCustos time-dependent components (validators, pollers, caches) all take a
  * {@code Supplier<Instant>}, so {@code MockClock} drops in directly.
  */
 public final class MockClock implements Supplier<Instant> {

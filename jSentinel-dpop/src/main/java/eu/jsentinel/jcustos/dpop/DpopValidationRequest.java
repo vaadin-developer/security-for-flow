@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.dpop;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.net.URI;
 import java.util.Objects;
@@ -31,7 +31,7 @@ import java.util.Optional;
  *
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record DpopValidationRequest(
     String proofCompact,
     String httpMethod,

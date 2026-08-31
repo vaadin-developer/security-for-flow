@@ -18,8 +18,8 @@ package eu.jsentinel.jcustos.authorization.api.roles;
 
 import eu.jsentinel.jcustos.authorization.annotations.RequiresRole;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationDecision;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,16 +41,16 @@ class RequiresRoleEvaluatorWithHierarchyTest {
 
   @BeforeEach
   void setUp() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   @AfterEach
   void tearDown() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   private static AccessContext ctxWith(Set<RoleName> heldRoles) {
-    JSentinelSubject subject = new JSentinelSubject(
+    JCustosSubject subject = new JCustosSubject(
         "u-1", "u-1", heldRoles, Set.of());
     return new AccessContext(
         Optional.of(subject), "rest-endpoint", "/x", "read", Map.of());
@@ -74,7 +74,7 @@ class RequiresRoleEvaluatorWithHierarchyTest {
   @Test
   @DisplayName("with hierarchy: held ADMIN is granted when VIEWER is required (ADMIN -> EDITOR -> VIEWER)")
   void withHierarchyTransitiveGrant() {
-    JSentinelServiceResolver.setRoleHierarchy(StaticRoleHierarchy.builder()
+    JCustosServiceResolver.setRoleHierarchy(StaticRoleHierarchy.builder()
         .role(ADMIN).inheritsFrom(EDITOR)
         .role(EDITOR).inheritsFrom(VIEWER)
         .build());
@@ -87,7 +87,7 @@ class RequiresRoleEvaluatorWithHierarchyTest {
   @Test
   @DisplayName("with hierarchy: held VIEWER is still forbidden when ADMIN is required (top-down only)")
   void withHierarchyDoesNotGoBottomUp() {
-    JSentinelServiceResolver.setRoleHierarchy(StaticRoleHierarchy.builder()
+    JCustosServiceResolver.setRoleHierarchy(StaticRoleHierarchy.builder()
         .role(ADMIN).inheritsFrom(EDITOR)
         .build());
 
@@ -99,7 +99,7 @@ class RequiresRoleEvaluatorWithHierarchyTest {
   @Test
   @DisplayName("with hierarchy: held EDITOR is granted when EDITOR is required (direct)")
   void withHierarchyDirectMatch() {
-    JSentinelServiceResolver.setRoleHierarchy(StaticRoleHierarchy.builder()
+    JCustosServiceResolver.setRoleHierarchy(StaticRoleHierarchy.builder()
         .role(ADMIN).inheritsFrom(EDITOR)
         .build());
 

@@ -10,7 +10,7 @@
  */
 package eu.jsentinel.jcustos.dx.rest.diagnostics;
 
-import eu.jsentinel.jcustos.autoservice.api.JSentinelAutoService;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 import eu.jsentinel.jcustos.dx.diagnostics.DiagnosticContributor;
 import eu.jsentinel.jcustos.dx.diagnostics.DiagnosticReportBuilder;
 import eu.jsentinel.jcustos.dx.diagnostics.DuplicateService;
@@ -27,7 +27,7 @@ import java.util.ServiceLoader;
  *
  * @since 00.72.00
  */
-@JSentinelAutoService(DiagnosticContributor.class)
+@JCustosAutoService(DiagnosticContributor.class)
 public final class RestDiagnosticContributor implements DiagnosticContributor {
 
   public RestDiagnosticContributor() {
@@ -48,7 +48,7 @@ public final class RestDiagnosticContributor implements DiagnosticContributor {
       builder.addMissing(new MissingRecommendedService(
           RestSubjectResolver.class,
           "No RestSubjectResolver registered.",
-          "Register a RestSubjectResolver via @JSentinelAutoService(RestSubjectResolver.class) "
+          "Register a RestSubjectResolver via @JCustosAutoService(RestSubjectResolver.class) "
               + "or RestSecurity.bootstrap().subjectResolver(...)."));
     } else if (impls.size() > 1) {
       builder.addDuplicate(new DuplicateService(RestSubjectResolver.class, impls));

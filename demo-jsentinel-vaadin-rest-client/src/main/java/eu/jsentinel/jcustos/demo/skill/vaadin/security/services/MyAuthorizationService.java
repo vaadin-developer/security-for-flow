@@ -5,7 +5,7 @@ import eu.jsentinel.jcustos.authorization.api.permissions.HasPermissions;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.authorization.api.roles.HasRoles;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleName;
-import eu.jsentinel.jcustos.autoservice.api.JSentinelAutoService;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 import eu.jsentinel.jcustos.demo.skill.vaadin.security.RestBackendClient;
 import eu.jsentinel.jcustos.demo.skill.vaadin.security.model.User;
 
@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
  * {@code {"id":"...","displayName":"...","roles":["ADMIN","USER"],"permissions":["app:view",...]}}.
  * The parser only needs the two arrays.
  */
-@JSentinelAutoService(AuthorizationService.class)
+@JCustosAutoService(AuthorizationService.class)
 public class MyAuthorizationService
     implements AuthorizationService<User> {
 

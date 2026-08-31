@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.types;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -28,9 +28,9 @@ package eu.jsentinel.jcustos.events.types;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventId;
 import eu.jsentinel.jcustos.events.api.EventMetadata;
-import eu.jsentinel.jcustos.events.api.JSentinelEventCategory;
-import eu.jsentinel.jcustos.events.api.JSentinelEventSeverity;
-import eu.jsentinel.jcustos.events.codec.CanonicalJSentinelEventPayload;
+import eu.jsentinel.jcustos.events.api.JCustosEventCategory;
+import eu.jsentinel.jcustos.events.api.JCustosEventSeverity;
+import eu.jsentinel.jcustos.events.codec.CanonicalJCustosEventPayload;
 import eu.jsentinel.jcustos.events.codec.RecordReflectionCanonicalizer;
 import eu.jsentinel.jcustos.logout.SubjectId;
 import org.junit.jupiter.api.DisplayName;
@@ -48,23 +48,23 @@ class OAuth2EventTypesTest {
 
   private static EventMetadata meta() {
     return new EventMetadata(EventId.of("evt-1"), TenantId.DEFAULT, SubjectId.of("system"),
-        Instant.parse("2026-06-26T12:00:00Z"), JSentinelEventSeverity.INFO);
+        Instant.parse("2026-06-26T12:00:00Z"), JCustosEventSeverity.INFO);
   }
 
   @Test
   @DisplayName("OAuth2TokenObtained carries grantType + audienceHash only — never a token")
   void tokenObtained() {
-    CanonicalJSentinelEventPayload p = canonicalizer.canonicalize(
+    CanonicalJCustosEventPayload p = canonicalizer.canonicalize(
         new OAuth2TokenObtainedEvent(meta(), "authorization_code", "ad5f...hash"));
     assertEquals("OAuth2TokenObtained", p.eventType());
-    assertEquals(JSentinelEventCategory.TOKEN.name(), p.category());
+    assertEquals(JCustosEventCategory.TOKEN.name(), p.category());
     assertEquals(Set.of("grantType", "audienceHash"), p.attributes().keySet());
   }
 
   @Test
   @DisplayName("OAuth2TokenFailed carries grantType + the stable error code only")
   void tokenFailed() {
-    CanonicalJSentinelEventPayload p = canonicalizer.canonicalize(
+    CanonicalJCustosEventPayload p = canonicalizer.canonicalize(
         new OAuth2TokenFailedEvent(meta(), "refresh_token", "oauth2/protocol-error:invalid_grant"));
     assertEquals(Set.of("grantType", "errorCode"), p.attributes().keySet());
     assertEquals("oauth2/protocol-error:invalid_grant", p.attributes().get("errorCode"));
@@ -73,7 +73,7 @@ class OAuth2EventTypesTest {
   @Test
   @DisplayName("RefreshTokenReuseDetected carries only the non-secret family id")
   void reuseDetected() {
-    CanonicalJSentinelEventPayload p = canonicalizer.canonicalize(
+    CanonicalJCustosEventPayload p = canonicalizer.canonicalize(
         new RefreshTokenReuseDetectedEvent(meta(), "family-7f3a"));
     assertEquals("RefreshTokenReuseDetected", p.eventType());
     assertEquals(Set.of("familyId"), p.attributes().keySet());
@@ -82,11 +82,11 @@ class OAuth2EventTypesTest {
   @Test
   @DisplayName("the device-grant events canonicalise to DEVICE with no secret payload")
   void deviceEvents() {
-    assertEquals(JSentinelEventCategory.DEVICE.name(),
+    assertEquals(JCustosEventCategory.DEVICE.name(),
         canonicalizer.canonicalize(new DeviceAuthorizationStartedEvent(meta())).category());
-    assertEquals(JSentinelEventCategory.DEVICE.name(),
+    assertEquals(JCustosEventCategory.DEVICE.name(),
         canonicalizer.canonicalize(new DeviceAuthorizationCompletedEvent(meta())).category());
-    CanonicalJSentinelEventPayload denied = canonicalizer.canonicalize(
+    CanonicalJCustosEventPayload denied = canonicalizer.canonicalize(
         new DeviceAuthorizationDeniedEvent(meta(), "access_denied"));
     assertEquals(Set.of("reason"), denied.attributes().keySet());
     assertEquals("access_denied", denied.attributes().get("reason"));
@@ -95,9 +95,9 @@ class OAuth2EventTypesTest {
   @Test
   @DisplayName("OAuth2StateInvalid is an AUTHORIZATION event carrying only the reason code")
   void stateInvalid() {
-    CanonicalJSentinelEventPayload p = canonicalizer.canonicalize(
+    CanonicalJCustosEventPayload p = canonicalizer.canonicalize(
         new OAuth2StateInvalidEvent(meta(), "oauth2/state-already-consumed"));
-    assertEquals(JSentinelEventCategory.AUTHORIZATION.name(), p.category());
+    assertEquals(JCustosEventCategory.AUTHORIZATION.name(), p.category());
     assertEquals(Set.of("reason"), p.attributes().keySet());
   }
 }

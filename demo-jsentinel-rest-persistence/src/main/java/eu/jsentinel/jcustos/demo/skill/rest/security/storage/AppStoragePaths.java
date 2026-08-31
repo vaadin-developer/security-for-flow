@@ -29,7 +29,7 @@ import java.nio.file.Path;
  * {@code -Dapp.storage.dir=/some/path}.
  *
  * <p>Since V00.74.20 the entire layout (framework + app) is owned by
- * a single {@code JSentinelStoragePair} opened under {@link #baseDir()};
+ * a single {@code JCustosStoragePair} opened under {@link #baseDir()};
  * sub-directories come from {@link StorageLayout#DEFAULT}.
  */
 public final class AppStoragePaths {

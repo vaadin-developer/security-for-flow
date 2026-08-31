@@ -27,10 +27,10 @@ import static java.lang.annotation.ElementType.TYPE;
  * Explicit opt-out marker (JS-SEC-024 / CWE-862): the annotated Vaadin
  * {@code @Route} class or REST handler class/method is intentionally public and
  * must stay reachable even when deny-by-default is enabled via
- * {@code JSentinelServiceResolver.setDenyByDefault(true)}.
+ * {@code JCustosServiceResolver.setDenyByDefault(true)}.
  *
  * <p>Unlike the {@code @Requires*} annotations this marker carries no
- * {@link JSentinelAnnotation} meta-binding, so {@code JSentinelAnnotationScanner}
+ * {@link JCustosAnnotation} meta-binding, so {@code JCustosAnnotationScanner}
  * ignores it (it never resolves an evaluator). It is consulted only by the
  * deny-by-default guard via {@link java.lang.reflect.AnnotatedElement#isAnnotationPresent}.
  * Retention is {@link RetentionPolicy#RUNTIME} so it is reflectively checkable at

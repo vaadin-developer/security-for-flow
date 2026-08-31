@@ -18,11 +18,11 @@ package eu.jsentinel.jcustos.session.vaadin;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.audit.SessionExpired;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authorization.LoginListener;
 import eu.jsentinel.jcustos.authorization.LoginListeners;
 import eu.jsentinel.jcustos.authorization.LoginView;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectIdResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStore;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
@@ -144,13 +144,13 @@ public class SessionLifetimeListener
         .orElse(createdAt);
 
     SessionMetadata metadata = new SessionMetadata(subjectId, createdAt, lastActivity);
-    SessionPolicy<Object> policy = JSentinelServiceResolver.sessionPolicy();
+    SessionPolicy<Object> policy = JCustosServiceResolver.sessionPolicy();
     if (policy instanceof NoopSessionPolicy && NOOP_POLICY_WARNED.compareAndSet(false, true)) {
       // JS-SEC-035 (CWE-613): this listener is auto-registered and advertises idle /
       // absolute-lifetime enforcement, but with the default NoopSessionPolicy the decision
       // is always Active — no idle timeout and, critically, no absolute-lifetime cap is
       // enforced (only the servlet container's idle timeout applies). Warn once (mirrors
-      // JS-SEC-027) so an integrator relying on jSentinel for session lifetime registers a
+      // JS-SEC-027) so an integrator relying on jCustos for session lifetime registers a
       // TimeoutSessionPolicy.
       logger().warn("Session lifetime enforcement is inert: no SessionPolicy is registered, so "
           + "SessionLifetimeListener enforces neither an idle timeout nor an absolute-lifetime cap "
@@ -187,7 +187,7 @@ public class SessionLifetimeListener
 
   private static Class<?> resolveSubjectType() {
     try {
-      return JSentinelServiceResolver.<Object, Object>authenticationService().subjectType();
+      return JCustosServiceResolver.<Object, Object>authenticationService().subjectType();
     } catch (RuntimeException ignored) {
       return null;
     }
@@ -206,7 +206,7 @@ public class SessionLifetimeListener
     // rejects a blank subjectId, so when no resolver is registered (or it
     // yields blank) fall back to a non-PII identity handle, never toString().
     Optional<SubjectIdResolver<Object>> resolver =
-        JSentinelServiceResolver.findSubjectIdResolver();
+        JCustosServiceResolver.findSubjectIdResolver();
     if (resolver.isPresent()) {
       String resolved = resolver.get().resolve(subject).value();
       if (resolved != null && !resolved.isBlank()) {
@@ -243,7 +243,7 @@ public class SessionLifetimeListener
   }
 
   private static void audit(String subjectId, String reasonLabel) {
-    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
+    JCustosAuditService sink = JCustosServiceResolver.securityAuditService();
     try {
       sink.publish(new SessionExpired(
           Instant.now(), subjectId == null ? "" : subjectId, null, reasonLabel));

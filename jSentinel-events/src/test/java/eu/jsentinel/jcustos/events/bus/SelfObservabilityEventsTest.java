@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.bus;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -26,9 +26,9 @@ package eu.jsentinel.jcustos.events.bus;
  */
 
 import eu.jsentinel.jcustos.events.api.EventSequence;
-import eu.jsentinel.jcustos.events.api.JSentinelEvent;
-import eu.jsentinel.jcustos.events.api.JSentinelEventSeverity;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.events.api.JCustosEvent;
+import eu.jsentinel.jcustos.events.api.JCustosEventSeverity;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.events.types.EnvelopeRejectedEvent;
 import eu.jsentinel.jcustos.events.types.EventBusSelfObservabilityEvent;
 import eu.jsentinel.jcustos.events.types.ReplayDetectedEvent;
@@ -55,14 +55,14 @@ class SelfObservabilityEventsTest {
   private static final Instant NOW = Instant.parse("2026-07-19T12:00:00Z");
 
   /** One real signed envelope through the real pipeline — no mocks. */
-  private static final SignedJSentinelEventEnvelope ENVELOPE =
+  private static final SignedJCustosEventEnvelope ENVELOPE =
       new BusFixtures().publishPipeline().toEnvelope(BusFixtures.event());
 
   @Test
   @DisplayName("Valid maps to no event at all")
   void validMapsToEmpty() {
     Optional<EventBusSelfObservabilityEvent> mapped = SelfObservabilityEvents.fromVerification(
-        new JSentinelEventVerificationResult.Valid(ENVELOPE), ENVELOPE, NOW);
+        new JCustosEventVerificationResult.Valid(ENVELOPE), ENVELOPE, NOW);
     assertTrue(mapped.isEmpty());
   }
 
@@ -79,43 +79,43 @@ class SelfObservabilityEventsTest {
   static Stream<Arguments> failureCases() {
     return Stream.of(
         arguments("InvalidSignature",
-            new JSentinelEventVerificationResult.InvalidSignature("signature does not verify"),
-            SignatureInvalidEvent.class, JSentinelEventSeverity.ERROR),
+            new JCustosEventVerificationResult.InvalidSignature("signature does not verify"),
+            SignatureInvalidEvent.class, JCustosEventSeverity.ERROR),
         arguments("PayloadHashMismatch",
-            new JSentinelEventVerificationResult.PayloadHashMismatch(ENVELOPE.envelopeId()),
-            SignatureInvalidEvent.class, JSentinelEventSeverity.ERROR),
+            new JCustosEventVerificationResult.PayloadHashMismatch(ENVELOPE.envelopeId()),
+            SignatureInvalidEvent.class, JCustosEventSeverity.ERROR),
         arguments("ReplayDetected",
-            new JSentinelEventVerificationResult.ReplayDetected(ENVELOPE.envelopeId()),
-            ReplayDetectedEvent.class, JSentinelEventSeverity.CRITICAL),
+            new JCustosEventVerificationResult.ReplayDetected(ENVELOPE.envelopeId()),
+            ReplayDetectedEvent.class, JCustosEventSeverity.CRITICAL),
         arguments("SequenceViolation",
-            new JSentinelEventVerificationResult.SequenceViolation(ENVELOPE.tenantId(),
+            new JCustosEventVerificationResult.SequenceViolation(ENVELOPE.tenantId(),
                 ENVELOPE.producerId(), EventSequence.of(4), EventSequence.of(2)),
-            SequenceViolationEvent.class, JSentinelEventSeverity.ERROR),
+            SequenceViolationEvent.class, JCustosEventSeverity.ERROR),
         arguments("UnknownKey",
-            new JSentinelEventVerificationResult.UnknownKey(ENVELOPE.keyId()),
-            EnvelopeRejectedEvent.class, JSentinelEventSeverity.ERROR),
+            new JCustosEventVerificationResult.UnknownKey(ENVELOPE.keyId()),
+            EnvelopeRejectedEvent.class, JCustosEventSeverity.ERROR),
         arguments("KeyRevoked",
-            new JSentinelEventVerificationResult.KeyRevoked(ENVELOPE.keyId()),
-            EnvelopeRejectedEvent.class, JSentinelEventSeverity.ERROR),
+            new JCustosEventVerificationResult.KeyRevoked(ENVELOPE.keyId()),
+            EnvelopeRejectedEvent.class, JCustosEventSeverity.ERROR),
         arguments("KeyExpired",
-            new JSentinelEventVerificationResult.KeyExpired(ENVELOPE.keyId()),
-            EnvelopeRejectedEvent.class, JSentinelEventSeverity.ERROR),
+            new JCustosEventVerificationResult.KeyExpired(ENVELOPE.keyId()),
+            EnvelopeRejectedEvent.class, JCustosEventSeverity.ERROR),
         arguments("Expired",
-            new JSentinelEventVerificationResult.Expired(ENVELOPE.expiresAt()),
-            EnvelopeRejectedEvent.class, JSentinelEventSeverity.ERROR),
+            new JCustosEventVerificationResult.Expired(ENVELOPE.expiresAt()),
+            EnvelopeRejectedEvent.class, JCustosEventSeverity.ERROR),
         arguments("ProducerNotAllowed",
-            new JSentinelEventVerificationResult.ProducerNotAllowed(ENVELOPE.producerId(),
+            new JCustosEventVerificationResult.ProducerNotAllowed(ENVELOPE.producerId(),
                 ENVELOPE.eventType(), ENVELOPE.tenantId()),
-            EnvelopeRejectedEvent.class, JSentinelEventSeverity.ERROR));
+            EnvelopeRejectedEvent.class, JCustosEventSeverity.ERROR));
   }
 
   @ParameterizedTest(name = "{0}")
   @MethodSource("failureCases")
   @DisplayName("every failure maps to exactly one event of the most specific type")
   void everyFailureMapsToExactlyOneEvent(String name,
-      JSentinelEventVerificationResult result,
+      JCustosEventVerificationResult result,
       Class<? extends EventBusSelfObservabilityEvent> expectedType,
-      JSentinelEventSeverity expectedSeverity) {
+      JCustosEventSeverity expectedSeverity) {
     Optional<EventBusSelfObservabilityEvent> mapped =
         SelfObservabilityEvents.fromVerification(result, ENVELOPE, NOW);
     // Optional<EventBusSelfObservabilityEvent> IS the exactly-one contract:
@@ -125,22 +125,22 @@ class SelfObservabilityEventsTest {
     assertInstanceOf(expectedType, event);
     assertEquals(expectedSeverity, event.severity());
     assertEquals(ENVELOPE.tenantId(), event.tenantId(), "tenant propagated from envelope");
-    assertEquals(JSentinelEvent.SYSTEM_SUBJECT, event.subjectId());
+    assertEquals(JCustosEvent.SYSTEM_SUBJECT, event.subjectId());
     assertEquals(NOW, event.occurredAt());
   }
 
   static Stream<Arguments> rejectionReasonCases() {
     return Stream.of(
         arguments("UnknownKey",
-            new JSentinelEventVerificationResult.UnknownKey(ENVELOPE.keyId()), "unknown-key"),
+            new JCustosEventVerificationResult.UnknownKey(ENVELOPE.keyId()), "unknown-key"),
         arguments("KeyRevoked",
-            new JSentinelEventVerificationResult.KeyRevoked(ENVELOPE.keyId()), "key-revoked"),
+            new JCustosEventVerificationResult.KeyRevoked(ENVELOPE.keyId()), "key-revoked"),
         arguments("KeyExpired",
-            new JSentinelEventVerificationResult.KeyExpired(ENVELOPE.keyId()), "key-expired"),
+            new JCustosEventVerificationResult.KeyExpired(ENVELOPE.keyId()), "key-expired"),
         arguments("Expired",
-            new JSentinelEventVerificationResult.Expired(ENVELOPE.expiresAt()), "expired"),
+            new JCustosEventVerificationResult.Expired(ENVELOPE.expiresAt()), "expired"),
         arguments("ProducerNotAllowed",
-            new JSentinelEventVerificationResult.ProducerNotAllowed(ENVELOPE.producerId(),
+            new JCustosEventVerificationResult.ProducerNotAllowed(ENVELOPE.producerId(),
                 ENVELOPE.eventType(), ENVELOPE.tenantId()), "producer-not-allowed"));
   }
 
@@ -148,7 +148,7 @@ class SelfObservabilityEventsTest {
   @MethodSource("rejectionReasonCases")
   @DisplayName("the rejection family carries the literal reason and the envelope id")
   void rejectionFamilyCarriesReasonAndEnvelopeId(String name,
-      JSentinelEventVerificationResult result, String expectedReason) {
+      JCustosEventVerificationResult result, String expectedReason) {
     EnvelopeRejectedEvent event = (EnvelopeRejectedEvent) SelfObservabilityEvents
         .fromVerification(result, ENVELOPE, NOW).orElseThrow();
     assertEquals(expectedReason, event.reason());
@@ -159,14 +159,14 @@ class SelfObservabilityEventsTest {
   @DisplayName("InvalidSignature and PayloadHashMismatch both carry the envelope id")
   void signatureFamilyCarriesEnvelopeId() {
     SignatureInvalidEvent fromSignature = (SignatureInvalidEvent) SelfObservabilityEvents
-        .fromVerification(new JSentinelEventVerificationResult.InvalidSignature("bad"),
+        .fromVerification(new JCustosEventVerificationResult.InvalidSignature("bad"),
             ENVELOPE, NOW)
         .orElseThrow();
     assertEquals(ENVELOPE.envelopeId().value(), fromSignature.envelopeId());
 
     SignatureInvalidEvent fromHash = (SignatureInvalidEvent) SelfObservabilityEvents
         .fromVerification(
-            new JSentinelEventVerificationResult.PayloadHashMismatch(ENVELOPE.envelopeId()),
+            new JCustosEventVerificationResult.PayloadHashMismatch(ENVELOPE.envelopeId()),
             ENVELOPE, NOW)
         .orElseThrow();
     assertEquals(ENVELOPE.envelopeId().value(), fromHash.envelopeId());
@@ -177,7 +177,7 @@ class SelfObservabilityEventsTest {
   void replayCarriesEnvelopeId() {
     ReplayDetectedEvent event = (ReplayDetectedEvent) SelfObservabilityEvents
         .fromVerification(
-            new JSentinelEventVerificationResult.ReplayDetected(ENVELOPE.envelopeId()),
+            new JCustosEventVerificationResult.ReplayDetected(ENVELOPE.envelopeId()),
             ENVELOPE, NOW)
         .orElseThrow();
     assertEquals(ENVELOPE.envelopeId().value(), event.replayedEnvelopeId());
@@ -188,7 +188,7 @@ class SelfObservabilityEventsTest {
   void sequenceViolationMapsComponents() {
     SequenceViolationEvent event = (SequenceViolationEvent) SelfObservabilityEvents
         .fromVerification(
-            new JSentinelEventVerificationResult.SequenceViolation(ENVELOPE.tenantId(),
+            new JCustosEventVerificationResult.SequenceViolation(ENVELOPE.tenantId(),
                 ENVELOPE.producerId(), EventSequence.of(4), EventSequence.of(2)),
             ENVELOPE, NOW)
         .orElseThrow();

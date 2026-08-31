@@ -1,7 +1,7 @@
 package eu.jsentinel.jcustos.demo.skill.rest.security;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleName;
@@ -15,7 +15,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Resolves the current {@link JSentinelSubject} from a Bearer token.
+ * Resolves the current {@link JCustosSubject} from a Bearer token.
  *
  * <p>Used by {@code RestAuthorizationFilter} (and the {@code Router})
  * to know <em>who</em> is making the request. Roles + permissions
@@ -26,20 +26,20 @@ public final class MyRestSubjectResolver implements RestSubjectResolver {
   private static final BearerTokenExtractor BEARER = new BearerTokenExtractor();
 
   @Override
-  public Optional<JSentinelSubject> resolveSubject(RestRequest request) {
+  public Optional<JCustosSubject> resolveSubject(RestRequest request) {
     Optional<String> token = BEARER.extract(request);
     if (token.isEmpty()) return Optional.empty();
     return TokenStore.INSTANCE.resolve(token.get()).map(this::toSubject);
   }
 
-  private JSentinelSubject toSubject(User user) {
+  private JCustosSubject toSubject(User user) {
     AuthorizationService<User> authz =
-        JSentinelServiceResolver.authorizationService();
+        JCustosServiceResolver.authorizationService();
     Set<RoleName> roles = authz.rolesFor(user).roleNames().stream()
         .collect(Collectors.toUnmodifiableSet());
     Set<PermissionName> perms = authz.permissionsFor(user).permissionNames().stream()
         .collect(Collectors.toUnmodifiableSet());
-    return new JSentinelSubject(
+    return new JCustosSubject(
         String.valueOf(user.id()),
         user.name(),
         roles,

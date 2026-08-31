@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.bus;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -47,24 +47,24 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("ConsumeFailurePolicy — reject vs dead-letter per failure kind")
 class ConsumeFailurePolicyTest {
 
-  private static final List<JSentinelEventVerificationResult> ALL_FAILURES = List.of(
-      new JSentinelEventVerificationResult.InvalidSignature("bad"),
-      new JSentinelEventVerificationResult.PayloadHashMismatch(EventEnvelopeId.of("e")),
-      new JSentinelEventVerificationResult.UnknownKey(KeyId.of("k")),
-      new JSentinelEventVerificationResult.KeyRevoked(KeyId.of("k")),
-      new JSentinelEventVerificationResult.KeyExpired(KeyId.of("k")),
-      new JSentinelEventVerificationResult.Expired(Instant.parse("2026-07-19T10:15:30Z")),
-      new JSentinelEventVerificationResult.ReplayDetected(EventEnvelopeId.of("e")),
-      new JSentinelEventVerificationResult.SequenceViolation(TenantId.DEFAULT,
+  private static final List<JCustosEventVerificationResult> ALL_FAILURES = List.of(
+      new JCustosEventVerificationResult.InvalidSignature("bad"),
+      new JCustosEventVerificationResult.PayloadHashMismatch(EventEnvelopeId.of("e")),
+      new JCustosEventVerificationResult.UnknownKey(KeyId.of("k")),
+      new JCustosEventVerificationResult.KeyRevoked(KeyId.of("k")),
+      new JCustosEventVerificationResult.KeyExpired(KeyId.of("k")),
+      new JCustosEventVerificationResult.Expired(Instant.parse("2026-07-19T10:15:30Z")),
+      new JCustosEventVerificationResult.ReplayDetected(EventEnvelopeId.of("e")),
+      new JCustosEventVerificationResult.SequenceViolation(TenantId.DEFAULT,
           EventProducerId.of("p"), EventSequence.of(2), EventSequence.of(5)),
-      new JSentinelEventVerificationResult.ProducerNotAllowed(EventProducerId.of("p"),
+      new JCustosEventVerificationResult.ProducerNotAllowed(EventProducerId.of("p"),
           EventType.of("LoginSucceeded"), TenantId.DEFAULT));
 
   @Test
   @DisplayName("strict() rejects every kind and dead-letters nothing")
   void strictProfile() {
     ConsumeFailurePolicy strict = ConsumeFailurePolicy.strict();
-    for (JSentinelEventVerificationResult failure : ALL_FAILURES) {
+    for (JCustosEventVerificationResult failure : ALL_FAILURES) {
       assertEquals(REJECT, strict.actionFor(failure), failure.getClass().getSimpleName());
     }
     assertFalse(strict.deadLettersAnything());
@@ -74,10 +74,10 @@ class ConsumeFailurePolicyTest {
   @DisplayName("operationalDefaults() dead-letters sequence violations and expired envelopes only")
   void operationalProfile() {
     ConsumeFailurePolicy operational = ConsumeFailurePolicy.operationalDefaults();
-    for (JSentinelEventVerificationResult failure : ALL_FAILURES) {
+    for (JCustosEventVerificationResult failure : ALL_FAILURES) {
       ConsumeFailureAction expected =
-          failure instanceof JSentinelEventVerificationResult.SequenceViolation
-              || failure instanceof JSentinelEventVerificationResult.Expired
+          failure instanceof JCustosEventVerificationResult.SequenceViolation
+              || failure instanceof JCustosEventVerificationResult.Expired
               ? REJECT_AND_DEAD_LETTER
               : REJECT;
       assertEquals(expected, operational.actionFor(failure),
@@ -93,9 +93,9 @@ class ConsumeFailurePolicyTest {
         .with(ConsumeFailurePolicy.FailureKind.REPLAY_DETECTED, REJECT_AND_DEAD_LETTER)
         .build();
     assertEquals(REJECT_AND_DEAD_LETTER, custom.actionFor(
-        new JSentinelEventVerificationResult.ReplayDetected(EventEnvelopeId.of("e"))));
+        new JCustosEventVerificationResult.ReplayDetected(EventEnvelopeId.of("e"))));
     assertEquals(REJECT, custom.actionFor(
-        new JSentinelEventVerificationResult.InvalidSignature("bad")));
+        new JCustosEventVerificationResult.InvalidSignature("bad")));
   }
 
   @Test
@@ -103,7 +103,7 @@ class ConsumeFailurePolicyTest {
   void validRejected() {
     ConsumeFailurePolicy policy = ConsumeFailurePolicy.strict();
     assertThrows(IllegalArgumentException.class, () -> policy.actionFor(
-        new JSentinelEventVerificationResult.Valid(
+        new JCustosEventVerificationResult.Valid(
             ConsumeFailureFixtures.envelope())));
   }
 }

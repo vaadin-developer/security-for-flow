@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.demo.app.browserless;
 
 import eu.jsentinel.jcustos.authorization.LoginView;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptContext;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptDecision;
@@ -70,7 +70,7 @@ class MyLoginViewExtendedBrowserlessTest extends BrowserlessTest {
   void setUp() throws Exception {
     System.setProperty("security.bootstrap.mode", "DISABLED");
     resetBootstrapWiringSingleton();
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
     DemoUserDirectoryProvider.directory().addUser("admin", "admin",
         new MyUser(1L, "Admin",
@@ -79,7 +79,7 @@ class MyLoginViewExtendedBrowserlessTest extends BrowserlessTest {
 
   @AfterEach
   void tearDown() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
     System.clearProperty("security.bootstrap.token.file");
   }
@@ -126,7 +126,7 @@ class MyLoginViewExtendedBrowserlessTest extends BrowserlessTest {
   @Test
   @DisplayName("Wrong credentials with no lockout surface the generic 'Credentials not accepted..' toast")
   void wrongCredentialsShowGenericToast() {
-    JSentinelServiceResolver.setLoginAttemptPolicy(new NeverLocksPolicy());
+    JCustosServiceResolver.setLoginAttemptPolicy(new NeverLocksPolicy());
 
     navigate(MyLoginView.class);
     test($view(TextField.class).id(LoginView.TF_USERNAME_ID)).setValue("admin");
@@ -148,7 +148,7 @@ class MyLoginViewExtendedBrowserlessTest extends BrowserlessTest {
   @Test
   @DisplayName("A LoginAttemptPolicy that throws is swallowed — the failure toast still surfaces")
   void throwingPolicyIsSwallowed() {
-    JSentinelServiceResolver.setLoginAttemptPolicy(new ThrowingPolicy());
+    JCustosServiceResolver.setLoginAttemptPolicy(new ThrowingPolicy());
 
     navigate(MyLoginView.class);
     test($view(TextField.class).id(LoginView.TF_USERNAME_ID)).setValue("admin");
@@ -196,7 +196,7 @@ class MyLoginViewExtendedBrowserlessTest extends BrowserlessTest {
   @Test
   @DisplayName("Valid credentials bind the SubjectStore via setCurrentSubject(...)")
   void successBindsSubjectStore() {
-    JSentinelServiceResolver.setLoginAttemptPolicy(new NeverLocksPolicy());
+    JCustosServiceResolver.setLoginAttemptPolicy(new NeverLocksPolicy());
 
     navigate(MyLoginView.class);
     test($view(TextField.class).id(LoginView.TF_USERNAME_ID)).setValue("admin");
@@ -305,7 +305,7 @@ class MyLoginViewExtendedBrowserlessTest extends BrowserlessTest {
   // ── Helpers ────────────────────────────────────────────────────
 
   private void triggerLockoutBanner(Duration remaining, int failedAttempts) {
-    JSentinelServiceResolver.setLoginAttemptPolicy(new AlwaysLockedPolicy(remaining, failedAttempts));
+    JCustosServiceResolver.setLoginAttemptPolicy(new AlwaysLockedPolicy(remaining, failedAttempts));
     navigate(MyLoginView.class);
     test($view(TextField.class).id(LoginView.TF_USERNAME_ID)).setValue("admin");
     test($view(PasswordField.class).id(LoginView.PF_PASSWORD_ID)).setValue("WRONG");

@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.bus;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,11 +25,11 @@ package eu.jsentinel.jcustos.events.bus;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.events.api.EventMetadata;
-import eu.jsentinel.jcustos.events.api.JSentinelEvent;
-import eu.jsentinel.jcustos.events.api.JSentinelEventSeverity;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.events.api.JCustosEvent;
+import eu.jsentinel.jcustos.events.api.JCustosEventSeverity;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.events.types.EnvelopeRejectedEvent;
 import eu.jsentinel.jcustos.events.types.EventBusSelfObservabilityEvent;
 import eu.jsentinel.jcustos.events.types.ReplayDetectedEvent;
@@ -41,7 +41,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Maps a {@link JSentinelEventVerificationResult} to the self-observability
+ * Maps a {@link JCustosEventVerificationResult} to the self-observability
  * event describing it.
  *
  * <p>Mapping contract: every failure result maps to <em>exactly one</em>
@@ -49,15 +49,15 @@ import java.util.Optional;
  * {@code security.eventbus.rejected.total} umbrella metric from the whole
  * rejection event family, so a double-publish here would double-count.
  * <ul>
- *   <li>{@link JSentinelEventVerificationResult.InvalidSignature} and
- *       {@link JSentinelEventVerificationResult.PayloadHashMismatch} both map
+ *   <li>{@link JCustosEventVerificationResult.InvalidSignature} and
+ *       {@link JCustosEventVerificationResult.PayloadHashMismatch} both map
  *       to {@link SignatureInvalidEvent}: the canonical payload is bound to
  *       the signed metadata through its hash, so a hash mismatch is a failure
  *       of the same cryptographic content binding as an invalid signature
  *       (see {@link SignatureInvalidEvent}).</li>
- *   <li>{@link JSentinelEventVerificationResult.ReplayDetected} maps to
+ *   <li>{@link JCustosEventVerificationResult.ReplayDetected} maps to
  *       {@link ReplayDetectedEvent}.</li>
- *   <li>{@link JSentinelEventVerificationResult.SequenceViolation} maps to
+ *   <li>{@link JCustosEventVerificationResult.SequenceViolation} maps to
  *       {@link SequenceViolationEvent}.</li>
  *   <li>Every remaining failure (unknown / revoked / expired key, expired
  *       envelope, producer not allowed) maps to
@@ -65,22 +65,22 @@ import java.util.Optional;
  *       constants.</li>
  * </ul>
  *
- * <p>Severity: every failure carries {@link JSentinelEventSeverity#ERROR},
+ * <p>Severity: every failure carries {@link JCustosEventSeverity#ERROR},
  * except a detected replay which carries
- * {@link JSentinelEventSeverity#CRITICAL} — the Konzept mandates "erkannter
+ * {@link JCustosEventSeverity#CRITICAL} — the Konzept mandates "erkannter
  * Replay fuehrt zu Reject und kritischem Security Event" and the severity
  * enum expresses that level directly. The metadata tenant comes from the
- * envelope, the subject is {@link JSentinelEvent#SYSTEM_SUBJECT} and the
+ * envelope, the subject is {@link JCustosEvent#SYSTEM_SUBJECT} and the
  * timestamp is the caller-supplied {@code now}.
  *
  * <p>Publish-side note: the pipeline rejects a publish <em>before</em> an
- * envelope exists, so on that path (see {@code DefaultJSentinelEventBus})
+ * envelope exists, so on that path (see {@code DefaultJCustosEventBus})
  * the event id doubles as the {@code rejectedEnvelopeId} of the emitted
  * {@link EnvelopeRejectedEvent}.
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class SelfObservabilityEvents {
 
   /** Rejection reason: the referenced key id is unknown. */
@@ -109,57 +109,57 @@ public final class SelfObservabilityEvents {
    *     where the result carries no id of its own, the envelope id)
    * @param now the emission timestamp
    * @return the single most specific event, or empty for
-   *     {@link JSentinelEventVerificationResult.Valid}
+   *     {@link JCustosEventVerificationResult.Valid}
    */
   public static Optional<EventBusSelfObservabilityEvent> fromVerification(
-      JSentinelEventVerificationResult result, SignedJSentinelEventEnvelope envelope,
+      JCustosEventVerificationResult result, SignedJCustosEventEnvelope envelope,
       Instant now) {
     Objects.requireNonNull(result, "result");
     Objects.requireNonNull(envelope, "envelope");
     Objects.requireNonNull(now, "now");
     return switch (result) {
-      case JSentinelEventVerificationResult.Valid ignored -> Optional.empty();
-      case JSentinelEventVerificationResult.InvalidSignature ignored ->
+      case JCustosEventVerificationResult.Valid ignored -> Optional.empty();
+      case JCustosEventVerificationResult.InvalidSignature ignored ->
           Optional.of(new SignatureInvalidEvent(
-              failureMetadata(envelope, now, JSentinelEventSeverity.ERROR),
+              failureMetadata(envelope, now, JCustosEventSeverity.ERROR),
               envelope.envelopeId().value()));
-      case JSentinelEventVerificationResult.PayloadHashMismatch mismatch ->
+      case JCustosEventVerificationResult.PayloadHashMismatch mismatch ->
           Optional.of(new SignatureInvalidEvent(
-              failureMetadata(envelope, now, JSentinelEventSeverity.ERROR),
+              failureMetadata(envelope, now, JCustosEventSeverity.ERROR),
               mismatch.envelopeId().value()));
-      case JSentinelEventVerificationResult.ReplayDetected replay ->
+      case JCustosEventVerificationResult.ReplayDetected replay ->
           Optional.of(new ReplayDetectedEvent(
-              failureMetadata(envelope, now, JSentinelEventSeverity.CRITICAL),
+              failureMetadata(envelope, now, JCustosEventSeverity.CRITICAL),
               replay.envelopeId().value()));
-      case JSentinelEventVerificationResult.SequenceViolation violation ->
+      case JCustosEventVerificationResult.SequenceViolation violation ->
           Optional.of(new SequenceViolationEvent(
-              failureMetadata(envelope, now, JSentinelEventSeverity.ERROR),
+              failureMetadata(envelope, now, JCustosEventSeverity.ERROR),
               violation.producerId().value(),
               violation.expected().value(),
               violation.actual().value()));
-      case JSentinelEventVerificationResult.UnknownKey ignored ->
+      case JCustosEventVerificationResult.UnknownKey ignored ->
           rejected(envelope, now, REASON_UNKNOWN_KEY);
-      case JSentinelEventVerificationResult.KeyRevoked ignored ->
+      case JCustosEventVerificationResult.KeyRevoked ignored ->
           rejected(envelope, now, REASON_KEY_REVOKED);
-      case JSentinelEventVerificationResult.KeyExpired ignored ->
+      case JCustosEventVerificationResult.KeyExpired ignored ->
           rejected(envelope, now, REASON_KEY_EXPIRED);
-      case JSentinelEventVerificationResult.Expired ignored ->
+      case JCustosEventVerificationResult.Expired ignored ->
           rejected(envelope, now, REASON_EXPIRED);
-      case JSentinelEventVerificationResult.ProducerNotAllowed ignored ->
+      case JCustosEventVerificationResult.ProducerNotAllowed ignored ->
           rejected(envelope, now, REASON_PRODUCER_NOT_ALLOWED);
     };
   }
 
   private static Optional<EventBusSelfObservabilityEvent> rejected(
-      SignedJSentinelEventEnvelope envelope, Instant now, String reason) {
+      SignedJCustosEventEnvelope envelope, Instant now, String reason) {
     return Optional.of(new EnvelopeRejectedEvent(
-        failureMetadata(envelope, now, JSentinelEventSeverity.ERROR),
+        failureMetadata(envelope, now, JCustosEventSeverity.ERROR),
         envelope.envelopeId().value(), reason));
   }
 
-  private static EventMetadata failureMetadata(SignedJSentinelEventEnvelope envelope,
-      Instant now, JSentinelEventSeverity severity) {
-    return EventMetadata.create(envelope.tenantId(), JSentinelEvent.SYSTEM_SUBJECT,
+  private static EventMetadata failureMetadata(SignedJCustosEventEnvelope envelope,
+      Instant now, JCustosEventSeverity severity) {
+    return EventMetadata.create(envelope.tenantId(), JCustosEvent.SYSTEM_SUBJECT,
         now, severity);
   }
 }

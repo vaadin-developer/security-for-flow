@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.api;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -38,13 +38,13 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisplayName("SignedJSentinelEventEnvelopeBuilder")
+@DisplayName("SignedJCustosEventEnvelopeBuilder")
 class EnvelopeBuilderTest {
 
   @Test
   @DisplayName("a fully-populated builder produces an envelope")
   void buildsWhenComplete() {
-    SignedJSentinelEventEnvelope envelope = EnvelopeFixtures.validBuilder().build();
+    SignedJCustosEventEnvelope envelope = EnvelopeFixtures.validBuilder().build();
     assertEquals(EventEnvelopeId.of("env-1"), envelope.envelopeId());
     assertEquals(EventType.of("LoginSucceeded"), envelope.eventType());
     assertEquals(EventSequence.of(7), envelope.sequence());
@@ -54,7 +54,7 @@ class EnvelopeBuilderTest {
   @Test
   @DisplayName("a missing causationId is allowed (root events have no cause)")
   void causationIdIsOptional() {
-    SignedJSentinelEventEnvelope envelope =
+    SignedJCustosEventEnvelope envelope =
         EnvelopeFixtures.validBuilder().causationId(null).build();
     assertEquals(null, envelope.causationId());
   }
@@ -149,7 +149,7 @@ class EnvelopeBuilderTest {
   @DisplayName("byte[] fields are defensively copied in and out")
   void byteArraysAreDefensivelyCopied() {
     byte[] payload = "mutate-me".getBytes(StandardCharsets.UTF_8);
-    SignedJSentinelEventEnvelope envelope =
+    SignedJCustosEventEnvelope envelope =
         EnvelopeFixtures.validBuilder().canonicalPayload(payload).build();
 
     payload[0] = 0; // mutate caller's array after build
@@ -165,12 +165,12 @@ class EnvelopeBuilderTest {
   @Test
   @DisplayName("equals / hashCode use content semantics over the byte[] fields")
   void valueSemantics() {
-    SignedJSentinelEventEnvelope a = EnvelopeFixtures.validBuilder().build();
-    SignedJSentinelEventEnvelope b = EnvelopeFixtures.validBuilder().build();
+    SignedJCustosEventEnvelope a = EnvelopeFixtures.validBuilder().build();
+    SignedJCustosEventEnvelope b = EnvelopeFixtures.validBuilder().build();
     assertEquals(a, b);
     assertEquals(a.hashCode(), b.hashCode());
 
-    SignedJSentinelEventEnvelope different = EnvelopeFixtures.validBuilder()
+    SignedJCustosEventEnvelope different = EnvelopeFixtures.validBuilder()
         .signature(new byte[]{9, 9, 9}).build();
     assertFalse(a.equals(different));
   }
@@ -178,7 +178,7 @@ class EnvelopeBuilderTest {
   @Test
   @DisplayName("isExpiredAt compares against the acceptance window")
   void expiryWindow() {
-    SignedJSentinelEventEnvelope envelope = EnvelopeFixtures.validBuilder().build();
+    SignedJCustosEventEnvelope envelope = EnvelopeFixtures.validBuilder().build();
     assertFalse(envelope.isExpiredAt(EnvelopeFixtures.ISSUED));
     assertTrue(envelope.isExpiredAt(EnvelopeFixtures.EXPIRES.plusSeconds(1)));
   }

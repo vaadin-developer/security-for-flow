@@ -20,7 +20,7 @@ import com.nimbusds.jose.JWEHeader;
 import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.crypto.RSADecrypter;
 import com.svenruppert.functional.result.Result;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.jwt.api.JweAlgorithmAllowList;
 import eu.jsentinel.jcustos.jwt.api.JweDecoder;
 import eu.jsentinel.jcustos.jwt.api.JweDecodingError;
@@ -39,7 +39,7 @@ import java.util.Objects;
  *
  * @since 00.79.20
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class NimbusJweDecoder implements JweDecoder {
 
   private final JweAlgorithmAllowList allowList;

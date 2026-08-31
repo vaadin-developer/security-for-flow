@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.api;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,7 +25,7 @@ package eu.jsentinel.jcustos.events.api;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.UUID;
 
@@ -37,7 +37,7 @@ import java.util.UUID;
  * @param value non-blank correlation identifier
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record CorrelationId(String value) {
 
   public CorrelationId {

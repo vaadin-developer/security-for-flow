@@ -6,11 +6,11 @@ import eu.jsentinel.jcustos.audit.AuditQuery;
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
 import eu.jsentinel.jcustos.authorization.api.AccessDeniedException;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.bootstrap.CreateInitialAdminCommand;
 import eu.jsentinel.jcustos.bootstrap.InitialAdminCreationResult;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapMode;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelRuntime;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapMode;
+import eu.jsentinel.jcustos.dx.runtime.JCustosRuntime;
 import eu.jsentinel.jcustos.dx.standalone.bootstrap.StandaloneSecurity;
 import eu.jsentinel.jcustos.standalone.SecuredProxy;
 import eu.jsentinel.jcustos.standalone.StandaloneLoginFlow;
@@ -52,9 +52,9 @@ public final class Main implements HasLogger {
         .findFirst().orElseThrow();
     AuthorizationService<?> authz = ServiceLoader.load(AuthorizationService.class)
         .findFirst().orElseThrow();
-    JSentinelRuntime runtime = eu.jsentinel.jcustos.demo.skill.standalone.security.bootstrap.BootstrapBuilder.apply(
+    JCustosRuntime runtime = eu.jsentinel.jcustos.demo.skill.standalone.security.bootstrap.BootstrapBuilder.apply(
         StandaloneSecurity.bootstrap()
-            .mode(JSentinelBootstrapMode.DEVELOPMENT)
+            .mode(JCustosBootstrapMode.DEVELOPMENT)
             .authentication(authn)
             .authorization(authz)
     ).install();
@@ -66,7 +66,7 @@ public final class Main implements HasLogger {
   }
 
   void run() throws IOException {
-    out.println("=== jSentinel Standalone Demo (persistence) ===");
+    out.println("=== jCustos Standalone Demo (persistence) ===");
     if (BootstrapWiring.instance().stateService().bootstrapRequired()) {
       out.println("System uninitialised — running setup.");
       if (!runSetup()) {
@@ -191,7 +191,7 @@ public final class Main implements HasLogger {
           out.println("DENIED");
           return;
         }
-        for (AuditEvent event : JSentinelServiceResolver.securityAuditService().query(AuditQuery.all())) {
+        for (AuditEvent event : JCustosServiceResolver.securityAuditService().query(AuditQuery.all())) {
           out.println("  " + event.timestamp() + " " + event.getClass().getSimpleName());
         }
       }

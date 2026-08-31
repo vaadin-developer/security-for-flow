@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.rest;
 
 /*-
  * #%L
- * jSentinel Events — REST/SSE bridge
+ * jCustos Events — REST/SSE bridge
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -26,7 +26,7 @@ package eu.jsentinel.jcustos.events.rest;
  */
 
 import com.svenruppert.dependencies.core.net.HttpStatus;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.events.bus.ConsumeFailureHandler;
 import eu.jsentinel.jcustos.events.bus.ConsumeFailurePolicy;
 import eu.jsentinel.jcustos.events.bus.ConsumePipeline;
@@ -101,8 +101,8 @@ class EventPublishServiceFailureWiringTest {
     // Two independent publish pipelines both reserve sequence 1 — after the
     // first envelope is consumed, the second is a genuine sequence violation
     // (different envelope id, so it is not a replay).
-    SignedJSentinelEventEnvelope first = fx.signedEnvelope();
-    SignedJSentinelEventEnvelope second = fx.signedEnvelope();
+    SignedJCustosEventEnvelope first = fx.signedEnvelope();
+    SignedJCustosEventEnvelope second = fx.signedEnvelope();
     ConsumePipeline consume = fx.newConsumePipeline();
     EventPublishService service =
         service(consume, ConsumeFailurePolicy.operationalDefaults());

@@ -1,10 +1,10 @@
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -26,10 +26,10 @@
 /**
  * Wire codec for signed envelopes: {@link
  * eu.jsentinel.jcustos.events.wire.EnvelopeWireCodec} serializes a
- * {@link eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope}
+ * {@link eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope}
  * to and from a flat JSON object (Base64 binaries, no Jackson) and offers a
  * secret-free {@code encodeMetadata} projection for logging / SIEM-style
- * consumers. Moved here from {@code jSentinel-events-rest} in V00.80.00 so
+ * consumers. Moved here from {@code jCustos-events-rest} in V00.80.00 so
  * transport-independent consumers (log publishers, monitoring) can encode
  * without a REST dependency; the REST module keeps a deprecated delegator
  * for one release.

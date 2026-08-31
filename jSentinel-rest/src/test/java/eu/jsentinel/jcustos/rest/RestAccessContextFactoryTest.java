@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.rest;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -76,7 +76,7 @@ class RestAccessContextFactoryTest {
   @Test
   @DisplayName("subject Optional is forwarded to the context as-is")
   void subjectIsForwarded() {
-    JSentinelSubject subject = new JSentinelSubject("u1", "User", Set.of(), Set.of());
+    JCustosSubject subject = new JCustosSubject("u1", "User", Set.of(), Set.of());
 
     AccessContext ctx = factory.create(req(), Optional.of(subject), "read", Map.of());
 

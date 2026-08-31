@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.persistence.eclipsestore;
 
 /*-
  * #%L
- * jSentinel Events — Eclipse-Store persistence
+ * jCustos Events — Eclipse-Store persistence
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -26,8 +26,8 @@ package eu.jsentinel.jcustos.events.persistence.eclipsestore;
  */
 
 import eu.jsentinel.jcustos.events.store.DeadLetterId;
-import eu.jsentinel.jcustos.events.store.JSentinelEventDeadLetter;
-import eu.jsentinel.jcustos.events.store.JSentinelEventDeadLetterStore;
+import eu.jsentinel.jcustos.events.store.JCustosEventDeadLetter;
+import eu.jsentinel.jcustos.events.store.JCustosEventDeadLetterStore;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,10 +36,10 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Eclipse-Store-backed {@link JSentinelEventDeadLetterStore} (Konzept §1073).
+ * Eclipse-Store-backed {@link JCustosEventDeadLetterStore} (Konzept §1073).
  * Insertion order is preserved so {@link #findOpen(int)} returns oldest-first.
  */
-final class EclipseStoreDeadLetterStore implements JSentinelEventDeadLetterStore {
+final class EclipseStoreDeadLetterStore implements JCustosEventDeadLetterStore {
 
   private final EclipseStoreEventStorage storage;
 
@@ -48,11 +48,11 @@ final class EclipseStoreDeadLetterStore implements JSentinelEventDeadLetterStore
   }
 
   @Override
-  public void store(JSentinelEventDeadLetter deadLetter) {
+  public void store(JCustosEventDeadLetter deadLetter) {
     Objects.requireNonNull(deadLetter, "deadLetter");
     storage.lock().writeLock().lock();
     try {
-      Map<String, JSentinelEventDeadLetter> records = storage.root().deadLetters;
+      Map<String, JCustosEventDeadLetter> records = storage.root().deadLetters;
       records.put(deadLetter.id().value(), deadLetter);
       storage.manager().store(records);
     } finally {
@@ -61,15 +61,15 @@ final class EclipseStoreDeadLetterStore implements JSentinelEventDeadLetterStore
   }
 
   @Override
-  public List<JSentinelEventDeadLetter> findOpen(int limit) {
+  public List<JCustosEventDeadLetter> findOpen(int limit) {
     if (limit < 0) {
       throw new IllegalArgumentException("limit must be >= 0, was " + limit);
     }
     storage.lock().readLock().lock();
     try {
       Set<String> resolved = storage.root().resolvedDeadLetters;
-      List<JSentinelEventDeadLetter> open = new ArrayList<>();
-      for (JSentinelEventDeadLetter record : storage.root().deadLetters.values()) {
+      List<JCustosEventDeadLetter> open = new ArrayList<>();
+      for (JCustosEventDeadLetter record : storage.root().deadLetters.values()) {
         if (open.size() >= limit) {
           break;
         }
@@ -98,7 +98,7 @@ final class EclipseStoreDeadLetterStore implements JSentinelEventDeadLetterStore
       // honours. Legacy already-persisted resolved ids are drained by the one-time startup migration
       // in EclipseStoreEventStorage, so findOpen (which still filters against the now-emptied set)
       // needs nothing here.
-      Map<String, JSentinelEventDeadLetter> records = storage.root().deadLetters;
+      Map<String, JCustosEventDeadLetter> records = storage.root().deadLetters;
       records.remove(id.value());
       storage.manager().store(records);
     } finally {

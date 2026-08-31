@@ -23,7 +23,7 @@
 package eu.jsentinel.jcustos.credential.lifecycle;
 
 import eu.jsentinel.jcustos.audit.CredentialStatusChanged;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.credential.store.CredentialStatus;
 import eu.jsentinel.jcustos.credential.store.CredentialStore;
 import eu.jsentinel.jcustos.credential.store.CredentialUpdateResult;
@@ -60,12 +60,12 @@ public final class CredentialLifecycleService {
       buildAllowedTransitions();
 
   private final CredentialStore store;
-  private final JSentinelAuditService auditService;
+  private final JCustosAuditService auditService;
   private final Clock clock;
 
   public CredentialLifecycleService(
       CredentialStore store,
-      JSentinelAuditService auditService,
+      JCustosAuditService auditService,
       Clock clock) {
     this.store = Objects.requireNonNull(store, "store");
     this.auditService = Objects.requireNonNull(auditService, "auditService");

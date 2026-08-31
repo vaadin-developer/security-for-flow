@@ -19,7 +19,7 @@ package eu.jsentinel.jcustos.logout.vaadin;
 import eu.jsentinel.jcustos.logout.InMemorySubjectSessionRegistry;
 import eu.jsentinel.jcustos.logout.LogoutListener;
 import eu.jsentinel.jcustos.logout.LogoutScope;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.credential.propagation.BearerToken;
 import eu.jsentinel.jcustos.credential.propagation.InMemoryTokenCredentialStore;
 import eu.jsentinel.jcustos.logout.SubjectId;
@@ -43,7 +43,7 @@ class VaadinLogoutServiceTest {
 
   @AfterEach
   void resetResolver() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   @Test
@@ -128,7 +128,7 @@ class VaadinLogoutServiceTest {
   @DisplayName("CurrentSession notifies SessionPolicy.onLogout")
   void currentSession_notifiesSessionPolicy() {
     RecordingSessionPolicy<String> policy = new RecordingSessionPolicy<>();
-    JSentinelServiceResolver.setSessionPolicy(policy);
+    JCustosServiceResolver.setSessionPolicy(policy);
 
     new VaadinLogoutService<>(new RecordingSubjectStore(), String.class,
         new RecordingGateway(), "/login", true, true)
@@ -141,7 +141,7 @@ class VaadinLogoutServiceTest {
   @DisplayName("AllSessionsOfSubject does NOT notify SessionPolicy.onLogout (current-thread concern)")
   void allSessions_doesNotNotifySessionPolicy() {
     RecordingSessionPolicy<String> policy = new RecordingSessionPolicy<>();
-    JSentinelServiceResolver.setSessionPolicy(policy);
+    JCustosServiceResolver.setSessionPolicy(policy);
 
     new VaadinLogoutService<>(new RecordingSubjectStore(), String.class,
         new RecordingGateway(), "/login", true, true)
@@ -173,7 +173,7 @@ class VaadinLogoutServiceTest {
   void currentSession_clearsBoundTokenCredential() {
     InMemoryTokenCredentialStore tokenStore = new InMemoryTokenCredentialStore();
     tokenStore.bind(token());
-    JSentinelServiceResolver.setTokenCredentialStore(tokenStore);
+    JCustosServiceResolver.setTokenCredentialStore(tokenStore);
     assertTrue(tokenStore.current().isPresent(), "precondition: a credential is bound");
 
     // Even with both invalidate flags false (session kept), the token must go.
@@ -190,7 +190,7 @@ class VaadinLogoutServiceTest {
   void allSessions_doesNotClearTokenCredential() {
     InMemoryTokenCredentialStore tokenStore = new InMemoryTokenCredentialStore();
     tokenStore.bind(token());
-    JSentinelServiceResolver.setTokenCredentialStore(tokenStore);
+    JCustosServiceResolver.setTokenCredentialStore(tokenStore);
 
     new VaadinLogoutService<>(new RecordingSubjectStore(), String.class,
         new RecordingGateway(), "/login", true, true)

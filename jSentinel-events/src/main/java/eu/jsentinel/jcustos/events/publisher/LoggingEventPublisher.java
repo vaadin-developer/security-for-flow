@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.publisher;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,8 +27,8 @@ package eu.jsentinel.jcustos.events.publisher;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.audit.LogFieldScrubber;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +52,7 @@ import java.util.Objects;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class LoggingEventPublisher implements SignedEnvelopePublisher, HasLogger {
 
   /** Event stream name; route this to a dedicated appender in logback/simplelogger. */
@@ -91,7 +91,7 @@ public final class LoggingEventPublisher implements SignedEnvelopePublisher, Has
   }
 
   @Override
-  public void onEnvelope(SignedJSentinelEventEnvelope envelope) {
+  public void onEnvelope(SignedJCustosEventEnvelope envelope) {
     if (envelope == null) {
       return;
     }
@@ -108,7 +108,7 @@ public final class LoggingEventPublisher implements SignedEnvelopePublisher, Has
     }
   }
 
-  private static String format(SignedJSentinelEventEnvelope e) {
+  private static String format(SignedJCustosEventEnvelope e) {
     StringBuilder sb = new StringBuilder(LINE_PREFIX);
     appendField(sb, K_ENVELOPE, e.envelopeId().value());
     appendField(sb, K_TYPE, e.eventType().value());

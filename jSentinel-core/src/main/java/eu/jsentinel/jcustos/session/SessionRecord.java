@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.session;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.logout.SubjectId;
 
@@ -34,8 +34,8 @@ import static java.util.Objects.requireNonNull;
  * "revoke all sessions of alice after a password change").
  *
  * <p>The {@code securityVersionAtLogin} component is the
- * {@link JSentinelVersion} of the subject at the moment this session
- * was opened. A planned {@code JSentinelVersionCheck} interceptor
+ * {@link JCustosVersion} of the subject at the moment this session
+ * was opened. A planned {@code JCustosVersionCheck} interceptor
  * (Phase 4 of the V00.70 roadmap) compares this value to the
  * subject's <em>current</em> security version on every request: a
  * mismatch means the subject's authority has changed since login,
@@ -56,14 +56,14 @@ import static java.util.Objects.requireNonNull;
  * @param securityVersionAtLogin  subject security version at login; non-null
  * @param status                  current lifecycle state; non-null
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record SessionRecord(
     SessionId sessionId,
     SubjectId subjectId,
     TenantId tenant,
     Instant createdAt,
     Instant lastActivityAt,
-    JSentinelVersion securityVersionAtLogin,
+    JCustosVersion securityVersionAtLogin,
     SessionStatus status
 ) {
 

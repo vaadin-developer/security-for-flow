@@ -25,7 +25,7 @@ package eu.jsentinel.jcustos.demo.rest.domain;
  * @param id      stable id
  * @param title   human-readable title
  * @param ownerId subjectId of the owner (matches
- *                {@code JSentinelSubject.subjectId()})
+ *                {@code JCustosSubject.subjectId()})
  */
 public record DemoOwnedDocument(long id, String title, String ownerId) {
 }

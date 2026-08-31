@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authorization.annotations;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.policy.impl.RequiresPolicyEvaluator;
 
 import java.lang.annotation.Inherited;
@@ -35,11 +35,11 @@ import static java.lang.annotation.ElementType.TYPE;
  * algorithms (any-of / all-of) will be added later via a separate
  * annotation to keep this contract stable.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({TYPE, METHOD})
-@JSentinelAnnotation(RequiresPolicyEvaluator.class)
+@JCustosAnnotation(RequiresPolicyEvaluator.class)
 public @interface RequiresPolicy {
 
   /**

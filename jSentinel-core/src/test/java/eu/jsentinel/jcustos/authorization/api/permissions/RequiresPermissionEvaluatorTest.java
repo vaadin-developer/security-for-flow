@@ -18,7 +18,7 @@ package eu.jsentinel.jcustos.authorization.api.permissions;
 
 import eu.jsentinel.jcustos.authorization.annotations.RequiresPermission;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationDecision;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -48,7 +48,7 @@ class RequiresPermissionEvaluatorTest {
   @Test
   @DisplayName("matching permission grants access")
   void matchingPermission() throws NoSuchMethodException {
-    JSentinelSubject subject = new JSentinelSubject(
+    JCustosSubject subject = new JCustosSubject(
         "u1", "User", Set.of(), Set.of(new PermissionName("document:read")));
 
     AuthorizationDecision decision = evaluator.evaluate(
@@ -61,7 +61,7 @@ class RequiresPermissionEvaluatorTest {
   @Test
   @DisplayName("missing permission forbids access")
   void missingPermission() throws NoSuchMethodException {
-    JSentinelSubject subject = new JSentinelSubject("u1", "User", Set.of(), Set.of());
+    JCustosSubject subject = new JCustosSubject("u1", "User", Set.of(), Set.of());
 
     AuthorizationDecision decision = evaluator.evaluate(
         context(Optional.of(subject)),
@@ -73,7 +73,7 @@ class RequiresPermissionEvaluatorTest {
   @Test
   @DisplayName("JS-SEC-010: empty @RequiresPermission({}) fails closed even for a subject with permissions")
   void emptyPermissionFailsClosed() throws NoSuchMethodException {
-    JSentinelSubject subject = new JSentinelSubject(
+    JCustosSubject subject = new JCustosSubject(
         "u1", "User", Set.of(), Set.of(new PermissionName("document:read")));
 
     AuthorizationDecision decision = evaluator.evaluate(
@@ -83,7 +83,7 @@ class RequiresPermissionEvaluatorTest {
     assertInstanceOf(AuthorizationDecision.Forbidden.class, decision);
   }
 
-  private static AccessContext context(Optional<JSentinelSubject> subject) {
+  private static AccessContext context(Optional<JCustosSubject> subject) {
     return new AccessContext(subject, "rest-endpoint", "/documents", "read", Map.of());
   }
 

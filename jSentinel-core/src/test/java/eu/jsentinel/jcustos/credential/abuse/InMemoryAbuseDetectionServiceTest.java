@@ -25,7 +25,7 @@ package eu.jsentinel.jcustos.credential.abuse;
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
 import eu.jsentinel.jcustos.audit.RateLimitExceeded;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,7 +47,7 @@ class InMemoryAbuseDetectionServiceTest {
 
   private static final Instant T0 = Instant.parse("2026-06-01T12:00:00Z");
 
-  private static final class RecordingAudit implements JSentinelAuditService {
+  private static final class RecordingAudit implements JCustosAuditService {
     final List<AuditEvent> events = new ArrayList<>();
     @Override public void publish(AuditEvent event) { events.add(event); }
     @Override public List<AuditEvent> query(AuditQuery q) { return List.copyOf(events); }

@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.testkit;
 
 /*-
  * #%L
- * jSentinel Events — Contract testkit
+ * jCustos Events — Contract testkit
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,10 +25,10 @@ package eu.jsentinel.jcustos.events.testkit;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.events.api.EventEnvelopeId;
-import eu.jsentinel.jcustos.events.store.JSentinelEventCursor;
-import eu.jsentinel.jcustos.events.store.JSentinelEventEnvelopeStore;
+import eu.jsentinel.jcustos.events.store.JCustosEventCursor;
+import eu.jsentinel.jcustos.events.store.JCustosEventEnvelopeStore;
 import eu.jsentinel.jcustos.events.store.StoredEnvelope;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,21 +39,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Reusable contract for {@link JSentinelEventEnvelopeStore} implementations,
+ * Reusable contract for {@link JCustosEventEnvelopeStore} implementations,
  * including the stable cursor ordering the SSE resume relies on.
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
-@DisplayName("JSentinelEventEnvelopeStore — contract")
+@ExperimentalJCustosApi
+@DisplayName("JCustosEventEnvelopeStore — contract")
 public interface EnvelopeStoreContract {
 
-  JSentinelEventEnvelopeStore newEnvelopeStore();
+  JCustosEventEnvelopeStore newEnvelopeStore();
 
   @Test
   @DisplayName("append assigns increasing positions and count tracks them")
   default void appendAssignsPositions() {
-    JSentinelEventEnvelopeStore store = newEnvelopeStore();
+    JCustosEventEnvelopeStore store = newEnvelopeStore();
     assertEquals(1, store.append(TestkitEnvelopes.envelope("a")).position());
     assertEquals(2, store.append(TestkitEnvelopes.envelope("b")).position());
     assertEquals(2, store.count());
@@ -62,11 +62,11 @@ public interface EnvelopeStoreContract {
   @Test
   @DisplayName("findAfter returns a stable-ordered page and supports resume")
   default void findAfterResumes() {
-    JSentinelEventEnvelopeStore store = newEnvelopeStore();
+    JCustosEventEnvelopeStore store = newEnvelopeStore();
     for (char c = 'a'; c <= 'e'; c++) {
       store.append(TestkitEnvelopes.envelope(String.valueOf(c)));
     }
-    List<StoredEnvelope> first = store.findAfter(JSentinelEventCursor.start(), 2);
+    List<StoredEnvelope> first = store.findAfter(JCustosEventCursor.start(), 2);
     assertEquals(2, first.size());
     assertEquals(EventEnvelopeId.of("a"), first.get(0).envelope().envelopeId());
 
@@ -79,7 +79,7 @@ public interface EnvelopeStoreContract {
   @Test
   @DisplayName("findByEnvelopeId resolves a stored envelope or empty")
   default void findByEnvelopeId() {
-    JSentinelEventEnvelopeStore store = newEnvelopeStore();
+    JCustosEventEnvelopeStore store = newEnvelopeStore();
     store.append(TestkitEnvelopes.envelope("x"));
     assertTrue(store.findByEnvelopeId(EventEnvelopeId.of("x")).isPresent());
     assertTrue(store.findByEnvelopeId(EventEnvelopeId.of("missing")).isEmpty());
@@ -88,10 +88,10 @@ public interface EnvelopeStoreContract {
   @Test
   @DisplayName("JS-SEC-058: findAfter with a Long.MAX_VALUE cursor returns an empty page, not an overflow throw")
   default void findAfterOutOfRangeCursorIsEmpty() {
-    JSentinelEventEnvelopeStore store = newEnvelopeStore();
+    JCustosEventEnvelopeStore store = newEnvelopeStore();
     store.append(TestkitEnvelopes.envelope("a"));
     // an at/after-end (here far-out-of-range) cursor must yield "nothing after it" rather than
     // throwing from the position+1 overflow.
-    assertTrue(store.findAfter(JSentinelEventCursor.at(Long.MAX_VALUE), 10).isEmpty());
+    assertTrue(store.findAfter(JCustosEventCursor.at(Long.MAX_VALUE), 10).isEmpty());
   }
 }

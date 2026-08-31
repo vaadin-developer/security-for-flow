@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.dpop;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.net.URI;
 import java.time.Instant;
@@ -29,7 +29,7 @@ import java.util.Objects;
  *
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record ValidatedDpopProof(
     JwkThumbprint thumbprint,
     String httpMethod,

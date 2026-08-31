@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.codec;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,8 +25,8 @@ package eu.jsentinel.jcustos.events.codec;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.api.JSentinelEvent;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.api.JCustosEvent;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.RecordComponent;
@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Default {@link JSentinelEventCanonicalizer}: pulls the eight standard fields
+ * Default {@link JCustosEventCanonicalizer}: pulls the eight standard fields
  * from the event accessors and derives {@code attributes} by reflecting the
  * event's record components (skipping the {@code metadata} component, whose
  * contents are already represented by the standard fields).
@@ -48,8 +48,8 @@ import java.util.TreeMap;
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
-public final class RecordReflectionCanonicalizer implements JSentinelEventCanonicalizer {
+@ExperimentalJCustosApi
+public final class RecordReflectionCanonicalizer implements JCustosEventCanonicalizer {
 
   /**
    * Marker emitted for a {@code null} nested-record component. It is emitted
@@ -60,7 +60,7 @@ public final class RecordReflectionCanonicalizer implements JSentinelEventCanoni
   private static final String NULL_COMPONENT = "null";
 
   @Override
-  public CanonicalJSentinelEventPayload canonicalize(JSentinelEvent event) {
+  public CanonicalJCustosEventPayload canonicalize(JCustosEvent event) {
     TreeMap<String, String> attributes = new TreeMap<>();
     if (event instanceof Record) {
       for (RecordComponent component : event.getClass().getRecordComponents()) {
@@ -79,8 +79,8 @@ public final class RecordReflectionCanonicalizer implements JSentinelEventCanoni
         attributes.put(component.getName(), render(component.getName(), value));
       }
     }
-    return new CanonicalJSentinelEventPayload(
-        CanonicalJSentinelEventPayload.SCHEMA_VERSION,
+    return new CanonicalJCustosEventPayload(
+        CanonicalJCustosEventPayload.SCHEMA_VERSION,
         event.eventType().value(),
         event.eventId().value(),
         event.tenantId().value(),

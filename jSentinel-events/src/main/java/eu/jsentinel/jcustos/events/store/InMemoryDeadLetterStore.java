@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.store;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,7 +25,7 @@ package eu.jsentinel.jcustos.events.store;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * In-memory {@link JSentinelEventDeadLetterStore}. Insertion order is
+ * In-memory {@link JCustosEventDeadLetterStore}. Insertion order is
  * preserved so {@link #findOpen(int)} returns oldest-first. All access is
  * synchronized.
  *
@@ -46,24 +46,24 @@ import java.util.Objects;
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
-public final class InMemoryDeadLetterStore implements JSentinelEventDeadLetterStore {
+@ExperimentalJCustosApi
+public final class InMemoryDeadLetterStore implements JCustosEventDeadLetterStore {
 
-  private final Map<DeadLetterId, JSentinelEventDeadLetter> records = new LinkedHashMap<>();
+  private final Map<DeadLetterId, JCustosEventDeadLetter> records = new LinkedHashMap<>();
 
   @Override
-  public synchronized void store(JSentinelEventDeadLetter deadLetter) {
+  public synchronized void store(JCustosEventDeadLetter deadLetter) {
     Objects.requireNonNull(deadLetter, "deadLetter");
     records.put(deadLetter.id(), deadLetter);
   }
 
   @Override
-  public synchronized List<JSentinelEventDeadLetter> findOpen(int limit) {
+  public synchronized List<JCustosEventDeadLetter> findOpen(int limit) {
     if (limit < 0) {
       throw new IllegalArgumentException("limit must be >= 0, was " + limit);
     }
-    List<JSentinelEventDeadLetter> open = new ArrayList<>();
-    for (JSentinelEventDeadLetter record : records.values()) {
+    List<JCustosEventDeadLetter> open = new ArrayList<>();
+    for (JCustosEventDeadLetter record : records.values()) {
       if (open.size() >= limit) {
         break;
       }

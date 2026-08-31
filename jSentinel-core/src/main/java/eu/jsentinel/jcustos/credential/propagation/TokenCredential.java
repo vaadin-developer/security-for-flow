@@ -10,7 +10,7 @@
  */
 package eu.jsentinel.jcustos.credential.propagation;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -42,13 +42,13 @@ import java.util.Optional;
  * Every record implementation masks the value in {@code toString()}
  * (e.g. {@code "BearerToken{exp=…, aud=…, value=***}"}).
  *
- * <p>V00.74 ships this type tagged {@link ExperimentalJSentinelApi};
+ * <p>V00.74 ships this type tagged {@link ExperimentalJCustosApi};
  * stable-API promotion is staged for V00.76 after at least one demo
  * migration cycle.
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi("V00.74 token propagation; stable promotion staged for V00.76")
+@ExperimentalJCustosApi("V00.74 token propagation; stable promotion staged for V00.76")
 public sealed interface TokenCredential
     permits BearerToken, OidcAccessToken, RefreshToken, ApiKey {
 

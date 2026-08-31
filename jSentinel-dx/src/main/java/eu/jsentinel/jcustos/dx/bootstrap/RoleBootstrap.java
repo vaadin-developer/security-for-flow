@@ -17,7 +17,7 @@ import eu.jsentinel.jcustos.authorization.api.roles.RoleHierarchy;
  *
  * <p><strong>V00.73 status:</strong> single-method typed surface —
  * {@link #hierarchy(RoleHierarchy)} wires
- * {@code JSentinelServiceResolver.setRoleHierarchy(...)}.
+ * {@code JCustosServiceResolver.setRoleHierarchy(...)}.
  *
  * <p>V00.73 intentionally exposes only {@code hierarchy(...)} in the
  * fluent surface. The {@code RolePermissionMapping} type has no

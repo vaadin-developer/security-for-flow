@@ -3,7 +3,7 @@ package eu.jsentinel.jcustos.demo.skill.vaadin.views;
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
 import eu.jsentinel.jcustos.authorization.LoginView;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.notification.Notification;
@@ -19,7 +19,7 @@ public class MyLoginView extends LoginView implements HasLogger {
   public boolean checkCredentials() {
     Credentials credentials = new Credentials(username(), password());
     AuthenticationService<Credentials, User> authn =
-        JSentinelServiceResolver.authenticationService();
+        JCustosServiceResolver.authenticationService();
     boolean ok = authn.checkCredentials(credentials);
     if (ok) {
       User user = authn.loadSubject(credentials);

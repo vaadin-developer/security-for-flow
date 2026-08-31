@@ -19,7 +19,7 @@ package eu.jsentinel.jcustos.ratelimiting;
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
 import eu.jsentinel.jcustos.audit.RateLimitExceeded;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -165,7 +165,7 @@ class InMemoryRateLimitPolicyTest {
   @DisplayName("audit failures do not block the decision")
   void auditFailureSwallowed() {
     InMemoryRateLimitStore store = new InMemoryRateLimitStore();
-    JSentinelAuditService throwing = new JSentinelAuditService() {
+    JCustosAuditService throwing = new JCustosAuditService() {
       @Override public void publish(AuditEvent event) { throw new RuntimeException("boom"); }
       @Override public List<AuditEvent> query(AuditQuery query) { return List.of(); }
     };
@@ -240,7 +240,7 @@ class InMemoryRateLimitPolicyTest {
     assertTrue(t.retryAfter().isZero());
   }
 
-  private static final class CollectingAuditService implements JSentinelAuditService {
+  private static final class CollectingAuditService implements JCustosAuditService {
     final List<AuditEvent> published = new ArrayList<>();
     @Override public void publish(AuditEvent event) { published.add(event); }
     @Override public List<AuditEvent> query(AuditQuery query) { return List.copyOf(published); }

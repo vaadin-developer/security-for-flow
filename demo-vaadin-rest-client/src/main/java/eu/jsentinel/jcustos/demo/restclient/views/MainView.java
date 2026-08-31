@@ -26,7 +26,7 @@ import eu.jsentinel.jcustos.logout.vaadin.VaadinLogoutService;
 import eu.jsentinel.jcustos.demo.restclient.backend.BackendClientProvider;
 import eu.jsentinel.jcustos.demo.restclient.backend.BackendException;
 import eu.jsentinel.jcustos.demo.restclient.backend.RemoteUser;
-import eu.jsentinel.jcustos.demo.restclient.security.ClientJSentinelContext;
+import eu.jsentinel.jcustos.demo.restclient.security.ClientJCustosContext;
 import eu.jsentinel.jcustos.demo.restclient.views.components.BackendOperationCard;
 import eu.jsentinel.jcustos.demo.restclient.views.components.PermissionDemoCard;
 import eu.jsentinel.jcustos.demo.restclient.views.standalone.AdminRolesView;
@@ -199,13 +199,13 @@ public class MainView extends AppLayout {
   }
 
   private static boolean hasPermission(String permissionValue) {
-    return ClientJSentinelContext.user()
+    return ClientJCustosContext.user()
         .map(u -> u.permissions().stream().anyMatch(p -> permissionValue.equals(p.value())))
         .orElse(false);
   }
 
   private Component welcomeContent() {
-    RemoteUser user = ClientJSentinelContext.user().orElse(null);
+    RemoteUser user = ClientJCustosContext.user().orElse(null);
     String name = user == null ? "Guest" : user.displayName();
     String roles = user == null ? "(none)"
         : user.roles().stream().map(r -> r.value()).sorted().toList().toString();
@@ -232,7 +232,7 @@ public class MainView extends AppLayout {
   }
 
   private void logout() {
-    String token = ClientJSentinelContext.token().orElse(null);
+    String token = ClientJCustosContext.token().orElse(null);
     if (token != null) {
       try {
         BackendClientProvider.client().logout(token);

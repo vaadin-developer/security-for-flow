@@ -24,7 +24,7 @@ package eu.jsentinel.jcustos.authorization.api.roles;
 
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStore;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.authorization.api.permissions.HasPermissions;
@@ -90,15 +90,15 @@ class RoleBasedAccessEvaluatorTest {
 
   @BeforeEach
   void setUp() {
-    JSentinelServiceResolver.resetAll();
-    JSentinelServiceResolver.setAuthenticationService(new TestAuthn());
+    JCustosServiceResolver.resetAll();
+    JCustosServiceResolver.setAuthenticationService(new TestAuthn());
     store = new HeapStore();
     SubjectStores.setSubjectStore(store);
   }
 
   @AfterEach
   void tearDown() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   private static AccessContext ctx() {
@@ -160,7 +160,7 @@ class RoleBasedAccessEvaluatorTest {
   @DisplayName("RoleHierarchy implied role grants access")
   void hierarchyImpliedGrants() {
     store.setCurrentSubject(new Sub(Set.of("ADMIN")), Sub.class);
-    JSentinelServiceResolver.setRoleHierarchy(role -> {
+    JCustosServiceResolver.setRoleHierarchy(role -> {
       if ("ADMIN".equals(role.value())) {
         return Set.of(new RoleName("ADMIN"), new RoleName("VIEWER"));
       }

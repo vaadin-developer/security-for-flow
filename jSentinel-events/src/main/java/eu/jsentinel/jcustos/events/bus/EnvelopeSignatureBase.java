@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.bus;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -26,7 +26,7 @@ package eu.jsentinel.jcustos.events.bus;
  */
 
 import eu.jsentinel.jcustos.events.api.CausationId;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -48,14 +48,14 @@ import java.nio.charset.StandardCharsets;
  *
  * <p><strong>Wire-format note:</strong> this changed the signing base in
  * V00.75.10; signatures produced by V00.75.00 do not verify under it. The event
- * bus is {@code @ExperimentalJSentinelApi}, so the format may still change.
+ * bus is {@code @ExperimentalJCustosApi}, so the format may still change.
  */
 final class EnvelopeSignatureBase {
 
   private EnvelopeSignatureBase() {
   }
 
-  static byte[] compute(SignedJSentinelEventEnvelope e) {
+  static byte[] compute(SignedJCustosEventEnvelope e) {
     ByteArrayOutputStream out = new ByteArrayOutputStream(256);
     field(out, "envelopeId", e.envelopeId().value());
     field(out, "eventId", e.eventId().value());

@@ -10,7 +10,7 @@
  */
 package eu.jsentinel.jcustos.dx.vaadin.diagnostics;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.dx.diagnostics.DiagnosticContributor;
 import eu.jsentinel.jcustos.dx.diagnostics.DiagnosticReportBuilder;
 import eu.jsentinel.jcustos.dx.diagnostics.DiscoveredService;
@@ -34,7 +34,7 @@ class VaadinDiagnosticContributorTest {
   @BeforeEach
   @AfterEach
   void resetResolver() {
-    JSentinelServiceResolver.setStepUpRouteName(JSentinelServiceResolver.DEFAULT_STEP_UP_ROUTE_NAME);
+    JCustosServiceResolver.setStepUpRouteName(JCustosServiceResolver.DEFAULT_STEP_UP_ROUTE_NAME);
   }
 
   @Test

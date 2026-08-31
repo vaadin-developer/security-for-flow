@@ -16,13 +16,13 @@
  */
 package eu.jsentinel.jcustos.oidc.api;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 
 import java.util.Optional;
 
 /**
- * Maps validated OIDC claims to a {@link JSentinelSubject} (V00.78). The default
- * implementation ({@code jSentinel-identity-oidc}) builds the 4-field stable
+ * Maps validated OIDC claims to a {@link JCustosSubject} (V00.78). The default
+ * implementation ({@code jCustos-identity-oidc}) builds the 4-field stable
  * subject — issuer-prefixed subject id, a display name from the standard claims,
  * and the roles / permissions from the dedicated {@link ClaimsToRolesMapper} /
  * {@link ClaimsToPermissionsMapper}. Tenant assignment (where applicable) is a
@@ -42,5 +42,5 @@ public interface ClaimsToSubjectMapper {
    * @param userInfo the UserInfo claims, if pulled
    * @return the mapped subject (id / displayName / roles / permissions)
    */
-  JSentinelSubject map(ValidatedIdToken idToken, Optional<UserInfoResponse> userInfo);
+  JCustosSubject map(ValidatedIdToken idToken, Optional<UserInfoResponse> userInfo);
 }

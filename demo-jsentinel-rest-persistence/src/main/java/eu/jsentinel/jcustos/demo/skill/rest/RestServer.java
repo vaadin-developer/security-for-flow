@@ -2,8 +2,8 @@ package eu.jsentinel.jcustos.demo.skill.rest;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.dx.rest.bootstrap.RestSecurity;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapMode;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelRuntime;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapMode;
+import eu.jsentinel.jcustos.dx.runtime.JCustosRuntime;
 import com.sun.net.httpserver.HttpServer;
 import eu.jsentinel.jcustos.demo.skill.rest.handlers.AuditHandler;
 import eu.jsentinel.jcustos.demo.skill.rest.handlers.AuthHandler;
@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * Persistence-layer REST server — same bootstrap-chain mechanism as
  * layer 1 (delegates audit / sessions / credentials to
- * {@link BootstrapBuilder#apply(eu.jsentinel.jcustos.dx.rest.bootstrap.RestJSentinelBootstrap)}),
+ * {@link BootstrapBuilder#apply(eu.jsentinel.jcustos.dx.rest.bootstrap.RestJCustosBootstrap)}),
  * but adds the {@code /api/setup} route + a bootstrap-required guard
  * that returns 503 on every other endpoint until the first admin is
  * provisioned.
@@ -48,9 +48,9 @@ public final class RestServer implements HasLogger {
   public static RestServer start(int port) throws IOException {
     MyRestSubjectResolver resolver = new MyRestSubjectResolver();
 
-    JSentinelRuntime runtime = BootstrapBuilder.apply(
+    JCustosRuntime runtime = BootstrapBuilder.apply(
         RestSecurity.bootstrap()
-            .mode(JSentinelBootstrapMode.DEVELOPMENT)
+            .mode(JCustosBootstrapMode.DEVELOPMENT)
             .subjectResolver(resolver)
     ).install();
     System.out.println(runtime.log());

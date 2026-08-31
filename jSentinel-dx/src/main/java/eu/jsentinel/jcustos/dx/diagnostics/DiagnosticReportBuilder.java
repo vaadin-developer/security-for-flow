@@ -13,9 +13,9 @@ package eu.jsentinel.jcustos.dx.diagnostics;
 
 /**
  * Builder handle passed to each {@link DiagnosticContributor} during a
- * {@link JSentinelDiagnostics#inspect()} sweep. Contributors append
+ * {@link JCustosDiagnostics#inspect()} sweep. Contributors append
  * findings; the diagnostics engine assembles the final immutable
- * {@link JSentinelServiceReport}.
+ * {@link JCustosServiceReport}.
  *
  * @since 00.72.00
  */

@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.policy.spi;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.policy.api.ResourceRef;
 
 import java.util.Map;
@@ -36,7 +36,7 @@ import java.util.Optional;
  *
  * @param <T> the domain type for this resolver
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface ResourceResolver<T> {
 
   /**

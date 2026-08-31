@@ -19,7 +19,7 @@ package eu.jsentinel.jcustos.authorization.api.permissions;
 import eu.jsentinel.jcustos.authorization.annotations.RequiresAllPermissions;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationDecision;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationEvaluator;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 
 import java.util.Arrays;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  * Generic evaluator for {@link RequiresAllPermissions} — AND-semantics
  * across the listed permissions.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class RequiresAllPermissionsEvaluator
     implements AuthorizationEvaluator<RequiresAllPermissions> {
 

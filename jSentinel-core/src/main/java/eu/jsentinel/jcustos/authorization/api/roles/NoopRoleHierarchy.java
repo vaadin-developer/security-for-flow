@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authorization.api.roles;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Set;
 
@@ -27,11 +27,11 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * Equivalent to the pre-hierarchy semantics where role-based
  * admission was a plain set membership check. Returned by
- * {@code JSentinelServiceResolver.roleHierarchy()} when no SPI
+ * {@code JCustosServiceResolver.roleHierarchy()} when no SPI
  * implementation is registered, so existing applications keep their
  * exact behaviour after the upgrade.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class NoopRoleHierarchy implements RoleHierarchy {
 
   /** Shared singleton instance — the hierarchy is stateless. */

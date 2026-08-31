@@ -17,9 +17,9 @@
 package eu.jsentinel.jcustos.demo.standalone;
 
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
-import eu.jsentinel.jcustos.autoservice.api.JSentinelAutoService;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 
-@JSentinelAutoService(AuthenticationService.class)
+@JCustosAutoService(AuthenticationService.class)
 public final class DemoAuthenticationService
     implements AuthenticationService<Credentials, User> {
 

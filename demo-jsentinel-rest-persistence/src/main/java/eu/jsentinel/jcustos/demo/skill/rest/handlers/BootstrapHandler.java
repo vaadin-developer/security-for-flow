@@ -1,6 +1,6 @@
 package eu.jsentinel.jcustos.demo.skill.rest.handlers;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.bootstrap.CreateInitialAdminCommand;
 import eu.jsentinel.jcustos.bootstrap.InitialAdminCreationResult;
 import com.sun.net.httpserver.HttpExchange;
@@ -26,7 +26,7 @@ public final class BootstrapHandler {
   private BootstrapHandler() {
   }
 
-  public static void setup(HttpExchange exchange, JSentinelSubject ignored) throws IOException {
+  public static void setup(HttpExchange exchange, JCustosSubject ignored) throws IOException {
     if (!BootstrapWiring.instance().stateService().bootstrapRequired()) {
       Router.respondJson(exchange, 409, Json.encode(Map.of("error", "already initialised")));
       return;

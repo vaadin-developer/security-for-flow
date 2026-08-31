@@ -26,7 +26,7 @@ import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.audit.CredentialRehashed;
 import eu.jsentinel.jcustos.audit.CredentialVerificationFailed;
 import eu.jsentinel.jcustos.audit.CredentialVerificationSucceeded;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.credential.password.CredentialVerificationResult;
 import eu.jsentinel.jcustos.credential.password.RehashDecision;
 import eu.jsentinel.jcustos.credential.password.RehashReason;
@@ -38,7 +38,7 @@ import java.util.Objects;
 /**
  * Translates {@link CredentialVerificationResult}s into the new
  * credential audit events and pushes them through
- * {@link JSentinelAuditService}.
+ * {@link JCustosAuditService}.
  *
  * <p>The publisher <strong>never propagates</strong> audit-sink
  * exceptions to the caller (CWE-778 / CWE-693): publishing is
@@ -48,15 +48,15 @@ import java.util.Objects;
  */
 public final class CredentialAuditPublisher implements HasLogger {
 
-  private final JSentinelAuditService auditService;
+  private final JCustosAuditService auditService;
   private final Clock clock;
 
-  public CredentialAuditPublisher(JSentinelAuditService auditService) {
+  public CredentialAuditPublisher(JCustosAuditService auditService) {
     this(auditService, Clock.systemUTC());
   }
 
   public CredentialAuditPublisher(
-      JSentinelAuditService auditService, Clock clock) {
+      JCustosAuditService auditService, Clock clock) {
     this.auditService = Objects.requireNonNull(auditService, "auditService");
     this.clock = Objects.requireNonNull(clock, "clock");
   }

@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.jwt.impl;
 
 /*-
  * #%L
- * jSentinel JWT — standardized JWT validation
+ * jCustos JWT — standardized JWT validation
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,7 +25,7 @@ package eu.jsentinel.jcustos.jwt.impl;
  * #L%
  */
 
-import eu.jsentinel.jcustos.autoservice.api.JSentinelAutoService;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 import eu.jsentinel.jcustos.jwt.api.JwtValidator;
 import eu.jsentinel.jcustos.jwt.api.JwtValidatorFactory;
 import eu.jsentinel.jcustos.jwt.api.JwtValidatorSpec;
@@ -34,13 +34,13 @@ import java.util.Objects;
 
 /**
  * Nimbus-backed {@link JwtValidatorFactory}. Registered via
- * {@code @JSentinelAutoService} so {@code jSentinel-dx} can discover it through
+ * {@code @JCustosAutoService} so {@code jCustos-dx} can discover it through
  * {@link java.util.ServiceLoader} and assemble a validator from a
  * {@link JwtValidatorSpec} without ever compiling against a JOSE type.
  *
  * @since 00.76.00
  */
-@JSentinelAutoService(JwtValidatorFactory.class)
+@JCustosAutoService(JwtValidatorFactory.class)
 public final class NimbusJwtValidatorFactory implements JwtValidatorFactory {
 
   /** ServiceLoader requires a public no-arg constructor. */

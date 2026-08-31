@@ -38,7 +38,7 @@ import java.util.function.Supplier;
  * {@code client_assertion} / {@code client_assertion_type} form fields in place.
  *
  * <p>The asymmetric case delegates to the {@link JwtSigner} SPI (so the JOSE
- * library stays in {@code jSentinel-jwt}); the symmetric case HMACs the assertion
+ * library stays in {@code jCustos-jwt}); the symmetric case HMACs the assertion
  * with the shared secret using the JDK {@link Mac} — no JOSE dependency. The
  * {@code aud} claim is the endpoint the request is sent to, {@code jti} is a fresh
  * 128-bit random nonce and {@code exp} bounds the assertion to its lifetime.

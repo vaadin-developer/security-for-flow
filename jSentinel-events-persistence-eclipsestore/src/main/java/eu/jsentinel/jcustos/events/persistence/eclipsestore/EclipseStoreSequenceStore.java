@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.persistence.eclipsestore;
 
 /*-
  * #%L
- * jSentinel Events — Eclipse-Store persistence
+ * jCustos Events — Eclipse-Store persistence
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -30,7 +30,7 @@ import eu.jsentinel.jcustos.audit.LogFieldScrubber;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventProducerId;
 import eu.jsentinel.jcustos.events.api.EventSequence;
-import eu.jsentinel.jcustos.events.sequence.JSentinelEventSequenceStore;
+import eu.jsentinel.jcustos.events.sequence.JCustosEventSequenceStore;
 import org.eclipse.store.storage.embedded.types.EmbeddedStorageManager;
 
 import java.nio.charset.StandardCharsets;
@@ -40,7 +40,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Eclipse-Store-backed {@link JSentinelEventSequenceStore}. The per-{@code
+ * Eclipse-Store-backed {@link JCustosEventSequenceStore}. The per-{@code
  * (tenant, producer)} counter survives restart; updates are atomic via the
  * storage write lock (Konzept §1072, §322).
  *
@@ -50,7 +50,7 @@ import java.util.Optional;
  * counter. Legacy raw {@code tenant|producer} keys are rewritten at open by
  * {@link #migrateLegacySequenceKeys(EmbeddedStorageManager, EventStorageRoot)}.
  */
-final class EclipseStoreSequenceStore implements JSentinelEventSequenceStore {
+final class EclipseStoreSequenceStore implements JCustosEventSequenceStore {
 
   /**
    * Schema marker in front of every framed key. Not needed for injectivity —
@@ -79,7 +79,7 @@ final class EclipseStoreSequenceStore implements JSentinelEventSequenceStore {
    * of either id can shift the segment boundary — two distinct
    * {@code (tenant, producer)} tuples always produce distinct keys. Byte
    * lengths match the framing convention of {@code EnvelopeSignatureBase} in
-   * jSentinel-events.
+   * jCustos-events.
    */
   private static String framedKey(TenantId tenantId, EventProducerId producerId) {
     return framedKey(

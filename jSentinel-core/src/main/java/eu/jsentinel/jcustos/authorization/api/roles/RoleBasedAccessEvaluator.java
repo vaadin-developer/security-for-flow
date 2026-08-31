@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.authorization.api.roles;
 
 import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 import eu.jsentinel.jcustos.authorization.navigation.AccessDecision;
@@ -61,7 +61,7 @@ public abstract class RoleBasedAccessEvaluator<T extends Annotation, U>
         }
 
         final AuthorizationService<U> authorizationService = this.authorizationService();
-        final RoleHierarchy hierarchy = JSentinelServiceResolver.roleHierarchy();
+        final RoleHierarchy hierarchy = JCustosServiceResolver.roleHierarchy();
 
         Set<RoleName> heldRoles = currentSubject.stream()
                 .map(authorizationService::rolesFor)
@@ -78,7 +78,7 @@ public abstract class RoleBasedAccessEvaluator<T extends Annotation, U>
 
     @SuppressWarnings("unchecked")
     private Class<U> subjectType() {
-        return (Class<U>) JSentinelServiceResolver
+        return (Class<U>) JCustosServiceResolver
             .<Object, Object>authenticationService()
             .subjectType();
     }

@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.dx.standalone.bootstrap;
 
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStore;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 
@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Static publication point + helper for the V00.74 thread-propagation
- * strategy collected by {@code StandaloneJSentinelBootstrap}.
+ * strategy collected by {@code StandaloneJCustosBootstrap}.
  *
  * <p>{@link #wrap(Executor)} returns an {@code Executor} that
  * captures the submitter's subject at {@code execute(Runnable)} time
@@ -107,12 +107,12 @@ public final class StandaloneThreadPropagationContext {
       Objects.requireNonNull(command, "command");
       // R13 (V00.76.10): the subject is bound in the store under the application's
       // subject type (AuthenticationService.subjectType(), e.g. User.class) — see
-      // StandaloneLoginFlow#login — NOT under JSentinelSubject.class. Capturing
-      // and rebinding under JSentinelSubject.class therefore always missed, so the
+      // StandaloneLoginFlow#login — NOT under JCustosSubject.class. Capturing
+      // and rebinding under JCustosSubject.class therefore always missed, so the
       // propagated worker ran with no subject: fail-closed, but the advertised
       // .threadPropagation(t -> t.inheritOnSubmit()) feature was silently dead.
       // Resolve the same type key the login flow uses.
-      Class<?> subjectType = JSentinelServiceResolver.findAuthenticationService()
+      Class<?> subjectType = JCustosServiceResolver.findAuthenticationService()
           .map(AuthenticationService::subjectType)
           .orElse(null);
       Object captured = subjectType == null

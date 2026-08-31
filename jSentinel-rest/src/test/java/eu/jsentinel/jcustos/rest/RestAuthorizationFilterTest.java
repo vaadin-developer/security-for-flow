@@ -18,8 +18,8 @@ package eu.jsentinel.jcustos.rest;
 
 import eu.jsentinel.jcustos.authorization.annotations.PublicRoute;
 import eu.jsentinel.jcustos.authorization.annotations.RequiresPermission;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,7 +38,7 @@ class RestAuthorizationFilterTest {
 
   @AfterEach
   void resetDenyByDefault() {
-    JSentinelServiceResolver.setDenyByDefault(false);
+    JCustosServiceResolver.setDenyByDefault(false);
   }
 
   @Test
@@ -149,7 +149,7 @@ class RestAuthorizationFilterTest {
   @Test
   @DisplayName("JS-SEC-024 / RF: deny-by-default without a subject is 401, not 403")
   void denyByDefault_unannotatedHandler_noSubject_unauthorized() throws NoSuchMethodException {
-    JSentinelServiceResolver.setDenyByDefault(true);
+    JCustosServiceResolver.setDenyByDefault(true);
     RecordingResponse response = new RecordingResponse();
     AtomicBoolean executed = new AtomicBoolean();
     RestAuthorizationFilter filter = new RestAuthorizationFilter(request -> Optional.empty());
@@ -167,7 +167,7 @@ class RestAuthorizationFilterTest {
   @Test
   @DisplayName("JS-SEC-024 / RF: deny-by-default with a resolved subject is 403")
   void denyByDefault_unannotatedHandler_withSubject_forbidden() throws NoSuchMethodException {
-    JSentinelServiceResolver.setDenyByDefault(true);
+    JCustosServiceResolver.setDenyByDefault(true);
     RecordingResponse response = new RecordingResponse();
     AtomicBoolean executed = new AtomicBoolean();
     RestAuthorizationFilter filter = new RestAuthorizationFilter(
@@ -185,7 +185,7 @@ class RestAuthorizationFilterTest {
   @Test
   @DisplayName("JS-SEC-024 / RF: class-level @PublicRoute opts the endpoint back in even when a Method is passed")
   void denyByDefault_classLevelPublicRoute_allowsHandler() throws NoSuchMethodException {
-    JSentinelServiceResolver.setDenyByDefault(true);
+    JCustosServiceResolver.setDenyByDefault(true);
     RecordingResponse response = new RecordingResponse();
     AtomicBoolean executed = new AtomicBoolean();
     RestAuthorizationFilter filter = new RestAuthorizationFilter(request -> Optional.empty());
@@ -203,7 +203,7 @@ class RestAuthorizationFilterTest {
   @Test
   @DisplayName("JS-SEC-024: deny-by-default still allows a @PublicRoute handler")
   void denyByDefault_publicRoute_allowsHandler() throws NoSuchMethodException {
-    JSentinelServiceResolver.setDenyByDefault(true);
+    JCustosServiceResolver.setDenyByDefault(true);
     RecordingResponse response = new RecordingResponse();
     AtomicBoolean executed = new AtomicBoolean();
     RestAuthorizationFilter filter = new RestAuthorizationFilter(request -> Optional.empty());
@@ -239,8 +239,8 @@ class RestAuthorizationFilterTest {
     return new SimpleRestRequest("DELETE", "/api/documents/42", Map.of(), Map.of());
   }
 
-  private static JSentinelSubject subject(Set<PermissionName> permissions) {
-    return new JSentinelSubject("u1", "User", Set.of(), permissions);
+  private static JCustosSubject subject(Set<PermissionName> permissions) {
+    return new JCustosSubject("u1", "User", Set.of(), permissions);
   }
 
   static final class HandlerFixture {

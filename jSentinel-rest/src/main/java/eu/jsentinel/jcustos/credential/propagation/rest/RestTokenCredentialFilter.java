@@ -10,7 +10,7 @@
  */
 package eu.jsentinel.jcustos.credential.propagation.rest;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.credential.propagation.BearerToken;
 import eu.jsentinel.jcustos.credential.propagation.TokenCredentialStore;
 import eu.jsentinel.jcustos.rest.BearerTokenExtractor;
@@ -23,15 +23,15 @@ import java.util.Optional;
  * Request-scope filter that binds the inbound Bearer token into a
  * {@link TokenCredentialStore} and clears it in the {@code finally}
  * block. Wire <strong>after</strong>
- * {@code RestJSentinelVersionFilter} but <strong>before</strong> the
+ * {@code RestJCustosVersionFilter} but <strong>before</strong> the
  * authorization filter / handler so the credential is available to the
  * handler and downstream propagating wrappers.
  *
- * <p>Pattern parallel to {@code RestJSentinelVersionFilter}.
+ * <p>Pattern parallel to {@code RestJCustosVersionFilter}.
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class RestTokenCredentialFilter {
 
   private final BearerTokenExtractor extractor = new BearerTokenExtractor();

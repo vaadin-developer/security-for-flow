@@ -17,7 +17,7 @@ import java.util.Set;
 /**
  * Mutable accumulator for the V00.78 {@code .oidc(...)} sub-builder. Holds the
  * recorded OIDC Relying-Party configuration; consumed + validated by
- * {@code AbstractJSentinelBootstrap.applyOidcConfiguration(...)}. {@code nonce} is
+ * {@code AbstractJCustosBootstrap.applyOidcConfiguration(...)}. {@code nonce} is
  * required by default (the secure default).
  */
 public final class OidcState {

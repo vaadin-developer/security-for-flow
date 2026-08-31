@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.types;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -28,9 +28,9 @@ package eu.jsentinel.jcustos.events.types;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventMetadata;
 import eu.jsentinel.jcustos.events.api.EventType;
-import eu.jsentinel.jcustos.events.api.JSentinelEvent;
-import eu.jsentinel.jcustos.events.api.JSentinelEventCategory;
-import eu.jsentinel.jcustos.events.api.JSentinelEventSeverity;
+import eu.jsentinel.jcustos.events.api.JCustosEvent;
+import eu.jsentinel.jcustos.events.api.JCustosEventCategory;
+import eu.jsentinel.jcustos.events.api.JCustosEventSeverity;
 import eu.jsentinel.jcustos.logout.SubjectId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,12 +46,12 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisplayName("JSentinelEvent concrete types")
+@DisplayName("JCustosEvent concrete types")
 class EventTypesTest {
 
   private static EventMetadata meta() {
     return EventMetadata.create(TenantId.DEFAULT, SubjectId.of("alice"),
-        Instant.parse("2026-06-24T10:15:30Z"), JSentinelEventSeverity.INFO);
+        Instant.parse("2026-06-24T10:15:30Z"), JCustosEventSeverity.INFO);
   }
 
   @Test
@@ -63,7 +63,7 @@ class EventTypesTest {
     assertEquals(TenantId.DEFAULT, event.tenantId());
     assertEquals(SubjectId.of("alice"), event.subjectId());
     assertEquals(Instant.parse("2026-06-24T10:15:30Z"), event.occurredAt());
-    assertEquals(JSentinelEventSeverity.INFO, event.severity());
+    assertEquals(JCustosEventSeverity.INFO, event.severity());
     assertEquals(m, event.metadata());
   }
 
@@ -80,27 +80,27 @@ class EventTypesTest {
   @Test
   @DisplayName("each category maps to the expected domain")
   void categoriesAreCorrect() {
-    assertEquals(JSentinelEventCategory.AUTHENTICATION,
+    assertEquals(JCustosEventCategory.AUTHENTICATION,
         new LoginFailedEvent(meta(), "bad-credentials").category());
-    assertEquals(JSentinelEventCategory.AUTHORIZATION,
+    assertEquals(JCustosEventCategory.AUTHORIZATION,
         new PermissionDeniedEvent(meta(), "doc:delete").category());
-    assertEquals(JSentinelEventCategory.POLICY,
+    assertEquals(JCustosEventCategory.POLICY,
         new PolicyDeniedEvent(meta(), "owner-or-admin").category());
-    assertEquals(JSentinelEventCategory.SESSION,
+    assertEquals(JCustosEventCategory.SESSION,
         new SessionRevokedEvent(meta(), "sid-1", "admin-revoked").category());
-    assertEquals(JSentinelEventCategory.ROLE,
+    assertEquals(JCustosEventCategory.ROLE,
         new RoleAssignedEvent(meta(), "ROLE_ADMIN").category());
-    assertEquals(JSentinelEventCategory.TOKEN,
+    assertEquals(JCustosEventCategory.TOKEN,
         new ApiKeyIssuedEvent(meta(), "ak-1").category());
-    assertEquals(JSentinelEventCategory.DEVICE,
+    assertEquals(JCustosEventCategory.DEVICE,
         new DeviceTrustedEvent(meta(), "dev-1").category());
-    assertEquals(JSentinelEventCategory.RATE_LIMIT,
+    assertEquals(JCustosEventCategory.RATE_LIMIT,
         new RateLimitExceededEvent(meta(), "login").category());
-    assertEquals(JSentinelEventCategory.INTEGRITY,
+    assertEquals(JCustosEventCategory.INTEGRITY,
         new ReplayDetectedEvent(meta(), "env-9").category());
-    assertEquals(JSentinelEventCategory.SYSTEM,
+    assertEquals(JCustosEventCategory.SYSTEM,
         new BusStartedEvent(meta()).category());
-    assertEquals(JSentinelEventCategory.ADMIN,
+    assertEquals(JCustosEventCategory.ADMIN,
         new TenantPolicyChangedEvent(meta(), "pwd-policy").category());
   }
 
@@ -115,7 +115,7 @@ class EventTypesTest {
   @Test
   @DisplayName("the shipped event TYPE names are all distinct")
   void eventTypeNamesAreUnique() {
-    List<JSentinelEvent> all = List.of(
+    List<JCustosEvent> all = List.of(
         new LoginSucceededEvent(meta(), "password"),
         new LoginFailedEvent(meta(), "bad"),
         new LogoutSucceededEvent(meta(), "sid"),
@@ -152,7 +152,7 @@ class EventTypesTest {
         new ProducerRegisteredEvent(meta(), "p"));
 
     Set<String> names = new HashSet<>();
-    for (JSentinelEvent event : all) {
+    for (JCustosEvent event : all) {
       assertNotNull(event.eventType());
       assertNotNull(event.category());
       boolean fresh = names.add(event.eventType().value());

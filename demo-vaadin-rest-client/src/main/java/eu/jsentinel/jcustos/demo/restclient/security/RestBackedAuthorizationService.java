@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.demo.restclient.security;
 
 import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
-import eu.jsentinel.jcustos.autoservice.api.JSentinelAutoService;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 import eu.jsentinel.jcustos.authorization.api.permissions.HasPermissions;
 import eu.jsentinel.jcustos.authorization.api.roles.HasRoles;
 import eu.jsentinel.jcustos.demo.restclient.backend.RemoteUser;
@@ -29,7 +29,7 @@ import java.util.Objects;
  * on the {@link RemoteUser} snapshot. This service simply returns the
  * snapshot — no further round-trips per UI decision.
  */
-@JSentinelAutoService(AuthorizationService.class)
+@JCustosAutoService(AuthorizationService.class)
 public class RestBackedAuthorizationService implements AuthorizationService<RemoteUser> {
 
   @Override

@@ -33,7 +33,7 @@ import java.util.Set;
  * claims, so roles are delivered under a configurable namespace
  * (e.g. {@code https://my-app.example/roles}); Auth0 RBAC permissions arrive in the
  * {@code permissions} claim. Construct with the app namespace, or use
- * {@link #INSTANCE} with the jSentinel default namespace.
+ * {@link #INSTANCE} with the jCustos default namespace.
  */
 public final class Auth0Profile implements VendorProfile {
 

@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.testkit;
 
 /*-
  * #%L
- * jSentinel Events — Contract testkit
+ * jCustos Events — Contract testkit
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,8 +25,8 @@ package eu.jsentinel.jcustos.events.testkit;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.events.publisher.SignedEnvelopePublisher;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 @DisplayName("SignedEnvelopePublisher — contract")
 public interface EnvelopePublisherContract {
 
@@ -72,7 +72,7 @@ public interface EnvelopePublisherContract {
   @DisplayName("tolerates repeated delivery of the same envelope")
   default void toleratesRepeatedDelivery() {
     SignedEnvelopePublisher publisher = publisherUnderTest();
-    SignedJSentinelEventEnvelope envelope = TestkitEnvelopes.envelope("env-1");
+    SignedJCustosEventEnvelope envelope = TestkitEnvelopes.envelope("env-1");
     assertDoesNotThrow(() -> {
       publisher.onEnvelope(envelope);
       publisher.onEnvelope(envelope);

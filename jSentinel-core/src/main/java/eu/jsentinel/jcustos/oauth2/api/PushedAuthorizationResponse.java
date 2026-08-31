@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.oauth2.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.time.Duration;
 import java.util.Objects;
@@ -28,7 +28,7 @@ import java.util.Objects;
  *
  * @since 00.79.20
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record PushedAuthorizationResponse(String requestUri, Duration expiresIn) {
 
   public PushedAuthorizationResponse {

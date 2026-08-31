@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.replay.impl;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.replay.api.NonceStore;
 import eu.jsentinel.jcustos.util.CapacityBound;
 
@@ -32,7 +32,7 @@ import java.util.function.Supplier;
  * In-memory {@link NonceStore} (V00.79): per-request-key nonce binding with TTL and
  * single-use consume. For a single JVM only. Thread-safe.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class InMemoryNonceStore implements NonceStore {
 
   private record Bound(String nonce, Instant expiresAt) {

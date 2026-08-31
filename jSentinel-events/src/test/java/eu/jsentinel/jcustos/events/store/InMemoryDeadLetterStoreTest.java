@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.store;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -43,12 +43,12 @@ class InMemoryDeadLetterStoreTest {
   @DisplayName("stored dead letters appear in findOpen, oldest first")
   void storeAndFindOpen() {
     InMemoryDeadLetterStore store = new InMemoryDeadLetterStore();
-    store.store(JSentinelEventDeadLetter.of(
+    store.store(JCustosEventDeadLetter.of(
         StoreFixtures.envelope("a"), RejectionReason.INVALID_SIGNATURE, AT));
-    store.store(JSentinelEventDeadLetter.of(
+    store.store(JCustosEventDeadLetter.of(
         StoreFixtures.envelope("b"), RejectionReason.REPLAY_DETECTED, AT));
 
-    List<JSentinelEventDeadLetter> open = store.findOpen(10);
+    List<JCustosEventDeadLetter> open = store.findOpen(10);
     assertEquals(2, open.size());
     assertEquals(RejectionReason.INVALID_SIGNATURE, open.get(0).reason());
     assertEquals(RejectionReason.REPLAY_DETECTED, open.get(1).reason());
@@ -58,7 +58,7 @@ class InMemoryDeadLetterStoreTest {
   @DisplayName("markResolved removes a record from findOpen")
   void markResolved() {
     InMemoryDeadLetterStore store = new InMemoryDeadLetterStore();
-    JSentinelEventDeadLetter dl = JSentinelEventDeadLetter.of(
+    JCustosEventDeadLetter dl = JCustosEventDeadLetter.of(
         StoreFixtures.envelope("a"), RejectionReason.SEQUENCE_VIOLATION, AT);
     store.store(dl);
     store.markResolved(dl.id());
@@ -69,9 +69,9 @@ class InMemoryDeadLetterStoreTest {
   @DisplayName("R07: markResolved drops the heavy record so resolved dead letters do not accumulate")
   void markResolvedDropsRecord() {
     InMemoryDeadLetterStore store = new InMemoryDeadLetterStore();
-    JSentinelEventDeadLetter a = JSentinelEventDeadLetter.of(
+    JCustosEventDeadLetter a = JCustosEventDeadLetter.of(
         StoreFixtures.envelope("a"), RejectionReason.SEQUENCE_VIOLATION, AT);
-    JSentinelEventDeadLetter b = JSentinelEventDeadLetter.of(
+    JCustosEventDeadLetter b = JCustosEventDeadLetter.of(
         StoreFixtures.envelope("b"), RejectionReason.REPLAY_DETECTED, AT);
     store.store(a);
     store.store(b);
@@ -83,7 +83,7 @@ class InMemoryDeadLetterStoreTest {
     // side set — only the still-open dead letter is retained
     assertEquals(1, store.retainedRecordCount(),
         "a resolved dead letter must not be retained");
-    List<JSentinelEventDeadLetter> open = store.findOpen(10);
+    List<JCustosEventDeadLetter> open = store.findOpen(10);
     assertEquals(1, open.size());
     assertEquals(RejectionReason.REPLAY_DETECTED, open.get(0).reason());
   }
@@ -93,7 +93,7 @@ class InMemoryDeadLetterStoreTest {
   void limit() {
     InMemoryDeadLetterStore store = new InMemoryDeadLetterStore();
     for (int i = 0; i < 5; i++) {
-      store.store(JSentinelEventDeadLetter.of(
+      store.store(JCustosEventDeadLetter.of(
           StoreFixtures.envelope("e" + i), RejectionReason.EXPIRED, AT));
     }
     assertEquals(3, store.findOpen(3).size());

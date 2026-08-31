@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.otel;
 
 /*-
  * #%L
- * jSentinel Events — OpenTelemetry exporter
+ * jCustos Events — OpenTelemetry exporter
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,11 +25,11 @@ package eu.jsentinel.jcustos.events.otel;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import io.opentelemetry.api.common.AttributeKey;
 
 /**
- * The OpenTelemetry attribute vocabulary of the jSentinel envelope-to-log
+ * The OpenTelemetry attribute vocabulary of the jCustos envelope-to-log
  * mapping. Attribute names are API — renaming one is a breaking change for
  * every dashboard and alert rule built on them.
  * <p>
@@ -41,7 +41,7 @@ import io.opentelemetry.api.common.AttributeKey;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class OtelEnvelopeAttributes {
 
   /** Instrumentation scope the publisher registers under. */

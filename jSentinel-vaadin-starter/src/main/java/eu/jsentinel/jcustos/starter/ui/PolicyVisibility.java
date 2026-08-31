@@ -12,8 +12,8 @@ package eu.jsentinel.jcustos.starter.ui;
 
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.SubjectIdResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import com.svenruppert.dependencies.core.logger.HasLogger;
@@ -31,7 +31,7 @@ import java.util.Optional;
  * V00.73 policy-aware visibility helper for {@link SecuredUi}.
  *
  * <p>Adds an attach listener that resolves the current
- * {@link JSentinelSubject}, builds a {@link PolicyContext}, and asks
+ * {@link JCustosSubject}, builds a {@link PolicyContext}, and asks
  * the configured {@link PolicyRegistry} how to render the component.
  * The same instance is re-evaluated on every attach so navigation
  * between routes refreshes the decision (mirrors V00.71
@@ -95,11 +95,11 @@ final class PolicyVisibility {
   }
 
   private static Verdict evaluate(String policyName) {
-    JSentinelSubject subject = resolveSubject().orElse(null);
+    JCustosSubject subject = resolveSubject().orElse(null);
     if (subject == null) {
       return Verdict.DeniedNoSubject;
     }
-    PolicyRegistry registry = JSentinelServiceResolver.policyRegistry();
+    PolicyRegistry registry = JCustosServiceResolver.policyRegistry();
     Optional<Policy> known = registry.find(policyName);
     if (known.isEmpty()) {
       return Verdict.UnknownPolicy;
@@ -122,9 +122,9 @@ final class PolicyVisibility {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  private static Optional<JSentinelSubject> resolveSubject() {
+  private static Optional<JCustosSubject> resolveSubject() {
     try {
-      Class subjectType = JSentinelServiceResolver
+      Class subjectType = JCustosServiceResolver
           .<Object, Object>findAuthenticationService()
           .map(AuthenticationService::subjectType)
           .orElse(null);
@@ -137,7 +137,7 @@ final class PolicyVisibility {
         return Optional.empty();
       }
       Optional<AuthorizationService<Object>> authzOpt =
-          JSentinelServiceResolver.findAuthorizationService();
+          JCustosServiceResolver.findAuthorizationService();
       if (authzOpt.isEmpty()) {
         return Optional.empty();
       }
@@ -146,9 +146,9 @@ final class PolicyVisibility {
       // R019: prefer the registered SubjectIdResolver; String.valueOf(user) can
       // leak internal user fields into the subject id.
       SubjectIdResolver idResolver =
-          JSentinelServiceResolver.findSubjectIdResolver().orElse(null);
+          JCustosServiceResolver.findSubjectIdResolver().orElse(null);
       String id = idResolver != null ? idResolver.resolve(u).value() : String.valueOf(u);
-      return Optional.of(new JSentinelSubject(
+      return Optional.of(new JCustosSubject(
           id,
           id,
           new java.util.LinkedHashSet<>(authz.rolesFor(u).roleNames()),

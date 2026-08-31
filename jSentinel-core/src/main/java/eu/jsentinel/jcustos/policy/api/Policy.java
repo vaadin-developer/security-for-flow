@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.policy.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 /**
  * Named, single-shot authorisation rule.
@@ -36,7 +36,7 @@ import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
  * interface and the {@link PolicyBuilder}. Implementations stay
  * package-private.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public sealed interface Policy permits NamedPolicy {
 
   /**

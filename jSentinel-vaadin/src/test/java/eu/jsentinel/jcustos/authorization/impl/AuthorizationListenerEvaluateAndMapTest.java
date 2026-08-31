@@ -152,37 +152,37 @@ class AuthorizationListenerEvaluateAndMapTest {
   @Test
   @DisplayName("map(StepUpRequired) → AccessDecision.Reroute to the default 'step-up' route")
   void map_stepUpDefaultRoute() throws Exception {
-    eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver.resetAll();
+    eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver.resetAll();
     try {
       Object result = invokeMap(new AuthorizationDecision.StepUpRequired("needs mfa", "MFA"));
       AccessDecision.Reroute reroute = (AccessDecision.Reroute) result;
       assertEquals("step-up", reroute.target());
       assertEquals(false, reroute.asForward());
     } finally {
-      eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver.resetAll();
+      eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver.resetAll();
     }
   }
 
   @Test
   @DisplayName("map(StepUpRequired) honours the configured stepUpRouteName")
   void map_stepUpConfiguredRoute() throws Exception {
-    eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver.resetAll();
-    eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver
+    eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver.resetAll();
+    eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver
         .setStepUpRouteName("mfa-challenge");
     try {
       Object result = invokeMap(new AuthorizationDecision.StepUpRequired("needs mfa", "MFA"));
       AccessDecision.Reroute reroute = (AccessDecision.Reroute) result;
       assertEquals("mfa-challenge", reroute.target());
     } finally {
-      eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver.resetAll();
+      eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver.resetAll();
     }
   }
 
   @Test
   @DisplayName("map(Unauthenticated) honours the configured loginRouteName (R025)")
   void map_unauthenticatedConfiguredRoute() throws Exception {
-    eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver.resetAll();
-    eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver
+    eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver.resetAll();
+    eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver
         .setLoginRouteName("sign-in");
     try {
       Object result = invokeMap(new AuthorizationDecision.Unauthenticated("not signed in"));
@@ -191,7 +191,7 @@ class AuthorizationListenerEvaluateAndMapTest {
           "Unauthenticated must reroute to the configured login route, not a hardcoded literal");
       assertEquals(false, reroute.asForward());
     } finally {
-      eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver.resetAll();
+      eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver.resetAll();
     }
   }
 

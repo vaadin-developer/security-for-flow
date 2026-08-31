@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.jwt.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Objects;
 
@@ -27,7 +27,7 @@ import java.util.Objects;
  *
  * @since 00.79.20
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public sealed interface JweDecodingError
     permits JweDecodingError.NotJwe, JweDecodingError.Malformed,
             JweDecodingError.UnsupportedAlgorithm, JweDecodingError.UnsupportedEncryption,

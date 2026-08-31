@@ -34,7 +34,7 @@ package eu.jsentinel.jcustos.authorization.api;
  *     <th>Variant</th>
  *     <th>REST ({@code HttpStatusDecisionMapper})</th>
  *     <th>Vaadin ({@code AuthorizationListener#map})</th>
- *     <th>Standalone ({@code JSentinelEnforcer#handle})</th>
+ *     <th>Standalone ({@code JCustosEnforcer#handle})</th>
  *   </tr>
  *   <tr>
  *     <td>{@link Granted}</td>

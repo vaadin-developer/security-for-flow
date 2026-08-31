@@ -10,7 +10,7 @@
  */
 package eu.jsentinel.jcustos.dx.standalone.diagnostics;
 
-import eu.jsentinel.jcustos.autoservice.api.JSentinelAutoService;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptPolicy;
 import eu.jsentinel.jcustos.dx.diagnostics.DiagnosticContributor;
 import eu.jsentinel.jcustos.dx.diagnostics.DiagnosticReportBuilder;
@@ -24,7 +24,7 @@ import java.util.ServiceLoader;
  *
  * @since 00.72.00
  */
-@JSentinelAutoService(DiagnosticContributor.class)
+@JCustosAutoService(DiagnosticContributor.class)
 public final class StandaloneDiagnosticContributor implements DiagnosticContributor {
 
   public StandaloneDiagnosticContributor() {
@@ -42,7 +42,7 @@ public final class StandaloneDiagnosticContributor implements DiagnosticContribu
       builder.addMissing(new MissingRecommendedService(
           LoginAttemptPolicy.class,
           "No LoginAttemptPolicy registered for standalone bootstrap.",
-          "Register a LoginAttemptPolicy via @JSentinelAutoService(LoginAttemptPolicy.class) "
+          "Register a LoginAttemptPolicy via @JCustosAutoService(LoginAttemptPolicy.class) "
               + "or StandaloneSecurity.bootstrap().loginAttemptPolicy(...)."));
     }
   }

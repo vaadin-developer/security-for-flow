@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.ratelimiting;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.time.Duration;
 
@@ -29,7 +29,7 @@ import static java.util.Objects.requireNonNull;
  * request through or refuse it with a {@code 429 Too Many
  * Requests} (REST) / equivalent rejection (UI).
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public sealed interface RateLimitDecision {
 
   /**

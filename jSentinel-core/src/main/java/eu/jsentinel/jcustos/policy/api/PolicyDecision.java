@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.policy.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import static java.util.Objects.requireNonNull;
 
@@ -34,7 +34,7 @@ import static java.util.Objects.requireNonNull;
  * sealed hierarchy from day one so later step-up support is additive,
  * not a breaking change.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public sealed interface PolicyDecision
     permits PolicyDecision.Allowed,
             PolicyDecision.Denied,

@@ -1,8 +1,8 @@
 package eu.jsentinel.jcustos.dx.bootstrap;
 
-import eu.jsentinel.jcustos.dx.internal.AbstractJSentinelBootstrap;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapWarning;
-import eu.jsentinel.jcustos.dx.runtime.RegisteredJSentinelService;
+import eu.jsentinel.jcustos.dx.internal.AbstractJCustosBootstrap;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapWarning;
+import eu.jsentinel.jcustos.dx.runtime.RegisteredJCustosService;
 import eu.jsentinel.jcustos.dx.runtime.Severity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,17 +17,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName(".oidc(...) sub-builder recording + STRICT validation (V00.78)")
 class OidcBootstrapTest {
 
-  static final class TestBootstrap extends AbstractJSentinelBootstrap<TestBootstrap> {
-    final List<RegisteredJSentinelService> services = new ArrayList<>();
+  static final class TestBootstrap extends AbstractJCustosBootstrap<TestBootstrap> {
+    final List<RegisteredJCustosService> services = new ArrayList<>();
 
-    List<JSentinelBootstrapWarning> applyOidc() {
-      List<JSentinelBootstrapWarning> warnings = new ArrayList<>();
+    List<JCustosBootstrapWarning> applyOidc() {
+      List<JCustosBootstrapWarning> warnings = new ArrayList<>();
       applyOidcConfiguration(services, warnings);
       return warnings;
     }
   }
 
-  private static boolean has(List<JSentinelBootstrapWarning> w, String code, Severity sev) {
+  private static boolean has(List<JCustosBootstrapWarning> w, String code, Severity sev) {
     return w.stream().anyMatch(x -> x.code().equals(code) && x.severity() == sev);
   }
 
@@ -40,7 +40,7 @@ class OidcBootstrapTest {
   @Test
   @DisplayName("missing issuer is a STRICT error")
   void missingIssuer() {
-    List<JSentinelBootstrapWarning> w = new TestBootstrap()
+    List<JCustosBootstrapWarning> w = new TestBootstrap()
         .oidc(o -> o.clientId("app").scope("openid")).applyOidc();
     assertTrue(has(w, "oidc/missing-issuer", Severity.ERROR));
   }
@@ -48,7 +48,7 @@ class OidcBootstrapTest {
   @Test
   @DisplayName("missing client id is a STRICT error")
   void missingClientId() {
-    List<JSentinelBootstrapWarning> w = new TestBootstrap()
+    List<JCustosBootstrapWarning> w = new TestBootstrap()
         .oidc(o -> o.issuer("https://idp").scope("openid")).applyOidc();
     assertTrue(has(w, "oidc/missing-client-id", Severity.ERROR));
   }
@@ -56,7 +56,7 @@ class OidcBootstrapTest {
   @Test
   @DisplayName("a scope without openid is a STRICT error (spec violation)")
   void scopeWithoutOpenid() {
-    List<JSentinelBootstrapWarning> w = new TestBootstrap()
+    List<JCustosBootstrapWarning> w = new TestBootstrap()
         .oidc(o -> o.issuer("https://idp").clientId("app").scope("profile")).applyOidc();
     assertTrue(has(w, "oidc/scope-without-openid", Severity.ERROR));
   }
@@ -64,7 +64,7 @@ class OidcBootstrapTest {
   @Test
   @DisplayName("a non-https, non-loopback redirect URI is a STRICT error")
   void redirectUriNotHttps() {
-    List<JSentinelBootstrapWarning> w = new TestBootstrap()
+    List<JCustosBootstrapWarning> w = new TestBootstrap()
         .oidc(o -> o.issuer("https://idp").clientId("app").scope("openid")
             .redirectUri(URI.create("http://app.example/cb"))).applyOidc();
     assertTrue(has(w, "oidc/redirect-uri-not-https", Severity.ERROR));
@@ -73,7 +73,7 @@ class OidcBootstrapTest {
   @Test
   @DisplayName("logoutEnabled without a post-logout redirect URI is a STRICT error")
   void logoutWithoutPostLogoutRedirect() {
-    List<JSentinelBootstrapWarning> w = new TestBootstrap()
+    List<JCustosBootstrapWarning> w = new TestBootstrap()
         .oidc(o -> o.issuer("https://idp").clientId("app").scope("openid")
             .logoutEnabled(true)).applyOidc();
     assertTrue(has(w, "oidc/logout-without-post-logout-redirect-uri", Severity.ERROR));
@@ -83,7 +83,7 @@ class OidcBootstrapTest {
   @DisplayName("a complete configuration registers the bootstrap-oidc marker with no errors")
   void completeConfiguration() {
     TestBootstrap b = new TestBootstrap();
-    List<JSentinelBootstrapWarning> w = b
+    List<JCustosBootstrapWarning> w = b
         .oidc(o -> o.issuer("https://idp.example/realm").clientId("app")
             .redirectUri(URI.create("https://app.example/callback"))
             .scope("openid", "profile", "email")

@@ -16,7 +16,7 @@
  */
 /**
  * V00.77 OAuth2 Relying-Party SPI contracts + value types (JOSE- and HTTP-free).
- * The {@code jSentinel-oauth2} module provides the JDK-HttpClient implementations;
+ * The {@code jCustos-oauth2} module provides the JDK-HttpClient implementations;
  * the {@code .oauth2(...)} bootstrap sub-builder produces an
  * {@link eu.jsentinel.jcustos.oauth2.api.OAuth2ClientConfig}.
  *

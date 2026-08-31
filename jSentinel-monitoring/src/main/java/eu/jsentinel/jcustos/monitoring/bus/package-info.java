@@ -1,10 +1,10 @@
 /*-
  * #%L
- * jSentinel Monitoring — metrics, health and diagnostics export points
+ * jCustos Monitoring — metrics, health and diagnostics export points
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -29,9 +29,9 @@
  * subscribes (non-critically) to the security event bus and maps bus
  * self-observability events and auth / authz / session domain events onto
  * the counter catalog in
- * {@link eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames},
+ * {@link eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames},
  * emitting through a
- * {@link eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricsPublisher}.
+ * {@link eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricsPublisher}.
  * Counters only — gauges represent state and stay application-wired.
  *
  * @since 00.80.00

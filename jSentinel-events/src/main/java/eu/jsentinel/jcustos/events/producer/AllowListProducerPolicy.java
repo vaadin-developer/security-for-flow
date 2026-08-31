@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.producer;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,7 +25,7 @@ package eu.jsentinel.jcustos.events.producer;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventProducerId;
 import eu.jsentinel.jcustos.events.api.EventType;
@@ -35,7 +35,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Default allow-list {@link JSentinelEventProducerPolicy} (Konzept §683):
+ * Default allow-list {@link JCustosEventProducerPolicy} (Konzept §683):
  * default-deny, with explicit grants per {@code (producer, eventType)} either
  * for all tenants or scoped to a specific tenant.
  *
@@ -50,8 +50,8 @@ import java.util.Set;
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
-public final class AllowListProducerPolicy implements JSentinelEventProducerPolicy {
+@ExperimentalJCustosApi
+public final class AllowListProducerPolicy implements JCustosEventProducerPolicy {
 
   private record AnyTenantGrant(EventProducerId producerId, EventType eventType) {
   }
@@ -83,7 +83,7 @@ public final class AllowListProducerPolicy implements JSentinelEventProducerPoli
   }
 
   /** Fluent builder for {@link AllowListProducerPolicy}. */
-  @ExperimentalJSentinelApi
+  @ExperimentalJCustosApi
   public static final class Builder {
     private final Set<AnyTenantGrant> anyTenant = new HashSet<>();
     private final Set<TenantGrant> perTenant = new HashSet<>();

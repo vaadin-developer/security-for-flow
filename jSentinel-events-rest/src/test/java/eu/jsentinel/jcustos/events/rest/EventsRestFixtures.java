@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.rest;
 
 /*-
  * #%L
- * jSentinel Events — REST / SSE bridge
+ * jCustos Events — REST / SSE bridge
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -28,17 +28,17 @@ package eu.jsentinel.jcustos.events.rest;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventMetadata;
 import eu.jsentinel.jcustos.events.api.EventProducerId;
-import eu.jsentinel.jcustos.events.api.JSentinelEventSeverity;
+import eu.jsentinel.jcustos.events.api.JCustosEventSeverity;
 import eu.jsentinel.jcustos.events.api.KeyId;
 import eu.jsentinel.jcustos.events.api.PayloadHashAlgorithm;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.events.bus.ConsumePipeline;
 import eu.jsentinel.jcustos.events.bus.PublishPipeline;
 import eu.jsentinel.jcustos.events.codec.CanonicalJsonPayloadCodec;
 import eu.jsentinel.jcustos.events.codec.RecordReflectionCanonicalizer;
 import eu.jsentinel.jcustos.events.keys.InMemoryKeyManagement;
 import eu.jsentinel.jcustos.events.producer.AllowListProducerPolicy;
-import eu.jsentinel.jcustos.events.producer.JSentinelEventProducerPolicy;
+import eu.jsentinel.jcustos.events.producer.JCustosEventProducerPolicy;
 import eu.jsentinel.jcustos.events.replay.InMemoryReplayStore;
 import eu.jsentinel.jcustos.events.sequence.InMemorySequenceStore;
 import eu.jsentinel.jcustos.events.sequence.SequenceValidator;
@@ -59,7 +59,7 @@ final class EventsRestFixtures {
 
   final InMemoryKeyManagement keyManagement =
       new InMemoryKeyManagement(new Ed25519SignatureAlgorithm(), KeyId.of("eventbus-1"));
-  final JSentinelEventProducerPolicy allowAll = AllowListProducerPolicy.builder()
+  final JCustosEventProducerPolicy allowAll = AllowListProducerPolicy.builder()
       .allow(PRODUCER, LoginSucceededEvent.TYPE)
       .build();
 
@@ -76,9 +76,9 @@ final class EventsRestFixtures {
         SequenceViolationStrategy.REJECT, allowAll);
   }
 
-  SignedJSentinelEventEnvelope signedEnvelope() {
+  SignedJCustosEventEnvelope signedEnvelope() {
     EventMetadata meta = EventMetadata.create(TenantId.DEFAULT, SubjectId.of("alice"),
-        T0, JSentinelEventSeverity.INFO);
+        T0, JCustosEventSeverity.INFO);
     return newPublishPipeline().toEnvelope(new LoginSucceededEvent(meta, "password"));
   }
 }

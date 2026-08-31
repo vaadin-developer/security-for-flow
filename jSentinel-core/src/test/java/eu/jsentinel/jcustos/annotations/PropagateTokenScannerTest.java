@@ -10,7 +10,7 @@
  */
 package eu.jsentinel.jcustos.annotations;
 
-import eu.jsentinel.jcustos.authorization.impl.JSentinelAnnotationScanner;
+import eu.jsentinel.jcustos.authorization.impl.JCustosAnnotationScanner;
 import eu.jsentinel.jcustos.credential.propagation.PropagateTokenAdvisor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("@PropagateToken — scanner integration")
 class PropagateTokenScannerTest {
 
-  private final JSentinelAnnotationScanner scanner = new JSentinelAnnotationScanner();
+  private final JCustosAnnotationScanner scanner = new JCustosAnnotationScanner();
 
   @Test
   @DisplayName("Class-level @PropagateToken is discovered at the class level")

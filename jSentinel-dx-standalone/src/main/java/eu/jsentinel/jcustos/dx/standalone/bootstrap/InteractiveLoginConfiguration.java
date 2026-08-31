@@ -16,12 +16,12 @@
  */
 package eu.jsentinel.jcustos.dx.standalone.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 /**
  * Immutable snapshot of the interactive-login configuration
  * collected via
- * {@code StandaloneJSentinelBootstrap.interactiveLogin(consumer)}.
+ * {@code StandaloneJCustosBootstrap.interactiveLogin(consumer)}.
  *
  * @param prompt      the prompt callback; non-null
  * @param maxAttempts max attempts before the loop should give up;
@@ -29,7 +29,7 @@ import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record InteractiveLoginConfiguration(
     InteractiveLoginPrompt prompt,
     int maxAttempts

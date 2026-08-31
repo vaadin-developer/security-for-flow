@@ -18,7 +18,7 @@ package eu.jsentinel.jcustos.demo.restclient.security;
 
 import eu.jsentinel.jcustos.authorization.LoginListener;
 import eu.jsentinel.jcustos.authorization.LoginView;
-import eu.jsentinel.jcustos.autoservice.api.JSentinelAutoService;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 import eu.jsentinel.jcustos.demo.restclient.backend.RemoteUser;
 import eu.jsentinel.jcustos.demo.restclient.views.MainView;
 import eu.jsentinel.jcustos.demo.restclient.views.MyLoginView;
@@ -27,7 +27,7 @@ import com.vaadin.flow.component.Component;
 /**
  * SPI-loaded {@link LoginListener} for the {@link RemoteUser} subject type.
  */
-@JSentinelAutoService(LoginListener.class)
+@JCustosAutoService(LoginListener.class)
 public class BackedLoginListener extends LoginListener<RemoteUser> {
 
   @Override

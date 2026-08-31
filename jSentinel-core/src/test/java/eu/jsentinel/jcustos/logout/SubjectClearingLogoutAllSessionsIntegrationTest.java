@@ -19,7 +19,7 @@ package eu.jsentinel.jcustos.logout;
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
 import eu.jsentinel.jcustos.audit.LogoutPerformed;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authorization.api.InMemorySubjectStore;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.session.InMemorySessionStore;
@@ -121,7 +121,7 @@ class SubjectClearingLogoutAllSessionsIntegrationTest {
     assertEquals(LogoutScope.AllSessionsOfSubject, lp.scope());
   }
 
-  private static final class CollectingAuditService implements JSentinelAuditService {
+  private static final class CollectingAuditService implements JCustosAuditService {
     final List<AuditEvent> published = new ArrayList<>();
     @Override public void publish(AuditEvent event) { published.add(event); }
     @Override public List<AuditEvent> query(AuditQuery query) { return List.copyOf(published); }

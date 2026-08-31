@@ -22,10 +22,10 @@ import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
 import eu.jsentinel.jcustos.credential.password.PasswordHashingServices;
 import eu.jsentinel.jcustos.demo.app.security.permissions.DemoPermission;
 import eu.jsentinel.jcustos.demo.app.security.roles.AuthorizationRole;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelRuntime;
+import eu.jsentinel.jcustos.dx.runtime.JCustosRuntime;
 import eu.jsentinel.jcustos.dx.vaadin.bootstrap.VaadinSecurity;
-import eu.jsentinel.jcustos.policy.api.JSentinelPolicies;
-import eu.jsentinel.jcustos.starter.profile.VaadinJSentinelStarter;
+import eu.jsentinel.jcustos.policy.api.JCustosPolicies;
+import eu.jsentinel.jcustos.starter.profile.VaadinJCustosStarter;
 import com.vaadin.flow.server.ServiceInitEvent;
 import com.vaadin.flow.server.VaadinServiceInitListener;
 
@@ -40,9 +40,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * <p>
  * <strong>V00.72:</strong> the listener also runs the new fluent bootstrap
  * once per JVM ({@link VaadinSecurity#bootstrap()} with the
- * {@link VaadinJSentinelStarter#developmentDefaults()} profile), pulling the
- * {@code @JSentinelAutoService}-registered SPIs through {@code ServiceLoader}
- * and printing the resulting {@link JSentinelRuntime#log()} so the operator
+ * {@link VaadinJCustosStarter#developmentDefaults()} profile), pulling the
+ * {@code @JCustosAutoService}-registered SPIs through {@code ServiceLoader}
+ * and printing the resulting {@link JCustosRuntime#log()} so the operator
  * sees which services are active at startup.
  */
 public class BootstrapServiceInitListener implements VaadinServiceInitListener, HasLogger {
@@ -77,11 +77,11 @@ public class BootstrapServiceInitListener implements VaadinServiceInitListener, 
       return;
     }
     // V00.73: typed sub-builders. .audit(...) surfaces a logging sink
-    // and an in-memory ring buffer in JSentinelDiagnostics; .credentials(...)
+    // and an in-memory ring buffer in JCustosDiagnostics; .credentials(...)
     // exposes the V00.71 password-hashing pipeline that BootstrapWiring
-    // already uses internally so it shows up in JSentinelRuntime.services().
-    JSentinelRuntime runtime = VaadinSecurity.bootstrap()
-        .use(VaadinJSentinelStarter.developmentDefaults())
+    // already uses internally so it shows up in JCustosRuntime.services().
+    JCustosRuntime runtime = VaadinSecurity.bootstrap()
+        .use(VaadinJCustosStarter.developmentDefaults())
         .authentication(authn)
         .authorization(authz)
         .loginRoute("login")
@@ -95,7 +95,7 @@ public class BootstrapServiceInitListener implements VaadinServiceInitListener, 
         // Role + permission strings are derived from the project's enums
         // so a rename in either AuthorizationRole or DemoPermission lands
         // here as a compile error, not as a silent runtime miss.
-        .policies(p -> p.register(JSentinelPolicies.anyRoleOrPermission(
+        .policies(p -> p.register(JCustosPolicies.anyRoleOrPermission(
             POLICY_ADMIN_OR_EDIT,
             Set.of(AuthorizationRole.ADMIN.name()),
             Set.of(DemoPermission.DEMO_EDIT.permissionName().value()))))

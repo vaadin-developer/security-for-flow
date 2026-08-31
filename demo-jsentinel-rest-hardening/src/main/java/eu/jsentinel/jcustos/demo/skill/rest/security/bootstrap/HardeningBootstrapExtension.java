@@ -1,11 +1,11 @@
 package eu.jsentinel.jcustos.demo.skill.rest.security.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectIdResolver;
 import eu.jsentinel.jcustos.credential.password.bouncycastle.BouncyCastleHashingServices;
 import eu.jsentinel.jcustos.dx.bootstrap.CredentialBootstrap;
 import eu.jsentinel.jcustos.dx.bootstrap.SessionBootstrap;
-import eu.jsentinel.jcustos.session.JSentinelVersionStore;
+import eu.jsentinel.jcustos.session.JCustosVersionStore;
 
 import java.util.Optional;
 
@@ -26,10 +26,10 @@ public final class HardeningBootstrapExtension implements BootstrapExtension {
 
   @Override
   public void contributeSessions(SessionBootstrap s) {
-    Optional<JSentinelVersionStore> versionStore =
-        JSentinelServiceResolver.findJSentinelVersionStore();
+    Optional<JCustosVersionStore> versionStore =
+        JCustosServiceResolver.findJCustosVersionStore();
     Optional<SubjectIdResolver<Object>> resolver =
-        JSentinelServiceResolver.findSubjectIdResolver();
+        JCustosServiceResolver.findSubjectIdResolver();
     versionStore.ifPresent(s::securityVersion);
     resolver.ifPresent(s::subjectIdResolver);
   }

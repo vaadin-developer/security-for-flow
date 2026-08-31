@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.publisher;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -37,7 +37,7 @@ import eu.jsentinel.jcustos.events.api.KeyId;
 import eu.jsentinel.jcustos.events.api.PayloadContentType;
 import eu.jsentinel.jcustos.events.api.PayloadHashAlgorithm;
 import eu.jsentinel.jcustos.events.api.SignatureAlgorithmId;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelopeBuilder;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelopeBuilder;
 import eu.jsentinel.jcustos.logout.SubjectId;
 
 import java.nio.charset.StandardCharsets;
@@ -47,7 +47,7 @@ import java.time.Instant;
  * Deterministic, fully-valid envelope fixtures for the publisher tests — no
  * mocks, every value a real domain object, chosen so log lines can be pinned
  * as literals. (The events testkit is not on this module's test classpath —
- * it depends on jSentinel-events, so the fixtures live module-locally.)
+ * it depends on jCustos-events, so the fixtures live module-locally.)
  */
 final class PublisherFixtures {
 
@@ -60,8 +60,8 @@ final class PublisherFixtures {
    * @return a builder with every mandatory field populated deterministically
    *     and a valid optional {@code causationId}
    */
-  static SignedJSentinelEventEnvelopeBuilder validBuilder() {
-    return SignedJSentinelEventEnvelopeBuilder.create()
+  static SignedJCustosEventEnvelopeBuilder validBuilder() {
+    return SignedJCustosEventEnvelopeBuilder.create()
         .envelopeId(EventEnvelopeId.of("env-1"))
         .eventId(EventId.of("evt-1"))
         .eventType(EventType.of("LoginSucceeded"))

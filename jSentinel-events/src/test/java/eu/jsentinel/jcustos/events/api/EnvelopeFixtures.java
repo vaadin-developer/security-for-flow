@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.api;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -48,8 +48,8 @@ final class EnvelopeFixtures {
    * @return a builder with every mandatory field populated and a valid
    *     optional {@code causationId}
    */
-  static SignedJSentinelEventEnvelopeBuilder validBuilder() {
-    return SignedJSentinelEventEnvelopeBuilder.create()
+  static SignedJCustosEventEnvelopeBuilder validBuilder() {
+    return SignedJCustosEventEnvelopeBuilder.create()
         .envelopeId(EventEnvelopeId.of("env-1"))
         .eventId(EventId.of("evt-1"))
         .eventType(EventType.of("LoginSucceeded"))

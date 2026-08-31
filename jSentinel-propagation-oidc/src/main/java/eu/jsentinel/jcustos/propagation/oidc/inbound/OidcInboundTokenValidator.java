@@ -1,7 +1,7 @@
 package eu.jsentinel.jcustos.propagation.oidc.inbound;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.credential.propagation.OidcAccessToken;
 
 import java.util.Optional;
@@ -12,15 +12,15 @@ import java.util.Optional;
  * validation result.
  *
  * <p>The validator is resolved at runtime via
- * {@link JSentinelServiceResolver#findJwtValidator()} — typically installed by a
+ * {@link JCustosServiceResolver#findJwtValidator()} — typically installed by a
  * {@code .jwt(...)} bootstrap. This module therefore gains inbound validation
- * <strong>without</strong> a compile dependency on {@code jSentinel-jwt} and
+ * <strong>without</strong> a compile dependency on {@code jCustos-jwt} and
  * without any JOSE library on its classpath (its enforcer ban stays intact). If
  * no validator is registered, validation returns empty.
  *
  * @since 00.76.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class OidcInboundTokenValidator {
 
   /**
@@ -32,7 +32,7 @@ public final class OidcInboundTokenValidator {
     if (rawToken == null || rawToken.isBlank()) {
       return Optional.empty();
     }
-    return JSentinelServiceResolver.findJwtValidator()
+    return JCustosServiceResolver.findJwtValidator()
         .flatMap(validator -> validator.validate(rawToken).toOptional())
         .map(validated -> OidcAccessToken.fromValidated(rawToken, validated));
   }

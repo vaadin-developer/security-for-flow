@@ -14,7 +14,7 @@
  * </ul>
  *
  * <p>Every public type in this package is annotated
- * {@link eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi}.
+ * {@link eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi}.
  * V00.74 ships the surface; stable-API promotion is staged for V00.76 after
  * at least one real demo adoption.
  *

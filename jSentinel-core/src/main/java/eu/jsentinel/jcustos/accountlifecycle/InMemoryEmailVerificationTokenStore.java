@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.accountlifecycle;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.logout.SubjectId;
 
@@ -30,7 +30,7 @@ import static java.util.Objects.requireNonNull;
  * In-memory {@link EmailVerificationTokenStore} backed by a
  * {@link ConcurrentHashMap} keyed on the token hash.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class InMemoryEmailVerificationTokenStore
     implements EmailVerificationTokenStore {
 

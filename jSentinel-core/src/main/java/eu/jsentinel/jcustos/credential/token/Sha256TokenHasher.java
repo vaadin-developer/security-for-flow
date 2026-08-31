@@ -22,7 +22,7 @@
  */
 package eu.jsentinel.jcustos.credential.token;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -37,7 +37,7 @@ import java.util.HexFormat;
  *
  * @since 00.75.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class Sha256TokenHasher implements TokenHasher {
 
   @Override

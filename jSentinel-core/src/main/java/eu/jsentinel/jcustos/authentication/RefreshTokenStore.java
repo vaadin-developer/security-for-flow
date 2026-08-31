@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authentication;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.logout.SubjectId;
 
@@ -36,7 +36,7 @@ import java.util.Optional;
  *
  * <p>Implementations must be thread-safe.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface RefreshTokenStore {
 
   /**

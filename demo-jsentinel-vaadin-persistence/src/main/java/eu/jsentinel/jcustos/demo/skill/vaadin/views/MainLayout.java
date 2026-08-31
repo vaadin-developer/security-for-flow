@@ -62,7 +62,7 @@ public class MainLayout extends AppLayout implements HasLogger, BeforeEnterObser
   private final Div authActionSlot = new Div();
 
   public MainLayout() {
-    Span appTitle = new Span("jSentinel Vaadin Demo");
+    Span appTitle = new Span("jCustos Vaadin Demo");
     appTitle.getStyle().set("font-weight", "600");
 
     authActionSlot.add(buildAuthActionButton());

@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.webhook;
 
 /*-
  * #%L
- * jSentinel Events — Webhook exporter
+ * jCustos Events — Webhook exporter
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -37,7 +37,7 @@ import java.util.List;
 /**
  * Hand-written SLF4J {@link org.slf4j.Logger} test double (no mock framework)
  * recording the final, placeholder-substituted message of every logging call.
- * Module-local copy of the jSentinel-events seam-test double — used to pin
+ * Module-local copy of the jCustos-events seam-test double — used to pin
  * the scrubbed WARN lines of {@link WebhookEventPublisher}.
  */
 class RecordingSlf4jLogger extends AbstractLogger {

@@ -10,7 +10,7 @@ import eu.jsentinel.jcustos.session.SessionStore;
  *
  * <p>Demo-only: in-memory, dropped on JVM exit. Swap in
  * {@code EclipseStoreSessionStore} (from
- * {@code jSentinel-persistence-eclipsestore}) for a persistent
+ * {@code jCustos-persistence-eclipsestore}) for a persistent
  * backend.
  */
 public final class SessionStoreProvider {

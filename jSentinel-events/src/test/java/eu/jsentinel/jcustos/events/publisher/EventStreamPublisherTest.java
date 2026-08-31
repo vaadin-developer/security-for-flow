@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.publisher;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -26,7 +26,7 @@ package eu.jsentinel.jcustos.events.publisher;
  */
 
 import eu.jsentinel.jcustos.events.api.EventEnvelopeId;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -45,9 +45,9 @@ class EventStreamPublisherTest {
 
   /** Real Flow.Subscriber collecting deliveries with unbounded demand — no mocks. */
   private static final class CollectingSubscriber
-      implements Flow.Subscriber<SignedJSentinelEventEnvelope> {
+      implements Flow.Subscriber<SignedJCustosEventEnvelope> {
 
-    final List<SignedJSentinelEventEnvelope> received = new CopyOnWriteArrayList<>();
+    final List<SignedJCustosEventEnvelope> received = new CopyOnWriteArrayList<>();
     final AtomicBoolean completed = new AtomicBoolean();
 
     @Override
@@ -56,7 +56,7 @@ class EventStreamPublisherTest {
     }
 
     @Override
-    public void onNext(SignedJSentinelEventEnvelope item) {
+    public void onNext(SignedJCustosEventEnvelope item) {
       received.add(item);
     }
 
@@ -73,9 +73,9 @@ class EventStreamPublisherTest {
 
   /** Subscriber that never requests, so the per-subscriber buffer fills up. */
   private static final class StalledSubscriber
-      implements Flow.Subscriber<SignedJSentinelEventEnvelope> {
+      implements Flow.Subscriber<SignedJCustosEventEnvelope> {
 
-    final List<SignedJSentinelEventEnvelope> received = new CopyOnWriteArrayList<>();
+    final List<SignedJCustosEventEnvelope> received = new CopyOnWriteArrayList<>();
 
     @Override
     public void onSubscribe(Flow.Subscription subscription) {
@@ -83,7 +83,7 @@ class EventStreamPublisherTest {
     }
 
     @Override
-    public void onNext(SignedJSentinelEventEnvelope item) {
+    public void onNext(SignedJCustosEventEnvelope item) {
       received.add(item);
     }
 
@@ -97,7 +97,7 @@ class EventStreamPublisherTest {
     }
   }
 
-  private static SignedJSentinelEventEnvelope envelope(String id) {
+  private static SignedJCustosEventEnvelope envelope(String id) {
     return PublisherFixtures.validBuilder().envelopeId(EventEnvelopeId.of(id)).build();
   }
 
@@ -110,8 +110,8 @@ class EventStreamPublisherTest {
       publisher.subscribe(subscriber);
       assertEquals(1, publisher.subscriberCount());
 
-      SignedJSentinelEventEnvelope first = envelope("env-1");
-      SignedJSentinelEventEnvelope second = envelope("env-2");
+      SignedJCustosEventEnvelope first = envelope("env-1");
+      SignedJCustosEventEnvelope second = envelope("env-2");
       publisher.onEnvelope(first);
       publisher.onEnvelope(second);
 

@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Test fixture (registered via {@code META-INF/services}) whose constructor
  * records each instantiation. Lets a test prove that
- * {@link JSentinelDiagnostics#inspect()} enumerates provider <em>types</em>
+ * {@link JCustosDiagnostics#inspect()} enumerates provider <em>types</em>
  * without constructing them (R030). {@link AuthorizationEvaluator} is chosen
  * because no diagnostic rule depends on its presence/absence, so registering
  * one does not perturb the other diagnostics tests.

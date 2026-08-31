@@ -5,7 +5,7 @@ import java.util.Optional;
 /**
  * Holds the last non-secret OIDC RP configuration snapshot recorded by
  * {@code .oidc(...)} (V00.78), so {@link OidcDiagnosticContributor} can surface
- * configuration risks in {@code JSentinelDiagnostics.inspect()}. Boolean flags
+ * configuration risks in {@code JCustosDiagnostics.inspect()}. Boolean flags
  * only — never an issuer, client id or secret.
  */
 public final class OidcDiagnosticState {

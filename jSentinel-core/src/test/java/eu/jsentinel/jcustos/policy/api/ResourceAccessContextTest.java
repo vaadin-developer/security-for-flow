@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.policy.api;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 import org.junit.jupiter.api.DisplayName;
@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("ResourceAccessContext")
 class ResourceAccessContextTest {
 
-  private static final JSentinelSubject ALICE = new JSentinelSubject(
+  private static final JCustosSubject ALICE = new JCustosSubject(
       "alice", "Alice", Set.of(), Set.of());
 
   private static AccessContext sampleAccessContext() {

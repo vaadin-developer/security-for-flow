@@ -10,7 +10,7 @@ import eu.jsentinel.jcustos.demo.skill.vaadin.security.model.User;
  * {@link SubjectId} key. Required for Phase-4c drift detection: the
  * {@code LoginView} needs to derive a stable {@code SubjectId} from
  * the just-authenticated subject to capture a
- * {@code JSentinelVersion} snapshot, and the
+ * {@code JCustosVersion} snapshot, and the
  * {@code VersionBumper} needs the same mapping to increment that
  * key on role changes.
  *

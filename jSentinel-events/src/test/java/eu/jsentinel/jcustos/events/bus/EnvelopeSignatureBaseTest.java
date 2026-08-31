@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.bus;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,7 +27,7 @@ package eu.jsentinel.jcustos.events.bus;
 
 import eu.jsentinel.jcustos.events.api.CausationId;
 import eu.jsentinel.jcustos.events.api.CorrelationId;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -44,8 +44,8 @@ class EnvelopeSignatureBaseTest {
   @DisplayName("each field is length-prefixed (key=<bytes>:value)")
   void framingIsLengthPrefixed() {
     BusFixtures fx = new BusFixtures();
-    SignedJSentinelEventEnvelope base = fx.publishPipeline().toEnvelope(BusFixtures.event());
-    SignedJSentinelEventEnvelope env = BusFixtures.rebuild(base)
+    SignedJCustosEventEnvelope base = fx.publishPipeline().toEnvelope(BusFixtures.event());
+    SignedJCustosEventEnvelope env = BusFixtures.rebuild(base)
         .correlationId(CorrelationId.of("ab")).build();
 
     String wire = new String(EnvelopeSignatureBase.compute(env), StandardCharsets.UTF_8);
@@ -59,14 +59,14 @@ class EnvelopeSignatureBaseTest {
   @DisplayName("a separator-containing value cannot reframe into a neighbouring field")
   void separatorInValueDoesNotCollide() {
     BusFixtures fx = new BusFixtures();
-    SignedJSentinelEventEnvelope base = fx.publishPipeline().toEnvelope(BusFixtures.event());
+    SignedJCustosEventEnvelope base = fx.publishPipeline().toEnvelope(BusFixtures.event());
 
     // The id types only reject blank values — a newline + '=' IS accepted, so
     // this is the exact shape the old framing's unenforced invariant assumed away.
-    SignedJSentinelEventEnvelope a = BusFixtures.rebuild(base)
+    SignedJCustosEventEnvelope a = BusFixtures.rebuild(base)
         .correlationId(CorrelationId.of("a"))
         .causationId(CausationId.of("b")).build();
-    SignedJSentinelEventEnvelope b = BusFixtures.rebuild(base)
+    SignedJCustosEventEnvelope b = BusFixtures.rebuild(base)
         .correlationId(CorrelationId.of("a\ncausationId=b"))
         .causationId(CausationId.of("b")).build();
 

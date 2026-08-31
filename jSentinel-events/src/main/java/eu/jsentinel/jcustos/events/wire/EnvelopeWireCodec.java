@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.wire;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,7 +27,7 @@ package eu.jsentinel.jcustos.events.wire;
 
 import com.svenruppert.functional.result.Result;
 import com.svenruppert.functional.result.functions.CheckedSupplier;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.CausationId;
 import eu.jsentinel.jcustos.events.api.CorrelationId;
@@ -40,8 +40,8 @@ import eu.jsentinel.jcustos.events.api.KeyId;
 import eu.jsentinel.jcustos.events.api.PayloadContentType;
 import eu.jsentinel.jcustos.events.api.PayloadHashAlgorithm;
 import eu.jsentinel.jcustos.events.api.SignatureAlgorithmId;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelopeBuilder;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelopeBuilder;
 import eu.jsentinel.jcustos.logout.SubjectId;
 
 import java.time.Instant;
@@ -50,19 +50,19 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Serializes a {@link SignedJSentinelEventEnvelope} to and from a flat JSON
+ * Serializes a {@link SignedJCustosEventEnvelope} to and from a flat JSON
  * object for REST/SSE transport (Konzept §111, §939). Binary fields
  * ({@code canonicalPayload}, {@code signature}) are Base64-encoded; the
  * {@code sequence} is a JSON number; every other field is a string.
  *
  * <p>Moved unchanged from {@code eu.jsentinel.jcustos.events.rest}
  * (present since 00.75.00) so transport-independent consumers can encode
- * without a REST dependency; {@link #encodeMetadata(SignedJSentinelEventEnvelope)}
+ * without a REST dependency; {@link #encodeMetadata(SignedJCustosEventEnvelope)}
  * is the V00.80.00 addition.
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class EnvelopeWireCodec {
 
   private static final Base64.Encoder ENCODER = Base64.getEncoder();
@@ -93,7 +93,7 @@ public final class EnvelopeWireCodec {
    * @param envelope the envelope
    * @return its JSON wire form
    */
-  public String encode(SignedJSentinelEventEnvelope envelope) {
+  public String encode(SignedJCustosEventEnvelope envelope) {
     Map<String, Object> f = metadataFields(envelope);
     f.put(F_CANONICAL_PAYLOAD, ENCODER.encodeToString(envelope.canonicalPayload()));
     f.put(F_SIGNATURE, ENCODER.encodeToString(envelope.signature()));
@@ -102,7 +102,7 @@ public final class EnvelopeWireCodec {
 
   /**
    * Secret-free metadata projection for logging / SIEM-style consumers: the
-   * same field set as {@link #encode(SignedJSentinelEventEnvelope)} minus
+   * same field set as {@link #encode(SignedJCustosEventEnvelope)} minus
    * {@code canonicalPayload} and {@code signature} (the
    * {@code canonicalPayloadHash} is kept). Not decodable back into an
    * envelope — it is a one-way projection.
@@ -111,11 +111,11 @@ public final class EnvelopeWireCodec {
    * @return the metadata-only JSON form
    * @since 00.80.00
    */
-  public String encodeMetadata(SignedJSentinelEventEnvelope envelope) {
+  public String encodeMetadata(SignedJCustosEventEnvelope envelope) {
     return WireJson.writeObject(metadataFields(envelope));
   }
 
-  private static Map<String, Object> metadataFields(SignedJSentinelEventEnvelope envelope) {
+  private static Map<String, Object> metadataFields(SignedJCustosEventEnvelope envelope) {
     Map<String, Object> f = new LinkedHashMap<>();
     f.put(F_ENVELOPE_ID, envelope.envelopeId().value());
     f.put(F_EVENT_ID, envelope.eventId().value());
@@ -148,8 +148,8 @@ public final class EnvelopeWireCodec {
    * @return the decoded envelope on success, or a short error description on
    *     malformed / incomplete input
    */
-  public Result<SignedJSentinelEventEnvelope, String> decode(String json) {
-    CheckedSupplier<SignedJSentinelEventEnvelope> step = () -> decodeOrThrow(json);
+  public Result<SignedJCustosEventEnvelope, String> decode(String json) {
+    CheckedSupplier<SignedJCustosEventEnvelope> step = () -> decodeOrThrow(json);
     return step.get().mapError(t -> scrub(t.getClass().getSimpleName()
         + (t.getMessage() == null ? "" : ": " + t.getMessage())));
   }
@@ -168,9 +168,9 @@ public final class EnvelopeWireCodec {
     return sb.toString();
   }
 
-  private SignedJSentinelEventEnvelope decodeOrThrow(String json) {
+  private SignedJCustosEventEnvelope decodeOrThrow(String json) {
     Map<String, Object> f = WireJson.parseObject(json);
-    SignedJSentinelEventEnvelopeBuilder builder = SignedJSentinelEventEnvelopeBuilder.create()
+    SignedJCustosEventEnvelopeBuilder builder = SignedJCustosEventEnvelopeBuilder.create()
         .envelopeId(EventEnvelopeId.of(str(f, F_ENVELOPE_ID)))
         .eventId(EventId.of(str(f, F_EVENT_ID)))
         .eventType(EventType.of(str(f, F_EVENT_TYPE)))

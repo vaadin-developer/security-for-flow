@@ -16,14 +16,14 @@
  */
 package eu.jsentinel.jcustos.dx.standalone.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Objects;
 
 /**
  * Fluent sub-builder for {@link InteractiveLoginConfiguration}.
  * Created via
- * {@code StandaloneJSentinelBootstrap.interactiveLogin(consumer)}.
+ * {@code StandaloneJCustosBootstrap.interactiveLogin(consumer)}.
  *
  * <pre>
  *   StandaloneSecurity.bootstrap()
@@ -35,7 +35,7 @@ import java.util.Objects;
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class InteractiveLoginBuilder {
 
   private InteractiveLoginPrompt prompt;

@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.producer;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -47,7 +47,7 @@ class AllowListProducerPolicyTest {
   @Test
   @DisplayName("an allowed producer may publish an allowed type for any tenant")
   void allowedProducerAllowedType() {
-    JSentinelEventProducerPolicy policy = AllowListProducerPolicy.builder()
+    JCustosEventProducerPolicy policy = AllowListProducerPolicy.builder()
         .allow(REST, LOGIN)
         .allow(REST, ROLE)
         .build();
@@ -58,7 +58,7 @@ class AllowListProducerPolicyTest {
   @Test
   @DisplayName("an allowed producer is not implicitly allowed every type (default deny)")
   void notAllTypesAllowed() {
-    JSentinelEventProducerPolicy policy = AllowListProducerPolicy.builder()
+    JCustosEventProducerPolicy policy = AllowListProducerPolicy.builder()
         .allow(REST, LOGIN)
         .build();
     assertFalse(policy.mayPublish(REST, SESSION_REVOKED, TenantId.DEFAULT));
@@ -67,7 +67,7 @@ class AllowListProducerPolicyTest {
   @Test
   @DisplayName("an unlisted producer is rejected")
   void unlistedProducerRejected() {
-    JSentinelEventProducerPolicy policy = AllowListProducerPolicy.builder()
+    JCustosEventProducerPolicy policy = AllowListProducerPolicy.builder()
         .allow(REST, SESSION_REVOKED)
         .build();
     assertFalse(policy.mayPublish(VAADIN, SESSION_REVOKED, TenantId.DEFAULT));
@@ -76,7 +76,7 @@ class AllowListProducerPolicyTest {
   @Test
   @DisplayName("tenant-specific grants are honoured only for that tenant")
   void tenantSpecificGrant() {
-    JSentinelEventProducerPolicy policy = AllowListProducerPolicy.builder()
+    JCustosEventProducerPolicy policy = AllowListProducerPolicy.builder()
         .allowForTenant(VAADIN, LOGIN, ACME)
         .build();
     assertTrue(policy.mayPublish(VAADIN, LOGIN, ACME));

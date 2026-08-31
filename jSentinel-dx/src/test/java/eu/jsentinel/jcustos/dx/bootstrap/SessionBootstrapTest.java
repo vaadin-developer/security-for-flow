@@ -10,19 +10,19 @@
  */
 package eu.jsentinel.jcustos.dx.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectIdResolver;
-import eu.jsentinel.jcustos.dx.internal.AbstractJSentinelBootstrap;
-import eu.jsentinel.jcustos.dx.runtime.RegisteredJSentinelService;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapMode;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapWarning;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelRuntime;
+import eu.jsentinel.jcustos.dx.internal.AbstractJCustosBootstrap;
+import eu.jsentinel.jcustos.dx.runtime.RegisteredJCustosService;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapMode;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapWarning;
+import eu.jsentinel.jcustos.dx.runtime.JCustosRuntime;
 import eu.jsentinel.jcustos.dx.runtime.Severity;
 import eu.jsentinel.jcustos.logout.SubjectId;
 import eu.jsentinel.jcustos.session.InMemorySessionStore;
-import eu.jsentinel.jcustos.session.JSentinelVersion;
-import eu.jsentinel.jcustos.session.JSentinelVersionKey;
-import eu.jsentinel.jcustos.session.JSentinelVersionStore;
+import eu.jsentinel.jcustos.session.JCustosVersion;
+import eu.jsentinel.jcustos.session.JCustosVersionKey;
+import eu.jsentinel.jcustos.session.JCustosVersionStore;
 import eu.jsentinel.jcustos.session.SessionPolicy;
 import eu.jsentinel.jcustos.session.SessionStore;
 import eu.jsentinel.jcustos.session.TimeoutSessionPolicy;
@@ -55,18 +55,18 @@ class SessionBootstrapTest {
   @BeforeEach
   @AfterEach
   void resetResolver() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   @Test
   @DisplayName("timeout + storeBacked constructs and registers a TimeoutSessionPolicy")
   void timeoutAndStoreConstructsTimeoutPolicy() {
     SessionStore store = new InMemorySessionStore();
-    JSentinelRuntime runtime = new VaadinTestBootstrap()
+    JCustosRuntime runtime = new VaadinTestBootstrap()
         .sessions(s -> s.storeBacked(store).timeout(Duration.ofMinutes(15)))
         .install();
 
-    SessionPolicy<?> policy = JSentinelServiceResolver.findSessionPolicy().orElseThrow();
+    SessionPolicy<?> policy = JCustosServiceResolver.findSessionPolicy().orElseThrow();
     assertInstanceOf(TimeoutSessionPolicy.class, policy);
     assertTrue(runtime.services().stream()
         .anyMatch(s -> SessionPolicy.class.equals(s.spi())));
@@ -82,30 +82,30 @@ class SessionBootstrapTest {
     new VaadinTestBootstrap()
         .sessions(s -> s.policy(custom).timeout(Duration.ofHours(1)))
         .install();
-    SessionPolicy<?> registered = JSentinelServiceResolver.findSessionPolicy().orElseThrow();
+    SessionPolicy<?> registered = JCustosServiceResolver.findSessionPolicy().orElseThrow();
     assertSame(custom, registered, "custom policy must not be wrapped or replaced");
   }
 
   @Test
   @DisplayName(".securityVersion(...) + .subjectIdResolver(...) register both via resolver")
   void securityVersionAndSubjectIdResolverRegister() {
-    JSentinelVersionStore vstore = new RecordingVersionStore();
+    JCustosVersionStore vstore = new RecordingVersionStore();
     SubjectIdResolver<String> resolver = subject -> SubjectId.of(subject);
     new VaadinTestBootstrap()
         .sessions(s -> s.securityVersion(vstore).subjectIdResolver(resolver))
         .install();
-    assertSame(vstore, JSentinelServiceResolver.findJSentinelVersionStore().orElseThrow());
-    Optional<SubjectIdResolver<Object>> found = JSentinelServiceResolver.findSubjectIdResolver();
+    assertSame(vstore, JCustosServiceResolver.findJCustosVersionStore().orElseThrow());
+    Optional<SubjectIdResolver<Object>> found = JCustosServiceResolver.findSubjectIdResolver();
     assertTrue(found.isPresent());
   }
 
   @Test
   @DisplayName("STRICT timeout without store throws sessions/missing-store")
   void strictTimeoutWithoutStoreThrows() {
-    JSentinelBootstrapException ex = assertThrows(
-        JSentinelBootstrapException.class,
+    JCustosBootstrapException ex = assertThrows(
+        JCustosBootstrapException.class,
         () -> new VaadinTestBootstrap()
-            .mode(JSentinelBootstrapMode.STRICT)
+            .mode(JCustosBootstrapMode.STRICT)
             .sessions(s -> s.timeout(Duration.ofMinutes(5)))
             .install());
     assertTrue(ex.warnings().stream()
@@ -115,10 +115,10 @@ class SessionBootstrapTest {
   @Test
   @DisplayName("STRICT invalid timeout (zero) throws sessions/invalid-timeout")
   void strictInvalidTimeoutThrows() {
-    JSentinelBootstrapException ex = assertThrows(
-        JSentinelBootstrapException.class,
+    JCustosBootstrapException ex = assertThrows(
+        JCustosBootstrapException.class,
         () -> new VaadinTestBootstrap()
-            .mode(JSentinelBootstrapMode.STRICT)
+            .mode(JCustosBootstrapMode.STRICT)
             .sessions(s -> s.storeBacked(new InMemorySessionStore()).timeout(Duration.ZERO))
             .install());
     assertTrue(ex.warnings().stream()
@@ -128,10 +128,10 @@ class SessionBootstrapTest {
   @Test
   @DisplayName("BL06: STRICT store-backed sessions without any lifetime enforcement throw sessions/no-timeout-policy")
   void strictStoreWithoutLifetimeThrows() {
-    JSentinelBootstrapException ex = assertThrows(
-        JSentinelBootstrapException.class,
+    JCustosBootstrapException ex = assertThrows(
+        JCustosBootstrapException.class,
         () -> new VaadinTestBootstrap()
-            .mode(JSentinelBootstrapMode.STRICT)
+            .mode(JCustosBootstrapMode.STRICT)
             .sessions(s -> s.storeBacked(new InMemorySessionStore()))
             .install());
     assertTrue(ex.warnings().stream()
@@ -151,10 +151,10 @@ class SessionBootstrapTest {
   @Test
   @DisplayName("BL06: a configured timeout silences sessions/no-timeout-policy")
   void configuredTimeoutSilencesTheFinding() {
-    JSentinelBootstrapException ex = assertThrows(
-        JSentinelBootstrapException.class,
+    JCustosBootstrapException ex = assertThrows(
+        JCustosBootstrapException.class,
         () -> new VaadinTestBootstrap()
-            .mode(JSentinelBootstrapMode.STRICT)
+            .mode(JCustosBootstrapMode.STRICT)
             .sessions(s -> s.storeBacked(new InMemorySessionStore()).timeout(Duration.ZERO))
             .install());
     // invalid-timeout still fires, but never the no-timeout-policy code
@@ -164,11 +164,11 @@ class SessionBootstrapTest {
 
   @Test
   @DisplayName("STRICT securityVersion without subjectIdResolver throws security-version-without-subject-id-resolver")
-  void strictJSentinelVersionWithoutResolverThrows() {
-    JSentinelBootstrapException ex = assertThrows(
-        JSentinelBootstrapException.class,
+  void strictJCustosVersionWithoutResolverThrows() {
+    JCustosBootstrapException ex = assertThrows(
+        JCustosBootstrapException.class,
         () -> new VaadinTestBootstrap()
-            .mode(JSentinelBootstrapMode.STRICT)
+            .mode(JCustosBootstrapMode.STRICT)
             .sessions(s -> s.securityVersion(new RecordingVersionStore()))
             .install());
     assertTrue(ex.warnings().stream()
@@ -178,31 +178,31 @@ class SessionBootstrapTest {
   @Test
   @DisplayName("standalone .sessions(...) records INFO standalone/sessions-not-applicable")
   void standaloneSessionsRecordsInfo() {
-    JSentinelRuntime runtime = new StandaloneTestBootstrap()
+    JCustosRuntime runtime = new StandaloneTestBootstrap()
         .sessions(s -> s.storeBacked(new InMemorySessionStore()))
         .install();
     assertTrue(runtime.warnings().stream()
         .anyMatch(w -> "standalone/sessions-not-applicable".equals(w.code())
             && w.severity() == Severity.INFO));
     // resolver must not be touched
-    assertFalse(JSentinelServiceResolver.findSessionPolicy().isPresent());
+    assertFalse(JCustosServiceResolver.findSessionPolicy().isPresent());
   }
 
   @Test
   @DisplayName("REST .storeBacked(...) records INFO rest/session-store-unused but still wires policy/version")
   void restStoreBackedUnusedButOthersWired() {
     SessionStore store = new InMemorySessionStore();
-    JSentinelVersionStore vstore = new RecordingVersionStore();
+    JCustosVersionStore vstore = new RecordingVersionStore();
     SubjectIdResolver<String> resolver = s -> SubjectId.of(s);
-    JSentinelRuntime runtime = new RestTestBootstrap()
+    JCustosRuntime runtime = new RestTestBootstrap()
         .sessions(s -> s.storeBacked(store).securityVersion(vstore).subjectIdResolver(resolver)
             .timeout(Duration.ofMinutes(10)))
         .install();
     assertTrue(runtime.warnings().stream()
         .anyMatch(w -> "rest/session-store-unused".equals(w.code())
             && w.severity() == Severity.INFO));
-    assertTrue(JSentinelServiceResolver.findSessionPolicy().isPresent(),
-        "REST still wires SessionPolicy/JSentinelVersion/SubjectIdResolver");
+    assertTrue(JCustosServiceResolver.findSessionPolicy().isPresent(),
+        "REST still wires SessionPolicy/JCustosVersion/SubjectIdResolver");
   }
 
   // ── adapter test doubles ─────────────────────────────────────────
@@ -214,23 +214,23 @@ class SessionBootstrapTest {
    * is the only thing that varies across them.
    */
   private abstract static class BaseTestBootstrap<B extends BaseTestBootstrap<B>>
-      extends AbstractJSentinelBootstrap<B> {
+      extends AbstractJCustosBootstrap<B> {
 
     abstract AdapterKind adapterKind();
 
     @Override
-    public JSentinelRuntime install() {
-      List<RegisteredJSentinelService> services = new ArrayList<>();
-      List<JSentinelBootstrapWarning> warnings = new ArrayList<>();
+    public JCustosRuntime install() {
+      List<RegisteredJCustosService> services = new ArrayList<>();
+      List<JCustosBootstrapWarning> warnings = new ArrayList<>();
       applyAuditConfiguration(services, warnings);
       applySessionConfiguration(adapterKind(), services, warnings);
-      JSentinelBootstrapMode mode = state.mode();
-      boolean strictError = mode == JSentinelBootstrapMode.STRICT
+      JCustosBootstrapMode mode = state.mode();
+      boolean strictError = mode == JCustosBootstrapMode.STRICT
           && warnings.stream().anyMatch(w -> w.severity() == Severity.ERROR);
       if (strictError) {
-        throw new JSentinelBootstrapException(warnings);
+        throw new JCustosBootstrapException(warnings);
       }
-      return new JSentinelRuntime(services, warnings, mode);
+      return new JCustosRuntime(services, warnings, mode);
     }
   }
 
@@ -246,16 +246,16 @@ class SessionBootstrapTest {
     @Override AdapterKind adapterKind() { return AdapterKind.STANDALONE; }
   }
 
-  /** Empty JSentinelVersionStore stub — just needs to be a real instance. */
-  private static final class RecordingVersionStore implements JSentinelVersionStore {
-    private JSentinelVersion version = JSentinelVersion.INITIAL;
-    @Override public JSentinelVersion current(JSentinelVersionKey key) { return version; }
-    @Override public JSentinelVersion increment(JSentinelVersionKey key) {
+  /** Empty JCustosVersionStore stub — just needs to be a real instance. */
+  private static final class RecordingVersionStore implements JCustosVersionStore {
+    private JCustosVersion version = JCustosVersion.INITIAL;
+    @Override public JCustosVersion current(JCustosVersionKey key) { return version; }
+    @Override public JCustosVersion increment(JCustosVersionKey key) {
       version = version.next();
       return version;
     }
-    @Override public void reset(JSentinelVersionKey key) {
-      version = JSentinelVersion.INITIAL;
+    @Override public void reset(JCustosVersionKey key) {
+      version = JCustosVersion.INITIAL;
     }
   }
 }

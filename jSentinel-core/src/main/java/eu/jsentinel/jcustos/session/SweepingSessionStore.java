@@ -18,9 +18,9 @@ package eu.jsentinel.jcustos.session;
 
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.SessionExpired;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.logout.SubjectId;
 
@@ -71,7 +71,7 @@ import java.util.Optional;
  *
  * @since 00.81.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class SweepingSessionStore implements SessionStore {
 
   /** Default retention for terminal records: 30 days. */
@@ -81,7 +81,7 @@ public final class SweepingSessionStore implements SessionStore {
   private final SessionPolicy<?> policy;
   private final Duration terminalRetention;
   private final Clock clock;
-  private final JSentinelAuditService auditService;
+  private final JCustosAuditService auditService;
 
   /**
    * Decorates {@code delegate} with the {@link #DEFAULT_TERMINAL_RETENTION},
@@ -102,11 +102,11 @@ public final class SweepingSessionStore implements SessionStore {
    *                          it; must be positive
    * @param clock             time source — fixed clocks make testing deterministic
    * @param auditService      audit sink, or {@code null} to resolve from
-   *                          {@link JSentinelServiceResolver} on each event
+   *                          {@link JCustosServiceResolver} on each event
    */
   public SweepingSessionStore(SessionStore delegate, SessionPolicy<?> policy,
                               Duration terminalRetention, Clock clock,
-                              JSentinelAuditService auditService) {
+                              JCustosAuditService auditService) {
     this.delegate = Objects.requireNonNull(delegate, "delegate");
     this.policy = Objects.requireNonNull(policy, "policy");
     Objects.requireNonNull(terminalRetention, "terminalRetention");
@@ -185,9 +185,9 @@ public final class SweepingSessionStore implements SessionStore {
   }
 
   private void publish(AuditEvent event) {
-    JSentinelAuditService sink = auditService != null
+    JCustosAuditService sink = auditService != null
         ? auditService
-        : JSentinelServiceResolver.securityAuditService();
+        : JCustosServiceResolver.securityAuditService();
     try {
       sink.publish(event);
     } catch (RuntimeException auditFailure) {

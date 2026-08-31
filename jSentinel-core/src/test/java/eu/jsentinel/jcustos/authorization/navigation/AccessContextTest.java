@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authorization.navigation;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +33,7 @@ class AccessContextTest {
   @Test
   @DisplayName("stores neutral access metadata")
   void storesNeutralMetadata() {
-    JSentinelSubject subject = new JSentinelSubject("u1", "User", Set.of(), Set.of());
+    JCustosSubject subject = new JCustosSubject("u1", "User", Set.of(), Set.of());
 
     AccessContext context = new AccessContext(
         Optional.of(subject),

@@ -32,12 +32,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * {@code security-processor} annotation processor generates
  * {@code MemberDirectorySecured} as a subclass of
  * {@link MemberDirectory}, and every guarded method calls into
- * {@code JSentinelEnforcer} before delegating to {@code super}. If this
+ * {@code JCustosEnforcer} before delegating to {@code super}. If this
  * test class even compiles, the processor ran and produced the
  * subclass; the test bodies verify that the inserted enforcer calls
  * actually decide accesses against the bound subject.
  *
- * <p>Sibling test: {@link DemoStandaloneJSentinelTest} drives the
+ * <p>Sibling test: {@link DemoStandaloneJCustosTest} drives the
  * runtime / dynamic-proxy path on {@link LibraryService}.
  */
 @DisplayName("Demo standalone — compile-time @Secured wrapper for MemberDirectory")

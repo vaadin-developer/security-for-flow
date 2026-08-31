@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.codec;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,7 +27,7 @@ package eu.jsentinel.jcustos.events.codec;
 
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventMetadata;
-import eu.jsentinel.jcustos.events.api.JSentinelEventSeverity;
+import eu.jsentinel.jcustos.events.api.JCustosEventSeverity;
 import eu.jsentinel.jcustos.events.api.PayloadContentType;
 import eu.jsentinel.jcustos.events.types.LoginSucceededEvent;
 import eu.jsentinel.jcustos.events.types.SequenceViolationEvent;
@@ -54,7 +54,7 @@ class CanonicalJsonPayloadCodecTest {
     return new EventMetadata(
         eu.jsentinel.jcustos.events.api.EventId.of("evt-1"),
         TenantId.DEFAULT, SubjectId.of("alice"),
-        Instant.parse("2026-06-24T10:15:30Z"), JSentinelEventSeverity.INFO);
+        Instant.parse("2026-06-24T10:15:30Z"), JCustosEventSeverity.INFO);
   }
 
   @Test
@@ -66,7 +66,7 @@ class CanonicalJsonPayloadCodecTest {
   @Test
   @DisplayName("encoding is deterministic — identical payload, identical bytes")
   void deterministicBytes() {
-    CanonicalJSentinelEventPayload payload =
+    CanonicalJCustosEventPayload payload =
         canonicalizer.canonicalize(new LoginSucceededEvent(fixedMeta(), "password"));
     byte[] first = codec.encode(payload);
     byte[] second = codec.encode(payload);
@@ -76,9 +76,9 @@ class CanonicalJsonPayloadCodecTest {
   @Test
   @DisplayName("encode -> decode round-trips a payload")
   void roundTrip() {
-    CanonicalJSentinelEventPayload payload =
+    CanonicalJCustosEventPayload payload =
         canonicalizer.canonicalize(new SequenceViolationEvent(fixedMeta(), "p1", 4, 7));
-    CanonicalJSentinelEventPayload decoded = codec.decode(codec.encode(payload));
+    CanonicalJCustosEventPayload decoded = codec.decode(codec.encode(payload));
     assertEquals(payload, decoded);
     assertEquals("p1", decoded.attributes().get("producerId"));
     assertEquals("4", decoded.attributes().get("expected"));
@@ -89,7 +89,7 @@ class CanonicalJsonPayloadCodecTest {
   @Test
   @DisplayName("top-level and attribute keys are emitted in sorted order")
   void sortedKeys() {
-    CanonicalJSentinelEventPayload payload =
+    CanonicalJCustosEventPayload payload =
         canonicalizer.canonicalize(new SequenceViolationEvent(fixedMeta(), "p1", 4, 7));
     String json = new String(codec.encode(payload), StandardCharsets.UTF_8);
     // top-level: attributes < category < eventId < eventType < occurredAt < schemaVersion ...
@@ -106,10 +106,10 @@ class CanonicalJsonPayloadCodecTest {
   void escapingRoundTrip() {
     TreeMap<String, String> attrs = new TreeMap<>();
     attrs.put("reason", "line1\nline2\t\"quoted\" \\backslash\\");
-    CanonicalJSentinelEventPayload payload = new CanonicalJSentinelEventPayload(
-        CanonicalJSentinelEventPayload.SCHEMA_VERSION, "LoginFailed", "e1",
+    CanonicalJCustosEventPayload payload = new CanonicalJCustosEventPayload(
+        CanonicalJCustosEventPayload.SCHEMA_VERSION, "LoginFailed", "e1",
         "default", "alice", "2026-06-24T10:15:30Z", "ERROR", "AUTHENTICATION", attrs);
-    CanonicalJSentinelEventPayload decoded = codec.decode(codec.encode(payload));
+    CanonicalJCustosEventPayload decoded = codec.decode(codec.encode(payload));
     assertEquals("line1\nline2\t\"quoted\" \\backslash\\", decoded.attributes().get("reason"));
   }
 

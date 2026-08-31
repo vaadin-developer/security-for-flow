@@ -27,7 +27,7 @@ import eu.jsentinel.jcustos.authorization.api.AuthorizationDecision;
  * {@link DefaultRestErrorBodyStrategy}.
  *
  * <p>Selected via the
- * {@code RestJSentinelBootstrap.problemJsonErrors()} convenience
+ * {@code RestJCustosBootstrap.problemJsonErrors()} convenience
  * method, or by passing this instance to
  * {@code .errorBodies(...)} directly.
  *

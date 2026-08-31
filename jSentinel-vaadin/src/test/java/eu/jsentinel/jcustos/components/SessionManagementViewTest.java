@@ -19,7 +19,7 @@ package eu.jsentinel.jcustos.components;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.logout.SubjectId;
 import eu.jsentinel.jcustos.session.InMemorySessionStore;
-import eu.jsentinel.jcustos.session.JSentinelVersion;
+import eu.jsentinel.jcustos.session.JCustosVersion;
 import eu.jsentinel.jcustos.session.SessionId;
 import eu.jsentinel.jcustos.session.SessionRecord;
 import eu.jsentinel.jcustos.session.SessionStatus;
@@ -47,7 +47,7 @@ class SessionManagementViewTest {
                                          SessionStatus status) {
     return new SessionRecord(
         new SessionId(sid), subjectId, TenantId.DEFAULT,
-        T0, T0, JSentinelVersion.INITIAL, status);
+        T0, T0, JCustosVersion.INITIAL, status);
   }
 
   @Test

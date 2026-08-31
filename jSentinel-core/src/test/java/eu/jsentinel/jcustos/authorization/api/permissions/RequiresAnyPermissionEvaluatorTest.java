@@ -18,7 +18,7 @@ package eu.jsentinel.jcustos.authorization.api.permissions;
 
 import eu.jsentinel.jcustos.authorization.annotations.RequiresAnyPermission;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationDecision;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 class RequiresAnyPermissionEvaluatorTest {
 
-  private static AccessContext ctxWithSubject(JSentinelSubject subject) {
+  private static AccessContext ctxWithSubject(JCustosSubject subject) {
     return new AccessContext(
         Optional.of(subject), "rest-endpoint", "/x", "read", Map.of());
   }
@@ -43,11 +43,11 @@ class RequiresAnyPermissionEvaluatorTest {
         Optional.empty(), "rest-endpoint", "/x", "read", Map.of());
   }
 
-  private static JSentinelSubject subjectWith(String... permissions) {
+  private static JCustosSubject subjectWith(String... permissions) {
     Set<PermissionName> perms = java.util.Arrays.stream(permissions)
         .map(PermissionName::new)
         .collect(java.util.stream.Collectors.toUnmodifiableSet());
-    return new JSentinelSubject("u-1", "u-1", Set.of(), perms);
+    return new JCustosSubject("u-1", "u-1", Set.of(), perms);
   }
 
   private static RequiresAnyPermission annotationFor(String... values) {

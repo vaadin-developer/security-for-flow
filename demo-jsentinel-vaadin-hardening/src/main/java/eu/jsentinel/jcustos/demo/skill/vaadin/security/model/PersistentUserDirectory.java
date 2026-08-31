@@ -1,13 +1,13 @@
 package eu.jsentinel.jcustos.demo.skill.vaadin.security.model;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.audit.RoleAssigned;
 import eu.jsentinel.jcustos.audit.RoleRevoked;
 import eu.jsentinel.jcustos.audit.UserCreated;
 import eu.jsentinel.jcustos.audit.UserDeleted;
 import eu.jsentinel.jcustos.authentication.PasswordHasher;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.demo.skill.vaadin.security.roles.AuthorizationRole;
 
 import java.time.Clock;
@@ -174,7 +174,7 @@ public final class PersistentUserDirectory implements UserDirectory, HasLogger {
   /**
    * Pushes the current state to the persistence layer. Logs the
    * username inventory at {@code ERROR} before re-throwing so the
-   * jSentinel-Core's blanket
+   * jCustos-Core's blanket
    * {@code RuntimeException → InternalError("could not persist
    * administrator")} catch doesn't swallow all diagnostic info.
    */
@@ -209,7 +209,7 @@ public final class PersistentUserDirectory implements UserDirectory, HasLogger {
 
   private static void audit(eu.jsentinel.jcustos.audit.AuditEvent event) {
     try {
-      JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
+      JCustosAuditService sink = JCustosServiceResolver.securityAuditService();
       sink.publish(event);
     } catch (RuntimeException ignored) {
       // audit must never block user-management calls

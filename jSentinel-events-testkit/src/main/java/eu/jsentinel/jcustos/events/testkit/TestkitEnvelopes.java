@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.testkit;
 
 /*-
  * #%L
- * jSentinel Events — Contract testkit
+ * jCustos Events — Contract testkit
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,7 +25,7 @@ package eu.jsentinel.jcustos.events.testkit;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.CorrelationId;
 import eu.jsentinel.jcustos.events.api.EventEnvelopeId;
@@ -37,8 +37,8 @@ import eu.jsentinel.jcustos.events.api.KeyId;
 import eu.jsentinel.jcustos.events.api.PayloadContentType;
 import eu.jsentinel.jcustos.events.api.PayloadHashAlgorithm;
 import eu.jsentinel.jcustos.events.api.SignatureAlgorithmId;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelopeBuilder;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelopeBuilder;
 import eu.jsentinel.jcustos.logout.SubjectId;
 
 import java.nio.charset.StandardCharsets;
@@ -50,7 +50,7 @@ import java.time.Instant;
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class TestkitEnvelopes {
 
   private TestkitEnvelopes() {
@@ -65,7 +65,7 @@ public final class TestkitEnvelopes {
    * @param envelopeId the envelope id (and seed for derived ids)
    * @return a fully-populated envelope
    */
-  public static SignedJSentinelEventEnvelope envelope(String envelopeId) {
+  public static SignedJCustosEventEnvelope envelope(String envelopeId) {
     return envelope(envelopeId,
         ("{\"id\":\"" + envelopeId + "\"}").getBytes(StandardCharsets.UTF_8));
   }
@@ -80,9 +80,9 @@ public final class TestkitEnvelopes {
    * @return a fully-populated envelope
    * @since 00.80.00
    */
-  public static SignedJSentinelEventEnvelope envelope(String envelopeId,
+  public static SignedJCustosEventEnvelope envelope(String envelopeId,
       byte[] canonicalPayload) {
-    return SignedJSentinelEventEnvelopeBuilder.create()
+    return SignedJCustosEventEnvelopeBuilder.create()
         .envelopeId(EventEnvelopeId.of(envelopeId))
         .eventId(EventId.of("evt-" + envelopeId))
         .eventType(EventType.of("LoginSucceeded"))

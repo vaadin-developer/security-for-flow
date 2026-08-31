@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.keys;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,7 +25,7 @@ package eu.jsentinel.jcustos.events.keys;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.events.api.KeyId;
 import eu.jsentinel.jcustos.events.signature.SignatureAlgorithm;
 
@@ -39,8 +39,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * In-memory {@link JSentinelEventSigningKeyProvider} +
- * {@link JSentinelEventVerificationKeyResolver} (Konzept §98). The default
+ * In-memory {@link JCustosEventSigningKeyProvider} +
+ * {@link JCustosEventVerificationKeyResolver} (Konzept §98). The default
  * key-management implementation for local setups and tests: it generates the
  * current key pair with the configured {@link SignatureAlgorithm} and supports
  * rotation and revocation without an API break.
@@ -50,9 +50,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class InMemoryKeyManagement
-    implements JSentinelEventSigningKeyProvider, JSentinelEventVerificationKeyResolver {
+    implements JCustosEventSigningKeyProvider, JCustosEventVerificationKeyResolver {
 
   // R00: id and key pair live in ONE immutable holder behind a single volatile
   // reference, so a reader can never observe the new id paired with the old key

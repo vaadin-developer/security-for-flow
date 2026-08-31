@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.demo.rest.server;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.operations.OperationVisibilityService;
 import eu.jsentinel.jcustos.authorization.api.operations.SecuredOperationDescriptor;
 import eu.jsentinel.jcustos.authorization.api.operations.SecuredOperationRegistry;
@@ -68,7 +68,7 @@ public final class DemoOperationRegistry {
     return registry.all();
   }
 
-  public List<SecuredOperationDescriptor> visibleFor(JSentinelSubject subject) {
+  public List<SecuredOperationDescriptor> visibleFor(JCustosSubject subject) {
     return visibility.visibleFor(subject);
   }
 }

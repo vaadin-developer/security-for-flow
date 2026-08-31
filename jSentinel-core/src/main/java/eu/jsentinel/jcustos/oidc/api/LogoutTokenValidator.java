@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.oidc.api;
 
 import com.svenruppert.functional.result.Result;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 /**
  * Validates an OIDC Back-Channel Logout token (V00.79). Validates the JWT (signature,
@@ -27,7 +27,7 @@ import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
  *
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface LogoutTokenValidator {
 
   Result<BackChannelLogoutToken, LogoutTokenValidationError> validate(String compactLogoutToken);

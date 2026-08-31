@@ -25,14 +25,14 @@ import eu.jsentinel.jcustos.authentication.ApiKeyStore;
 import eu.jsentinel.jcustos.authentication.InMemoryApiKeyStore;
 import eu.jsentinel.jcustos.authentication.InMemoryRefreshTokenStore;
 import eu.jsentinel.jcustos.authentication.TokenService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptConfiguration;
 import eu.jsentinel.jcustos.credential.password.PasswordHashingService;
 import eu.jsentinel.jcustos.credential.password.PasswordHashingServices;
 import eu.jsentinel.jcustos.credential.token.Sha256TokenHasher;
 import eu.jsentinel.jcustos.dx.rest.bootstrap.RestSecurity;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapMode;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelRuntime;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapMode;
+import eu.jsentinel.jcustos.dx.runtime.JCustosRuntime;
 import eu.jsentinel.jcustos.ratelimiting.InMemoryRateLimitPolicy;
 import eu.jsentinel.jcustos.ratelimiting.InMemoryRateLimitStore;
 import eu.jsentinel.jcustos.ratelimiting.RateLimitPolicy;
@@ -65,11 +65,11 @@ import eu.jsentinel.jcustos.policy.impl.InMemoryPolicyRegistry;
 import eu.jsentinel.jcustos.policy.impl.InMemoryResourceResolverRegistry;
 import eu.jsentinel.jcustos.policy.spi.PolicyRegistry;
 import eu.jsentinel.jcustos.policy.spi.ResourceResolverRegistry;
-import eu.jsentinel.jcustos.rest.RestJSentinelVersionFilter;
+import eu.jsentinel.jcustos.rest.RestJCustosVersionFilter;
 import eu.jsentinel.jcustos.rest.RestSubjectResolver;
-import eu.jsentinel.jcustos.session.InMemoryJSentinelVersionStore;
-import eu.jsentinel.jcustos.session.JSentinelVersionEnforcer;
-import eu.jsentinel.jcustos.session.JSentinelVersionStore;
+import eu.jsentinel.jcustos.session.InMemoryJCustosVersionStore;
+import eu.jsentinel.jcustos.session.JCustosVersionEnforcer;
+import eu.jsentinel.jcustos.session.JCustosVersionStore;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
@@ -148,11 +148,11 @@ public final class DemoRestServer {
     Sha256TokenHasher apiKeyHasher = new Sha256TokenHasher();
     ApiKeyAuthenticationService apiKeyAuth = new ApiKeyAuthenticationService(
         apiKeyStore, apiKeyHasher,
-        JSentinelServiceResolver.securityAuditService());
+        JCustosServiceResolver.securityAuditService());
     DemoSubjectResolver resolver = new DemoSubjectResolver(
         tokens, mapping, apiKeyAuth);
     DemoOperationRegistry registry = new DemoOperationRegistry();
-    JSentinelVersionStore versionStore = new InMemoryJSentinelVersionStore();
+    JCustosVersionStore versionStore = new InMemoryJCustosVersionStore();
     // PasswordResetService requires a *deterministic* hasher so the
     // token-hash → record lookup actually matches. The SPI-resolved
     // PasswordHasher (PBKDF2 / Argon2id) is salted by design and would
@@ -160,7 +160,7 @@ public final class DemoRestServer {
     PasswordResetService passwordResetService = new PasswordResetService(
         new InMemoryPasswordResetTokenStore(),
         new Sha256TokenHasher(),
-        JSentinelServiceResolver.securityAuditService(),
+        JCustosServiceResolver.securityAuditService(),
         new LoggingNotificationSender());
     // V00.70 Phase-7c per-IP login rate limiting — 200 attempts per minute.
     // Sits ahead of the per-username brute-force window so distributed
@@ -173,7 +173,7 @@ public final class DemoRestServer {
     // smaller limit (see DemoLoginRateLimitTest).
     RateLimitPolicy loginRateLimit = new InMemoryRateLimitPolicy(
         new InMemoryRateLimitStore(),
-        JSentinelServiceResolver.securityAuditService(),
+        JCustosServiceResolver.securityAuditService(),
         200,
         Duration.ofMinutes(1));
     // V00.70 Phase-7b — rotating refresh tokens. Uses the same
@@ -182,7 +182,7 @@ public final class DemoRestServer {
     TokenService tokenService = new TokenService(
         new InMemoryRefreshTokenStore(),
         apiKeyHasher,
-        JSentinelServiceResolver.securityAuditService());
+        JCustosServiceResolver.securityAuditService());
     DemoHandlers handlers = new DemoHandlers(
         users, tokens, documents, registry, resolver, loginAttemptPolicy,
         versionStore, passwordResetService, loginRateLimit,
@@ -197,20 +197,20 @@ public final class DemoRestServer {
     PolicyRegistry policyRegistry = new InMemoryPolicyRegistry();
     ResourceResolverRegistry resourceRegistry = new InMemoryResourceResolverRegistry();
 
-    // V00.73 fluent bootstrap. Replaces the V00.71 JSentinelServiceResolver
+    // V00.73 fluent bootstrap. Replaces the V00.71 JCustosServiceResolver
     // direct-set calls for PolicyRegistry / ResourceResolverRegistry /
-    // JSentinelVersionStore and surfaces the V00.71 password-hashing pipeline.
+    // JCustosVersionStore and surfaces the V00.71 password-hashing pipeline.
     //
     // .audit(...) is intentionally NOT used here: ApiKeyAuthenticationService,
     // TokenService and the demo's PasswordResetService capture
-    // JSentinelServiceResolver.securityAuditService() at construction time
+    // JCustosServiceResolver.securityAuditService() at construction time
     // (lines above), so replacing the audit service at install() would
     // leave those references pointing at the previous instance. Demos
     // that have full control over construction order — like demo-vaadin
     // and demo-standalone — can use .audit(...) freely.
-    JSentinelRuntime runtime =
+    JCustosRuntime runtime =
         RestSecurity.bootstrap()
-            .mode(JSentinelBootstrapMode.DEVELOPMENT)
+            .mode(JCustosBootstrapMode.DEVELOPMENT)
             .subjectResolver(resolver)
             .credentials(c -> c.hashing(hashingService))
             .sessions(s -> s.securityVersion(versionStore))
@@ -222,9 +222,9 @@ public final class DemoRestServer {
             .install();
     HasLogger.staticLogger().info("{}", runtime.log());
 
-    JSentinelVersionEnforcer versionEnforcer = new JSentinelVersionEnforcer(
-        versionStore, JSentinelServiceResolver.securityAuditService());
-    RestJSentinelVersionFilter versionFilter = new RestJSentinelVersionFilter(
+    JCustosVersionEnforcer versionEnforcer = new JCustosVersionEnforcer(
+        versionStore, JCustosServiceResolver.securityAuditService());
+    RestJCustosVersionFilter versionFilter = new RestJCustosVersionFilter(
         resolver, versionEnforcer);
 
     SubjectClearingLogoutService<DemoUser> logoutService = new SubjectClearingLogoutService<>(
@@ -234,7 +234,7 @@ public final class DemoRestServer {
         tokens.revoke(sessionId);
       }
     });
-    JSentinelServiceResolver.setLogoutService(logoutService);
+    JCustosServiceResolver.setLogoutService(logoutService);
 
     DemoAdministratorAccountStore adminStore = new DemoAdministratorAccountStore(users);
     BootstrapStateService stateService = new BootstrapStateService(adminStore, bootstrapConfig.mode());
@@ -304,7 +304,7 @@ public final class DemoRestServer {
   public static void main(String[] args) throws IOException {
     int port = args.length > 0 ? Integer.parseInt(args[0]) : 8080;
     // V00.73: the RestSecurity.bootstrap() chain that prints the
-    // JSentinelRuntime diagnostic banner now lives inside start(...) —
+    // JCustosRuntime diagnostic banner now lives inside start(...) —
     // every demo entry point (main, tests) sees the same wiring.
     DemoRestServer server = start(port);
     System.out.println("Demo REST server running on http://localhost:" + server.port());

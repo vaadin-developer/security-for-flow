@@ -29,9 +29,9 @@ import static java.util.Objects.requireNonNull;
 /** Eclipse-Store-backed {@link RememberMeTokenStore}. */
 final class EclipseStoreRememberMeTokenStore implements RememberMeTokenStore {
 
-  private final EclipseStoreJSentinelStorage storage;
+  private final EclipseStoreJCustosStorage storage;
 
-  EclipseStoreRememberMeTokenStore(EclipseStoreJSentinelStorage storage) {
+  EclipseStoreRememberMeTokenStore(EclipseStoreJCustosStorage storage) {
     this.storage = storage;
   }
 

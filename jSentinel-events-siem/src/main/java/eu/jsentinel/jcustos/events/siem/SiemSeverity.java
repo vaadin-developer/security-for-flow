@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.siem;
 
 /*-
  * #%L
- * jSentinel Events — SIEM exporter
+ * jCustos Events — SIEM exporter
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,7 +25,7 @@ package eu.jsentinel.jcustos.events.siem;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.events.api.EventType;
 import eu.jsentinel.jcustos.events.types.DeadLetteredEvent;
 import eu.jsentinel.jcustos.events.types.EnvelopeRejectedEvent;
@@ -47,7 +47,7 @@ import java.util.Objects;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class SiemSeverity {
 
   /** A detected replay — the concept's critical verification failure. */

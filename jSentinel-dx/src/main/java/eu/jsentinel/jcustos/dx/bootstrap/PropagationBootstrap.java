@@ -10,14 +10,14 @@
  */
 package eu.jsentinel.jcustos.dx.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.credential.propagation.OutboundTokenStrategy;
 import eu.jsentinel.jcustos.credential.propagation.TokenCredentialStore;
 
 /**
  * V00.74 sub-builder for token-propagation wiring. Exposed via
  * {@code .propagation(...)} on
- * {@link CommonJSentinelBootstrap}; all three adapter facades
+ * {@link CommonJCustosBootstrap}; all three adapter facades
  * inherit it for free.
  *
  * <p>Composition rules (Konzept §10):
@@ -35,7 +35,7 @@ import eu.jsentinel.jcustos.credential.propagation.TokenCredentialStore;
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi("V00.74 token propagation; stable promotion staged for V00.76")
+@ExperimentalJCustosApi("V00.74 token propagation; stable promotion staged for V00.76")
 public interface PropagationBootstrap {
 
   /** Override the SPI-discovered adapter default store. */

@@ -25,7 +25,7 @@ import java.util.Objects;
 
 /**
  * A PKCE code verifier (RFC 7636, V00.77) — the high-entropy secret kept between
- * the authorization request and the token-endpoint code exchange. jSentinel uses
+ * the authorization request and the token-endpoint code exchange. jCustos uses
  * {@code S256} only.
  *
  * <p>{@link #generate()} draws 32 bytes from {@link SecureRandom} and base64url-

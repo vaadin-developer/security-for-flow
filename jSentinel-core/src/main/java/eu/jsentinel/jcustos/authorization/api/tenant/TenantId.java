@@ -19,10 +19,10 @@ package eu.jsentinel.jcustos.authorization.api.tenant;
 /**
  * Identifier for the tenant scope of a security decision.
  * <p>
- * jSentinel keeps multi-tenant support optional. Single-tenant
+ * jCustos keeps multi-tenant support optional. Single-tenant
  * applications never need to think about {@code TenantId}: every
  * tenant-aware key, record, or context that ships in
- * {@code jSentinel-core} carries {@link #DEFAULT} as a transparent
+ * {@code jCustos-core} carries {@link #DEFAULT} as a transparent
  * default, so existing single-tenant code keeps compiling and behaving
  * unchanged.
  *

@@ -1,10 +1,10 @@
 /*-
  * #%L
- * jSentinel Events — OpenTelemetry exporter
+ * jCustos Events — OpenTelemetry exporter
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -32,7 +32,7 @@
  *
  * <p>Signal choice: a security event is a discrete occurrence — a span would
  * fabricate duration and trace semantics it does not have, and metrics are
- * the {@code jSentinel-monitoring} bridge's territory. The Logs Bridge API
+ * the {@code jCustos-monitoring} bridge's territory. The Logs Bridge API
  * ships inside {@code opentelemetry-api}, so this module is
  * <strong>api-only at compile scope</strong> and noop-safe by construction:
  * with {@code LoggerProvider.noop()} every call is free and silent. Opt-in:

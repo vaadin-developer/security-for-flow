@@ -10,7 +10,7 @@
  */
 package eu.jsentinel.jcustos.propagation.oidc.strategy;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.credential.propagation.HeaderValue;
 import eu.jsentinel.jcustos.credential.propagation.OutboundCall;
 import eu.jsentinel.jcustos.credential.propagation.OutboundTokenStrategy;
@@ -39,7 +39,7 @@ import java.util.Optional;
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class ClientCredentialsStrategy implements OutboundTokenStrategy, HasLogger {
 
   private static final String AUTHORIZATION = "Authorization";
@@ -115,11 +115,11 @@ public final class ClientCredentialsStrategy implements OutboundTokenStrategy, H
       // carries only the status code; the body is logged truncated at DEBUG.
       logger().debug("Token endpoint returned HTTP {} (body truncated): {}",
           response.statusCode(), truncateBody(response.body()));
-      throw new JSentinelPropagationException(response.statusCode(),
+      throw new JCustosPropagationException(response.statusCode(),
           "Token endpoint returned HTTP " + response.statusCode());
     }
     String accessToken = JsonResponse.accessToken(response.body())
-        .orElseThrow(() -> new JSentinelPropagationException(response.statusCode(),
+        .orElseThrow(() -> new JCustosPropagationException(response.statusCode(),
             "Token endpoint response missing access_token"));
     long expiresIn = JsonResponse.expiresIn(response.body()).orElse(60L);
     cache.put(key, new TokenExchangeCache.CachedEntry(

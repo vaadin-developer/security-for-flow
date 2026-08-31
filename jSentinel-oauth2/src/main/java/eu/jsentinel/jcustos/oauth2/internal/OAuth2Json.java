@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 /**
  * Minimal, depth-aware JSON field extractor for OAuth2 token / introspection /
  * device responses (V00.77) — no third-party JSON library. Mirrors the
- * R09-hardened {@code jSentinel-propagation-oidc} scanner: it only matches keys
+ * R09-hardened {@code jCustos-propagation-oidc} scanner: it only matches keys
  * that are direct members of the outermost object, tracking nesting depth and
  * string literals (honouring {@code \\} escapes), so a nested or
  * value-embedded key can never be grabbed. The V00.77.x consolidation (B6)

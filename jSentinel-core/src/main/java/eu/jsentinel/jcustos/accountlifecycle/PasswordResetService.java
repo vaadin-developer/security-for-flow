@@ -19,9 +19,9 @@ package eu.jsentinel.jcustos.accountlifecycle;
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.audit.PasswordResetCompleted;
 import eu.jsentinel.jcustos.audit.PasswordResetRequested;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authentication.PasswordHasher;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.credential.token.TokenHasher;
 import eu.jsentinel.jcustos.credential.token.TokenHashers;
@@ -45,7 +45,7 @@ import static java.util.Objects.requireNonNull;
  *   <li>{@link #request(SubjectId, Duration) request(subject, ttl)} —
  *       generates a fresh plain token, persists only its hash,
  *       publishes a {@link PasswordResetRequested} audit event, and
- *       hands the plain token to the {@link JSentinelNotificationSender}
+ *       hands the plain token to the {@link JCustosNotificationSender}
  *       so the application can deliver it (mail, SMS, log).</li>
  *   <li>{@link #validate(String) validate(plain)} — looks the token
  *       up by its hash and returns the record only when it exists,
@@ -65,7 +65,7 @@ import static java.util.Objects.requireNonNull;
  * <p>Bound to one {@link TenantId} at construction. Multi-tenant
  * deployments instantiate one service per tenant.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class PasswordResetService implements HasLogger {
 
   /** Default token entropy in bytes (256 bits). */
@@ -73,8 +73,8 @@ public final class PasswordResetService implements HasLogger {
 
   private final PasswordResetTokenStore store;
   private final TokenHasher hasher;
-  private final JSentinelAuditService auditService;
-  private final JSentinelNotificationSender notificationSender;
+  private final JCustosAuditService auditService;
+  private final JCustosNotificationSender notificationSender;
   private final TenantId tenant;
   private final Clock clock;
   private final Supplier<String> tokenSource;
@@ -90,8 +90,8 @@ public final class PasswordResetService implements HasLogger {
    */
   public PasswordResetService(PasswordResetTokenStore store,
                               TokenHasher hasher,
-                              JSentinelAuditService auditService,
-                              JSentinelNotificationSender notificationSender) {
+                              JCustosAuditService auditService,
+                              JCustosNotificationSender notificationSender) {
     this(store, hasher, auditService, notificationSender,
         TenantId.DEFAULT, Clock.systemUTC(), defaultTokenSource());
   }
@@ -113,8 +113,8 @@ public final class PasswordResetService implements HasLogger {
    */
   public PasswordResetService(PasswordResetTokenStore store,
                               TokenHasher hasher,
-                              JSentinelAuditService auditService,
-                              JSentinelNotificationSender notificationSender,
+                              JCustosAuditService auditService,
+                              JCustosNotificationSender notificationSender,
                               TenantId tenant,
                               Clock clock,
                               Supplier<String> tokenSource) {
@@ -141,8 +141,8 @@ public final class PasswordResetService implements HasLogger {
   @Deprecated(forRemoval = true)
   public PasswordResetService(PasswordResetTokenStore store,
                               PasswordHasher hasher,
-                              JSentinelAuditService auditService,
-                              JSentinelNotificationSender notificationSender) {
+                              JCustosAuditService auditService,
+                              JCustosNotificationSender notificationSender) {
     this(store, TokenHashers.fromPasswordHasher(hasher), auditService, notificationSender);
   }
 
@@ -162,8 +162,8 @@ public final class PasswordResetService implements HasLogger {
   @Deprecated(forRemoval = true)
   public PasswordResetService(PasswordResetTokenStore store,
                               PasswordHasher hasher,
-                              JSentinelAuditService auditService,
-                              JSentinelNotificationSender notificationSender,
+                              JCustosAuditService auditService,
+                              JCustosNotificationSender notificationSender,
                               TenantId tenant,
                               Clock clock,
                               Supplier<String> tokenSource) {
@@ -195,7 +195,7 @@ public final class PasswordResetService implements HasLogger {
         hash, tenant, subjectId, now, now.plus(ttl), Optional.empty());
     store.save(record);
     publishRequested(now, subjectId, hash);
-    notify(JSentinelNotification.Kind.PASSWORD_RESET_REQUESTED,
+    notify(JCustosNotification.Kind.PASSWORD_RESET_REQUESTED,
         subjectId, now,
         java.util.Map.of(
             "tokenPlain", plain,
@@ -240,7 +240,7 @@ public final class PasswordResetService implements HasLogger {
   /**
    * Marks the supplied plain token consumed and publishes a
    * {@link PasswordResetCompleted} audit + a
-   * {@link JSentinelNotification.Kind#PASSWORD_RESET_COMPLETED}
+   * {@link JCustosNotification.Kind#PASSWORD_RESET_COMPLETED}
    * notification. Returns the consumed record exactly once;
    * subsequent calls on the same token yield empty.
    *
@@ -261,7 +261,7 @@ public final class PasswordResetService implements HasLogger {
       return Optional.empty();
     }
     publishCompleted(now, record.subjectId(), record.tokenHash());
-    notify(JSentinelNotification.Kind.PASSWORD_RESET_COMPLETED,
+    notify(JCustosNotification.Kind.PASSWORD_RESET_COMPLETED,
         record.subjectId(), now, java.util.Map.of());
     return Optional.of(record.withConsumedAt(now));
   }
@@ -305,12 +305,12 @@ public final class PasswordResetService implements HasLogger {
     }
   }
 
-  private void notify(JSentinelNotification.Kind kind,
+  private void notify(JCustosNotification.Kind kind,
                       SubjectId subjectId,
                       Instant at,
                       java.util.Map<String, String> attributes) {
     try {
-      notificationSender.send(new JSentinelNotification(
+      notificationSender.send(new JCustosNotification(
           kind, subjectId, tenant, at, attributes));
     } catch (RuntimeException e) {
       logger().warn("notification sender failed during {} dispatch", kind, e);

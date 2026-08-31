@@ -1,10 +1,10 @@
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -33,11 +33,11 @@
  * eu.jsentinel.jcustos.events.publisher.EventStreamPublisher}
  * (in-process {@link java.util.concurrent.Flow} tap for embedding apps) —
  * plus the alerting building blocks {@link
- * eu.jsentinel.jcustos.events.publisher.JSentinelAlert}, {@link
- * eu.jsentinel.jcustos.events.publisher.JSentinelAlertSink}, {@link
+ * eu.jsentinel.jcustos.events.publisher.JCustosAlert}, {@link
+ * eu.jsentinel.jcustos.events.publisher.JCustosAlertSink}, {@link
  * eu.jsentinel.jcustos.events.publisher.LoggingAlertSink} and the
  * severity-filtering {@link
- * eu.jsentinel.jcustos.events.publisher.JSentinelAlertPublisher}.
+ * eu.jsentinel.jcustos.events.publisher.JCustosAlertPublisher}.
  *
  * @since 00.80.00
  */

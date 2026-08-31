@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.audit.integrity.listener;
 
 /*-
  * #%L
- * jSentinel Audit Integrity — tamper-evident audit
+ * jCustos Audit Integrity — tamper-evident audit
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,12 +27,12 @@ package eu.jsentinel.jcustos.audit.integrity.listener;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.audit.integrity.chain.AuditChainAppender;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.api.JSentinelEvent;
-import eu.jsentinel.jcustos.events.bus.JSentinelEventBus;
-import eu.jsentinel.jcustos.events.bus.JSentinelEventListener;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.api.JCustosEvent;
+import eu.jsentinel.jcustos.events.bus.JCustosEventBus;
+import eu.jsentinel.jcustos.events.bus.JCustosEventListener;
 import eu.jsentinel.jcustos.events.bus.Registration;
-import eu.jsentinel.jcustos.events.codec.JSentinelEventCanonicalizer;
+import eu.jsentinel.jcustos.events.codec.JCustosEventCanonicalizer;
 import eu.jsentinel.jcustos.events.codec.PayloadCodec;
 import eu.jsentinel.jcustos.events.codec.CanonicalJsonPayloadCodec;
 import eu.jsentinel.jcustos.events.codec.RecordReflectionCanonicalizer;
@@ -54,16 +54,16 @@ import java.util.Objects;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class AuditIntegrityListener
-    implements JSentinelEventListener<JSentinelEvent>, HasLogger {
+    implements JCustosEventListener<JCustosEvent>, HasLogger {
 
   /** Payload type of chained bus events. */
   public static final String PAYLOAD_TYPE = "jsentinel-event/canonical-json/v1";
 
   private final AuditChainAppender appender;
   private final AuditRelevancePolicy policy;
-  private final JSentinelEventCanonicalizer canonicalizer;
+  private final JCustosEventCanonicalizer canonicalizer;
   private final PayloadCodec codec;
 
   /** Defaults: {@link AuditRelevancePolicy#auditRelevantDefaults()} + the canonical-JSON pipeline. */
@@ -73,7 +73,7 @@ public final class AuditIntegrityListener
   }
 
   public AuditIntegrityListener(AuditChainAppender appender,
-      AuditRelevancePolicy policy, JSentinelEventCanonicalizer canonicalizer,
+      AuditRelevancePolicy policy, JCustosEventCanonicalizer canonicalizer,
       PayloadCodec codec) {
     this.appender = Objects.requireNonNull(appender, "appender");
     this.policy = Objects.requireNonNull(policy, "policy");
@@ -82,7 +82,7 @@ public final class AuditIntegrityListener
   }
 
   @Override
-  public void onJSentinelEvent(JSentinelEvent event) {
+  public void onJCustosEvent(JCustosEvent event) {
     if (event == null || !policy.isAuditRelevant(event)) {
       return;
     }
@@ -103,7 +103,7 @@ public final class AuditIntegrityListener
    * @param bus the event bus
    * @return the subscription registration
    */
-  public Registration subscribeTo(JSentinelEventBus bus) {
-    return bus.subscribe(JSentinelEvent.class, this);
+  public Registration subscribeTo(JCustosEventBus bus) {
+    return bus.subscribe(JCustosEvent.class, this);
   }
 }

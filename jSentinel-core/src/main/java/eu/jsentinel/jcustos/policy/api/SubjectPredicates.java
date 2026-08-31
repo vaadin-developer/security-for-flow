@@ -16,8 +16,8 @@
  */
 package eu.jsentinel.jcustos.policy.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleName;
 
@@ -28,13 +28,13 @@ import java.util.function.Predicate;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Predicate factories that branch on the {@link JSentinelSubject} carried
+ * Predicate factories that branch on the {@link JCustosSubject} carried
  * by a {@link PolicyContext}.
  *
  * <p>All predicates return {@code false} when no subject is present,
  * except {@link #isAnonymous()} which is the explicit complement.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class SubjectPredicates {
 
   private SubjectPredicates() {
@@ -69,7 +69,7 @@ public final class SubjectPredicates {
         .map(RoleName::new)
         .toArray(RoleName[]::new);
     return ctx -> {
-      Optional<JSentinelSubject> subject = ctx.subject();
+      Optional<JCustosSubject> subject = ctx.subject();
       if (subject.isEmpty()) {
         return false;
       }

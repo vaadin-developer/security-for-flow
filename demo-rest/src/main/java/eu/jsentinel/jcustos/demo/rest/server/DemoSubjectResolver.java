@@ -18,7 +18,7 @@ package eu.jsentinel.jcustos.demo.rest.server;
 
 import eu.jsentinel.jcustos.authentication.ApiKeyAuthenticationService;
 import eu.jsentinel.jcustos.authentication.ApiKeyRecord;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleName;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
@@ -28,7 +28,7 @@ import eu.jsentinel.jcustos.logout.SubjectId;
 import eu.jsentinel.jcustos.rest.BearerTokenExtractor;
 import eu.jsentinel.jcustos.rest.RestHeaders;
 import eu.jsentinel.jcustos.rest.RestRequest;
-import eu.jsentinel.jcustos.rest.RestJSentinelVersionContext;
+import eu.jsentinel.jcustos.rest.RestJCustosVersionContext;
 import eu.jsentinel.jcustos.rest.RestSubjectResolver;
 import eu.jsentinel.jcustos.session.SessionMetadata;
 
@@ -72,19 +72,19 @@ public final class DemoSubjectResolver implements RestSubjectResolver {
   }
 
   @Override
-  public Optional<JSentinelSubject> resolveSubject(RestRequest request) {
+  public Optional<JCustosSubject> resolveSubject(RestRequest request) {
     // V00.70 Phase-7b API-key path takes precedence — a request that
     // ships an X-Api-Key uses the scopes recorded on the key as its
     // entire authorization surface (no role inheritance from any
     // session token).
-    Optional<JSentinelSubject> apiKeySubject = resolveApiKeySubject(request);
+    Optional<JCustosSubject> apiKeySubject = resolveApiKeySubject(request);
     if (apiKeySubject.isPresent()) {
       return apiKeySubject;
     }
     return extractToken(request).flatMap(tokens::resolve).map(this::toSubject);
   }
 
-  private Optional<JSentinelSubject> resolveApiKeySubject(RestRequest request) {
+  private Optional<JCustosSubject> resolveApiKeySubject(RestRequest request) {
     if (apiKeyAuth == null) {
       return Optional.empty();
     }
@@ -94,8 +94,8 @@ public final class DemoSubjectResolver implements RestSubjectResolver {
         .map(DemoSubjectResolver::toApiKeySubject));
   }
 
-  private static JSentinelSubject toApiKeySubject(ApiKeyRecord record) {
-    return new JSentinelSubject(
+  private static JCustosSubject toApiKeySubject(ApiKeyRecord record) {
+    return new JCustosSubject(
         record.subjectId().value(),
         record.name(),
         Set.of(),
@@ -103,11 +103,11 @@ public final class DemoSubjectResolver implements RestSubjectResolver {
   }
 
   @Override
-  public Optional<RestJSentinelVersionContext> resolveJSentinelVersionContext(RestRequest request) {
+  public Optional<RestJCustosVersionContext> resolveJCustosVersionContext(RestRequest request) {
     Optional<String> token = extractToken(request);
     return token
         .flatMap(s -> tokens.resolveMetadata(s)
-        .map(metadata -> new RestJSentinelVersionContext(
+        .map(metadata -> new RestJCustosVersionContext(
             SubjectId.of(metadata.user().username()),
             TenantId.DEFAULT,
             metadata.snapshot(),
@@ -139,10 +139,10 @@ public final class DemoSubjectResolver implements RestSubjectResolver {
     return BEARER.extract(request);
   }
 
-  private JSentinelSubject toSubject(DemoUser user) {
+  private JCustosSubject toSubject(DemoUser user) {
     RoleName roleName = user.role().roleName();
     Set<PermissionName> permissions = mapping.permissionsFor(roleName);
-    return new JSentinelSubject(
+    return new JCustosSubject(
         user.username(),
         user.displayName(),
         Set.of(roleName),

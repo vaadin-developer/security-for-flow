@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.replay.api;
 
 import com.svenruppert.functional.result.Result;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.time.Instant;
 
@@ -31,7 +31,7 @@ import java.time.Instant;
  *
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface JtiStore {
 
   /**

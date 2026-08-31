@@ -19,7 +19,7 @@ package eu.jsentinel.jcustos.identity.oidc;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.jwt.api.JoseHeader;
 import eu.jsentinel.jcustos.jwt.api.ValidatedJwt;
 import eu.jsentinel.jcustos.oidc.api.UserInfoResponse;
@@ -52,7 +52,7 @@ class DefaultClaimsToSubjectMapperTest {
   @Test
   @DisplayName("subject id is issuer-prefixed (iss#sub); name claim wins for displayName")
   void issuerPrefixedWithName() {
-    JSentinelSubject s = new DefaultClaimsToSubjectMapper()
+    JCustosSubject s = new DefaultClaimsToSubjectMapper()
         .map(idToken(Map.of("name", "Alice Smith")), Optional.empty());
     assertEquals(ISS + "#alice", s.subjectId());
     assertEquals("Alice Smith", s.displayName());
@@ -75,14 +75,14 @@ class DefaultClaimsToSubjectMapperTest {
   @DisplayName("UserInfo supplies displayName claims the ID token lacks")
   void userInfoSuppliesDisplayName() {
     UserInfoResponse ui = new UserInfoResponse("alice", Map.of("sub", "alice", "name", "Alice From UserInfo"));
-    JSentinelSubject s = new DefaultClaimsToSubjectMapper().map(idToken(Map.of()), Optional.of(ui));
+    JCustosSubject s = new DefaultClaimsToSubjectMapper().map(idToken(Map.of()), Optional.of(ui));
     assertEquals("Alice From UserInfo", s.displayName());
   }
 
   @Test
   @DisplayName("the non-issuer-prefixed mode uses the bare sub")
   void bareSubMode() {
-    JSentinelSubject s = new DefaultClaimsToSubjectMapper(
+    JCustosSubject s = new DefaultClaimsToSubjectMapper(
         EmptyRolesMapper.INSTANCE, EmptyPermissionsMapper.INSTANCE, false)
         .map(idToken(Map.of("name", "Alice")), Optional.empty());
     assertEquals("alice", s.subjectId());

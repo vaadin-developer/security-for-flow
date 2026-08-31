@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.types;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,8 +25,8 @@ package eu.jsentinel.jcustos.events.types;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.api.JSentinelEvent;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.api.JCustosEvent;
 
 /**
  * Marker for the events the Security Event Bus emits about <em>itself</em>:
@@ -50,6 +50,6 @@ import eu.jsentinel.jcustos.events.api.JSentinelEvent;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
-public interface EventBusSelfObservabilityEvent extends JSentinelEvent {
+@ExperimentalJCustosApi
+public interface EventBusSelfObservabilityEvent extends JCustosEvent {
 }

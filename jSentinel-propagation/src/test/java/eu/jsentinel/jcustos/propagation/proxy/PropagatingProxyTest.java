@@ -11,7 +11,7 @@
 package eu.jsentinel.jcustos.propagation.proxy;
 
 import eu.jsentinel.jcustos.annotations.PropagateToken;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.credential.propagation.BearerToken;
 import eu.jsentinel.jcustos.credential.propagation.HeaderValue;
 import eu.jsentinel.jcustos.credential.propagation.InMemoryTokenCredentialStore;
@@ -37,16 +37,16 @@ class PropagatingProxyTest {
 
   @BeforeEach
   void setup() {
-    JSentinelServiceResolver.resetAll();
-    JSentinelServiceResolver.setTokenCredentialStore(store);
-    JSentinelServiceResolver.registerOutboundTokenStrategy(
+    JCustosServiceResolver.resetAll();
+    JCustosServiceResolver.setTokenCredentialStore(store);
+    JCustosServiceResolver.registerOutboundTokenStrategy(
         PassThroughStrategy.NAME, PassThroughStrategy.INSTANCE);
   }
 
   @AfterEach
   void cleanup() {
     OutboundHeaderContext.clear();
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   @Test

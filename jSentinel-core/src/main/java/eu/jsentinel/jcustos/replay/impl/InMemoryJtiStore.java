@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.replay.impl;
 
 import com.svenruppert.functional.result.Result;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.replay.api.JtiStore;
 import eu.jsentinel.jcustos.replay.api.ReplayError;
 
@@ -44,7 +44,7 @@ import java.util.function.Supplier;
  * replay window into a trivial full DoS. For a single JVM only — a multi-node deployment
  * needs a shared store. Thread-safe (synchronised).
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class InMemoryJtiStore implements JtiStore {
 
   /** Default capacity bound on retained {@code jti}s. */

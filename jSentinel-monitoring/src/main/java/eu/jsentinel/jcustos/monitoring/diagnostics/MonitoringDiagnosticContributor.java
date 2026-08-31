@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.monitoring.diagnostics;
 
 /*-
  * #%L
- * jSentinel Monitoring — metrics, health and diagnostics export points
+ * jCustos Monitoring — metrics, health and diagnostics export points
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,13 +25,13 @@ package eu.jsentinel.jcustos.monitoring.diagnostics;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.dx.diagnostics.DiagnosticContributor;
 import eu.jsentinel.jcustos.dx.diagnostics.DiagnosticReportBuilder;
 import eu.jsentinel.jcustos.dx.diagnostics.DiscoveredService;
 import eu.jsentinel.jcustos.dx.diagnostics.ServiceWarning;
-import eu.jsentinel.jcustos.monitoring.health.JSentinelHealthIndicator;
-import eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricsPublisher;
+import eu.jsentinel.jcustos.monitoring.health.JCustosHealthIndicator;
+import eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricsPublisher;
 
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -41,8 +41,8 @@ import java.util.Set;
 
 /**
  * Contributes the monitoring-module findings to
- * {@code JSentinelDiagnostics.inspect()}: enumerates the registered
- * {@link JSentinelMetricsPublisher} and {@link JSentinelHealthIndicator}
+ * {@code JCustosDiagnostics.inspect()}: enumerates the registered
+ * {@link JCustosMetricsPublisher} and {@link JCustosHealthIndicator}
  * implementations (as discovered entries) and warns when none is found —
  * a deployment without a metrics publisher silently discards every
  * metric via the no-op default, and one without health indicators gets
@@ -57,7 +57,7 @@ import java.util.Set;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class MonitoringDiagnosticContributor implements DiagnosticContributor {
 
   /** Stable contributor id. */
@@ -66,10 +66,10 @@ public final class MonitoringDiagnosticContributor implements DiagnosticContribu
   /** Warning code for a broken monitoring SPI registration. */
   public static final String PROVIDER_LOAD_FAILURE_CODE = "monitoring/provider-load-failure";
 
-  /** Warning code when no {@link JSentinelMetricsPublisher} is registered. */
+  /** Warning code when no {@link JCustosMetricsPublisher} is registered. */
   public static final String NO_METRICS_PUBLISHER_CODE = "monitoring/no-metrics-publisher";
 
-  /** Warning code when no {@link JSentinelHealthIndicator} is registered. */
+  /** Warning code when no {@link JCustosHealthIndicator} is registered. */
   public static final String NO_HEALTH_INDICATORS_CODE = "monitoring/no-health-indicators";
 
   /** ServiceLoader requires a public no-arg constructor. */
@@ -84,21 +84,21 @@ public final class MonitoringDiagnosticContributor implements DiagnosticContribu
   @Override
   public void contribute(DiagnosticReportBuilder builder) {
     ClassLoader cl = contextClassLoader();
-    int publishers = enumerate(JSentinelMetricsPublisher.class, cl, builder);
+    int publishers = enumerate(JCustosMetricsPublisher.class, cl, builder);
     if (publishers == 0) {
       builder.addWarning(new ServiceWarning(
           NO_METRICS_PUBLISHER_CODE,
-          "No JSentinelMetricsPublisher registered — metrics are discarded (NoOp default).",
+          "No JCustosMetricsPublisher registered — metrics are discarded (NoOp default).",
           "Register an adapter via META-INF/services or wire one programmatically."));
     }
-    int indicators = enumerate(JSentinelHealthIndicator.class, cl, builder);
+    int indicators = enumerate(JCustosHealthIndicator.class, cl, builder);
     if (indicators == 0) {
       builder.addWarning(new ServiceWarning(
           NO_HEALTH_INDICATORS_CODE,
-          "No JSentinelHealthIndicator registered — "
-              + "JSentinelHealthCheck.discoverAndCheck() reports no findings.",
+          "No JCustosHealthIndicator registered — "
+              + "JCustosHealthCheck.discoverAndCheck() reports no findings.",
           "Register an indicator via META-INF/services or pass indicators "
-              + "programmatically to JSentinelHealthCheck.check(...)."));
+              + "programmatically to JCustosHealthCheck.check(...)."));
     }
   }
 

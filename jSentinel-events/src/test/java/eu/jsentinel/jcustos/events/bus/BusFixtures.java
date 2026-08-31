@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.bus;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -28,16 +28,16 @@ package eu.jsentinel.jcustos.events.bus;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventMetadata;
 import eu.jsentinel.jcustos.events.api.EventProducerId;
-import eu.jsentinel.jcustos.events.api.JSentinelEventSeverity;
+import eu.jsentinel.jcustos.events.api.JCustosEventSeverity;
 import eu.jsentinel.jcustos.events.api.KeyId;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelopeBuilder;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelopeBuilder;
 import eu.jsentinel.jcustos.events.codec.CanonicalJsonPayloadCodec;
 import eu.jsentinel.jcustos.events.codec.RecordReflectionCanonicalizer;
 import eu.jsentinel.jcustos.events.api.PayloadHashAlgorithm;
 import eu.jsentinel.jcustos.events.keys.InMemoryKeyManagement;
 import eu.jsentinel.jcustos.events.producer.AllowListProducerPolicy;
-import eu.jsentinel.jcustos.events.producer.JSentinelEventProducerPolicy;
+import eu.jsentinel.jcustos.events.producer.JCustosEventProducerPolicy;
 import eu.jsentinel.jcustos.events.replay.InMemoryReplayStore;
 import eu.jsentinel.jcustos.events.sequence.InMemorySequenceStore;
 import eu.jsentinel.jcustos.events.sequence.SequenceValidator;
@@ -63,7 +63,7 @@ final class BusFixtures {
   final InMemorySequenceStore publishSequence = new InMemorySequenceStore();
   final InMemoryReplayStore consumeReplay = new InMemoryReplayStore();
   final InMemorySequenceStore consumeSequence = new InMemorySequenceStore();
-  final JSentinelEventProducerPolicy allowAll = AllowListProducerPolicy.builder()
+  final JCustosEventProducerPolicy allowAll = AllowListProducerPolicy.builder()
       .allow(PRODUCER, LoginSucceededEvent.TYPE)
       .build();
 
@@ -71,7 +71,7 @@ final class BusFixtures {
     return publishPipeline(allowAll);
   }
 
-  PublishPipeline publishPipeline(JSentinelEventProducerPolicy policy) {
+  PublishPipeline publishPipeline(JCustosEventProducerPolicy policy) {
     return new PublishPipeline(keyManagement, new RecordReflectionCanonicalizer(),
         new CanonicalJsonPayloadCodec(), PayloadHashAlgorithm.SHA_256, PRODUCER,
         publishSequence, publishReplay, policy, Duration.ofMinutes(5), () -> T0);
@@ -81,7 +81,7 @@ final class BusFixtures {
     return consumePipeline(allowAll, SequenceViolationStrategy.REJECT);
   }
 
-  ConsumePipeline consumePipeline(JSentinelEventProducerPolicy policy,
+  ConsumePipeline consumePipeline(JCustosEventProducerPolicy policy,
       SequenceViolationStrategy strategy) {
     return new ConsumePipeline(keyManagement, SignatureAlgorithms.defaults(), consumeReplay,
         consumeSequence, new SequenceValidator(), strategy, policy);
@@ -89,13 +89,13 @@ final class BusFixtures {
 
   static LoginSucceededEvent event() {
     EventMetadata meta = EventMetadata.create(TenantId.DEFAULT, SubjectId.of("alice"),
-        T0, JSentinelEventSeverity.INFO);
+        T0, JCustosEventSeverity.INFO);
     return new LoginSucceededEvent(meta, "password");
   }
 
   /** Returns a builder pre-filled from an existing envelope, for tampering tests. */
-  static SignedJSentinelEventEnvelopeBuilder rebuild(SignedJSentinelEventEnvelope e) {
-    return SignedJSentinelEventEnvelopeBuilder.create()
+  static SignedJCustosEventEnvelopeBuilder rebuild(SignedJCustosEventEnvelope e) {
+    return SignedJCustosEventEnvelopeBuilder.create()
         .envelopeId(e.envelopeId())
         .eventId(e.eventId())
         .eventType(e.eventType())

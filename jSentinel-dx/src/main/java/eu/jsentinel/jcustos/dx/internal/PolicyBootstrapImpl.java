@@ -22,7 +22,7 @@ import java.util.Objects;
  * Real V00.73 implementation of {@link PolicyBootstrap}. Records
  * everything into the {@link PolicyState} held by
  * {@link BootstrapState}; install-time wiring happens in
- * {@code AbstractJSentinelBootstrap.applyPolicyConfiguration}.
+ * {@code AbstractJCustosBootstrap.applyPolicyConfiguration}.
  *
  * @since 00.73.00
  */

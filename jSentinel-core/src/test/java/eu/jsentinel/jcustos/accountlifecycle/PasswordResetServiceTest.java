@@ -20,7 +20,7 @@ import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
 import eu.jsentinel.jcustos.audit.PasswordResetCompleted;
 import eu.jsentinel.jcustos.audit.PasswordResetRequested;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authentication.PasswordHasher;
 import eu.jsentinel.jcustos.authentication.Pbkdf2PasswordHasher;
 import eu.jsentinel.jcustos.credential.token.TokenHasher;
@@ -146,8 +146,8 @@ class PasswordResetServiceTest {
 
     // notification with plain token
     assertEquals(1, sender.received.size());
-    JSentinelNotification n = sender.received.get(0);
-    assertEquals(JSentinelNotification.Kind.PASSWORD_RESET_REQUESTED, n.kind());
+    JCustosNotification n = sender.received.get(0);
+    assertEquals(JCustosNotification.Kind.PASSWORD_RESET_REQUESTED, n.kind());
     assertEquals("tok-1", n.attributes().get("tokenPlain"));
     assertEquals(issued.record().expiresAt().toString(), n.attributes().get("expiresAt"));
   }
@@ -217,7 +217,7 @@ class PasswordResetServiceTest {
 
     // request notification + completion notification
     assertEquals(2, sender.received.size());
-    assertEquals(JSentinelNotification.Kind.PASSWORD_RESET_COMPLETED,
+    assertEquals(JCustosNotification.Kind.PASSWORD_RESET_COMPLETED,
         sender.received.get(1).kind());
   }
 
@@ -267,11 +267,11 @@ class PasswordResetServiceTest {
   @DisplayName("audit + notification failures do not block the lifecycle flow")
   void sinkFailuresSwallowed() {
     InMemoryPasswordResetTokenStore store = new InMemoryPasswordResetTokenStore();
-    JSentinelAuditService throwingAudit = new JSentinelAuditService() {
+    JCustosAuditService throwingAudit = new JCustosAuditService() {
       @Override public void publish(AuditEvent event) { throw new RuntimeException("boom"); }
       @Override public List<AuditEvent> query(AuditQuery query) { return List.of(); }
     };
-    JSentinelNotificationSender throwingSender = n -> { throw new RuntimeException("boom"); };
+    JCustosNotificationSender throwingSender = n -> { throw new RuntimeException("boom"); };
     PasswordResetService service = new PasswordResetService(
         store, new FakeHasher(), throwingAudit, throwingSender,
         TenantId.DEFAULT, steppingClock(T0, Duration.ofSeconds(1)),
@@ -335,15 +335,15 @@ class PasswordResetServiceTest {
     assertFalse(issued.record().isConsumed());
   }
 
-  private static final class CollectingAuditService implements JSentinelAuditService {
+  private static final class CollectingAuditService implements JCustosAuditService {
     final List<AuditEvent> published = new ArrayList<>();
     @Override public void publish(AuditEvent event) { published.add(event); }
     @Override public List<AuditEvent> query(AuditQuery query) { return List.copyOf(published); }
   }
 
-  private static final class RecordingNotificationSender implements JSentinelNotificationSender {
-    final List<JSentinelNotification> received = new ArrayList<>();
-    @Override public void send(JSentinelNotification n) { received.add(n); }
+  private static final class RecordingNotificationSender implements JCustosNotificationSender {
+    final List<JCustosNotification> received = new ArrayList<>();
+    @Override public void send(JCustosNotification n) { received.add(n); }
   }
 
   // ── V00.74.10 / L2 — audit-sink WARN log discipline ─────────────────
@@ -358,11 +358,11 @@ class PasswordResetServiceTest {
       InMemoryPasswordResetTokenStore store = new InMemoryPasswordResetTokenStore();
       RuntimeException auditBoom = new RuntimeException("audit-boom");
       RuntimeException senderBoom = new RuntimeException("sender-boom");
-      JSentinelAuditService throwingAudit = new JSentinelAuditService() {
+      JCustosAuditService throwingAudit = new JCustosAuditService() {
         @Override public void publish(AuditEvent event) { throw auditBoom; }
         @Override public List<AuditEvent> query(AuditQuery query) { return List.of(); }
       };
-      JSentinelNotificationSender throwingSender = n -> { throw senderBoom; };
+      JCustosNotificationSender throwingSender = n -> { throw senderBoom; };
       PasswordResetService service = new PasswordResetService(
           store, new FakeHasher(), throwingAudit, throwingSender,
           TenantId.DEFAULT, steppingClock(T0, Duration.ofSeconds(1)),

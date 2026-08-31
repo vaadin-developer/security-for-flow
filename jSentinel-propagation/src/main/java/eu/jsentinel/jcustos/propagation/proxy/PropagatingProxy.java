@@ -11,8 +11,8 @@
 package eu.jsentinel.jcustos.propagation.proxy;
 
 import eu.jsentinel.jcustos.annotations.PropagateToken;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.credential.propagation.HeaderValue;
 import eu.jsentinel.jcustos.credential.propagation.OutboundCall;
 import eu.jsentinel.jcustos.credential.propagation.OutboundHeaderContext;
@@ -44,7 +44,7 @@ import java.util.Optional;
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class PropagatingProxy {
 
   private PropagatingProxy() {
@@ -100,7 +100,7 @@ public final class PropagatingProxy {
       if (annotation == null) {
         return invokeDirect(method, args);
       }
-      TokenCredentialStore store = JSentinelServiceResolver.tokenCredentialStore();
+      TokenCredentialStore store = JCustosServiceResolver.tokenCredentialStore();
       OutboundCall call = new OutboundCall(
           contract.getSimpleName(),
           method.getName(),

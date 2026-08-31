@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.demo.app.security.services;
 
 import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
-import eu.jsentinel.jcustos.autoservice.api.JSentinelAutoService;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 import eu.jsentinel.jcustos.authorization.api.permissions.HasPermissions;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.authorization.api.permissions.RolePermissionMapping;
@@ -44,7 +44,7 @@ import static eu.jsentinel.jcustos.demo.app.security.permissions.DemoPermission.
  * {@link RolePermissionResolver}. This keeps the demo free of
  * authorization helper code.
  */
-@JSentinelAutoService(AuthorizationService.class)
+@JCustosAutoService(AuthorizationService.class)
 public class MyAuthorizationService
     implements AuthorizationService<MyUser> {
 

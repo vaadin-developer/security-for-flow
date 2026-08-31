@@ -1,6 +1,6 @@
 package eu.jsentinel.jcustos.demo.skill.rest.handlers;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import com.sun.net.httpserver.HttpExchange;
 import eu.jsentinel.jcustos.demo.skill.rest.Json;
 import eu.jsentinel.jcustos.demo.skill.rest.Router;
@@ -22,14 +22,14 @@ public final class SessionsHandler {
   private SessionsHandler() {
   }
 
-  public static void list(HttpExchange exchange, JSentinelSubject subject) throws IOException {
+  public static void list(HttpExchange exchange, JCustosSubject subject) throws IOException {
     List<Map<String, Object>> body = TokenStore.INSTANCE.all()
         .map(SessionsHandler::project)
         .toList();
     Router.respondJson(exchange, 200, Json.encode(body));
   }
 
-  public static void revoke(HttpExchange exchange, JSentinelSubject subject) throws IOException {
+  public static void revoke(HttpExchange exchange, JCustosSubject subject) throws IOException {
     String path = exchange.getRequestURI().getPath();
     String prefix = "/api/sessions/";
     if (!path.startsWith(prefix)) {

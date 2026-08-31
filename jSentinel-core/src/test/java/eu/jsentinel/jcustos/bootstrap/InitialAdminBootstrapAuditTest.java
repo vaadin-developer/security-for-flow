@@ -22,8 +22,8 @@ import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
 import eu.jsentinel.jcustos.audit.BootstrapAdminCreated;
 import eu.jsentinel.jcustos.audit.BootstrapTokenRejected;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -50,14 +50,14 @@ class InitialAdminBootstrapAuditTest {
 
   @BeforeEach
   void wireAudit() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     audit = new RecordingAudit();
-    JSentinelServiceResolver.setJSentinelAuditService(audit);
+    JCustosServiceResolver.setJCustosAuditService(audit);
   }
 
   @AfterEach
   void clearAudit() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   @Test
@@ -158,7 +158,7 @@ class InitialAdminBootstrapAuditTest {
 
   // ── Fixtures ──────────────────────────────────────────────────
 
-  private static final class RecordingAudit implements JSentinelAuditService {
+  private static final class RecordingAudit implements JCustosAuditService {
     final List<AuditEvent> events = new ArrayList<>();
 
     @Override public void publish(AuditEvent event) {

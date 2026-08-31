@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.policy.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +52,7 @@ import static java.util.Objects.requireNonNull;
  * <p>Builder is not thread-safe; build the policy once at registration
  * time, then evaluate the built {@link Policy} concurrently.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class PolicyBuilder {
 
   static final String GENERIC_DEFAULT_DENY_REASON = "policy denied";

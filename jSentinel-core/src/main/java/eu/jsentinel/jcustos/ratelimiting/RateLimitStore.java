@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.ratelimiting;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.time.Instant;
 
@@ -49,7 +49,7 @@ import java.time.Instant;
  * <p>Implementations must be thread-safe; concurrent recordEvent
  * and countSince happen on every protected endpoint.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface RateLimitStore {
 
   /**

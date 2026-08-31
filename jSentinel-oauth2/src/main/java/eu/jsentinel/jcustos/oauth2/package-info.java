@@ -19,7 +19,7 @@
  * token-endpoint client, authorization-code + PKCE flow, refresh-token rotation
  * with reuse-detection, revocation, introspection and the device-authorization
  * grant. The JOSE-free SPI contracts live in
- * {@code eu.jsentinel.jcustos.oauth2.api} (jSentinel-core); this module is
+ * {@code eu.jsentinel.jcustos.oauth2.api} (jCustos-core); this module is
  * the opt-in HTTP implementation.
  *
  * @since 00.77.00

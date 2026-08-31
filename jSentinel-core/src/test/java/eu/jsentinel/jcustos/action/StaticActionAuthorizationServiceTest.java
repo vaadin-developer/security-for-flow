@@ -19,7 +19,7 @@ package eu.jsentinel.jcustos.action;
 import eu.jsentinel.jcustos.audit.ActionDenied;
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authorization.api.AccessDeniedException;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
 import eu.jsentinel.jcustos.authorization.api.permissions.HasPermissions;
@@ -121,7 +121,7 @@ class StaticActionAuthorizationServiceTest {
   @Test
   @DisplayName("audit-sink failure must not block the AccessDeniedException")
   void auditFailureIsSwallowed() {
-    JSentinelAuditService throwingAudit = new JSentinelAuditService() {
+    JCustosAuditService throwingAudit = new JCustosAuditService() {
       @Override public void publish(AuditEvent event) {
         throw new RuntimeException("audit boom");
       }
@@ -166,7 +166,7 @@ class StaticActionAuthorizationServiceTest {
     };
   }
 
-  static final class RecordingAudit implements JSentinelAuditService {
+  static final class RecordingAudit implements JCustosAuditService {
     final List<AuditEvent> events = new ArrayList<>();
 
     @Override

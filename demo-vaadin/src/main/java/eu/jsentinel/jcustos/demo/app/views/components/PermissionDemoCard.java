@@ -19,7 +19,7 @@ package eu.jsentinel.jcustos.demo.app.views.components;
 import eu.jsentinel.jcustos.action.ActionAuthorizationService;
 import eu.jsentinel.jcustos.action.ActionPermission;
 import eu.jsentinel.jcustos.authorization.api.AccessDeniedException;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.components.SecuredButton;
 import eu.jsentinel.jcustos.components.SecuredVisibility.Requirement;
@@ -86,7 +86,7 @@ public class PermissionDemoCard extends Composite<VerticalLayout> {
         "Same UX adaptation as Pattern A, but expressed declaratively via "
             + "SecuredButton + SecuredVisibility.Requirement. The framework "
             + "looks up the current subject's permissions through "
-            + "JSentinelServiceResolver — no manual isAllowed plumbing per "
+            + "JCustosServiceResolver — no manual isAllowed plumbing per "
             + "button. DISABLE mode keeps the affordance visible (greyed "
             + "out) to teach the user about the missing permission."));
     root.add(buildSecuredButtonRow());
@@ -100,7 +100,7 @@ public class PermissionDemoCard extends Composite<VerticalLayout> {
             + "BootstrapServiceInitListener.POLICY_ADMIN_OR_EDIT) to "
             + "demonstrate the V00.73 PolicyRegistry path — the policy is "
             + "registered in BootstrapServiceInitListener via "
-            + "JSentinelPolicies.anyRoleOrPermission(...)."));
+            + "JCustosPolicies.anyRoleOrPermission(...)."));
     root.add(buildSecuredUiButtonRow());
 
     root.add(new H4("Pattern E — V00.74 SecuredUi.component (any Vaadin component)"));
@@ -237,7 +237,7 @@ public class PermissionDemoCard extends Composite<VerticalLayout> {
   }
 
   private static ActionAuthorizationService<MyUser> actionAuthorizationService() {
-    return JSentinelServiceResolver.actionAuthorizationService();
+    return JCustosServiceResolver.actionAuthorizationService();
   }
 
   private static Optional<MyUser> currentUser() {

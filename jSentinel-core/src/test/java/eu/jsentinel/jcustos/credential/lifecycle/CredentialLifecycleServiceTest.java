@@ -25,7 +25,7 @@ package eu.jsentinel.jcustos.credential.lifecycle;
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
 import eu.jsentinel.jcustos.audit.CredentialStatusChanged;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.credential.store.CredentialRecord;
 import eu.jsentinel.jcustos.credential.store.CredentialStatus;
 import eu.jsentinel.jcustos.credential.store.CredentialUpdateResult;
@@ -51,7 +51,7 @@ class CredentialLifecycleServiceTest {
   private static final Instant T0 = Instant.parse("2026-06-01T12:00:00Z");
   private static final Clock FIXED = Clock.fixed(T0, ZoneOffset.UTC);
 
-  private static final class RecordingAuditService implements JSentinelAuditService {
+  private static final class RecordingAuditService implements JCustosAuditService {
     final List<AuditEvent> events = new ArrayList<>();
 
     @Override
@@ -65,7 +65,7 @@ class CredentialLifecycleServiceTest {
     }
   }
 
-  private static final class FailingAuditService implements JSentinelAuditService {
+  private static final class FailingAuditService implements JCustosAuditService {
     @Override
     public void publish(AuditEvent event) {
       throw new RuntimeException("sink unavailable");

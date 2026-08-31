@@ -1,7 +1,7 @@
 package eu.jsentinel.jcustos.demo.skill.rest.security.model;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.demo.skill.rest.security.bootstrap.JSentinelStorageProvider;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.demo.skill.rest.security.bootstrap.JCustosStorageProvider;
 
 import java.util.Objects;
 
@@ -10,9 +10,9 @@ import java.util.Objects;
  *
  * <p>Default wires an {@link EclipseStoreUserDirectoryPersistence}
  * around the app-side storage manager exposed by
- * {@link JSentinelStorageProvider#app()}, then injects it into a
+ * {@link JCustosStorageProvider#app()}, then injects it into a
  * {@link PersistentUserDirectory}. The user-directory storage shares
- * the {@code JSentinelStoragePair}'s lifecycle — no separate manager,
+ * the {@code JCustosStoragePair}'s lifecycle — no separate manager,
  * no separate shutdown hook (V00.74.20+).
  *
  * <p>Lazy via the
@@ -69,11 +69,11 @@ public final class UserDirectoryProvider {
 
   private static UserDirectory buildDefault() {
     UserDirectoryPersistence persistence =
-        new EclipseStoreUserDirectoryPersistence(JSentinelStorageProvider.app());
-    // No shutdown hook here — JSentinelStorageProvider owns the
+        new EclipseStoreUserDirectoryPersistence(JCustosStorageProvider.app());
+    // No shutdown hook here — JCustosStorageProvider owns the
     // single shutdown hook that closes the pair.
     return new PersistentUserDirectory(
         persistence,
-        JSentinelServiceResolver.passwordHashingService());
+        JCustosServiceResolver.passwordHashingService());
   }
 }

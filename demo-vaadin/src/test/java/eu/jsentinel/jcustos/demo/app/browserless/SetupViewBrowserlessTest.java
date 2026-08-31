@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.demo.app.browserless;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.demo.app.security.bootstrap.BootstrapWiring;
 import eu.jsentinel.jcustos.demo.app.security.model.DemoUserDirectoryProvider;
 import eu.jsentinel.jcustos.demo.app.security.model.MyUser;
@@ -74,7 +74,7 @@ class SetupViewBrowserlessTest extends BrowserlessTest {
     System.setProperty("security.bootstrap.token.file", tokenFile.toString());
     resetBootstrapWiringSingleton();
 
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
   }
 
@@ -84,7 +84,7 @@ class SetupViewBrowserlessTest extends BrowserlessTest {
     System.clearProperty("security.bootstrap.token.file");
     System.clearProperty("security.bootstrap.mode");
     resetBootstrapWiringSingleton();
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
   }
 

@@ -20,7 +20,7 @@ import eu.jsentinel.jcustos.audit.AccessDenied;
 import eu.jsentinel.jcustos.audit.AccessGranted;
 import eu.jsentinel.jcustos.audit.PolicyEvaluated;
 import eu.jsentinel.jcustos.authorization.annotations.RequiresPolicy;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleName;
@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * navigation against a route annotated with {@link RequiresPolicy}.
  * Proves that the new annotation flows through the existing listener
  * pipeline without any adapter changes — only by registering the
- * {@code PolicyRegistry} in {@code JSentinelServiceResolver}.
+ * {@code PolicyRegistry} in {@code JCustosServiceResolver}.
  */
 @DisplayName("AuthorizationListener with @RequiresPolicy")
 class AuthorizationListenerPolicyTest extends BrowserlessTest {
@@ -60,10 +60,10 @@ class AuthorizationListenerPolicyTest extends BrowserlessTest {
   @BeforeEach
   @Override
   protected void initVaadinEnvironment() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     SubjectStores.reset();
     SubjectStores.setSubjectStore(new InMemorySubjectStore());
-    JSentinelServiceResolver.setJSentinelAuditService(audit);
+    JCustosServiceResolver.setJCustosAuditService(audit);
 
     StubAuthorizationService.clear();
     StubAuthorizationService.put("admin",
@@ -81,14 +81,14 @@ class AuthorizationListenerPolicyTest extends BrowserlessTest {
             eu.jsentinel.jcustos.policy.api.PolicyDecision.StepUpMethod.MFA,
             "needs mfa")
         .build());
-    JSentinelServiceResolver.setPolicyRegistry(registry);
+    JCustosServiceResolver.setPolicyRegistry(registry);
 
     super.initVaadinEnvironment();
   }
 
   @AfterEach
   void cleanUp() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     SubjectStores.reset();
     StubAuthorizationService.clear();
   }
@@ -157,7 +157,7 @@ class AuthorizationListenerPolicyTest extends BrowserlessTest {
   @DisplayName("unknown policy name produces PolicyEvaluated('Denied','unknown policy: ...')")
   void unknownPolicyDeniesGracefully() {
     SubjectStores.subjectStore().setCurrentSubject("admin", String.class);
-    JSentinelServiceResolver.setPolicyRegistry(new InMemoryPolicyRegistry()); // empty
+    JCustosServiceResolver.setPolicyRegistry(new InMemoryPolicyRegistry()); // empty
 
     try {
       navigate(PolicyProtectedFixture.class);
@@ -174,7 +174,7 @@ class AuthorizationListenerPolicyTest extends BrowserlessTest {
   @Test
   @DisplayName("StepUpRequired policy reroutes to the configured step-up route; PolicyEvaluated('StepUpRequired')")
   void stepUpReroutesToStepUpRoute() {
-    JSentinelServiceResolver.setStepUpRouteName("step-up");
+    JCustosServiceResolver.setStepUpRouteName("step-up");
     SubjectStores.subjectStore().setCurrentSubject("user", String.class);
 
     try {

@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.replay.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Objects;
 
@@ -29,7 +29,7 @@ import java.util.Objects;
  * @param message a short non-secret description
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record ReplayError(String code, String message) {
 
   public ReplayError {

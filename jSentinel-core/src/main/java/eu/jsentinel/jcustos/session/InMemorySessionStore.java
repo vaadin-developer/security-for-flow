@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.session;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.logout.SubjectId;
 
@@ -37,7 +37,7 @@ import static java.util.Objects.requireNonNull;
  * Thread-safety: a {@link ReentrantReadWriteLock} serialises writes
  * and lets queries proceed in parallel.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class InMemorySessionStore implements SessionStore {
 
   private final Map<SessionId, SessionRecord> sessions = new LinkedHashMap<>();

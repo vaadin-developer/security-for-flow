@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.siem;
 
 /*-
  * #%L
- * jSentinel Events — SIEM exporter
+ * jCustos Events — SIEM exporter
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,8 +25,8 @@ package eu.jsentinel.jcustos.events.siem;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.events.wire.EnvelopeWireCodec;
 
 /**
@@ -47,7 +47,7 @@ import eu.jsentinel.jcustos.events.wire.EnvelopeWireCodec;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class JsonLinesEnvelopeFormatter implements SiemEnvelopeFormatter {
 
   private final EnvelopeWireCodec codec = new EnvelopeWireCodec();
@@ -68,7 +68,7 @@ public final class JsonLinesEnvelopeFormatter implements SiemEnvelopeFormatter {
   }
 
   @Override
-  public String format(SignedJSentinelEventEnvelope envelope) {
+  public String format(SignedJCustosEventEnvelope envelope) {
     return includePayload
         ? codec.encode(envelope)
         : codec.encodeMetadata(envelope);

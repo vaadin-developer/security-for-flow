@@ -29,7 +29,7 @@ import java.util.Objects;
  * <p>Fired by the security-vaadin / security-rest interceptors
  * before the authorization step (Phase 4c of the V00.70 roadmap)
  * and by callers of
- * {@code eu.jsentinel.jcustos.session.JSentinelVersionEnforcer}.
+ * {@code eu.jsentinel.jcustos.session.JCustosVersionEnforcer}.
  *
  * @param timestamp       UTC creation time, never {@code null}
  * @param subjectId       subject identifier, never blank

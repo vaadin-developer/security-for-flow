@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.identity.vendor.github;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.oidc.api.ClaimsToSubjectMapper;
 import eu.jsentinel.jcustos.oidc.api.UserInfoResponse;
 import eu.jsentinel.jcustos.oidc.api.VendorProfile;
@@ -69,7 +69,7 @@ public final class GitHubProfile implements VendorProfile {
       String displayName = userInfo.flatMap(u -> u.claim("name", String.class))
           .or(() -> login)
           .orElse(stableId);
-      return new JSentinelSubject("github#" + stableId, displayName, Set.of(), Set.of());
+      return new JCustosSubject("github#" + stableId, displayName, Set.of(), Set.of());
     });
   }
 }

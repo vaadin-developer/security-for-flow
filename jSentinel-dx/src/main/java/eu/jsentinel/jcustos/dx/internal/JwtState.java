@@ -12,7 +12,7 @@ import java.util.Set;
 /**
  * Sub-aggregate of {@link BootstrapState} holding everything the {@code .jwt(...)}
  * sub-builder records. Internal — consumed by the adapter-DX {@code install()}
- * paths via {@code AbstractJSentinelBootstrap.applyJwtConfiguration(...)}.
+ * paths via {@code AbstractJCustosBootstrap.applyJwtConfiguration(...)}.
  *
  * @since 00.76.00
  */

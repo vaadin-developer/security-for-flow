@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.dx.rest.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.List;
 
@@ -47,7 +47,7 @@ import java.util.List;
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record RestCorsConfiguration(
     List<String> allowedOrigins,
     List<String> allowedMethods,
@@ -74,7 +74,7 @@ public record RestCorsConfiguration(
    * is honoured by browsers, unlike {@code "*"}. The bootstrap uses this to warn
    * in every mode, throw in STRICT, and — R15 (V00.76.10) — refuse to publish it
    * live in PRODUCTION. This is a developer lint, not a header-rendering control
-   * (jSentinel ships no CORS filter).
+   * (jCustos ships no CORS filter).
    *
    * @return {@code true} iff credentials are allowed alongside a wildcard or
    *     {@code "null"} origin

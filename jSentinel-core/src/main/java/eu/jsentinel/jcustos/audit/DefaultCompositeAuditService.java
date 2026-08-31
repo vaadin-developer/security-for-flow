@@ -19,16 +19,16 @@ package eu.jsentinel.jcustos.audit;
 import java.util.List;
 
 /**
- * No-arg {@link JSentinelAuditService} suitable for {@code META-INF/services}
+ * No-arg {@link JCustosAuditService} suitable for {@code META-INF/services}
  * registration. Combines a default-sized {@link RingBufferAuditSink} (for
  * {@link #query(AuditQuery)}) with a {@link LoggingAuditSink} that mirrors
  * every event to {@code java.util.logging} at {@code INFO}.
  * <p>
  * Applications that want different retention or additional sinks should
- * register their own {@code JSentinelAuditService} implementation instead
+ * register their own {@code JCustosAuditService} implementation instead
  * of this default.
  */
-public final class DefaultCompositeAuditService implements JSentinelAuditService {
+public final class DefaultCompositeAuditService implements JCustosAuditService {
 
   private final CompositeAuditService delegate;
 

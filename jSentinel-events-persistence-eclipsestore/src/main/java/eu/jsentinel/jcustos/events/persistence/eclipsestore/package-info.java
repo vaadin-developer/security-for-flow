@@ -1,10 +1,10 @@
 /*-
  * #%L
- * jSentinel Events — Eclipse-Store persistence
+ * jCustos Events — Eclipse-Store persistence
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -35,7 +35,7 @@
  * Konzept §468) is deferred: Eclipse-Store 4.1.0 does not transitively expose
  * the standalone {@code org.eclipse.serializer:serializer} facade, and pinning
  * it risks a version clash with the embedded persistence binary. The required
- * default — the interoperable canonical-JSON codec in {@code jSentinel-events}
+ * default — the interoperable canonical-JSON codec in {@code jCustos-events}
  * — is fully shipped and covers the deterministic-bytes contract.
  *
  * @since 00.75.00

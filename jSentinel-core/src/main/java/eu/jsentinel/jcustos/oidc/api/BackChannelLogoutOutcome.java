@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.oidc.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Objects;
 import java.util.Set;
@@ -29,7 +29,7 @@ import java.util.Set;
  *
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public sealed interface BackChannelLogoutOutcome {
 
   record Accepted(Set<String> terminatedSessionIds) implements BackChannelLogoutOutcome {

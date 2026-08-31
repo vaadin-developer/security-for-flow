@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.oidc.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -30,7 +30,7 @@ import java.util.Optional;
  *
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record BackChannelLogoutToken(
     String issuer,
     Optional<String> subject,

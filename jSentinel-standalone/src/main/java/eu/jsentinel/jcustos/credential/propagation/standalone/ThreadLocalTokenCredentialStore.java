@@ -10,7 +10,7 @@
  */
 package eu.jsentinel.jcustos.credential.propagation.standalone;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.credential.propagation.ThreadSafeTokenCredentialStore;
 import eu.jsentinel.jcustos.credential.propagation.TokenCredential;
 import eu.jsentinel.jcustos.credential.propagation.TokenCredentialStore;
@@ -33,7 +33,7 @@ import java.util.Optional;
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class ThreadLocalTokenCredentialStore
     implements TokenCredentialStore, ThreadSafeTokenCredentialStore {
 

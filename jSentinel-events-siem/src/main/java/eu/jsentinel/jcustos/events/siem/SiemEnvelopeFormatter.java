@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.siem;
 
 /*-
  * #%L
- * jSentinel Events — SIEM exporter
+ * jCustos Events — SIEM exporter
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,8 +25,8 @@ package eu.jsentinel.jcustos.events.siem;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 
 /**
  * Formats one signed envelope into one single-line SIEM record. Contract:
@@ -37,7 +37,7 @@ import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 @FunctionalInterface
 public interface SiemEnvelopeFormatter {
 
@@ -45,5 +45,5 @@ public interface SiemEnvelopeFormatter {
    * @param envelope the envelope
    * @return the single-line record
    */
-  String format(SignedJSentinelEventEnvelope envelope);
+  String format(SignedJCustosEventEnvelope envelope);
 }

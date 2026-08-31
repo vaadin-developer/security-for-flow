@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import eu.jsentinel.jcustos.authorization.api.AuthorizationDecision;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 
 import java.util.Map;
@@ -55,12 +55,12 @@ class OidcAuthenticatedEvaluatorTest {
     return holder.getAnnotation(OidcAuthenticated.class);
   }
 
-  private static AccessContext context(Optional<JSentinelSubject> subject, Map<String, Object> attrs) {
+  private static AccessContext context(Optional<JCustosSubject> subject, Map<String, Object> attrs) {
     return new AccessContext(subject, "route", "Secure", "view", attrs);
   }
 
-  private static final JSentinelSubject SUBJECT =
-      new JSentinelSubject("alice", "Alice", Set.of(), Set.of());
+  private static final JCustosSubject SUBJECT =
+      new JCustosSubject("alice", "Alice", Set.of(), Set.of());
 
   @Test
   @DisplayName("no subject is unauthenticated")

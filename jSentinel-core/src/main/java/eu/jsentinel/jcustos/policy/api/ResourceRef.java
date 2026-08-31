@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.policy.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 
 /**
@@ -45,7 +45,7 @@ import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
  * @param tenant       tenant scope of the resource; {@code null} is
  *                     normalised to {@link TenantId#DEFAULT}
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record ResourceRef(String resourceType, String resourceId, TenantId tenant) {
 
   /**

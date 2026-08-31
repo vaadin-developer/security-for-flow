@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authorization.api.roles;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -49,7 +49,7 @@ import static java.util.Objects.requireNonNull;
  * <p>Cycles in the declared inheritance graph are rejected at
  * {@link Builder#build()} time.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class StaticRoleHierarchy implements RoleHierarchy {
 
   private final Map<RoleName, Set<RoleName>> closure;

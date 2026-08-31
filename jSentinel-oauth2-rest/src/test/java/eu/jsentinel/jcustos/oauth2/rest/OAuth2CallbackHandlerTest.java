@@ -273,7 +273,7 @@ class OAuth2CallbackHandlerTest {
   @DisplayName("BL01: hostCookieHeader pins the __Host- attributes and rejects control characters")
   void hostCookieHeaderIsPinned() {
     String header = CallbackStateBinding.hostCookieHeader("state-123");
-    assertEquals("__Host-JSentinelOAuth2State=state-123; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=300",
+    assertEquals("__Host-JCustosOAuth2State=state-123; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=300",
         header);
     org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
         () -> CallbackStateBinding.hostCookieHeader("evil\r\nSet-Cookie: x=y"));

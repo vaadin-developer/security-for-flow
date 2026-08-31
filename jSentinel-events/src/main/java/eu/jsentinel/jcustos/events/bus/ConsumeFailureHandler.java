@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.bus;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,10 +27,10 @@ package eu.jsentinel.jcustos.events.bus;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.audit.LogFieldScrubber;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.events.store.DeadLetterRecorder;
-import eu.jsentinel.jcustos.events.store.JSentinelEventDeadLetterStore;
+import eu.jsentinel.jcustos.events.store.JCustosEventDeadLetterStore;
 import eu.jsentinel.jcustos.events.store.RejectionReason;
 
 import java.time.Instant;
@@ -54,7 +54,7 @@ import java.util.function.Supplier;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class ConsumeFailureHandler implements HasLogger {
 
   static final String CODE_MISCONFIGURED = "events/consume-policy-misconfigured";
@@ -73,7 +73,7 @@ public final class ConsumeFailureHandler implements HasLogger {
    * @param clock           the failure-event clock
    */
   public ConsumeFailureHandler(ConsumeFailurePolicy policy,
-      JSentinelEventDeadLetterStore deadLetterStore,
+      JCustosEventDeadLetterStore deadLetterStore,
       EventBusObservabilityPublisher observability,
       Supplier<Instant> clock) {
     this.policy = Objects.requireNonNull(policy, "policy");
@@ -103,8 +103,8 @@ public final class ConsumeFailureHandler implements HasLogger {
    * @param failure  the non-{@code Valid} verification result
    * @return the action taken
    */
-  public ConsumeFailureAction handle(SignedJSentinelEventEnvelope envelope,
-      JSentinelEventVerificationResult failure) {
+  public ConsumeFailureAction handle(SignedJCustosEventEnvelope envelope,
+      JCustosEventVerificationResult failure) {
     Objects.requireNonNull(envelope, "envelope");
     Objects.requireNonNull(failure, "failure");
     try {
@@ -131,54 +131,54 @@ public final class ConsumeFailureHandler implements HasLogger {
     return action;
   }
 
-  private void logFailure(SignedJSentinelEventEnvelope envelope,
-      JSentinelEventVerificationResult failure) {
+  private void logFailure(SignedJCustosEventEnvelope envelope,
+      JCustosEventVerificationResult failure) {
     String envelopeId = LogFieldScrubber.scrub(envelope.envelopeId().value());
     String producer = LogFieldScrubber.scrub(envelope.producerId().value());
     String tenant = LogFieldScrubber.scrub(envelope.tenantId().value());
     switch (failure) {
-      case JSentinelEventVerificationResult.Valid ignored ->
+      case JCustosEventVerificationResult.Valid ignored ->
           throw new IllegalArgumentException("Valid is not a failure");
-      case JSentinelEventVerificationResult.InvalidSignature ignored ->
+      case JCustosEventVerificationResult.InvalidSignature ignored ->
           logger().warn("events/signature-invalid: envelope {} from producer {} (tenant {})"
                   + " rejected. Check that the producer signs with the registered key"
                   + " material and that both sides run the same signature-base version.",
               envelopeId, producer, tenant);
-      case JSentinelEventVerificationResult.PayloadHashMismatch ignored ->
+      case JCustosEventVerificationResult.PayloadHashMismatch ignored ->
           logger().warn("events/signature-invalid: envelope {} rejected — the payload does"
                   + " not match its signed hash. The payload was altered after signing;"
                   + " investigate the transport path of producer {}.",
               envelopeId, producer);
-      case JSentinelEventVerificationResult.UnknownKey unknown ->
+      case JCustosEventVerificationResult.UnknownKey unknown ->
           logger().warn("events/unknown-key: envelope {} rejected — key id '{}' is not"
                   + " resolvable. Register the producer's public key with the"
                   + " verification key resolver, or update the producer after a rotation.",
               envelopeId, LogFieldScrubber.scrub(unknown.keyId().value()));
-      case JSentinelEventVerificationResult.KeyRevoked revoked ->
+      case JCustosEventVerificationResult.KeyRevoked revoked ->
           logger().warn("events/key-revoked: envelope {} rejected — key '{}' is revoked."
                   + " Rotate the producer to the current signing key; envelopes under a"
                   + " revoked key are permanently rejected.",
               envelopeId, LogFieldScrubber.scrub(revoked.keyId().value()));
-      case JSentinelEventVerificationResult.KeyExpired expired ->
+      case JCustosEventVerificationResult.KeyExpired expired ->
           logger().warn("events/key-expired: envelope {} rejected — key '{}' is expired."
                   + " Rotate the producer to the current signing key.",
               envelopeId, LogFieldScrubber.scrub(expired.keyId().value()));
-      case JSentinelEventVerificationResult.Expired expired ->
+      case JCustosEventVerificationResult.Expired expired ->
           logger().warn("events/envelope-expired: envelope {} rejected — it expired at {}."
                   + " Check producer/consumer clock drift and the acceptance window.",
               envelopeId, expired.expiresAt());
-      case JSentinelEventVerificationResult.ReplayDetected ignored ->
+      case JCustosEventVerificationResult.ReplayDetected ignored ->
           logger().warn("events/replay-detected: envelope {} was already consumed —"
                   + " possible replay attack or duplicate delivery. Investigate producer"
                   + " {} and the transport path; the envelope was rejected.",
               envelopeId, producer);
-      case JSentinelEventVerificationResult.SequenceViolation violation ->
+      case JCustosEventVerificationResult.SequenceViolation violation ->
           logger().warn("events/sequence-violation: producer {} (tenant {}) sent sequence"
                   + " {} but {} was expected — possible loss, reordering or injection."
                   + " The envelope was rejected{}.",
               producer, tenant, violation.actual().value(), violation.expected().value(),
               policy.deadLettersAnything() ? " (see the dead-letter store)" : "");
-      case JSentinelEventVerificationResult.ProducerNotAllowed ignored ->
+      case JCustosEventVerificationResult.ProducerNotAllowed ignored ->
           logger().warn("events/producer-not-allowed: envelope {} rejected — producer {}"
                   + " is not allow-listed for this event type on tenant {}. Extend the"
                   + " producer policy deliberately if this producer is legitimate.",
@@ -186,29 +186,29 @@ public final class ConsumeFailureHandler implements HasLogger {
     }
   }
 
-  private static RejectionReason rejectionReason(JSentinelEventVerificationResult failure) {
+  private static RejectionReason rejectionReason(JCustosEventVerificationResult failure) {
     return switch (failure) {
-      case JSentinelEventVerificationResult.Valid ignored ->
+      case JCustosEventVerificationResult.Valid ignored ->
           throw new IllegalArgumentException("Valid is not a failure");
-      case JSentinelEventVerificationResult.InvalidSignature ignored ->
+      case JCustosEventVerificationResult.InvalidSignature ignored ->
           RejectionReason.INVALID_SIGNATURE;
-      case JSentinelEventVerificationResult.PayloadHashMismatch ignored ->
+      case JCustosEventVerificationResult.PayloadHashMismatch ignored ->
           RejectionReason.INVALID_SIGNATURE;
-      case JSentinelEventVerificationResult.UnknownKey ignored ->
+      case JCustosEventVerificationResult.UnknownKey ignored ->
           RejectionReason.UNKNOWN_KEY;
-      case JSentinelEventVerificationResult.KeyRevoked ignored ->
+      case JCustosEventVerificationResult.KeyRevoked ignored ->
           RejectionReason.KEY_REVOKED;
       // The reason enum has no KEY_EXPIRED — an expired key is unusable like
       // a revoked one; the log line keeps the precise cause.
-      case JSentinelEventVerificationResult.KeyExpired ignored ->
+      case JCustosEventVerificationResult.KeyExpired ignored ->
           RejectionReason.KEY_REVOKED;
-      case JSentinelEventVerificationResult.Expired ignored ->
+      case JCustosEventVerificationResult.Expired ignored ->
           RejectionReason.EXPIRED;
-      case JSentinelEventVerificationResult.ReplayDetected ignored ->
+      case JCustosEventVerificationResult.ReplayDetected ignored ->
           RejectionReason.REPLAY_DETECTED;
-      case JSentinelEventVerificationResult.SequenceViolation ignored ->
+      case JCustosEventVerificationResult.SequenceViolation ignored ->
           RejectionReason.SEQUENCE_VIOLATION;
-      case JSentinelEventVerificationResult.ProducerNotAllowed ignored ->
+      case JCustosEventVerificationResult.ProducerNotAllowed ignored ->
           RejectionReason.PRODUCER_NOT_ALLOWED;
     };
   }

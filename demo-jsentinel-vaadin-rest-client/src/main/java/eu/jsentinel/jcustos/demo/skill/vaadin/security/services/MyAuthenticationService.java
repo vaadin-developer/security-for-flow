@@ -1,7 +1,7 @@
 package eu.jsentinel.jcustos.demo.skill.vaadin.security.services;
 
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
-import eu.jsentinel.jcustos.autoservice.api.JSentinelAutoService;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 import eu.jsentinel.jcustos.demo.skill.vaadin.security.RestBackendClient;
 import eu.jsentinel.jcustos.demo.skill.vaadin.security.model.Credentials;
 import eu.jsentinel.jcustos.demo.skill.vaadin.security.model.User;
@@ -19,7 +19,7 @@ import java.util.Optional;
  * {@code /api/whoami}'s display name; the typed role set is filled
  * by {@code AuthorizationService} when it's queried.
  */
-@JSentinelAutoService(AuthenticationService.class)
+@JCustosAutoService(AuthenticationService.class)
 public class MyAuthenticationService
     implements AuthenticationService<Credentials, User> {
 

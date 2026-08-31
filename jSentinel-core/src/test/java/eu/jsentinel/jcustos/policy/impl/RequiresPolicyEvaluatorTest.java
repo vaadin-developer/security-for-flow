@@ -19,11 +19,11 @@ package eu.jsentinel.jcustos.policy.impl;
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
 import eu.jsentinel.jcustos.audit.PolicyEvaluated;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authorization.annotations.RequiresPolicy;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationDecision;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleName;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
@@ -56,19 +56,19 @@ class RequiresPolicyEvaluatorTest {
 
   @BeforeEach
   void setUp() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     registry = new InMemoryPolicyRegistry();
-    JSentinelServiceResolver.setPolicyRegistry(registry);
+    JCustosServiceResolver.setPolicyRegistry(registry);
     auditSink = new RecordingAuditSink();
-    JSentinelServiceResolver.setJSentinelAuditService(auditSink);
+    JCustosServiceResolver.setJCustosAuditService(auditSink);
   }
 
   @AfterEach
   void tearDown() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
-  private static AccessContext ctxWithSubject(JSentinelSubject subject) {
+  private static AccessContext ctxWithSubject(JCustosSubject subject) {
     return new AccessContext(
         Optional.of(subject), "rest-endpoint", "/documents", "read", Map.of());
   }
@@ -100,7 +100,7 @@ class RequiresPolicyEvaluatorTest {
         .deny("must be ADMIN")
         .build());
 
-    JSentinelSubject admin = new JSentinelSubject(
+    JCustosSubject admin = new JCustosSubject(
         "u-admin", "admin", Set.of(new RoleName("ADMIN")), Set.of());
 
     AuthorizationDecision decision = new RequiresPolicyEvaluator()
@@ -121,7 +121,7 @@ class RequiresPolicyEvaluatorTest {
         .deny("must be ADMIN")
         .build());
 
-    JSentinelSubject user = new JSentinelSubject(
+    JCustosSubject user = new JCustosSubject(
         "u-user", "user", Set.of(new RoleName("USER")), Set.of());
 
     AuthorizationDecision decision = new RequiresPolicyEvaluator()
@@ -151,7 +151,7 @@ class RequiresPolicyEvaluatorTest {
     assertInstanceOf(AuthorizationDecision.Forbidden.class, decision);
 
     PolicyEvaluated audit = auditSink.singlePolicyEvent();
-    // JSentinelSubject is absent, subjectId reflects that.
+    // JCustosSubject is absent, subjectId reflects that.
     assertNull(audit.subjectId());
   }
 
@@ -177,7 +177,7 @@ class RequiresPolicyEvaluatorTest {
     registry.register(Policy.named("p")
         .stepUpRequiredIf(c -> true, PolicyDecision.StepUpMethod.MFA, "needs mfa")
         .build());
-    JSentinelSubject user = new JSentinelSubject(
+    JCustosSubject user = new JCustosSubject(
         "u-1", "u-1", Set.of(), Set.of(new PermissionName("any")));
 
     AuthorizationDecision decision = new RequiresPolicyEvaluator()
@@ -199,7 +199,7 @@ class RequiresPolicyEvaluatorTest {
     eu.jsentinel.jcustos.policy.api.ResourceRef expectedRef =
         new eu.jsentinel.jcustos.policy.api.ResourceRef("document", "42");
     AccessContext ctx = new AccessContext(
-        Optional.of(new JSentinelSubject("u-1", "u-1", Set.of(), Set.of())),
+        Optional.of(new JCustosSubject("u-1", "u-1", Set.of(), Set.of())),
         "rest-endpoint",
         "/documents/42",
         "read",
@@ -253,10 +253,10 @@ class RequiresPolicyEvaluatorTest {
   @Test
   @DisplayName("audit sink that throws does not break the evaluator")
   void auditFailureIsSwallowed() {
-    JSentinelServiceResolver.setJSentinelAuditService(new ThrowingAuditSink());
+    JCustosServiceResolver.setJCustosAuditService(new ThrowingAuditSink());
     registry.register(Policy.named("p").allowIf(c -> true).build());
 
-    JSentinelSubject anyone = new JSentinelSubject(
+    JCustosSubject anyone = new JCustosSubject(
         "u-1", "u-1", Set.of(), Set.of());
 
     AuthorizationDecision decision = new RequiresPolicyEvaluator()
@@ -265,7 +265,7 @@ class RequiresPolicyEvaluatorTest {
     assertInstanceOf(AuthorizationDecision.Granted.class, decision);
   }
 
-  private static final class RecordingAuditSink implements JSentinelAuditService {
+  private static final class RecordingAuditSink implements JCustosAuditService {
     private final List<AuditEvent> events = new ArrayList<>();
 
     @Override
@@ -291,7 +291,7 @@ class RequiresPolicyEvaluatorTest {
     }
   }
 
-  private static final class ThrowingAuditSink implements JSentinelAuditService {
+  private static final class ThrowingAuditSink implements JCustosAuditService {
     @Override
     public void publish(AuditEvent event) {
       throw new RuntimeException("boom");

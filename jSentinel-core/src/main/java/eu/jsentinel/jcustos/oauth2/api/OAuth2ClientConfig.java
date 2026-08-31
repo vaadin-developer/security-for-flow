@@ -24,7 +24,7 @@ import java.util.Set;
 
 /**
  * The resolved OAuth2 RP configuration (V00.77) — the immutable snapshot the
- * {@code jSentinel-oauth2} factory turns into the HTTP clients + flow. The
+ * {@code jCustos-oauth2} factory turns into the HTTP clients + flow. The
  * {@code .oauth2(...)} bootstrap sub-builder produces it.
  *
  * @param clientAuth                 how the RP authenticates (carries the client id)

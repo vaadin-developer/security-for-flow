@@ -16,11 +16,11 @@
  */
 package eu.jsentinel.jcustos.logout;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
-import eu.jsentinel.jcustos.session.JSentinelVersion;
-import eu.jsentinel.jcustos.session.JSentinelVersionKey;
-import eu.jsentinel.jcustos.session.JSentinelVersionStore;
+import eu.jsentinel.jcustos.session.JCustosVersion;
+import eu.jsentinel.jcustos.session.JCustosVersionKey;
+import eu.jsentinel.jcustos.session.JCustosVersionStore;
 import eu.jsentinel.jcustos.session.SessionId;
 import eu.jsentinel.jcustos.session.SessionRecord;
 import eu.jsentinel.jcustos.session.SessionStatus;
@@ -44,8 +44,8 @@ import static java.util.Objects.requireNonNull;
  * adapter fills the missing fields with sensible defaults at
  * {@link #register(SubjectId, String) register} time:
  * timestamps from the supplied clock,
- * {@link JSentinelVersion#INITIAL} (or the subject's current
- * value when a {@link JSentinelVersionStore} is supplied), status
+ * {@link JCustosVersion#INITIAL} (or the subject's current
+ * value when a {@link JCustosVersionStore} is supplied), status
  * {@link SessionStatus#ACTIVE}. Calling
  * {@link #register(SubjectId, String) register} again for an
  * existing session id refreshes the {@code lastActivityAt} via
@@ -55,26 +55,26 @@ import static java.util.Objects.requireNonNull;
  * <p>Bound to one {@link TenantId} at construction. Multi-tenant
  * deployments instantiate one registry per tenant.
  *
- * <p>For Phase 4c (JSentinelVersionCheck-driven session refresh),
- * pass a {@link JSentinelVersionStore} so each fresh session
+ * <p>For Phase 4c (JCustosVersionCheck-driven session refresh),
+ * pass a {@link JCustosVersionStore} so each fresh session
  * captures the subject's current security version as its
  * {@link SessionRecord#securityVersionAtLogin() snapshot}.
  * Without one, every snapshot defaults to
- * {@link JSentinelVersion#INITIAL} — fine for adapters that don't
+ * {@link JCustosVersion#INITIAL} — fine for adapters that don't
  * enforce drift but useless for the Vaadin/REST drift interceptors.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class StoreBackedSubjectSessionRegistry implements SubjectSessionRegistry {
 
   private final SessionStore store;
   private final TenantId tenant;
   private final Clock clock;
-  private final JSentinelVersionStore versionStore;
+  private final JCustosVersionStore versionStore;
 
   /**
    * Builds a registry bound to {@link TenantId#DEFAULT} using a
    * system clock and no version-store integration — every new
-   * session is recorded with {@link JSentinelVersion#INITIAL}.
+   * session is recorded with {@link JCustosVersion#INITIAL}.
    *
    * @param store backing session store; non-null
    */
@@ -105,14 +105,14 @@ public final class StoreBackedSubjectSessionRegistry implements SubjectSessionRe
    * @param clock        time source; non-null
    * @param versionStore optional version store consulted at
    *                     register-time to capture the subject's
-   *                     current {@link JSentinelVersion} as the
+   *                     current {@link JCustosVersion} as the
    *                     session snapshot; {@code null} falls back
-   *                     to {@link JSentinelVersion#INITIAL}
+   *                     to {@link JCustosVersion#INITIAL}
    */
   public StoreBackedSubjectSessionRegistry(SessionStore store,
                                            TenantId tenant,
                                            Clock clock,
-                                           JSentinelVersionStore versionStore) {
+                                           JCustosVersionStore versionStore) {
     this.store = requireNonNull(store, "store must not be null");
     this.tenant = tenant == null ? TenantId.DEFAULT : tenant;
     this.clock = requireNonNull(clock, "clock must not be null");
@@ -132,11 +132,11 @@ public final class StoreBackedSubjectSessionRegistry implements SubjectSessionRe
     store.save(record);
   }
 
-  private JSentinelVersion snapshotVersionFor(SubjectId subjectId) {
+  private JCustosVersion snapshotVersionFor(SubjectId subjectId) {
     if (versionStore == null) {
-      return JSentinelVersion.INITIAL;
+      return JCustosVersion.INITIAL;
     }
-    return versionStore.current(new JSentinelVersionKey(tenant, subjectId));
+    return versionStore.current(new JCustosVersionKey(tenant, subjectId));
   }
 
   @Override

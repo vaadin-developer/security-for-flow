@@ -18,8 +18,8 @@ package eu.jsentinel.jcustos.authentication;
 
 import eu.jsentinel.jcustos.audit.ApiKeyDenied;
 import eu.jsentinel.jcustos.audit.ApiKeyUsed;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.credential.token.TokenHasher;
 import eu.jsentinel.jcustos.credential.token.TokenHashers;
@@ -57,12 +57,12 @@ import static java.util.Objects.requireNonNull;
  * <p>Bound to one {@link TenantId} at construction. Multi-tenant
  * deployments instantiate one service per tenant.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class ApiKeyAuthenticationService {
 
   private final ApiKeyStore store;
   private final TokenHasher hasher;
-  private final JSentinelAuditService auditService;
+  private final JCustosAuditService auditService;
   private final TenantId tenant;
   private final Clock clock;
 
@@ -76,7 +76,7 @@ public final class ApiKeyAuthenticationService {
    */
   public ApiKeyAuthenticationService(ApiKeyStore store,
                                      TokenHasher hasher,
-                                     JSentinelAuditService auditService) {
+                                     JCustosAuditService auditService) {
     this(store, hasher, auditService, TenantId.DEFAULT, Clock.systemUTC());
   }
 
@@ -93,7 +93,7 @@ public final class ApiKeyAuthenticationService {
    */
   public ApiKeyAuthenticationService(ApiKeyStore store,
                                      TokenHasher hasher,
-                                     JSentinelAuditService auditService,
+                                     JCustosAuditService auditService,
                                      TenantId tenant,
                                      Clock clock) {
     this.store = requireNonNull(store, "store must not be null");
@@ -114,7 +114,7 @@ public final class ApiKeyAuthenticationService {
   @Deprecated(forRemoval = true)
   public ApiKeyAuthenticationService(ApiKeyStore store,
                                      PasswordHasher hasher,
-                                     JSentinelAuditService auditService) {
+                                     JCustosAuditService auditService) {
     this(store, TokenHashers.fromPasswordHasher(hasher), auditService);
   }
 
@@ -130,7 +130,7 @@ public final class ApiKeyAuthenticationService {
   @Deprecated(forRemoval = true)
   public ApiKeyAuthenticationService(ApiKeyStore store,
                                      PasswordHasher hasher,
-                                     JSentinelAuditService auditService,
+                                     JCustosAuditService auditService,
                                      TenantId tenant,
                                      Clock clock) {
     this(store, TokenHashers.fromPasswordHasher(hasher), auditService, tenant, clock);

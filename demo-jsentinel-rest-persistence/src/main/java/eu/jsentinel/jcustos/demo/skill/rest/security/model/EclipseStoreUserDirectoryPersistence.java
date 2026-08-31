@@ -13,8 +13,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * <p>Since V00.74.20 the persistence does <strong>not</strong> open
  * its own {@code EmbeddedStorageManager} — it shares the app-side
- * manager from the {@code JSentinelStoragePair} that
- * {@link eu.jsentinel.jcustos.demo.skill.rest.security.bootstrap.JSentinelStorageProvider}
+ * manager from the {@code JCustosStoragePair} that
+ * {@link eu.jsentinel.jcustos.demo.skill.rest.security.bootstrap.JCustosStorageProvider}
  * maintains. The pair's lifecycle owns the shutdown.
  */
 public final class EclipseStoreUserDirectoryPersistence

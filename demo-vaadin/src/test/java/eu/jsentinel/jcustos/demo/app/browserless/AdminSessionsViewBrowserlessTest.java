@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.demo.app.browserless;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.demo.app.security.bootstrap.BootstrapWiring;
@@ -27,7 +27,7 @@ import eu.jsentinel.jcustos.demo.app.security.services.DemoSessionStoreProvider;
 import eu.jsentinel.jcustos.demo.app.views.AdminSessionsView;
 import eu.jsentinel.jcustos.logout.SubjectId;
 import eu.jsentinel.jcustos.session.SessionId;
-import eu.jsentinel.jcustos.session.JSentinelVersion;
+import eu.jsentinel.jcustos.session.JCustosVersion;
 import eu.jsentinel.jcustos.session.SessionRecord;
 import eu.jsentinel.jcustos.session.SessionStatus;
 import eu.jsentinel.jcustos.session.SessionStore;
@@ -71,7 +71,7 @@ class AdminSessionsViewBrowserlessTest extends BrowserlessTest {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
     MyUser admin = new MyUser(1L, "Admin",
         java.util.EnumSet.of(AuthorizationRole.ADMIN, AuthorizationRole.USER));
@@ -91,7 +91,7 @@ class AdminSessionsViewBrowserlessTest extends BrowserlessTest {
   @AfterEach
   void tearDown() {
     DemoSessionStoreProvider.sessionStore().delete(SID);
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
   }
 
@@ -115,7 +115,7 @@ class AdminSessionsViewBrowserlessTest extends BrowserlessTest {
     Instant now = Instant.now();
     SessionRecord record = new SessionRecord(
         SID, SubjectId.of("1"), TenantId.DEFAULT,
-        now, now, JSentinelVersion.INITIAL, SessionStatus.ACTIVE);
+        now, now, JCustosVersion.INITIAL, SessionStatus.ACTIVE);
     DemoSessionStoreProvider.sessionStore().save(record);
 
     navigate(AdminSessionsView.class);

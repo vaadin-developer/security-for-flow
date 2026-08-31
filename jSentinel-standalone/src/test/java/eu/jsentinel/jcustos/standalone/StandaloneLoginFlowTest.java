@@ -20,9 +20,9 @@ import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
 import eu.jsentinel.jcustos.audit.LoginFailed;
 import eu.jsentinel.jcustos.audit.LoginSucceeded;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptContext;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptDecision;
@@ -58,9 +58,9 @@ class StandaloneLoginFlowTest {
 
   @BeforeEach
   void setUp() {
-    JSentinelServiceResolver.resetAll();
-    JSentinelServiceResolver.setJSentinelAuditService(audit);
-    JSentinelServiceResolver.setLoginAttemptPolicy(policy);
+    JCustosServiceResolver.resetAll();
+    JCustosServiceResolver.setJCustosAuditService(audit);
+    JCustosServiceResolver.setLoginAttemptPolicy(policy);
     // Reset the cached SubjectStore so every test starts clean — the
     // SPI-registered ThreadLocalSubjectStore is recreated lazily.
     SubjectStores.reset();
@@ -70,7 +70,7 @@ class StandaloneLoginFlowTest {
 
   @AfterEach
   void tearDown() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     SubjectStores.reset();
     InMemoryStore.clear();
   }
@@ -177,7 +177,7 @@ class StandaloneLoginFlowTest {
   @Test
   @DisplayName("A throwing audit sink does NOT block a successful login")
   void throwingAuditSinkDoesNotBlockSuccess() {
-    JSentinelServiceResolver.setJSentinelAuditService(new JSentinelAuditService() {
+    JCustosServiceResolver.setJCustosAuditService(new JCustosAuditService() {
       @Override public void publish(AuditEvent event) { throw new RuntimeException("boom"); }
       @Override public List<AuditEvent> query(AuditQuery q) { return List.of(); }
     });

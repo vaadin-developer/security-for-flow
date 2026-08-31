@@ -23,7 +23,7 @@ import java.net.URI;
  * {@code end_session_endpoint} with {@code id_token_hint} +
  * {@code post_logout_redirect_uri} + {@code state}. Pure URL construction — no
  * network call; the adapter performs the browser redirect. The implementation
- * lives in {@code jSentinel-identity-oidc}.
+ * lives in {@code jCustos-identity-oidc}.
  *
  * @since 00.78.00
  */

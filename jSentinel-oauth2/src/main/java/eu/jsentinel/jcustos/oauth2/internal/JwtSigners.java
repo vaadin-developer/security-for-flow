@@ -22,9 +22,9 @@ import java.util.ServiceLoader;
 
 /**
  * Resolves the {@link JwtSigner} SPI via {@link ServiceLoader} (V00.77) so the
- * {@code jSentinel-oauth2} module needs {@code private_key_jwt} signing without
+ * {@code jCustos-oauth2} module needs {@code private_key_jwt} signing without
  * ever importing a JOSE library — the Nimbus-backed signer lives in
- * {@code jSentinel-jwt}. Resolution is memoised; the absence of any provider is
+ * {@code jCustos-jwt}. Resolution is memoised; the absence of any provider is
  * an explicit, non-secret failure raised only when {@code private_key_jwt} is
  * actually used.
  */
@@ -43,13 +43,13 @@ public final class JwtSigners {
   /**
    * @return the registered {@link JwtSigner}
    * @throws IllegalStateException if no provider is on the classpath (add the
-   *                               {@code jSentinel-jwt} module)
+   *                               {@code jCustos-jwt} module)
    */
   public static JwtSigner require() {
     if (Holder.INSTANCE == null) {
       throw new IllegalStateException(
           "oauth2/no-jwt-signer: private_key_jwt requires a JwtSigner provider — "
-              + "add the jSentinel-jwt module to the classpath");
+              + "add the jCustos-jwt module to the classpath");
     }
     return Holder.INSTANCE;
   }

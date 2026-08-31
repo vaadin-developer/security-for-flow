@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.persistence.eclipsestore;
 
 /*-
  * #%L
- * jSentinel Events — Eclipse-Store persistence
+ * jCustos Events — Eclipse-Store persistence
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -26,11 +26,11 @@ package eu.jsentinel.jcustos.events.persistence.eclipsestore;
  */
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.replay.JSentinelEventReplayStore;
-import eu.jsentinel.jcustos.events.sequence.JSentinelEventSequenceStore;
-import eu.jsentinel.jcustos.events.store.JSentinelEventDeadLetterStore;
-import eu.jsentinel.jcustos.events.store.JSentinelEventEnvelopeStore;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.replay.JCustosEventReplayStore;
+import eu.jsentinel.jcustos.events.sequence.JCustosEventSequenceStore;
+import eu.jsentinel.jcustos.events.store.JCustosEventDeadLetterStore;
+import eu.jsentinel.jcustos.events.store.JCustosEventEnvelopeStore;
 import eu.jsentinel.jcustos.persistence.eclipsestore.StorageTreeHardening;
 import org.eclipse.store.storage.embedded.types.EmbeddedStorage;
 import org.eclipse.store.storage.embedded.types.EmbeddedStorageManager;
@@ -50,7 +50,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class EclipseStoreEventStorage implements AutoCloseable, HasLogger {
 
   private final EmbeddedStorageManager manager;
@@ -131,22 +131,22 @@ public final class EclipseStoreEventStorage implements AutoCloseable, HasLogger 
   }
 
   /** @return the persistent replay store. */
-  public JSentinelEventReplayStore replayStore() {
+  public JCustosEventReplayStore replayStore() {
     return new EclipseStoreReplayStore(this);
   }
 
   /** @return the persistent sequence store. */
-  public JSentinelEventSequenceStore sequenceStore() {
+  public JCustosEventSequenceStore sequenceStore() {
     return new EclipseStoreSequenceStore(this);
   }
 
   /** @return the persistent envelope store. */
-  public JSentinelEventEnvelopeStore envelopeStore() {
+  public JCustosEventEnvelopeStore envelopeStore() {
     return new EclipseStoreEnvelopeStore(this);
   }
 
   /** @return the persistent dead-letter store. */
-  public JSentinelEventDeadLetterStore deadLetterStore() {
+  public JCustosEventDeadLetterStore deadLetterStore() {
     return new EclipseStoreDeadLetterStore(this);
   }
 
@@ -157,7 +157,7 @@ public final class EclipseStoreEventStorage implements AutoCloseable, HasLogger 
    * thread-safe and ordered against in-flight writes) makes the second and
    * later calls genuine no-ops — previously a double close (destroy listener +
    * JVM shutdown hook) hit an already-shut manager. Mirrors the R033 guard on
-   * {@code EclipseStoreJSentinelStorage}.
+   * {@code EclipseStoreJCustosStorage}.
    */
   @Override
   public void close() {

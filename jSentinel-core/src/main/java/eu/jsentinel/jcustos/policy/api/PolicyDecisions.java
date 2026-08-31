@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.policy.api;
 
 import eu.jsentinel.jcustos.authorization.api.AuthorizationDecision;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import static java.util.Objects.requireNonNull;
 
@@ -39,7 +39,7 @@ import static java.util.Objects.requireNonNull;
  * constant; new adapter code should switch on the typed
  * {@link AuthorizationDecision.StepUpRequired} variant directly.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class PolicyDecisions {
 
   /**

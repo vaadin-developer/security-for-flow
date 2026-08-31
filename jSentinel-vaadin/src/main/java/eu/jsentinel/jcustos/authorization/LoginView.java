@@ -17,21 +17,21 @@
 package eu.jsentinel.jcustos.authorization;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.audit.SessionInvalidated;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectIdResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStore;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.logout.SubjectId;
-import eu.jsentinel.jcustos.session.JSentinelVersion;
-import eu.jsentinel.jcustos.session.JSentinelVersionKey;
-import eu.jsentinel.jcustos.session.JSentinelVersionStore;
+import eu.jsentinel.jcustos.session.JCustosVersion;
+import eu.jsentinel.jcustos.session.JCustosVersionKey;
+import eu.jsentinel.jcustos.session.JCustosVersionStore;
 import eu.jsentinel.jcustos.session.SessionContext;
 import eu.jsentinel.jcustos.session.SessionDecision;
 import eu.jsentinel.jcustos.session.SessionPolicy;
-import eu.jsentinel.jcustos.session.vaadin.VaadinJSentinelVersionContext;
+import eu.jsentinel.jcustos.session.vaadin.VaadinJCustosVersionContext;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
@@ -185,7 +185,7 @@ public abstract class LoginView
     if (isValid) {
       logger().info("Login was accepted .. {}", LocalDateTime.now());
       notifyOnLogin();
-      captureJSentinelVersionSnapshot();
+      captureJCustosVersionSnapshot();
       navigateToApp();
     } else {
       logger().warn("Login was not accepted .. {}", LocalDateTime.now());
@@ -195,7 +195,7 @@ public abstract class LoginView
   }
 
   /**
-   * JS-SEC-027: warns once (not per login) when a JSentinelVersionStore is
+   * JS-SEC-027: warns once (not per login) when a JCustosVersionStore is
    * registered but no SubjectIdResolver is resolvable, so drift detection is
    * silently inert.
    */
@@ -204,9 +204,9 @@ public abstract class LoginView
 
   /**
    * Phase 4c-Followup: best-effort capture of the
-   * {@link JSentinelVersion} snapshot into
-   * {@link VaadinJSentinelVersionContext} so the
-   * {@code JSentinelVersionEnforcerListener} can detect drift on
+   * {@link JCustosVersion} snapshot into
+   * {@link VaadinJCustosVersionContext} so the
+   * {@code JCustosVersionEnforcerListener} can detect drift on
    * subsequent requests.
    * <p>
    * Fires after {@link #notifyOnLogin()} so any session rotation
@@ -214,7 +214,7 @@ public abstract class LoginView
    * matches the new servlet session. The capture is a strict
    * three-way no-op when any prerequisite is missing:
    * <ol>
-   *   <li>No SPI-registered {@link JSentinelVersionStore} (Phase 4a
+   *   <li>No SPI-registered {@link JCustosVersionStore} (Phase 4a
    *       not wired) — skip.</li>
    *   <li>No SPI-registered {@link SubjectIdResolver} — the
    *       framework cannot derive a {@link SubjectId} from the
@@ -222,18 +222,18 @@ public abstract class LoginView
    *   <li>No active Vaadin session / no current subject — skip.</li>
    * </ol>
    * Any exception thrown by the resolver, the store, or
-   * {@link VaadinJSentinelVersionContext#record} is swallowed —
+   * {@link VaadinJCustosVersionContext#record} is swallowed —
    * snapshot capture must never block the login flow.
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
-  private void captureJSentinelVersionSnapshot() {
+  private void captureJCustosVersionSnapshot() {
     try {
-      Optional<JSentinelVersionStore> storeOpt = JSentinelServiceResolver.findJSentinelVersionStore();
+      Optional<JCustosVersionStore> storeOpt = JCustosServiceResolver.findJCustosVersionStore();
       if (storeOpt.isEmpty()) {
         return;
       }
       Optional<SubjectIdResolver<Object>> resolverOpt =
-          JSentinelServiceResolver.findSubjectIdResolver();
+          JCustosServiceResolver.findSubjectIdResolver();
       if (resolverOpt.isEmpty()) {
         // JS-SEC-027 (CWE-636): a version store is registered but no
         // SubjectIdResolver — the snapshot is never captured, so the drift
@@ -241,7 +241,7 @@ public abstract class LoginView
         // not enforced). Warn once so a manual-SPI integrator gets a runtime
         // signal (the DX bootstrap fails this as a STRICT/ERROR diagnostic).
         if (DRIFT_INERT_WARNED.compareAndSet(false, true)) {
-          logger().warn("JSentinelVersion drift detection is inert: a JSentinelVersionStore "
+          logger().warn("JCustosVersion drift detection is inert: a JCustosVersionStore "
               + "is registered but no SubjectIdResolver is resolvable, so no login snapshot is "
               + "captured and mid-session role/permission revocation will not be enforced. "
               + "Register a SubjectIdResolver.");
@@ -259,13 +259,13 @@ public abstract class LoginView
       SubjectIdResolver<Object> resolver = resolverOpt.get();
       SubjectId subjectId = resolver.resolve(subject);
       TenantId tenant = resolver.tenantFor(subject);
-      JSentinelVersion snapshot = storeOpt.get()
-          .current(new JSentinelVersionKey(tenant, subjectId));
+      JCustosVersion snapshot = storeOpt.get()
+          .current(new JCustosVersionKey(tenant, subjectId));
       WrappedSession wrapped = session.getSession();
       String sessionId = wrapped == null ? null : wrapped.getId();
-      VaadinJSentinelVersionContext.record(session, subjectId, tenant, snapshot, sessionId);
+      VaadinJCustosVersionContext.record(session, subjectId, tenant, snapshot, sessionId);
     } catch (RuntimeException captureFailure) {
-      logger().warn("JSentinelVersion snapshot capture failed: {}", captureFailure.toString());
+      logger().warn("JCustosVersion snapshot capture failed: {}", captureFailure.toString());
     }
   }
 
@@ -294,7 +294,7 @@ public abstract class LoginView
    */
   private void notifyOnLogin() {
     try {
-      SessionPolicy<Object> policy = JSentinelServiceResolver.sessionPolicy();
+      SessionPolicy<Object> policy = JCustosServiceResolver.sessionPolicy();
       Optional<SessionContext<Object>> contextOpt = buildSessionContext();
       if (contextOpt.isEmpty()) {
         return;
@@ -344,7 +344,7 @@ public abstract class LoginView
 
   private void auditRotation(SessionContext<Object> context, String oldSessionId, String reason) {
     try {
-      JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
+      JCustosAuditService sink = JCustosServiceResolver.securityAuditService();
       sink.publish(new SessionInvalidated(
           Instant.now(),
           subjectIdOf(context),
@@ -368,11 +368,11 @@ public abstract class LoginView
     // An application user object's toString() commonly serialises email / hash /
     // internal ids into the audit channel — the leak class R019 / R020-R021
     // closed on the REST / StepUp / policy paths. Derive a stable id via the
-    // registered SubjectIdResolver (the same resolver the JSentinelVersion
+    // registered SubjectIdResolver (the same resolver the JCustosVersion
     // snapshot path uses), falling back to a non-PII empty id when none is
     // registered (audit attribution requires a resolver by design).
     Optional<SubjectIdResolver<Object>> resolver =
-        JSentinelServiceResolver.findSubjectIdResolver();
+        JCustosServiceResolver.findSubjectIdResolver();
     return resolver.map(r -> r.resolve(subject).value()).orElse("");
   }
 
@@ -404,7 +404,7 @@ public abstract class LoginView
 
   private static Optional<Object> currentSubject() {
     try {
-      Class<?> subjectType = JSentinelServiceResolver
+      Class<?> subjectType = JCustosServiceResolver
           .<Object, Object>authenticationService()
           .subjectType();
       if (subjectType == null) {

@@ -45,7 +45,7 @@ import org.junit.jupiter.api.io.TempDir;
 /**
  * No-mock mTLS: keytool-generated client + server keystores, a real {@link SSLServerSocket}
  * requiring client auth, and a real {@link SSLSocket} built from the {@link SSLContext}
- * that {@link MutualTls} produces. Proves the jSentinel-built context presents the client
+ * that {@link MutualTls} produces. Proves the jCustos-built context presents the client
  * certificate (handshake succeeds) and that a context without the client key is rejected.
  */
 @DisplayName("mTLS — MutualTls SSLContext presents the client cert (RFC 8705)")
@@ -150,7 +150,7 @@ class MutualTlsTest {
         assertEquals(42, is.read(), "server replied over the mutually-authenticated channel");
       }
       assertTrue(serverSide.get().contains("test-client"),
-          "server saw the client certificate jSentinel presented");
+          "server saw the client certificate jCustos presented");
     } finally {
       pool.shutdownNow();
     }

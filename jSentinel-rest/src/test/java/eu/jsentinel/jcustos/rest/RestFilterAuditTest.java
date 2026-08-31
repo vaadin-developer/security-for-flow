@@ -20,13 +20,13 @@ import eu.jsentinel.jcustos.audit.AccessDenied;
 import eu.jsentinel.jcustos.audit.AccessGranted;
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.audit.SessionExpired;
 import eu.jsentinel.jcustos.authorization.annotations.RequiresPermission;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
-import eu.jsentinel.jcustos.authorization.impl.JSentinelAnnotationScanner;
+import eu.jsentinel.jcustos.authorization.impl.JCustosAnnotationScanner;
 import eu.jsentinel.jcustos.session.SessionContext;
 import eu.jsentinel.jcustos.session.SessionDecision;
 import eu.jsentinel.jcustos.session.SessionMetadata;
@@ -70,7 +70,7 @@ class RestFilterAuditTest {
 
   @AfterEach
   void resetResolver() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   // ── RestAuthorizationFilter — authorization-decision audits ────
@@ -85,7 +85,7 @@ class RestFilterAuditTest {
 
     AccessGranted event = single(AccessGranted.class);
     assertEquals("u1", event.subjectId(),
-        "AccessGranted must carry the subject id from the resolved JSentinelSubject");
+        "AccessGranted must carry the subject id from the resolved JCustosSubject");
     assertEquals("/api/documents/42", event.route(),
         "AccessGranted must carry the request path as the route");
   }
@@ -156,7 +156,7 @@ class RestFilterAuditTest {
   @Test
   @DisplayName("IdleTimeout session-policy decision publishes SessionExpired(reason='IdleTimeout')")
   void authzFilter_idleTimeout_publishesSessionExpired() throws Exception {
-    JSentinelServiceResolver.setSessionPolicy(new AlwaysDecide<>(
+    JCustosServiceResolver.setSessionPolicy(new AlwaysDecide<>(
         new SessionPolicyDecision.IdleTimeout()));
 
     RecordingResponse response = new RecordingResponse();
@@ -168,13 +168,13 @@ class RestFilterAuditTest {
     SessionExpired event = single(SessionExpired.class);
     assertEquals("IdleTimeout", event.reason());
     assertEquals("u-idle", event.subjectId(),
-        "subjectId must come from the SessionMetadata, not the JSentinelSubject");
+        "subjectId must come from the SessionMetadata, not the JCustosSubject");
   }
 
   @Test
   @DisplayName("AbsoluteLifetimeExceeded session-policy decision publishes SessionExpired(reason='AbsoluteLifetimeExceeded')")
   void authzFilter_absoluteLifetime_publishesSessionExpired() throws Exception {
-    JSentinelServiceResolver.setSessionPolicy(new AlwaysDecide<>(
+    JCustosServiceResolver.setSessionPolicy(new AlwaysDecide<>(
         new SessionPolicyDecision.AbsoluteLifetimeExceeded()));
 
     RestAuthorizationFilter filter = filterFor(new MetadataAwareResolver("u-abs"));
@@ -188,7 +188,7 @@ class RestFilterAuditTest {
   @Test
   @DisplayName("Active session-policy decision lets authorization run and publishes AccessGranted (no SessionExpired)")
   void authzFilter_active_runsAuthorization() throws Exception {
-    JSentinelServiceResolver.setSessionPolicy(new AlwaysDecide<>(SessionPolicyDecision.active()));
+    JCustosServiceResolver.setSessionPolicy(new AlwaysDecide<>(SessionPolicyDecision.active()));
 
     RecordingResponse response = new RecordingResponse();
     RestAuthorizationFilter filter = filterFor(new MetadataAwareResolver("u-active"));
@@ -205,13 +205,13 @@ class RestFilterAuditTest {
   @Test
   @DisplayName("A throwing audit sink does not break the authorization decision")
   void throwingSinkDoesNotBlockAuthorization() throws Exception {
-    JSentinelAuditService boom = new JSentinelAuditService() {
+    JCustosAuditService boom = new JCustosAuditService() {
       @Override public void publish(AuditEvent event) { throw new RuntimeException("boom"); }
       @Override public List<AuditEvent> query(AuditQuery q) { return List.of(); }
     };
     RestAuthorizationFilter filter = new RestAuthorizationFilter(
         request -> Optional.of(subject("u1", Set.of(new PermissionName("document:delete")))),
-        new JSentinelAnnotationScanner(),
+        new JCustosAnnotationScanner(),
         new RestAccessContextFactory(),
         new HttpStatusDecisionMapper(),
         boom);
@@ -228,8 +228,8 @@ class RestFilterAuditTest {
   @Test
   @DisplayName("RestAuthenticationFilter: IdleTimeout publishes SessionExpired('IdleTimeout')")
   void authFilter_idleTimeout_publishesSessionExpired() {
-    JSentinelServiceResolver.setJSentinelAuditService(audit);
-    JSentinelServiceResolver.setSessionPolicy(new AlwaysDecide<>(
+    JCustosServiceResolver.setJCustosAuditService(audit);
+    JCustosServiceResolver.setSessionPolicy(new AlwaysDecide<>(
         new SessionPolicyDecision.IdleTimeout()));
 
     RestAuthenticationFilter filter = new RestAuthenticationFilter(new MetadataAwareResolver("u-idle"));
@@ -245,8 +245,8 @@ class RestFilterAuditTest {
   @Test
   @DisplayName("RestAuthenticationFilter: AbsoluteLifetimeExceeded publishes SessionExpired('AbsoluteLifetimeExceeded')")
   void authFilter_absoluteLifetime_publishesSessionExpired() {
-    JSentinelServiceResolver.setJSentinelAuditService(audit);
-    JSentinelServiceResolver.setSessionPolicy(new AlwaysDecide<>(
+    JCustosServiceResolver.setJCustosAuditService(audit);
+    JCustosServiceResolver.setSessionPolicy(new AlwaysDecide<>(
         new SessionPolicyDecision.AbsoluteLifetimeExceeded()));
 
     RestAuthenticationFilter filter = new RestAuthenticationFilter(new MetadataAwareResolver("u-abs"));
@@ -259,11 +259,11 @@ class RestFilterAuditTest {
   @Test
   @DisplayName("RestAuthenticationFilter: a throwing audit sink does not break the 401 response")
   void authFilter_throwingSinkDoesNotBlock() {
-    JSentinelServiceResolver.setJSentinelAuditService(new JSentinelAuditService() {
+    JCustosServiceResolver.setJCustosAuditService(new JCustosAuditService() {
       @Override public void publish(AuditEvent event) { throw new RuntimeException("boom"); }
       @Override public List<AuditEvent> query(AuditQuery q) { return List.of(); }
     });
-    JSentinelServiceResolver.setSessionPolicy(new AlwaysDecide<>(
+    JCustosServiceResolver.setSessionPolicy(new AlwaysDecide<>(
         new SessionPolicyDecision.IdleTimeout()));
 
     RestAuthenticationFilter filter = new RestAuthenticationFilter(new MetadataAwareResolver("u-x"));
@@ -279,7 +279,7 @@ class RestFilterAuditTest {
   private RestAuthorizationFilter filterFor(RestSubjectResolver resolver) {
     return new RestAuthorizationFilter(
         resolver,
-        new JSentinelAnnotationScanner(),
+        new JCustosAnnotationScanner(),
         new RestAccessContextFactory(),
         new HttpStatusDecisionMapper(),
         audit);
@@ -293,8 +293,8 @@ class RestFilterAuditTest {
     return new SimpleRestRequest("DELETE", "/api/documents/42", Map.of(), Map.of());
   }
 
-  private static JSentinelSubject subject(String id, Set<PermissionName> permissions) {
-    return new JSentinelSubject(id, "User", Set.of(), permissions);
+  private static JCustosSubject subject(String id, Set<PermissionName> permissions) {
+    return new JCustosSubject(id, "User", Set.of(), permissions);
   }
 
   private static RestHandler noopHandler() {
@@ -330,7 +330,7 @@ class RestFilterAuditTest {
 
   @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
   @java.lang.annotation.Target(java.lang.annotation.ElementType.METHOD)
-  @eu.jsentinel.jcustos.authorization.annotations.JSentinelAnnotation(
+  @eu.jsentinel.jcustos.authorization.annotations.JCustosAnnotation(
       StepUpDemandingEvaluator.class)
   public @interface DemandsStepUp { }
 
@@ -357,9 +357,9 @@ class RestFilterAuditTest {
     }
 
     @Override
-    public Optional<JSentinelSubject> resolveSubject(RestRequest request) {
+    public Optional<JCustosSubject> resolveSubject(RestRequest request) {
       String id = subjectId == null ? "anonymous" : subjectId;
-      return Optional.of(new JSentinelSubject(id, "User", Set.of(),
+      return Optional.of(new JCustosSubject(id, "User", Set.of(),
           Set.of(new PermissionName("document:delete"))));
     }
 

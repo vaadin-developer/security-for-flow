@@ -15,7 +15,7 @@ import java.util.Objects;
 
 /**
  * A single SPI implementation discovered by
- * {@link JSentinelDiagnostics#inspect()}.
+ * {@link JCustosDiagnostics#inspect()}.
  *
  * @param spi         the SPI contract
  * @param impl        the discovered implementation class

@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.integration;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,11 +27,11 @@ package eu.jsentinel.jcustos.events.integration;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.audit.AuditEvent;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.api.JSentinelEvent;
-import eu.jsentinel.jcustos.events.bus.JSentinelEventBus;
-import eu.jsentinel.jcustos.events.bus.JSentinelEventListener;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.api.JCustosEvent;
+import eu.jsentinel.jcustos.events.bus.JCustosEventBus;
+import eu.jsentinel.jcustos.events.bus.JCustosEventListener;
 import eu.jsentinel.jcustos.events.bus.Registration;
 
 import java.util.Objects;
@@ -43,34 +43,34 @@ import java.util.Optional;
  * bridge.
  *
  * <p>Audit-sink failures are isolated (Konzept §779): a throwing
- * {@link JSentinelAuditService} is caught and logged, never propagated back into
+ * {@link JCustosAuditService} is caught and logged, never propagated back into
  * the dispatch loop.
  *
- * <p>Lives in {@code jSentinel-events} (not {@code jSentinel-core}) because it
+ * <p>Lives in {@code jCustos-events} (not {@code jCustos-core}) because it
  * must see both the bus event types and the core audit model, and
- * {@code jSentinel-core} must not depend on the events module — the dependency
+ * {@code jCustos-core} must not depend on the events module — the dependency
  * runs events → core only.
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class AuditEventBusListener
-    implements JSentinelEventListener<JSentinelEvent>, HasLogger {
+    implements JCustosEventListener<JCustosEvent>, HasLogger {
 
-  private final JSentinelAuditService auditService;
+  private final JCustosAuditService auditService;
   private final AuditEventMapper mapper;
 
-  public AuditEventBusListener(JSentinelAuditService auditService) {
+  public AuditEventBusListener(JCustosAuditService auditService) {
     this(auditService, new AuditEventMapper());
   }
 
-  public AuditEventBusListener(JSentinelAuditService auditService, AuditEventMapper mapper) {
+  public AuditEventBusListener(JCustosAuditService auditService, AuditEventMapper mapper) {
     this.auditService = Objects.requireNonNull(auditService, "auditService");
     this.mapper = Objects.requireNonNull(mapper, "mapper");
   }
 
   @Override
-  public void onJSentinelEvent(JSentinelEvent event) {
+  public void onJCustosEvent(JCustosEvent event) {
     Optional<AuditEvent> audit = mapper.toAuditEvent(event);
     if (audit.isEmpty()) {
       return;
@@ -90,7 +90,7 @@ public final class AuditEventBusListener
    * @param bus the event bus
    * @return the subscription registration
    */
-  public Registration subscribeTo(JSentinelEventBus bus) {
-    return bus.subscribe(JSentinelEvent.class, this);
+  public Registration subscribeTo(JCustosEventBus bus) {
+    return bus.subscribe(JCustosEvent.class, this);
   }
 }

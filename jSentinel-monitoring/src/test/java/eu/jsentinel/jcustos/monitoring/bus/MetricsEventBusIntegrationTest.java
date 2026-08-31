@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.monitoring.bus;
 
 /*-
  * #%L
- * jSentinel Monitoring — metrics, health and diagnostics export points
+ * jCustos Monitoring — metrics, health and diagnostics export points
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -28,10 +28,10 @@ package eu.jsentinel.jcustos.monitoring.bus;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventMetadata;
 import eu.jsentinel.jcustos.events.api.EventProducerId;
-import eu.jsentinel.jcustos.events.api.JSentinelEventSeverity;
+import eu.jsentinel.jcustos.events.api.JCustosEventSeverity;
 import eu.jsentinel.jcustos.events.api.KeyId;
 import eu.jsentinel.jcustos.events.api.PayloadHashAlgorithm;
-import eu.jsentinel.jcustos.events.bus.DefaultJSentinelEventBus;
+import eu.jsentinel.jcustos.events.bus.DefaultJCustosEventBus;
 import eu.jsentinel.jcustos.events.bus.PublishPipeline;
 import eu.jsentinel.jcustos.events.codec.CanonicalJsonPayloadCodec;
 import eu.jsentinel.jcustos.events.codec.RecordReflectionCanonicalizer;
@@ -51,15 +51,15 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 
-import static eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames.AUTH_LOGIN_SUCCESS_TOTAL;
-import static eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames.EVENTBUS_LISTENER_FAILURE_TOTAL;
-import static eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames.EVENTBUS_PUBLISHED_TOTAL;
-import static eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames.EVENTBUS_REJECTED_TOTAL;
-import static eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames.EVENTBUS_REPLAY_DETECTED_TOTAL;
+import static eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames.AUTH_LOGIN_SUCCESS_TOTAL;
+import static eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames.EVENTBUS_LISTENER_FAILURE_TOTAL;
+import static eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames.EVENTBUS_PUBLISHED_TOTAL;
+import static eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames.EVENTBUS_REJECTED_TOTAL;
+import static eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames.EVENTBUS_REPLAY_DETECTED_TOTAL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Real end-to-end wiring — no mocks: a {@link DefaultJSentinelEventBus}
+ * Real end-to-end wiring — no mocks: a {@link DefaultJCustosEventBus}
  * on a real {@link PublishPipeline} (in-memory Ed25519 key management,
  * canonical-JSON codec, in-memory replay / sequence stores, allow-list
  * producer policy) with the {@link MetricsEventBusListener} bridge
@@ -74,7 +74,7 @@ class MetricsEventBusIntegrationTest {
   private static final KeyId KEY = KeyId.of("eventbus-1");
 
   private RecordingMetricsPublisher recorder;
-  private DefaultJSentinelEventBus bus;
+  private DefaultJCustosEventBus bus;
 
   @BeforeEach
   void setUp() {
@@ -87,13 +87,13 @@ class MetricsEventBusIntegrationTest {
         new InMemoryReplayStore(),
         AllowListProducerPolicy.builder().allow(PRODUCER, LoginSucceededEvent.TYPE).build(),
         Duration.ofMinutes(5), () -> T0);
-    bus = new DefaultJSentinelEventBus(pipeline);
+    bus = new DefaultJCustosEventBus(pipeline);
     new MetricsEventBusListener(recorder).subscribeTo(bus);
   }
 
   private static LoginSucceededEvent loginSucceeded() {
     EventMetadata meta = EventMetadata.create(TenantId.DEFAULT, SubjectId.of("alice"), T0,
-        JSentinelEventSeverity.INFO);
+        JCustosEventSeverity.INFO);
     return new LoginSucceededEvent(meta, "password");
   }
 
@@ -126,7 +126,7 @@ class MetricsEventBusIntegrationTest {
   @Test
   void directObservabilityDispatchCountsRejectionFamilyNotPublished() {
     EventMetadata meta = EventMetadata.create(TenantId.DEFAULT, SubjectId.of("system"), T0,
-        JSentinelEventSeverity.ERROR);
+        JCustosEventSeverity.ERROR);
 
     bus.publishObservability(new ReplayDetectedEvent(meta, "envelope-replayed"));
 

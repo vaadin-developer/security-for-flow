@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.publisher;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,8 +27,8 @@ package eu.jsentinel.jcustos.events.publisher;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.audit.LogFieldScrubber;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.util.CapacityBound;
 
 import java.util.Objects;
@@ -42,10 +42,10 @@ import java.util.concurrent.atomic.AtomicLong;
  * {@link SignedEnvelopePublisher} that hands published envelopes off to a
  * {@link Flow.Publisher} — the in-process reactive tap for embedding
  * applications (dashboards, custom pipelines). Distinct from the SSE HTTP
- * transport in {@code jSentinel-events-rest}, which serves <em>remote</em>
+ * transport in {@code jCustos-events-rest}, which serves <em>remote</em>
  * consumers over the wire; this tap never leaves the JVM.
  *
- * <p>{@link #onEnvelope(SignedJSentinelEventEnvelope)} is non-blocking:
+ * <p>{@link #onEnvelope(SignedJCustosEventEnvelope)} is non-blocking:
  * envelopes are submitted with a drop-not-retry policy, so a slow subscriber
  * whose buffer is full loses the envelope instead of stalling the bus's
  * publish thread. Each drop increments {@link #droppedEnvelopeCount()} and is
@@ -53,11 +53,11 @@ import java.util.concurrent.atomic.AtomicLong;
  * {@value #DROP_LOG_INTERVAL}-th drop — mirroring
  * {@code SseEventBroadcaster}'s drop policy (R041). Consumers needing
  * lossless delivery use
- * {@link eu.jsentinel.jcustos.events.store.JSentinelEventEnvelopeStore#findAfter}.
+ * {@link eu.jsentinel.jcustos.events.store.JCustosEventEnvelopeStore#findAfter}.
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class EventStreamPublisher
     implements SignedEnvelopePublisher, AutoCloseable, HasLogger {
 
@@ -67,7 +67,7 @@ public final class EventStreamPublisher
   /** WARN is emitted on the 1st drop and every Nth drop thereafter. */
   static final long DROP_LOG_INTERVAL = 100L;
 
-  private final SubmissionPublisher<SignedJSentinelEventEnvelope> delegate;
+  private final SubmissionPublisher<SignedJCustosEventEnvelope> delegate;
   private final AtomicLong droppedEnvelopes = new AtomicLong();
 
   /**
@@ -94,12 +94,12 @@ public final class EventStreamPublisher
    *
    * @param subscriber the subscriber
    */
-  public void subscribe(Flow.Subscriber<? super SignedJSentinelEventEnvelope> subscriber) {
+  public void subscribe(Flow.Subscriber<? super SignedJCustosEventEnvelope> subscriber) {
     delegate.subscribe(subscriber);
   }
 
   @Override
-  public void onEnvelope(SignedJSentinelEventEnvelope envelope) {
+  public void onEnvelope(SignedJCustosEventEnvelope envelope) {
     if (delegate.isClosed()) {
       // Envelopes arriving after close() are ignored — the bus registration
       // usually outlives the tap for a moment during shutdown.

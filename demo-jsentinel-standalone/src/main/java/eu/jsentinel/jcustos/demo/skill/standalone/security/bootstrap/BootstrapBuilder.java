@@ -1,6 +1,6 @@
 package eu.jsentinel.jcustos.demo.skill.standalone.security.bootstrap;
 
-import eu.jsentinel.jcustos.dx.standalone.bootstrap.StandaloneJSentinelBootstrap;
+import eu.jsentinel.jcustos.dx.standalone.bootstrap.StandaloneJCustosBootstrap;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,7 +18,7 @@ public final class BootstrapBuilder {
   private BootstrapBuilder() {
   }
 
-  public static StandaloneJSentinelBootstrap apply(StandaloneJSentinelBootstrap builder) {
+  public static StandaloneJCustosBootstrap apply(StandaloneJCustosBootstrap builder) {
     List<BootstrapExtension> extensions = new ArrayList<>();
     ServiceLoader.load(BootstrapExtension.class).forEach(extensions::add);
     extensions.sort(Comparator.comparingInt(BootstrapExtension::order));

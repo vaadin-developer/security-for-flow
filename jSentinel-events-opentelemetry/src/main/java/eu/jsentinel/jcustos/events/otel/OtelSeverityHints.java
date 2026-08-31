@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.otel;
 
 /*-
  * #%L
- * jSentinel Events — OpenTelemetry exporter
+ * jCustos Events — OpenTelemetry exporter
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,7 +25,7 @@ package eu.jsentinel.jcustos.events.otel;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.events.api.EventType;
 import eu.jsentinel.jcustos.events.types.DeadLetteredEvent;
 import eu.jsentinel.jcustos.events.types.EnvelopeRejectedEvent;
@@ -56,7 +56,7 @@ import java.util.Objects;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class OtelSeverityHints {
 
   private static final Map<EventType, Severity> HINTS = Map.of(

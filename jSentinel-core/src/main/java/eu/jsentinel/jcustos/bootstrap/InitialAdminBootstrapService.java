@@ -19,8 +19,8 @@ package eu.jsentinel.jcustos.bootstrap;
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.audit.BootstrapAdminCreated;
 import eu.jsentinel.jcustos.audit.BootstrapTokenRejected;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.credential.password.PasswordHashResult;
 import eu.jsentinel.jcustos.credential.password.PasswordHashingService;
 
@@ -163,7 +163,7 @@ public final class InitialAdminBootstrapService implements HasLogger {
   }
 
   private void auditAdminCreated(String username) {
-    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
+    JCustosAuditService sink = JCustosServiceResolver.securityAuditService();
     try {
       sink.publish(new BootstrapAdminCreated(Instant.now(clock), username, null));
     } catch (RuntimeException ignored) {
@@ -172,7 +172,7 @@ public final class InitialAdminBootstrapService implements HasLogger {
   }
 
   private void auditTokenRejected(String reason) {
-    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
+    JCustosAuditService sink = JCustosServiceResolver.securityAuditService();
     try {
       sink.publish(new BootstrapTokenRejected(Instant.now(clock), reason, null));
     } catch (RuntimeException ignored) {

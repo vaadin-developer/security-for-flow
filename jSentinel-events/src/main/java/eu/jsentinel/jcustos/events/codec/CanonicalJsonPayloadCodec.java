@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.codec;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,7 +25,7 @@ package eu.jsentinel.jcustos.events.codec;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.events.api.PayloadContentType;
 
 import java.nio.charset.StandardCharsets;
@@ -34,13 +34,13 @@ import java.util.TreeMap;
 
 /**
  * Interoperable {@link PayloadCodec}: encodes a
- * {@link CanonicalJSentinelEventPayload} as canonical JSON (Konzept §431-§466)
+ * {@link CanonicalJCustosEventPayload} as canonical JSON (Konzept §431-§466)
  * via the in-tree {@link CanonicalJson} engine. This is the default,
  * REST/SSE-friendly, externally readable codec.
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class CanonicalJsonPayloadCodec implements PayloadCodec {
 
   private static final String KEY_SCHEMA = "schemaVersion";
@@ -59,7 +59,7 @@ public final class CanonicalJsonPayloadCodec implements PayloadCodec {
   }
 
   @Override
-  public byte[] encode(CanonicalJSentinelEventPayload payload) {
+  public byte[] encode(CanonicalJCustosEventPayload payload) {
     Map<String, Object> root = new TreeMap<>();
     root.put(KEY_SCHEMA, payload.schemaVersion());
     root.put(KEY_EVENT_TYPE, payload.eventType());
@@ -76,7 +76,7 @@ public final class CanonicalJsonPayloadCodec implements PayloadCodec {
   }
 
   @Override
-  public CanonicalJSentinelEventPayload decode(byte[] bytes) {
+  public CanonicalJCustosEventPayload decode(byte[] bytes) {
     Object parsed = CanonicalJson.parse(new String(bytes, StandardCharsets.UTF_8));
     if (!(parsed instanceof Map<?, ?> map)) {
       throw new PayloadCodecException("canonical JSON payload must be a JSON object");
@@ -89,7 +89,7 @@ public final class CanonicalJsonPayloadCodec implements PayloadCodec {
     for (Map.Entry<?, ?> e : attrMap.entrySet()) {
       attributes.put(String.valueOf(e.getKey()), asString(e.getValue(), "attribute"));
     }
-    return new CanonicalJSentinelEventPayload(
+    return new CanonicalJCustosEventPayload(
         (int) asLong(require(map, KEY_SCHEMA)),
         asString(require(map, KEY_EVENT_TYPE), KEY_EVENT_TYPE),
         asString(require(map, KEY_EVENT_ID), KEY_EVENT_ID),

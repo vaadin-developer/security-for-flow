@@ -18,7 +18,7 @@ package eu.jsentinel.jcustos.logout;
 
 /**
  * Default {@link LogoutService} — discards every call. Returned by
- * {@link eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver#logoutService()}
+ * {@link eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver#logoutService()}
  * when no real implementation has been registered.
  * <p>
  * Production applications must register a concrete

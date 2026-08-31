@@ -21,7 +21,7 @@ import eu.jsentinel.jcustos.demo.app.security.model.DemoUserDirectory;
 import eu.jsentinel.jcustos.demo.app.security.model.DemoUserDirectoryProvider;
 import eu.jsentinel.jcustos.demo.app.security.model.MyUser;
 import eu.jsentinel.jcustos.demo.app.security.roles.AuthorizationRole;
-import eu.jsentinel.jcustos.demo.app.security.services.DemoJSentinelVersionBumper;
+import eu.jsentinel.jcustos.demo.app.security.services.DemoJCustosVersionBumper;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -128,7 +128,7 @@ public class AdminRolesView extends Composite<VerticalLayout> {
     dialog.setConfirmButtonTheme("error primary");
     dialog.addConfirmListener(e -> {
       DemoUserDirectoryProvider.directory().deleteUser(user.id());
-      DemoJSentinelVersionBumper.bump(user);
+      DemoJCustosVersionBumper.bump(user);
       success("Deleted user " + user.name() + ".");
       refresh();
     });
@@ -225,7 +225,7 @@ public class AdminRolesView extends Composite<VerticalLayout> {
         return;
       }
       DemoUserDirectoryProvider.directory().assignRole(user.id(), role);
-      DemoJSentinelVersionBumper.bump(user);
+      DemoJCustosVersionBumper.bump(user);
       success("Granted " + role.name() + " to " + user.name()
           + " — their session will be re-authenticated on next navigation.");
       refresh();
@@ -243,7 +243,7 @@ public class AdminRolesView extends Composite<VerticalLayout> {
         return;
       }
       DemoUserDirectoryProvider.directory().revokeRole(user.id(), role);
-      DemoJSentinelVersionBumper.bump(user);
+      DemoJCustosVersionBumper.bump(user);
       success("Revoked " + role.name() + " from " + user.name()
           + " — their session will be re-authenticated on next navigation.");
       refresh();

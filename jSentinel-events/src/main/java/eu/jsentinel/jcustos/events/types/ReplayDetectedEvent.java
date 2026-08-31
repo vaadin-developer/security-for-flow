@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.types;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,22 +25,22 @@ package eu.jsentinel.jcustos.events.types;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.events.api.EventMetadata;
 import eu.jsentinel.jcustos.events.api.EventType;
-import eu.jsentinel.jcustos.events.api.JSentinelEventCategory;
+import eu.jsentinel.jcustos.events.api.JCustosEventCategory;
 
 import java.util.Objects;
 
 /**
  * A replayed envelope was detected (Konzept §289). Short name for the
- * Konzept's {@code JSentinelEventReplayDetectedEvent}.
+ * Konzept's {@code JCustosEventReplayDetectedEvent}.
  *
  * @param metadata variable per-instance metadata
  * @param replayedEnvelopeId the envelope id seen more than once
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record ReplayDetectedEvent(EventMetadata metadata, String replayedEnvelopeId)
     implements EventBusSelfObservabilityEvent {
 
@@ -56,7 +56,7 @@ public record ReplayDetectedEvent(EventMetadata metadata, String replayedEnvelop
   }
 
   @Override
-  public JSentinelEventCategory category() {
-    return JSentinelEventCategory.INTEGRITY;
+  public JCustosEventCategory category() {
+    return JCustosEventCategory.INTEGRITY;
   }
 }

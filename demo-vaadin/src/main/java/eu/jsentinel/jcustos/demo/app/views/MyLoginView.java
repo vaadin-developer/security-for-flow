@@ -24,7 +24,7 @@ import eu.jsentinel.jcustos.bruteforce.LoginAttemptPolicy;
 import eu.jsentinel.jcustos.demo.app.security.bootstrap.BootstrapWiring;
 import eu.jsentinel.jcustos.demo.app.security.services.DemoSessionStoreProvider;
 import eu.jsentinel.jcustos.logout.SubjectId;
-import eu.jsentinel.jcustos.session.JSentinelVersion;
+import eu.jsentinel.jcustos.session.JCustosVersion;
 import eu.jsentinel.jcustos.session.SessionId;
 import eu.jsentinel.jcustos.session.SessionRecord;
 import eu.jsentinel.jcustos.session.SessionStatus;
@@ -43,7 +43,7 @@ import eu.jsentinel.jcustos.demo.app.security.model.DemoUserDirectoryProvider;
 import eu.jsentinel.jcustos.demo.app.security.model.MyUser;
 import eu.jsentinel.jcustos.authorization.LoginView;
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 
 import java.time.Clock;
@@ -71,7 +71,7 @@ public class MyLoginView
 
 
   private final AuthenticationService<Credentials, MyUser> authenticationService
-      = JSentinelServiceResolver.authenticationService();
+      = JCustosServiceResolver.authenticationService();
 
   public MyLoginView() {
     super();
@@ -102,7 +102,7 @@ public class MyLoginView
       return LoginAttemptDecision.allowed();
     }
     try {
-      LoginAttemptPolicy policy = JSentinelServiceResolver.loginAttemptPolicy();
+      LoginAttemptPolicy policy = JCustosServiceResolver.loginAttemptPolicy();
       return policy.beforeAttempt(
           LoginAttemptContext.now(username, currentClientAddress(), null));
     } catch (RuntimeException ignored) {
@@ -199,7 +199,7 @@ public class MyLoginView
           TenantId.DEFAULT,
           now,
           now,
-          JSentinelVersion.INITIAL,
+          JCustosVersion.INITIAL,
           SessionStatus.ACTIVE));
     } catch (RuntimeException ignored) {
       // session bookkeeping must not block login

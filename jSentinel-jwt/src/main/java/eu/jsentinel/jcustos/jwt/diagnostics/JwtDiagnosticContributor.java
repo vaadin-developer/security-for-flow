@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.jwt.diagnostics;
 
 /*-
  * #%L
- * jSentinel JWT — standardized JWT validation
+ * jCustos JWT — standardized JWT validation
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,8 +25,8 @@ package eu.jsentinel.jcustos.jwt.diagnostics;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.autoservice.api.JSentinelAutoService;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 import eu.jsentinel.jcustos.dx.diagnostics.DiagnosticContributor;
 import eu.jsentinel.jcustos.dx.diagnostics.DiagnosticReportBuilder;
 import eu.jsentinel.jcustos.dx.diagnostics.ServiceWarning;
@@ -41,7 +41,7 @@ import java.util.Optional;
  *
  * @since 00.76.00
  */
-@JSentinelAutoService(DiagnosticContributor.class)
+@JCustosAutoService(DiagnosticContributor.class)
 public final class JwtDiagnosticContributor implements DiagnosticContributor {
 
   /** ServiceLoader requires a public no-arg constructor. */
@@ -56,7 +56,7 @@ public final class JwtDiagnosticContributor implements DiagnosticContributor {
   @Override
   public void contribute(DiagnosticReportBuilder builder) {
     try {
-      Optional<JwtValidator> validator = JSentinelServiceResolver.findJwtValidator();
+      Optional<JwtValidator> validator = JCustosServiceResolver.findJwtValidator();
       if (validator.isEmpty()) {
         builder.addWarning(new ServiceWarning(
             "jwt/no-validator",
@@ -68,7 +68,7 @@ public final class JwtDiagnosticContributor implements DiagnosticContributor {
       builder.addWarning(new ServiceWarning(
           "jwt/rule-failed",
           "JWT diagnostic failed: " + e.getClass().getSimpleName(),
-          "Inspect JSentinelServiceResolver state."));
+          "Inspect JCustosServiceResolver state."));
     }
   }
 }

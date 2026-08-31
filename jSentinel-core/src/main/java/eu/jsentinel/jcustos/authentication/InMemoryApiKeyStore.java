@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authentication;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.logout.SubjectId;
 
@@ -36,7 +36,7 @@ import static java.util.Objects.requireNonNull;
  * preserves insertion order. Read-write lock keeps mutations atomic
  * while letting concurrent lookups proceed.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class InMemoryApiKeyStore implements ApiKeyStore {
 
   private final Map<String, ApiKeyRecord> keys = new LinkedHashMap<>();

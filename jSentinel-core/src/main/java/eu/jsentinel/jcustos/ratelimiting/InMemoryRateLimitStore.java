@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.ratelimiting;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.time.Instant;
 import java.util.Iterator;
@@ -41,7 +41,7 @@ import static java.util.Objects.requireNonNull;
  * {@link #purgeOlderThan(Instant)}; without periodic purges the
  * deques would grow unboundedly under sustained traffic.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class InMemoryRateLimitStore implements RateLimitStore {
 
   private final Map<RateLimitKey, ConcurrentLinkedDeque<Instant>> buckets =

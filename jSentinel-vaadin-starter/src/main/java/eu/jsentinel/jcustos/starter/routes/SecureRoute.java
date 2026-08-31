@@ -10,7 +10,7 @@
  */
 package eu.jsentinel.jcustos.starter.routes;
 
-import eu.jsentinel.jcustos.authorization.annotations.JSentinelAnnotation;
+import eu.jsentinel.jcustos.authorization.annotations.JCustosAnnotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -38,7 +38,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-@JSentinelAnnotation(SecureRouteEvaluator.class)
+@JCustosAnnotation(SecureRouteEvaluator.class)
 public @interface SecureRoute {
 
   String[] roles() default {};

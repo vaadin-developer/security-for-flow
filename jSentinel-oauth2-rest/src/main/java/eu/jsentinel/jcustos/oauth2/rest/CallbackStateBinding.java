@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.oauth2.rest;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.rest.RestRequest;
 
 import java.nio.charset.StandardCharsets;
@@ -47,12 +47,12 @@ import java.util.Objects;
  *
  * @since 00.81.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 @FunctionalInterface
 public interface CallbackStateBinding {
 
   /** Default cookie carrying the state binding. */
-  String DEFAULT_COOKIE_NAME = "__Host-JSentinelOAuth2State";
+  String DEFAULT_COOKIE_NAME = "__Host-JCustosOAuth2State";
 
   /** Cookie attributes for the binding cookie (5-minute lifetime, origin-pinned). */
   String COOKIE_ATTRIBUTES = "; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=300";

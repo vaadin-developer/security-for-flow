@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.bus;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,11 +27,11 @@ package eu.jsentinel.jcustos.events.bus;
 
 import eu.jsentinel.jcustos.events.api.KeyId;
 import eu.jsentinel.jcustos.events.api.PayloadHashAlgorithm;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.events.codec.CanonicalJsonPayloadCodec;
 import eu.jsentinel.jcustos.events.codec.RecordReflectionCanonicalizer;
 import eu.jsentinel.jcustos.events.keys.InMemoryKeyManagement;
-import eu.jsentinel.jcustos.events.keys.JSentinelEventSigningKeyProvider;
+import eu.jsentinel.jcustos.events.keys.JCustosEventSigningKeyProvider;
 import eu.jsentinel.jcustos.events.keys.SigningKeySnapshot;
 import eu.jsentinel.jcustos.events.signature.SignatureAlgorithm;
 import org.junit.jupiter.api.DisplayName;
@@ -58,7 +58,7 @@ class PublishPipelineKeyRotationTest {
    * delegate's atomic snapshot and rotates AFTERWARDS, modeling a rotation
    * landing right after the pipeline captured its one snapshot.
    */
-  private static final class RotateOnReadProvider implements JSentinelEventSigningKeyProvider {
+  private static final class RotateOnReadProvider implements JCustosEventSigningKeyProvider {
 
     private final InMemoryKeyManagement delegate;
     private final AtomicInteger rotations = new AtomicInteger();
@@ -111,9 +111,9 @@ class PublishPipelineKeyRotationTest {
     // consistent (keyId, signature) pair — Valid end-to-end, because the
     // rotated-out key stays accepted for verification.
     for (int i = 0; i < 3; i++) {
-      SignedJSentinelEventEnvelope envelope = publisher.toEnvelope(BusFixtures.event());
-      JSentinelEventVerificationResult result = consumer.verify(envelope, BusFixtures.T0);
-      assertInstanceOf(JSentinelEventVerificationResult.Valid.class, result,
+      SignedJCustosEventEnvelope envelope = publisher.toEnvelope(BusFixtures.event());
+      JCustosEventVerificationResult result = consumer.verify(envelope, BusFixtures.T0);
+      assertInstanceOf(JCustosEventVerificationResult.Valid.class, result,
           "envelope stamped " + envelope.keyId().value()
               + " must verify under its own stamped keyId");
     }

@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.components;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 /**
  * How a secured component reacts when the current subject is not
@@ -35,7 +35,7 @@ import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
  * still has to enforce the permission on every action invocation.
  * Hiding a button does not protect against a hand-crafted RPC call.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public enum SecuredVisibilityMode {
   HIDE,
   DISABLE

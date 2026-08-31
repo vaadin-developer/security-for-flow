@@ -20,8 +20,8 @@ import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.SessionCreated;
 import eu.jsentinel.jcustos.audit.SessionExpired;
 import eu.jsentinel.jcustos.audit.SessionInvalidated;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -113,7 +113,7 @@ public final class TimeoutSessionPolicy<U> implements SessionPolicy<U> {
 
   private final Config config;
   private final Clock clock;
-  private final JSentinelAuditService auditService;
+  private final JCustosAuditService auditService;
 
   public TimeoutSessionPolicy() {
     this(Config.defaults(), Clock.systemUTC(), null);
@@ -123,9 +123,9 @@ public final class TimeoutSessionPolicy<U> implements SessionPolicy<U> {
    * @param config       thresholds and post-login behaviour
    * @param clock        time source — fixed clocks make testing deterministic
    * @param auditService audit sink, or {@code null} to resolve from
-   *                     {@link JSentinelServiceResolver} on each event
+   *                     {@link JCustosServiceResolver} on each event
    */
-  public TimeoutSessionPolicy(Config config, Clock clock, JSentinelAuditService auditService) {
+  public TimeoutSessionPolicy(Config config, Clock clock, JCustosAuditService auditService) {
     this.config = Objects.requireNonNull(config, "config");
     this.clock = Objects.requireNonNull(clock, "clock");
     this.auditService = auditService;
@@ -213,15 +213,15 @@ public final class TimeoutSessionPolicy<U> implements SessionPolicy<U> {
     if (subject == null) {
       return "";
     }
-    return JSentinelServiceResolver.<U>findSubjectIdResolver()
+    return JCustosServiceResolver.<U>findSubjectIdResolver()
         .map(r -> r.resolve(subject).value())
         .orElse("");
   }
 
   private void publish(AuditEvent event) {
-    JSentinelAuditService sink = auditService != null
+    JCustosAuditService sink = auditService != null
         ? auditService
-        : JSentinelServiceResolver.securityAuditService();
+        : JCustosServiceResolver.securityAuditService();
     try {
       sink.publish(event);
     } catch (RuntimeException auditFailure) {

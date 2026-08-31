@@ -19,7 +19,7 @@ package eu.jsentinel.jcustos.authorization.api.roles;
 import eu.jsentinel.jcustos.authorization.annotations.RequiresRole;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationDecision;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationEvaluator;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 
 import java.util.Arrays;
@@ -44,7 +44,7 @@ public final class RequiresRoleEvaluator implements AuthorizationEvaluator<Requi
     boolean granted = RoleMatcher.containsAnyImplied(
         context.subject().orElseThrow().roleNames(),
         required,
-        JSentinelServiceResolver.roleHierarchy());
+        JCustosServiceResolver.roleHierarchy());
 
     return granted
         ? AuthorizationDecision.granted()

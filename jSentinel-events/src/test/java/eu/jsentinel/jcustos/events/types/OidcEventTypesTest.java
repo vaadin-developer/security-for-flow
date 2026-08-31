@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.types;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -28,9 +28,9 @@ package eu.jsentinel.jcustos.events.types;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventId;
 import eu.jsentinel.jcustos.events.api.EventMetadata;
-import eu.jsentinel.jcustos.events.api.JSentinelEventCategory;
-import eu.jsentinel.jcustos.events.api.JSentinelEventSeverity;
-import eu.jsentinel.jcustos.events.codec.CanonicalJSentinelEventPayload;
+import eu.jsentinel.jcustos.events.api.JCustosEventCategory;
+import eu.jsentinel.jcustos.events.api.JCustosEventSeverity;
+import eu.jsentinel.jcustos.events.codec.CanonicalJCustosEventPayload;
 import eu.jsentinel.jcustos.events.codec.RecordReflectionCanonicalizer;
 import eu.jsentinel.jcustos.logout.SubjectId;
 import org.junit.jupiter.api.DisplayName;
@@ -48,23 +48,23 @@ class OidcEventTypesTest {
 
   private static EventMetadata meta() {
     return new EventMetadata(EventId.of("evt-1"), TenantId.DEFAULT, SubjectId.of("system"),
-        Instant.parse("2026-06-26T12:00:00Z"), JSentinelEventSeverity.INFO);
+        Instant.parse("2026-06-26T12:00:00Z"), JCustosEventSeverity.INFO);
   }
 
   @Test
   @DisplayName("IdTokenValidated carries the issuer only")
   void idTokenValidated() {
-    CanonicalJSentinelEventPayload p = canonicalizer.canonicalize(
+    CanonicalJCustosEventPayload p = canonicalizer.canonicalize(
         new IdTokenValidatedEvent(meta(), "https://idp.example/"));
     assertEquals("IdTokenValidated", p.eventType());
-    assertEquals(JSentinelEventCategory.TOKEN.name(), p.category());
+    assertEquals(JCustosEventCategory.TOKEN.name(), p.category());
     assertEquals(Set.of("issuer"), p.attributes().keySet());
   }
 
   @Test
   @DisplayName("IdTokenValidationFailed carries the stable error code only")
   void idTokenValidationFailed() {
-    CanonicalJSentinelEventPayload p = canonicalizer.canonicalize(
+    CanonicalJCustosEventPayload p = canonicalizer.canonicalize(
         new IdTokenValidationFailedEvent(meta(), "oidc/nonce-mismatch"));
     assertEquals(Set.of("errorCode"), p.attributes().keySet());
     assertEquals("oidc/nonce-mismatch", p.attributes().get("errorCode"));
@@ -73,18 +73,18 @@ class OidcEventTypesTest {
   @Test
   @DisplayName("OidcLoginSucceeded is an AUTHENTICATION event carrying the issuer only")
   void loginSucceeded() {
-    CanonicalJSentinelEventPayload p = canonicalizer.canonicalize(
+    CanonicalJCustosEventPayload p = canonicalizer.canonicalize(
         new OidcLoginSucceededEvent(meta(), "https://idp.example/"));
-    assertEquals(JSentinelEventCategory.AUTHENTICATION.name(), p.category());
+    assertEquals(JCustosEventCategory.AUTHENTICATION.name(), p.category());
     assertEquals(Set.of("issuer"), p.attributes().keySet());
   }
 
   @Test
   @DisplayName("OidcLogout is a SESSION event carrying the issuer only")
   void logout() {
-    CanonicalJSentinelEventPayload p = canonicalizer.canonicalize(
+    CanonicalJCustosEventPayload p = canonicalizer.canonicalize(
         new OidcLogoutEvent(meta(), "https://idp.example/"));
-    assertEquals(JSentinelEventCategory.SESSION.name(), p.category());
+    assertEquals(JCustosEventCategory.SESSION.name(), p.category());
     assertEquals(Set.of("issuer"), p.attributes().keySet());
   }
 }

@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.rest;
 
 /*-
  * #%L
- * jSentinel Events — REST / SSE bridge
+ * jCustos Events — REST / SSE bridge
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,13 +27,13 @@ package eu.jsentinel.jcustos.events.rest;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.dependencies.core.net.HttpStatus;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.events.bus.ConsumeFailureHandler;
 import eu.jsentinel.jcustos.events.bus.ConsumePipeline;
-import eu.jsentinel.jcustos.events.bus.JSentinelEventVerificationResult;
-import eu.jsentinel.jcustos.events.store.JSentinelEventCursor;
-import eu.jsentinel.jcustos.events.store.JSentinelEventEnvelopeStore;
+import eu.jsentinel.jcustos.events.bus.JCustosEventVerificationResult;
+import eu.jsentinel.jcustos.events.store.JCustosEventCursor;
+import eu.jsentinel.jcustos.events.store.JCustosEventEnvelopeStore;
 import eu.jsentinel.jcustos.events.store.StoredEnvelope;
 import eu.jsentinel.jcustos.events.wire.EnvelopeWireCodec;
 
@@ -44,24 +44,24 @@ import java.util.function.Supplier;
 /**
  * Framework-light publish handler for the bridge (Konzept §970): decode a wire
  * envelope, run the full {@link ConsumePipeline}, and on success store + live-
- * broadcast it. Maps every {@link JSentinelEventVerificationResult} to an
+ * broadcast it. Maps every {@link JCustosEventVerificationResult} to an
  * {@link EventPublishOutcome}. HTTP-server-agnostic, so it can be unit-tested
  * directly and reused behind any transport.
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class EventPublishService implements HasLogger {
 
   private final EnvelopeWireCodec wireCodec;
   private final ConsumePipeline consumePipeline;
-  private final JSentinelEventEnvelopeStore envelopeStore;
+  private final JCustosEventEnvelopeStore envelopeStore;
   private final SseEventBroadcaster broadcaster;
   private final Supplier<Instant> clock;
   private final ConsumeFailureHandler failureHandler;
 
   public EventPublishService(EnvelopeWireCodec wireCodec, ConsumePipeline consumePipeline,
-      JSentinelEventEnvelopeStore envelopeStore, SseEventBroadcaster broadcaster,
+      JCustosEventEnvelopeStore envelopeStore, SseEventBroadcaster broadcaster,
       Supplier<Instant> clock) {
     this(wireCodec, consumePipeline, envelopeStore, broadcaster, clock, null);
   }
@@ -77,7 +77,7 @@ public final class EventPublishService implements HasLogger {
    * @since 00.80.00
    */
   public EventPublishService(EnvelopeWireCodec wireCodec, ConsumePipeline consumePipeline,
-      JSentinelEventEnvelopeStore envelopeStore, SseEventBroadcaster broadcaster,
+      JCustosEventEnvelopeStore envelopeStore, SseEventBroadcaster broadcaster,
       Supplier<Instant> clock, ConsumeFailureHandler failureHandler) {
     this.wireCodec = Objects.requireNonNull(wireCodec, "wireCodec");
     this.consumePipeline = Objects.requireNonNull(consumePipeline, "consumePipeline");
@@ -103,49 +103,49 @@ public final class EventPublishService implements HasLogger {
         });
   }
 
-  private EventPublishOutcome verifyAndMap(SignedJSentinelEventEnvelope envelope) {
-    JSentinelEventVerificationResult result = consumePipeline.verify(envelope, clock.get());
+  private EventPublishOutcome verifyAndMap(SignedJCustosEventEnvelope envelope) {
+    JCustosEventVerificationResult result = consumePipeline.verify(envelope, clock.get());
     if (failureHandler != null
-        && !(result instanceof JSentinelEventVerificationResult.Valid)) {
+        && !(result instanceof JCustosEventVerificationResult.Valid)) {
       // P012: event + metric seam + optional dead letter — the handler is
       // total and never changes the HTTP outcome below.
       failureHandler.handle(envelope, result);
     }
     return switch (result) {
-      case JSentinelEventVerificationResult.Valid v -> accept(v.envelope());
-      case JSentinelEventVerificationResult.InvalidSignature ignored ->
+      case JCustosEventVerificationResult.Valid v -> accept(v.envelope());
+      case JCustosEventVerificationResult.InvalidSignature ignored ->
           new EventPublishOutcome(HttpStatus.BAD_REQUEST.code(),
               EventPublishBodies.INVALID_SIGNATURE);
-      case JSentinelEventVerificationResult.PayloadHashMismatch ignored ->
+      case JCustosEventVerificationResult.PayloadHashMismatch ignored ->
           new EventPublishOutcome(HttpStatus.BAD_REQUEST.code(),
               EventPublishBodies.PAYLOAD_HASH_MISMATCH);
-      case JSentinelEventVerificationResult.UnknownKey ignored ->
+      case JCustosEventVerificationResult.UnknownKey ignored ->
           new EventPublishOutcome(HttpStatus.BAD_REQUEST.code(),
               EventPublishBodies.UNKNOWN_KEY);
-      case JSentinelEventVerificationResult.KeyRevoked ignored ->
+      case JCustosEventVerificationResult.KeyRevoked ignored ->
           new EventPublishOutcome(HttpStatus.FORBIDDEN.code(),
               EventPublishBodies.KEY_REVOKED);
-      case JSentinelEventVerificationResult.KeyExpired ignored ->
+      case JCustosEventVerificationResult.KeyExpired ignored ->
           new EventPublishOutcome(HttpStatus.FORBIDDEN.code(),
               EventPublishBodies.KEY_EXPIRED);
-      case JSentinelEventVerificationResult.Expired ignored ->
+      case JCustosEventVerificationResult.Expired ignored ->
           new EventPublishOutcome(HttpStatus.GONE.code(),
               EventPublishBodies.EXPIRED);
-      case JSentinelEventVerificationResult.ReplayDetected ignored ->
+      case JCustosEventVerificationResult.ReplayDetected ignored ->
           new EventPublishOutcome(HttpStatus.CONFLICT.code(),
               EventPublishBodies.REPLAY_DETECTED);
-      case JSentinelEventVerificationResult.SequenceViolation ignored ->
+      case JCustosEventVerificationResult.SequenceViolation ignored ->
           new EventPublishOutcome(HttpStatus.CONFLICT.code(),
               EventPublishBodies.SEQUENCE_VIOLATION);
-      case JSentinelEventVerificationResult.ProducerNotAllowed ignored ->
+      case JCustosEventVerificationResult.ProducerNotAllowed ignored ->
           new EventPublishOutcome(HttpStatus.FORBIDDEN.code(),
               EventPublishBodies.PRODUCER_NOT_ALLOWED);
     };
   }
 
-  private EventPublishOutcome accept(SignedJSentinelEventEnvelope envelope) {
+  private EventPublishOutcome accept(SignedJCustosEventEnvelope envelope) {
     if (envelopeStore != null) {
-      JSentinelEventCursor cursor = envelopeStore.append(envelope);
+      JCustosEventCursor cursor = envelopeStore.append(envelope);
       if (broadcaster != null) {
         broadcaster.broadcast(new StoredEnvelope(cursor, envelope));
       }

@@ -1,6 +1,6 @@
 package eu.jsentinel.jcustos.demo.skill.rest;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.rest.RestRequest;
 import eu.jsentinel.jcustos.rest.RestSubjectResolver;
@@ -21,7 +21,7 @@ import java.util.Optional;
  * Composite {@link HttpHandler} that dispatches requests to method
  * handlers based on (HTTP method, path-prefix), performs the
  * {@code @RequiresPermission}-equivalent check via the resolved
- * {@link JSentinelSubject}, and writes the JSON response.
+ * {@link JCustosSubject}, and writes the JSON response.
  *
  * <p>Demo-level routing — no path parameter capture beyond the last
  * segment, no content-negotiation. Production swaps for any
@@ -51,7 +51,7 @@ public final class Router implements HttpHandler {
         return;
       }
       RestRequest req = restRequestFrom(exchange);
-      Optional<JSentinelSubject> subject = resolver.resolveSubject(req);
+      Optional<JCustosSubject> subject = resolver.resolveSubject(req);
       if (match.requiredPermission != null) {
         if (subject.isEmpty()) {
           respond(exchange, 401, "Unauthorized");
@@ -91,7 +91,7 @@ public final class Router implements HttpHandler {
   /** Handler signature with the resolved subject (or null for public routes). */
   @FunctionalInterface
   public interface RouteHandler {
-    void handle(HttpExchange exchange, JSentinelSubject subject) throws IOException;
+    void handle(HttpExchange exchange, JCustosSubject subject) throws IOException;
   }
 
   /** Route record — method + path prefix + optional permission requirement. */

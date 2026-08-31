@@ -34,20 +34,20 @@
     <Bug pattern="SING_SINGLETON_HAS_NONPRIVATE_CONSTRUCTOR"/>
   </Match>
   <Match>
-    <Class name="eu.jsentinel.jcustos.rest.RestJSentinelVersionFilter"/>
+    <Class name="eu.jsentinel.jcustos.rest.RestJCustosVersionFilter"/>
     <Bug pattern="NP_NULL_PARAM_DEREF"/>
   </Match>
   <!--
     V00.75.20 RF-01 (exit review): MS_EXPOSE_REP on
-    JSentinelServiceResolver.current(). Returning the shared process-wide
-    DEFAULT JSentinelContext is the intended static-facade accessor (V00.75.10
+    JCustosServiceResolver.current(). Returning the shared process-wide
+    DEFAULT JCustosContext is the intended static-facade accessor (V00.75.10
     H5), documented as the deliberate process-global surface in R038 — not an
     accidental leak. Latent since H5; surfaced by the exit-review gate (the
     baseline excludes the instance EI_EXPOSE_REP* but not the static
     MS_EXPOSE_REP). Scoped to this one method so the rule stays strict elsewhere.
   -->
   <Match>
-    <Class name="eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver"/>
+    <Class name="eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver"/>
     <Method name="current"/>
     <Bug pattern="MS_EXPOSE_REP"/>
   </Match>
@@ -61,7 +61,7 @@
        because Vaadin's UI/navigation lifecycle requires it (a documented
        legitimate Serializable shape — see docs/security/credentials/standards/
        serialization-policy.md). The flagged fields are stateless strategy
-       singletons resolved via JSentinelServiceResolver/ServiceLoader, not state.
+       singletons resolved via JCustosServiceResolver/ServiceLoader, not state.
        Marking them `transient final` would null them after session
        deserialization (final cannot be re-assigned without readObject
        machinery); the project does NOT use Java session serialization (Eclipse-
@@ -73,7 +73,7 @@
       <Class name="eu.jsentinel.jcustos.authorization.impl.AuthorizationListener"/>
       <Class name="eu.jsentinel.jcustos.components.SecuredButton"/>
       <Class name="eu.jsentinel.jcustos.components.SecuredRouterLink"/>
-      <Class name="eu.jsentinel.jcustos.session.vaadin.JSentinelVersionEnforcerListener"/>
+      <Class name="eu.jsentinel.jcustos.session.vaadin.JCustosVersionEnforcerListener"/>
     </Or>
     <Bug pattern="SE_BAD_FIELD"/>
   </Match>
@@ -115,7 +115,7 @@
     test-seam providers. Both return a deliberately swappable static instance
     so tests can replace the backing SPI before exercising it (the Javadoc on
     each documents the setter + reset()). This is the same intended-static-
-    accessor pattern already excluded for JSentinelServiceResolver.current()
+    accessor pattern already excluded for JCustosServiceResolver.current()
     (V00.75.20 RF-01) — not an accidental leak, and confined to demo modules
     that are never part of the Central bundle. Scoped to the two accessor
     methods so the rule stays strict elsewhere. (Pre-existing since the V00.73

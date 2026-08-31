@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.policy.api;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,7 +42,7 @@ class PolicyContextTest {
         Map.of());
   }
 
-  private static AccessContext accessContextWithSubject(JSentinelSubject subject) {
+  private static AccessContext accessContextWithSubject(JCustosSubject subject) {
     return new AccessContext(
         Optional.of(subject),
         "rest-endpoint",
@@ -99,7 +99,7 @@ class PolicyContextTest {
   @Test
   @DisplayName("subject() returns the wrapped access context's subject")
   void subjectShortcut() {
-    JSentinelSubject subject = new JSentinelSubject("u-1", "u-1", Set.of(), Set.of());
+    JCustosSubject subject = new JCustosSubject("u-1", "u-1", Set.of(), Set.of());
     PolicyContext ctx = new PolicyContext(accessContextWithSubject(subject), "policy.x");
     assertTrue(ctx.subject().isPresent());
     assertSame(subject, ctx.subject().orElseThrow());

@@ -17,8 +17,8 @@
 package eu.jsentinel.jcustos.ratelimiting;
 
 import eu.jsentinel.jcustos.audit.RateLimitExceeded;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -52,13 +52,13 @@ import static java.util.Objects.requireNonNull;
  * backoff and lockout semantics. This policy is for steady-state
  * traffic shaping.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class InMemoryRateLimitPolicy implements RateLimitPolicy {
 
   private static final String SUBJECT_PREFIX = "subject:";
 
   private final RateLimitStore store;
-  private final JSentinelAuditService auditService;
+  private final JCustosAuditService auditService;
   private final int limit;
   private final Duration window;
   private final Clock clock;
@@ -70,7 +70,7 @@ public final class InMemoryRateLimitPolicy implements RateLimitPolicy {
    * @param window       sliding-window duration; non-null, strictly positive
    */
   public InMemoryRateLimitPolicy(RateLimitStore store,
-                                 JSentinelAuditService auditService,
+                                 JCustosAuditService auditService,
                                  int limit,
                                  Duration window) {
     this(store, auditService, limit, window, Clock.systemUTC());
@@ -86,7 +86,7 @@ public final class InMemoryRateLimitPolicy implements RateLimitPolicy {
    * @param clock        time source; non-null
    */
   public InMemoryRateLimitPolicy(RateLimitStore store,
-                                 JSentinelAuditService auditService,
+                                 JCustosAuditService auditService,
                                  int limit,
                                  Duration window,
                                  Clock clock) {

@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.dx.standalone.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 /**
  * SPI handed to a standalone / CLI application's interactive login
@@ -30,7 +30,7 @@ import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 @FunctionalInterface
 public interface InteractiveLoginPrompt {
 

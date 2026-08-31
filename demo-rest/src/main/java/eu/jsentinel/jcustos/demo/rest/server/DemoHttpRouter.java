@@ -22,7 +22,7 @@ import eu.jsentinel.jcustos.demo.rest.shared.DemoEndpoints;
 import eu.jsentinel.jcustos.policy.api.ResourceRef;
 import eu.jsentinel.jcustos.rest.RestAuthenticationFilter;
 import eu.jsentinel.jcustos.rest.RestAuthorizationFilter;
-import eu.jsentinel.jcustos.rest.RestJSentinelVersionFilter;
+import eu.jsentinel.jcustos.rest.RestJCustosVersionFilter;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -47,7 +47,7 @@ public final class DemoHttpRouter implements HttpHandler {
   private final DemoBootstrapHandlers bootstrapHandlers;
   private final RestAuthorizationFilter filter;
   private final RestAuthenticationFilter authenticationFilter;
-  private final RestJSentinelVersionFilter versionFilter;
+  private final RestJCustosVersionFilter versionFilter;
 
   private final Method listDocumentsMethod;
   private final Method createDocumentMethod;
@@ -74,7 +74,7 @@ public final class DemoHttpRouter implements HttpHandler {
       DemoHandlers handlers,
       DemoBootstrapHandlers bootstrapHandlers,
       DemoSubjectResolver subjectResolver,
-      RestJSentinelVersionFilter versionFilter) {
+      RestJCustosVersionFilter versionFilter) {
     this.handlers = handlers;
     this.bootstrapHandlers = bootstrapHandlers;
     this.filter = new RestAuthorizationFilter(subjectResolver);

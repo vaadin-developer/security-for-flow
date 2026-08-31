@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.components;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.session.SessionRecord;
 import eu.jsentinel.jcustos.session.SessionStatus;
 import eu.jsentinel.jcustos.session.SessionStore;
@@ -62,7 +62,7 @@ import static java.util.Objects.requireNonNull;
  * polling timer via {@code UI.setPollInterval(...)} and call
  * {@code refresh()} from a {@code PollEvent} listener.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public class SessionManagementView extends Composite<VerticalLayout> {
 
   private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ISO_INSTANT;

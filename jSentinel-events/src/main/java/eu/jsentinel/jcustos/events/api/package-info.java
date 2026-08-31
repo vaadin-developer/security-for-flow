@@ -1,10 +1,10 @@
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,8 +25,8 @@
 
 /**
  * V00.75 Security Event Bus core API: the {@link
- * eu.jsentinel.jcustos.events.api.JSentinelEvent} contract, the signed
- * {@link eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope}
+ * eu.jsentinel.jcustos.events.api.JCustosEvent} contract, the signed
+ * {@link eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope}
  * and its builder, the event category / severity enums, and the strongly
  * typed envelope identifiers ({@code EventId}, {@code EventEnvelopeId},
  * {@code EventProducerId}, {@code CorrelationId}, {@code CausationId},
@@ -36,7 +36,7 @@
  * <p>The module is framework-neutral — no Vaadin, no REST framework, no
  * Eclipse Store (Konzept §102). Every public type in this package is
  * annotated {@link
- * eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi};
+ * eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi};
  * stable-API promotion is staged for V00.76 / V00.77 after demo adoption.
  *
  * @since 00.75.00

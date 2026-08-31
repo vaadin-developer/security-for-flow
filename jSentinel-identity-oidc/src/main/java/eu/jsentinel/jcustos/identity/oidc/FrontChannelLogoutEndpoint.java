@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.identity.oidc;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.oidc.api.SessionRegistry;
 
 import java.util.Objects;
@@ -33,7 +33,7 @@ import java.util.Set;
  *
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class FrontChannelLogoutEndpoint {
 
   private final String trustedIssuer;

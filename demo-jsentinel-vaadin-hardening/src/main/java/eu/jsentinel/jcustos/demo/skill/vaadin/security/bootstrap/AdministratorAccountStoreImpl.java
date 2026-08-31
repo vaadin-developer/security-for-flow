@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * <p>Logs at {@code INFO} before and after the directory write and at
  * {@code ERROR} on failure — <em>before</em> rethrowing — because the
- * jSentinel-Core {@code InitialAdminBootstrapService.createInitialAdmin}
+ * jCustos-Core {@code InitialAdminBootstrapService.createInitialAdmin}
  * catches blanket {@code RuntimeException} and converts to
  * {@code InternalError("could not persist administrator")} with no
  * cause attached. Without this local logging the operator sees only

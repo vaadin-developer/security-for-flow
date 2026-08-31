@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authorization.api.roles;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Set;
 
@@ -38,7 +38,7 @@ import java.util.Set;
  *
  * <p>Implementations must be thread-safe.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface RoleAssignmentStore {
 
   /**

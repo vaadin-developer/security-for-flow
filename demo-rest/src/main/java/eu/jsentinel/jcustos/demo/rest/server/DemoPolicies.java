@@ -35,7 +35,7 @@ import eu.jsentinel.jcustos.policy.api.SubjectPredicates;
  *   deny otherwise.
  * }</pre>
  * Registered programmatically with
- * {@link eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver#policyRegistry()}
+ * {@link eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver#policyRegistry()}
  * at {@code DemoRestServer} startup.
  */
 public final class DemoPolicies {

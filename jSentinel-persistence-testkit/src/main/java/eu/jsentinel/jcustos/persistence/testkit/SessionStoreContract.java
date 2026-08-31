@@ -18,7 +18,7 @@ package eu.jsentinel.jcustos.persistence.testkit;
 
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.logout.SubjectId;
-import eu.jsentinel.jcustos.session.JSentinelVersion;
+import eu.jsentinel.jcustos.session.JCustosVersion;
 import eu.jsentinel.jcustos.session.SessionId;
 import eu.jsentinel.jcustos.session.SessionRecord;
 import eu.jsentinel.jcustos.session.SessionStatus;
@@ -62,7 +62,7 @@ public interface SessionStoreContract {
         tenant,
         now,
         now,
-        JSentinelVersion.INITIAL,
+        JCustosVersion.INITIAL,
         SessionStatus.ACTIVE);
   }
 

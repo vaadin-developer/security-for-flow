@@ -18,8 +18,8 @@ package eu.jsentinel.jcustos.bruteforce;
 
 import eu.jsentinel.jcustos.audit.BruteForceLimitReached;
 import eu.jsentinel.jcustos.audit.LoginFailed;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.util.CapacityBound;
 
 import java.time.Clock;
@@ -52,8 +52,8 @@ import java.util.concurrent.ConcurrentMap;
  * <h2>Audit</h2>
  *
  * <p>The policy emits audit events through the
- * {@link JSentinelServiceResolver#securityAuditService() resolved}
- * {@link JSentinelAuditService}:
+ * {@link JCustosServiceResolver#securityAuditService() resolved}
+ * {@link JCustosAuditService}:
  *
  * <ul>
  *   <li>{@link LoginFailed} on every
@@ -69,7 +69,7 @@ public final class InMemoryLoginAttemptPolicy implements LoginAttemptPolicy {
 
   private final LoginAttemptConfiguration config;
   private final Clock clock;
-  private final JSentinelAuditService auditService;
+  private final JCustosAuditService auditService;
   private final int maxEntries;
   private final ConcurrentMap<String, State> byCombinedKey = new ConcurrentHashMap<>();
   private final ConcurrentMap<String, State> byUsername = new ConcurrentHashMap<>();
@@ -83,11 +83,11 @@ public final class InMemoryLoginAttemptPolicy implements LoginAttemptPolicy {
    * @param config       throttling thresholds
    * @param clock        time source — fixed clocks make testing deterministic
    * @param auditService audit sink, or {@code null} to resolve from
-   *                     {@link JSentinelServiceResolver} on each event
+   *                     {@link JCustosServiceResolver} on each event
    */
   public InMemoryLoginAttemptPolicy(LoginAttemptConfiguration config,
                                     Clock clock,
-                                    JSentinelAuditService auditService) {
+                                    JCustosAuditService auditService) {
     this(config, clock, auditService, CapacityBound.DEFAULT_MAX_ENTRIES);
   }
 
@@ -102,7 +102,7 @@ public final class InMemoryLoginAttemptPolicy implements LoginAttemptPolicy {
    */
   public InMemoryLoginAttemptPolicy(LoginAttemptConfiguration config,
                                     Clock clock,
-                                    JSentinelAuditService auditService,
+                                    JCustosAuditService auditService,
                                     int maxEntries) {
     this.config = Objects.requireNonNull(config, "config");
     this.clock = Objects.requireNonNull(clock, "clock");
@@ -209,7 +209,7 @@ public final class InMemoryLoginAttemptPolicy implements LoginAttemptPolicy {
   }
 
   private void auditLoginFailed(LoginAttemptContext context) {
-    JSentinelAuditService sink = sink();
+    JCustosAuditService sink = sink();
     try {
       sink.publish(new LoginFailed(
           Instant.now(clock),
@@ -223,7 +223,7 @@ public final class InMemoryLoginAttemptPolicy implements LoginAttemptPolicy {
 
   private void auditBruteForceLimitReached(
       LoginAttemptContext context, State state, Instant now) {
-    JSentinelAuditService sink = sink();
+    JCustosAuditService sink = sink();
     Duration lockoutRemaining = state.lockedUntil() == null
         ? Duration.ZERO
         : Duration.between(now, state.lockedUntil());
@@ -242,10 +242,10 @@ public final class InMemoryLoginAttemptPolicy implements LoginAttemptPolicy {
     }
   }
 
-  private JSentinelAuditService sink() {
+  private JCustosAuditService sink() {
     return auditService != null
         ? auditService
-        : JSentinelServiceResolver.securityAuditService();
+        : JCustosServiceResolver.securityAuditService();
   }
 
   // ── State ─────────────────────────────────────────────────────

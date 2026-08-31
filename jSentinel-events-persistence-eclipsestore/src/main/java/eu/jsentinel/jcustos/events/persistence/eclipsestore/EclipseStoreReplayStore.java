@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.persistence.eclipsestore;
 
 /*-
  * #%L
- * jSentinel Events — Eclipse-Store persistence
+ * jCustos Events — Eclipse-Store persistence
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -26,7 +26,7 @@ package eu.jsentinel.jcustos.events.persistence.eclipsestore;
  */
 
 import eu.jsentinel.jcustos.events.api.EventEnvelopeId;
-import eu.jsentinel.jcustos.events.replay.JSentinelEventReplayStore;
+import eu.jsentinel.jcustos.events.replay.JCustosEventReplayStore;
 import eu.jsentinel.jcustos.util.CapacityBound;
 
 import java.time.Instant;
@@ -34,11 +34,11 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Eclipse-Store-backed {@link JSentinelEventReplayStore}. Unlike the in-memory
+ * Eclipse-Store-backed {@link JCustosEventReplayStore}. Unlike the in-memory
  * default it survives JVM restarts (Konzept §1072). {@code markSeen} is atomic
  * via the storage write lock.
  */
-final class EclipseStoreReplayStore implements JSentinelEventReplayStore {
+final class EclipseStoreReplayStore implements JCustosEventReplayStore {
 
   private final EclipseStoreEventStorage storage;
   private final int maxEntries;

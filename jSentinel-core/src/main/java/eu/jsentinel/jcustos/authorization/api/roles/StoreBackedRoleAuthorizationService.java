@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.authorization.api.roles;
 
 import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.logout.SubjectId;
 
@@ -45,7 +45,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @param <U> application user type
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class StoreBackedRoleAuthorizationService<U> implements AuthorizationService<U> {
 
   private final RoleAssignmentStore store;

@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.policy.api;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleName;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
@@ -40,7 +40,7 @@ class SubjectPredicatesTest {
   }
 
   private static PolicyContext ctxWith(Set<RoleName> roles, Set<PermissionName> perms) {
-    JSentinelSubject subject = new JSentinelSubject("u-1", "u-1", roles, perms);
+    JCustosSubject subject = new JCustosSubject("u-1", "u-1", roles, perms);
     return new PolicyContext(
         new AccessContext(Optional.of(subject), "rest-endpoint", "/x", "read", Map.of()),
         "test.policy");

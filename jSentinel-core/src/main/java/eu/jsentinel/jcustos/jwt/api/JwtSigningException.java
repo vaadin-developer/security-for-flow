@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.jwt.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Objects;
 
@@ -30,7 +30,7 @@ import java.util.Objects;
  *
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class JwtSigningException extends RuntimeException {
 
   private final String code;

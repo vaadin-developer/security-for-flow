@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.api;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,7 +25,7 @@ package eu.jsentinel.jcustos.events.api;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.logout.SubjectId;
 
@@ -33,10 +33,10 @@ import java.time.Instant;
 import java.util.Objects;
 
 /**
- * The variable per-instance metadata shared by every {@link JSentinelEvent}.
+ * The variable per-instance metadata shared by every {@link JCustosEvent}.
  *
  * <p>The constant parts of an event — its {@link EventType} and
- * {@link JSentinelEventCategory} — are <em>not</em> part of the metadata;
+ * {@link JCustosEventCategory} — are <em>not</em> part of the metadata;
  * they are declared by each concrete event type. The metadata holds only the
  * fields that differ between instances of the same type.
  *
@@ -47,13 +47,13 @@ import java.util.Objects;
  * @param severity security-relevance level
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record EventMetadata(
     EventId eventId,
     TenantId tenantId,
     SubjectId subjectId,
     Instant occurredAt,
-    JSentinelEventSeverity severity
+    JCustosEventSeverity severity
 ) {
 
   public EventMetadata {
@@ -68,14 +68,14 @@ public record EventMetadata(
    * Convenience factory that assigns a fresh random {@link EventId}.
    *
    * @param tenantId mandatory tenant
-   * @param subjectId subject (use {@link JSentinelEvent#SYSTEM_SUBJECT} for
+   * @param subjectId subject (use {@link JCustosEvent#SYSTEM_SUBJECT} for
    *     system events)
    * @param occurredAt business timestamp
    * @param severity security-relevance level
    * @return metadata with a generated event id
    */
   public static EventMetadata create(TenantId tenantId, SubjectId subjectId,
-      Instant occurredAt, JSentinelEventSeverity severity) {
+      Instant occurredAt, JCustosEventSeverity severity) {
     return new EventMetadata(EventId.random(), tenantId, subjectId, occurredAt, severity);
   }
 }

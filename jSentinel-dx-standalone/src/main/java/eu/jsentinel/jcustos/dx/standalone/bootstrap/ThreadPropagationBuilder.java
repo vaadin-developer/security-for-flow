@@ -16,13 +16,13 @@
  */
 package eu.jsentinel.jcustos.dx.standalone.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Objects;
 
 /**
  * Fluent sub-builder for {@link ThreadPropagationStrategy}. Created
- * via {@code StandaloneJSentinelBootstrap.threadPropagation(consumer)}.
+ * via {@code StandaloneJCustosBootstrap.threadPropagation(consumer)}.
  *
  * <pre>
  *   StandaloneSecurity.bootstrap()
@@ -36,7 +36,7 @@ import java.util.Objects;
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class ThreadPropagationBuilder {
 
   private ThreadPropagationMode mode = ThreadPropagationMode.NONE;

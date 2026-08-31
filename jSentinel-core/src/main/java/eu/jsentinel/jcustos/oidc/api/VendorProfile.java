@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.oidc.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Optional;
 
@@ -30,11 +30,11 @@ import java.util.Optional;
  * one object — {@code .oidc(o -> o.vendor(KeycloakProfile.INSTANCE))} — instead of
  * each mapper individually. Each override is optional; an empty {@link Optional}
  * means "keep the spec-clean default". The concrete profiles live in the opt-in
- * {@code jSentinel-identity-vendor-*} modules.
+ * {@code jCustos-identity-vendor-*} modules.
  *
  * @since 00.79.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface VendorProfile {
 
   /** @return a stable vendor id (e.g. {@code "keycloak"}, {@code "entra"}). */

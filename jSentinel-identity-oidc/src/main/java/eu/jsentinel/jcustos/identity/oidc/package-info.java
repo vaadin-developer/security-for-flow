@@ -18,7 +18,7 @@
  * V00.78 OpenID Connect Relying-Party implementations: discovery, ID-token
  * validation (composing the V00.76 {@code JwtValidator} SPI), UserInfo,
  * RP-initiated logout and claims-to-subject mapping. The JOSE-free SPI contracts
- * live in {@code eu.jsentinel.jcustos.oidc.api} (jSentinel-core); this module
+ * live in {@code eu.jsentinel.jcustos.oidc.api} (jCustos-core); this module
  * is the opt-in HTTP implementation.
  *
  * @since 00.78.00

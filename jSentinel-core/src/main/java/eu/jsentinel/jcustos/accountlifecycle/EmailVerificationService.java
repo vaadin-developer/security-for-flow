@@ -19,9 +19,9 @@ package eu.jsentinel.jcustos.accountlifecycle;
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.audit.EmailVerificationRequested;
 import eu.jsentinel.jcustos.audit.EmailVerified;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authentication.PasswordHasher;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.credential.token.TokenHasher;
 import eu.jsentinel.jcustos.credential.token.TokenHashers;
@@ -50,7 +50,7 @@ import static java.util.Objects.requireNonNull;
  *       — generates a plain token, persists only its hash with
  *       the email it confirms, emits
  *       {@link EmailVerificationRequested}, hands the plain token
- *       to the {@link JSentinelNotificationSender}.</li>
+ *       to the {@link JCustosNotificationSender}.</li>
  *   <li>{@link #validate(String) validate(plain)} — looks the
  *       token up; returns the record only when live, in this
  *       tenant, not consumed, not expired.</li>
@@ -60,7 +60,7 @@ import static java.util.Objects.requireNonNull;
  *
  * <p>Bound to one {@link TenantId} at construction.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class EmailVerificationService implements HasLogger {
 
   /** Default token entropy in bytes (256 bits). */
@@ -68,8 +68,8 @@ public final class EmailVerificationService implements HasLogger {
 
   private final EmailVerificationTokenStore store;
   private final TokenHasher hasher;
-  private final JSentinelAuditService auditService;
-  private final JSentinelNotificationSender notificationSender;
+  private final JCustosAuditService auditService;
+  private final JCustosNotificationSender notificationSender;
   private final TenantId tenant;
   private final Clock clock;
   private final Supplier<String> tokenSource;
@@ -85,8 +85,8 @@ public final class EmailVerificationService implements HasLogger {
    */
   public EmailVerificationService(EmailVerificationTokenStore store,
                                   TokenHasher hasher,
-                                  JSentinelAuditService auditService,
-                                  JSentinelNotificationSender notificationSender) {
+                                  JCustosAuditService auditService,
+                                  JCustosNotificationSender notificationSender) {
     this(store, hasher, auditService, notificationSender,
         TenantId.DEFAULT, Clock.systemUTC(), defaultTokenSource());
   }
@@ -106,8 +106,8 @@ public final class EmailVerificationService implements HasLogger {
    */
   public EmailVerificationService(EmailVerificationTokenStore store,
                                   TokenHasher hasher,
-                                  JSentinelAuditService auditService,
-                                  JSentinelNotificationSender notificationSender,
+                                  JCustosAuditService auditService,
+                                  JCustosNotificationSender notificationSender,
                                   TenantId tenant,
                                   Clock clock,
                                   Supplier<String> tokenSource) {
@@ -134,8 +134,8 @@ public final class EmailVerificationService implements HasLogger {
   @Deprecated(forRemoval = true)
   public EmailVerificationService(EmailVerificationTokenStore store,
                                   PasswordHasher hasher,
-                                  JSentinelAuditService auditService,
-                                  JSentinelNotificationSender notificationSender) {
+                                  JCustosAuditService auditService,
+                                  JCustosNotificationSender notificationSender) {
     this(store, TokenHashers.fromPasswordHasher(hasher), auditService, notificationSender);
   }
 
@@ -155,8 +155,8 @@ public final class EmailVerificationService implements HasLogger {
   @Deprecated(forRemoval = true)
   public EmailVerificationService(EmailVerificationTokenStore store,
                                   PasswordHasher hasher,
-                                  JSentinelAuditService auditService,
-                                  JSentinelNotificationSender notificationSender,
+                                  JCustosAuditService auditService,
+                                  JCustosNotificationSender notificationSender,
                                   TenantId tenant,
                                   Clock clock,
                                   Supplier<String> tokenSource) {
@@ -191,7 +191,7 @@ public final class EmailVerificationService implements HasLogger {
         hash, tenant, subjectId, email, now, now.plus(ttl), Optional.empty());
     store.save(record);
     publishRequested(now, subjectId, email, hash);
-    notify(JSentinelNotification.Kind.EMAIL_VERIFICATION_REQUESTED,
+    notify(JCustosNotification.Kind.EMAIL_VERIFICATION_REQUESTED,
         subjectId, now,
         Map.of(
             "tokenPlain", plain,
@@ -230,7 +230,7 @@ public final class EmailVerificationService implements HasLogger {
 
   /**
    * Marks the token consumed exactly once, emits {@link EmailVerified}
-   * and a {@link JSentinelNotification.Kind#EMAIL_VERIFIED}
+   * and a {@link JCustosNotification.Kind#EMAIL_VERIFIED}
    * notification.
    *
    * @param plainToken plain token; null/blank yields empty
@@ -248,7 +248,7 @@ public final class EmailVerificationService implements HasLogger {
       return Optional.empty();
     }
     publishVerified(now, record.subjectId(), record.email(), record.tokenHash());
-    notify(JSentinelNotification.Kind.EMAIL_VERIFIED,
+    notify(JCustosNotification.Kind.EMAIL_VERIFIED,
         record.subjectId(), now,
         Map.of("email", record.email()));
     return Optional.of(record.withConsumedAt(now));
@@ -293,12 +293,12 @@ public final class EmailVerificationService implements HasLogger {
     }
   }
 
-  private void notify(JSentinelNotification.Kind kind,
+  private void notify(JCustosNotification.Kind kind,
                       SubjectId subjectId,
                       Instant at,
                       Map<String, String> attributes) {
     try {
-      notificationSender.send(new JSentinelNotification(
+      notificationSender.send(new JCustosNotification(
           kind, subjectId, tenant, at, attributes));
     } catch (RuntimeException e) {
       logger().warn("notification sender failed during {} dispatch", kind, e);

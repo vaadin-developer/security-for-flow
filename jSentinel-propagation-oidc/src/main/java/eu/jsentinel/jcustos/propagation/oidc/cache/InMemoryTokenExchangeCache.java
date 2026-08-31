@@ -10,7 +10,7 @@
  */
 package eu.jsentinel.jcustos.propagation.oidc.cache;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentMap;
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class InMemoryTokenExchangeCache implements TokenExchangeCache {
 
   /** Default skew applied to {@code expiresAt} (30 seconds). */

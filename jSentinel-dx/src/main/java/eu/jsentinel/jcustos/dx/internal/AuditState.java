@@ -11,7 +11,7 @@
 package eu.jsentinel.jcustos.dx.internal;
 
 import eu.jsentinel.jcustos.audit.AuditEventStore;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 
 /**
  * Sub-aggregate of {@link BootstrapState} holding everything the
@@ -26,7 +26,7 @@ import eu.jsentinel.jcustos.audit.JSentinelAuditService;
  */
 public final class AuditState {
 
-  private JSentinelAuditService directService;
+  private JCustosAuditService directService;
   private AuditEventStore storeBackedStore;
   private boolean storeBackedRequested;
   private boolean loggingEnabled;
@@ -36,11 +36,11 @@ public final class AuditState {
   private boolean credentialEventsConfigured;
   private boolean credentialEventsEnabled;
 
-  public JSentinelAuditService directService() {
+  public JCustosAuditService directService() {
     return directService;
   }
 
-  public void directService(JSentinelAuditService service) {
+  public void directService(JCustosAuditService service) {
     this.directService = service;
   }
 

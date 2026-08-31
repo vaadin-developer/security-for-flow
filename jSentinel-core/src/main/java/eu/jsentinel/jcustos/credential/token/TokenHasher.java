@@ -22,7 +22,7 @@
  */
 package eu.jsentinel.jcustos.credential.token;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 /**
  * Deterministic digest for high-entropy tokens (refresh / reset /
@@ -43,7 +43,7 @@ import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
  *
  * @since 00.75.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface TokenHasher {
 
   /**

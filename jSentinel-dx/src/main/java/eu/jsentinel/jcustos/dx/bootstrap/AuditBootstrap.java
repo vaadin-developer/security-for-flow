@@ -11,14 +11,14 @@
 package eu.jsentinel.jcustos.dx.bootstrap;
 
 import eu.jsentinel.jcustos.audit.AuditEventStore;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 
 /**
  * Audit sub-builder of the fluent bootstrap.
  *
  * <p><strong>V00.73 status:</strong> typed surface — every selection
- * method maps to a real {@link JSentinelAuditService} that is wired
- * into {@code JSentinelServiceResolver.setJSentinelAuditService(...)}
+ * method maps to a real {@link JCustosAuditService} that is wired
+ * into {@code JCustosServiceResolver.setJCustosAuditService(...)}
  * by {@code install()}.
  *
  * <h2>Composition rules</h2>
@@ -27,12 +27,12 @@ import eu.jsentinel.jcustos.audit.JSentinelAuditService;
  *       directly; mixing it with any other selection in the same
  *       lambda yields {@code audit/conflicting-direct-service}.</li>
  *   <li>{@code .storeBacked(store)} — installs a
- *       {@code StoreBackedJSentinelAuditService(store)}.</li>
+ *       {@code StoreBackedJCustosAuditService(store)}.</li>
  *   <li>{@code .logging()} / {@code .ringBuffer(n)} — contribute
  *       sinks. A sinks-only setup builds a small DX-internal
  *       sink-forwarding service; combined with {@code .storeBacked(...)}
  *       the bootstrap tees both via a package-private
- *       {@code TeeingJSentinelAuditService}.</li>
+ *       {@code TeeingJCustosAuditService}.</li>
  * </ul>
  *
  * @since 00.72.00
@@ -40,12 +40,12 @@ import eu.jsentinel.jcustos.audit.JSentinelAuditService;
 public interface AuditBootstrap {
 
   /**
-   * Registers an already-constructed {@link JSentinelAuditService}.
+   * Registers an already-constructed {@link JCustosAuditService}.
    * Must not be combined with any other selection method on the same
    * builder; doing so produces the {@code audit/conflicting-direct-service}
    * diagnostic.
    */
-  AuditBootstrap securityAuditService(JSentinelAuditService service);
+  AuditBootstrap securityAuditService(JCustosAuditService service);
 
   /** Backs the audit pipeline by a {@link AuditEventStore}-based service. */
   AuditBootstrap storeBacked(AuditEventStore store);
@@ -60,8 +60,8 @@ public interface AuditBootstrap {
    * Records the intent to route credential events through the
    * configured audit service. <strong>V00.73 status: no behavioural
    * effect</strong> — {@code CredentialAuditPublisher} already routes
-   * through {@code JSentinelServiceResolver.findJSentinelAuditService()}
-   * unconditionally. The flag is surfaced in {@code JSentinelRuntime}
+   * through {@code JCustosServiceResolver.findJCustosAuditService()}
+   * unconditionally. The flag is surfaced in {@code JCustosRuntime}
    * so the configured intent is visible; future releases (V00.75+)
    * may make it enable per-channel filtering. JavaDoc here is the
    * single source of truth for the no-op semantics — do not mistake

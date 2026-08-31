@@ -18,10 +18,10 @@ package eu.jsentinel.jcustos.authorization.impl;
 
 import eu.jsentinel.jcustos.audit.AccessDenied;
 import eu.jsentinel.jcustos.audit.AccessGranted;
-import eu.jsentinel.jcustos.authorization.annotations.JSentinelAnnotation;
+import eu.jsentinel.jcustos.authorization.annotations.JCustosAnnotation;
 import eu.jsentinel.jcustos.authorization.annotations.PublicRoute;
 import eu.jsentinel.jcustos.authorization.api.AccessEvaluator;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 import eu.jsentinel.jcustos.authorization.navigation.AccessDecision;
@@ -58,16 +58,16 @@ class AuthorizationListenerNavigationTest extends BrowserlessTest {
   @org.junit.jupiter.api.BeforeEach
   @Override
   protected void initVaadinEnvironment() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     SubjectStores.reset();
     SubjectStores.setSubjectStore(new InMemorySubjectStore());
-    JSentinelServiceResolver.setJSentinelAuditService(audit);
+    JCustosServiceResolver.setJCustosAuditService(audit);
     super.initVaadinEnvironment();
   }
 
   @AfterEach
   void cleanUp() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     SubjectStores.reset();
   }
 
@@ -113,7 +113,7 @@ class AuthorizationListenerNavigationTest extends BrowserlessTest {
   @Test
   @DisplayName("JS-SEC-024: deny-by-default denies an un-annotated route (AccessDenied audited)")
   void denyByDefault_unannotatedRoute_denied() {
-    JSentinelServiceResolver.setDenyByDefault(true);
+    JCustosServiceResolver.setDenyByDefault(true);
     try {
       navigate(PlainFixture.class);
     } catch (RuntimeException expected) {
@@ -134,7 +134,7 @@ class AuthorizationListenerNavigationTest extends BrowserlessTest {
   @Test
   @DisplayName("JS-SEC-024: deny-by-default still allows a @PublicRoute route (no denial)")
   void denyByDefault_publicRoute_allowed() {
-    JSentinelServiceResolver.setDenyByDefault(true);
+    JCustosServiceResolver.setDenyByDefault(true);
     navigate(PublicFixture.class);
     assertEquals(0, audit.events().size(),
         "@PublicRoute must stay reachable under deny-by-default; got: " + audit.events());
@@ -144,7 +144,7 @@ class AuthorizationListenerNavigationTest extends BrowserlessTest {
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target(ElementType.TYPE)
-  @JSentinelAnnotation(GrantingEvaluator.class)
+  @JCustosAnnotation(GrantingEvaluator.class)
   public @interface Granting { }
 
   public static final class GrantingEvaluator implements AccessEvaluator<Granting> {
@@ -155,7 +155,7 @@ class AuthorizationListenerNavigationTest extends BrowserlessTest {
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target(ElementType.TYPE)
-  @JSentinelAnnotation(ReroutingEvaluator.class)
+  @JCustosAnnotation(ReroutingEvaluator.class)
   public @interface Rerouting { }
 
   public static final class ReroutingEvaluator implements AccessEvaluator<Rerouting> {

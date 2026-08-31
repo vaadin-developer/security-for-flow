@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.rest;
 
 /*-
  * #%L
- * jSentinel Events — REST / SSE bridge
+ * jCustos Events — REST / SSE bridge
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -36,7 +36,7 @@ import java.util.List;
 /**
  * Hand-written SLF4J {@link org.slf4j.Logger} test double (no mock framework)
  * that records the final, placeholder-substituted message of every logging
- * call. Module-local copy of the jSentinel-core seam-test double (that one
+ * call. Module-local copy of the jCustos-core seam-test double (that one
  * lives in core's unpublished test sources) — used to pin the scrubbed
  * drop-WARN line of {@link SseEventBroadcaster} (R07).
  *

@@ -40,7 +40,7 @@ class SessionRecordTest {
         TenantId.DEFAULT,
         CREATED,
         CREATED,
-        JSentinelVersion.INITIAL,
+        JCustosVersion.INITIAL,
         SessionStatus.ACTIVE);
   }
 
@@ -49,22 +49,22 @@ class SessionRecordTest {
   void rejectsNulls() {
     assertThrows(NullPointerException.class,
         () -> new SessionRecord(null, new SubjectId("alice"), TenantId.DEFAULT,
-            CREATED, CREATED, JSentinelVersion.INITIAL, SessionStatus.ACTIVE));
+            CREATED, CREATED, JCustosVersion.INITIAL, SessionStatus.ACTIVE));
     assertThrows(NullPointerException.class,
         () -> new SessionRecord(new SessionId("s"), null, TenantId.DEFAULT,
-            CREATED, CREATED, JSentinelVersion.INITIAL, SessionStatus.ACTIVE));
+            CREATED, CREATED, JCustosVersion.INITIAL, SessionStatus.ACTIVE));
     assertThrows(NullPointerException.class,
         () -> new SessionRecord(new SessionId("s"), new SubjectId("a"), TenantId.DEFAULT,
-            null, CREATED, JSentinelVersion.INITIAL, SessionStatus.ACTIVE));
+            null, CREATED, JCustosVersion.INITIAL, SessionStatus.ACTIVE));
     assertThrows(NullPointerException.class,
         () -> new SessionRecord(new SessionId("s"), new SubjectId("a"), TenantId.DEFAULT,
-            CREATED, null, JSentinelVersion.INITIAL, SessionStatus.ACTIVE));
+            CREATED, null, JCustosVersion.INITIAL, SessionStatus.ACTIVE));
     assertThrows(NullPointerException.class,
         () -> new SessionRecord(new SessionId("s"), new SubjectId("a"), TenantId.DEFAULT,
             CREATED, CREATED, null, SessionStatus.ACTIVE));
     assertThrows(NullPointerException.class,
         () -> new SessionRecord(new SessionId("s"), new SubjectId("a"), TenantId.DEFAULT,
-            CREATED, CREATED, JSentinelVersion.INITIAL, null));
+            CREATED, CREATED, JCustosVersion.INITIAL, null));
   }
 
   @Test
@@ -72,7 +72,7 @@ class SessionRecordTest {
   void nullTenantNormalisedToDefault() {
     SessionRecord record = new SessionRecord(
         new SessionId("sid-1"), new SubjectId("alice"), null,
-        CREATED, CREATED, JSentinelVersion.INITIAL, SessionStatus.ACTIVE);
+        CREATED, CREATED, JCustosVersion.INITIAL, SessionStatus.ACTIVE);
     assertSame(TenantId.DEFAULT, record.tenant());
   }
 
@@ -82,7 +82,7 @@ class SessionRecordTest {
     assertThrows(IllegalArgumentException.class,
         () -> new SessionRecord(new SessionId("s"), new SubjectId("a"), TenantId.DEFAULT,
             CREATED, CREATED.minusSeconds(1),
-            JSentinelVersion.INITIAL, SessionStatus.ACTIVE));
+            JCustosVersion.INITIAL, SessionStatus.ACTIVE));
   }
 
   @Test
@@ -90,7 +90,7 @@ class SessionRecordTest {
   void lastActivityEqualToCreatedAllowed() {
     SessionRecord record = new SessionRecord(
         new SessionId("s"), new SubjectId("a"), TenantId.DEFAULT,
-        CREATED, CREATED, JSentinelVersion.INITIAL, SessionStatus.ACTIVE);
+        CREATED, CREATED, JCustosVersion.INITIAL, SessionStatus.ACTIVE);
     assertEquals(CREATED, record.lastActivityAt());
   }
 

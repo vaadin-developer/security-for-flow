@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authentication;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.credential.token.TokenHasher;
 import eu.jsentinel.jcustos.credential.token.TokenHashers;
@@ -52,7 +52,7 @@ import static java.util.Objects.requireNonNull;
  * {@code tokenSource} constructor argument if a different format
  * is required by the carrier (cookie, header, query parameter).
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class StoreBackedRememberMeService {
 
   /** Default token entropy in bytes (256 bits). */

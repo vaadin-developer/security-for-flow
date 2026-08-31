@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.test;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 import eu.jsentinel.jcustos.policy.api.ResourceRef;
 
@@ -64,7 +64,7 @@ public final class AccessContexts {
    * @param subject subject to bind
    * @return access context
    */
-  public static AccessContext withSubject(JSentinelSubject subject) {
+  public static AccessContext withSubject(JCustosSubject subject) {
     return new AccessContext(
         Optional.of(subject),
         DEFAULT_RESOURCE_TYPE, DEFAULT_RESOURCE_NAME, DEFAULT_OPERATION,
@@ -82,7 +82,7 @@ public final class AccessContexts {
    * @return access context
    */
   public static AccessContext withSubjectAndResource(
-      JSentinelSubject subject, ResourceRef ref) {
+      JCustosSubject subject, ResourceRef ref) {
     return new AccessContext(
         Optional.of(subject),
         DEFAULT_RESOURCE_TYPE, DEFAULT_RESOURCE_NAME, DEFAULT_OPERATION,

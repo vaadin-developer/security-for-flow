@@ -17,10 +17,10 @@
 package eu.jsentinel.jcustos.action;
 
 import eu.jsentinel.jcustos.audit.ActionDenied;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authorization.api.AccessDeniedException;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionMatcher;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 
@@ -48,30 +48,30 @@ import java.util.Objects;
 public final class StaticActionAuthorizationService<U> implements ActionAuthorizationService<U> {
 
   private final AuthorizationService<U> authorizationService;
-  private final JSentinelAuditService auditService;
+  private final JCustosAuditService auditService;
 
   /**
    * Builds a service that resolves the {@link AuthorizationService} via
-   * {@link JSentinelServiceResolver}. Audit events are routed to
-   * {@link JSentinelServiceResolver#securityAuditService()} at check time.
+   * {@link JCustosServiceResolver}. Audit events are routed to
+   * {@link JCustosServiceResolver#securityAuditService()} at check time.
    *
    * @param subjectType compile-time helper — kept on the constructor so
    *                    the generic parameter is inferable; not stored
    */
   @SuppressWarnings("unused")
   public StaticActionAuthorizationService(Class<U> subjectType) {
-    this(JSentinelServiceResolver.<U>authorizationService(), null);
+    this(JCustosServiceResolver.<U>authorizationService(), null);
   }
 
   /**
    * @param authorizationService the application's authorization service
    * @param auditService         audit sink, or {@code null} to resolve
-   *                             from {@link JSentinelServiceResolver}
+   *                             from {@link JCustosServiceResolver}
    *                             at each check
    */
   public StaticActionAuthorizationService(
       AuthorizationService<U> authorizationService,
-      JSentinelAuditService auditService) {
+      JCustosAuditService auditService) {
     this.authorizationService = Objects.requireNonNull(
         authorizationService, "authorizationService");
     this.auditService = auditService;
@@ -102,9 +102,9 @@ public final class StaticActionAuthorizationService<U> implements ActionAuthoriz
   }
 
   private void auditDenied(U subject, String actionName) {
-    JSentinelAuditService sink = auditService != null
+    JCustosAuditService sink = auditService != null
         ? auditService
-        : JSentinelServiceResolver.securityAuditService();
+        : JCustosServiceResolver.securityAuditService();
     try {
       String subjectId = subject == null ? null
           : subject.getClass().getSimpleName()

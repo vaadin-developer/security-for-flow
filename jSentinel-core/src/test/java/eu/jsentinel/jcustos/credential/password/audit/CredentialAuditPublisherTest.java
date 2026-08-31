@@ -27,7 +27,7 @@ import eu.jsentinel.jcustos.audit.AuditQuery;
 import eu.jsentinel.jcustos.audit.CredentialRehashed;
 import eu.jsentinel.jcustos.audit.CredentialVerificationFailed;
 import eu.jsentinel.jcustos.audit.CredentialVerificationSucceeded;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.credential.CredentialType;
 import eu.jsentinel.jcustos.credential.InternalAuditEventType;
 import eu.jsentinel.jcustos.credential.PublicFailureType;
@@ -52,7 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CredentialAuditPublisherTest {
 
   /** Real audit service that just records events in memory. */
-  private static final class RecordingAuditService implements JSentinelAuditService {
+  private static final class RecordingAuditService implements JCustosAuditService {
     final List<AuditEvent> events = new ArrayList<>();
 
     @Override
@@ -67,7 +67,7 @@ class CredentialAuditPublisherTest {
   }
 
   /** Audit service that always throws. Models a misconfigured sink. */
-  private static final class FailingAuditService implements JSentinelAuditService {
+  private static final class FailingAuditService implements JCustosAuditService {
     @Override
     public void publish(AuditEvent event) {
       throw new RuntimeException("sink unavailable");

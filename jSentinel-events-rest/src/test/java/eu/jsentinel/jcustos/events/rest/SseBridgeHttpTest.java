@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.rest;
 
 /*-
  * #%L
- * jSentinel Events — REST / SSE bridge
+ * jCustos Events — REST / SSE bridge
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -26,10 +26,10 @@ package eu.jsentinel.jcustos.events.rest;
  */
 
 import com.svenruppert.dependencies.core.net.HttpStatus;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.events.wire.EnvelopeWireCodec;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.events.bus.ConsumePipeline;
 import eu.jsentinel.jcustos.events.store.InMemoryEnvelopeStore;
 import eu.jsentinel.jcustos.rest.RestSubjectResolver;
@@ -80,12 +80,12 @@ class SseBridgeHttpTest {
     RestSubjectResolver resolver = request -> {
       String auth = request.headers().get("Authorization");
       if ("Bearer admin".equals(auth)) {
-        return Optional.of(new JSentinelSubject("admin", "Admin", Set.of(),
+        return Optional.of(new JCustosSubject("admin", "Admin", Set.of(),
             Set.of(new PermissionName("events:publish"),
                 new PermissionName("events:subscribe"))));
       }
       if ("Bearer user".equals(auth)) {
-        return Optional.of(new JSentinelSubject("user", "User", Set.of(), Set.of()));
+        return Optional.of(new JCustosSubject("user", "User", Set.of(), Set.of()));
       }
       return Optional.empty();
     };
@@ -118,7 +118,7 @@ class SseBridgeHttpTest {
   @Test
   @DisplayName("POST a valid signed envelope with the publish permission -> 202")
   void publishValid() throws Exception {
-    SignedJSentinelEventEnvelope env = fx.signedEnvelope();
+    SignedJCustosEventEnvelope env = fx.signedEnvelope();
     HttpResponse<String> response = post("Bearer admin", wire.encode(env));
     assertEquals(HttpStatus.ACCEPTED.code(), response.statusCode());
     assertEquals(1, store.count());

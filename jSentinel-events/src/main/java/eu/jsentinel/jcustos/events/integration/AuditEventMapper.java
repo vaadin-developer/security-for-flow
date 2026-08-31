@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.integration;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -29,8 +29,8 @@ import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.LoginFailed;
 import eu.jsentinel.jcustos.audit.LoginSucceeded;
 import eu.jsentinel.jcustos.audit.AccessDenied;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.api.JSentinelEvent;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.api.JCustosEvent;
 import eu.jsentinel.jcustos.events.types.LoginFailedEvent;
 import eu.jsentinel.jcustos.events.types.LoginSucceededEvent;
 import eu.jsentinel.jcustos.events.types.PermissionDeniedEvent;
@@ -38,7 +38,7 @@ import eu.jsentinel.jcustos.events.types.PermissionDeniedEvent;
 import java.util.Optional;
 
 /**
- * Maps a bus {@link JSentinelEvent} to the core {@link AuditEvent} model where a
+ * Maps a bus {@link JCustosEvent} to the core {@link AuditEvent} model where a
  * direct counterpart exists (Konzept §1033). Audit is a separate <em>consumer</em>
  * of the bus — the bus does not hard-wire it (Konzept §30, §143).
  *
@@ -47,7 +47,7 @@ import java.util.Optional;
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class AuditEventMapper {
 
   private static final String UNKNOWN = "unknown";
@@ -56,7 +56,7 @@ public final class AuditEventMapper {
    * @param event the bus event
    * @return the mapped audit event, if a counterpart exists
    */
-  public Optional<AuditEvent> toAuditEvent(JSentinelEvent event) {
+  public Optional<AuditEvent> toAuditEvent(JCustosEvent event) {
     return switch (event) {
       case LoginSucceededEvent e -> Optional.of(new LoginSucceeded(
           e.occurredAt(), e.subjectId().value(), UNKNOWN, UNKNOWN));

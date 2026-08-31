@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.authorization;
 
 import eu.jsentinel.jcustos.authorization.annotations.RequiresRole;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.test.InMemorySubjectStore;
 import com.vaadin.flow.component.Component;
@@ -54,7 +54,7 @@ class LoginListenerBeforeEnterTest {
 
   @BeforeEach
   void setUp() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     LoginListeners.reset();
     SubjectStores.reset();
     SubjectStores.setSubjectStore(store);
@@ -65,7 +65,7 @@ class LoginListenerBeforeEnterTest {
 
   @AfterEach
   void tearDown() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     LoginListeners.reset();
     SubjectStores.reset();
     CurrentInstance.clearAll();

@@ -19,7 +19,7 @@ package eu.jsentinel.jcustos.demo.restclient.views;
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.authorization.LoginView;
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptContext;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptDecision;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptPolicy;
@@ -40,7 +40,7 @@ public class MyLoginView extends LoginView implements HasLogger, BeforeEnterObse
   public static final String NAV = "login";
 
   private final AuthenticationService<Credentials, RemoteUser> authenticationService =
-      JSentinelServiceResolver.authenticationService();
+      JCustosServiceResolver.authenticationService();
 
   @Override
   public void beforeEnter(BeforeEnterEvent event) {
@@ -61,7 +61,7 @@ public class MyLoginView extends LoginView implements HasLogger, BeforeEnterObse
     boolean ok = authenticationService.checkCredentials(credentials);
     if (!ok) return false;
     // RestBackedAuthenticationService already cached the RemoteUser via
-    // ClientJSentinelContext / SubjectStore, so no extra step here.
+    // ClientJCustosContext / SubjectStore, so no extra step here.
     return true;
   }
 
@@ -93,7 +93,7 @@ public class MyLoginView extends LoginView implements HasLogger, BeforeEnterObse
       return LoginAttemptDecision.allowed();
     }
     try {
-      LoginAttemptPolicy policy = JSentinelServiceResolver.loginAttemptPolicy();
+      LoginAttemptPolicy policy = JCustosServiceResolver.loginAttemptPolicy();
       return policy.beforeAttempt(
           LoginAttemptContext.now(username, currentClientAddress(), null));
     } catch (RuntimeException ignored) {

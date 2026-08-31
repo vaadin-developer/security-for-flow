@@ -24,9 +24,9 @@ public final class VaadinSecurity {
   }
 
   /**
-   * @return a fresh {@link VaadinJSentinelBootstrap} builder
+   * @return a fresh {@link VaadinJCustosBootstrap} builder
    */
-  public static VaadinJSentinelBootstrap bootstrap() {
-    return new VaadinJSentinelBootstrapImpl();
+  public static VaadinJCustosBootstrap bootstrap() {
+    return new VaadinJCustosBootstrapImpl();
   }
 }

@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.siem;
 
 /*-
  * #%L
- * jSentinel Events — SIEM exporter
+ * jCustos Events — SIEM exporter
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,8 +25,8 @@ package eu.jsentinel.jcustos.events.siem;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -48,7 +48,7 @@ import java.time.format.DateTimeFormatter;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class LeefEnvelopeFormatter implements SiemEnvelopeFormatter {
 
   private static final String LEEF_HEADER = "LEEF:2.0";
@@ -73,7 +73,7 @@ public final class LeefEnvelopeFormatter implements SiemEnvelopeFormatter {
   static final String ATTR_PAYLOAD_HASH = "payloadHash";
 
   @Override
-  public String format(SignedJSentinelEventEnvelope e) {
+  public String format(SignedJCustosEventEnvelope e) {
     StringBuilder sb = new StringBuilder(LEEF_HEADER)
         .append(HEADER_SEPARATOR).append(headerEscape(SiemProduct.VENDOR))
         .append(HEADER_SEPARATOR).append(headerEscape(SiemProduct.PRODUCT))

@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.oidc.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Optional;
 import java.util.Set;
@@ -30,7 +30,7 @@ import java.util.Set;
  *
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface SessionRegistry {
 
   /** Binds the RP's {@code sessionId} to the OP session ({@code issuer}, {@code subject}, {@code sid}). */

@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.store;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -36,8 +36,8 @@ import eu.jsentinel.jcustos.events.api.KeyId;
 import eu.jsentinel.jcustos.events.api.PayloadContentType;
 import eu.jsentinel.jcustos.events.api.PayloadHashAlgorithm;
 import eu.jsentinel.jcustos.events.api.SignatureAlgorithmId;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelopeBuilder;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelopeBuilder;
 import eu.jsentinel.jcustos.logout.SubjectId;
 
 import java.nio.charset.StandardCharsets;
@@ -49,9 +49,9 @@ final class StoreFixtures {
   private StoreFixtures() {
   }
 
-  static SignedJSentinelEventEnvelope envelope(String envelopeId) {
+  static SignedJCustosEventEnvelope envelope(String envelopeId) {
     Instant now = Instant.parse("2026-06-24T10:15:30Z");
-    return SignedJSentinelEventEnvelopeBuilder.create()
+    return SignedJCustosEventEnvelopeBuilder.create()
         .envelopeId(EventEnvelopeId.of(envelopeId))
         .eventId(EventId.of("evt-" + envelopeId))
         .eventType(EventType.of("LoginSucceeded"))

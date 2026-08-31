@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.monitoring.bus;
 
 /*-
  * #%L
- * jSentinel Monitoring — metrics, health and diagnostics export points
+ * jCustos Monitoring — metrics, health and diagnostics export points
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -28,9 +28,9 @@ package eu.jsentinel.jcustos.monitoring.bus;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventMetadata;
 import eu.jsentinel.jcustos.events.api.EventType;
-import eu.jsentinel.jcustos.events.api.JSentinelEvent;
-import eu.jsentinel.jcustos.events.api.JSentinelEventCategory;
-import eu.jsentinel.jcustos.events.api.JSentinelEventSeverity;
+import eu.jsentinel.jcustos.events.api.JCustosEvent;
+import eu.jsentinel.jcustos.events.api.JCustosEventCategory;
+import eu.jsentinel.jcustos.events.api.JCustosEventSeverity;
 import eu.jsentinel.jcustos.events.types.BruteForceThresholdReachedEvent;
 import eu.jsentinel.jcustos.events.types.DeadLetteredEvent;
 import eu.jsentinel.jcustos.events.types.EnvelopeRejectedEvent;
@@ -50,26 +50,26 @@ import eu.jsentinel.jcustos.events.types.SessionRevokedEvent;
 import eu.jsentinel.jcustos.events.types.SignatureInvalidEvent;
 import eu.jsentinel.jcustos.events.types.StepUpRequiredEvent;
 import eu.jsentinel.jcustos.logout.SubjectId;
-import eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricsPublisher;
+import eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricsPublisher;
 import eu.jsentinel.jcustos.monitoring.metrics.RecordingMetricsPublisher;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.Map;
 
-import static eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames.AUTHZ_DENIED_TOTAL;
-import static eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames.AUTH_LOCKOUT_TOTAL;
-import static eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames.AUTH_LOGIN_FAILURE_TOTAL;
-import static eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames.AUTH_LOGIN_SUCCESS_TOTAL;
-import static eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames.EVENTBUS_DEADLETTER_TOTAL;
-import static eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames.EVENTBUS_LISTENER_FAILURE_TOTAL;
-import static eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames.EVENTBUS_PUBLISHED_TOTAL;
-import static eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames.EVENTBUS_REJECTED_TOTAL;
-import static eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames.EVENTBUS_REPLAY_DETECTED_TOTAL;
-import static eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames.EVENTBUS_SEQUENCE_VIOLATION_TOTAL;
-import static eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames.EVENTBUS_SIGNATURE_INVALID_TOTAL;
-import static eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames.SESSION_CREATED_TOTAL;
-import static eu.jsentinel.jcustos.monitoring.metrics.JSentinelMetricNames.SESSION_REVOKED_TOTAL;
+import static eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames.AUTHZ_DENIED_TOTAL;
+import static eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames.AUTH_LOCKOUT_TOTAL;
+import static eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames.AUTH_LOGIN_FAILURE_TOTAL;
+import static eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames.AUTH_LOGIN_SUCCESS_TOTAL;
+import static eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames.EVENTBUS_DEADLETTER_TOTAL;
+import static eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames.EVENTBUS_LISTENER_FAILURE_TOTAL;
+import static eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames.EVENTBUS_PUBLISHED_TOTAL;
+import static eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames.EVENTBUS_REJECTED_TOTAL;
+import static eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames.EVENTBUS_REPLAY_DETECTED_TOTAL;
+import static eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames.EVENTBUS_SEQUENCE_VIOLATION_TOTAL;
+import static eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames.EVENTBUS_SIGNATURE_INVALID_TOTAL;
+import static eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames.SESSION_CREATED_TOTAL;
+import static eu.jsentinel.jcustos.monitoring.metrics.JCustosMetricNames.SESSION_REVOKED_TOTAL;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -87,26 +87,26 @@ class MetricsEventBusListenerTest {
 
   private static EventMetadata meta() {
     return EventMetadata.create(TenantId.DEFAULT, SubjectId.of("alice"), T0,
-        JSentinelEventSeverity.INFO);
+        JCustosEventSeverity.INFO);
   }
 
   /** Runs one event through a fresh listener and returns the exact counter set. */
-  private static Map<String, Long> countersAfter(JSentinelEvent event) {
+  private static Map<String, Long> countersAfter(JCustosEvent event) {
     RecordingMetricsPublisher recorder = new RecordingMetricsPublisher();
-    new MetricsEventBusListener(recorder).onJSentinelEvent(event);
+    new MetricsEventBusListener(recorder).onJCustosEvent(event);
     return recorder.counters();
   }
 
   /** A domain event this bridge has no dedicated counter for. */
-  private record UnmappedDomainEvent(EventMetadata metadata) implements JSentinelEvent {
+  private record UnmappedDomainEvent(EventMetadata metadata) implements JCustosEvent {
     @Override
     public EventType eventType() {
       return EventType.of("UnmappedDomain");
     }
 
     @Override
-    public JSentinelEventCategory category() {
-      return JSentinelEventCategory.AUTHENTICATION;
+    public JCustosEventCategory category() {
+      return JCustosEventCategory.AUTHENTICATION;
     }
   }
 
@@ -119,8 +119,8 @@ class MetricsEventBusListenerTest {
     }
 
     @Override
-    public JSentinelEventCategory category() {
-      return JSentinelEventCategory.INTEGRITY;
+    public JCustosEventCategory category() {
+      return JCustosEventCategory.INTEGRITY;
     }
   }
 
@@ -129,7 +129,7 @@ class MetricsEventBusListenerTest {
    * real implementation, not a mock; exercises the belt-and-suspenders
    * catch in the bridge.
    */
-  private static final class ThrowingMetricsPublisher implements JSentinelMetricsPublisher {
+  private static final class ThrowingMetricsPublisher implements JCustosMetricsPublisher {
     @Override
     public void increment(String counterName, long delta) {
       throw new IllegalStateException("metrics backend down");
@@ -271,12 +271,12 @@ class MetricsEventBusListenerTest {
   @Test
   void throwingPublisherIsIsolatedOnDomainEvent() {
     MetricsEventBusListener listener = new MetricsEventBusListener(new ThrowingMetricsPublisher());
-    assertDoesNotThrow(() -> listener.onJSentinelEvent(new LoginSucceededEvent(meta(), "password")));
+    assertDoesNotThrow(() -> listener.onJCustosEvent(new LoginSucceededEvent(meta(), "password")));
   }
 
   @Test
   void throwingPublisherIsIsolatedOnObservabilityEvent() {
     MetricsEventBusListener listener = new MetricsEventBusListener(new ThrowingMetricsPublisher());
-    assertDoesNotThrow(() -> listener.onJSentinelEvent(new ReplayDetectedEvent(meta(), "envelope-1")));
+    assertDoesNotThrow(() -> listener.onJCustosEvent(new ReplayDetectedEvent(meta(), "envelope-1")));
   }
 }

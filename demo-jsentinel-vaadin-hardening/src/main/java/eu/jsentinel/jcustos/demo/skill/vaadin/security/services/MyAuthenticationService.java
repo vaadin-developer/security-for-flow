@@ -1,11 +1,11 @@
 package eu.jsentinel.jcustos.demo.skill.vaadin.security.services;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.audit.LoginSucceeded;
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.autoservice.api.JSentinelAutoService;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptContext;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptDecision;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptPolicy;
@@ -18,7 +18,7 @@ import java.time.Clock;
 import java.time.Instant;
 
 /**
- * SPI-registered via {@link JSentinelAutoService @JSentinelAutoService}
+ * SPI-registered via {@link JCustosAutoService @JCustosAutoService}
  * — the annotation processor produces the matching
  * {@code META-INF/services/eu.jsentinel.jcustos.authentication.AuthenticationService}
  * entry at compile time. No hand-written service file required.
@@ -27,7 +27,7 @@ import java.time.Instant;
  * before delegating to the user directory; records success / failure
  * back into the policy so brute-force protection works.
  */
-@JSentinelAutoService(AuthenticationService.class)
+@JCustosAutoService(AuthenticationService.class)
 public class MyAuthenticationService
     implements AuthenticationService<Credentials, User>, HasLogger {
 
@@ -37,7 +37,7 @@ public class MyAuthenticationService
       return false;
     }
 
-    LoginAttemptPolicy policy = JSentinelServiceResolver.loginAttemptPolicy();
+    LoginAttemptPolicy policy = JCustosServiceResolver.loginAttemptPolicy();
     LoginAttemptContext attempt = LoginAttemptContext.now(
         credentials.username(), currentClientAddress(), null);
 
@@ -69,7 +69,7 @@ public class MyAuthenticationService
   }
 
   private static void auditLoginSucceeded(String username, String clientAddress) {
-    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
+    JCustosAuditService sink = JCustosServiceResolver.securityAuditService();
     try {
       sink.publish(new LoginSucceeded(
           Instant.now(Clock.systemUTC()), username, clientAddress, null));

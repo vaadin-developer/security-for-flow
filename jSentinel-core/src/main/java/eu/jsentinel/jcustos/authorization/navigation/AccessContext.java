@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authorization.navigation;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -34,7 +34,7 @@ import static java.util.Objects.requireNonNull;
  * @param attributes   adapter-provided contextual attributes
  */
 public record AccessContext(
-    Optional<JSentinelSubject> subject,
+    Optional<JCustosSubject> subject,
     String resourceType,
     String resourceName,
     String operation,

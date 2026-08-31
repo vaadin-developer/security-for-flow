@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.bruteforce;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 
 import java.time.Clock;
@@ -59,7 +59,7 @@ import static java.util.Objects.requireNonNull;
  * deployments instantiate one policy per tenant or wrap with a
  * resolver.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class StoreBackedLoginAttemptPolicy implements LoginAttemptPolicy {
 
   private final LoginAttemptStore store;

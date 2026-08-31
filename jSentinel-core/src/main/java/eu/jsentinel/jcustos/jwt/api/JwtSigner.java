@@ -25,9 +25,9 @@ import java.util.Map;
  * client authentication (RFC 7523): a client proves its identity to the token
  * endpoint with a short-lived, asymmetrically-signed assertion. V00.76 shipped
  * only validation; this SPI adds the signing seam. It is JOSE-free (the Nimbus
- * implementation lives in {@code jSentinel-jwt} and is discovered via
- * {@code ServiceLoader} / {@code @JSentinelAutoService}), so callers in
- * {@code jSentinel-oauth2} depend only on this contract.
+ * implementation lives in {@code jCustos-jwt} and is discovered via
+ * {@code ServiceLoader} / {@code @JCustosAutoService}), so callers in
+ * {@code jCustos-oauth2} depend only on this contract.
  *
  * <p>Implementations sign only with the asymmetric, allow-listed algorithm
  * families ({@link JwsAlgorithm}); {@code alg:none} and HMAC are impossible by

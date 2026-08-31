@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.oauth2;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.jwt.api.JwtSigner;
 import eu.jsentinel.jcustos.jwt.api.JwtSigningKey;
 
@@ -34,7 +34,7 @@ import java.util.Objects;
  *
  * @since 00.79.20
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class AuthorizationRequestSigner {
 
   private final JwtSigner signer;

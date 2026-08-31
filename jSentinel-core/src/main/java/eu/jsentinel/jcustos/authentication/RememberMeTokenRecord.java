@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authentication;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.logout.SubjectId;
 
@@ -46,7 +46,7 @@ import static java.util.Objects.requireNonNull;
  * @param expiresAt  absolute expiry; must be strictly after
  *                   {@code createdAt}
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record RememberMeTokenRecord(
     String tokenHash,
     TenantId tenant,

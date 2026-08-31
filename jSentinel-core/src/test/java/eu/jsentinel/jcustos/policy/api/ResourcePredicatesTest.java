@@ -16,8 +16,8 @@
  */
 package eu.jsentinel.jcustos.policy.api;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 import eu.jsentinel.jcustos.policy.impl.InMemoryResourceResolverRegistry;
 import eu.jsentinel.jcustos.policy.spi.ResourceResolver;
@@ -41,14 +41,14 @@ class ResourcePredicatesTest {
 
   @BeforeEach
   void setUp() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     registry = new InMemoryResourceResolverRegistry();
-    JSentinelServiceResolver.setResourceResolverRegistry(registry);
+    JCustosServiceResolver.setResourceResolverRegistry(registry);
   }
 
   @AfterEach
   void tearDown() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   // ── ownerMatchesSubject ───────────────────────────────────────
@@ -201,15 +201,15 @@ class ResourcePredicatesTest {
 
   // ── Fixtures ──────────────────────────────────────────────────
 
-  private static PolicyContext ctx(JSentinelSubject subject, ResourceRef ref) {
+  private static PolicyContext ctx(JCustosSubject subject, ResourceRef ref) {
     AccessContext accessContext = new AccessContext(
         subject == null ? Optional.empty() : Optional.of(subject),
         "rest-endpoint", "/x", "read", Map.of());
     return new PolicyContext(accessContext, "test.policy", ref);
   }
 
-  private static JSentinelSubject subjectWithId(String id) {
-    return new JSentinelSubject(id, id, Set.of(), Set.of());
+  private static JCustosSubject subjectWithId(String id) {
+    return new JCustosSubject(id, id, Set.of(), Set.of());
   }
 
   private static ResourceResolver<Map<String, Object>> documentResolverWith(

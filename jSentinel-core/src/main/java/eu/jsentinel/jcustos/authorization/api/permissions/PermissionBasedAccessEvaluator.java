@@ -18,7 +18,7 @@ package eu.jsentinel.jcustos.authorization.api.permissions;
 
 import eu.jsentinel.jcustos.authorization.api.AccessEvaluator;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 import eu.jsentinel.jcustos.authorization.navigation.AccessDecision;
 
@@ -31,7 +31,7 @@ import java.util.Set;
  * @param <T> the restriction annotation type
  * @param <U> the user/subject type
  */
-@ExperimentalJSentinelApi("Permission-based access evaluation is experimental. "
+@ExperimentalJCustosApi("Permission-based access evaluation is experimental. "
     + "Use role-based access for stable production use.")
 public abstract class PermissionBasedAccessEvaluator<T extends Annotation, U>
     implements AccessEvaluator<T> {

@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.siem;
 
 /*-
  * #%L
- * jSentinel Events — SIEM exporter
+ * jCustos Events — SIEM exporter
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -26,7 +26,7 @@ package eu.jsentinel.jcustos.events.siem;
  */
 
 import eu.jsentinel.jcustos.events.api.EventType;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.events.testkit.TestkitEnvelopes;
 import eu.jsentinel.jcustos.events.wire.EnvelopeWireCodec;
 import org.junit.jupiter.api.DisplayName;
@@ -80,7 +80,7 @@ class SiemFormattersTest {
   @Test
   @DisplayName("JSON-lines metadata golden: codec projection, no payload/signature fields")
   void jsonLinesMetadataGolden() {
-    SignedJSentinelEventEnvelope envelope = TestkitEnvelopes.envelope("env-1");
+    SignedJCustosEventEnvelope envelope = TestkitEnvelopes.envelope("env-1");
     String line = new JsonLinesEnvelopeFormatter().format(envelope);
     assertEquals(new EnvelopeWireCodec().encodeMetadata(envelope), line,
         "metadata mode must be exactly the codec's projection — one field home");
@@ -93,7 +93,7 @@ class SiemFormattersTest {
   @Test
   @DisplayName("JSON-lines full mode round-trips through the shared wire codec")
   void jsonLinesFullRoundTrip() {
-    SignedJSentinelEventEnvelope envelope = TestkitEnvelopes.envelope("env-rt");
+    SignedJCustosEventEnvelope envelope = TestkitEnvelopes.envelope("env-rt");
     String line = new JsonLinesEnvelopeFormatter(true).format(envelope);
     assertEquals(envelope, new EnvelopeWireCodec().decode(line).getOrThrow());
   }
@@ -101,7 +101,7 @@ class SiemFormattersTest {
   @Test
   @DisplayName("CEF escaping: header escapes backslash and pipe; extensions escape backslash, '=' and newlines")
   void cefEscaping() {
-    SignedJSentinelEventEnvelope envelope = SiemFixtures.envelopeWith(
+    SignedJCustosEventEnvelope envelope = SiemFixtures.envelopeWith(
         "env-esc", EventType.of("Weird|Type\\x"), "a=b\r\nc\\d");
     String line = new CefEnvelopeFormatter().format(envelope);
     assertTrue(line.contains("|Weird\\|Type\\\\x|"),
@@ -115,7 +115,7 @@ class SiemFormattersTest {
   @Test
   @DisplayName("LEEF escaping: header escapes pipe; attribute values replace tab/CR/LF with a space")
   void leefEscaping() {
-    SignedJSentinelEventEnvelope envelope = SiemFixtures.envelopeWith(
+    SignedJCustosEventEnvelope envelope = SiemFixtures.envelopeWith(
         "env-esc", EventType.of("Weird|Type"), "a\tb\r\nc");
     String line = new LeefEnvelopeFormatter().format(envelope);
     assertTrue(line.contains("|Weird\\|Type|"), "header escapes |: " + line);
@@ -128,7 +128,7 @@ class SiemFormattersTest {
   @Test
   @DisplayName("CEF/LEEF mini-parse: header fields and key values are recoverable")
   void parseablePlainRecord() {
-    SignedJSentinelEventEnvelope envelope = TestkitEnvelopes.envelope("env-parse");
+    SignedJCustosEventEnvelope envelope = TestkitEnvelopes.envelope("env-parse");
     String[] cefHeader = new CefEnvelopeFormatter().format(envelope).split("\\|", 8);
     assertEquals("CEF:0", cefHeader[0]);
     assertEquals(SiemProduct.VENDOR, cefHeader[1]);
@@ -147,7 +147,7 @@ class SiemFormattersTest {
   @Test
   @DisplayName("no formatter output carries payload bytes for the metadata modes")
   void metadataModesArePayloadFree() {
-    SignedJSentinelEventEnvelope envelope = TestkitEnvelopes.envelope("env-free");
+    SignedJCustosEventEnvelope envelope = TestkitEnvelopes.envelope("env-free");
     String payload = new String(envelope.canonicalPayload(),
         java.nio.charset.StandardCharsets.UTF_8);
     assertFalse(new CefEnvelopeFormatter().format(envelope).contains(payload));

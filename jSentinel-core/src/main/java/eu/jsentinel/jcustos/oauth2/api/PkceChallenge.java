@@ -20,7 +20,7 @@ import java.util.Objects;
 
 /**
  * A PKCE code challenge (RFC 7636) sent on the authorization request (V00.77).
- * jSentinel only emits {@code S256} — {@code plain} is deliberately unsupported.
+ * jCustos only emits {@code S256} — {@code plain} is deliberately unsupported.
  *
  * @param codeChallenge the {@code code_challenge} value
  * @param method        always {@code "S256"}

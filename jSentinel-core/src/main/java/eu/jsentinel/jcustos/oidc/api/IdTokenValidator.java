@@ -22,7 +22,7 @@ import com.svenruppert.functional.result.Result;
  * Validates an OIDC ID token (V00.78). Runs the JWT-standard validation (signature
  * via the V00.76 {@code JwtValidator} SPI, plus exp / iss / aud) and then the
  * OIDC-specific checks (nonce, azp, at_hash, c_hash, auth_time/max_age, acr) per
- * OIDC Core §3.1.3.7. The implementation lives in {@code jSentinel-identity-oidc}
+ * OIDC Core §3.1.3.7. The implementation lives in {@code jCustos-identity-oidc}
  * and <em>composes</em> a {@code JwtValidator} (it does not subtype the Nimbus
  * validator). JOSE-free contract.
  *

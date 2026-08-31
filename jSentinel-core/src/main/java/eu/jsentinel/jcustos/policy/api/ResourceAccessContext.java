@@ -16,8 +16,8 @@
  */
 package eu.jsentinel.jcustos.policy.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 
@@ -56,7 +56,7 @@ import static java.util.Objects.requireNonNull;
  * @param accessContext adapter-neutral access context; must not be {@code null}
  * @param resourceRef   concrete domain resource the request targets; must not be {@code null}
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record ResourceAccessContext(
     AccessContext accessContext,
     ResourceRef resourceRef
@@ -79,7 +79,7 @@ public record ResourceAccessContext(
    *
    * @return authenticated subject, if any
    */
-  public Optional<JSentinelSubject> subject() {
+  public Optional<JCustosSubject> subject() {
     return accessContext.subject();
   }
 

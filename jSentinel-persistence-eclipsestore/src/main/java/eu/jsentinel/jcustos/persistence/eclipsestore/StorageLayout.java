@@ -16,12 +16,12 @@
  */
 package eu.jsentinel.jcustos.persistence.eclipsestore;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Objects;
 
 /**
- * Names of the two sub-directories a {@code JSentinelStoragePair} lays
+ * Names of the two sub-directories a {@code JCustosStoragePair} lays
  * out under a single parent directory: one for the framework storage
  * (Phase-2 stores: audit, sessions, login attempts, etc.) and one for
  * application domain data.
@@ -46,7 +46,7 @@ import java.util.Objects;
  *                        relative to the storage pair's parent
  * @since 00.74.20
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record StorageLayout(String frameworkSubdir, String appSubdir) {
 
   /**

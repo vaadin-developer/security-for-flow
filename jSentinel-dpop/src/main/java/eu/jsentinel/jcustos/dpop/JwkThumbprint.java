@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.dpop;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Objects;
 
@@ -28,7 +28,7 @@ import java.util.Objects;
  *
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record JwkThumbprint(String value) {
 
   public JwkThumbprint {

@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.testkit;
 
 /*-
  * #%L
- * jSentinel Events — Contract testkit
+ * jCustos Events — Contract testkit
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,8 +25,8 @@ package eu.jsentinel.jcustos.events.testkit;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.codec.CanonicalJSentinelEventPayload;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.codec.CanonicalJCustosEventPayload;
 import eu.jsentinel.jcustos.events.codec.PayloadCodec;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,18 +44,18 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 @DisplayName("PayloadCodec — contract")
 public interface PayloadCodecContract {
 
   PayloadCodec newCodec();
 
-  private static CanonicalJSentinelEventPayload samplePayload() {
+  private static CanonicalJCustosEventPayload samplePayload() {
     TreeMap<String, String> attributes = new TreeMap<>();
     attributes.put("authenticationMethod", "password");
     attributes.put("note", "line1\nline2\t\"q\"");
-    return new CanonicalJSentinelEventPayload(
-        CanonicalJSentinelEventPayload.SCHEMA_VERSION, "LoginSucceeded", "evt-1",
+    return new CanonicalJCustosEventPayload(
+        CanonicalJCustosEventPayload.SCHEMA_VERSION, "LoginSucceeded", "evt-1",
         "default", "alice", "2026-06-24T10:15:30Z", "INFO", "AUTHENTICATION", attributes);
   }
 
@@ -69,7 +69,7 @@ public interface PayloadCodecContract {
   @DisplayName("encoding the same payload twice yields identical bytes")
   default void deterministic() {
     PayloadCodec codec = newCodec();
-    CanonicalJSentinelEventPayload payload = samplePayload();
+    CanonicalJCustosEventPayload payload = samplePayload();
     assertArrayEquals(codec.encode(payload), codec.encode(payload));
   }
 
@@ -77,7 +77,7 @@ public interface PayloadCodecContract {
   @DisplayName("encode -> decode round-trips the payload")
   default void roundTrip() {
     PayloadCodec codec = newCodec();
-    CanonicalJSentinelEventPayload payload = samplePayload();
+    CanonicalJCustosEventPayload payload = samplePayload();
     assertEquals(payload, codec.decode(codec.encode(payload)));
   }
 }

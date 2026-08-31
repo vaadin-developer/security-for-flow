@@ -25,11 +25,11 @@ import java.lang.reflect.Proxy;
  * <p>This is intentionally NOT a mocking-framework construct. It uses
  * only {@link java.lang.reflect.Proxy} (JDK reflection API — the same
  * primitive that drives {@code SecuredProxy.wrap(...)} elsewhere in
- * jSentinel) and a plain {@code InvocationHandler}. Konzept §9
+ * jCustos) and a plain {@code InvocationHandler}. Konzept §9
  * "No-Mocks-Disziplin" bans mocking libraries (Mockito, EasyMock,
  * PowerMock); it does not forbid concrete real-class delegators.
  *
- * <p>Need: the lifecycle tests for {@code JSentinelStoragePair.close()}
+ * <p>Need: the lifecycle tests for {@code JCustosStoragePair.close()}
  * must drive a deterministic {@code shutdown()} failure. Eclipse
  * Store's own {@code shutdown()} is idempotent (returns {@code false}
  * on the second call, never throws), so the "pre-shutdown trick"

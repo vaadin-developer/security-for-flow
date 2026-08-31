@@ -20,7 +20,7 @@ import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
 import eu.jsentinel.jcustos.audit.BruteForceLimitReached;
 import eu.jsentinel.jcustos.audit.LoginFailed;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -285,7 +285,7 @@ class InMemoryLoginAttemptPolicyTest {
   @Test
   @DisplayName("Throwing audit sink does not propagate from recordFailure")
   void auditFailureSwallowed() {
-    JSentinelAuditService throwingAudit = new JSentinelAuditService() {
+    JCustosAuditService throwingAudit = new JCustosAuditService() {
       @Override public void publish(AuditEvent event) {
         throw new RuntimeException("audit boom");
       }
@@ -365,7 +365,7 @@ class InMemoryLoginAttemptPolicyTest {
 
   // ── Test fixtures ────────────────────────────────────────────
 
-  static final class RecordingAudit implements JSentinelAuditService {
+  static final class RecordingAudit implements JCustosAuditService {
     final List<AuditEvent> events = new ArrayList<>();
 
     @Override

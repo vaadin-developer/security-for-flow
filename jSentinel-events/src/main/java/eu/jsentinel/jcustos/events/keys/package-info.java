@@ -1,10 +1,10 @@
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,9 +25,9 @@
 
 /**
  * V00.75 key-management SPI (Konzept §567-§615): the signer-side
- * {@link eu.jsentinel.jcustos.events.keys.JSentinelEventSigningKeyProvider}
+ * {@link eu.jsentinel.jcustos.events.keys.JCustosEventSigningKeyProvider}
  * and verifier-side {@link
- * eu.jsentinel.jcustos.events.keys.JSentinelEventVerificationKeyResolver},
+ * eu.jsentinel.jcustos.events.keys.JCustosEventVerificationKeyResolver},
  * the {@link eu.jsentinel.jcustos.events.keys.KeyStatus} lifecycle enum,
  * and two implementations: {@link
  * eu.jsentinel.jcustos.events.keys.InMemoryKeyManagement} (default /

@@ -20,7 +20,7 @@ import eu.jsentinel.jcustos.authorization.annotations.RequiresPermission;
 import eu.jsentinel.jcustos.demo.restclient.backend.BackendClientProvider;
 import eu.jsentinel.jcustos.demo.restclient.backend.BackendException;
 import eu.jsentinel.jcustos.demo.restclient.backend.RemoteUserEntry;
-import eu.jsentinel.jcustos.demo.restclient.security.ClientJSentinelContext;
+import eu.jsentinel.jcustos.demo.restclient.security.ClientJCustosContext;
 import eu.jsentinel.jcustos.demo.restclient.views.MainView;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.UI;
@@ -131,7 +131,7 @@ public class AdminRolesView extends Composite<VerticalLayout> {
   }
 
   private void performDelete(String username) {
-    String token = ClientJSentinelContext.token().orElse(null);
+    String token = ClientJCustosContext.token().orElse(null);
     if (token == null) {
       warn("Not authenticated.");
       return;
@@ -194,7 +194,7 @@ public class AdminRolesView extends Composite<VerticalLayout> {
 
   private void performCreate(String username, String password, String displayName,
                              String role, Dialog dialog) {
-    String token = ClientJSentinelContext.token().orElse(null);
+    String token = ClientJCustosContext.token().orElse(null);
     if (token == null) {
       warn("Not authenticated.");
       return;
@@ -238,7 +238,7 @@ public class AdminRolesView extends Composite<VerticalLayout> {
   }
 
   private void apply(String username, String newRole) {
-    String token = ClientJSentinelContext.token().orElse(null);
+    String token = ClientJCustosContext.token().orElse(null);
     if (token == null) {
       warn("Not authenticated.");
       return;
@@ -259,7 +259,7 @@ public class AdminRolesView extends Composite<VerticalLayout> {
   }
 
   private void refresh() {
-    String token = ClientJSentinelContext.token().orElse(null);
+    String token = ClientJCustosContext.token().orElse(null);
     if (token == null) {
       grid.setItems(List.of());
       return;

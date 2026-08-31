@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.dpop;
 
 import com.svenruppert.functional.result.Result;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 /**
  * Validates an inbound DPoP proof (RFC 9449 §4.3), V00.79. An implementation parses
@@ -29,7 +29,7 @@ import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
  *
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface DpopProofValidator {
 
   Result<ValidatedDpopProof, DpopValidationError> validate(DpopValidationRequest request);

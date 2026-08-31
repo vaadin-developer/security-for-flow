@@ -18,7 +18,7 @@ package eu.jsentinel.jcustos.demo.app.security.model;
 
 import eu.jsentinel.jcustos.audit.RoleAssigned;
 import eu.jsentinel.jcustos.audit.RoleRevoked;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authentication.Pbkdf2PasswordHasher;
 import eu.jsentinel.jcustos.demo.app.security.roles.AuthorizationRole;
 import eu.jsentinel.jcustos.test.RecordingAuditSink;
@@ -39,14 +39,14 @@ class InMemoryDemoUserDirectoryRoleMutationTest {
 
   @BeforeEach
   void setUp() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     audit = new RecordingAuditSink();
-    JSentinelServiceResolver.setJSentinelAuditService(audit);
+    JCustosServiceResolver.setJCustosAuditService(audit);
   }
 
   @AfterEach
   void tearDown() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   @Test

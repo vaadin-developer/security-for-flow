@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.bus;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,7 +25,7 @@ package eu.jsentinel.jcustos.events.bus;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -50,12 +50,12 @@ import java.util.Objects;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class ConsumeFailurePolicy {
 
   /**
    * The consume-side failure kinds — one constant per non-{@code Valid}
-   * variant of {@link JSentinelEventVerificationResult}.
+   * variant of {@link JCustosEventVerificationResult}.
    */
   public enum FailureKind {
     INVALID_SIGNATURE,
@@ -68,19 +68,19 @@ public final class ConsumeFailurePolicy {
     SEQUENCE_VIOLATION,
     PRODUCER_NOT_ALLOWED;
 
-    static FailureKind of(JSentinelEventVerificationResult failure) {
+    static FailureKind of(JCustosEventVerificationResult failure) {
       return switch (failure) {
-        case JSentinelEventVerificationResult.Valid ignored ->
+        case JCustosEventVerificationResult.Valid ignored ->
             throw new IllegalArgumentException("Valid is not a failure");
-        case JSentinelEventVerificationResult.InvalidSignature ignored -> INVALID_SIGNATURE;
-        case JSentinelEventVerificationResult.PayloadHashMismatch ignored -> PAYLOAD_HASH_MISMATCH;
-        case JSentinelEventVerificationResult.UnknownKey ignored -> UNKNOWN_KEY;
-        case JSentinelEventVerificationResult.KeyRevoked ignored -> KEY_REVOKED;
-        case JSentinelEventVerificationResult.KeyExpired ignored -> KEY_EXPIRED;
-        case JSentinelEventVerificationResult.Expired ignored -> EXPIRED;
-        case JSentinelEventVerificationResult.ReplayDetected ignored -> REPLAY_DETECTED;
-        case JSentinelEventVerificationResult.SequenceViolation ignored -> SEQUENCE_VIOLATION;
-        case JSentinelEventVerificationResult.ProducerNotAllowed ignored -> PRODUCER_NOT_ALLOWED;
+        case JCustosEventVerificationResult.InvalidSignature ignored -> INVALID_SIGNATURE;
+        case JCustosEventVerificationResult.PayloadHashMismatch ignored -> PAYLOAD_HASH_MISMATCH;
+        case JCustosEventVerificationResult.UnknownKey ignored -> UNKNOWN_KEY;
+        case JCustosEventVerificationResult.KeyRevoked ignored -> KEY_REVOKED;
+        case JCustosEventVerificationResult.KeyExpired ignored -> KEY_EXPIRED;
+        case JCustosEventVerificationResult.Expired ignored -> EXPIRED;
+        case JCustosEventVerificationResult.ReplayDetected ignored -> REPLAY_DETECTED;
+        case JCustosEventVerificationResult.SequenceViolation ignored -> SEQUENCE_VIOLATION;
+        case JCustosEventVerificationResult.ProducerNotAllowed ignored -> PRODUCER_NOT_ALLOWED;
       };
     }
   }
@@ -125,7 +125,7 @@ public final class ConsumeFailurePolicy {
    * @return the configured action for its kind
    * @throws IllegalArgumentException for {@code Valid}
    */
-  public ConsumeFailureAction actionFor(JSentinelEventVerificationResult failure) {
+  public ConsumeFailureAction actionFor(JCustosEventVerificationResult failure) {
     Objects.requireNonNull(failure, "failure");
     return actions.get(FailureKind.of(failure));
   }

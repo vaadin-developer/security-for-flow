@@ -17,13 +17,13 @@
 package eu.jsentinel.jcustos.policy.impl;
 
 import eu.jsentinel.jcustos.audit.PolicyEvaluated;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authorization.annotations.RequiresPolicy;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationDecision;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationEvaluator;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 import eu.jsentinel.jcustos.policy.api.PolicyContext;
 import eu.jsentinel.jcustos.policy.api.PolicyDecision;
@@ -43,7 +43,7 @@ import java.util.Optional;
  * Behaviour:
  * <ol>
  *   <li>Resolve the configured {@link PolicyRegistry} via
- *       {@link JSentinelServiceResolver#policyRegistry()}.</li>
+ *       {@link JCustosServiceResolver#policyRegistry()}.</li>
  *   <li>Build a {@link PolicyContext} from the inbound
  *       {@link AccessContext}.</li>
  *   <li>Evaluate the named policy. If the policy is not registered, the
@@ -62,7 +62,7 @@ import java.util.Optional;
  * resolved per evaluation through the static resolver, matching the
  * pattern of {@code RequiresRoleEvaluator}.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class RequiresPolicyEvaluator
     implements AuthorizationEvaluator<RequiresPolicy> {
 
@@ -77,7 +77,7 @@ public final class RequiresPolicyEvaluator
     PolicyContext policyContext = new PolicyContext(
         context, policyName, resourceRef, Map.of());
 
-    PolicyRegistry registry = JSentinelServiceResolver.policyRegistry();
+    PolicyRegistry registry = JCustosServiceResolver.policyRegistry();
     PolicyDecision policyDecision = registry.evaluate(policyName, policyContext);
 
     publish(policyDecision, policyContext);
@@ -102,8 +102,8 @@ public final class RequiresPolicyEvaluator
   }
 
   private static void publish(PolicyDecision decision, PolicyContext context) {
-    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
-    String subjectId = context.subject().map(JSentinelSubject::subjectId).orElse(null);
+    JCustosAuditService sink = JCustosServiceResolver.securityAuditService();
+    String subjectId = context.subject().map(JCustosSubject::subjectId).orElse(null);
     String label = label(decision);
     String reason = reason(decision);
     try {

@@ -2,9 +2,9 @@ package eu.jsentinel.jcustos.demo.skill.rest.handlers;
 
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import com.sun.net.httpserver.HttpExchange;
 import eu.jsentinel.jcustos.demo.skill.rest.Json;
 import eu.jsentinel.jcustos.demo.skill.rest.Router;
@@ -25,8 +25,8 @@ public final class AuditHandler {
   private AuditHandler() {
   }
 
-  public static void list(HttpExchange exchange, JSentinelSubject subject) throws IOException {
-    JSentinelAuditService audit = JSentinelServiceResolver.securityAuditService();
+  public static void list(HttpExchange exchange, JCustosSubject subject) throws IOException {
+    JCustosAuditService audit = JCustosServiceResolver.securityAuditService();
     List<AuditEvent> events = audit.query(AuditQuery.all());
     List<Map<String, Object>> body = events.stream()
         .map(AuditHandler::project)

@@ -17,10 +17,10 @@
 package eu.jsentinel.jcustos.demo.restclient.security;
 
 import eu.jsentinel.jcustos.audit.LoginSucceeded;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
-import eu.jsentinel.jcustos.autoservice.api.JSentinelAutoService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptContext;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptDecision;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptPolicy;
@@ -38,16 +38,16 @@ import java.time.Instant;
  * check to the demo-rest backend via {@link BackendClientProvider}.
  * <p>
  * On a successful login the returned token + {@link RemoteUser} are
- * stored in {@link ClientJSentinelContext} so subsequent calls
+ * stored in {@link ClientJCustosContext} so subsequent calls
  * ({@code loadSubject}, {@code SubjectStore.currentSubject(...)}) return
  * them without another round-trip.
  * <p>
  * Repeated failures are throttled locally via the
  * {@link LoginAttemptPolicy} resolved through
- * {@link JSentinelServiceResolver}, so a brute-force attempt stops at the
+ * {@link JCustosServiceResolver}, so a brute-force attempt stops at the
  * Vaadin layer before issuing yet another HTTP call against the backend.
  */
-@JSentinelAutoService(AuthenticationService.class)
+@JCustosAutoService(AuthenticationService.class)
 public class RestBackedAuthenticationService
     implements AuthenticationService<Credentials, RemoteUser> {
 
@@ -57,7 +57,7 @@ public class RestBackedAuthenticationService
       return false;
     }
 
-    LoginAttemptPolicy policy = JSentinelServiceResolver.loginAttemptPolicy();
+    LoginAttemptPolicy policy = JCustosServiceResolver.loginAttemptPolicy();
     LoginAttemptContext attempt = LoginAttemptContext.now(
         credentials.username(), currentClientAddress(), null);
 
@@ -68,7 +68,7 @@ public class RestBackedAuthenticationService
 
     LoginResult result = BackendClientProvider.client().login(credentials);
     if (result instanceof LoginResult.Authenticated(String token, RemoteUser user)) {
-      ClientJSentinelContext.setActiveLogin(token, user);
+      ClientJCustosContext.setActiveLogin(token, user);
       policy.recordSuccess(attempt);
       auditLoginSucceeded(user, attempt.clientAddress());
       return true;
@@ -78,7 +78,7 @@ public class RestBackedAuthenticationService
   }
 
   private static void auditLoginSucceeded(RemoteUser user, String clientAddress) {
-    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
+    JCustosAuditService sink = JCustosServiceResolver.securityAuditService();
     try {
       sink.publish(new LoginSucceeded(
           Instant.now(Clock.systemUTC()), user.subjectId(), clientAddress, null));
@@ -89,7 +89,7 @@ public class RestBackedAuthenticationService
 
   @Override
   public RemoteUser loadSubject(Credentials credentials) {
-    return ClientJSentinelContext.user().orElse(null);
+    return ClientJCustosContext.user().orElse(null);
   }
 
   @Override

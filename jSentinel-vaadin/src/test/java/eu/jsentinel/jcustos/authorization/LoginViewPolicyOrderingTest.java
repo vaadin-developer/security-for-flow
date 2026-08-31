@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.authorization;
 
 import eu.jsentinel.jcustos.audit.SessionInvalidated;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.session.SessionContext;
 import eu.jsentinel.jcustos.session.SessionDecision;
 import eu.jsentinel.jcustos.session.SessionMetadata;
@@ -65,9 +65,9 @@ class LoginViewPolicyOrderingTest extends BrowserlessTest {
 
   @BeforeEach
   void wire() {
-    JSentinelServiceResolver.resetAll();
-    JSentinelServiceResolver.setSessionPolicy(sessionPolicy);
-    JSentinelServiceResolver.setJSentinelAuditService(audit);
+    JCustosServiceResolver.resetAll();
+    JCustosServiceResolver.setSessionPolicy(sessionPolicy);
+    JCustosServiceResolver.setJCustosAuditService(audit);
     calls.clear();
     OrderingLoginView.acceptCredentials = true;
     OrderingLoginView.callLog = calls;
@@ -75,7 +75,7 @@ class LoginViewPolicyOrderingTest extends BrowserlessTest {
 
   @AfterEach
   void cleanUp() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     OrderingLoginView.callLog = null;
   }
 

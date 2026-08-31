@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authorization.api.roles;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Set;
 
@@ -37,7 +37,7 @@ import java.util.Set;
  * {@link #impliedRoles(RoleName)} runs on every role-based admission
  * check.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface RoleHierarchy {
 
   /**

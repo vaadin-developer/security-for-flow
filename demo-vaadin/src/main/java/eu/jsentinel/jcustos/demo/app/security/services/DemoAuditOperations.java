@@ -18,11 +18,11 @@ package eu.jsentinel.jcustos.demo.app.security.services;
 
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authorization.annotations.RequiresAllPermissions;
 import eu.jsentinel.jcustos.authorization.annotations.RequiresPermission;
 import eu.jsentinel.jcustos.authorization.annotations.Secured;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 
 import java.util.List;
 
@@ -32,7 +32,7 @@ import java.util.List;
  * processor. The {@link Secured @Secured} mark triggers code
  * generation: a {@code DemoAuditOperationsSecured} subclass is
  * emitted alongside this class, with each annotated method
- * delegating through {@code JSentinelEnforcer} before invoking
+ * delegating through {@code JCustosEnforcer} before invoking
  * {@code super.<method>(...)}.
  * <p>
  * Concrete-class flavour of the same demonstration that
@@ -52,7 +52,7 @@ public class DemoAuditOperations {
    */
   @RequiresPermission("audit:read")
   public List<AuditEvent> listEvents() {
-    JSentinelAuditService audit = JSentinelServiceResolver.securityAuditService();
+    JCustosAuditService audit = JCustosServiceResolver.securityAuditService();
     return audit.query(AuditQuery.all());
   }
 
@@ -73,7 +73,7 @@ public class DemoAuditOperations {
     if (days < 0) {
       throw new IllegalArgumentException("days must be non-negative");
     }
-    JSentinelAuditService audit = JSentinelServiceResolver.securityAuditService();
+    JCustosAuditService audit = JCustosServiceResolver.securityAuditService();
     // Pretend purge: count events that would qualify. Production
     // code would actually drop them via AuditEventStore.purgeOlderThan.
     return audit.query(AuditQuery.all()).size();

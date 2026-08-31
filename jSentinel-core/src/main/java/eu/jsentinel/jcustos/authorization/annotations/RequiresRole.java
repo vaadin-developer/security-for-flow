@@ -32,7 +32,7 @@ import static java.lang.annotation.ElementType.TYPE;
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({TYPE, METHOD})
-@JSentinelAnnotation(RequiresRoleEvaluator.class)
+@JCustosAnnotation(RequiresRoleEvaluator.class)
 public @interface RequiresRole {
 
   /**

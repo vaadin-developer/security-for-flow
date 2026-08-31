@@ -23,7 +23,7 @@
 package eu.jsentinel.jcustos.credential.emergency;
 
 import eu.jsentinel.jcustos.audit.CredentialStatusChanged;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.credential.store.CredentialRecord;
 import eu.jsentinel.jcustos.credential.store.CredentialStatus;
 import eu.jsentinel.jcustos.credential.store.CredentialStore;
@@ -57,12 +57,12 @@ import java.util.Optional;
 public final class MassCredentialStatusChange {
 
   private final CredentialStore store;
-  private final JSentinelAuditService audit;
+  private final JCustosAuditService audit;
   private final Clock clock;
 
   public MassCredentialStatusChange(
       CredentialStore store,
-      JSentinelAuditService audit,
+      JCustosAuditService audit,
       Clock clock) {
     this.store = Objects.requireNonNull(store, "store");
     this.audit = Objects.requireNonNull(audit, "audit");

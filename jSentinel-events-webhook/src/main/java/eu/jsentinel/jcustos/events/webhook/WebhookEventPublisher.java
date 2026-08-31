@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.webhook;
 
 /*-
  * #%L
- * jSentinel Events — Webhook exporter
+ * jCustos Events — Webhook exporter
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -28,8 +28,8 @@ package eu.jsentinel.jcustos.events.webhook;
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.dependencies.core.net.MediaType;
 import eu.jsentinel.jcustos.audit.LogFieldScrubber;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.events.publisher.SignedEnvelopePublisher;
 import eu.jsentinel.jcustos.events.wire.EnvelopeWireCodec;
 import org.slf4j.Logger;
@@ -58,7 +58,7 @@ import static com.svenruppert.dependencies.core.net.HttpStatus.fromCode;
  * bridge, so a receiver can feed it straight into its own verification
  * pipeline.
  * <p>
- * Delivery model: {@link #onEnvelope(SignedJSentinelEventEnvelope)} only
+ * Delivery model: {@link #onEnvelope(SignedJCustosEventEnvelope)} only
  * enqueues into a bounded in-memory queue and NEVER blocks the publish
  * thread; a single dedicated virtual-thread worker drains the queue (one
  * worker keeps per-target envelope order). A full queue drops the envelope
@@ -78,14 +78,14 @@ import static com.svenruppert.dependencies.core.net.HttpStatus.fromCode;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class WebhookEventPublisher
     implements SignedEnvelopePublisher, HasLogger, AutoCloseable {
 
   /** Routing header carrying the envelope's event type. */
-  public static final String HEADER_EVENT_TYPE = "X-JSentinel-Event-Type";
+  public static final String HEADER_EVENT_TYPE = "X-JCustos-Event-Type";
   /** Routing header carrying the envelope id. */
-  public static final String HEADER_ENVELOPE_ID = "X-JSentinel-Envelope-Id";
+  public static final String HEADER_ENVELOPE_ID = "X-JCustos-Envelope-Id";
 
   private static final String HEADER_CONTENT_TYPE = "Content-Type";
   private static final String HEADER_AUTHORIZATION = "Authorization";
@@ -100,7 +100,7 @@ public final class WebhookEventPublisher
   private final HttpClient client;
   private final Logger logger;
   private final EnvelopeWireCodec codec = new EnvelopeWireCodec();
-  private final BlockingQueue<SignedJSentinelEventEnvelope> queue;
+  private final BlockingQueue<SignedJCustosEventEnvelope> queue;
   private final Thread worker;
   private final AtomicBoolean closed = new AtomicBoolean();
   private final AtomicLong delivered = new AtomicLong();
@@ -136,7 +136,7 @@ public final class WebhookEventPublisher
   }
 
   @Override
-  public void onEnvelope(SignedJSentinelEventEnvelope envelope) {
+  public void onEnvelope(SignedJCustosEventEnvelope envelope) {
     if (envelope == null || closed.get()) {
       if (envelope != null) {
         dropped.incrementAndGet();
@@ -206,7 +206,7 @@ public final class WebhookEventPublisher
 
   private void drainLoop() {
     while (!closed.get()) {
-      SignedJSentinelEventEnvelope envelope;
+      SignedJCustosEventEnvelope envelope;
       try {
         envelope = queue.take();
       } catch (InterruptedException e) {
@@ -217,7 +217,7 @@ public final class WebhookEventPublisher
     }
   }
 
-  private void deliverWithRetry(SignedJSentinelEventEnvelope envelope) {
+  private void deliverWithRetry(SignedJCustosEventEnvelope envelope) {
     String scrubbedId = LogFieldScrubber.scrub(envelope.envelopeId().value());
     if (WebhookPublisherConfig.containsControlCharacter(envelope.eventType().value())
         || WebhookPublisherConfig.containsControlCharacter(envelope.envelopeId().value())) {
@@ -273,7 +273,7 @@ public final class WebhookEventPublisher
         scrubbedId, config.maxAttempts(), lastFailure);
   }
 
-  private HttpRequest request(SignedJSentinelEventEnvelope envelope, String body) {
+  private HttpRequest request(SignedJCustosEventEnvelope envelope, String body) {
     HttpRequest.Builder builder = HttpRequest.newBuilder(config.endpoint())
         .timeout(config.requestTimeout())
         .header(HEADER_CONTENT_TYPE, MediaType.APPLICATION_JSON.withCharsetUtf8())

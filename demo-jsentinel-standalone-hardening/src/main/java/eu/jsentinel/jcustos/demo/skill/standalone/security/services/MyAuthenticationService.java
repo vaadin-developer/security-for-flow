@@ -1,7 +1,7 @@
 package eu.jsentinel.jcustos.demo.skill.standalone.security.services;
 
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
-import eu.jsentinel.jcustos.autoservice.api.JSentinelAutoService;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 import eu.jsentinel.jcustos.demo.skill.standalone.security.model.Credentials;
 import eu.jsentinel.jcustos.demo.skill.standalone.security.model.User;
 import eu.jsentinel.jcustos.demo.skill.standalone.security.model.UserDirectoryProvider;
@@ -10,7 +10,7 @@ import eu.jsentinel.jcustos.demo.skill.standalone.security.model.UserDirectoryPr
  * Standalone AuthenticationService — same shape as the Vaadin /
  * REST skills minus the request-bound client address.
  */
-@JSentinelAutoService(AuthenticationService.class)
+@JCustosAutoService(AuthenticationService.class)
 public class MyAuthenticationService
     implements AuthenticationService<Credentials, User> {
 

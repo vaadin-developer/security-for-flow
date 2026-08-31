@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.monitoring.metrics;
 
 /*-
  * #%L
- * jSentinel Monitoring — metrics, health and diagnostics export points
+ * jCustos Monitoring — metrics, health and diagnostics export points
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -31,9 +31,9 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Module-local test double: records every counter increment and gauge
  * push into thread-safe maps for assertion. Not a mock — a real,
- * fully functional {@link JSentinelMetricsPublisher} implementation.
+ * fully functional {@link JCustosMetricsPublisher} implementation.
  */
-public final class RecordingMetricsPublisher implements JSentinelMetricsPublisher {
+public final class RecordingMetricsPublisher implements JCustosMetricsPublisher {
 
   private final ConcurrentHashMap<String, Long> counters = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, Long> gauges = new ConcurrentHashMap<>();

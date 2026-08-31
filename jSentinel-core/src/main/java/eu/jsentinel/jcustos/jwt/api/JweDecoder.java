@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.jwt.api;
 
 import com.svenruppert.functional.result.Result;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.security.PrivateKey;
 
@@ -32,7 +32,7 @@ import java.security.PrivateKey;
  *
  * @since 00.79.20
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface JweDecoder {
 
   /**

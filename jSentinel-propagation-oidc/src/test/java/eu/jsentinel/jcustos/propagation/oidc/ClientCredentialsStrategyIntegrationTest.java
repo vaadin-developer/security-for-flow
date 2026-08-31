@@ -15,7 +15,7 @@ import eu.jsentinel.jcustos.credential.propagation.OutboundCall;
 import eu.jsentinel.jcustos.propagation.oidc.cache.InMemoryTokenExchangeCache;
 import eu.jsentinel.jcustos.propagation.oidc.cache.TokenExchangeCache;
 import eu.jsentinel.jcustos.propagation.oidc.strategy.ClientCredentialsStrategy;
-import eu.jsentinel.jcustos.propagation.oidc.strategy.JSentinelPropagationException;
+import eu.jsentinel.jcustos.propagation.oidc.strategy.JCustosPropagationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,7 +70,7 @@ class ClientCredentialsStrategyIntegrationTest {
         stub.tokenEndpoint(), "cid", "csecret",
         HttpClient.newHttpClient(), new InMemoryTokenExchangeCache(),
         ClientCredentialsStrategy.NAME);
-    JSentinelPropagationException ex = assertThrows(JSentinelPropagationException.class,
+    JCustosPropagationException ex = assertThrows(JCustosPropagationException.class,
         () -> strategy.resolve(
             new OutboundCall("svc", "m", "api", Map.of()),
             Optional.empty()));
@@ -138,7 +138,7 @@ class ClientCredentialsStrategyIntegrationTest {
         HttpClient.newHttpClient(), new InMemoryTokenExchangeCache(),
         ClientCredentialsStrategy.NAME);
 
-    assertThrows(JSentinelPropagationException.class,
+    assertThrows(JCustosPropagationException.class,
         () -> strategy.resolve(new OutboundCall("svc", "m", "api", Map.of()), Optional.empty()));
   }
 }

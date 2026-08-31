@@ -1,10 +1,10 @@
 /*-
  * #%L
- * jSentinel propagation — OIDC strategies
+ * jCustos propagation — OIDC strategies
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,8 +25,8 @@
 
 /**
  * V00.76 inbound JWT validation for the OIDC propagation module. Consumes the
- * core {@code JwtValidator} SPI via {@code JSentinelServiceResolver} at runtime —
- * <strong>no</strong> compile dependency on {@code jSentinel-jwt} and no JOSE
+ * core {@code JwtValidator} SPI via {@code JCustosServiceResolver} at runtime —
+ * <strong>no</strong> compile dependency on {@code jCustos-jwt} and no JOSE
  * library on this module's classpath, so the module's JOSE enforcer ban stays
  * intact.
  *

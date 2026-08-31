@@ -2,7 +2,7 @@ package eu.jsentinel.jcustos.demo.skill.vaadin.views.admin;
 
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.audit.LoginFailed;
 import eu.jsentinel.jcustos.audit.LoginSucceeded;
 import eu.jsentinel.jcustos.audit.LogoutPerformed;
@@ -13,7 +13,7 @@ import eu.jsentinel.jcustos.audit.SessionInvalidated;
 import eu.jsentinel.jcustos.audit.UserCreated;
 import eu.jsentinel.jcustos.audit.UserDeleted;
 import eu.jsentinel.jcustos.authorization.annotations.RequiresPermission;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -46,7 +46,7 @@ import java.util.Set;
  * Renders the in-memory audit ring buffer as a filterable grid.
  *
  * <p>The ring buffer was wired in
- * {@code JSentinelBootstrapInitListener.audit(a -> a.ringBuffer(256).logging())}.
+ * {@code JCustosBootstrapInitListener.audit(a -> a.ringBuffer(256).logging())}.
  * Every login, role change, session creation, etc. lands here.
  *
  * <p>Filter toolbar:
@@ -61,7 +61,7 @@ import java.util.Set;
  *
  * <p>All four filters compose: every value-change triggers a fresh
  * {@link AuditQuery} against
- * {@link JSentinelServiceResolver#securityAuditService()}.
+ * {@link JCustosServiceResolver#securityAuditService()}.
  *
  * <p>Restricted by {@code @RequiresPermission("audit:read")} — only
  * subjects holding the permission can navigate to {@code /audit}.
@@ -101,7 +101,7 @@ public class AuditView extends Composite<VerticalLayout> {
 
     root.add(new H1("Security audit log"));
     root.add(new Paragraph(
-        "In-memory ring buffer from JSentinelAuditService. "
+        "In-memory ring buffer from JCustosAuditService. "
             + "Use the toolbar to filter by event type, subject, and time window. "
             + "Restricted to subjects holding the audit:read permission."));
 
@@ -179,7 +179,7 @@ public class AuditView extends Composite<VerticalLayout> {
    * client-side filtering is adequate.
    */
   private void refresh() {
-    JSentinelAuditService audit = JSentinelServiceResolver.securityAuditService();
+    JCustosAuditService audit = JCustosServiceResolver.securityAuditService();
     Class<? extends AuditEvent> selectedType = typeFilter.getValue();
     Set<Class<? extends AuditEvent>> types = selectedType == null
         ? Set.of()

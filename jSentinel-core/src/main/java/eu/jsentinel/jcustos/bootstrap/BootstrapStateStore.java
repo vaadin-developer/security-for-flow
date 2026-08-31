@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 
 import java.util.Optional;
@@ -32,7 +32,7 @@ import java.util.Optional;
  *
  * <p>Implementations must be thread-safe.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface BootstrapStateStore {
 
   /**

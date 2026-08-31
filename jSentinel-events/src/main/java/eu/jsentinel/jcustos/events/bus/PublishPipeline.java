@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.bus;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,24 +25,24 @@ package eu.jsentinel.jcustos.events.bus;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.CorrelationId;
 import eu.jsentinel.jcustos.events.api.EventEnvelopeId;
 import eu.jsentinel.jcustos.events.api.EventProducerId;
 import eu.jsentinel.jcustos.events.api.EventSequence;
-import eu.jsentinel.jcustos.events.api.JSentinelEvent;
+import eu.jsentinel.jcustos.events.api.JCustosEvent;
 import eu.jsentinel.jcustos.events.api.PayloadHashAlgorithm;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelopeBuilder;
-import eu.jsentinel.jcustos.events.codec.CanonicalJSentinelEventPayload;
-import eu.jsentinel.jcustos.events.codec.JSentinelEventCanonicalizer;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelopeBuilder;
+import eu.jsentinel.jcustos.events.codec.CanonicalJCustosEventPayload;
+import eu.jsentinel.jcustos.events.codec.JCustosEventCanonicalizer;
 import eu.jsentinel.jcustos.events.codec.PayloadCodec;
-import eu.jsentinel.jcustos.events.keys.JSentinelEventSigningKeyProvider;
+import eu.jsentinel.jcustos.events.keys.JCustosEventSigningKeyProvider;
 import eu.jsentinel.jcustos.events.keys.SigningKeySnapshot;
-import eu.jsentinel.jcustos.events.producer.JSentinelEventProducerPolicy;
-import eu.jsentinel.jcustos.events.replay.JSentinelEventReplayStore;
-import eu.jsentinel.jcustos.events.sequence.JSentinelEventSequenceStore;
+import eu.jsentinel.jcustos.events.producer.JCustosEventProducerPolicy;
+import eu.jsentinel.jcustos.events.replay.JCustosEventReplayStore;
+import eu.jsentinel.jcustos.events.sequence.JCustosEventSequenceStore;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -50,33 +50,33 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
- * The publish pipeline (Konzept §826): turns a {@link JSentinelEvent} into a
- * signed {@link SignedJSentinelEventEnvelope}. Stages, in order: complete
+ * The publish pipeline (Konzept §826): turns a {@link JCustosEvent} into a
+ * signed {@link SignedJCustosEventEnvelope}. Stages, in order: complete
  * context, check producer policy, reserve sequence, canonicalize payload,
  * compute payload hash, build envelope, sign, mark replay store, optionally
  * append to the envelope store.
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class PublishPipeline {
 
-  private final JSentinelEventSigningKeyProvider signingKeyProvider;
-  private final JSentinelEventCanonicalizer canonicalizer;
+  private final JCustosEventSigningKeyProvider signingKeyProvider;
+  private final JCustosEventCanonicalizer canonicalizer;
   private final PayloadCodec codec;
   private final PayloadHashAlgorithm hashAlgorithm;
   private final EventProducerId producerId;
-  private final JSentinelEventSequenceStore sequenceStore;
-  private final JSentinelEventReplayStore replayStore;
-  private final JSentinelEventProducerPolicy producerPolicy;
+  private final JCustosEventSequenceStore sequenceStore;
+  private final JCustosEventReplayStore replayStore;
+  private final JCustosEventProducerPolicy producerPolicy;
   private final Duration ttl;
   private final Supplier<Instant> clock;
 
-  public PublishPipeline(JSentinelEventSigningKeyProvider signingKeyProvider,
-      JSentinelEventCanonicalizer canonicalizer, PayloadCodec codec,
+  public PublishPipeline(JCustosEventSigningKeyProvider signingKeyProvider,
+      JCustosEventCanonicalizer canonicalizer, PayloadCodec codec,
       PayloadHashAlgorithm hashAlgorithm, EventProducerId producerId,
-      JSentinelEventSequenceStore sequenceStore, JSentinelEventReplayStore replayStore,
-      JSentinelEventProducerPolicy producerPolicy, Duration ttl, Supplier<Instant> clock) {
+      JCustosEventSequenceStore sequenceStore, JCustosEventReplayStore replayStore,
+      JCustosEventProducerPolicy producerPolicy, Duration ttl, Supplier<Instant> clock) {
     this.signingKeyProvider = Objects.requireNonNull(signingKeyProvider, "signingKeyProvider");
     this.canonicalizer = Objects.requireNonNull(canonicalizer, "canonicalizer");
     this.codec = Objects.requireNonNull(codec, "codec");
@@ -96,7 +96,7 @@ public final class PublishPipeline {
    * @return the signed envelope
    * @throws EventPublishException if the producer may not publish this type
    */
-  public SignedJSentinelEventEnvelope toEnvelope(JSentinelEvent event) {
+  public SignedJCustosEventEnvelope toEnvelope(JCustosEvent event) {
     Objects.requireNonNull(event, "event");
     TenantId tenantId = event.tenantId();
 
@@ -108,7 +108,7 @@ public final class PublishPipeline {
 
     EventSequence sequence = reserveSequence(tenantId);
 
-    CanonicalJSentinelEventPayload payload = canonicalizer.canonicalize(event);
+    CanonicalJCustosEventPayload payload = canonicalizer.canonicalize(event);
     byte[] canonicalPayload = codec.encode(payload);
     String canonicalPayloadHash = PayloadDigest.hash(hashAlgorithm, canonicalPayload);
 
@@ -118,7 +118,7 @@ public final class PublishPipeline {
     // rotation between the builder stage and the sign stage can never yield an
     // envelope stamped keyId=OLD but signed with NEW private material.
     SigningKeySnapshot signingKey = signingKeyProvider.signingSnapshot();
-    SignedJSentinelEventEnvelopeBuilder builder = SignedJSentinelEventEnvelopeBuilder.create()
+    SignedJCustosEventEnvelopeBuilder builder = SignedJCustosEventEnvelopeBuilder.create()
         .envelopeId(EventEnvelopeId.random())
         .eventId(event.eventId())
         .eventType(event.eventType())
@@ -140,7 +140,7 @@ public final class PublishPipeline {
 
     byte[] signatureBase = EnvelopeSignatureBase.compute(builder.build());
     byte[] signature = signingKey.algorithm().sign(signatureBase, signingKey.privateKey());
-    SignedJSentinelEventEnvelope envelope = builder.signature(signature).build();
+    SignedJCustosEventEnvelope envelope = builder.signature(signature).build();
 
     replayStore.markSeen(envelope.envelopeId(), envelope.expiresAt());
     return envelope;

@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.persistence.eclipsestore;
 
 /*-
  * #%L
- * jSentinel Events — Eclipse-Store persistence
+ * jCustos Events — Eclipse-Store persistence
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,7 +27,7 @@ package eu.jsentinel.jcustos.events.persistence.eclipsestore;
 
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventProducerId;
-import eu.jsentinel.jcustos.events.sequence.JSentinelEventSequenceStore;
+import eu.jsentinel.jcustos.events.sequence.JCustosEventSequenceStore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -62,7 +62,7 @@ class EclipseStoreSequenceStoreCompositeKeyTest extends EclipseStoreEventStorage
   @Test
   @DisplayName("alias pair (a|b, c) vs (a, b|c) gets independent counters, also across reopen")
   void aliasPairHasIndependentCounters() {
-    JSentinelEventSequenceStore store = storage.sequenceStore();
+    JCustosEventSequenceStore store = storage.sequenceStore();
     assertEquals(1, store.reserveNext(ALIAS_TENANT_A, ALIAS_PRODUCER_A).value());
     assertEquals(2, store.reserveNext(ALIAS_TENANT_A, ALIAS_PRODUCER_A).value());
     assertTrue(store.lastSequence(ALIAS_TENANT_B, ALIAS_PRODUCER_B).isEmpty(),
@@ -87,7 +87,7 @@ class EclipseStoreSequenceStoreCompositeKeyTest extends EclipseStoreEventStorage
     storage.manager().store(storage.root().sequences);
 
     reopen();
-    JSentinelEventSequenceStore store = storage.sequenceStore();
+    JCustosEventSequenceStore store = storage.sequenceStore();
     TenantId tenant = TenantId.of("tenant-x");
     EventProducerId producer = EventProducerId.of("producer-y");
     assertEquals(41, store.lastSequence(tenant, producer).orElseThrow().value(),

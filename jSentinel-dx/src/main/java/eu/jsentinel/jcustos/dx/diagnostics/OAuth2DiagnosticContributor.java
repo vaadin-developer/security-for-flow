@@ -1,13 +1,13 @@
 package eu.jsentinel.jcustos.dx.diagnostics;
 
 /**
- * Contributes the OAuth2 Relying-Party findings to {@code JSentinelDiagnostics.inspect()}
+ * Contributes the OAuth2 Relying-Party findings to {@code JCustosDiagnostics.inspect()}
  * (Konzept §13.3, V00.77). Reads the non-secret {@link OAuth2DiagnosticState}
  * snapshot recorded by {@code .oauth2(...)} and warns on the two configuration
  * risks that are silent at bootstrap time: a public client that disabled PKCE,
  * and an introspection endpoint with caching switched off (a per-request
  * round-trip = DoS amplification). Registered via {@code META-INF/services}
- * (jSentinel-dx carries no AutoService processor).
+ * (jCustos-dx carries no AutoService processor).
  */
 public final class OAuth2DiagnosticContributor implements DiagnosticContributor {
 

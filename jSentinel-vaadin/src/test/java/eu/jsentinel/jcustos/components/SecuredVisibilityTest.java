@@ -40,10 +40,10 @@ class SecuredVisibilityTest {
   private static final PermissionName DOC_DELETE = new PermissionName("document:delete");
   private static final PermissionName DOC_READ = new PermissionName("document:read");
 
-  private static SecuredVisibility.JSentinelView view(Set<RoleName> roles, Set<PermissionName> perms) {
+  private static SecuredVisibility.JCustosView view(Set<RoleName> roles, Set<PermissionName> perms) {
     HasRoles r = () -> List.copyOf(roles);
     HasPermissions p = () -> List.copyOf(perms);
-    return new SecuredVisibility.JSentinelView(r, p);
+    return new SecuredVisibility.JCustosView(r, p);
   }
 
   @Test
@@ -69,10 +69,10 @@ class SecuredVisibilityTest {
   @DisplayName("required permission: missing → denied, present → allowed")
   void permissionRequirement() {
     SecuredVisibility.Requirement req = SecuredVisibility.Requirement.permission(DOC_DELETE);
-    SecuredVisibility.JSentinelView v = view(Set.of(), Set.of(DOC_READ));
+    SecuredVisibility.JCustosView v = view(Set.of(), Set.of(DOC_READ));
     assertFalse(SecuredVisibility.isAllowed(req, v.roles(), v.permissions()));
 
-    SecuredVisibility.JSentinelView v2 = view(Set.of(), Set.of(DOC_READ, DOC_DELETE));
+    SecuredVisibility.JCustosView v2 = view(Set.of(), Set.of(DOC_READ, DOC_DELETE));
     assertTrue(SecuredVisibility.isAllowed(req, v2.roles(), v2.permissions()));
   }
 
@@ -81,9 +81,9 @@ class SecuredVisibilityTest {
   void andSemantics() {
     SecuredVisibility.Requirement req = new SecuredVisibility.Requirement(
         Set.of(ADMIN), Set.of(DOC_DELETE));
-    SecuredVisibility.JSentinelView roleOnly = view(Set.of(ADMIN), Set.of());
-    SecuredVisibility.JSentinelView permOnly = view(Set.of(), Set.of(DOC_DELETE));
-    SecuredVisibility.JSentinelView both = view(Set.of(ADMIN), Set.of(DOC_DELETE));
+    SecuredVisibility.JCustosView roleOnly = view(Set.of(ADMIN), Set.of());
+    SecuredVisibility.JCustosView permOnly = view(Set.of(), Set.of(DOC_DELETE));
+    SecuredVisibility.JCustosView both = view(Set.of(ADMIN), Set.of(DOC_DELETE));
 
     assertFalse(SecuredVisibility.isAllowed(req, roleOnly.roles(), roleOnly.permissions()));
     assertFalse(SecuredVisibility.isAllowed(req, permOnly.roles(), permOnly.permissions()));

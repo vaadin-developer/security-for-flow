@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.audit.integrity.listener;
 
 /*-
  * #%L
- * jSentinel Audit Integrity — tamper-evident audit
+ * jCustos Audit Integrity — tamper-evident audit
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,7 +27,7 @@ package eu.jsentinel.jcustos.audit.integrity.listener;
 
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.integrity.chain.AuditChainException;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.events.codec.CanonicalJson;
 
 import java.lang.reflect.RecordComponent;
@@ -41,7 +41,7 @@ import java.util.Objects;
 /**
  * Deterministic canonical-JSON rendering of core {@link AuditEvent} records
  * for the hash chain. The events-module canonicalizer cannot serve here —
- * it requires the {@code JSentinelEvent} accessors and its whitelist lacks
+ * it requires the {@code JCustosEvent} accessors and its whitelist lacks
  * {@link Instant}/{@link Duration}, both of which audit records carry.
  * <p>
  * Shape: {@code {"v":1,"type":"<record simple name>","fields":{...}}} with
@@ -55,7 +55,7 @@ import java.util.Objects;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class AuditEventCanonicalizer {
 
   static final String CODE_NOT_CANONICALIZABLE =

@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.rest;
 
 /*-
  * #%L
- * jSentinel Events — REST / SSE bridge
+ * jCustos Events — REST / SSE bridge
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -28,12 +28,12 @@ package eu.jsentinel.jcustos.events.rest;
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import com.svenruppert.dependencies.core.net.HttpStatus;
 import eu.jsentinel.jcustos.audit.LogFieldScrubber;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionMatcher;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
-import eu.jsentinel.jcustos.events.store.JSentinelEventCursor;
-import eu.jsentinel.jcustos.events.store.JSentinelEventEnvelopeStore;
+import eu.jsentinel.jcustos.events.store.JCustosEventCursor;
+import eu.jsentinel.jcustos.events.store.JCustosEventEnvelopeStore;
 import eu.jsentinel.jcustos.events.store.StoredEnvelope;
 import eu.jsentinel.jcustos.events.wire.EnvelopeWireCodec;
 import eu.jsentinel.jcustos.rest.RestSubjectResolver;
@@ -56,11 +56,11 @@ import java.util.concurrent.TimeUnit;
  * {@code Last-Event-ID} cursor from the envelope store, then live-tails new
  * envelopes from the {@link SseEventBroadcaster}, emitting a keep-alive comment
  * whenever the stream is idle. Drops to the raw {@link HttpExchange} stream
- * because jSentinel-rest's buffered {@code RestResponse} cannot stream.
+ * because jCustos-rest's buffered {@code RestResponse} cannot stream.
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class SseStreamHttpHandler implements HttpHandler, HasLogger {
 
   /** JS-SEC-032 (CWE-306): cap on the auth-probe read of the (bodyless) GET request. */
@@ -70,7 +70,7 @@ public final class SseStreamHttpHandler implements HttpHandler, HasLogger {
   public static final int DEFAULT_MAX_SUBSCRIBERS = 256;
 
   private final SseEventBroadcaster broadcaster;
-  private final JSentinelEventEnvelopeStore envelopeStore;
+  private final JCustosEventEnvelopeStore envelopeStore;
   private final EnvelopeWireCodec wireCodec;
   private final RestSubjectResolver subjectResolver;
   private final PermissionName requiredPermission;
@@ -81,7 +81,7 @@ public final class SseStreamHttpHandler implements HttpHandler, HasLogger {
       new java.util.concurrent.atomic.AtomicInteger();
 
   public SseStreamHttpHandler(SseEventBroadcaster broadcaster,
-      JSentinelEventEnvelopeStore envelopeStore, EnvelopeWireCodec wireCodec,
+      JCustosEventEnvelopeStore envelopeStore, EnvelopeWireCodec wireCodec,
       RestSubjectResolver subjectResolver, String requiredPermission,
       long keepAliveSeconds, int replayBatch) {
     this(broadcaster, envelopeStore, wireCodec, subjectResolver, requiredPermission,
@@ -97,7 +97,7 @@ public final class SseStreamHttpHandler implements HttpHandler, HasLogger {
    * {@code sun.net.httpserver.maxRspTime} for a write deadline.
    */
   public SseStreamHttpHandler(SseEventBroadcaster broadcaster,
-      JSentinelEventEnvelopeStore envelopeStore, EnvelopeWireCodec wireCodec,
+      JCustosEventEnvelopeStore envelopeStore, EnvelopeWireCodec wireCodec,
       RestSubjectResolver subjectResolver, String requiredPermission,
       long keepAliveSeconds, int replayBatch, int maxSubscribers) {
     this.broadcaster = Objects.requireNonNull(broadcaster, "broadcaster");
@@ -148,7 +148,7 @@ public final class SseStreamHttpHandler implements HttpHandler, HasLogger {
       writeStatus(exchange, HttpStatus.BAD_REQUEST.code());
       return;
     }
-    Optional<JSentinelSubject> subject = subjectResolver.resolveSubject(authProbe);
+    Optional<JCustosSubject> subject = subjectResolver.resolveSubject(authProbe);
     if (subject.isEmpty()) {
       writeStatus(exchange, HttpStatus.UNAUTHORIZED.code());
       return;
@@ -208,27 +208,27 @@ public final class SseStreamHttpHandler implements HttpHandler, HasLogger {
     }
   }
 
-  private JSentinelEventCursor resumeCursor(HttpExchange exchange) {
+  private JCustosEventCursor resumeCursor(HttpExchange exchange) {
     List<String> header = exchange.getRequestHeaders().get("Last-Event-ID");
     if (header == null || header.isEmpty()) {
-      return JSentinelEventCursor.start();
+      return JCustosEventCursor.start();
     }
     try {
-      return JSentinelEventCursor.at(Long.parseLong(header.get(0).trim()));
+      return JCustosEventCursor.at(Long.parseLong(header.get(0).trim()));
     } catch (IllegalArgumentException invalid) {
       // R05: a malformed value (NumberFormatException) and a negative position (the
       // cursor's own IllegalArgumentException) both degrade to a full replay from the
       // start — a client-supplied "-1" must behave exactly like a missing header
       // instead of aborting the stream.
-      return JSentinelEventCursor.start();
+      return JCustosEventCursor.start();
     }
   }
 
-  private void replaySince(JSentinelEventCursor cursor, OutputStream out) throws IOException {
+  private void replaySince(JCustosEventCursor cursor, OutputStream out) throws IOException {
     if (envelopeStore == null) {
       return;
     }
-    JSentinelEventCursor position = cursor;
+    JCustosEventCursor position = cursor;
     while (true) {
       List<StoredEnvelope> page = envelopeStore.findAfter(position, replayBatch);
       if (page.isEmpty()) {

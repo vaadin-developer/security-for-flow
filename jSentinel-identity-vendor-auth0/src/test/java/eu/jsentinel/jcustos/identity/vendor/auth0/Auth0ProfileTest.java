@@ -57,7 +57,7 @@ class Auth0ProfileTest {
   }
 
   @Test
-  @DisplayName("the default INSTANCE uses the jSentinel default namespace")
+  @DisplayName("the default INSTANCE uses the jCustos default namespace")
   void defaultNamespace() {
     Set<RoleName> roles = Auth0Profile.INSTANCE.rolesMapper().orElseThrow().mapRoles(
         idToken(Map.of(Auth0Profile.DEFAULT_NAMESPACE, List.of("user"))), Optional.empty());

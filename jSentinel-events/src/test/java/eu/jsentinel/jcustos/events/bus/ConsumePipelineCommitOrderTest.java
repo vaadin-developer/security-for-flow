@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.bus;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -29,12 +29,12 @@ import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventProducerId;
 import eu.jsentinel.jcustos.events.api.EventSequence;
 import eu.jsentinel.jcustos.events.api.PayloadHashAlgorithm;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.events.codec.CanonicalJsonPayloadCodec;
 import eu.jsentinel.jcustos.events.codec.RecordReflectionCanonicalizer;
 import eu.jsentinel.jcustos.events.replay.InMemoryReplayStore;
 import eu.jsentinel.jcustos.events.sequence.InMemorySequenceStore;
-import eu.jsentinel.jcustos.events.sequence.JSentinelEventSequenceStore;
+import eu.jsentinel.jcustos.events.sequence.JCustosEventSequenceStore;
 import eu.jsentinel.jcustos.events.sequence.SequenceValidator;
 import eu.jsentinel.jcustos.events.sequence.SequenceViolationStrategy;
 import eu.jsentinel.jcustos.events.signature.SignatureAlgorithms;
@@ -59,17 +59,17 @@ class ConsumePipelineCommitOrderTest {
     BusFixtures fx = new BusFixtures();
     // Two distinct, validly signed envelopes claiming the SAME sequence (1):
     // same signing key + producer, but separate publish-side sequence stores.
-    SignedJSentinelEventEnvelope a = fx.publishPipeline().toEnvelope(BusFixtures.event());
+    SignedJCustosEventEnvelope a = fx.publishPipeline().toEnvelope(BusFixtures.event());
     PublishPipeline secondPublisher = new PublishPipeline(fx.keyManagement,
         new RecordReflectionCanonicalizer(), new CanonicalJsonPayloadCodec(),
         PayloadHashAlgorithm.SHA_256, BusFixtures.PRODUCER, new InMemorySequenceStore(),
         new InMemoryReplayStore(), fx.allowAll, Duration.ofMinutes(5), () -> BusFixtures.T0);
-    SignedJSentinelEventEnvelope b = secondPublisher.toEnvelope(BusFixtures.event());
+    SignedJCustosEventEnvelope b = secondPublisher.toEnvelope(BusFixtures.event());
     assertEquals(a.sequence(), b.sequence(), "premise: both envelopes claim the same sequence");
 
     ConsumePipeline consumer = fx.consumePipeline();
     assertTrue(consumer.verify(a, BusFixtures.T0).isValid());
-    assertInstanceOf(JSentinelEventVerificationResult.SequenceViolation.class,
+    assertInstanceOf(JCustosEventVerificationResult.SequenceViolation.class,
         consumer.verify(b, BusFixtures.T0));
 
     assertTrue(fx.consumeReplay.hasSeen(a.envelopeId()),
@@ -84,8 +84,8 @@ class ConsumePipelineCommitOrderTest {
   void casLosingEnvelopeIsNotMarkedSeen() {
     BusFixtures fx = new BusFixtures();
     PublishPipeline publisher = fx.publishPipeline();
-    SignedJSentinelEventEnvelope a = publisher.toEnvelope(BusFixtures.event()); // sequence 1
-    SignedJSentinelEventEnvelope b = publisher.toEnvelope(BusFixtures.event()); // sequence 2
+    SignedJCustosEventEnvelope a = publisher.toEnvelope(BusFixtures.event()); // sequence 1
+    SignedJCustosEventEnvelope b = publisher.toEnvelope(BusFixtures.event()); // sequence 2
 
     RacingSequenceStore racing = new RacingSequenceStore();
     ConsumePipeline consumer = new ConsumePipeline(fx.keyManagement,
@@ -99,7 +99,7 @@ class ConsumePipelineCommitOrderTest {
     // exactly the race in which the old markSeen-first order poisoned the
     // replay store with the id of a rejected envelope.
     racing.raceOnNextRead();
-    assertInstanceOf(JSentinelEventVerificationResult.SequenceViolation.class,
+    assertInstanceOf(JCustosEventVerificationResult.SequenceViolation.class,
         consumer.verify(b, BusFixtures.T0));
     assertFalse(fx.consumeReplay.hasSeen(b.envelopeId()),
         "a CAS-losing envelope must not poison the replay store (R04)");
@@ -107,7 +107,7 @@ class ConsumePipelineCommitOrderTest {
     // Residual semantics: the redelivery of B is rejected via SequenceViolation
     // (its sequence was consumed by the competitor) — fail-closed, but NOT via
     // ReplayDetected, and the replay store stays clean.
-    assertInstanceOf(JSentinelEventVerificationResult.SequenceViolation.class,
+    assertInstanceOf(JCustosEventVerificationResult.SequenceViolation.class,
         consumer.verify(b, BusFixtures.T0));
     assertFalse(fx.consumeReplay.hasSeen(b.envelopeId()));
   }
@@ -119,7 +119,7 @@ class ConsumePipelineCommitOrderTest {
    * concurrently racing consumer would, before returning the originally
    * observed value. All mutation paths delegate to the real atomic store.
    */
-  private static final class RacingSequenceStore implements JSentinelEventSequenceStore {
+  private static final class RacingSequenceStore implements JCustosEventSequenceStore {
 
     private final InMemorySequenceStore delegate = new InMemorySequenceStore();
     private final AtomicBoolean race = new AtomicBoolean();

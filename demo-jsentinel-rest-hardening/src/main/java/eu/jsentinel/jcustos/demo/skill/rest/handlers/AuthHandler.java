@@ -1,8 +1,8 @@
 package eu.jsentinel.jcustos.demo.skill.rest.handlers;
 
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import com.sun.net.httpserver.HttpExchange;
 import eu.jsentinel.jcustos.demo.skill.rest.Json;
 import eu.jsentinel.jcustos.demo.skill.rest.Router;
@@ -32,13 +32,13 @@ public final class AuthHandler {
   }
 
   @SuppressWarnings("unchecked")
-  public static void login(HttpExchange exchange, JSentinelSubject ignored) throws IOException {
+  public static void login(HttpExchange exchange, JCustosSubject ignored) throws IOException {
     Map<String, String> body = Json.parseFlat(Router.readBody(exchange));
     String username = body.get("username");
     String password = body.get("password");
     Credentials credentials = new Credentials(username, password);
     AuthenticationService<Credentials, User> authn =
-        JSentinelServiceResolver.authenticationService();
+        JCustosServiceResolver.authenticationService();
     if (!authn.checkCredentials(credentials)) {
       Router.respondJson(exchange, 401, Json.encode(Map.of("error", "invalid credentials")));
       return;
@@ -54,7 +54,7 @@ public final class AuthHandler {
         "user", user.get().name())));
   }
 
-  public static void logout(HttpExchange exchange, JSentinelSubject subject) throws IOException {
+  public static void logout(HttpExchange exchange, JCustosSubject subject) throws IOException {
     String auth = exchange.getRequestHeaders().getFirst("Authorization");
     if (auth != null && auth.startsWith("Bearer ")) {
       TokenStore.INSTANCE.revoke(auth.substring("Bearer ".length()).trim());
@@ -62,7 +62,7 @@ public final class AuthHandler {
     Router.respondJson(exchange, 200, "{\"ok\":true}");
   }
 
-  public static void whoami(HttpExchange exchange, JSentinelSubject subject) throws IOException {
+  public static void whoami(HttpExchange exchange, JCustosSubject subject) throws IOException {
     if (subject == null) {
       Router.respondJson(exchange, 401, Json.encode(Map.of("error", "unauthorized")));
       return;

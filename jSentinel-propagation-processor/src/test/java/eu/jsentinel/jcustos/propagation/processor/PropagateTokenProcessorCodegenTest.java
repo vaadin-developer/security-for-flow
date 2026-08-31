@@ -89,8 +89,8 @@ class PropagateTokenProcessorCodegenTest {
         }
       };
 
-      // Inherit this test JVM's classpath so jSentinel-core (OutboundCall,
-      // HeaderValue, PropagateTokenAdvisor, JSentinelServiceResolver, the
+      // Inherit this test JVM's classpath so jCustos-core (OutboundCall,
+      // HeaderValue, PropagateTokenAdvisor, JCustosServiceResolver, the
       // @PropagateToken annotation, ...) is visible to both the source and the
       // generated DemoPropagating.
       List<String> options = List.of("-classpath", System.getProperty("java.class.path"));

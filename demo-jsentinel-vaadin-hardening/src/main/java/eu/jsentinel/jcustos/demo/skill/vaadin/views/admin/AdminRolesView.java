@@ -56,7 +56,7 @@ public class AdminRolesView extends Composite<VerticalLayout> {
     root.add(new H1("Role administration"));
     root.add(new Paragraph(
         "Admin-only. Mutations emit RoleAssigned / RoleRevoked / UserCreated "
-            + "/ UserDeleted audit events and bump the per-subject JSentinelVersion — "
+            + "/ UserDeleted audit events and bump the per-subject JCustosVersion — "
             + "the affected user is forced back to login on their next navigation."));
 
     grid.setSizeFull();

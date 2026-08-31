@@ -16,8 +16,8 @@
  */
 package eu.jsentinel.jcustos.policy.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 
 import java.util.Map;
@@ -52,7 +52,7 @@ import static java.util.Objects.requireNonNull;
  * @param resourceRef        reference to the concrete domain resource, if any
  * @param resourceAttributes policy-specific resource attributes
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record PolicyContext(
     AccessContext accessContext,
     String policyName,
@@ -124,7 +124,7 @@ public record PolicyContext(
    *
    * @return authenticated subject, if any
    */
-  public Optional<JSentinelSubject> subject() {
+  public Optional<JCustosSubject> subject() {
     return accessContext.subject();
   }
 }

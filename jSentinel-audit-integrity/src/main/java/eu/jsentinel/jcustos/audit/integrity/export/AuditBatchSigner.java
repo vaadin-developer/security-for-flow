@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.audit.integrity.export;
 
 /*-
  * #%L
- * jSentinel Audit Integrity — tamper-evident audit
+ * jCustos Audit Integrity — tamper-evident audit
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -26,8 +26,8 @@ package eu.jsentinel.jcustos.audit.integrity.export;
  */
 
 import eu.jsentinel.jcustos.audit.integrity.api.AuditChainEntry;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.keys.JSentinelEventSigningKeyProvider;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.keys.JCustosEventSigningKeyProvider;
 import eu.jsentinel.jcustos.events.keys.SigningKeySnapshot;
 
 import java.time.Instant;
@@ -38,22 +38,22 @@ import java.util.function.Supplier;
 /**
  * Signs a contiguous audit-chain range into a {@link SignedAuditBatch},
  * reusing the events key SPIs — no second signing stack: the
- * {@link JSentinelEventSigningKeyProvider} (and its atomic
+ * {@link JCustosEventSigningKeyProvider} (and its atomic
  * {@link SigningKeySnapshot}) is the single signing home of the framework.
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class AuditBatchSigner {
 
-  private final JSentinelEventSigningKeyProvider signingKeys;
+  private final JCustosEventSigningKeyProvider signingKeys;
   private final Supplier<Instant> clock;
 
-  public AuditBatchSigner(JSentinelEventSigningKeyProvider signingKeys) {
+  public AuditBatchSigner(JCustosEventSigningKeyProvider signingKeys) {
     this(signingKeys, Instant::now);
   }
 
-  public AuditBatchSigner(JSentinelEventSigningKeyProvider signingKeys,
+  public AuditBatchSigner(JCustosEventSigningKeyProvider signingKeys,
       Supplier<Instant> clock) {
     this.signingKeys = Objects.requireNonNull(signingKeys, "signingKeys");
     this.clock = Objects.requireNonNull(clock, "clock");

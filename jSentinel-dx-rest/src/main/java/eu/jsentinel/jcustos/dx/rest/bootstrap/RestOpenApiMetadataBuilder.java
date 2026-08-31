@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.dx.rest.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,21 +25,21 @@ import java.util.Objects;
 
 /**
  * Fluent sub-builder for {@link RestOpenApiMetadata}. Created via
- * {@code RestJSentinelBootstrap.openApiMetadata(consumer)}.
+ * {@code RestJCustosBootstrap.openApiMetadata(consumer)}.
  *
  * <pre>
  *   RestSecurity.bootstrap()
  *       .openApiMetadata(o -> o
  *           .title("Demo REST API")
  *           .version("0.74.0")
- *           .description("Demo endpoints secured by jSentinel.")
+ *           .description("Demo endpoints secured by jCustos.")
  *           .servers("https://api.example.com"))
  *       .install();
  * </pre>
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class RestOpenApiMetadataBuilder {
 
   private String title;

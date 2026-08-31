@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.store;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,9 +25,9 @@ package eu.jsentinel.jcustos.events.store;
  * #L%
  */
 
-import eu.jsentinel.jcustos.events.api.JSentinelEvent;
-import eu.jsentinel.jcustos.events.api.JSentinelEventSeverity;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.events.api.JCustosEvent;
+import eu.jsentinel.jcustos.events.api.JCustosEventSeverity;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.events.bus.EventBusObservabilityPublisher;
 import eu.jsentinel.jcustos.events.types.DeadLetteredEvent;
 import eu.jsentinel.jcustos.events.types.EventBusSelfObservabilityEvent;
@@ -50,17 +50,17 @@ class DeadLetterRecorderTest {
   private static final Instant NOW = Instant.parse("2026-07-19T12:00:00Z");
 
   /** Hand-written failure-injecting decorator around the real store. */
-  private static final class ThrowingStore implements JSentinelEventDeadLetterStore {
+  private static final class ThrowingStore implements JCustosEventDeadLetterStore {
 
     private final InMemoryDeadLetterStore delegate = new InMemoryDeadLetterStore();
 
     @Override
-    public void store(JSentinelEventDeadLetter deadLetter) {
+    public void store(JCustosEventDeadLetter deadLetter) {
       throw new IllegalStateException("dead-letter store unavailable");
     }
 
     @Override
-    public List<JSentinelEventDeadLetter> findOpen(int limit) {
+    public List<JCustosEventDeadLetter> findOpen(int limit) {
       return delegate.findOpen(limit);
     }
 
@@ -76,11 +76,11 @@ class DeadLetterRecorderTest {
     InMemoryDeadLetterStore store = new InMemoryDeadLetterStore();
     List<EventBusSelfObservabilityEvent> emitted = new ArrayList<>();
     DeadLetterRecorder recorder = new DeadLetterRecorder(store, emitted::add, () -> NOW);
-    SignedJSentinelEventEnvelope envelope = StoreFixtures.envelope("env-dlr-1");
+    SignedJCustosEventEnvelope envelope = StoreFixtures.envelope("env-dlr-1");
 
-    JSentinelEventDeadLetter letter = recorder.record(envelope, RejectionReason.INVALID_SIGNATURE);
+    JCustosEventDeadLetter letter = recorder.record(envelope, RejectionReason.INVALID_SIGNATURE);
 
-    List<JSentinelEventDeadLetter> open = store.findOpen(10);
+    List<JCustosEventDeadLetter> open = store.findOpen(10);
     assertEquals(1, open.size());
     assertEquals(letter.id(), open.get(0).id());
     assertEquals(envelope, open.get(0).envelope());
@@ -92,8 +92,8 @@ class DeadLetterRecorderTest {
     assertEquals("env-dlr-1", event.envelopeId());
     assertEquals(RejectionReason.INVALID_SIGNATURE.name(), event.reason());
     assertEquals(envelope.tenantId(), event.tenantId(), "tenant propagated from envelope");
-    assertEquals(JSentinelEvent.SYSTEM_SUBJECT, event.subjectId());
-    assertEquals(JSentinelEventSeverity.ERROR, event.severity());
+    assertEquals(JCustosEvent.SYSTEM_SUBJECT, event.subjectId());
+    assertEquals(JCustosEventSeverity.ERROR, event.severity());
     assertEquals(NOW, event.occurredAt());
   }
 
@@ -119,7 +119,7 @@ class DeadLetterRecorderTest {
           throw new IllegalStateException("observability sink down");
         }, () -> NOW);
 
-    JSentinelEventDeadLetter letter =
+    JCustosEventDeadLetter letter =
         recorder.record(StoreFixtures.envelope("env-dlr-3"), RejectionReason.REPLAY_DETECTED);
 
     assertNotNull(letter);

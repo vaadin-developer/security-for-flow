@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.rest;
 
 /*-
  * #%L
- * jSentinel Events — REST / SSE bridge
+ * jCustos Events — REST / SSE bridge
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -26,7 +26,7 @@ package eu.jsentinel.jcustos.events.rest;
  */
 
 import com.svenruppert.dependencies.core.net.HttpStatus;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.events.wire.EnvelopeWireCodec;
 import eu.jsentinel.jcustos.events.bus.ConsumePipeline;
@@ -77,7 +77,7 @@ class EventPublishBodyLimitTest {
 
     RestSubjectResolver resolver = request -> {
       if ("Bearer admin".equals(request.headers().get("Authorization"))) {
-        return Optional.of(new JSentinelSubject("admin", "Admin",
+        return Optional.of(new JCustosSubject("admin", "Admin",
             Set.of(), Set.of(new PermissionName("events:publish"))));
       }
       return Optional.empty();

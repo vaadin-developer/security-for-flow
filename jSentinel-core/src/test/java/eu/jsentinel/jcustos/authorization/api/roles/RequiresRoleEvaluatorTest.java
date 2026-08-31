@@ -18,7 +18,7 @@ package eu.jsentinel.jcustos.authorization.api.roles;
 
 import eu.jsentinel.jcustos.authorization.annotations.RequiresRole;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationDecision;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -48,7 +48,7 @@ class RequiresRoleEvaluatorTest {
   @Test
   @DisplayName("matching role grants access")
   void matchingRole() throws NoSuchMethodException {
-    JSentinelSubject subject = new JSentinelSubject(
+    JCustosSubject subject = new JCustosSubject(
         "u1", "User", Set.of(new RoleName("ROLE_ADMIN")), Set.of());
 
     AuthorizationDecision decision = evaluator.evaluate(
@@ -61,7 +61,7 @@ class RequiresRoleEvaluatorTest {
   @Test
   @DisplayName("missing role forbids access")
   void missingRole() throws NoSuchMethodException {
-    JSentinelSubject subject = new JSentinelSubject(
+    JCustosSubject subject = new JCustosSubject(
         "u1", "User", Set.of(new RoleName("ROLE_VIEWER")), Set.of());
 
     AuthorizationDecision decision = evaluator.evaluate(
@@ -71,7 +71,7 @@ class RequiresRoleEvaluatorTest {
     assertInstanceOf(AuthorizationDecision.Forbidden.class, decision);
   }
 
-  private static AccessContext context(Optional<JSentinelSubject> subject) {
+  private static AccessContext context(Optional<JCustosSubject> subject) {
     return new AccessContext(subject, "rest-endpoint", "/admin", "access", Map.of());
   }
 

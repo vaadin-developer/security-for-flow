@@ -10,7 +10,7 @@
  */
 package eu.jsentinel.jcustos.credential.propagation;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Optional;
 
@@ -18,7 +18,7 @@ import java.util.Optional;
  * Pluggable "how does the inbound token reach the downstream call" SPI.
  *
  * <p>V00.74 ships {@link PassThroughStrategy} as the core default. The
- * opt-in {@code jSentinel-propagation-oidc} module adds
+ * opt-in {@code jCustos-propagation-oidc} module adds
  * {@code TokenExchangeStrategy} (RFC 8693) and
  * {@code ClientCredentialsStrategy} (RFC 6749 §4.4). Consumers register
  * additional strategies via the {@code .propagation(...)} bootstrap
@@ -32,7 +32,7 @@ import java.util.Optional;
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi("V00.74 token propagation; stable promotion staged for V00.76")
+@ExperimentalJCustosApi("V00.74 token propagation; stable promotion staged for V00.76")
 public interface OutboundTokenStrategy {
 
   /**

@@ -1,7 +1,7 @@
 package eu.jsentinel.jcustos.propagation.oidc.inbound;
 
 import com.svenruppert.functional.result.Result;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.credential.propagation.OidcAccessToken;
 import eu.jsentinel.jcustos.jwt.api.JoseHeader;
 import eu.jsentinel.jcustos.jwt.api.JwtValidationError;
@@ -26,7 +26,7 @@ class OidcInboundTokenValidatorTest {
 
   @AfterEach
   void reset() {
-    JSentinelServiceResolver.setJwtValidator(null);
+    JCustosServiceResolver.setJwtValidator(null);
   }
 
   private static ValidatedJwt validatedFor(String token) {
@@ -41,7 +41,7 @@ class OidcInboundTokenValidatorTest {
     JwtValidator validator = compact -> accepted.equals(compact)
         ? Result.success(validatedFor(compact))
         : Result.failure(new JwtValidationError.SignatureInvalid("nope"));
-    JSentinelServiceResolver.setJwtValidator(validator);
+    JCustosServiceResolver.setJwtValidator(validator);
   }
 
   @Test

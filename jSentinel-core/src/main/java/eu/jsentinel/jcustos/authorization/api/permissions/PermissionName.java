@@ -16,14 +16,14 @@
  */
 package eu.jsentinel.jcustos.authorization.api.permissions;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 /**
  * Wrapper for a permission name string.
  *
  * @param permissionName the permission identifier
  */
-@ExperimentalJSentinelApi("Permission-based access is experimental. Use role-based access for stable production use.")
+@ExperimentalJCustosApi("Permission-based access is experimental. Use role-based access for stable production use.")
 public record PermissionName(String permissionName) {
 
   /**

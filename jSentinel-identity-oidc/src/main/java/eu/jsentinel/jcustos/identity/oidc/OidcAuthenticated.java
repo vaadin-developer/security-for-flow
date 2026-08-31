@@ -19,7 +19,7 @@ package eu.jsentinel.jcustos.identity.oidc;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 
-import eu.jsentinel.jcustos.authorization.annotations.JSentinelAnnotation;
+import eu.jsentinel.jcustos.authorization.annotations.JCustosAnnotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -31,15 +31,15 @@ import java.lang.annotation.Target;
  * among {@link #acrValues()} the evaluator returns
  * {@link eu.jsentinel.jcustos.authorization.api.AuthorizationDecision.StepUpRequired}
  * with a method derived from the requested acr (hardware / MFA / strong), tying the
- * jSentinel step-up semantics (V00.70/V00.72) to OIDC {@code acr_values}. Bound to
- * {@link OidcAuthenticatedEvaluator} via {@link JSentinelAnnotation} and discovered
+ * jCustos step-up semantics (V00.70/V00.72) to OIDC {@code acr_values}. Bound to
+ * {@link OidcAuthenticatedEvaluator} via {@link JCustosAnnotation} and discovered
  * by the V00.70 annotation scanner.
  *
  * @since 00.78.00
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({TYPE, METHOD})
-@JSentinelAnnotation(OidcAuthenticatedEvaluator.class)
+@JCustosAnnotation(OidcAuthenticatedEvaluator.class)
 public @interface OidcAuthenticated {
 
   /** The acceptable {@code acr} values; empty means "any authenticated subject". */

@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.store;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,9 +25,9 @@ package eu.jsentinel.jcustos.events.store;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.events.api.EventEnvelopeId;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,24 +35,24 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * In-memory {@link JSentinelEventEnvelopeStore}. The append index <em>is</em>
+ * In-memory {@link JCustosEventEnvelopeStore}. The append index <em>is</em>
  * the stable cursor position (1-based). All access is synchronized.
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
-public final class InMemoryEnvelopeStore implements JSentinelEventEnvelopeStore {
+@ExperimentalJCustosApi
+public final class InMemoryEnvelopeStore implements JCustosEventEnvelopeStore {
 
-  private final List<SignedJSentinelEventEnvelope> envelopes = new ArrayList<>();
+  private final List<SignedJCustosEventEnvelope> envelopes = new ArrayList<>();
 
   @Override
-  public synchronized JSentinelEventCursor append(SignedJSentinelEventEnvelope envelope) {
+  public synchronized JCustosEventCursor append(SignedJCustosEventEnvelope envelope) {
     envelopes.add(Objects.requireNonNull(envelope, "envelope"));
-    return JSentinelEventCursor.at(envelopes.size());
+    return JCustosEventCursor.at(envelopes.size());
   }
 
   @Override
-  public synchronized List<StoredEnvelope> findAfter(JSentinelEventCursor cursor, int limit) {
+  public synchronized List<StoredEnvelope> findAfter(JCustosEventCursor cursor, int limit) {
     Objects.requireNonNull(cursor, "cursor");
     if (limit < 0) {
       throw new IllegalArgumentException("limit must be >= 0, was " + limit);
@@ -61,7 +61,7 @@ public final class InMemoryEnvelopeStore implements JSentinelEventEnvelopeStore 
     // JS-SEC-058 (CWE-190): return an empty page for an at/after-end cursor, which also makes the
     // `position + 1` overflow unreachable — a Long.MAX_VALUE cursor (only position >= 0 is validated)
     // would otherwise overflow to Long.MIN_VALUE, enter the loop, and throw from
-    // JSentinelEventCursor.at(Long.MIN_VALUE) instead of returning "nothing after it".
+    // JCustosEventCursor.at(Long.MIN_VALUE) instead of returning "nothing after it".
     long from = cursor.position();
     if (from >= envelopes.size()) {
       return page;
@@ -72,16 +72,16 @@ public final class InMemoryEnvelopeStore implements JSentinelEventEnvelopeStore 
         break;
       }
       page.add(new StoredEnvelope(
-          JSentinelEventCursor.at(position), envelopes.get((int) (position - 1))));
+          JCustosEventCursor.at(position), envelopes.get((int) (position - 1))));
     }
     return page;
   }
 
   @Override
-  public synchronized Optional<SignedJSentinelEventEnvelope> findByEnvelopeId(
+  public synchronized Optional<SignedJCustosEventEnvelope> findByEnvelopeId(
       EventEnvelopeId envelopeId) {
     Objects.requireNonNull(envelopeId, "envelopeId");
-    for (SignedJSentinelEventEnvelope envelope : envelopes) {
+    for (SignedJCustosEventEnvelope envelope : envelopes) {
       if (envelope.envelopeId().equals(envelopeId)) {
         return Optional.of(envelope);
       }

@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.rest;
 
 /*-
  * #%L
- * jSentinel Events — REST / SSE bridge
+ * jCustos Events — REST / SSE bridge
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,7 +25,7 @@ package eu.jsentinel.jcustos.events.rest;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.events.wire.EnvelopeWireCodec;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.rest.RestSubjectResolver;
@@ -61,7 +61,7 @@ class SseStreamHttpHandlerTest {
       // keepAliveSeconds=1 → streamLive writes a keep-alive after the first idle
       // poll; the throwing OutputStream makes that first write fail, simulating
       // a client that has gone away. No envelope store → no replay.
-      RestSubjectResolver authorized = req -> Optional.of(new JSentinelSubject(
+      RestSubjectResolver authorized = req -> Optional.of(new JCustosSubject(
           "u", "U", Set.of(), Set.of(new PermissionName(EventsRestRoutes.STREAM_PERMISSION))));
       SseStreamHttpHandler handler = new SseStreamHttpHandler(
           broadcaster, null, new EnvelopeWireCodec(), authorized,
@@ -95,7 +95,7 @@ class SseStreamHttpHandlerTest {
   @DisplayName("JS-SEC-032: a subject lacking the stream permission is rejected 403")
   void insufficientPermissionStreamRejected() throws IOException {
     SseEventBroadcaster broadcaster = new SseEventBroadcaster(new EnvelopeWireCodec());
-    RestSubjectResolver wrongPerm = req -> Optional.of(new JSentinelSubject(
+    RestSubjectResolver wrongPerm = req -> Optional.of(new JCustosSubject(
         "u", "U", Set.of(), Set.of(new PermissionName(EventsRestRoutes.PUBLISH_PERMISSION))));
     SseStreamHttpHandler handler = new SseStreamHttpHandler(
         broadcaster, null, new EnvelopeWireCodec(), wrongPerm,
@@ -114,7 +114,7 @@ class SseStreamHttpHandlerTest {
       SseEventBroadcaster broadcaster = new SseEventBroadcaster(new EnvelopeWireCodec());
       // "events:*" is not equal to "events:subscribe" but grants it via PermissionMatcher —
       // the same wildcard semantics @RequiresPermission uses. A flat contains() would 403 this.
-      RestSubjectResolver wildcard = req -> Optional.of(new JSentinelSubject(
+      RestSubjectResolver wildcard = req -> Optional.of(new JCustosSubject(
           "u", "U", Set.of(), Set.of(new PermissionName("events:*"))));
       SseStreamHttpHandler handler = new SseStreamHttpHandler(
           broadcaster, null, new EnvelopeWireCodec(), wildcard,
@@ -134,7 +134,7 @@ class SseStreamHttpHandlerTest {
   void concurrentCapReturns503() {
     assertTimeoutPreemptively(java.time.Duration.ofSeconds(5), () -> {
       SseEventBroadcaster broadcaster = new SseEventBroadcaster(new EnvelopeWireCodec());
-      RestSubjectResolver authorized = req -> Optional.of(new JSentinelSubject(
+      RestSubjectResolver authorized = req -> Optional.of(new JCustosSubject(
           "u", "U", Set.of(), Set.of(new PermissionName(EventsRestRoutes.STREAM_PERMISSION))));
       // keepAlive large so the first stream parks in poll() holding its slot; cap = 1.
       SseStreamHttpHandler handler = new SseStreamHttpHandler(

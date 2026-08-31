@@ -1,10 +1,10 @@
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,16 +25,16 @@
 
 /**
  * V00.75 EventBus API + pipelines (Konzept §791-§898): the {@link
- * eu.jsentinel.jcustos.events.bus.JSentinelEventBus} contract, its
- * {@link eu.jsentinel.jcustos.events.bus.DefaultJSentinelEventBus}
+ * eu.jsentinel.jcustos.events.bus.JCustosEventBus} contract, its
+ * {@link eu.jsentinel.jcustos.events.bus.DefaultJCustosEventBus}
  * implementation, the {@link
  * eu.jsentinel.jcustos.events.bus.PublishPipeline} (event → signed
  * envelope) and {@link eu.jsentinel.jcustos.events.bus.ConsumePipeline}
  * (envelope → {@link
- * eu.jsentinel.jcustos.events.bus.JSentinelEventVerificationResult}),
+ * eu.jsentinel.jcustos.events.bus.JCustosEventVerificationResult}),
  * plus the {@link
- * eu.jsentinel.jcustos.events.bus.JSentinelEventListener} /
- * {@link eu.jsentinel.jcustos.events.bus.JSentinelEventListenerOptions} /
+ * eu.jsentinel.jcustos.events.bus.JCustosEventListener} /
+ * {@link eu.jsentinel.jcustos.events.bus.JCustosEventListenerOptions} /
  * {@link eu.jsentinel.jcustos.events.bus.Registration} subscription model
  * and {@link eu.jsentinel.jcustos.events.bus.ListenerErrorStrategy}.
  *

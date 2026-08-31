@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.policy.impl;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.policy.api.Policy;
 import eu.jsentinel.jcustos.policy.api.PolicyContext;
 import eu.jsentinel.jcustos.policy.api.PolicyDecision;
@@ -36,10 +36,10 @@ import static java.util.Objects.requireNonNull;
  * backing map is a {@link ConcurrentHashMap}.
  *
  * <p>This is the default implementation returned by
- * {@code JSentinelServiceResolver.policyRegistry()} when no SPI override
+ * {@code JCustosServiceResolver.policyRegistry()} when no SPI override
  * is registered.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class InMemoryPolicyRegistry implements PolicyRegistry {
 
   private final ConcurrentMap<String, Policy> policies = new ConcurrentHashMap<>();

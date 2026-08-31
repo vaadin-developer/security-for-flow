@@ -10,8 +10,8 @@
  */
 package eu.jsentinel.jcustos.propagation.diagnostics;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.autoservice.api.JSentinelAutoService;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 import eu.jsentinel.jcustos.credential.propagation.ThreadSafeTokenCredentialStore;
 import eu.jsentinel.jcustos.credential.propagation.TokenCredentialStore;
 import eu.jsentinel.jcustos.dx.diagnostics.DiagnosticContributor;
@@ -40,7 +40,7 @@ import java.util.Optional;
  *
  * @since 00.74.00
  */
-@JSentinelAutoService(DiagnosticContributor.class)
+@JCustosAutoService(DiagnosticContributor.class)
 public final class PropagationDiagnosticContributor implements DiagnosticContributor {
 
   /** ServiceLoader requires a public no-arg constructor. */
@@ -55,12 +55,12 @@ public final class PropagationDiagnosticContributor implements DiagnosticContrib
   @Override
   public void contribute(DiagnosticReportBuilder builder) {
     try {
-      Optional<TokenCredentialStore> store = JSentinelServiceResolver.findTokenCredentialStore();
+      Optional<TokenCredentialStore> store = JCustosServiceResolver.findTokenCredentialStore();
       if (store.isEmpty()) {
         builder.addWarning(new ServiceWarning(
             "propagation/missing-credential-store",
             "No TokenCredentialStore is registered.",
-            "Register an adapter default via @JSentinelAutoService or pass an explicit "
+            "Register an adapter default via @JCustosAutoService or pass an explicit "
                 + "store via .propagation(p -> p.credentialStore(...))."));
         return;
       }
@@ -77,7 +77,7 @@ public final class PropagationDiagnosticContributor implements DiagnosticContrib
           "propagation/rule-failed",
           "propagation diagnostic failed: " + e.getClass().getSimpleName() + ": "
               + e.getMessage(),
-          "Inspect JSentinelServiceResolver state."));
+          "Inspect JCustosServiceResolver state."));
     }
   }
 }

@@ -11,8 +11,8 @@
 package eu.jsentinel.jcustos.credential.propagation;
 
 import eu.jsentinel.jcustos.annotations.PropagateToken;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 
 import java.util.Optional;
 
@@ -26,14 +26,14 @@ import java.util.Optional;
  * advisor either returns a header (bind it) or empty (skip).
  *
  * <p>{@link Default} composes
- * {@link eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver#findOutboundTokenStrategy(String)}
+ * {@link eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver#findOutboundTokenStrategy(String)}
  * with the supplied store. Prompt 008 lands the {@code Default} body;
  * this file ships the contract so {@code @PropagateToken}'s meta
  * reference resolves.
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi("V00.74 token propagation; stable promotion staged for V00.76")
+@ExperimentalJCustosApi("V00.74 token propagation; stable promotion staged for V00.76")
 public interface PropagateTokenAdvisor {
 
   /**
@@ -49,7 +49,7 @@ public interface PropagateTokenAdvisor {
   /**
    * Stateless default advisor: looks up the strategy by
    * {@link PropagateToken#strategy()} via
-   * {@link JSentinelServiceResolver#findOutboundTokenStrategy(String)},
+   * {@link JCustosServiceResolver#findOutboundTokenStrategy(String)},
    * calls its {@code resolve} with the store's current credential, and
    * — when {@link PropagateToken#header()} is non-empty — overrides the
    * strategy's chosen header name.
@@ -72,7 +72,7 @@ public interface PropagateTokenAdvisor {
                                           OutboundCall call,
                                           TokenCredentialStore store) {
       Optional<OutboundTokenStrategy> strategy =
-          JSentinelServiceResolver.findOutboundTokenStrategy(annotation.strategy());
+          JCustosServiceResolver.findOutboundTokenStrategy(annotation.strategy());
       if (strategy.isEmpty()) {
         return Optional.empty();
       }

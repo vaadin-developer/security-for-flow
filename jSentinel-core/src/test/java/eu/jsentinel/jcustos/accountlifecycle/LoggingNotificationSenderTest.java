@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisplayName("LoggingNotificationSender + JSentinelNotification")
+@DisplayName("LoggingNotificationSender + JCustosNotification")
 class LoggingNotificationSenderTest {
 
   @Test
@@ -39,8 +39,8 @@ class LoggingNotificationSenderTest {
     RecordingSlf4jLogger logger = new RecordingSlf4jLogger();
 
     LoggingNotificationSender sender = new LoggingNotificationSender(logger);
-    sender.send(new JSentinelNotification(
-        JSentinelNotification.Kind.PASSWORD_RESET_REQUESTED,
+    sender.send(new JCustosNotification(
+        JCustosNotification.Kind.PASSWORD_RESET_REQUESTED,
         new SubjectId("alice"),
         TenantId.DEFAULT,
         Instant.parse("2026-01-01T00:00:00Z"),
@@ -62,8 +62,8 @@ class LoggingNotificationSenderTest {
   @DisplayName("JS-SEC-045: CR/LF + spaces in a field cannot forge a second NOTIFY line or key=value token")
   void scrubsFieldForging() {
     RecordingSlf4jLogger logger = new RecordingSlf4jLogger();
-    new LoggingNotificationSender(logger).send(new JSentinelNotification(
-        JSentinelNotification.Kind.PASSWORD_RESET_REQUESTED,
+    new LoggingNotificationSender(logger).send(new JCustosNotification(
+        JCustosNotification.Kind.PASSWORD_RESET_REQUESTED,
         new SubjectId("alice"),
         TenantId.DEFAULT,
         Instant.parse("2026-01-01T00:00:00Z"),
@@ -91,26 +91,26 @@ class LoggingNotificationSenderTest {
       @Override public void info(String msg) { throw new RuntimeException("boom"); }
     };
 
-    new LoggingNotificationSender(throwing).send(new JSentinelNotification(
-        JSentinelNotification.Kind.EMAIL_VERIFIED,
+    new LoggingNotificationSender(throwing).send(new JCustosNotification(
+        JCustosNotification.Kind.EMAIL_VERIFIED,
         new SubjectId("alice"), null, Instant.now(), Map.of()));
   }
 
   @Test
-  @DisplayName("JSentinelNotification rejects null components (except attributes which become empty)")
+  @DisplayName("JCustosNotification rejects null components (except attributes which become empty)")
   void notificationInvariants() {
     Instant now = Instant.now();
     assertThrows(NullPointerException.class,
-        () -> new JSentinelNotification(null, new SubjectId("a"), TenantId.DEFAULT, now, Map.of()));
+        () -> new JCustosNotification(null, new SubjectId("a"), TenantId.DEFAULT, now, Map.of()));
     assertThrows(NullPointerException.class,
-        () -> new JSentinelNotification(JSentinelNotification.Kind.EMAIL_VERIFIED,
+        () -> new JCustosNotification(JCustosNotification.Kind.EMAIL_VERIFIED,
             null, TenantId.DEFAULT, now, Map.of()));
     assertThrows(NullPointerException.class,
-        () -> new JSentinelNotification(JSentinelNotification.Kind.EMAIL_VERIFIED,
+        () -> new JCustosNotification(JCustosNotification.Kind.EMAIL_VERIFIED,
             new SubjectId("a"), TenantId.DEFAULT, null, Map.of()));
 
-    JSentinelNotification n = new JSentinelNotification(
-        JSentinelNotification.Kind.EMAIL_VERIFIED,
+    JCustosNotification n = new JCustosNotification(
+        JCustosNotification.Kind.EMAIL_VERIFIED,
         new SubjectId("a"), null /* → DEFAULT */, now, null /* → empty map */);
     assertEquals(TenantId.DEFAULT, n.tenant());
     assertTrue(n.attributes().isEmpty());

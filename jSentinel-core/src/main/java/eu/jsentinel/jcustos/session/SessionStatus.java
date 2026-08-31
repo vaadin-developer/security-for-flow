@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.session;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 /**
  * Lifecycle state of a {@code SessionRecord}.
@@ -36,7 +36,7 @@ import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
  * again — re-authentication produces a new {@code SessionRecord} with
  * a fresh {@code SessionId}.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public enum SessionStatus {
 
   /** Session is open and admissible. */

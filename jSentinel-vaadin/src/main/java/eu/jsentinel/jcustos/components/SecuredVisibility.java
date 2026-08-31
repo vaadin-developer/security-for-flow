@@ -16,9 +16,9 @@
  */
 package eu.jsentinel.jcustos.components;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.PermissionGuard;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.authorization.api.permissions.HasPermissions;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
@@ -72,7 +72,7 @@ import static java.util.Objects.requireNonNull;
  * the helper denies the affordance. UI components must never grant
  * by default when authentication is unknown.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class SecuredVisibility {
 
   private SecuredVisibility() {
@@ -171,7 +171,7 @@ public final class SecuredVisibility {
     requireNonNull(target, "target must not be null");
     requireNonNull(requirement, "requirement must not be null");
     requireNonNull(mode, "mode must not be null");
-    apply(target, requirement, mode, () -> currentJSentinelView());
+    apply(target, requirement, mode, () -> currentJCustosView());
   }
 
   /**
@@ -187,12 +187,12 @@ public final class SecuredVisibility {
   public static void apply(Target target,
                            Requirement requirement,
                            SecuredVisibilityMode mode,
-                           Supplier<Optional<JSentinelView>> viewSupplier) {
+                           Supplier<Optional<JCustosView>> viewSupplier) {
     requireNonNull(target, "target must not be null");
     requireNonNull(requirement, "requirement must not be null");
     requireNonNull(mode, "mode must not be null");
     requireNonNull(viewSupplier, "viewSupplier must not be null");
-    Optional<JSentinelView> view = viewSupplier.get();
+    Optional<JCustosView> view = viewSupplier.get();
     boolean allowed = view.map(v -> isAllowed(requirement, v.roles(), v.permissions()))
         .orElse(requirement.isEmpty());
     if (allowed) {
@@ -219,9 +219,9 @@ public final class SecuredVisibility {
    * @param roles       caller's role view; non-null
    * @param permissions caller's permission view; non-null
    */
-  public record JSentinelView(HasRoles roles, HasPermissions permissions) {
+  public record JCustosView(HasRoles roles, HasPermissions permissions) {
     /** Validates the components. */
-    public JSentinelView {
+    public JCustosView {
       requireNonNull(roles, "roles must not be null");
       requireNonNull(permissions, "permissions must not be null");
     }
@@ -236,9 +236,9 @@ public final class SecuredVisibility {
    * @return current security view, if resolvable
    */
   @SuppressWarnings({"rawtypes", "unchecked"})
-  public static Optional<JSentinelView> currentJSentinelView() {
+  public static Optional<JCustosView> currentJCustosView() {
     try {
-      Class subjectType = JSentinelServiceResolver
+      Class subjectType = JCustosServiceResolver
           .<Object, Object>findAuthenticationService()
           .map(s -> (Class) s.subjectType())
           .orElse(null);
@@ -252,14 +252,14 @@ public final class SecuredVisibility {
       }
       Object subject = subjectOpt.get();
       Optional<AuthorizationService<Object>> authzOpt =
-          JSentinelServiceResolver.findAuthorizationService();
+          JCustosServiceResolver.findAuthorizationService();
       if (authzOpt.isEmpty()) {
         return Optional.empty();
       }
       AuthorizationService<Object> authz = authzOpt.get();
       HasRoles roles = () -> List.copyOf(authz.rolesFor(subject).roleNames());
       HasPermissions permissions = () -> List.copyOf(authz.permissionsFor(subject).permissionNames());
-      return Optional.of(new JSentinelView(roles, permissions));
+      return Optional.of(new JCustosView(roles, permissions));
     } catch (RuntimeException ignored) {
       return Optional.empty();
     }

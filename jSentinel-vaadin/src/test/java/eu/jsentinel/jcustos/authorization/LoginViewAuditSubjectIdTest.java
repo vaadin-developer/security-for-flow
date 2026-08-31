@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authorization;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectIdResolver;
 import eu.jsentinel.jcustos.logout.SubjectId;
 import eu.jsentinel.jcustos.session.SessionContext;
@@ -57,7 +57,7 @@ class LoginViewAuditSubjectIdTest {
   @BeforeEach
   @AfterEach
   void reset() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   @Test
@@ -65,7 +65,7 @@ class LoginViewAuditSubjectIdTest {
   void usesResolverNotToString() {
     PiiUser user = new PiiUser("alice@corp.example", "argon2id$secret");
     SubjectIdResolver<Object> resolver = s -> new SubjectId("uid-42");
-    JSentinelServiceResolver.setSubjectIdResolver(resolver);
+    JCustosServiceResolver.setSubjectIdResolver(resolver);
 
     String id = LoginView.subjectIdOf(contextWith(user));
 

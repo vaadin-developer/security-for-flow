@@ -10,15 +10,15 @@
  */
 package eu.jsentinel.jcustos.dx.vaadin.diagnostics;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.autoservice.api.JSentinelAutoService;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 import eu.jsentinel.jcustos.dx.diagnostics.DiagnosticContributor;
 import eu.jsentinel.jcustos.dx.diagnostics.DiagnosticReportBuilder;
 import eu.jsentinel.jcustos.dx.diagnostics.ServiceWarning;
 
 /**
  * Vaadin-side {@link DiagnosticContributor}. Adds Vaadin-specific
- * findings to {@code JSentinelDiagnostics.inspect()}.
+ * findings to {@code JCustosDiagnostics.inspect()}.
  * <p>
  * Rules:
  * <ul>
@@ -33,7 +33,7 @@ import eu.jsentinel.jcustos.dx.diagnostics.ServiceWarning;
  *
  * @since 00.72.00
  */
-@JSentinelAutoService(DiagnosticContributor.class)
+@JCustosAutoService(DiagnosticContributor.class)
 public final class VaadinDiagnosticContributor implements DiagnosticContributor {
 
   /** ServiceLoader requires a public no-arg constructor. */
@@ -48,7 +48,7 @@ public final class VaadinDiagnosticContributor implements DiagnosticContributor 
   @Override
   public void contribute(DiagnosticReportBuilder builder) {
     try {
-      String stepUp = JSentinelServiceResolver.stepUpRouteName();
+      String stepUp = JCustosServiceResolver.stepUpRouteName();
       if (stepUp == null || stepUp.isBlank()) {
         builder.addWarning(new ServiceWarning(
             "vaadin/step-up-route-blank",
@@ -59,7 +59,7 @@ public final class VaadinDiagnosticContributor implements DiagnosticContributor 
       builder.addWarning(new ServiceWarning(
           "vaadin/rule-failed",
           "step-up-route check failed: " + e.getClass().getSimpleName() + ": " + e.getMessage(),
-          "Inspect JSentinelServiceResolver state."));
+          "Inspect JCustosServiceResolver state."));
     }
   }
 }

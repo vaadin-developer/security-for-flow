@@ -17,13 +17,13 @@
 package eu.jsentinel.jcustos.demo.restclient.views.standalone;
 
 import eu.jsentinel.jcustos.audit.PolicyEvaluated;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authorization.annotations.RequiresRole;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 import eu.jsentinel.jcustos.demo.restclient.backend.RemoteUser;
-import eu.jsentinel.jcustos.demo.restclient.security.ClientJSentinelContext;
+import eu.jsentinel.jcustos.demo.restclient.security.ClientJCustosContext;
 import eu.jsentinel.jcustos.demo.restclient.security.DemoPolicyInitListener;
 import eu.jsentinel.jcustos.demo.restclient.security.resource.DemoDocument;
 import eu.jsentinel.jcustos.demo.restclient.security.resource.DemoDocumentStore;
@@ -114,14 +114,14 @@ public class ResourcePolicyDemoView extends Composite<Div> {
 
   private static void attemptEdit(DemoDocument doc) {
     PolicyContext policyContext = buildPolicyContext(doc.id());
-    PolicyDecision decision = JSentinelServiceResolver.policyRegistry()
+    PolicyDecision decision = JCustosServiceResolver.policyRegistry()
         .evaluate(DemoPolicyInitListener.POLICY_DOCUMENT_OWNER_OR_ADMIN, policyContext);
     publishAudit(decision, policyContext);
     showNotification(doc, decision);
   }
 
   private static PolicyContext buildPolicyContext(String docId) {
-    Optional<JSentinelSubject> subject = currentJSentinelSubject();
+    Optional<JCustosSubject> subject = currentJCustosSubject();
     ResourceRef ref = new ResourceRef(DemoDocumentResolver.RESOURCE_TYPE, docId);
     AccessContext access = new AccessContext(
         subject,
@@ -135,12 +135,12 @@ public class ResourcePolicyDemoView extends Composite<Div> {
         ref);
   }
 
-  private static Optional<JSentinelSubject> currentJSentinelSubject() {
-    return ClientJSentinelContext.user().map(ResourcePolicyDemoView::toJSentinelSubject);
+  private static Optional<JCustosSubject> currentJCustosSubject() {
+    return ClientJCustosContext.user().map(ResourcePolicyDemoView::toJCustosSubject);
   }
 
-  private static JSentinelSubject toJSentinelSubject(RemoteUser user) {
-    return new JSentinelSubject(
+  private static JCustosSubject toJCustosSubject(RemoteUser user) {
+    return new JCustosSubject(
         user.subjectId(),
         user.displayName(),
         Set.copyOf(user.roles()),
@@ -148,8 +148,8 @@ public class ResourcePolicyDemoView extends Composite<Div> {
   }
 
   private static void publishAudit(PolicyDecision decision, PolicyContext context) {
-    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
-    String subjectId = context.subject().map(JSentinelSubject::subjectId).orElse(null);
+    JCustosAuditService sink = JCustosServiceResolver.securityAuditService();
+    String subjectId = context.subject().map(JCustosSubject::subjectId).orElse(null);
     String label = switch (decision) {
       case PolicyDecision.Allowed ignored -> "Allowed";
       case PolicyDecision.Denied ignored -> "Denied";

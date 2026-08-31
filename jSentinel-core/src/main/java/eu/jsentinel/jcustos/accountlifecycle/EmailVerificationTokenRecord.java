@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.accountlifecycle;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.logout.SubjectId;
 
@@ -43,7 +43,7 @@ import static java.util.Objects.requireNonNull;
  *                   still pending; if present must be strictly after
  *                   {@code createdAt}
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record EmailVerificationTokenRecord(
     String tokenHash,
     TenantId tenant,

@@ -29,9 +29,9 @@ import static java.util.Objects.requireNonNull;
 /** Eclipse-Store-backed {@link PasswordResetTokenStore}. */
 final class EclipseStorePasswordResetTokenStore implements PasswordResetTokenStore {
 
-  private final EclipseStoreJSentinelStorage storage;
+  private final EclipseStoreJCustosStorage storage;
 
-  EclipseStorePasswordResetTokenStore(EclipseStoreJSentinelStorage storage) {
+  EclipseStorePasswordResetTokenStore(EclipseStoreJCustosStorage storage) {
     this.storage = storage;
   }
 

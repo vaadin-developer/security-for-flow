@@ -1,6 +1,6 @@
 package eu.jsentinel.jcustos.dx.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.oauth2.api.ClientAuthentication;
 import eu.jsentinel.jcustos.oidc.api.ClaimsToPermissionsMapper;
 import eu.jsentinel.jcustos.oidc.api.ClaimsToRolesMapper;
@@ -16,11 +16,11 @@ import java.time.Duration;
 
 /**
  * V00.78 declarative OIDC Relying-Party sub-builder, exposed via {@code .oidc(...)}
- * on {@link CommonJSentinelBootstrap}; all three adapter facades inherit it. The DX
+ * on {@link CommonJCustosBootstrap}; all three adapter facades inherit it. The DX
  * layer only records + STRICT-validates the configuration (Konzept §11); the HTTP
- * clients are assembled in {@code jSentinel-identity-oidc(-*)}, so this layer stays
+ * clients are assembled in {@code jCustos-identity-oidc(-*)}, so this layer stays
  * free of any JOSE / HTTP-client compile dependency (it references only the
- * JOSE-free {@code oidc/api} + {@code oauth2/api} types in {@code jSentinel-core}).
+ * JOSE-free {@code oidc/api} + {@code oauth2/api} types in {@code jCustos-core}).
  *
  * <p>STRICT raises for {@code oidc/missing-issuer}, {@code oidc/missing-client-id},
  * {@code oidc/scope-without-openid} and {@code oidc/logout-without-post-logout-redirect-uri};
@@ -94,6 +94,6 @@ public interface OidcBootstrap {
    * @param profile the vendor profile (e.g. {@code KeycloakProfile.INSTANCE})
    * @return this builder
    */
-  @ExperimentalJSentinelApi
+  @ExperimentalJCustosApi
   OidcBootstrap vendor(VendorProfile profile);
 }

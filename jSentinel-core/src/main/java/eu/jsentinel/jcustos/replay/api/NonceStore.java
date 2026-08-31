@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.replay.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -29,7 +29,7 @@ import java.util.Optional;
  *
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface NonceStore {
 
   /** Binds {@code nonce} to {@code requestKey} for {@code ttl}. */

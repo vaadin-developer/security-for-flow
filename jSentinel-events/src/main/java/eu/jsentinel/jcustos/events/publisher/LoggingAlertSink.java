@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.publisher;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,14 +27,14 @@ package eu.jsentinel.jcustos.events.publisher;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.audit.LogFieldScrubber;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
 /**
- * {@link JSentinelAlertSink} that writes a single {@code INFO} line per alert
+ * {@link JCustosAlertSink} that writes a single {@code INFO} line per alert
  * to the named alert stream. Never throws.
  * <p>
  * The line format is intentionally compact and stable so it can be grepped
@@ -49,8 +49,8 @@ import java.util.Objects;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
-public final class LoggingAlertSink implements JSentinelAlertSink {
+@ExperimentalJCustosApi
+public final class LoggingAlertSink implements JCustosAlertSink {
 
   /** Alert stream name; route this to a dedicated appender in logback/simplelogger. */
   public static final String ALERT_LOGGER_NAME = "eu.jsentinel.jcustos.alerts";
@@ -76,7 +76,7 @@ public final class LoggingAlertSink implements JSentinelAlertSink {
   }
 
   @Override
-  public void accept(JSentinelAlert alert) {
+  public void accept(JCustosAlert alert) {
     if (alert == null) {
       return;
     }
@@ -92,7 +92,7 @@ public final class LoggingAlertSink implements JSentinelAlertSink {
     }
   }
 
-  private static String format(JSentinelAlert alert) {
+  private static String format(JCustosAlert alert) {
     StringBuilder sb = new StringBuilder(LINE_PREFIX);
     appendField(sb, K_TYPE, alert.eventType().value());
     appendField(sb, K_SEVERITY, alert.severity().name());

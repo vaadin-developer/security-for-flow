@@ -1,10 +1,10 @@
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -24,7 +24,7 @@
  */
 
 /**
- * V00.75 concrete {@link eu.jsentinel.jcustos.events.api.JSentinelEvent}
+ * V00.75 concrete {@link eu.jsentinel.jcustos.events.api.JCustosEvent}
  * record types (Konzept §215-§294), grouped by category: authentication,
  * authorization / policy, session, role / tenant, token / device,
  * rate-limit / abuse, and bus / integrity.
@@ -33,11 +33,11 @@
  * eu.jsentinel.jcustos.events.api.EventMetadata} and declares only its
  * constant {@code eventType()} and {@code category()}. The bus / integrity
  * events keep short names ({@code ReplayDetectedEvent} rather than the
- * Konzept's verbose {@code JSentinelEventReplayDetectedEvent}); the package
+ * Konzept's verbose {@code JCustosEventReplayDetectedEvent}); the package
  * already scopes them.
  *
  * <p>Every public type is annotated {@link
- * eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi}.
+ * eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi}.
  *
  * @since 00.75.00
  */

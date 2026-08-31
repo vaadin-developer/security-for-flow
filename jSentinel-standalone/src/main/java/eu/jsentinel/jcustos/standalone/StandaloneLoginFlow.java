@@ -18,9 +18,9 @@ package eu.jsentinel.jcustos.standalone;
 
 import eu.jsentinel.jcustos.audit.LoginFailed;
 import eu.jsentinel.jcustos.audit.LoginSucceeded;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptContext;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptDecision;
@@ -65,7 +65,7 @@ public final class StandaloneLoginFlow<T, U> {
    * UTC clock. The most common entry point.
    */
   public StandaloneLoginFlow() {
-    this(JSentinelServiceResolver.authenticationService(), Clock.systemUTC());
+    this(JCustosServiceResolver.authenticationService(), Clock.systemUTC());
   }
 
   /**
@@ -88,7 +88,7 @@ public final class StandaloneLoginFlow<T, U> {
    * @return the outcome
    */
   public LoginResult<U> login(T credentials, String username) {
-    LoginAttemptPolicy policy = JSentinelServiceResolver.loginAttemptPolicy();
+    LoginAttemptPolicy policy = JCustosServiceResolver.loginAttemptPolicy();
     LoginAttemptContext attempt = LoginAttemptContext.now(username, null, null);
 
     LoginAttemptDecision gate = policy.beforeAttempt(attempt);
@@ -128,7 +128,7 @@ public final class StandaloneLoginFlow<T, U> {
     // re-login in the same thread) starts without a stale credential.
     // Best-effort: the SPI store may not be registered in setups that
     // do not opt into V00.74 propagation.
-    JSentinelServiceResolver.findTokenCredentialStore()
+    JCustosServiceResolver.findTokenCredentialStore()
         .ifPresent(eu.jsentinel.jcustos.credential.propagation.TokenCredentialStore::clear);
   }
 
@@ -145,7 +145,7 @@ public final class StandaloneLoginFlow<T, U> {
    * @param credential the credential to bind; non-null
    */
   public void bindToken(TokenCredential credential) {
-    JSentinelServiceResolver.tokenCredentialStore().bind(credential);
+    JCustosServiceResolver.tokenCredentialStore().bind(credential);
   }
 
   private Instant now() {
@@ -153,7 +153,7 @@ public final class StandaloneLoginFlow<T, U> {
   }
 
   private static void audit(eu.jsentinel.jcustos.audit.AuditEvent event) {
-    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
+    JCustosAuditService sink = JCustosServiceResolver.securityAuditService();
     try {
       sink.publish(event);
     } catch (RuntimeException ignored) {

@@ -12,7 +12,7 @@ import java.util.Objects;
 /**
  * Records the fluent {@code .oauth2(...)} calls into an {@link OAuth2State}
  * (V00.77). Pure recorder — no validation here; the STRICT / INFO checks run in
- * {@code AbstractJSentinelBootstrap.applyOAuth2Configuration(...)}.
+ * {@code AbstractJCustosBootstrap.applyOAuth2Configuration(...)}.
  */
 public final class RecordingOAuth2Bootstrap implements OAuth2Bootstrap {
 

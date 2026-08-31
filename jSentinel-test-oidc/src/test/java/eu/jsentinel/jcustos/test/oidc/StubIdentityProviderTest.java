@@ -19,7 +19,7 @@ package eu.jsentinel.jcustos.test.oidc;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.identity.oidc.DefaultClaimsToSubjectMapper;
 import eu.jsentinel.jcustos.identity.oidc.DefaultIdTokenValidator;
 import eu.jsentinel.jcustos.identity.oidc.HttpOidcDiscoveryClient;
@@ -126,7 +126,7 @@ class StubIdentityProviderTest {
     assertEquals("alice", userInfo.subject());
 
     // 5. claims -> subject
-    JSentinelSubject subject = new DefaultClaimsToSubjectMapper().map(vit, Optional.of(userInfo));
+    JCustosSubject subject = new DefaultClaimsToSubjectMapper().map(vit, Optional.of(userInfo));
     assertEquals(idp.issuer() + "#alice", subject.subjectId());
     assertEquals("Alice", subject.displayName());
   }

@@ -29,9 +29,9 @@ import static java.util.Objects.requireNonNull;
 /** Eclipse-Store-backed {@link RateLimitStore}. */
 final class EclipseStoreRateLimitStore implements RateLimitStore {
 
-  private final EclipseStoreJSentinelStorage storage;
+  private final EclipseStoreJCustosStorage storage;
 
-  EclipseStoreRateLimitStore(EclipseStoreJSentinelStorage storage) {
+  EclipseStoreRateLimitStore(EclipseStoreJCustosStorage storage) {
     this.storage = storage;
   }
 

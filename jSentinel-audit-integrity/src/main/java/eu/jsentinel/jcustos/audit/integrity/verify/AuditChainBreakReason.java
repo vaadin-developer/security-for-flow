@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.audit.integrity.verify;
 
 /*-
  * #%L
- * jSentinel Audit Integrity — tamper-evident audit
+ * jCustos Audit Integrity — tamper-evident audit
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,14 +25,14 @@ package eu.jsentinel.jcustos.audit.integrity.verify;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 /**
  * Why a chain walk stopped trusting the chain.
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public enum AuditChainBreakReason {
 
   /** The recomputed entry hash differs from the stored one — the entry was mutated. */

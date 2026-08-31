@@ -12,7 +12,7 @@ package eu.jsentinel.jcustos.dx.diagnostics;
 
 /**
  * Test-only contributor that always throws. Used to verify the
- * fail-soft behavior of {@link JSentinelDiagnostics#inspect()}.
+ * fail-soft behavior of {@link JCustosDiagnostics#inspect()}.
  */
 public final class ThrowingContributor implements DiagnosticContributor {
 

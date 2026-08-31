@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.audit;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 
 import static java.util.Objects.requireNonNull;
@@ -36,7 +36,7 @@ import static java.util.Objects.requireNonNull;
  *               {@link TenantId#DEFAULT}
  * @param event  the wrapped audit event; never {@code null}
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record AuditEnvelope(String id, TenantId tenant, AuditEvent event) {
 
   /**

@@ -1,12 +1,12 @@
 package eu.jsentinel.jcustos.demo.skill.vaadin.views.admin;
 
 import eu.jsentinel.jcustos.authorization.annotations.RequiresPermission;
-import eu.jsentinel.jcustos.demo.skill.vaadin.security.bootstrap.JSentinelBootstrapInitListener;
+import eu.jsentinel.jcustos.demo.skill.vaadin.security.bootstrap.JCustosBootstrapInitListener;
 import eu.jsentinel.jcustos.demo.skill.vaadin.views.MainLayout;
 import eu.jsentinel.jcustos.dx.runtime.Health;
 import eu.jsentinel.jcustos.dx.runtime.HealthFinding;
 import eu.jsentinel.jcustos.dx.runtime.HealthStatus;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelRuntime;
+import eu.jsentinel.jcustos.dx.runtime.JCustosRuntime;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -34,7 +34,7 @@ import java.util.List;
  * <p>The route lives under {@code admin/health} and reuses the
  * existing admin permission {@code admin:roles} — no new permission
  * is introduced. Every render re-reads
- * {@link JSentinelBootstrapInitListener#currentRuntime()} so a future
+ * {@link JCustosBootstrapInitListener#currentRuntime()} so a future
  * runtime swap is visible without a page reload.
  */
 @Route(value = "admin/health", layout = MainLayout.class)
@@ -94,7 +94,7 @@ public final class HealthView extends Composite<VerticalLayout> {
   }
 
   private void refresh() {
-    JSentinelRuntime runtime = JSentinelBootstrapInitListener.currentRuntime();
+    JCustosRuntime runtime = JCustosBootstrapInitListener.currentRuntime();
     if (runtime == null) {
       summaryBanner.setText("(runtime not yet initialised)");
       overallBadge.setText("—");
@@ -127,7 +127,7 @@ public final class HealthView extends Composite<VerticalLayout> {
 
   /**
    * Minimal in-page JSON pretty-printer. The framework's own
-   * {@code JsonEncoder} (jSentinel-dx) is intentionally compact-only
+   * {@code JsonEncoder} (jCustos-dx) is intentionally compact-only
    * — pretty-printing belongs to the consumer, so we keep the policy
    * here in the demo.
    */

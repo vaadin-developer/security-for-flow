@@ -9,7 +9,7 @@ import java.util.Set;
  * name, and the set of roles the {@link AuthorizationService} resolves
  * permissions from.
  *
- * <p>Records are framework-friendly: jSentinel never mutates the
+ * <p>Records are framework-friendly: jCustos never mutates the
  * subject; consumers always pass a fresh instance through the
  * {@code SubjectStore}.
  *

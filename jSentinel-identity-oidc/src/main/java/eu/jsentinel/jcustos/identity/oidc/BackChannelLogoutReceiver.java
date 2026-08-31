@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.identity.oidc;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.oidc.api.BackChannelLogoutOutcome;
 import eu.jsentinel.jcustos.oidc.api.BackChannelLogoutToken;
 import eu.jsentinel.jcustos.oidc.api.LogoutTokenValidator;
@@ -34,7 +34,7 @@ import java.util.Set;
  *
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class BackChannelLogoutReceiver {
 
   private final LogoutTokenValidator validator;

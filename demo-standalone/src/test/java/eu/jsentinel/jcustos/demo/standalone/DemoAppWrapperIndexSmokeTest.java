@@ -10,8 +10,8 @@
  */
 package eu.jsentinel.jcustos.demo.standalone;
 
-import eu.jsentinel.jcustos.dx.diagnostics.GeneratedJSentinelWrapper;
-import eu.jsentinel.jcustos.dx.diagnostics.JSentinelDiagnostics;
+import eu.jsentinel.jcustos.dx.diagnostics.GeneratedJCustosWrapper;
+import eu.jsentinel.jcustos.dx.diagnostics.JCustosDiagnostics;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * V00.73 end-to-end smoke check: the security-processor wrote the
  * wrapper index at compile time, the V00.72 reader is on the
- * classpath, and {@link JSentinelDiagnostics#inspect()} surfaces
+ * classpath, and {@link JCustosDiagnostics#inspect()} surfaces
  * {@code MemberDirectorySecured} as a generated wrapper for
  * {@link MemberDirectory}.
  *
@@ -35,16 +35,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DemoAppWrapperIndexSmokeTest {
 
   @Test
-  @DisplayName("MemberDirectory appears in JSentinelDiagnostics.processorReport().wrappers()")
+  @DisplayName("MemberDirectory appears in JCustosDiagnostics.processorReport().wrappers()")
   void memberDirectoryIsListed() {
-    List<GeneratedJSentinelWrapper> wrappers =
-        JSentinelDiagnostics.inspect().processorReport().wrappers();
+    List<GeneratedJCustosWrapper> wrappers =
+        JCustosDiagnostics.inspect().processorReport().wrappers();
 
     assertFalse(wrappers.isEmpty(),
         "expected at least one wrapper entry — the security-processor "
             + "must have written generated-wrappers.idx during compile");
 
-    GeneratedJSentinelWrapper memberDir = wrappers.stream()
+    GeneratedJCustosWrapper memberDir = wrappers.stream()
         .filter(w -> w.sourceType().equals(MemberDirectory.class))
         .findFirst()
         .orElseThrow(() -> new AssertionError(

@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.accountlifecycle;
 
 import eu.jsentinel.jcustos.audit.LogFieldScrubber;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,13 +25,13 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Default {@link JSentinelNotificationSender} that writes a single
+ * Default {@link JCustosNotificationSender} that writes a single
  * INFO line per notification — useful for demos and tests that
  * need lifecycle flows to complete without a real mail provider.
  * <p>
  * The line format mirrors {@code LoggingAuditSink}: a stable
  * {@code NOTIFY type=…} prefix followed by key=value pairs so log
- * scrapers can pivot on the {@link JSentinelNotification.Kind} and
+ * scrapers can pivot on the {@link JCustosNotification.Kind} and
  * the attribute keys without parsing free-form text.
  *
  * <p>Secret-bearing attribute values (the plaintext reset /
@@ -41,8 +41,8 @@ import java.util.Objects;
  * never write a single-use token into a log (CWE-532, V00.75.20 R020).
  * Production deployments register their own transport.
  */
-@ExperimentalJSentinelApi
-public final class LoggingNotificationSender implements JSentinelNotificationSender {
+@ExperimentalJCustosApi
+public final class LoggingNotificationSender implements JCustosNotificationSender {
 
   /** Notification stream name; route to a dedicated appender if desired. */
   public static final String NOTIFY_LOGGER_NAME =
@@ -65,7 +65,7 @@ public final class LoggingNotificationSender implements JSentinelNotificationSen
   }
 
   @Override
-  public void send(JSentinelNotification notification) {
+  public void send(JCustosNotification notification) {
     if (notification == null) return;
     try {
       logger.info(format(notification));
@@ -74,7 +74,7 @@ public final class LoggingNotificationSender implements JSentinelNotificationSen
     }
   }
 
-  private static String format(JSentinelNotification n) {
+  private static String format(JCustosNotification n) {
     // JS-SEC-045 (CWE-117): scrub every attacker-influenced field (subject / tenant / attribute
     // key + value) through the shared LogFieldScrubber before it enters this space-separated
     // key=value NOTIFY line — the sink's javadoc claims it "mirrors LoggingAuditSink", and this is

@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.policy.spi;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.policy.api.Policy;
 import eu.jsentinel.jcustos.policy.api.PolicyContext;
 import eu.jsentinel.jcustos.policy.api.PolicyDecision;
@@ -29,13 +29,13 @@ import java.util.Optional;
  * Discovered via {@code java.util.ServiceLoader}; consuming applications
  * register a default implementation in
  * {@code META-INF/services/eu.jsentinel.jcustos.policy.spi.PolicyRegistry}.
- * If no implementation is registered, the {@code JSentinelServiceResolver}
+ * If no implementation is registered, the {@code JCustosServiceResolver}
  * supplies an in-memory default.
  *
  * <p>Implementations should be thread-safe: registration typically
  * happens at startup, evaluation runs on every protected access.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface PolicyRegistry {
 
   /**

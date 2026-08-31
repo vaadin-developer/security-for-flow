@@ -44,7 +44,7 @@ class InMemorySessionStoreTest {
         tenant,
         now,
         now,
-        JSentinelVersion.INITIAL,
+        JCustosVersion.INITIAL,
         SessionStatus.ACTIVE);
   }
 

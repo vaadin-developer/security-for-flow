@@ -20,14 +20,14 @@ import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.audit.AccessDenied;
 import eu.jsentinel.jcustos.audit.AccessGranted;
 import eu.jsentinel.jcustos.audit.AuditEvent;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.audit.StepUpChallenged;
 import eu.jsentinel.jcustos.authorization.api.AccessEvaluator;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationDecision;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationEvaluator;
 import eu.jsentinel.jcustos.authorization.annotations.PublicRoute;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 import eu.jsentinel.jcustos.authorization.navigation.AccessDecision;
 import eu.jsentinel.jcustos.components.SessionManagementView;
@@ -52,7 +52,7 @@ import static java.util.Objects.requireNonNull;
  * Vaadin adapter for the authorization phase.
  * <p>
  * This listener intercepts navigation events, delegates annotation
- * scanning to {@link JSentinelAnnotationScanner}, evaluator resolution
+ * scanning to {@link JCustosAnnotationScanner}, evaluator resolution
  * to the Vaadin instantiator, and decision evaluation to
  * {@link AccessEvaluator#evaluate}. It then maps the resulting
  * {@link AccessDecision} to the {@link BeforeEnterEvent}.
@@ -66,7 +66,7 @@ import static java.util.Objects.requireNonNull;
  * views that must require authentication with a constraint-less
  * {@code @SecureRoute()} (fail-closed, R035), and treat "no annotation = public"
  * as an explicit decision. Opt-in deny-by-default is now available (JS-SEC-024):
- * enable it with {@code JSentinelServiceResolver.setDenyByDefault(true)} and an
+ * enable it with {@code JCustosServiceResolver.setDenyByDefault(true)} and an
  * un-annotated route then fails closed unless it is marked {@link PublicRoute};
  * a STRICT startup diagnostic enumerates the routes it would deny.
  * <p>
@@ -81,7 +81,7 @@ public class AuthorizationListener
   private static final long serialVersionUID = 974589421761348380L;
 
   /** Cached scanner for restriction annotations. */
-  private final JSentinelAnnotationScanner scanner = new JSentinelAnnotationScanner();
+  private final JCustosAnnotationScanner scanner = new JCustosAnnotationScanner();
 
   /** Creates core contexts from Vaadin events. */
   private final VaadinAccessContextFactory contextFactory = new VaadinAccessContextFactory();
@@ -154,7 +154,7 @@ public class AuthorizationListener
    * allow-by-omission and full backward compatibility.
    */
   private void denyByDefaultIfEnabled(Class<?> navigationTarget, BeforeEnterEvent event) {
-    if (!JSentinelServiceResolver.isDenyByDefault()
+    if (!JCustosServiceResolver.isDenyByDefault()
         || navigationTarget.isAnnotationPresent(PublicRoute.class)
         || isDenyByDefaultExempt(navigationTarget)) {
       return;
@@ -200,7 +200,7 @@ public class AuthorizationListener
   }
 
   private void audit(EvaluatedDecision evaluated, AccessContext context) {
-    String subjectId = context.subject().map(JSentinelSubject::subjectId).orElse(null);
+    String subjectId = context.subject().map(JCustosSubject::subjectId).orElse(null);
     String route = context.resourceName();
     Instant now = Instant.now(Clock.systemUTC());
 
@@ -220,7 +220,7 @@ public class AuthorizationListener
       event = new AccessDenied(now, subjectId, route, reason);
     }
 
-    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
+    JCustosAuditService sink = JCustosServiceResolver.securityAuditService();
     try {
       sink.publish(event);
     } catch (RuntimeException auditFailure) {
@@ -307,10 +307,10 @@ public class AuthorizationListener
     return switch (decision) {
       case AuthorizationDecision.Granted() -> AccessDecision.granted();
       case AuthorizationDecision.Unauthenticated _ ->
-          // R025: resolve the login route through JSentinelServiceResolver
+          // R025: resolve the login route through JCustosServiceResolver
           // (default "login") instead of a hardcoded literal, so apps that name
           // their login route differently are not silently broken.
-          AccessDecision.denied(JSentinelServiceResolver.loginRouteName(), false);
+          AccessDecision.denied(JCustosServiceResolver.loginRouteName(), false);
       case AuthorizationDecision.Forbidden _ ->
           // R018: never surface the evaluator's internal reason to the user-facing
           // error view (it may carry subject ids, policy names, SQL). Use a generic
@@ -321,7 +321,7 @@ public class AuthorizationListener
           // Reroute to the configured step-up route — the consuming
           // application registers a Route under that name to render
           // the MFA / re-auth challenge.
-          AccessDecision.reroute(JSentinelServiceResolver.stepUpRouteName(), false);
+          AccessDecision.reroute(JCustosServiceResolver.stepUpRouteName(), false);
     };
   }
 }

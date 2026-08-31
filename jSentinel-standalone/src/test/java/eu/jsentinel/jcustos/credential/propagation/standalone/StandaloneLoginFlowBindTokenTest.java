@@ -11,7 +11,7 @@
 package eu.jsentinel.jcustos.credential.propagation.standalone;
 
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.credential.propagation.BearerToken;
 import eu.jsentinel.jcustos.credential.propagation.TokenCredentialStore;
 import eu.jsentinel.jcustos.standalone.StandaloneLoginFlow;
@@ -33,13 +33,13 @@ class StandaloneLoginFlowBindTokenTest {
 
   @BeforeEach
   void setup() {
-    JSentinelServiceResolver.setTokenCredentialStore(store);
+    JCustosServiceResolver.setTokenCredentialStore(store);
   }
 
   @AfterEach
   void cleanup() {
     store.clear();
-    JSentinelServiceResolver.setTokenCredentialStore(null);
+    JCustosServiceResolver.setTokenCredentialStore(null);
   }
 
   @Test

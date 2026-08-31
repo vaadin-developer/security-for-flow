@@ -20,7 +20,7 @@ import eu.jsentinel.jcustos.audit.SessionExpired;
 import eu.jsentinel.jcustos.authorization.LoginListener;
 import eu.jsentinel.jcustos.authorization.LoginListeners;
 import eu.jsentinel.jcustos.authorization.LoginView;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.logout.SubjectId;
 import eu.jsentinel.jcustos.test.InMemorySubjectStore;
@@ -69,15 +69,15 @@ class SessionLifetimeListenerTest {
 
   @BeforeEach
   void resetState() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     LoginListeners.reset();
-    JSentinelServiceResolver.setJSentinelAuditService(audit);
+    JCustosServiceResolver.setJCustosAuditService(audit);
     CurrentInstance.clearAll();
   }
 
   @AfterEach
   void cleanUp() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     LoginListeners.reset();
     CurrentInstance.clearAll();
   }
@@ -101,7 +101,7 @@ class SessionLifetimeListenerTest {
     InMemoryVaadinSession session = bindSession(T0);
     SubjectStores.setSubjectStore(new InMemorySubjectStore());
     SubjectStores.subjectStore().setCurrentSubject("alice", String.class);
-    JSentinelServiceResolver.setSessionPolicy(new AlwaysActive<String>());
+    JCustosServiceResolver.setSessionPolicy(new AlwaysActive<String>());
 
     Instant later = T0.plusSeconds(30);
     SessionLifetimeListener listener = new SessionLifetimeListener(
@@ -122,10 +122,10 @@ class SessionLifetimeListenerTest {
     SubjectStores.setSubjectStore(new InMemorySubjectStore());
     SubjectStores.subjectStore().setCurrentSubject("alice", String.class);
     LoginListeners.setLoginListener(new TestLoginListener());
-    JSentinelServiceResolver.setSessionPolicy(
+    JCustosServiceResolver.setSessionPolicy(
         new AlwaysDecide<String>(SessionPolicyDecision.idleTimeout()));
     // JS-SEC-004: the audit subjectId must come from the resolver, not toString().
-    JSentinelServiceResolver.<String>setSubjectIdResolver(s -> SubjectId.of("resolved-" + s));
+    JCustosServiceResolver.<String>setSubjectIdResolver(s -> SubjectId.of("resolved-" + s));
 
     SessionLifetimeListener listener = new SessionLifetimeListener(
         Clock.fixed(T0.plusSeconds(60), ZoneOffset.UTC));
@@ -151,7 +151,7 @@ class SessionLifetimeListenerTest {
     SubjectStores.setSubjectStore(new InMemorySubjectStore());
     SubjectStores.subjectStore().setCurrentSubject("alice", String.class);
     LoginListeners.setLoginListener(new TestLoginListener());
-    JSentinelServiceResolver.setSessionPolicy(
+    JCustosServiceResolver.setSessionPolicy(
         new AlwaysDecide<String>(SessionPolicyDecision.idleTimeout()));
     // No SubjectIdResolver registered — SessionMetadata rejects a blank id, so
     // the listener must fall back to a non-blank, non-PII identity handle.
@@ -175,7 +175,7 @@ class SessionLifetimeListenerTest {
     SubjectStores.setSubjectStore(new InMemorySubjectStore());
     SubjectStores.subjectStore().setCurrentSubject("alice", String.class);
     LoginListeners.setLoginListener(new TestLoginListener());
-    JSentinelServiceResolver.setSessionPolicy(
+    JCustosServiceResolver.setSessionPolicy(
         new AlwaysDecide<String>(SessionPolicyDecision.absoluteLifetimeExceeded()));
 
     SessionLifetimeListener listener = new SessionLifetimeListener(

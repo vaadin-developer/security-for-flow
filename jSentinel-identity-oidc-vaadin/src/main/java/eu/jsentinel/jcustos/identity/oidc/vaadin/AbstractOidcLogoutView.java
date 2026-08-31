@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.identity.oidc.vaadin;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStore;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.identity.oidc.RpInitiatedLogoutInitiator;
@@ -80,7 +80,7 @@ public abstract class AbstractOidcLogoutView extends Div implements BeforeEnterO
       }
       Class<?> subjectType;
       try {
-        subjectType = JSentinelServiceResolver.<Object, Object>authenticationService().subjectType();
+        subjectType = JCustosServiceResolver.<Object, Object>authenticationService().subjectType();
       } catch (RuntimeException ignored) {
         return;
       }

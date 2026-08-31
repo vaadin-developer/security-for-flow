@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.types;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -28,9 +28,9 @@ package eu.jsentinel.jcustos.events.types;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventId;
 import eu.jsentinel.jcustos.events.api.EventMetadata;
-import eu.jsentinel.jcustos.events.api.JSentinelEventCategory;
-import eu.jsentinel.jcustos.events.api.JSentinelEventSeverity;
-import eu.jsentinel.jcustos.events.codec.CanonicalJSentinelEventPayload;
+import eu.jsentinel.jcustos.events.api.JCustosEventCategory;
+import eu.jsentinel.jcustos.events.api.JCustosEventSeverity;
+import eu.jsentinel.jcustos.events.codec.CanonicalJCustosEventPayload;
 import eu.jsentinel.jcustos.events.codec.RecordReflectionCanonicalizer;
 import eu.jsentinel.jcustos.logout.SubjectId;
 import org.junit.jupiter.api.DisplayName;
@@ -48,23 +48,23 @@ class JwtEventTypesTest {
 
   private static EventMetadata meta() {
     return new EventMetadata(EventId.of("evt-1"), TenantId.DEFAULT, SubjectId.of("system"),
-        Instant.parse("2026-06-25T12:00:00Z"), JSentinelEventSeverity.INFO);
+        Instant.parse("2026-06-25T12:00:00Z"), JCustosEventSeverity.INFO);
   }
 
   @Test
   @DisplayName("JwtValidationSucceeded canonicalises issuer/keyId/algorithm only — no raw token")
   void succeeded() {
-    CanonicalJSentinelEventPayload p = canonicalizer.canonicalize(
+    CanonicalJCustosEventPayload p = canonicalizer.canonicalize(
         new JwtValidationSucceededEvent(meta(), "https://idp.example/", "k1", "RS256"));
     assertEquals("JwtValidationSucceeded", p.eventType());
-    assertEquals(JSentinelEventCategory.TOKEN.name(), p.category());
+    assertEquals(JCustosEventCategory.TOKEN.name(), p.category());
     assertEquals(Set.of("issuer", "keyId", "algorithm"), p.attributes().keySet());
   }
 
   @Test
   @DisplayName("JwtValidationFailed canonicalises the failure code only — no token / message")
   void failed() {
-    CanonicalJSentinelEventPayload p = canonicalizer.canonicalize(
+    CanonicalJCustosEventPayload p = canonicalizer.canonicalize(
         new JwtValidationFailedEvent(meta(), "jwt/signature-invalid"));
     assertEquals(Set.of("failureCode"), p.attributes().keySet());
     assertEquals("jwt/signature-invalid", p.attributes().get("failureCode"));
@@ -73,7 +73,7 @@ class JwtEventTypesTest {
   @Test
   @DisplayName("JwksRefreshed canonicalises keyCount/ttlSeconds only")
   void refreshed() {
-    CanonicalJSentinelEventPayload p = canonicalizer.canonicalize(
+    CanonicalJCustosEventPayload p = canonicalizer.canonicalize(
         new JwksRefreshedEvent(meta(), 3, 300));
     assertEquals(Set.of("keyCount", "ttlSeconds"), p.attributes().keySet());
   }
@@ -81,7 +81,7 @@ class JwtEventTypesTest {
   @Test
   @DisplayName("JwksRefreshFailed canonicalises the error class name only — no stack trace")
   void refreshFailed() {
-    CanonicalJSentinelEventPayload p = canonicalizer.canonicalize(
+    CanonicalJCustosEventPayload p = canonicalizer.canonicalize(
         new JwksRefreshFailedEvent(meta(), "ConnectException"));
     assertEquals(Set.of("errorClass"), p.attributes().keySet());
     assertEquals("ConnectException", p.attributes().get("errorClass"));

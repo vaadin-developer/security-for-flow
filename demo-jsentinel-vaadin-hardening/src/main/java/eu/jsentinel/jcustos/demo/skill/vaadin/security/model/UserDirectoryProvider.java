@@ -1,6 +1,6 @@
 package eu.jsentinel.jcustos.demo.skill.vaadin.security.model;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 
 import java.nio.file.Path;
 import java.util.Objects;
@@ -48,6 +48,6 @@ public final class UserDirectoryProvider {
         "user-directory-persistence-shutdown"));
     return new PersistentUserDirectory(
         persistence,
-        JSentinelServiceResolver.passwordHashingService());
+        JCustosServiceResolver.passwordHashingService());
   }
 }

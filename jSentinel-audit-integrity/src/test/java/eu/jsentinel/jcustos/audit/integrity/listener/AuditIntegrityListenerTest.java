@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.audit.integrity.listener;
 
 /*-
  * #%L
- * jSentinel Audit Integrity — tamper-evident audit
+ * jCustos Audit Integrity — tamper-evident audit
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -31,8 +31,8 @@ import eu.jsentinel.jcustos.audit.integrity.chain.AuditChainAppender;
 import eu.jsentinel.jcustos.audit.integrity.chain.InMemoryAuditChainStore;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventMetadata;
-import eu.jsentinel.jcustos.events.api.JSentinelEvent;
-import eu.jsentinel.jcustos.events.api.JSentinelEventSeverity;
+import eu.jsentinel.jcustos.events.api.JCustosEvent;
+import eu.jsentinel.jcustos.events.api.JCustosEventSeverity;
 import eu.jsentinel.jcustos.events.codec.CanonicalJsonPayloadCodec;
 import eu.jsentinel.jcustos.events.types.BusStartedEvent;
 import eu.jsentinel.jcustos.events.types.LoginSucceededEvent;
@@ -53,16 +53,16 @@ class AuditIntegrityListenerTest {
   private final AuditIntegrityListener listener =
       new AuditIntegrityListener(new AuditChainAppender(store));
 
-  private static LoginSucceededEvent loginEvent(JSentinelEventSeverity severity) {
+  private static LoginSucceededEvent loginEvent(JCustosEventSeverity severity) {
     return new LoginSucceededEvent(
-        EventMetadata.create(TenantId.DEFAULT, JSentinelEvent.SYSTEM_SUBJECT, AT, severity),
+        EventMetadata.create(TenantId.DEFAULT, JCustosEvent.SYSTEM_SUBJECT, AT, severity),
         "password");
   }
 
   @Test
   @DisplayName("audit-relevant events are chained and their payload decodes")
   void relevantEventChained() {
-    listener.onJSentinelEvent(loginEvent(JSentinelEventSeverity.INFO));
+    listener.onJCustosEvent(loginEvent(JCustosEventSeverity.INFO));
 
     assertEquals(1, store.size(),
         "an AUTHENTICATION event is chained regardless of severity");
@@ -75,9 +75,9 @@ class AuditIntegrityListenerTest {
   @Test
   @DisplayName("DEBUG system noise stays out of the chain by default")
   void systemNoiseFiltered() {
-    listener.onJSentinelEvent(new BusStartedEvent(EventMetadata.create(
-        TenantId.DEFAULT, JSentinelEvent.SYSTEM_SUBJECT, AT,
-        JSentinelEventSeverity.DEBUG)));
+    listener.onJCustosEvent(new BusStartedEvent(EventMetadata.create(
+        TenantId.DEFAULT, JCustosEvent.SYSTEM_SUBJECT, AT,
+        JCustosEventSeverity.DEBUG)));
 
     assertEquals(0, store.size());
   }
@@ -89,9 +89,9 @@ class AuditIntegrityListenerTest {
     AuditIntegrityListener tinyListener =
         new AuditIntegrityListener(new AuditChainAppender(tiny));
 
-    tinyListener.onJSentinelEvent(loginEvent(JSentinelEventSeverity.INFO));
+    tinyListener.onJCustosEvent(loginEvent(JCustosEventSeverity.INFO));
     assertDoesNotThrow(() ->
-        tinyListener.onJSentinelEvent(loginEvent(JSentinelEventSeverity.INFO)));
+        tinyListener.onJCustosEvent(loginEvent(JCustosEventSeverity.INFO)));
     assertEquals(1, tiny.size());
   }
 

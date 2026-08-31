@@ -16,7 +16,7 @@ import eu.jsentinel.jcustos.credential.propagation.OutboundCall;
 import eu.jsentinel.jcustos.credential.propagation.RefreshToken;
 import eu.jsentinel.jcustos.propagation.oidc.cache.InMemoryTokenExchangeCache;
 import eu.jsentinel.jcustos.propagation.oidc.cache.TokenExchangeCache;
-import eu.jsentinel.jcustos.propagation.oidc.strategy.JSentinelPropagationException;
+import eu.jsentinel.jcustos.propagation.oidc.strategy.JCustosPropagationException;
 import eu.jsentinel.jcustos.propagation.oidc.strategy.TokenExchangeStrategy;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -79,13 +79,13 @@ class TokenExchangeStrategyIntegrationTest {
   }
 
   @Test
-  @DisplayName("401 from IDP → JSentinelPropagationException")
+  @DisplayName("401 from IDP → JCustosPropagationException")
   void unauthorizedRaises() {
     stub.respondWith(new StubTokenEndpoint.Response(401, "{\"error\":\"invalid_grant\"}"));
     TokenExchangeStrategy strategy = new TokenExchangeStrategy(
         stub.tokenEndpoint(), "cid", "csecret",
         HttpClient.newHttpClient(), new InMemoryTokenExchangeCache());
-    JSentinelPropagationException ex = assertThrows(JSentinelPropagationException.class,
+    JCustosPropagationException ex = assertThrows(JCustosPropagationException.class,
         () -> strategy.resolve(
             new OutboundCall("svc", "m", "api", Map.of()),
             Optional.of(new BearerToken("subject"))));
@@ -100,7 +100,7 @@ class TokenExchangeStrategyIntegrationTest {
     TokenExchangeStrategy strategy = new TokenExchangeStrategy(
         stub.tokenEndpoint(), "cid", "csecret",
         HttpClient.newHttpClient(), new InMemoryTokenExchangeCache());
-    JSentinelPropagationException ex = assertThrows(JSentinelPropagationException.class,
+    JCustosPropagationException ex = assertThrows(JCustosPropagationException.class,
         () -> strategy.resolve(
             new OutboundCall("svc", "m", "api", Map.of()),
             Optional.of(new BearerToken("subject"))));

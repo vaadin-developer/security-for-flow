@@ -28,7 +28,7 @@ import java.util.Objects;
  * {@code logout(SubjectId)} call cannot).
  *
  * @param value the subject identifier as exposed by the application's
- *              {@link eu.jsentinel.jcustos.authorization.api.JSentinelSubject#subjectId() JSentinelSubject}.
+ *              {@link eu.jsentinel.jcustos.authorization.api.JCustosSubject#subjectId() JCustosSubject}.
  *              Non-{@code null}, non-blank.
  */
 public record SubjectId(String value) {

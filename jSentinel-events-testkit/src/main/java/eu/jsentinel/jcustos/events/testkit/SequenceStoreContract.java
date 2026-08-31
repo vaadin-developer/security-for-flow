@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.testkit;
 
 /*-
  * #%L
- * jSentinel Events — Contract testkit
+ * jCustos Events — Contract testkit
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,11 +25,11 @@ package eu.jsentinel.jcustos.events.testkit;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventProducerId;
 import eu.jsentinel.jcustos.events.api.EventSequence;
-import eu.jsentinel.jcustos.events.sequence.JSentinelEventSequenceStore;
+import eu.jsentinel.jcustos.events.sequence.JCustosEventSequenceStore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -43,15 +43,15 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Reusable contract for {@link JSentinelEventSequenceStore} implementations.
+ * Reusable contract for {@link JCustosEventSequenceStore} implementations.
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
-@DisplayName("JSentinelEventSequenceStore — contract")
+@ExperimentalJCustosApi
+@DisplayName("JCustosEventSequenceStore — contract")
 public interface SequenceStoreContract {
 
-  JSentinelEventSequenceStore newSequenceStore();
+  JCustosEventSequenceStore newSequenceStore();
 
   EventProducerId PRODUCER_A = EventProducerId.of("producer-a");
   EventProducerId PRODUCER_B = EventProducerId.of("producer-b");
@@ -65,7 +65,7 @@ public interface SequenceStoreContract {
   @Test
   @DisplayName("updateSequence then lastSequence round-trips")
   default void updateThenRead() {
-    JSentinelEventSequenceStore store = newSequenceStore();
+    JCustosEventSequenceStore store = newSequenceStore();
     store.updateSequence(TenantId.DEFAULT, PRODUCER_A, EventSequence.of(42));
     assertEquals(42, store.lastSequence(TenantId.DEFAULT, PRODUCER_A).orElseThrow().value());
   }
@@ -73,7 +73,7 @@ public interface SequenceStoreContract {
   @Test
   @DisplayName("sequences are isolated per tenant + producer")
   default void scopedPerTenantAndProducer() {
-    JSentinelEventSequenceStore store = newSequenceStore();
+    JCustosEventSequenceStore store = newSequenceStore();
     store.updateSequence(TenantId.DEFAULT, PRODUCER_A, EventSequence.of(10));
     store.updateSequence(TenantId.DEFAULT, PRODUCER_B, EventSequence.of(20));
     store.updateSequence(TenantId.of("other"), PRODUCER_A, EventSequence.of(30));
@@ -85,7 +85,7 @@ public interface SequenceStoreContract {
   @Test
   @DisplayName("reserveNext starts at FIRST and advances monotonically")
   default void reserveNextAdvances() {
-    JSentinelEventSequenceStore store = newSequenceStore();
+    JCustosEventSequenceStore store = newSequenceStore();
     assertEquals(EventSequence.FIRST, store.reserveNext(TenantId.DEFAULT, PRODUCER_A));
     assertEquals(2, store.reserveNext(TenantId.DEFAULT, PRODUCER_A).value());
     assertEquals(2, store.lastSequence(TenantId.DEFAULT, PRODUCER_A).orElseThrow().value());
@@ -96,7 +96,7 @@ public interface SequenceStoreContract {
   @Test
   @DisplayName("reserveNext is atomic — N concurrent reservations yield N distinct, gap-free sequences (R011)")
   default void reserveNextIsAtomicUnderContention() throws InterruptedException {
-    JSentinelEventSequenceStore store = newSequenceStore();
+    JCustosEventSequenceStore store = newSequenceStore();
     int threads = 64;
     ConcurrentHashMap.KeySetView<Long, Boolean> seen = ConcurrentHashMap.newKeySet();
     AtomicInteger duplicates = new AtomicInteger();
@@ -137,7 +137,7 @@ public interface SequenceStoreContract {
   @Test
   @DisplayName("compareAndAdvance from a fresh scope succeeds once, then the stale 'empty' expectation fails")
   default void compareAndAdvanceFromFresh() {
-    JSentinelEventSequenceStore store = newSequenceStore();
+    JCustosEventSequenceStore store = newSequenceStore();
     assertTrue(store.compareAndAdvance(TenantId.DEFAULT, PRODUCER_A,
         Optional.empty(), EventSequence.FIRST), "fresh-scope advance must apply");
     assertEquals(EventSequence.FIRST,
@@ -152,7 +152,7 @@ public interface SequenceStoreContract {
   @Test
   @DisplayName("compareAndAdvance applies when the expected last matches, and is rejected when it is stale")
   default void compareAndAdvanceMatchesOrRejects() {
-    JSentinelEventSequenceStore store = newSequenceStore();
+    JCustosEventSequenceStore store = newSequenceStore();
     store.updateSequence(TenantId.DEFAULT, PRODUCER_A, EventSequence.of(5));
     // matching expectation advances
     assertTrue(store.compareAndAdvance(TenantId.DEFAULT, PRODUCER_A,
@@ -167,7 +167,7 @@ public interface SequenceStoreContract {
   @Test
   @DisplayName("compareAndAdvance is atomic — N envelopes claiming the same next sequence: exactly one wins (R016)")
   default void compareAndAdvanceAtomicUnderContention() throws InterruptedException {
-    JSentinelEventSequenceStore store = newSequenceStore();
+    JCustosEventSequenceStore store = newSequenceStore();
     int threads = 64;
     AtomicInteger winners = new AtomicInteger();
     CountDownLatch start = new CountDownLatch(1);

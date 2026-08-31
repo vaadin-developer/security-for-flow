@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.bruteforce;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 
 /**
@@ -33,7 +33,7 @@ import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
  * @param userId username dimension; non-blank
  * @param ip     client-address dimension; non-blank
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record LoginAttemptKey(TenantId tenant, String userId, String ip) {
 
   /**

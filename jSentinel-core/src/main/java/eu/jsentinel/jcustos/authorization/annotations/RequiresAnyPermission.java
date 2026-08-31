@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authorization.annotations;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.permissions.RequiresAnyPermissionEvaluator;
 
 import java.lang.annotation.Inherited;
@@ -38,11 +38,11 @@ import static java.lang.annotation.ElementType.TYPE;
  * "subject has both X and Y" — the latter being explicit about the
  * AND-semantics that {@code @RequiresPermission} also offers.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({TYPE, METHOD})
-@JSentinelAnnotation(RequiresAnyPermissionEvaluator.class)
+@JCustosAnnotation(RequiresAnyPermissionEvaluator.class)
 public @interface RequiresAnyPermission {
 
   /**

@@ -15,7 +15,7 @@ import eu.jsentinel.jcustos.authentication.AuthenticationService;
 import eu.jsentinel.jcustos.authentication.TokenService;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptPolicy;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapMode;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapMode;
 import eu.jsentinel.jcustos.logout.LogoutService;
 import eu.jsentinel.jcustos.ratelimiting.RateLimitPolicy;
 
@@ -23,7 +23,7 @@ import eu.jsentinel.jcustos.ratelimiting.RateLimitPolicy;
  * Mutable aggregate of accumulated configuration during a fluent
  * bootstrap call. Reset to a fresh instance per bootstrap call.
  * <p>
- * <strong>Internal API.</strong> Used by {@link AbstractJSentinelBootstrap}
+ * <strong>Internal API.</strong> Used by {@link AbstractJCustosBootstrap}
  * and adapter-DX module subclasses; not part of the V00.72 public surface.
  *
  * @since 00.72.00
@@ -32,7 +32,7 @@ public final class BootstrapState {
 
   private AuthenticationService<?, ?> authenticationService;
   private AuthorizationService<?> authorizationService;
-  private JSentinelBootstrapMode mode = JSentinelBootstrapMode.COMMUNITY_DEFAULTS;
+  private JCustosBootstrapMode mode = JCustosBootstrapMode.COMMUNITY_DEFAULTS;
 
   private boolean auditConfigured;
   private boolean sessionsConfigured;
@@ -41,7 +41,7 @@ public final class BootstrapState {
   private boolean credentialsConfigured;
   private boolean propagationConfigured;
 
-  // V00.74: direct-set services on CommonJSentinelBootstrap
+  // V00.74: direct-set services on CommonJCustosBootstrap
   private LogoutService logoutService;
   private LoginAttemptPolicy loginAttemptPolicy;
   private RateLimitPolicy rateLimitPolicy;
@@ -105,11 +105,11 @@ public final class BootstrapState {
     this.authorizationService = service;
   }
 
-  public JSentinelBootstrapMode mode() {
+  public JCustosBootstrapMode mode() {
     return mode;
   }
 
-  public void mode(JSentinelBootstrapMode mode) {
+  public void mode(JCustosBootstrapMode mode) {
     if (mode != null) {
       this.mode = mode;
     }

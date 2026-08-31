@@ -25,7 +25,7 @@ package eu.jsentinel.jcustos.credential.emergency;
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
 import eu.jsentinel.jcustos.audit.CredentialStatusChanged;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.credential.store.CredentialRecord;
 import eu.jsentinel.jcustos.credential.store.CredentialStatus;
 import eu.jsentinel.jcustos.credential.store.InMemoryCredentialStore;
@@ -47,7 +47,7 @@ class MassCredentialStatusChangeTest {
 
   private static final Instant T0 = Instant.parse("2026-06-01T12:00:00Z");
 
-  private static final class RecordingAudit implements JSentinelAuditService {
+  private static final class RecordingAudit implements JCustosAuditService {
     final List<AuditEvent> events = new ArrayList<>();
     @Override public void publish(AuditEvent event) { events.add(event); }
     @Override public List<AuditEvent> query(AuditQuery q) { return List.copyOf(events); }

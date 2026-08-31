@@ -31,9 +31,9 @@ import static java.util.Objects.requireNonNull;
 /** Eclipse-Store-backed {@link ApiKeyStore}. */
 final class EclipseStoreApiKeyStore implements ApiKeyStore {
 
-  private final EclipseStoreJSentinelStorage storage;
+  private final EclipseStoreJCustosStorage storage;
 
-  EclipseStoreApiKeyStore(EclipseStoreJSentinelStorage storage) {
+  EclipseStoreApiKeyStore(EclipseStoreJCustosStorage storage) {
     this.storage = storage;
   }
 

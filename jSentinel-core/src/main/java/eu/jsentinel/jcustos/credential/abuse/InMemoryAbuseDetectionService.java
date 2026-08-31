@@ -23,7 +23,7 @@
 package eu.jsentinel.jcustos.credential.abuse;
 
 import eu.jsentinel.jcustos.audit.RateLimitExceeded;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 
 import java.time.Duration;
@@ -64,18 +64,18 @@ public final class InMemoryAbuseDetectionService implements AbuseDetectionServic
   public static final int DEFAULT_MAX_ENTRIES = 100_000;
 
   private final AbuseLimitsPolicy policy;
-  private final JSentinelAuditService auditService;
+  private final JCustosAuditService auditService;
   private final int maxEntries;
   private final ConcurrentHashMap<String, Deque<Instant>> counters =
       new ConcurrentHashMap<>();
 
   public InMemoryAbuseDetectionService(
-      AbuseLimitsPolicy policy, JSentinelAuditService auditService) {
+      AbuseLimitsPolicy policy, JCustosAuditService auditService) {
     this(policy, auditService, DEFAULT_MAX_ENTRIES);
   }
 
   public InMemoryAbuseDetectionService(
-      AbuseLimitsPolicy policy, JSentinelAuditService auditService, int maxEntries) {
+      AbuseLimitsPolicy policy, JCustosAuditService auditService, int maxEntries) {
     this.policy = Objects.requireNonNull(policy, "policy");
     this.auditService = Objects.requireNonNull(auditService, "auditService");
     if (maxEntries < 1) {

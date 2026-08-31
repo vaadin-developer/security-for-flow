@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.testkit;
 
 /*-
  * #%L
- * jSentinel Events — Contract testkit
+ * jCustos Events — Contract testkit
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,9 +25,9 @@ package eu.jsentinel.jcustos.events.testkit;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.events.api.EventEnvelopeId;
-import eu.jsentinel.jcustos.events.replay.JSentinelEventReplayStore;
+import eu.jsentinel.jcustos.events.replay.JCustosEventReplayStore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -37,21 +37,21 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Reusable contract for {@link JSentinelEventReplayStore} implementations.
+ * Reusable contract for {@link JCustosEventReplayStore} implementations.
  * Implement {@link #newReplayStore()} to bind a concrete store under test.
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
-@DisplayName("JSentinelEventReplayStore — contract")
+@ExperimentalJCustosApi
+@DisplayName("JCustosEventReplayStore — contract")
 public interface ReplayStoreContract {
 
-  JSentinelEventReplayStore newReplayStore();
+  JCustosEventReplayStore newReplayStore();
 
   @Test
   @DisplayName("markSeen accepts an envelope once, then reports replay")
   default void firstSeenThenReplay() {
-    JSentinelEventReplayStore store = newReplayStore();
+    JCustosEventReplayStore store = newReplayStore();
     EventEnvelopeId id = EventEnvelopeId.of("env-1");
     Instant expires = TestkitEnvelopes.AT.plusSeconds(300);
     assertTrue(store.markSeen(id, expires));
@@ -62,7 +62,7 @@ public interface ReplayStoreContract {
   @Test
   @DisplayName("purgeExpired drops entries at or before now")
   default void purgeExpired() {
-    JSentinelEventReplayStore store = newReplayStore();
+    JCustosEventReplayStore store = newReplayStore();
     store.markSeen(EventEnvelopeId.of("old"), TestkitEnvelopes.AT.plusSeconds(10));
     store.markSeen(EventEnvelopeId.of("new"), TestkitEnvelopes.AT.plusSeconds(1000));
     store.purgeExpired(TestkitEnvelopes.AT.plusSeconds(100));

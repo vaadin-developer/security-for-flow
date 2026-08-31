@@ -37,7 +37,7 @@ import static java.util.Objects.requireNonNull;
  * FakeAuthenticationService&lt;String, User&gt; auth =
  *     FakeAuthenticationService.&lt;String, User&gt;forType(User.class);
  * auth.register("alice", new User("u-alice", "Alice"));
- * JSentinelServiceResolver.setAuthenticationService...   // wire if needed
+ * JCustosServiceResolver.setAuthenticationService...   // wire if needed
  * </pre>
  *
  * @param <C> credentials type

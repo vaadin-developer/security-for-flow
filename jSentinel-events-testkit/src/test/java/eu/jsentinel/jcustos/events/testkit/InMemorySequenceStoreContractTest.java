@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.testkit;
 
 /*-
  * #%L
- * jSentinel Events — Contract testkit
+ * jCustos Events — Contract testkit
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -26,8 +26,8 @@ package eu.jsentinel.jcustos.events.testkit;
  */
 
 import eu.jsentinel.jcustos.events.sequence.InMemorySequenceStore;
-import eu.jsentinel.jcustos.events.sequence.JSentinelEventSequenceStore;
+import eu.jsentinel.jcustos.events.sequence.JCustosEventSequenceStore;
 
 class InMemorySequenceStoreContractTest implements SequenceStoreContract {
-  public JSentinelEventSequenceStore newSequenceStore() { return new InMemorySequenceStore(); }
+  public JCustosEventSequenceStore newSequenceStore() { return new InMemorySequenceStore(); }
 }

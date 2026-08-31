@@ -21,8 +21,8 @@ import eu.jsentinel.jcustos.audit.AuditQuery;
 import eu.jsentinel.jcustos.audit.SessionCreated;
 import eu.jsentinel.jcustos.audit.SessionExpired;
 import eu.jsentinel.jcustos.audit.SessionInvalidated;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.logout.SubjectId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -57,7 +57,7 @@ class TimeoutSessionPolicyTest {
   @AfterEach
   void resetResolver() {
     // JS-SEC-004 tests register a SubjectIdResolver; reset so it never leaks.
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   // ── Config validation ────────────────────────────────────────
@@ -209,7 +209,7 @@ class TimeoutSessionPolicyTest {
     Instant t0 = Instant.parse("2026-05-08T10:00:00Z");
     RecordingAudit audit = new RecordingAudit();
     // Resolver maps the subject to a clean, non-PII id distinct from toString().
-    JSentinelServiceResolver.<String>setSubjectIdResolver(
+    JCustosServiceResolver.<String>setSubjectIdResolver(
         s -> SubjectId.of("uid-" + s.length()));
     TimeoutSessionPolicy<String> policy = new TimeoutSessionPolicy<>(
         CONFIG, Clock.fixed(t0, ZoneOffset.UTC), audit);
@@ -227,7 +227,7 @@ class TimeoutSessionPolicyTest {
   @DisplayName("JS-SEC-004: audit subjectId is empty (never toString()) when no resolver is registered")
   void auditSubjectIdEmptyWithoutResolver() {
     Instant t0 = Instant.parse("2026-05-08T10:00:00Z");
-    JSentinelServiceResolver.resetAll(); // ensure no resolver is registered
+    JCustosServiceResolver.resetAll(); // ensure no resolver is registered
     RecordingAudit audit = new RecordingAudit();
     TimeoutSessionPolicy<String> policy = new TimeoutSessionPolicy<>(
         CONFIG, Clock.fixed(t0, ZoneOffset.UTC), audit);
@@ -244,7 +244,7 @@ class TimeoutSessionPolicyTest {
   void auditFailureSwallowed() {
     Instant t0 = Instant.parse("2026-05-08T10:00:00Z");
     Instant now = t0.plus(CONFIG.absoluteLifetime()).plusSeconds(1);
-    JSentinelAuditService throwingAudit = new JSentinelAuditService() {
+    JCustosAuditService throwingAudit = new JCustosAuditService() {
       @Override public void publish(AuditEvent event) {
         throw new RuntimeException("audit boom");
       }
@@ -374,7 +374,7 @@ class TimeoutSessionPolicyTest {
 
   // ── Test fixtures ────────────────────────────────────────────
 
-  static final class RecordingAudit implements JSentinelAuditService {
+  static final class RecordingAudit implements JCustosAuditService {
     final List<AuditEvent> events = new ArrayList<>();
 
     @Override

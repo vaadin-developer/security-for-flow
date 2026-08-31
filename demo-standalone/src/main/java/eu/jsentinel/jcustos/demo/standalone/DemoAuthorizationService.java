@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.demo.standalone;
 
 import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
-import eu.jsentinel.jcustos.autoservice.api.JSentinelAutoService;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 import eu.jsentinel.jcustos.authorization.api.permissions.HasPermissions;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.authorization.api.permissions.RolePermissionResolver;
@@ -40,7 +40,7 @@ import static eu.jsentinel.jcustos.demo.standalone.Permission.MEMBER_INVITE;
 import static eu.jsentinel.jcustos.demo.standalone.Permission.MEMBER_LIST;
 import static eu.jsentinel.jcustos.demo.standalone.Permission.MEMBER_REMOVE;
 
-@JSentinelAutoService(AuthorizationService.class)
+@JCustosAutoService(AuthorizationService.class)
 public final class DemoAuthorizationService implements AuthorizationService<User> {
 
   private static final StaticRolePermissionMapping ROLE_PERMISSIONS =

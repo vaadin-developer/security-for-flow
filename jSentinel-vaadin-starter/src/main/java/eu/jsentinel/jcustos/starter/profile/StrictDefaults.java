@@ -10,10 +10,10 @@
  */
 package eu.jsentinel.jcustos.starter.profile;
 
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapMode;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapMode;
 
-/** Strict profile — mode STRICT; missing critical SPIs raise JSentinelBootstrapException. */
-public final class StrictDefaults implements VaadinJSentinelStarter {
+/** Strict profile — mode STRICT; missing critical SPIs raise JCustosBootstrapException. */
+public final class StrictDefaults implements VaadinJCustosStarter {
 
   static final StrictDefaults INSTANCE = new StrictDefaults();
 
@@ -21,7 +21,7 @@ public final class StrictDefaults implements VaadinJSentinelStarter {
   }
 
   @Override
-  public JSentinelBootstrapMode preferredMode() {
-    return JSentinelBootstrapMode.STRICT;
+  public JCustosBootstrapMode preferredMode() {
+    return JCustosBootstrapMode.STRICT;
   }
 }

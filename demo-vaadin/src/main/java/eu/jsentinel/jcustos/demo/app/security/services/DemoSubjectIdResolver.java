@@ -25,14 +25,14 @@ import eu.jsentinel.jcustos.logout.SubjectId;
  * {@link MyUser} to its stable id-as-string — matches the subject
  * identifier already used in {@code RoleAssigned} /
  * {@code RoleRevoked} audit events, so {@code SessionStale}
- * events emitted by the {@code JSentinelVersionEnforcerListener}
+ * events emitted by the {@code JCustosVersionEnforcerListener}
  * correlate cleanly in the {@code /audit} grid.
  * <p>
  * Registered via
  * {@code META-INF/services/eu.jsentinel.jcustos.authorization.api.SubjectIdResolver}.
  * Without this resolver the Phase 4c snapshot capture in
  * {@code LoginView} is a silent no-op (see
- * {@code LoginView.captureJSentinelVersionSnapshot}).
+ * {@code LoginView.captureJCustosVersionSnapshot}).
  */
 public final class DemoSubjectIdResolver implements SubjectIdResolver<MyUser> {
 

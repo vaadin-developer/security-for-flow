@@ -17,7 +17,7 @@ import java.util.Objects;
 /**
  * Records the fluent {@code .oidc(...)} calls into an {@link OidcState} (V00.78).
  * Pure recorder — validation runs in
- * {@code AbstractJSentinelBootstrap.applyOidcConfiguration(...)}.
+ * {@code AbstractJCustosBootstrap.applyOidcConfiguration(...)}.
  */
 public final class RecordingOidcBootstrap implements OidcBootstrap {
 

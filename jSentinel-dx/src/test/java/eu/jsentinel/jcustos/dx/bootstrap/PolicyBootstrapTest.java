@@ -10,12 +10,12 @@
  */
 package eu.jsentinel.jcustos.dx.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.dx.internal.AbstractJSentinelBootstrap;
-import eu.jsentinel.jcustos.dx.runtime.RegisteredJSentinelService;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapMode;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapWarning;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelRuntime;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.dx.internal.AbstractJCustosBootstrap;
+import eu.jsentinel.jcustos.dx.runtime.RegisteredJCustosService;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapMode;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapWarning;
+import eu.jsentinel.jcustos.dx.runtime.JCustosRuntime;
 import eu.jsentinel.jcustos.dx.runtime.Severity;
 import eu.jsentinel.jcustos.policy.api.Policy;
 import eu.jsentinel.jcustos.policy.api.SubjectPredicates;
@@ -42,11 +42,11 @@ class PolicyBootstrapTest {
   @BeforeEach
   @AfterEach
   void resetResolver() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   @Test
-  @DisplayName(".register(policy) lands in the default PolicyRegistry from JSentinelServiceResolver")
+  @DisplayName(".register(policy) lands in the default PolicyRegistry from JCustosServiceResolver")
   void registerLandsInDefaultRegistry() {
     Policy policy = Policy.named("docs.viewer")
         .allowIf(SubjectPredicates.hasRole("ROLE_USER"))
@@ -55,11 +55,11 @@ class PolicyBootstrapTest {
     new TestBootstrap()
         .policies(p -> p.register(policy))
         .install();
-    assertTrue(JSentinelServiceResolver.policyRegistry().find("docs.viewer").isPresent());
+    assertTrue(JCustosServiceResolver.policyRegistry().find("docs.viewer").isPresent());
   }
 
   @Test
-  @DisplayName(".registry(external) replaces the default via JSentinelServiceResolver.setPolicyRegistry")
+  @DisplayName(".registry(external) replaces the default via JCustosServiceResolver.setPolicyRegistry")
   void externalRegistryReplacesDefault() {
     RecordingPolicyRegistry external = new RecordingPolicyRegistry();
     Policy policy = Policy.named("docs.owner")
@@ -69,7 +69,7 @@ class PolicyBootstrapTest {
     new TestBootstrap()
         .policies(p -> p.registry(external).register(policy))
         .install();
-    assertSame(external, JSentinelServiceResolver.policyRegistry());
+    assertSame(external, JCustosServiceResolver.policyRegistry());
     assertTrue(external.registered.containsKey("docs.owner"));
   }
 
@@ -80,29 +80,29 @@ class PolicyBootstrapTest {
     new TestBootstrap()
         .policies(p -> p.resourceResolver(resolver))
         .install();
-    assertTrue(JSentinelServiceResolver.resourceResolverRegistry()
+    assertTrue(JCustosServiceResolver.resourceResolverRegistry()
         .find("document").isPresent());
   }
 
   // ── helpers ──────────────────────────────────────────────────────
 
   private static final class TestBootstrap
-      extends AbstractJSentinelBootstrap<TestBootstrap> {
+      extends AbstractJCustosBootstrap<TestBootstrap> {
     @Override
-    public JSentinelRuntime install() {
-      List<RegisteredJSentinelService> services = new ArrayList<>();
-      List<JSentinelBootstrapWarning> warnings = new ArrayList<>();
+    public JCustosRuntime install() {
+      List<RegisteredJCustosService> services = new ArrayList<>();
+      List<JCustosBootstrapWarning> warnings = new ArrayList<>();
       applyAuditConfiguration(services, warnings);
       applySessionConfiguration(AdapterKind.VAADIN, services, warnings);
       applyRoleConfiguration(services, warnings);
       applyCredentialConfiguration(services, warnings);
       applyPolicyConfiguration(services, warnings);
-      JSentinelBootstrapMode mode = state.mode();
-      if (mode == JSentinelBootstrapMode.STRICT
+      JCustosBootstrapMode mode = state.mode();
+      if (mode == JCustosBootstrapMode.STRICT
           && warnings.stream().anyMatch(w -> w.severity() == Severity.ERROR)) {
-        throw new JSentinelBootstrapException(warnings);
+        throw new JCustosBootstrapException(warnings);
       }
-      return new JSentinelRuntime(services, warnings, mode);
+      return new JCustosRuntime(services, warnings, mode);
     }
   }
 

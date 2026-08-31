@@ -20,8 +20,8 @@ import eu.jsentinel.jcustos.audit.AccessDenied;
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
 import eu.jsentinel.jcustos.audit.LoginSucceeded;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.demo.app.security.bootstrap.BootstrapWiring;
 import eu.jsentinel.jcustos.demo.app.security.model.DemoUserDirectoryProvider;
@@ -70,7 +70,7 @@ class AuditViewBrowserlessTest extends BrowserlessTest {
     System.setProperty("security.bootstrap.mode", "DISABLED");
     resetBootstrapWiringSingleton();
 
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
     // Seed an admin so the directory reports hasAnyAdministrator() — keeps
     // BootstrapStateService from forwarding to /setup even if a stale
@@ -83,12 +83,12 @@ class AuditViewBrowserlessTest extends BrowserlessTest {
     audit.events.add(new LoginSucceeded(T0, "admin", "127.0.0.1", null));
     audit.events.add(new LoginSucceeded(T0.plusSeconds(1), "editor", "127.0.0.1", null));
     audit.events.add(new AccessDenied(T0.plusSeconds(2), "bob", "/secret", "MissingRole"));
-    JSentinelServiceResolver.setJSentinelAuditService(audit);
+    JCustosServiceResolver.setJCustosAuditService(audit);
   }
 
   @AfterEach
   void tearDown() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
   }
 
@@ -139,7 +139,7 @@ class AuditViewBrowserlessTest extends BrowserlessTest {
    * {@code query} call. Lets the {@code AuditView}'s default behaviour
    * exercise the type-filter logic against deterministic data.
    */
-  private static final class SeedingAudit implements JSentinelAuditService {
+  private static final class SeedingAudit implements JCustosAuditService {
     final List<AuditEvent> events = new ArrayList<>();
 
     @Override public void publish(AuditEvent event) {

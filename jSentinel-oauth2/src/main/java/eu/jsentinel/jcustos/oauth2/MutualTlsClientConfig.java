@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.oauth2;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.security.KeyStore;
 import java.util.Objects;
@@ -24,7 +24,7 @@ import java.util.Objects;
 /**
  * Client-side mTLS material for OAuth2 mutual-TLS client authentication (V00.79,
  * RFC 8705): the {@link KeyStore} holding the client certificate + private key, its
- * password, and the {@code alias} under which the client key lives. jSentinel does not
+ * password, and the {@code alias} under which the client key lives. jCustos does not
  * load this from a hardware token / OS keychain — the consumer pre-loads the
  * {@code KeyStore} and passes it here (Konzept §4.5).
  *
@@ -35,7 +35,7 @@ import java.util.Objects;
  *
  * @since 00.79.20
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record MutualTlsClientConfig(KeyStore keyStore, char[] password, String alias) {
 
   public MutualTlsClientConfig {

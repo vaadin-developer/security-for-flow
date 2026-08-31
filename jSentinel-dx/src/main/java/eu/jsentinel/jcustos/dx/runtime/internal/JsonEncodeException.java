@@ -21,7 +21,7 @@ package eu.jsentinel.jcustos.dx.runtime.internal;
  * {@code eu.jsentinel.jcustos.dx.runtime.internal} package — by
  * convention, classes in {@code internal} packages are <strong>not</strong>
  * part of the public API surface.
- * {@code JSentinelRuntime#toJson()} only ever encodes the deterministic
+ * {@code JCustosRuntime#toJson()} only ever encodes the deterministic
  * {@code toMap()} output, so this exception fires only on a framework
  * bug, never on consumer input.
  *

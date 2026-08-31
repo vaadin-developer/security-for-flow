@@ -14,7 +14,7 @@ package eu.jsentinel.jcustos.dx.diagnostics;
 import java.util.Objects;
 
 /**
- * A diagnostic warning surfaced through {@link JSentinelServiceReport}.
+ * A diagnostic warning surfaced through {@link JCustosServiceReport}.
  *
  * @since 00.72.00
  */

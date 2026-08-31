@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.monitoring.health;
 
 /*-
  * #%L
- * jSentinel Monitoring — metrics, health and diagnostics export points
+ * jCustos Monitoring — metrics, health and diagnostics export points
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,10 +25,10 @@ package eu.jsentinel.jcustos.monitoring.health;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.dx.diagnostics.DuplicateService;
-import eu.jsentinel.jcustos.dx.diagnostics.JSentinelDiagnostics;
-import eu.jsentinel.jcustos.dx.diagnostics.JSentinelServiceReport;
+import eu.jsentinel.jcustos.dx.diagnostics.JCustosDiagnostics;
+import eu.jsentinel.jcustos.dx.diagnostics.JCustosServiceReport;
 import eu.jsentinel.jcustos.dx.diagnostics.MissingRecommendedService;
 import eu.jsentinel.jcustos.dx.diagnostics.ServiceWarning;
 import eu.jsentinel.jcustos.dx.runtime.HealthFinding;
@@ -39,19 +39,19 @@ import java.util.List;
 
 /**
  * Health indicator over the dx diagnostics sweep: runs
- * {@link JSentinelDiagnostics#inspect()} and maps the resulting
- * {@link JSentinelServiceReport} into {@link HealthFinding}s.
+ * {@link JCustosDiagnostics#inspect()} and maps the resulting
+ * {@link JCustosServiceReport} into {@link HealthFinding}s.
  *
  * <p>Mapping:</p>
  * <ul>
- *   <li>{@link JSentinelServiceReport#missing()} ⇒
+ *   <li>{@link JCustosServiceReport#missing()} ⇒
  *       {@link Severity#ERROR} finding with code
  *       {@link #MISSING_SERVICE_CODE} — a missing critical SPI means
  *       the security stack cannot work.</li>
- *   <li>{@link JSentinelServiceReport#duplicates()} ⇒
+ *   <li>{@link JCustosServiceReport#duplicates()} ⇒
  *       {@link Severity#WARNING} finding with code
  *       {@link #DUPLICATE_SERVICE_CODE}.</li>
- *   <li>{@link JSentinelServiceReport#warnings()} ⇒
+ *   <li>{@link JCustosServiceReport#warnings()} ⇒
  *       {@link Severity#WARNING} finding carrying the warning's own
  *       code — consumers route on codes, so the diagnostic code passes
  *       through unchanged.</li>
@@ -59,8 +59,8 @@ import java.util.List;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
-public final class DiagnosticsHealthIndicator implements JSentinelHealthIndicator {
+@ExperimentalJCustosApi
+public final class DiagnosticsHealthIndicator implements JCustosHealthIndicator {
 
   /** Stable indicator id. */
   public static final String ID = "diagnostics";
@@ -82,7 +82,7 @@ public final class DiagnosticsHealthIndicator implements JSentinelHealthIndicato
 
   @Override
   public List<HealthFinding> check() {
-    JSentinelServiceReport report = JSentinelDiagnostics.inspect();
+    JCustosServiceReport report = JCustosDiagnostics.inspect();
     List<HealthFinding> findings = new ArrayList<>();
     for (MissingRecommendedService missing : report.missing()) {
       findings.add(new HealthFinding(Severity.ERROR, MISSING_SERVICE_CODE,

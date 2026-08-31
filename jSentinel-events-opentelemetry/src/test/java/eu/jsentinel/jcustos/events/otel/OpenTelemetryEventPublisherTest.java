@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.otel;
 
 /*-
  * #%L
- * jSentinel Events — OpenTelemetry exporter
+ * jCustos Events — OpenTelemetry exporter
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -36,8 +36,8 @@ import eu.jsentinel.jcustos.events.api.KeyId;
 import eu.jsentinel.jcustos.events.api.PayloadContentType;
 import eu.jsentinel.jcustos.events.api.PayloadHashAlgorithm;
 import eu.jsentinel.jcustos.events.api.SignatureAlgorithmId;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelopeBuilder;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelopeBuilder;
 import eu.jsentinel.jcustos.events.testkit.TestkitEnvelopes;
 import eu.jsentinel.jcustos.events.types.ListenerFailedEvent;
 import eu.jsentinel.jcustos.events.types.ReplayDetectedEvent;
@@ -82,7 +82,7 @@ class OpenTelemetryEventPublisherTest {
   @Test
   @DisplayName("maps one envelope to one record: body, severity, timestamps and the attribute vocabulary")
   void mapsEnvelopeToRecord() {
-    SignedJSentinelEventEnvelope envelope = TestkitEnvelopes.envelope("env-otel");
+    SignedJCustosEventEnvelope envelope = TestkitEnvelopes.envelope("env-otel");
 
     publisher.onEnvelope(envelope);
 
@@ -140,7 +140,7 @@ class OpenTelemetryEventPublisherTest {
   @Test
   @DisplayName("data minimization: no attribute carries payload or signature material")
   void noPayloadOrSignatureAttributes() {
-    SignedJSentinelEventEnvelope envelope = TestkitEnvelopes.envelope("env-min");
+    SignedJCustosEventEnvelope envelope = TestkitEnvelopes.envelope("env-min");
 
     publisher.onEnvelope(envelope);
 
@@ -190,8 +190,8 @@ class OpenTelemetryEventPublisherTest {
    * severity cases rebuild the envelope with the wanted type using the same
    * recipe.
    */
-  private static SignedJSentinelEventEnvelope envelopeOfType(String id, EventType type) {
-    return SignedJSentinelEventEnvelopeBuilder.create()
+  private static SignedJCustosEventEnvelope envelopeOfType(String id, EventType type) {
+    return SignedJCustosEventEnvelopeBuilder.create()
         .envelopeId(EventEnvelopeId.of(id))
         .eventId(EventId.of("evt-" + id))
         .eventType(type)

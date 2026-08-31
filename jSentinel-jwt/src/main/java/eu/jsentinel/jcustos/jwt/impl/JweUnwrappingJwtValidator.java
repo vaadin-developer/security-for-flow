@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.jwt.impl;
 
 import com.svenruppert.functional.result.Result;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.jwt.api.JweDecoder;
 import eu.jsentinel.jcustos.jwt.api.JweDecodingError;
 import eu.jsentinel.jcustos.jwt.api.JwtValidationError;
@@ -36,7 +36,7 @@ import java.util.Objects;
  *
  * @since 00.79.20
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class JweUnwrappingJwtValidator implements JwtValidator {
 
   private final JwtValidator delegate;

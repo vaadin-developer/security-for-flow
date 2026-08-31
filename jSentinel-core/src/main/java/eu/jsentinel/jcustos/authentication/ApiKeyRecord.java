@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authentication;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.logout.SubjectId;
@@ -62,7 +62,7 @@ import static java.util.Objects.requireNonNull;
  * @param revokedAt  revocation instant; if present must not predate
  *                   {@code createdAt}
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record ApiKeyRecord(
     String keyHash,
     TenantId tenant,

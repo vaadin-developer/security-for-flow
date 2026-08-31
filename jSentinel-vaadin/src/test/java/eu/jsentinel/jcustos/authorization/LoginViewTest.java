@@ -141,9 +141,9 @@ class LoginViewTest {
   @Test
   @DisplayName("validate() success notifies SessionPolicy.onLogin (no-op when no Vaadin session is bound)")
   void validateSuccessIsAuditSilentWithoutVaadinSession() throws Exception {
-    eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver.resetAll();
+    eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver.resetAll();
     RecordingSessionPolicy<String> policy = new RecordingSessionPolicy<>();
-    eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver.setSessionPolicy(policy);
+    eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver.setSessionPolicy(policy);
 
     try {
       TestLoginView view = new TestLoginView();
@@ -160,16 +160,16 @@ class LoginViewTest {
       assertEquals(0, policy.onLoginCalls,
           "without an active VaadinSession the policy must not be invoked");
     } finally {
-      eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver.resetAll();
+      eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver.resetAll();
     }
   }
 
   @Test
   @DisplayName("validate() failure does NOT notify SessionPolicy.onLogin")
   void validateFailureSkipsSessionPolicy() throws Exception {
-    eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver.resetAll();
+    eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver.resetAll();
     RecordingSessionPolicy<String> policy = new RecordingSessionPolicy<>();
-    eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver.setSessionPolicy(policy);
+    eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver.setSessionPolicy(policy);
 
     try {
       TestLoginView view = new TestLoginView();
@@ -182,16 +182,16 @@ class LoginViewTest {
       assertEquals(0, policy.onLoginCalls,
           "policy.onLogin must only fire on a successful credential check");
     } finally {
-      eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver.resetAll();
+      eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver.resetAll();
     }
   }
 
   @Test
   @DisplayName("validate() success absorbs an Invalidate decision from onLogin without throwing")
   void invalidateFromOnLoginIsAbsorbed() throws Exception {
-    eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver.resetAll();
+    eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver.resetAll();
     InvalidatingSessionPolicy<String> policy = new InvalidatingSessionPolicy<>();
-    eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver.setSessionPolicy(policy);
+    eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver.setSessionPolicy(policy);
 
     try {
       TestLoginView view = new TestLoginView();
@@ -208,7 +208,7 @@ class LoginViewTest {
       assertTrue(view.navigatedToApp,
           "even when onLogin asks for rotation, navigateToApp must run");
     } finally {
-      eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver.resetAll();
+      eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver.resetAll();
     }
   }
 

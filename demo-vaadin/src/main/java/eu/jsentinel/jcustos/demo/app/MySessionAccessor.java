@@ -19,7 +19,7 @@ package eu.jsentinel.jcustos.demo.app;
 import eu.jsentinel.jcustos.demo.app.security.model.MyUser;
 import eu.jsentinel.jcustos.demo.app.security.roles.AuthorizationRole;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleName;
 
@@ -36,7 +36,7 @@ public interface MySessionAccessor {
     final List<AuthorizationRole> roles = asList(authorizationRoles);
     final Optional<MyUser> currentSubject = SubjectStores.subjectStore().currentSubject(MyUser.class);
     final AuthorizationService<MyUser> authorizationService =
-        JSentinelServiceResolver.authorizationService();
+        JCustosServiceResolver.authorizationService();
     return currentSubject.isPresent() && authorizationService.rolesFor(currentSubject.get())
                                                             .roleNames()
                                                             .stream()

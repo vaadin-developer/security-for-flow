@@ -1,6 +1,6 @@
 package eu.jsentinel.jcustos.demo.skill.rest.handlers;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import com.sun.net.httpserver.HttpExchange;
 import eu.jsentinel.jcustos.demo.skill.rest.Json;
 import eu.jsentinel.jcustos.demo.skill.rest.Router;
@@ -30,7 +30,7 @@ public final class UsersHandler {
   private UsersHandler() {
   }
 
-  public static void list(HttpExchange exchange, JSentinelSubject subject) throws IOException {
+  public static void list(HttpExchange exchange, JCustosSubject subject) throws IOException {
     UserDirectory dir = UserDirectoryProvider.directory();
     List<Map<String, Object>> body = dir.all()
         .map(UsersHandler::project)
@@ -38,7 +38,7 @@ public final class UsersHandler {
     Router.respondJson(exchange, 200, Json.encode(body));
   }
 
-  public static void create(HttpExchange exchange, JSentinelSubject subject) throws IOException {
+  public static void create(HttpExchange exchange, JCustosSubject subject) throws IOException {
     Map<String, String> body = Json.parseFlat(Router.readBody(exchange));
     String username = body.get("username");
     String password = body.get("password");
@@ -66,7 +66,7 @@ public final class UsersHandler {
     Router.respondJson(exchange, 201, Json.encode(project(user)));
   }
 
-  public static void delete(HttpExchange exchange, JSentinelSubject subject) throws IOException {
+  public static void delete(HttpExchange exchange, JCustosSubject subject) throws IOException {
     Long id = idFromPath(exchange, "/api/users/");
     if (id == null) {
       Router.respond(exchange, 400, "Bad Request");
@@ -78,7 +78,7 @@ public final class UsersHandler {
     Router.respondJson(exchange, 200, "{\"ok\":true}");
   }
 
-  public static void assignRole(HttpExchange exchange, JSentinelSubject subject) throws IOException {
+  public static void assignRole(HttpExchange exchange, JCustosSubject subject) throws IOException {
     RoleTarget t = roleTargetFromPath(exchange);
     if (t == null) {
       Router.respond(exchange, 400, "Bad Request");
@@ -89,7 +89,7 @@ public final class UsersHandler {
     Router.respondJson(exchange, 200, "{\"ok\":true}");
   }
 
-  public static void revokeRole(HttpExchange exchange, JSentinelSubject subject) throws IOException {
+  public static void revokeRole(HttpExchange exchange, JCustosSubject subject) throws IOException {
     RoleTarget t = roleTargetFromPath(exchange);
     if (t == null) {
       Router.respond(exchange, 400, "Bad Request");

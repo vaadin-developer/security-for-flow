@@ -1,10 +1,10 @@
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,9 +25,9 @@
 
 /**
  * V00.75 payload-codec SPI (Konzept §405-§566): the controlled
- * {@link eu.jsentinel.jcustos.events.codec.CanonicalJSentinelEventPayload}
+ * {@link eu.jsentinel.jcustos.events.codec.CanonicalJCustosEventPayload}
  * model, the {@link
- * eu.jsentinel.jcustos.events.codec.JSentinelEventCanonicalizer} that
+ * eu.jsentinel.jcustos.events.codec.JCustosEventCanonicalizer} that
  * maps a typed event to it, the {@link
  * eu.jsentinel.jcustos.events.codec.PayloadCodec} SPI, and the
  * interoperable in-tree {@link
@@ -38,7 +38,7 @@
  * are Maven-Enforcer-banned on this module; the codec uses the in-tree
  * {@link eu.jsentinel.jcustos.events.codec.CanonicalJson} engine. The
  * Java-native Eclipse-Serializer codec (Konzept §468) lives in
- * {@code jSentinel-events-persistence-eclipsestore} so the core stays
+ * {@code jCustos-events-persistence-eclipsestore} so the core stays
  * storage-free.
  *
  * @since 00.75.00

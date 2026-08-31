@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.bruteforce;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -39,7 +39,7 @@ import java.util.Optional;
  * <p>Implementations must be thread-safe; concurrent
  * {@code recordFailure} calls happen on every failed login.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface LoginAttemptStore {
 
   /**

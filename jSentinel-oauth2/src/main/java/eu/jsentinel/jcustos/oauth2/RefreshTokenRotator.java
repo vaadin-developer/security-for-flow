@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.oauth2;
 
 import com.svenruppert.functional.result.Result;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.credential.secret.SecretValue;
 import eu.jsentinel.jcustos.oauth2.api.OAuth2Error;
 import eu.jsentinel.jcustos.oauth2.api.RefreshTokenFamilyStore;
@@ -47,7 +47,7 @@ import java.util.Optional;
  *
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class RefreshTokenRotator {
 
   private final TokenEndpointClient endpoint;

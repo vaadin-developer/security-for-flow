@@ -16,8 +16,8 @@
  */
 package eu.jsentinel.jcustos.authorization.impl;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleName;
@@ -51,13 +51,13 @@ class VaadinAccessContextFactoryTest {
 
   @BeforeEach
   void resetServices() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     StubAuthorizationService.clear();
   }
 
   @AfterEach
   void tearDown() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     StubAuthorizationService.clear();
   }
 
@@ -80,7 +80,7 @@ class VaadinAccessContextFactoryTest {
   }
 
   @Test
-  @DisplayName("currentJSentinelSubject yields empty when SubjectStore has no subject")
+  @DisplayName("currentJCustosSubject yields empty when SubjectStore has no subject")
   void emptySubjectWhenStoreEmpty() {
     SubjectStores.setSubjectStore(new InMemorySubjectStore());
 
@@ -108,7 +108,7 @@ class VaadinAccessContextFactoryTest {
 
     assertTrue(context.subject().isPresent(),
         "populated SubjectStore must surface as AccessContext.subject()");
-    JSentinelSubject snapshot = context.subject().get();
+    JCustosSubject snapshot = context.subject().get();
     assertEquals(List.of(admin), List.copyOf(snapshot.roles()));
     assertEquals(List.of(del), List.copyOf(snapshot.permissions()));
   }
@@ -123,7 +123,7 @@ class VaadinAccessContextFactoryTest {
     StubAuthorizationService.put(subject, Set.of(), Set.of());
 
     AccessContext context = factory.create(event("/", AdminRoute.class));
-    JSentinelSubject snapshot = context.subject().orElseThrow();
+    JCustosSubject snapshot = context.subject().orElseThrow();
 
     assertTrue(snapshot.subjectId().startsWith("String@"),
         "subject id must lead with the subject's class simple name + '@'");
@@ -141,7 +141,7 @@ class VaadinAccessContextFactoryTest {
     StubAuthorizationService.put(blank, Set.of(), Set.of());
 
     AccessContext context = factory.create(event("/", AdminRoute.class));
-    JSentinelSubject snapshot = context.subject().orElseThrow();
+    JCustosSubject snapshot = context.subject().orElseThrow();
 
     assertEquals(snapshot.subjectId(), snapshot.displayName(),
         "blank subject.toString() must trigger displayName = subjectId fallback");

@@ -1,7 +1,7 @@
 package eu.jsentinel.jcustos.dx.diagnostics;
 
 /**
- * Contributes the OIDC Relying-Party findings to {@code JSentinelDiagnostics.inspect()}
+ * Contributes the OIDC Relying-Party findings to {@code JCustosDiagnostics.inspect()}
  * (V00.78). Reads the non-secret {@link OidcDiagnosticState} snapshot recorded by
  * {@code .oidc(...)} and warns on the configuration risk that is silent at bootstrap
  * time: a disabled {@code nonce} check (the primary login-CSRF / replay defence for

@@ -11,7 +11,7 @@
 package eu.jsentinel.jcustos.dx.internal;
 
 import eu.jsentinel.jcustos.authorization.api.SubjectIdResolver;
-import eu.jsentinel.jcustos.session.JSentinelVersionStore;
+import eu.jsentinel.jcustos.session.JCustosVersionStore;
 import eu.jsentinel.jcustos.session.SessionPolicy;
 import eu.jsentinel.jcustos.session.SessionStore;
 
@@ -30,7 +30,7 @@ import java.time.Duration;
 public final class SessionState {
 
   private SessionStore sessionStore;
-  private JSentinelVersionStore securityVersionStore;
+  private JCustosVersionStore securityVersionStore;
   private SubjectIdResolver<?> subjectIdResolver;
   private Duration idleTimeout;
   private Duration absoluteLifetime;
@@ -46,11 +46,11 @@ public final class SessionState {
     this.sessionStore = store;
   }
 
-  public JSentinelVersionStore securityVersionStore() {
+  public JCustosVersionStore securityVersionStore() {
     return securityVersionStore;
   }
 
-  public void securityVersionStore(JSentinelVersionStore store) {
+  public void securityVersionStore(JCustosVersionStore store) {
     this.securityVersionStore = store;
   }
 

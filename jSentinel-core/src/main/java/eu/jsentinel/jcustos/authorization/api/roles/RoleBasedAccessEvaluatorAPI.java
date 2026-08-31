@@ -18,7 +18,7 @@ package eu.jsentinel.jcustos.authorization.api.roles;
 
 import eu.jsentinel.jcustos.authorization.api.AccessEvaluator;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 
 import java.lang.annotation.Annotation;
@@ -34,7 +34,7 @@ public interface RoleBasedAccessEvaluatorAPI<T extends Annotation, U>
         extends AccessEvaluator<T> {
 
     /**
-     * Resolves the {@link AuthorizationService} via SPI using {@link JSentinelServiceResolver}.
+     * Resolves the {@link AuthorizationService} via SPI using {@link JCustosServiceResolver}.
      * <p>
      * If you need to deal with another technology, override this method in your implementation.
      * The resolved service is cached by the resolver.
@@ -42,7 +42,7 @@ public interface RoleBasedAccessEvaluatorAPI<T extends Annotation, U>
      * @return the AuthorizationService of your choice.
      */
     default AuthorizationService<U> authorizationService() {
-        return JSentinelServiceResolver.authorizationService();
+        return JCustosServiceResolver.authorizationService();
     }
 
     /**

@@ -27,7 +27,7 @@ import eu.jsentinel.jcustos.authorization.api.SubjectStore;
 import eu.jsentinel.jcustos.credential.propagation.TokenCredentialStore;
 import eu.jsentinel.jcustos.session.SessionContext;
 import eu.jsentinel.jcustos.session.SessionPolicy;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 
 import java.time.Instant;
 import java.util.Map;
@@ -193,7 +193,7 @@ public final class VaadinLogoutService<U> implements LogoutService {
    */
   private void clearBoundTokenCredential() {
     try {
-      JSentinelServiceResolver.findTokenCredentialStore()
+      JCustosServiceResolver.findTokenCredentialStore()
           .ifPresent(TokenCredentialStore::clear);
     } catch (RuntimeException cleanupFailure) {
       // never block the logout flow
@@ -203,7 +203,7 @@ public final class VaadinLogoutService<U> implements LogoutService {
   private void notifySessionPolicyOnLogout() {
     try {
       Optional<U> currentSubject = subjectStore.currentSubject(subjectType);
-      SessionPolicy<Object> policy = JSentinelServiceResolver.sessionPolicy();
+      SessionPolicy<Object> policy = JCustosServiceResolver.sessionPolicy();
       Instant now = Instant.now();
       SessionContext<Object> sessionContext = new SessionContext<>(
           currentSubject.orElse(null), null, now, now, null, Map.of());

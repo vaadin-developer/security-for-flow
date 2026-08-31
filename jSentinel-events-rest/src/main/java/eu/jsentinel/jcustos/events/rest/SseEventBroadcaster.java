@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.rest;
 
 /*-
  * #%L
- * jSentinel Events — REST / SSE bridge
+ * jCustos Events — REST / SSE bridge
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,7 +27,7 @@ package eu.jsentinel.jcustos.events.rest;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.audit.LogFieldScrubber;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.events.store.StoredEnvelope;
 import eu.jsentinel.jcustos.events.wire.EnvelopeWireCodec;
 import org.slf4j.Logger;
@@ -53,7 +53,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class SseEventBroadcaster implements HasLogger {
 
   /** WARN is emitted on the 1st drop and every Nth drop thereafter. */
@@ -70,7 +70,7 @@ public final class SseEventBroadcaster implements HasLogger {
 
   /**
    * R07: {@code (Logger)} test/injection seam, mirroring
-   * {@code LoggingAuditSink} in jSentinel-core — lets tests pin the scrubbed
+   * {@code LoggingAuditSink} in jCustos-core — lets tests pin the scrubbed
    * drop-WARN line without a mock framework.
    *
    * @param wireCodec the frame codec

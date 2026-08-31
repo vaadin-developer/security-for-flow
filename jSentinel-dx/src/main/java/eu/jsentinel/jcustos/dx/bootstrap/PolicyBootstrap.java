@@ -24,12 +24,12 @@ import eu.jsentinel.jcustos.policy.spi.ResourceResolverRegistry;
  * <ul>
  *   <li>{@link #register(Policy)} — adds a policy to whatever
  *       registry is active (custom via {@link #registry(PolicyRegistry)}
- *       or the default {@code JSentinelServiceResolver.policyRegistry()}).</li>
+ *       or the default {@code JCustosServiceResolver.policyRegistry()}).</li>
  *   <li>{@link #resourceResolver(ResourceResolver)} — adds a resource
  *       resolver to whatever registry is active.</li>
  *   <li>{@link #registry(PolicyRegistry)} — replaces the active
  *       policy registry via
- *       {@code JSentinelServiceResolver.setPolicyRegistry(...)}.</li>
+ *       {@code JCustosServiceResolver.setPolicyRegistry(...)}.</li>
  *   <li>{@link #resourceRegistry(ResourceResolverRegistry)} — same
  *       for resource resolvers.</li>
  * </ul>

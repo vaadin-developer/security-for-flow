@@ -13,14 +13,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * <p>Since V00.74.20 the persistence does <strong>not</strong> open
  * its own {@code EmbeddedStorageManager} — it shares the app-side
- * manager from the {@code JSentinelStoragePair} that
- * {@link eu.jsentinel.jcustos.demo.skill.vaadin.security.bootstrap.JSentinelStorageProvider}
+ * manager from the {@code JCustosStoragePair} that
+ * {@link eu.jsentinel.jcustos.demo.skill.vaadin.security.bootstrap.JCustosStorageProvider}
  * maintains. The pair's lifecycle owns the shutdown; this class only
  * owns the root structure and the read/write methods.
  *
  * <ul>
  *   <li>Pair-owned shutdown — closing the storage is a single call to
- *       {@code JSentinelStoragePair.close()} (run from one JVM
+ *       {@code JCustosStoragePair.close()} (run from one JVM
  *       shutdown hook). The persistence's {@link #close()} only
  *       flips an internal guard flag.</li>
  *   <li>Single writer per JVM (Eclipse-Store invariant) holds as
@@ -50,7 +50,7 @@ public final class EclipseStoreUserDirectoryPersistence
   /**
    * Wires the persistence around the app-side
    * {@link EmbeddedStorageManager} that
-   * {@code JSentinelStorageProvider.app()} returns. The manager must
+   * {@code JCustosStorageProvider.app()} returns. The manager must
    * already have been started by the pair factory; this constructor
    * does <strong>not</strong> open or shut it down.
    */
@@ -85,7 +85,7 @@ public final class EclipseStoreUserDirectoryPersistence
 
   /**
    * Marks this persistence as closed. The manager itself is NOT shut
-   * down here — the {@code JSentinelStoragePair} owns the storage
+   * down here — the {@code JCustosStoragePair} owns the storage
    * lifecycle.
    */
   @Override

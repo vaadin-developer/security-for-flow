@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.session;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 /**
  * Strongly-typed identifier of an authenticated session.
@@ -29,7 +29,7 @@ import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
  *
  * @param value non-blank session identifier
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record SessionId(String value) {
 
   /**

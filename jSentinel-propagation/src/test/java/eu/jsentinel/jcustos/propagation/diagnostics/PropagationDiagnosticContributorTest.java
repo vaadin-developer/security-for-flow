@@ -10,7 +10,7 @@
  */
 package eu.jsentinel.jcustos.propagation.diagnostics;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.credential.propagation.InMemoryTokenCredentialStore;
 import eu.jsentinel.jcustos.credential.propagation.TokenCredential;
 import eu.jsentinel.jcustos.credential.propagation.TokenCredentialStore;
@@ -40,7 +40,7 @@ class PropagationDiagnosticContributorTest {
       new PropagationDiagnosticContributor();
 
   @BeforeEach @AfterEach
-  void resetResolver() { JSentinelServiceResolver.resetAll(); }
+  void resetResolver() { JCustosServiceResolver.resetAll(); }
 
   @Test
   @DisplayName("id() returns \"propagation\"")
@@ -61,7 +61,7 @@ class PropagationDiagnosticContributorTest {
   @Test
   @DisplayName("ThreadSafe store registered → no store-not-thread-safe warning")
   void threadSafeStoreSilent() {
-    JSentinelServiceResolver.setTokenCredentialStore(new ThreadSafeStub());
+    JCustosServiceResolver.setTokenCredentialStore(new ThreadSafeStub());
     RecordingBuilder builder = new RecordingBuilder();
     contributor.contribute(builder);
     assertFalse(builder.warnings.stream()
@@ -74,7 +74,7 @@ class PropagationDiagnosticContributorTest {
   @Test
   @DisplayName("Non-thread-safe store → propagation/store-not-thread-safe")
   void nonThreadSafeStoreWarns() {
-    JSentinelServiceResolver.setTokenCredentialStore(new InMemoryTokenCredentialStore());
+    JCustosServiceResolver.setTokenCredentialStore(new InMemoryTokenCredentialStore());
     RecordingBuilder builder = new RecordingBuilder();
     contributor.contribute(builder);
     assertTrue(builder.warnings.stream()

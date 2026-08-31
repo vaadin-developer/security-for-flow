@@ -2,7 +2,7 @@ package eu.jsentinel.jcustos.demo.skill.rest.security.bootstrap;
 
 import eu.jsentinel.jcustos.dx.bootstrap.AuditBootstrap;
 import eu.jsentinel.jcustos.dx.bootstrap.SessionBootstrap;
-import eu.jsentinel.jcustos.persistence.eclipsestore.EclipseStoreJSentinelStorage;
+import eu.jsentinel.jcustos.persistence.eclipsestore.EclipseStoreJCustosStorage;
 
 /**
  * Persistence-layer extension. Contributes Eclipse-Store-backed
@@ -22,10 +22,10 @@ import eu.jsentinel.jcustos.persistence.eclipsestore.EclipseStoreJSentinelStorag
  */
 public final class PersistenceBootstrapExtension implements BootstrapExtension {
 
-  private static final EclipseStoreJSentinelStorage STORAGE;
+  private static final EclipseStoreJCustosStorage STORAGE;
 
   static {
-    STORAGE = JSentinelStorageProvider.storage();
+    STORAGE = JCustosStorageProvider.storage();
     BootstrapWiring.instance();
   }
 

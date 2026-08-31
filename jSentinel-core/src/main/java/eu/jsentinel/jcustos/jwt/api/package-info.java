@@ -1,10 +1,10 @@
 /*-
  * #%L
- * jSentinel Core
+ * jCustos Core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -32,7 +32,7 @@
  * {@link eu.jsentinel.jcustos.jwt.api.JwtValidator},
  * {@link eu.jsentinel.jcustos.jwt.api.JwksClient} and
  * {@link eu.jsentinel.jcustos.jwt.api.JwtValidatorFactory} lives in the
- * opt-in {@code jSentinel-jwt} module.
+ * opt-in {@code jCustos-jwt} module.
  *
  * <p>Validation is {@code Result}-based ({@code Result<ValidatedJwt,
  * JwtValidationError>}): expected failures travel in the return value, not as

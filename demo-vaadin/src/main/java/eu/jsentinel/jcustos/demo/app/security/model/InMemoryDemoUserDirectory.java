@@ -18,10 +18,10 @@ package eu.jsentinel.jcustos.demo.app.security.model;
 
 import eu.jsentinel.jcustos.audit.RoleAssigned;
 import eu.jsentinel.jcustos.audit.RoleRevoked;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.audit.UserCreated;
 import eu.jsentinel.jcustos.audit.UserDeleted;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authentication.PasswordHasher;
 import eu.jsentinel.jcustos.demo.app.security.roles.AuthorizationRole;
 
@@ -51,7 +51,7 @@ public final class InMemoryDemoUserDirectory implements DemoUserDirectory {
   private final Map<Long, MyUser> byId = new ConcurrentHashMap<>();
 
   public InMemoryDemoUserDirectory() {
-    this(JSentinelServiceResolver.passwordHashingService());
+    this(JCustosServiceResolver.passwordHashingService());
   }
 
   public InMemoryDemoUserDirectory(PasswordHasher hasher) {
@@ -193,7 +193,7 @@ public final class InMemoryDemoUserDirectory implements DemoUserDirectory {
   }
 
   private static void audit(eu.jsentinel.jcustos.audit.AuditEvent event) {
-    JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
+    JCustosAuditService sink = JCustosServiceResolver.securityAuditService();
     try {
       sink.publish(event);
     } catch (RuntimeException ignored) {

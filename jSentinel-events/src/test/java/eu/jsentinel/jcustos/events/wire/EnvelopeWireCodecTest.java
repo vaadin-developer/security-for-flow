@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.wire;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,7 +25,7 @@ package eu.jsentinel.jcustos.events.wire;
  * #L%
  */
 
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -44,16 +44,16 @@ class EnvelopeWireCodecTest {
   @Test
   @DisplayName("encode -> decode round-trips a signed envelope by value")
   void roundTrip() {
-    SignedJSentinelEventEnvelope env = new WireFixtures().signedEnvelope();
+    SignedJCustosEventEnvelope env = new WireFixtures().signedEnvelope();
     String json = codec.encode(env);
-    SignedJSentinelEventEnvelope decoded = codec.decode(json).getOrThrow();
+    SignedJCustosEventEnvelope decoded = codec.decode(json).getOrThrow();
     assertEquals(env, decoded);
   }
 
   @Test
   @DisplayName("the wire form is a JSON object carrying the envelope id and a numeric sequence")
   void wireShape() {
-    SignedJSentinelEventEnvelope env = new WireFixtures().signedEnvelope();
+    SignedJCustosEventEnvelope env = new WireFixtures().signedEnvelope();
     String json = codec.encode(env);
     assertTrue(json.startsWith("{") && json.endsWith("}"));
     assertTrue(json.contains("\"envelopeId\":\"" + env.envelopeId().value() + "\""));
@@ -88,7 +88,7 @@ class EnvelopeWireCodecTest {
   @Test
   @DisplayName("encodeMetadata omits canonicalPayload and signature but keeps the payload hash")
   void metadataOmitsPayloadAndSignature() {
-    SignedJSentinelEventEnvelope env = new WireFixtures().signedEnvelope();
+    SignedJCustosEventEnvelope env = new WireFixtures().signedEnvelope();
     String json = codec.encodeMetadata(env);
     assertFalse(json.contains("\"canonicalPayload\":"),
         "metadata projection must not carry the payload field");
@@ -103,7 +103,7 @@ class EnvelopeWireCodecTest {
   @Test
   @DisplayName("encodeMetadata carries the same metadata field values as encode")
   void metadataMatchesFullForm() {
-    SignedJSentinelEventEnvelope env = new WireFixtures().signedEnvelope();
+    SignedJCustosEventEnvelope env = new WireFixtures().signedEnvelope();
     String metadata = codec.encodeMetadata(env);
     assertTrue(metadata.startsWith("{") && metadata.endsWith("}"));
     assertTrue(metadata.contains("\"envelopeId\":\"" + env.envelopeId().value() + "\""));
@@ -120,7 +120,7 @@ class EnvelopeWireCodecTest {
   @Test
   @DisplayName("the metadata projection is one-way: it does not decode back into an envelope")
   void metadataIsNotDecodable() {
-    SignedJSentinelEventEnvelope env = new WireFixtures().signedEnvelope();
+    SignedJCustosEventEnvelope env = new WireFixtures().signedEnvelope();
     assertTrue(codec.decode(codec.encodeMetadata(env)).isFailure());
   }
 }

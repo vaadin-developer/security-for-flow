@@ -22,7 +22,7 @@ import java.util.Optional;
 
 /**
  * Maps OIDC claims to a {@link TenantId} (V00.78). Because the stable
- * {@link eu.jsentinel.jcustos.authorization.api.JSentinelSubject} carries no
+ * {@link eu.jsentinel.jcustos.authorization.api.JCustosSubject} carries no
  * tenant field, tenant assignment is a dedicated concern: the default returns
  * empty; multi-tenant applications derive the tenant from an IdP claim
  * (organization, realm, …).

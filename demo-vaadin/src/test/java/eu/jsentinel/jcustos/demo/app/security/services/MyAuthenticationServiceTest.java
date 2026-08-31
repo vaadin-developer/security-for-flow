@@ -19,8 +19,8 @@ package eu.jsentinel.jcustos.demo.app.security.services;
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
 import eu.jsentinel.jcustos.audit.LoginSucceeded;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptContext;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptDecision;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptPolicy;
@@ -55,9 +55,9 @@ class MyAuthenticationServiceTest {
 
   @BeforeEach
   void wire() {
-    JSentinelServiceResolver.resetAll();
-    JSentinelServiceResolver.setJSentinelAuditService(audit);
-    JSentinelServiceResolver.setLoginAttemptPolicy(policy);
+    JCustosServiceResolver.resetAll();
+    JCustosServiceResolver.setJCustosAuditService(audit);
+    JCustosServiceResolver.setLoginAttemptPolicy(policy);
     DemoUserDirectoryProvider.reset();
     DemoUserDirectoryProvider.directory().addUser("admin", "admin",
         new MyUser(1L, "Admin",
@@ -68,7 +68,7 @@ class MyAuthenticationServiceTest {
 
   @AfterEach
   void reset() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
   }
 
@@ -130,7 +130,7 @@ class MyAuthenticationServiceTest {
   @DisplayName("Audit-sink RuntimeException is swallowed — login still returns true")
   void auditFailureDoesNotBlockLogin() {
     policy.next = new LoginAttemptDecision.Allowed();
-    JSentinelServiceResolver.setJSentinelAuditService(new JSentinelAuditService() {
+    JCustosServiceResolver.setJCustosAuditService(new JCustosAuditService() {
       @Override public void publish(AuditEvent event) { throw new RuntimeException("boom"); }
       @Override public List<AuditEvent> query(AuditQuery q) { return List.of(); }
     });

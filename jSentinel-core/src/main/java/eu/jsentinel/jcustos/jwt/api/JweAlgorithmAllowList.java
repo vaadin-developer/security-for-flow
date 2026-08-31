@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.jwt.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Objects;
 import java.util.Set;
@@ -29,7 +29,7 @@ import java.util.Set;
  *
  * @since 00.79.20
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record JweAlgorithmAllowList(Set<String> keyManagement, Set<String> contentEncryption) {
 
   public JweAlgorithmAllowList {

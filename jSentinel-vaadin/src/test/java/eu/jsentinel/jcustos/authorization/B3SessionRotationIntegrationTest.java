@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.authorization;
 
 import eu.jsentinel.jcustos.audit.SessionInvalidated;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.session.SessionContext;
 import eu.jsentinel.jcustos.session.SessionDecision;
 import eu.jsentinel.jcustos.session.SessionMetadata;
@@ -77,15 +77,15 @@ class B3SessionRotationIntegrationTest extends BrowserlessTest {
 
   @BeforeEach
   void wire() {
-    JSentinelServiceResolver.resetAll();
-    JSentinelServiceResolver.setJSentinelAuditService(audit);
-    JSentinelServiceResolver.setSessionPolicy(new RotatingPolicy(capturedContext, "B3-Test-Rotation"));
+    JCustosServiceResolver.resetAll();
+    JCustosServiceResolver.setJCustosAuditService(audit);
+    JCustosServiceResolver.setSessionPolicy(new RotatingPolicy(capturedContext, "B3-Test-Rotation"));
     B3FixtureLoginView.lastNavigateToAppCalled = false;
   }
 
   @AfterEach
   void cleanUp() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   @Test
@@ -144,7 +144,7 @@ class B3SessionRotationIntegrationTest extends BrowserlessTest {
     // invalidation — the behaviour of the resolver default, NoopSessionPolicy.
     // Before JS-SEC-003 this left the pre-auth session id intact: a fixation
     // hole on the canonical login path.
-    JSentinelServiceResolver.setSessionPolicy(new NonRotatingPolicy(capturedContext));
+    JCustosServiceResolver.setSessionPolicy(new NonRotatingPolicy(capturedContext));
 
     navigate(B3FixtureLoginView.class);
     VaadinSession beforeSession = VaadinSession.getCurrent();

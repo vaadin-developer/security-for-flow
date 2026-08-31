@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authorization.api.roles;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -30,7 +30,7 @@ import static java.util.Objects.requireNonNull;
  * {@code compute} calls so add / revoke / set don't race against
  * each other.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class InMemoryRoleAssignmentStore implements RoleAssignmentStore {
 
   private final ConcurrentHashMap<RoleAssignmentKey, Set<RoleName>> assignments =

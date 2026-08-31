@@ -17,8 +17,8 @@
 package eu.jsentinel.jcustos.rest;
 
 import eu.jsentinel.jcustos.authorization.annotations.RequiresPolicy;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleName;
 import eu.jsentinel.jcustos.policy.api.Policy;
 import eu.jsentinel.jcustos.policy.api.PolicyDecision;
@@ -53,7 +53,7 @@ class RestPolicyIntegrationTest {
 
   @BeforeEach
   void setUp() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     registry = new InMemoryPolicyRegistry();
     registry.register(Policy.named("test.policy")
         .allowIf(SubjectPredicates.hasRole("ADMIN"))
@@ -62,12 +62,12 @@ class RestPolicyIntegrationTest {
     registry.register(Policy.named("test.step-up")
         .stepUpRequiredIf(c -> true, PolicyDecision.StepUpMethod.MFA, "needs mfa")
         .build());
-    JSentinelServiceResolver.setPolicyRegistry(registry);
+    JCustosServiceResolver.setPolicyRegistry(registry);
   }
 
   @AfterEach
   void tearDown() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   @Test
@@ -133,7 +133,7 @@ class RestPolicyIntegrationTest {
   @Test
   @DisplayName("missing policy registration is forbidden (no throw)")
   void missingPolicyRegistrationForbidden() throws NoSuchMethodException {
-    JSentinelServiceResolver.setPolicyRegistry(new InMemoryPolicyRegistry());
+    JCustosServiceResolver.setPolicyRegistry(new InMemoryPolicyRegistry());
     RecordingResponse response = new RecordingResponse();
     AtomicBoolean executed = new AtomicBoolean();
     RestAuthorizationFilter filter = new RestAuthorizationFilter(
@@ -184,8 +184,8 @@ class RestPolicyIntegrationTest {
         "DELETE", "/api/documents/42", Map.of(), Map.of());
   }
 
-  private static JSentinelSubject subject(Set<RoleName> roles) {
-    return new JSentinelSubject("u1", "User", roles, Set.of());
+  private static JCustosSubject subject(Set<RoleName> roles) {
+    return new JCustosSubject("u1", "User", roles, Set.of());
   }
 
   static final class HandlerFixture {

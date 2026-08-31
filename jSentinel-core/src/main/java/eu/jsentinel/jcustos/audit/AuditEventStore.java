@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.audit;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 
 import java.time.Instant;
@@ -39,7 +39,7 @@ import java.util.List;
  * and {@code query} calls happen on every request that produces an
  * audit event.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface AuditEventStore {
 
   /**

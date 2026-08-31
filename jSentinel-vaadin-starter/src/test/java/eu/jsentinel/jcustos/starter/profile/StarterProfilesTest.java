@@ -10,7 +10,7 @@
  */
 package eu.jsentinel.jcustos.starter.profile;
 
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapMode;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapMode;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,29 +20,29 @@ class StarterProfilesTest {
 
   @Test
   void developmentDefaultsModeIsDevelopment() {
-    assertEquals(JSentinelBootstrapMode.DEVELOPMENT,
-        VaadinJSentinelStarter.developmentDefaults().preferredMode());
+    assertEquals(JCustosBootstrapMode.DEVELOPMENT,
+        VaadinJCustosStarter.developmentDefaults().preferredMode());
   }
 
   @Test
   void productionDefaultsModeIsProduction() {
-    assertEquals(JSentinelBootstrapMode.PRODUCTION,
-        VaadinJSentinelStarter.productionDefaults().preferredMode());
+    assertEquals(JCustosBootstrapMode.PRODUCTION,
+        VaadinJCustosStarter.productionDefaults().preferredMode());
   }
 
   @Test
   void strictDefaultsModeIsStrict() {
-    assertEquals(JSentinelBootstrapMode.STRICT,
-        VaadinJSentinelStarter.strictDefaults().preferredMode());
+    assertEquals(JCustosBootstrapMode.STRICT,
+        VaadinJCustosStarter.strictDefaults().preferredMode());
   }
 
   @Test
   void factoryReturnsSingletonInstances() {
-    assertSame(VaadinJSentinelStarter.developmentDefaults(),
-        VaadinJSentinelStarter.developmentDefaults());
-    assertSame(VaadinJSentinelStarter.productionDefaults(),
-        VaadinJSentinelStarter.productionDefaults());
-    assertSame(VaadinJSentinelStarter.strictDefaults(),
-        VaadinJSentinelStarter.strictDefaults());
+    assertSame(VaadinJCustosStarter.developmentDefaults(),
+        VaadinJCustosStarter.developmentDefaults());
+    assertSame(VaadinJCustosStarter.productionDefaults(),
+        VaadinJCustosStarter.productionDefaults());
+    assertSame(VaadinJCustosStarter.strictDefaults(),
+        VaadinJCustosStarter.strictDefaults());
   }
 }

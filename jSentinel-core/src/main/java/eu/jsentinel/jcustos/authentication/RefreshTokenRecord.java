@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authentication;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.logout.SubjectId;
 
@@ -54,7 +54,7 @@ import static java.util.Objects.requireNonNull;
  *                        the first rotation
  * @param revokedAt       revocation instant, empty until revoked
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record RefreshTokenRecord(
     String tokenHash,
     TenantId tenant,

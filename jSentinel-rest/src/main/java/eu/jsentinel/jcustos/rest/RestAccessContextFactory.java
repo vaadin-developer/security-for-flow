@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.rest;
 
 import eu.jsentinel.jcustos.audit.LogFieldScrubber;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 
 import java.util.LinkedHashMap;
@@ -40,7 +40,7 @@ public final class RestAccessContextFactory {
    */
   public AccessContext create(
       RestRequest request,
-      Optional<JSentinelSubject> subject,
+      Optional<JCustosSubject> subject,
       String operation,
       Map<String, Object> attributes) {
     Map<String, Object> contextAttributes = new LinkedHashMap<>(

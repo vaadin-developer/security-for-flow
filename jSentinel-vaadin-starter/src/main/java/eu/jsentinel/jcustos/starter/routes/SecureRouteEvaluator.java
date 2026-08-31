@@ -12,8 +12,8 @@ package eu.jsentinel.jcustos.starter.routes;
 
 import eu.jsentinel.jcustos.authorization.api.AuthorizationDecision;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationEvaluator;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.permissions.HasPermissions;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.authorization.api.roles.HasRoles;
@@ -42,7 +42,7 @@ public final class SecureRouteEvaluator implements AuthorizationEvaluator<Secure
 
   @Override
   public AuthorizationDecision evaluate(AccessContext context, SecureRoute annotation) {
-    Optional<JSentinelSubject> maybeSubject = context.subject();
+    Optional<JCustosSubject> maybeSubject = context.subject();
     if (maybeSubject.isEmpty()) {
       // R035: fail closed. A @SecureRoute always requires authentication —
       // even a constraint-less one means "any authenticated subject", never
@@ -68,9 +68,9 @@ public final class SecureRouteEvaluator implements AuthorizationEvaluator<Secure
   }
 
   private static AuthorizationDecision evaluatePolicy(AccessContext context,
-                                                      JSentinelSubject subject,
+                                                      JCustosSubject subject,
                                                       String policyName) {
-    PolicyRegistry registry = JSentinelServiceResolver.policyRegistry();
+    PolicyRegistry registry = JCustosServiceResolver.policyRegistry();
     Optional<Policy> known = registry.find(policyName);
     if (known.isEmpty()) {
       return new AuthorizationDecision.Forbidden(
@@ -102,7 +102,7 @@ public final class SecureRouteEvaluator implements AuthorizationEvaluator<Secure
   }
 
   // Roles: any-of
-  private static AuthorizationDecision evaluateRoles(JSentinelSubject subject, String[] roles) {
+  private static AuthorizationDecision evaluateRoles(JCustosSubject subject, String[] roles) {
     Set<RoleName> subjectRoles = subject instanceof HasRoles hr
         ? copy(hr.roleNames()) : Collections.emptySet();
     boolean any = Arrays.stream(roles).anyMatch(r -> subjectRoles.contains(new RoleName(r)));
@@ -113,7 +113,7 @@ public final class SecureRouteEvaluator implements AuthorizationEvaluator<Secure
   }
 
   // Permissions: all-of
-  private static AuthorizationDecision evaluatePermissions(JSentinelSubject subject, String[] perms) {
+  private static AuthorizationDecision evaluatePermissions(JCustosSubject subject, String[] perms) {
     Set<PermissionName> subjectPerms = subject instanceof HasPermissions hp
         ? copy(hp.permissionNames()) : Collections.emptySet();
     boolean missing = Arrays.stream(perms).anyMatch(p -> !subjectPerms.contains(new PermissionName(p)));

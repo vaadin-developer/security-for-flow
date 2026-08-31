@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * <p>Runs in its own {@link EmbeddedStorageManager} under
  * {@code ./data/jsentinel-rest-persistence/users} — <strong>independent of the
- * jSentinel-framework storage</strong>. Consequence:
+ * jCustos-framework storage</strong>. Consequence:
  *
  * <ul>
  *   <li>Corrupting the framework storage doesn't take the app users

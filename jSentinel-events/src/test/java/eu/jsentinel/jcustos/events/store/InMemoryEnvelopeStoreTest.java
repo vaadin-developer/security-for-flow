@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.store;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -53,12 +53,12 @@ class InMemoryEnvelopeStoreTest {
     for (char c = 'a'; c <= 'e'; c++) {
       store.append(StoreFixtures.envelope(String.valueOf(c)));
     }
-    List<StoredEnvelope> firstPage = store.findAfter(JSentinelEventCursor.start(), 2);
+    List<StoredEnvelope> firstPage = store.findAfter(JCustosEventCursor.start(), 2);
     assertEquals(2, firstPage.size());
     assertEquals(EventEnvelopeId.of("a"), firstPage.get(0).envelope().envelopeId());
     assertEquals(EventEnvelopeId.of("b"), firstPage.get(1).envelope().envelopeId());
 
-    JSentinelEventCursor resume = firstPage.get(1).cursor();
+    JCustosEventCursor resume = firstPage.get(1).cursor();
     List<StoredEnvelope> secondPage = store.findAfter(resume, 10);
     assertEquals(3, secondPage.size());
     assertEquals(EventEnvelopeId.of("c"), secondPage.get(0).envelope().envelopeId());

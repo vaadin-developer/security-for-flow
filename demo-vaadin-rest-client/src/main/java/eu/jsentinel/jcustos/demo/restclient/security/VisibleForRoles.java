@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.demo.restclient.security;
 
-import eu.jsentinel.jcustos.authorization.annotations.JSentinelAnnotation;
+import eu.jsentinel.jcustos.authorization.annotations.JCustosAnnotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -32,7 +32,7 @@ import static java.lang.annotation.ElementType.TYPE;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(TYPE)
-@JSentinelAnnotation(ProjectRoleAccessEvaluator.class)
+@JCustosAnnotation(ProjectRoleAccessEvaluator.class)
 public @interface VisibleForRoles {
 
   ProjectRole[] value();

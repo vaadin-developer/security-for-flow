@@ -31,7 +31,7 @@ import eu.jsentinel.jcustos.authorization.api.permissions.HasPermissions;
  *
  * @param <U> the user/subject type
  */
-@ExperimentalJSentinelApi("Permission-based authorization is experimental. "
+@ExperimentalJCustosApi("Permission-based authorization is experimental. "
     + "Use role-based AuthorizationService for stable production use.")
 public interface PermissionAuthorizationService<U> extends AuthorizationService<U> {
 

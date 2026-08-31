@@ -16,14 +16,14 @@
  */
 package eu.jsentinel.jcustos.dx.runtime;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
 /**
- * Structured health classification of a {@link JSentinelRuntime} snapshot —
+ * Structured health classification of a {@link JCustosRuntime} snapshot —
  * the canonical {@code /health}-endpoint body type. Pure function of the
  * runtime warnings list, plus a wall-clock {@code inspectedAt} stamp.
  * <p>
@@ -36,7 +36,7 @@ import java.util.Objects;
  *
  * @since 00.74.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record HealthStatus(
     Health overall,
     List<HealthFinding> findings,

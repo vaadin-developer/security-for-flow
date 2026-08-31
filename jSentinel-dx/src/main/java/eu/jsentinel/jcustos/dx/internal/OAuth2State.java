@@ -12,7 +12,7 @@ import java.util.Set;
 /**
  * Mutable accumulator for the V00.77 {@code .oauth2(...)} sub-builder. Holds the
  * recorded Relying-Party configuration; consumed + validated by
- * {@code AbstractJSentinelBootstrap.applyOAuth2Configuration(...)}. PKCE and
+ * {@code AbstractJCustosBootstrap.applyOAuth2Configuration(...)}. PKCE and
  * refresh-rotation default to {@code true} (the secure defaults).
  */
 public final class OAuth2State {

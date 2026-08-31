@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.dpop;
 
 import com.nimbusds.jose.jwk.JWK;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Map;
 import java.util.Objects;
@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class InMemoryDpopKeyStore implements DpopKeyStore {
 
   private final Map<String, JWK> keys = new ConcurrentHashMap<>();

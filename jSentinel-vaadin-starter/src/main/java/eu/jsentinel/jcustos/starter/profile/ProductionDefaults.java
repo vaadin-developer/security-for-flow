@@ -10,10 +10,10 @@
  */
 package eu.jsentinel.jcustos.starter.profile;
 
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapMode;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapMode;
 
 /** Production profile — mode PRODUCTION; missing SPIs warn but do not throw. */
-public final class ProductionDefaults implements VaadinJSentinelStarter {
+public final class ProductionDefaults implements VaadinJCustosStarter {
 
   static final ProductionDefaults INSTANCE = new ProductionDefaults();
 
@@ -21,7 +21,7 @@ public final class ProductionDefaults implements VaadinJSentinelStarter {
   }
 
   @Override
-  public JSentinelBootstrapMode preferredMode() {
-    return JSentinelBootstrapMode.PRODUCTION;
+  public JCustosBootstrapMode preferredMode() {
+    return JCustosBootstrapMode.PRODUCTION;
   }
 }

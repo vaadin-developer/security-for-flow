@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.oauth2;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.oauth2.internal.OAuth2FormPost;
 
 import java.net.URI;
@@ -44,7 +44,7 @@ import javax.net.ssl.TrustManagerFactory;
  *
  * @since 00.79.20
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class MutualTls {
 
   private MutualTls() {

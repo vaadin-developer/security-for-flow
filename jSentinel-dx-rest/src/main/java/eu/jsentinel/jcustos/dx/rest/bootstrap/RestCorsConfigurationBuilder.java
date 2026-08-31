@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.dx.rest.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,7 +25,7 @@ import java.util.Objects;
 
 /**
  * Fluent sub-builder for {@link RestCorsConfiguration}. Created by
- * {@code RestJSentinelBootstrap.cors(consumer)}; the consumer
+ * {@code RestJCustosBootstrap.cors(consumer)}; the consumer
  * receives the builder and configures origins, methods, headers,
  * exposed headers, credentials, and max-age.
  *
@@ -41,7 +41,7 @@ import java.util.Objects;
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class RestCorsConfigurationBuilder {
 
   private final List<String> allowedOrigins = new ArrayList<>();

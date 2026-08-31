@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * </ul>
  *
  * <p>Read by downstream Vaadin starter / app code at attach time;
- * written by {@code VaadinJSentinelBootstrapImpl} once during
+ * written by {@code VaadinJCustosBootstrapImpl} once during
  * {@code install()}. Single-process holder — a second bootstrap call
  * replaces the previous values (matches the existing
  * {@link SessionManagementContext} pattern).

@@ -18,7 +18,7 @@ package eu.jsentinel.jcustos.identity.vendor.github;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.jwt.api.JoseHeader;
 import eu.jsentinel.jcustos.jwt.api.ValidatedJwt;
 import eu.jsentinel.jcustos.oidc.api.UserInfoResponse;
@@ -48,7 +48,7 @@ class GitHubProfileTest {
   void anchorsSubjectToNumericIdNotLogin() {
     UserInfoResponse userInfo = new UserInfoResponse("12345",
         Map.of("sub", "12345", "login", "octocat", "name", "The Octocat"));
-    JSentinelSubject subject = GitHubProfile.INSTANCE.subjectMapper().orElseThrow()
+    JCustosSubject subject = GitHubProfile.INSTANCE.subjectMapper().orElseThrow()
         .map(placeholderIdToken(), Optional.of(userInfo));
     // the principal keys on the numeric id, NOT the reclaimable login "octocat"
     assertEquals("github#12345", subject.subjectId());
@@ -63,7 +63,7 @@ class GitHubProfileTest {
     // as a JSON number — must still key on the id, not the login.
     UserInfoResponse userInfo = new UserInfoResponse("",
         Map.of("id", 12345, "login", "octocat"));
-    JSentinelSubject subject = GitHubProfile.INSTANCE.subjectMapper().orElseThrow()
+    JCustosSubject subject = GitHubProfile.INSTANCE.subjectMapper().orElseThrow()
         .map(placeholderIdToken(), Optional.of(userInfo));
     assertEquals("github#12345", subject.subjectId());
     assertEquals("octocat", subject.displayName());

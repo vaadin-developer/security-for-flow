@@ -16,9 +16,9 @@
  */
 package eu.jsentinel.jcustos.authentication;
 
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.audit.TokenRotated;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.credential.token.TokenHasher;
 import eu.jsentinel.jcustos.credential.token.TokenHashers;
@@ -71,7 +71,7 @@ import static java.util.Objects.requireNonNull;
  *
  * <p>Bound to one {@link TenantId} at construction.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class TokenService {
 
   /** Default token entropy in bytes (256 bits). */
@@ -79,7 +79,7 @@ public final class TokenService {
 
   private final RefreshTokenStore store;
   private final TokenHasher hasher;
-  private final JSentinelAuditService auditService;
+  private final JCustosAuditService auditService;
   private final TenantId tenant;
   private final Clock clock;
   private final Supplier<String> tokenSource;
@@ -97,7 +97,7 @@ public final class TokenService {
    */
   public TokenService(RefreshTokenStore store,
                       TokenHasher hasher,
-                      JSentinelAuditService auditService) {
+                      JCustosAuditService auditService) {
     this(store, hasher, auditService, TenantId.DEFAULT, Clock.systemUTC(),
         defaultTokenSource(),
         Duration.ofMinutes(15), Duration.ofDays(30));
@@ -119,7 +119,7 @@ public final class TokenService {
    */
   public TokenService(RefreshTokenStore store,
                       TokenHasher hasher,
-                      JSentinelAuditService auditService,
+                      JCustosAuditService auditService,
                       TenantId tenant,
                       Clock clock,
                       Supplier<String> tokenSource,
@@ -147,7 +147,7 @@ public final class TokenService {
   @Deprecated(forRemoval = true)
   public TokenService(RefreshTokenStore store,
                       PasswordHasher hasher,
-                      JSentinelAuditService auditService) {
+                      JCustosAuditService auditService) {
     this(store, TokenHashers.fromPasswordHasher(hasher), auditService);
   }
 
@@ -166,7 +166,7 @@ public final class TokenService {
   @Deprecated(forRemoval = true)
   public TokenService(RefreshTokenStore store,
                       PasswordHasher hasher,
-                      JSentinelAuditService auditService,
+                      JCustosAuditService auditService,
                       TenantId tenant,
                       Clock clock,
                       Supplier<String> tokenSource,

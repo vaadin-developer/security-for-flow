@@ -19,7 +19,7 @@ package eu.jsentinel.jcustos.demo.restclient.security;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationDecision;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationEvaluator;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleMatcher;
-import eu.jsentinel.jcustos.autoservice.api.JSentinelAutoService;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleName;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 
@@ -28,7 +28,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /** Evaluator for the project-specific {@link VisibleForRoles} annotation. */
-@JSentinelAutoService(AuthorizationEvaluator.class)
+@JCustosAutoService(AuthorizationEvaluator.class)
 public final class ProjectRoleAccessEvaluator implements AuthorizationEvaluator<VisibleForRoles> {
 
   @Override

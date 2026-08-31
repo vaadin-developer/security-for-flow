@@ -18,7 +18,7 @@ package eu.jsentinel.jcustos.authentication;
 
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.audit.TokenRotated;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.credential.token.TokenHasher;
@@ -285,7 +285,7 @@ class TokenServiceTest {
   @DisplayName("audit failures are swallowed during rotation")
   void auditFailuresSwallowed() {
     InMemoryRefreshTokenStore store = new InMemoryRefreshTokenStore();
-    JSentinelAuditService throwing = new JSentinelAuditService() {
+    JCustosAuditService throwing = new JCustosAuditService() {
       @Override public void publish(AuditEvent event) { throw new RuntimeException("boom"); }
       @Override public List<AuditEvent> query(AuditQuery query) { return List.of(); }
     };
@@ -346,7 +346,7 @@ class TokenServiceTest {
     assertNotEquals(pair.accessToken(), pair.refreshToken());
   }
 
-  private static final class CollectingAuditService implements JSentinelAuditService {
+  private static final class CollectingAuditService implements JCustosAuditService {
     final List<AuditEvent> published = new ArrayList<>();
     @Override public void publish(AuditEvent event) { published.add(event); }
     @Override public List<AuditEvent> query(AuditQuery query) { return List.copyOf(published); }

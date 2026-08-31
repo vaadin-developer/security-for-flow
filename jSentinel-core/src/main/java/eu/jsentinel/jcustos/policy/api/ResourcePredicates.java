@@ -16,8 +16,8 @@
  */
 package eu.jsentinel.jcustos.policy.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.policy.spi.ResourceResolverRegistry;
 
 import java.util.Map;
@@ -33,7 +33,7 @@ import static java.util.Objects.requireNonNull;
  *
  * <p>The predicates consult the
  * {@link ResourceResolverRegistry} resolved via
- * {@link JSentinelServiceResolver#resourceResolverRegistry()} to turn
+ * {@link JCustosServiceResolver#resourceResolverRegistry()} to turn
  * the reference into a resolved attribute map. None of them throw on
  * missing references, missing resolvers, or unresolvable ids — they
  * return {@code false} so a policy denies gracefully.
@@ -47,7 +47,7 @@ import static java.util.Objects.requireNonNull;
  *   <li>resolve to attributes via the registry.</li>
  * </ul>
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class ResourcePredicates {
 
   private ResourcePredicates() {
@@ -120,7 +120,7 @@ public final class ResourcePredicates {
     if (!expectedType.equals(ref.resourceType())) {
       return Optional.empty();
     }
-    return JSentinelServiceResolver.resourceResolverRegistry()
+    return JCustosServiceResolver.resourceResolverRegistry()
         .resolveAttributes(ref);
   }
 

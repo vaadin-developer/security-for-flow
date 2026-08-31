@@ -40,11 +40,11 @@ class SecuredButtonTest {
   private static final RoleName ADMIN = new RoleName("ADMIN");
   private static final PermissionName DOC_DELETE = new PermissionName("document:delete");
 
-  private static Optional<SecuredVisibility.JSentinelView> view(Set<RoleName> roles,
+  private static Optional<SecuredVisibility.JCustosView> view(Set<RoleName> roles,
                                                                Set<PermissionName> perms) {
     HasRoles r = () -> List.copyOf(roles);
     HasPermissions p = () -> List.copyOf(perms);
-    return Optional.of(new SecuredVisibility.JSentinelView(r, p));
+    return Optional.of(new SecuredVisibility.JCustosView(r, p));
   }
 
   @Test
@@ -83,7 +83,7 @@ class SecuredButtonTest {
   @Test
   @DisplayName("refresh() recomputes from the current security view")
   void refreshRecomputes() {
-    java.util.concurrent.atomic.AtomicReference<Optional<SecuredVisibility.JSentinelView>> ref =
+    java.util.concurrent.atomic.AtomicReference<Optional<SecuredVisibility.JCustosView>> ref =
         new java.util.concurrent.atomic.AtomicReference<>(view(Set.of(), Set.of()));
     SecuredButton btn = new SecuredButton("Delete",
         SecuredVisibility.Requirement.role(ADMIN),

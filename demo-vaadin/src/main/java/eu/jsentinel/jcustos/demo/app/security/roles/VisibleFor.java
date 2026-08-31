@@ -16,13 +16,13 @@
  */
 package eu.jsentinel.jcustos.demo.app.security.roles;
 
-import eu.jsentinel.jcustos.authorization.annotations.JSentinelAnnotation;
+import eu.jsentinel.jcustos.authorization.annotations.JCustosAnnotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @Retention(RetentionPolicy.RUNTIME)
-@JSentinelAnnotation(MyRoleAccessEvaluator.class)
+@JCustosAnnotation(MyRoleAccessEvaluator.class)
 public @interface VisibleFor {
   AuthorizationRole[] value();
 }

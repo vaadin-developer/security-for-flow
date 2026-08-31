@@ -1,12 +1,12 @@
 package eu.jsentinel.jcustos.demo.skill.rest.security.model;
 
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.audit.RoleAssigned;
 import eu.jsentinel.jcustos.audit.RoleRevoked;
 import eu.jsentinel.jcustos.audit.UserCreated;
 import eu.jsentinel.jcustos.audit.UserDeleted;
 import eu.jsentinel.jcustos.authentication.PasswordHasher;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.demo.skill.rest.security.roles.AuthorizationRole;
 
 import java.time.Clock;
@@ -28,7 +28,7 @@ import java.util.stream.Stream;
  * </ul>
  *
  * <p>Passwords are hashed at storage time through
- * {@code JSentinelServiceResolver.passwordHashingService()} — the
+ * {@code JCustosServiceResolver.passwordHashingService()} — the
  * plaintext literals are visible in this file but never make it to
  * the store. <strong>Demo-only seeding strategy. Migrate to the
  * V00.72 InitialAdminBootstrapService (token flow) before any
@@ -41,7 +41,7 @@ public final class InMemoryUserDirectory implements UserDirectory {
   private final Map<Long, User> byId = new ConcurrentHashMap<>();
 
   public InMemoryUserDirectory() {
-    this(JSentinelServiceResolver.passwordHashingService());
+    this(JCustosServiceResolver.passwordHashingService());
   }
 
   public InMemoryUserDirectory(PasswordHasher hasher) {
@@ -182,7 +182,7 @@ public final class InMemoryUserDirectory implements UserDirectory {
 
   private static void audit(eu.jsentinel.jcustos.audit.AuditEvent event) {
     try {
-      JSentinelAuditService sink = JSentinelServiceResolver.securityAuditService();
+      JCustosAuditService sink = JCustosServiceResolver.securityAuditService();
       sink.publish(event);
     } catch (RuntimeException ignored) {
       // audit must never block user-management calls

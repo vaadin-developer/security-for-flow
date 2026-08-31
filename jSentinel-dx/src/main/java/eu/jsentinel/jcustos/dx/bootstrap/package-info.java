@@ -2,7 +2,7 @@
  * Common fluent-bootstrap contracts of the V00.72 developer-experience layer.
  * <p>
  * All public types in this package are
- * {@link eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi experimental}
+ * {@link eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi experimental}
  * until V00.73.
  *
  * @since 00.72.00

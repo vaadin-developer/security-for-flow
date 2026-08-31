@@ -21,8 +21,8 @@ import eu.jsentinel.jcustos.audit.AuditEventStore;
 import eu.jsentinel.jcustos.audit.AuditQuery;
 import eu.jsentinel.jcustos.audit.InMemoryAuditEventStore;
 import eu.jsentinel.jcustos.audit.LoginSucceeded;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,13 +40,13 @@ class DemoCompositeAuditServiceTest {
 
   @AfterEach
   void tearDown() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   @Test
   @DisplayName("SPI resolves the demo composite service (not the framework default)")
   void spiResolvesDemoService() {
-    JSentinelAuditService service = JSentinelServiceResolver.securityAuditService();
+    JCustosAuditService service = JCustosServiceResolver.securityAuditService();
     assertInstanceOf(DemoCompositeAuditService.class, service,
         "demo-vaadin must publish DemoCompositeAuditService via META-INF/services");
   }

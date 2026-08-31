@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.api;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,10 +25,10 @@ package eu.jsentinel.jcustos.events.api;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 /**
- * Typed kind of a {@link JSentinelEvent}, e.g. {@code "LoginSucceeded"}.
+ * Typed kind of a {@link JCustosEvent}, e.g. {@code "LoginSucceeded"}.
  *
  * <p>The {@code EventType} is part of the signed envelope metadata
  * (Konzept §326) and is consulted by the {@code ProducerPolicy} to decide
@@ -39,7 +39,7 @@ import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
  * @param value non-blank type identifier
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record EventType(String value) {
 
   public EventType {

@@ -45,15 +45,15 @@ class EclipseStoreRoleAssignmentRestartTest {
   @Test
   @DisplayName("a second assigned role survives a close/reopen")
   void assignedRolesSurviveRestart() {
-    try (EclipseStoreJSentinelStorage storage =
-             EclipseStoreJSentinelStorage.openAt(tempDir)) {
+    try (EclipseStoreJCustosStorage storage =
+             EclipseStoreJCustosStorage.openAt(tempDir)) {
       RoleAssignmentStore store = storage.roleAssignmentStore();
       store.assignRole(ALICE, ADMIN);
       store.assignRole(ALICE, EDITOR); // mutates the already-persisted set
       assertEquals(Set.of(ADMIN, EDITOR), store.findRoles(ALICE));
     }
-    try (EclipseStoreJSentinelStorage reopened =
-             EclipseStoreJSentinelStorage.openAt(tempDir)) {
+    try (EclipseStoreJCustosStorage reopened =
+             EclipseStoreJCustosStorage.openAt(tempDir)) {
       assertEquals(Set.of(ADMIN, EDITOR),
           reopened.roleAssignmentStore().findRoles(ALICE),
           "both assigned roles must survive a restart");
@@ -63,16 +63,16 @@ class EclipseStoreRoleAssignmentRestartTest {
   @Test
   @DisplayName("an in-place revoke survives a close/reopen")
   void revokedRoleSurvivesRestart() {
-    try (EclipseStoreJSentinelStorage storage =
-             EclipseStoreJSentinelStorage.openAt(tempDir)) {
+    try (EclipseStoreJCustosStorage storage =
+             EclipseStoreJCustosStorage.openAt(tempDir)) {
       RoleAssignmentStore store = storage.roleAssignmentStore();
       store.assignRole(ALICE, ADMIN);
       store.assignRole(ALICE, EDITOR);
       assertTrue(store.revokeRole(ALICE, EDITOR)); // in-place remove, ADMIN stays
       assertEquals(Set.of(ADMIN), store.findRoles(ALICE));
     }
-    try (EclipseStoreJSentinelStorage reopened =
-             EclipseStoreJSentinelStorage.openAt(tempDir)) {
+    try (EclipseStoreJCustosStorage reopened =
+             EclipseStoreJCustosStorage.openAt(tempDir)) {
       assertEquals(Set.of(ADMIN),
           reopened.roleAssignmentStore().findRoles(ALICE),
           "the revoke must survive a restart — EDITOR gone, ADMIN kept");

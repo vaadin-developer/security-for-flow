@@ -1,7 +1,7 @@
 package eu.jsentinel.jcustos.demo.rest.server;
 
 import com.svenruppert.dependencies.core.net.HttpStatus;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.bootstrap.BootstrapConfiguration;
 import eu.jsentinel.jcustos.demo.rest.shared.DemoEndpoints;
 import org.junit.jupiter.api.AfterEach;
@@ -32,7 +32,7 @@ class JwtDemoRouteTest {
   void start() throws Exception {
     stub = new JwtIssuerStub();
     // wire the stub's validator the way a .jwt(...) bootstrap would install it
-    JSentinelServiceResolver.setJwtValidator(stub.validator(NOW));
+    JCustosServiceResolver.setJwtValidator(stub.validator(NOW));
     server = DemoRestServer.start(0, BootstrapConfiguration.disabled());
     base = "http://127.0.0.1:" + server.port();
   }
@@ -40,7 +40,7 @@ class JwtDemoRouteTest {
   @AfterEach
   void stop() {
     server.stop();
-    JSentinelServiceResolver.setJwtValidator(null);
+    JCustosServiceResolver.setJwtValidator(null);
   }
 
   private HttpResponse<String> postJwtDemo(String bearer) throws Exception {

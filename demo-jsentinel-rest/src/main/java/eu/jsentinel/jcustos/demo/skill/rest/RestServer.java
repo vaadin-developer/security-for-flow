@@ -2,8 +2,8 @@ package eu.jsentinel.jcustos.demo.skill.rest;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.dx.rest.bootstrap.RestSecurity;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapMode;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelRuntime;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapMode;
+import eu.jsentinel.jcustos.dx.runtime.JCustosRuntime;
 import com.sun.net.httpserver.HttpServer;
 import eu.jsentinel.jcustos.demo.skill.rest.security.bootstrap.BootstrapBuilder;
 import eu.jsentinel.jcustos.demo.skill.rest.handlers.AuditHandler;
@@ -37,9 +37,9 @@ public final class RestServer implements HasLogger {
   public static RestServer start(int port) throws IOException {
     MyRestSubjectResolver resolver = new MyRestSubjectResolver();
 
-    JSentinelRuntime runtime = BootstrapBuilder.apply(
+    JCustosRuntime runtime = BootstrapBuilder.apply(
         RestSecurity.bootstrap()
-            .mode(JSentinelBootstrapMode.DEVELOPMENT)
+            .mode(JCustosBootstrapMode.DEVELOPMENT)
             .subjectResolver(resolver)
     ).install();
     System.out.println(runtime.log());

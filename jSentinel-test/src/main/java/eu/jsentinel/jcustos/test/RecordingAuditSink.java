@@ -18,7 +18,7 @@ package eu.jsentinel.jcustos.test;
 
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,7 +30,7 @@ import java.util.List;
  * {@link #all(Class)} to assert on specific event types without
  * casting.
  */
-public final class RecordingAuditSink implements JSentinelAuditService {
+public final class RecordingAuditSink implements JCustosAuditService {
 
   private final List<AuditEvent> events = new ArrayList<>();
 

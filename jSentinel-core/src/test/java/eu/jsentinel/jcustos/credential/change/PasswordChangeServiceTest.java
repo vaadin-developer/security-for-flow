@@ -24,7 +24,7 @@ package eu.jsentinel.jcustos.credential.change;
 
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.credential.input.PasswordInputPolicy;
 import eu.jsentinel.jcustos.credential.input.PasswordInputValidator;
 import eu.jsentinel.jcustos.credential.input.PasswordInputViolation;
@@ -60,7 +60,7 @@ class PasswordChangeServiceTest {
   private static final Instant T0 = Instant.parse("2026-06-01T12:00:00Z");
   private static final Clock FIXED = Clock.fixed(T0, ZoneOffset.UTC);
 
-  private static final class RecordingAuditService implements JSentinelAuditService {
+  private static final class RecordingAuditService implements JCustosAuditService {
     final List<AuditEvent> events = new ArrayList<>();
     @Override public void publish(AuditEvent event) { events.add(event); }
     @Override public List<AuditEvent> query(AuditQuery q) { return List.copyOf(events); }

@@ -3,7 +3,7 @@ package eu.jsentinel.jcustos.jwt.api;
 import java.util.Optional;
 
 /**
- * The JWS signature algorithms jSentinel validates in V00.76 — asymmetric only.
+ * The JWS signature algorithms jCustos validates in V00.76 — asymmetric only.
  *
  * <p>HMAC ({@code HS256/384/512}) is deliberately absent: a JWKS endpoint yields
  * {@link java.security.PublicKey}s, and symmetric secrets do not come from a

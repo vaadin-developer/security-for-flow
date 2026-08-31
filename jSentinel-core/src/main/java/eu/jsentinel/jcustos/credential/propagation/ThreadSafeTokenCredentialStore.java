@@ -10,7 +10,7 @@
  */
 package eu.jsentinel.jcustos.credential.propagation;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 /**
  * Marker for {@link TokenCredentialStore} implementations that are safe
@@ -27,6 +27,6 @@ import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface ThreadSafeTokenCredentialStore extends TokenCredentialStore {
 }

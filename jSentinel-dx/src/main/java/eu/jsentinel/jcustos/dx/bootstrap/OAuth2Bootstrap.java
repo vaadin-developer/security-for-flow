@@ -9,11 +9,11 @@ import java.time.Duration;
 
 /**
  * V00.77 declarative OAuth2 Relying-Party sub-builder, exposed via
- * {@code .oauth2(...)} on {@link CommonJSentinelBootstrap}; all three adapter
+ * {@code .oauth2(...)} on {@link CommonJCustosBootstrap}; all three adapter
  * facades inherit it (adapter symmetry — Vaadin uses the redirect/callback flow,
  * REST the callback handler, Standalone the device grant). The DX layer only
  * records + validates the configuration (Konzept §11); the actual HTTP clients
- * are assembled in the {@code jSentinel-oauth2-*} adapter modules, so this layer
+ * are assembled in the {@code jCustos-oauth2-*} adapter modules, so this layer
  * stays free of any JOSE / HTTP-client compile dependency.
  *
  * <p>STRICT mode raises for {@code oauth2/missing-client-id},

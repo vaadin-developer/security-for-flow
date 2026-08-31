@@ -10,7 +10,7 @@
  */
 package eu.jsentinel.jcustos.credential.propagation;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Optional;
 
@@ -22,12 +22,12 @@ import java.util.Optional;
  *
  * <p>Adapter-specific defaults ship in each adapter module:
  * <ul>
- *   <li>{@code VaadinSessionTokenCredentialStore} ({@code jSentinel-vaadin})
+ *   <li>{@code VaadinSessionTokenCredentialStore} ({@code jCustos-vaadin})
  *       — backed by {@code VaadinSession}.</li>
- *   <li>{@code ThreadLocalTokenCredentialStore} ({@code jSentinel-rest})
+ *   <li>{@code ThreadLocalTokenCredentialStore} ({@code jCustos-rest})
  *       — backed by a per-request {@code ThreadLocal}, scoped by
  *       {@code RestTokenCredentialFilter}.</li>
- *   <li>{@code ThreadLocalTokenCredentialStore} ({@code jSentinel-standalone})
+ *   <li>{@code ThreadLocalTokenCredentialStore} ({@code jCustos-standalone})
  *       — backed by a per-thread {@code ThreadLocal}, scoped by
  *       {@code StandaloneLoginFlow}.</li>
  * </ul>
@@ -43,7 +43,7 @@ import java.util.Optional;
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi("V00.74 token propagation; stable promotion staged for V00.76")
+@ExperimentalJCustosApi("V00.74 token propagation; stable promotion staged for V00.76")
 public interface TokenCredentialStore {
 
   /**

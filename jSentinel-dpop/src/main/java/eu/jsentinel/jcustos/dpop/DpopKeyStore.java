@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.dpop;
 
 import com.nimbusds.jose.jwk.JWK;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Optional;
 
@@ -29,7 +29,7 @@ import java.util.Optional;
  *
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public interface DpopKeyStore {
 
   /** The signing key bound to {@code targetOrigin} (e.g. {@code https://api.example.com}). */

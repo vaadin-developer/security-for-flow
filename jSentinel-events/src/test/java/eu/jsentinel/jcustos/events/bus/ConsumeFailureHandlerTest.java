@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.bus;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -29,10 +29,10 @@ import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventEnvelopeId;
 import eu.jsentinel.jcustos.events.api.EventProducerId;
 import eu.jsentinel.jcustos.events.api.EventSequence;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.events.store.InMemoryDeadLetterStore;
-import eu.jsentinel.jcustos.events.store.JSentinelEventDeadLetter;
-import eu.jsentinel.jcustos.events.store.JSentinelEventDeadLetterStore;
+import eu.jsentinel.jcustos.events.store.JCustosEventDeadLetter;
+import eu.jsentinel.jcustos.events.store.JCustosEventDeadLetterStore;
 import eu.jsentinel.jcustos.events.store.RejectionReason;
 import eu.jsentinel.jcustos.events.types.DeadLetteredEvent;
 import eu.jsentinel.jcustos.events.types.EventBusSelfObservabilityEvent;
@@ -54,7 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("ConsumeFailureHandler — event + dead letter + operator log, total")
 class ConsumeFailureHandlerTest {
 
-  private final SignedJSentinelEventEnvelope envelope = ConsumeFailureFixtures.envelope();
+  private final SignedJCustosEventEnvelope envelope = ConsumeFailureFixtures.envelope();
   private final List<EventBusSelfObservabilityEvent> events = new ArrayList<>();
   private final EventBusObservabilityPublisher recording = events::add;
 
@@ -65,7 +65,7 @@ class ConsumeFailureHandlerTest {
         ConsumeFailurePolicy.strict(), null, recording, () -> ConsumeFailureFixtures.AT);
 
     ConsumeFailureAction action = handler.handle(envelope,
-        new JSentinelEventVerificationResult.InvalidSignature("bad signature"));
+        new JCustosEventVerificationResult.InvalidSignature("bad signature"));
 
     assertEquals(ConsumeFailureAction.REJECT, action);
     assertEquals(1, events.size(), "exactly ONE event per failure — no double publish");
@@ -79,7 +79,7 @@ class ConsumeFailureHandlerTest {
         ConsumeFailurePolicy.strict(), null, recording, () -> ConsumeFailureFixtures.AT);
 
     handler.handle(envelope,
-        new JSentinelEventVerificationResult.ReplayDetected(envelope.envelopeId()));
+        new JCustosEventVerificationResult.ReplayDetected(envelope.envelopeId()));
 
     assertEquals(1, events.size());
     assertInstanceOf(ReplayDetectedEvent.class, events.get(0));
@@ -94,7 +94,7 @@ class ConsumeFailureHandlerTest {
         () -> ConsumeFailureFixtures.AT);
 
     ConsumeFailureAction action = handler.handle(envelope,
-        new JSentinelEventVerificationResult.SequenceViolation(TenantId.DEFAULT,
+        new JCustosEventVerificationResult.SequenceViolation(TenantId.DEFAULT,
             EventProducerId.of("rest-service-primary"),
             EventSequence.of(2), EventSequence.of(5)));
 
@@ -102,7 +102,7 @@ class ConsumeFailureHandlerTest {
     assertEquals(2, events.size(), "the specific event plus the dead-letter event");
     assertInstanceOf(SequenceViolationEvent.class, events.get(0));
     assertInstanceOf(DeadLetteredEvent.class, events.get(1));
-    List<JSentinelEventDeadLetter> open = store.findOpen(10);
+    List<JCustosEventDeadLetter> open = store.findOpen(10);
     assertEquals(1, open.size());
     assertEquals(RejectionReason.SEQUENCE_VIOLATION, open.get(0).reason());
   }
@@ -122,14 +122,14 @@ class ConsumeFailureHandlerTest {
     EventBusObservabilityPublisher throwing = event -> {
       throw new IllegalStateException("observability down");
     };
-    JSentinelEventDeadLetterStore throwingStore = new JSentinelEventDeadLetterStore() {
+    JCustosEventDeadLetterStore throwingStore = new JCustosEventDeadLetterStore() {
       @Override
-      public void store(JSentinelEventDeadLetter deadLetter) {
+      public void store(JCustosEventDeadLetter deadLetter) {
         throw new IllegalStateException("store down");
       }
 
       @Override
-      public List<JSentinelEventDeadLetter> findOpen(int maxCount) {
+      public List<JCustosEventDeadLetter> findOpen(int maxCount) {
         return List.of();
       }
 
@@ -144,10 +144,10 @@ class ConsumeFailureHandlerTest {
         () -> ConsumeFailureFixtures.AT);
 
     assertDoesNotThrow(() -> handler.handle(envelope,
-        new JSentinelEventVerificationResult.SequenceViolation(TenantId.DEFAULT,
+        new JCustosEventVerificationResult.SequenceViolation(TenantId.DEFAULT,
             EventProducerId.of("rest-service-primary"),
             EventSequence.of(2), EventSequence.of(5))));
     assertDoesNotThrow(() -> handler.handle(envelope,
-        new JSentinelEventVerificationResult.UnknownKey(envelope.keyId())));
+        new JCustosEventVerificationResult.UnknownKey(envelope.keyId())));
   }
 }

@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.policy.impl;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.policy.api.ResourceRef;
 import eu.jsentinel.jcustos.policy.spi.ResourceResolver;
 import eu.jsentinel.jcustos.policy.spi.ResourceResolverRegistry;
@@ -35,11 +35,11 @@ import static java.util.Objects.requireNonNull;
  * the previous entry.
  *
  * <p>This is the default implementation returned by
- * {@code JSentinelServiceResolver.resourceResolverRegistry()} when no
+ * {@code JCustosServiceResolver.resourceResolverRegistry()} when no
  * SPI override is registered. Applications register their domain
  * resolvers into the cached instance at startup.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class InMemoryResourceResolverRegistry implements ResourceResolverRegistry {
 
   private final ConcurrentMap<String, ResourceResolver<?>> resolvers = new ConcurrentHashMap<>();

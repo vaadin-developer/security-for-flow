@@ -23,7 +23,7 @@ import java.util.Map;
 
 /**
  * A minimal, strict, dependency-free JSON parser (V00.78) for OIDC discovery +
- * UserInfo responses — the {@code jSentinel-identity-oidc} module bans Jackson /
+ * UserInfo responses — the {@code jCustos-identity-oidc} module bans Jackson /
  * Gson / org.json, so it parses in-tree. Produces {@link Map} / {@link List} /
  * {@link String} / {@link Long} / {@link Double} / {@link Boolean} / {@code null}.
  * Nesting is depth-capped (defence against stack-exhausting input); the HTTP layer

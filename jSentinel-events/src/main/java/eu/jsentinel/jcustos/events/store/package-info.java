@@ -1,10 +1,10 @@
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,16 +25,16 @@
 
 /**
  * V00.75 envelope + dead-letter stores (Konzept §701-§751): the {@link
- * eu.jsentinel.jcustos.events.store.JSentinelEventEnvelopeStore} (append /
+ * eu.jsentinel.jcustos.events.store.JCustosEventEnvelopeStore} (append /
  * findAfter / findByEnvelopeId / count) with its {@link
- * eu.jsentinel.jcustos.events.store.JSentinelEventCursor} and {@link
+ * eu.jsentinel.jcustos.events.store.JCustosEventCursor} and {@link
  * eu.jsentinel.jcustos.events.store.StoredEnvelope}, and the {@link
- * eu.jsentinel.jcustos.events.store.JSentinelEventDeadLetterStore} with
- * its {@link eu.jsentinel.jcustos.events.store.JSentinelEventDeadLetter}
+ * eu.jsentinel.jcustos.events.store.JCustosEventDeadLetterStore} with
+ * its {@link eu.jsentinel.jcustos.events.store.JCustosEventDeadLetter}
  * record and {@link
  * eu.jsentinel.jcustos.events.store.RejectionReason}. In-memory defaults
  * ship here; Eclipse-Store-backed variants ship in
- * {@code jSentinel-events-persistence-eclipsestore}.
+ * {@code jCustos-events-persistence-eclipsestore}.
  *
  * @since 00.75.00
  */

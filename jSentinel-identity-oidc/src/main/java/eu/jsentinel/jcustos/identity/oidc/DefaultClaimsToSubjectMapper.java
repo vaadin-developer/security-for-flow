@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.identity.oidc;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.oidc.api.ClaimsToPermissionsMapper;
 import eu.jsentinel.jcustos.oidc.api.ClaimsToRolesMapper;
 import eu.jsentinel.jcustos.oidc.api.ClaimsToSubjectMapper;
@@ -28,7 +28,7 @@ import java.util.Optional;
 
 /**
  * The spec-clean default {@link ClaimsToSubjectMapper} (V00.78). Builds the
- * 4-field stable {@link JSentinelSubject}: an issuer-prefixed subject id
+ * 4-field stable {@link JCustosSubject}: an issuer-prefixed subject id
  * ({@code iss + "#" + sub} — defeats cross-IdP subject collisions), a display name
  * from the standard claims ({@code name} → {@code preferred_username} →
  * {@code email} → {@code sub}), and roles / permissions from the injected
@@ -62,7 +62,7 @@ public final class DefaultClaimsToSubjectMapper implements ClaimsToSubjectMapper
   }
 
   @Override
-  public JSentinelSubject map(ValidatedIdToken idToken, Optional<UserInfoResponse> userInfo) {
+  public JCustosSubject map(ValidatedIdToken idToken, Optional<UserInfoResponse> userInfo) {
     Objects.requireNonNull(idToken, "idToken");
     Objects.requireNonNull(userInfo, "userInfo");
     // R-EXIT-2 / OIDC Core §5.3.2: a UserInfo response MUST be for the same subject
@@ -73,7 +73,7 @@ public final class DefaultClaimsToSubjectMapper implements ClaimsToSubjectMapper
             "oidc/userinfo-sub-mismatch: UserInfo sub does not match the ID token sub");
       }
     });
-    return new JSentinelSubject(
+    return new JCustosSubject(
         buildSubjectId(idToken),
         displayName(idToken, userInfo),
         rolesMapper.mapRoles(idToken, userInfo),

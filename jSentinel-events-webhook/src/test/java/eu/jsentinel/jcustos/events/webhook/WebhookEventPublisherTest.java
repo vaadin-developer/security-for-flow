@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.webhook;
 
 /*-
  * #%L
- * jSentinel Events — Webhook exporter
+ * jCustos Events — Webhook exporter
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,7 +27,7 @@ package eu.jsentinel.jcustos.events.webhook;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpServer;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.events.testkit.TestkitEnvelopes;
 import eu.jsentinel.jcustos.events.wire.EnvelopeWireCodec;
 import org.junit.jupiter.api.AfterEach;
@@ -102,13 +102,13 @@ class WebhookEventPublisherTest {
   @DisplayName("round-trip: the body is the wire form, routing + auth headers are set")
   void roundTripDeliversWireFormAndHeaders() {
     publisher = publisher(config(8, 3, () -> Optional.of("token-123")), null);
-    SignedJSentinelEventEnvelope envelope = TestkitEnvelopes.envelope("env-rt");
+    SignedJCustosEventEnvelope envelope = TestkitEnvelopes.envelope("env-rt");
 
     publisher.onEnvelope(envelope);
 
     await(() -> publisher.deliveredCount() == 1, "delivery");
     ReceivedRequest request = received.poll();
-    SignedJSentinelEventEnvelope decoded = new EnvelopeWireCodec()
+    SignedJCustosEventEnvelope decoded = new EnvelopeWireCodec()
         .decode(new String(request.body(), java.nio.charset.StandardCharsets.UTF_8))
         .getOrThrow();
     assertEquals(envelope, decoded,

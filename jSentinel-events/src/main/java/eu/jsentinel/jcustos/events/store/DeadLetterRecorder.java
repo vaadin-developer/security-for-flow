@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.store;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -26,11 +26,11 @@ package eu.jsentinel.jcustos.events.store;
  */
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.events.api.EventMetadata;
-import eu.jsentinel.jcustos.events.api.JSentinelEvent;
-import eu.jsentinel.jcustos.events.api.JSentinelEventSeverity;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.events.api.JCustosEvent;
+import eu.jsentinel.jcustos.events.api.JCustosEventSeverity;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.events.bus.EventBusObservabilityPublisher;
 import eu.jsentinel.jcustos.events.types.DeadLetteredEvent;
 
@@ -40,7 +40,7 @@ import java.util.function.Supplier;
 
 /**
  * The canonical dead-letter emission point: stores a rejected envelope as a
- * {@link JSentinelEventDeadLetter} and emits the matching
+ * {@link JCustosEventDeadLetter} and emits the matching
  * {@link DeadLetteredEvent} through the observability publisher.
  *
  * <p>Store and emission are strictly ordered: the store write comes first and
@@ -51,18 +51,18 @@ import java.util.function.Supplier;
  *
  * <p>Routing policy — <em>which</em> rejections are dead-lettered at all — is
  * deliberately out of scope here; callers decide what to route into
- * {@link #record(SignedJSentinelEventEnvelope, RejectionReason)}.
+ * {@link #record(SignedJCustosEventEnvelope, RejectionReason)}.
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class DeadLetterRecorder implements HasLogger {
 
-  private final JSentinelEventDeadLetterStore store;
+  private final JCustosEventDeadLetterStore store;
   private final EventBusObservabilityPublisher observability;
   private final Supplier<Instant> clock;
 
-  public DeadLetterRecorder(JSentinelEventDeadLetterStore store,
+  public DeadLetterRecorder(JCustosEventDeadLetterStore store,
       EventBusObservabilityPublisher observability, Supplier<Instant> clock) {
     this.store = Objects.requireNonNull(store, "store");
     this.observability = Objects.requireNonNull(observability, "observability");
@@ -80,16 +80,16 @@ public final class DeadLetterRecorder implements HasLogger {
    * @throws RuntimeException whatever the store throws — a failed store write
    *     is never swallowed
    */
-  public JSentinelEventDeadLetter record(SignedJSentinelEventEnvelope envelope,
+  public JCustosEventDeadLetter record(SignedJCustosEventEnvelope envelope,
       RejectionReason reason) {
     Objects.requireNonNull(envelope, "envelope");
     Objects.requireNonNull(reason, "reason");
     Instant now = clock.get();
-    JSentinelEventDeadLetter deadLetter = JSentinelEventDeadLetter.of(envelope, reason, now);
+    JCustosEventDeadLetter deadLetter = JCustosEventDeadLetter.of(envelope, reason, now);
     store.store(deadLetter);
     try {
       EventMetadata metadata = EventMetadata.create(envelope.tenantId(),
-          JSentinelEvent.SYSTEM_SUBJECT, now, JSentinelEventSeverity.ERROR);
+          JCustosEvent.SYSTEM_SUBJECT, now, JCustosEventSeverity.ERROR);
       observability.publishObservability(new DeadLetteredEvent(metadata,
           envelope.envelopeId().value(), reason.name()));
     } catch (RuntimeException failure) {

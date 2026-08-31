@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.audit.integrity.testkit;
 
 /*-
  * #%L
- * jSentinel Audit Integrity — contract testkit
+ * jCustos Audit Integrity — contract testkit
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,7 +27,7 @@ package eu.jsentinel.jcustos.audit.integrity.testkit;
 
 import eu.jsentinel.jcustos.audit.integrity.api.AuditChainEntry;
 import eu.jsentinel.jcustos.audit.integrity.api.AuditChainStore;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 @DisplayName("AuditChainStore — contract")
 public interface AuditChainStoreContract {
 

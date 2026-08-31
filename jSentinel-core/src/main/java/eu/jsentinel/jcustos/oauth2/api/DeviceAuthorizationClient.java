@@ -24,7 +24,7 @@ import java.util.Set;
  * The device-authorization endpoint (RFC 8628 §3.1, V00.77) — the first leg of
  * the device grant: the RP asks for a {@code device_code} + {@code user_code},
  * then polls the token endpoint while the human authorizes on a second device.
- * JOSE-free; the HTTP implementation lives in {@code jSentinel-oauth2}.
+ * JOSE-free; the HTTP implementation lives in {@code jCustos-oauth2}.
  *
  * @since 00.77.00
  */

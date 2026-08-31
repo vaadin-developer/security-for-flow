@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.integration;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,13 +27,13 @@ package eu.jsentinel.jcustos.events.integration;
 
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.audit.LoginFailed;
 import eu.jsentinel.jcustos.audit.LoginSucceeded;
 import eu.jsentinel.jcustos.audit.AccessDenied;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventMetadata;
-import eu.jsentinel.jcustos.events.api.JSentinelEventSeverity;
+import eu.jsentinel.jcustos.events.api.JCustosEventSeverity;
 import eu.jsentinel.jcustos.events.types.BusStartedEvent;
 import eu.jsentinel.jcustos.events.types.LoginFailedEvent;
 import eu.jsentinel.jcustos.events.types.LoginSucceededEvent;
@@ -57,7 +57,7 @@ class AuditEventBusListenerTest {
   private static final Instant AT = Instant.parse("2026-06-24T10:00:00Z");
 
   /** A real recording audit service — not a mock. */
-  private static final class RecordingAuditService implements JSentinelAuditService {
+  private static final class RecordingAuditService implements JCustosAuditService {
     final List<AuditEvent> events = new ArrayList<>();
 
     @Override
@@ -73,14 +73,14 @@ class AuditEventBusListenerTest {
 
   private static EventMetadata meta() {
     return EventMetadata.create(TenantId.DEFAULT, SubjectId.of("alice"), AT,
-        JSentinelEventSeverity.INFO);
+        JCustosEventSeverity.INFO);
   }
 
   @Test
   @DisplayName("LoginSucceededEvent maps to an audit LoginSucceeded")
   void mapsLoginSucceeded() {
     RecordingAuditService audit = new RecordingAuditService();
-    new AuditEventBusListener(audit).onJSentinelEvent(new LoginSucceededEvent(meta(), "password"));
+    new AuditEventBusListener(audit).onJCustosEvent(new LoginSucceededEvent(meta(), "password"));
     assertEquals(1, audit.events.size());
     LoginSucceeded recorded = assertInstanceOf(LoginSucceeded.class, audit.events.get(0));
     assertEquals("alice", recorded.username());
@@ -92,7 +92,7 @@ class AuditEventBusListenerTest {
   void mapsLoginFailed() {
     RecordingAuditService audit = new RecordingAuditService();
     new AuditEventBusListener(audit)
-        .onJSentinelEvent(new LoginFailedEvent(meta(), "bad-credentials"));
+        .onJCustosEvent(new LoginFailedEvent(meta(), "bad-credentials"));
     LoginFailed recorded = assertInstanceOf(LoginFailed.class, audit.events.get(0));
     assertEquals("bad-credentials", recorded.reason());
   }
@@ -102,7 +102,7 @@ class AuditEventBusListenerTest {
   void mapsPermissionDenied() {
     RecordingAuditService audit = new RecordingAuditService();
     new AuditEventBusListener(audit)
-        .onJSentinelEvent(new PermissionDeniedEvent(meta(), "doc:delete"));
+        .onJCustosEvent(new PermissionDeniedEvent(meta(), "doc:delete"));
     AccessDenied recorded = assertInstanceOf(AccessDenied.class, audit.events.get(0));
     assertEquals("doc:delete", recorded.route());
   }
@@ -111,14 +111,14 @@ class AuditEventBusListenerTest {
   @DisplayName("an event without an audit counterpart is skipped")
   void skipsUnmapped() {
     RecordingAuditService audit = new RecordingAuditService();
-    new AuditEventBusListener(audit).onJSentinelEvent(new BusStartedEvent(meta()));
+    new AuditEventBusListener(audit).onJCustosEvent(new BusStartedEvent(meta()));
     assertTrue(audit.events.isEmpty());
   }
 
   @Test
   @DisplayName("a throwing audit sink is isolated, not propagated")
   void sinkFailureIsolated() {
-    JSentinelAuditService throwing = new JSentinelAuditService() {
+    JCustosAuditService throwing = new JCustosAuditService() {
       @Override
       public void publish(AuditEvent event) {
         throw new IllegalStateException("sink down");
@@ -131,6 +131,6 @@ class AuditEventBusListenerTest {
     };
     AuditEventBusListener listener = new AuditEventBusListener(throwing);
     assertDoesNotThrow(() ->
-        listener.onJSentinelEvent(new LoginSucceededEvent(meta(), "password")));
+        listener.onJCustosEvent(new LoginSucceededEvent(meta(), "password")));
   }
 }

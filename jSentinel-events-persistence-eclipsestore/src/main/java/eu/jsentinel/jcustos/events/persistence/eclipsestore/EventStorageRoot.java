@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.persistence.eclipsestore;
 
 /*-
  * #%L
- * jSentinel Events — Eclipse-Store persistence
+ * jCustos Events — Eclipse-Store persistence
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,8 +25,8 @@ package eu.jsentinel.jcustos.events.persistence.eclipsestore;
  * #L%
  */
 
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
-import eu.jsentinel.jcustos.events.store.JSentinelEventDeadLetter;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
+import eu.jsentinel.jcustos.events.store.JCustosEventDeadLetter;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -53,10 +53,10 @@ final class EventStorageRoot {
   final Map<String, Long> sequences = new LinkedHashMap<>();
 
   /** Append-ordered envelope store; index + 1 is the cursor position. */
-  final List<SignedJSentinelEventEnvelope> envelopes = new ArrayList<>();
+  final List<SignedJCustosEventEnvelope> envelopes = new ArrayList<>();
 
   /** dead-letter id -> record, insertion-ordered. */
-  final Map<String, JSentinelEventDeadLetter> deadLetters = new LinkedHashMap<>();
+  final Map<String, JCustosEventDeadLetter> deadLetters = new LinkedHashMap<>();
 
   /** Ids of resolved dead letters. */
   final Set<String> resolvedDeadLetters = new LinkedHashSet<>();

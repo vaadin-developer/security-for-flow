@@ -24,7 +24,7 @@ import java.util.Set;
 
 /**
  * The OAuth2 token endpoint (RFC 6749 §3.2, V00.77) — the RP's lifeline. The
- * JOSE-free contract; the {@code jSentinel-oauth2} HTTP implementation handles
+ * JOSE-free contract; the {@code jCustos-oauth2} HTTP implementation handles
  * client authentication, the form body and response parsing. Every method
  * returns a {@link Result} carrying a {@link TokenResponse} or a non-secret
  * {@link OAuth2Error}.

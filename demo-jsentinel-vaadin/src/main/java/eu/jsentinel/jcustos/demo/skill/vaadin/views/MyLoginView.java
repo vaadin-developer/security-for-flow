@@ -3,11 +3,11 @@ package eu.jsentinel.jcustos.demo.skill.vaadin.views;
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
 import eu.jsentinel.jcustos.authorization.LoginView;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.logout.SubjectId;
-import eu.jsentinel.jcustos.session.JSentinelVersion;
+import eu.jsentinel.jcustos.session.JCustosVersion;
 import eu.jsentinel.jcustos.session.SessionId;
 import eu.jsentinel.jcustos.session.SessionRecord;
 import eu.jsentinel.jcustos.session.SessionStatus;
@@ -40,7 +40,7 @@ public class MyLoginView
   public static final String NAV = "login";
 
   private final AuthenticationService<Credentials, User> authenticationService
-      = JSentinelServiceResolver.authenticationService();
+      = JCustosServiceResolver.authenticationService();
 
   @Override
   public boolean checkCredentials() {
@@ -85,7 +85,7 @@ public class MyLoginView
           SubjectId.of(user.id().toString()),
           TenantId.DEFAULT,
           now, now,
-          JSentinelVersion.INITIAL,
+          JCustosVersion.INITIAL,
           SessionStatus.ACTIVE));
     } catch (RuntimeException ignored) {
       // session bookkeeping must not block login

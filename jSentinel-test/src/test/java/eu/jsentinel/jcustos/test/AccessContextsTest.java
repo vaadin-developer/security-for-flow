@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.test;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 import eu.jsentinel.jcustos.policy.api.ResourceRef;
 import org.junit.jupiter.api.DisplayName;
@@ -42,7 +42,7 @@ class AccessContextsTest {
   @Test
   @DisplayName("withSubject binds the subject")
   void withSubject() {
-    JSentinelSubject subject = JSentinelSubjects.anonymousIdentity("u-1");
+    JCustosSubject subject = JCustosSubjects.anonymousIdentity("u-1");
     AccessContext ctx = AccessContexts.withSubject(subject);
     assertSame(subject, ctx.subject().orElseThrow());
     assertTrue(ctx.attributes().isEmpty());
@@ -51,7 +51,7 @@ class AccessContextsTest {
   @Test
   @DisplayName("withSubjectAndResource stashes the ResourceRef under ATTRIBUTE_KEY")
   void withSubjectAndResource() {
-    JSentinelSubject subject = JSentinelSubjects.anonymousIdentity("u-1");
+    JCustosSubject subject = JCustosSubjects.anonymousIdentity("u-1");
     ResourceRef ref = new ResourceRef("document", "42");
     AccessContext ctx = AccessContexts.withSubjectAndResource(subject, ref);
 

@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authentication;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.logout.SubjectId;
 
@@ -31,7 +31,7 @@ import static java.util.Objects.requireNonNull;
  * {@link ConcurrentHashMap}. Atomic mutations through
  * {@code compute}/{@code computeIfPresent}.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class InMemoryRefreshTokenStore implements RefreshTokenStore {
 
   private final ConcurrentHashMap<String, RefreshTokenRecord> tokens =

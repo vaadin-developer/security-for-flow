@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.siem;
 
 /*-
  * #%L
- * jSentinel Events — SIEM exporter
+ * jCustos Events — SIEM exporter
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,8 +27,8 @@ package eu.jsentinel.jcustos.events.siem;
 
 import com.svenruppert.dependencies.core.logger.HasLogger;
 import eu.jsentinel.jcustos.audit.LogFieldScrubber;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import eu.jsentinel.jcustos.events.publisher.SignedEnvelopePublisher;
 
 import java.io.Flushable;
@@ -52,7 +52,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class SiemEventExporter
     implements SignedEnvelopePublisher, HasLogger, AutoCloseable {
 
@@ -86,7 +86,7 @@ public final class SiemEventExporter
   }
 
   @Override
-  public void onEnvelope(SignedJSentinelEventEnvelope envelope) {
+  public void onEnvelope(SignedJCustosEventEnvelope envelope) {
     if (envelope == null) {
       return;
     }

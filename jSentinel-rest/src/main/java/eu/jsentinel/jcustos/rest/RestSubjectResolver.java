@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.rest;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.session.SessionMetadata;
 
 import java.util.Optional;
@@ -33,7 +33,7 @@ public interface RestSubjectResolver {
    * @param request request
    * @return subject, or empty if no subject is authenticated
    */
-  Optional<JSentinelSubject> resolveSubject(RestRequest request);
+  Optional<JCustosSubject> resolveSubject(RestRequest request);
 
   /**
    * Resolves session metadata for the current request.
@@ -55,12 +55,12 @@ public interface RestSubjectResolver {
 
   /**
    * Resolves the session's security-version snapshot for
-   * {@link RestJSentinelVersionFilter}.
+   * {@link RestJCustosVersionFilter}.
    * <p>
    * The default returns {@link Optional#empty()} so existing
    * implementations keep working — the filter becomes a no-op for
    * them. Override this when your token / session store records
-   * the {@link eu.jsentinel.jcustos.session.JSentinelVersion}
+   * the {@link eu.jsentinel.jcustos.session.JCustosVersion}
    * captured at login time and you want drifted sessions refused
    * with {@code 401 + WWW-Authenticate: SessionStale}.
    *
@@ -68,7 +68,7 @@ public interface RestSubjectResolver {
    * @return security-version context, or empty when the resolver
    *         doesn't track per-session versions
    */
-  default Optional<RestJSentinelVersionContext> resolveJSentinelVersionContext(RestRequest request) {
+  default Optional<RestJCustosVersionContext> resolveJCustosVersionContext(RestRequest request) {
     return Optional.empty();
   }
 }

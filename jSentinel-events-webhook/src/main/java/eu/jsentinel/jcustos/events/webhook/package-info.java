@@ -1,10 +1,10 @@
 /*-
  * #%L
- * jSentinel Events — Webhook exporter
+ * jCustos Events — Webhook exporter
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -27,7 +27,7 @@
  * V00.80.00 (Konzept goal 8) webhook integration for the Security Event Bus:
  * {@link eu.jsentinel.jcustos.events.webhook.WebhookEventPublisher}
  * subscribes to the bus's envelope tap
- * ({@code JSentinelEventBus.subscribeEnvelope}) and POSTs every signed
+ * ({@code JCustosEventBus.subscribeEnvelope}) and POSTs every signed
  * envelope — in the {@code EnvelopeWireCodec} wire form shared with the
  * REST/SSE bridge — to an operator-configured endpoint. The signed envelope
  * IS the authenticity and integrity layer; receivers verify it with the

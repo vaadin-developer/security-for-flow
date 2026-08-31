@@ -16,8 +16,8 @@
  */
 package eu.jsentinel.jcustos.demo.rest.server;
 
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.bruteforce.NoopLoginAttemptPolicy;
 import eu.jsentinel.jcustos.credential.password.PasswordHashingServices;
@@ -29,7 +29,7 @@ import eu.jsentinel.jcustos.ratelimiting.InMemoryRateLimitStore;
 import eu.jsentinel.jcustos.ratelimiting.RateLimitDecision;
 import eu.jsentinel.jcustos.ratelimiting.RateLimitKey;
 import eu.jsentinel.jcustos.ratelimiting.RateLimitPolicy;
-import eu.jsentinel.jcustos.session.InMemoryJSentinelVersionStore;
+import eu.jsentinel.jcustos.session.InMemoryJCustosVersionStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -61,8 +61,8 @@ class DemoLoginRateLimitTest {
 
   @BeforeEach
   void setUp() {
-    JSentinelServiceResolver.resetAll();
-    JSentinelAuditService audit = JSentinelServiceResolver.securityAuditService();
+    JCustosServiceResolver.resetAll();
+    JCustosAuditService audit = JCustosServiceResolver.securityAuditService();
     DemoTokenStore tokens = new DemoTokenStore();
     DemoUserStore users = new DemoUserStore(
         PasswordHashingServices.defaults(), false);
@@ -75,7 +75,7 @@ class DemoLoginRateLimitTest {
     handlers = new DemoHandlers(
         users, tokens, documents, registry, resolver,
         NoopLoginAttemptPolicy.INSTANCE,
-        new InMemoryJSentinelVersionStore(),
+        new InMemoryJCustosVersionStore(),
         null,
         policy);
   }

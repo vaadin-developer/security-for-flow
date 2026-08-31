@@ -38,7 +38,7 @@ import eu.jsentinel.jcustos.audit.StepUpChallenged;
 import eu.jsentinel.jcustos.audit.LogoutPerformed;
 import eu.jsentinel.jcustos.audit.RoleAssigned;
 import eu.jsentinel.jcustos.audit.RoleRevoked;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.audit.SessionCreated;
 import eu.jsentinel.jcustos.audit.SessionExpired;
 import eu.jsentinel.jcustos.audit.SessionInvalidated;
@@ -47,7 +47,7 @@ import eu.jsentinel.jcustos.audit.TokenRotated;
 import eu.jsentinel.jcustos.audit.UserCreated;
 import eu.jsentinel.jcustos.audit.UserDeleted;
 import eu.jsentinel.jcustos.authorization.annotations.RequiresPermission;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -109,7 +109,7 @@ public class AuditView extends Composite<VerticalLayout> {
     root.add(new H1("Security audit log"));
     root.add(new Paragraph(
         "In-memory snapshot from the V00.70 AuditEventStore SPI (this "
-            + "demo wires StoreBackedJSentinelAuditService over an "
+            + "demo wires StoreBackedJCustosAuditService over an "
             + "InMemoryAuditEventStore — production deployments swap in "
             + "a persistent store with retention). Visible to subjects "
             + "with the audit:read permission."));
@@ -154,7 +154,7 @@ public class AuditView extends Composite<VerticalLayout> {
   }
 
   private void refresh() {
-    JSentinelAuditService audit = JSentinelServiceResolver.securityAuditService();
+    JCustosAuditService audit = JCustosServiceResolver.securityAuditService();
     Class<? extends AuditEvent> selectedType = typeFilter.getValue();
     String subject = subjectFilter.getValue() == null ? null : subjectFilter.getValue().trim();
     if (subject != null && subject.isEmpty()) {

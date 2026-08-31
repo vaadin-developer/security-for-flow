@@ -33,7 +33,7 @@ import static java.lang.annotation.ElementType.TYPE;
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({TYPE, METHOD})
-@JSentinelAnnotation(ProtectedByEvaluator.class)
+@JCustosAnnotation(ProtectedByEvaluator.class)
 public @interface ProtectedBy {
 
   /**

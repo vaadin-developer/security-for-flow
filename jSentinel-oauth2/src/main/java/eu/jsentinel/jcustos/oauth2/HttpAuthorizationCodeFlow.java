@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.oauth2;
 
 import com.svenruppert.functional.result.Result;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.oauth2.api.AuthorizationCodeFlow;
 import eu.jsentinel.jcustos.oauth2.api.CallbackResult;
 import eu.jsentinel.jcustos.oauth2.api.OAuth2ClientConfig;
@@ -49,7 +49,7 @@ import java.util.function.Supplier;
  *
  * @since 00.77.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class HttpAuthorizationCodeFlow implements AuthorizationCodeFlow {
 
   private static final SecureRandom RANDOM = new SecureRandom();

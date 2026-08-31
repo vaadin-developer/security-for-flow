@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.rest;
 
 /*-
  * #%L
- * jSentinel Events — REST / SSE bridge
+ * jCustos Events — REST / SSE bridge
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -28,7 +28,7 @@ package eu.jsentinel.jcustos.events.rest;
 import com.svenruppert.dependencies.core.net.HttpStatus;
 import eu.jsentinel.jcustos.events.wire.EnvelopeWireCodec;
 import eu.jsentinel.jcustos.events.bus.ConsumePipeline;
-import eu.jsentinel.jcustos.events.api.SignedJSentinelEventEnvelope;
+import eu.jsentinel.jcustos.events.api.SignedJCustosEventEnvelope;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -48,7 +48,7 @@ class EventPublishServiceTest {
   @DisplayName("a valid envelope yields 202 Accepted")
   void validAccepted() {
     EventsRestFixtures fx = new EventsRestFixtures();
-    SignedJSentinelEventEnvelope env = fx.signedEnvelope();
+    SignedJCustosEventEnvelope env = fx.signedEnvelope();
     EventPublishOutcome outcome = service(fx.newConsumePipeline()).publish(wire.encode(env));
     assertEquals(HttpStatus.ACCEPTED.code(), outcome.statusCode());
     assertEquals(EventPublishBodies.ACCEPTED, outcome.body());
@@ -79,7 +79,7 @@ class EventPublishServiceTest {
   @DisplayName("a replayed envelope yields 409 Conflict")
   void replayConflict() {
     EventsRestFixtures fx = new EventsRestFixtures();
-    SignedJSentinelEventEnvelope env = fx.signedEnvelope();
+    SignedJCustosEventEnvelope env = fx.signedEnvelope();
     ConsumePipeline consume = fx.newConsumePipeline();
     EventPublishService service = service(consume);
     assertEquals(HttpStatus.ACCEPTED.code(), service.publish(wire.encode(env)).statusCode());

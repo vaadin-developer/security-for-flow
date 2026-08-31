@@ -26,7 +26,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.svenruppert.functional.result.Result;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.replay.api.JtiStore;
 
 import java.text.ParseException;
@@ -46,7 +46,7 @@ import java.util.function.Supplier;
  *
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class NimbusDpopProofValidator implements DpopProofValidator {
 
   private final Set<String> allowedAlgorithms;

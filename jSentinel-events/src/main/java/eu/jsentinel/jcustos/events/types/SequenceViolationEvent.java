@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.types;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,16 +25,16 @@ package eu.jsentinel.jcustos.events.types;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.events.api.EventMetadata;
 import eu.jsentinel.jcustos.events.api.EventType;
-import eu.jsentinel.jcustos.events.api.JSentinelEventCategory;
+import eu.jsentinel.jcustos.events.api.JCustosEventCategory;
 
 import java.util.Objects;
 
 /**
  * A per-(tenant, producer) sequence violation was detected (Konzept §291).
- * Short name for the Konzept's {@code JSentinelEventSequenceViolationEvent}.
+ * Short name for the Konzept's {@code JCustosEventSequenceViolationEvent}.
  *
  * @param metadata variable per-instance metadata
  * @param producerId the producer whose sequence was violated
@@ -42,7 +42,7 @@ import java.util.Objects;
  * @param actual the observed sequence value
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record SequenceViolationEvent(
     EventMetadata metadata, String producerId, long expected, long actual)
     implements EventBusSelfObservabilityEvent {
@@ -59,7 +59,7 @@ public record SequenceViolationEvent(
   }
 
   @Override
-  public JSentinelEventCategory category() {
-    return JSentinelEventCategory.INTEGRITY;
+  public JCustosEventCategory category() {
+    return JCustosEventCategory.INTEGRITY;
   }
 }

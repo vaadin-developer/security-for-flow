@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 
 import java.time.Instant;
@@ -48,7 +48,7 @@ import static java.util.Objects.requireNonNull;
  *                       {@code adminCreated} is {@code true}, must
  *                       be empty when it is {@code false}
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record BootstrapState(
     TenantId tenant,
     boolean adminCreated,

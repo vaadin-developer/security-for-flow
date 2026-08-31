@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.policy.api;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -33,7 +33,7 @@ import static java.util.Objects.requireNonNull;
  * {@link PolicyContext#resourceAttributes()}), use
  * {@link #resourceAttributeEquals(String, Object)}.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class ContextPredicates {
 
   private ContextPredicates() {

@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authorization.api;
 
-import eu.jsentinel.jcustos.authorization.annotations.JSentinelAnnotation;
+import eu.jsentinel.jcustos.authorization.annotations.JCustosAnnotation;
 import eu.jsentinel.jcustos.authorization.navigation.AccessContext;
 import eu.jsentinel.jcustos.authorization.navigation.AccessDecision;
 
@@ -26,7 +26,7 @@ import java.lang.annotation.Annotation;
  * Evaluates whether the current subject has access to a route target.
  * <p>
  * Implementations are linked to restriction annotations via
- * {@link JSentinelAnnotation}. The framework calls
+ * {@link JCustosAnnotation}. The framework calls
  * {@link #evaluate(AccessContext, Annotation)} to obtain a
  * Vaadin-free {@link AccessDecision}.
  *
@@ -39,7 +39,7 @@ public interface AccessEvaluator<T extends Annotation> {
    *
    * @param context          the adapter-neutral access context
    * @param annotation       the {@link Annotation} on the route-target that itself is annotated
-   *                         with a {@link JSentinelAnnotation}. This annotation may carry
+   *                         with a {@link JCustosAnnotation}. This annotation may carry
    *                         additional data which can be used to evaluate the access.
    * @return the {@link AccessDecision}
    */

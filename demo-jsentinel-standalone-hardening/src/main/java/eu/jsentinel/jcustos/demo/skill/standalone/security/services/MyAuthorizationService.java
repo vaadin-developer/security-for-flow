@@ -8,7 +8,7 @@ import eu.jsentinel.jcustos.authorization.api.permissions.RolePermissionResolver
 import eu.jsentinel.jcustos.authorization.api.permissions.StaticRolePermissionMapping;
 import eu.jsentinel.jcustos.authorization.api.roles.HasRoles;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleName;
-import eu.jsentinel.jcustos.autoservice.api.JSentinelAutoService;
+import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 import eu.jsentinel.jcustos.demo.skill.standalone.security.model.User;
 import eu.jsentinel.jcustos.demo.skill.standalone.security.roles.AuthorizationRole;
 
@@ -21,7 +21,7 @@ import static eu.jsentinel.jcustos.demo.skill.standalone.security.permissions.Ap
 
 /**
  * Role → permission table. SPI-registered via
- * {@link JSentinelAutoService @JSentinelAutoService}.
+ * {@link JCustosAutoService @JCustosAutoService}.
  *
  * <ul>
  *   <li>ADMIN: every permission</li>
@@ -31,7 +31,7 @@ import static eu.jsentinel.jcustos.demo.skill.standalone.security.permissions.Ap
  * <p>Subject's effective permission set = union of every role's
  * permissions (delegated to {@link RolePermissionResolver}).
  */
-@JSentinelAutoService(AuthorizationService.class)
+@JCustosAutoService(AuthorizationService.class)
 public class MyAuthorizationService
     implements AuthorizationService<User> {
 

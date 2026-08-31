@@ -10,7 +10,7 @@
  */
 package eu.jsentinel.jcustos.credential.propagation.vaadin;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.credential.propagation.TokenCredential;
 import eu.jsentinel.jcustos.credential.propagation.TokenCredentialStore;
 import com.vaadin.flow.server.VaadinSession;
@@ -30,7 +30,7 @@ import java.util.Optional;
  *
  * <p>Registered via {@code META-INF/services/...TokenCredentialStore}
  * — the Vaadin-adapter module does not (yet) wire the
- * {@code jSentinel-autoservice-processor}, so registration is
+ * {@code jCustos-autoservice-processor}, so registration is
  * hand-written next to the existing {@code SubjectStore} entry.
  *
  * <p>Single-thread per UI; not marked
@@ -39,7 +39,7 @@ import java.util.Optional;
  *
  * @since 00.74.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class VaadinSessionTokenCredentialStore implements TokenCredentialStore {
 
   static final String ATTR_KEY =

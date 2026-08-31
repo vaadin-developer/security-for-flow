@@ -19,11 +19,11 @@ package eu.jsentinel.jcustos.standalone;
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
 import eu.jsentinel.jcustos.authorization.annotations.RequiresPermission;
 import eu.jsentinel.jcustos.authorization.annotations.RequiresRole;
-import eu.jsentinel.jcustos.authorization.annotations.JSentinelAnnotation;
+import eu.jsentinel.jcustos.authorization.annotations.JCustosAnnotation;
 import eu.jsentinel.jcustos.authorization.api.AccessDeniedException;
 import eu.jsentinel.jcustos.authorization.api.AccessEvaluator;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.authorization.api.permissions.HasPermissions;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
@@ -59,11 +59,11 @@ class SecuredTest {
 
   @BeforeEach
   void setUp() {
-    JSentinelServiceResolver.resetAll();
-    // V00.75.10 (H5): the resolver's static fields moved into JSentinelContext;
+    JCustosServiceResolver.resetAll();
+    // V00.75.10 (H5): the resolver's static fields moved into JCustosContext;
     // install the stubs through the public setters instead of by reflection.
-    JSentinelServiceResolver.setAuthenticationService(new StubAuth());
-    JSentinelServiceResolver.setAuthorizationService(new StubAuthz());
+    JCustosServiceResolver.setAuthenticationService(new StubAuth());
+    JCustosServiceResolver.setAuthorizationService(new StubAuthz());
     SubjectStores.reset();
     InMemoryStore.clear();
     SubjectStores.setSubjectStore(new InMemoryStore());
@@ -71,7 +71,7 @@ class SecuredTest {
 
   @AfterEach
   void tearDown() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     SubjectStores.reset();
     InMemoryStore.clear();
   }
@@ -386,7 +386,7 @@ class SecuredTest {
   // SecuredProxy.run().
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.METHOD, ElementType.TYPE})
-  @JSentinelAnnotation(StepUpDemandingEvaluator.class)
+  @JCustosAnnotation(StepUpDemandingEvaluator.class)
   public @interface DemandsStepUp { }
 
   public static class StepUpDemandingEvaluator
@@ -412,7 +412,7 @@ class SecuredTest {
   // (the SettableEvaluator returns whatever the test stages in `next`).
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.METHOD, ElementType.TYPE})
-  @JSentinelAnnotation(SettableEvaluator.class)
+  @JCustosAnnotation(SettableEvaluator.class)
   public @interface CustomCheck { }
 
   public static class SettableEvaluator implements AccessEvaluator<CustomCheck> {

@@ -18,7 +18,7 @@ import eu.jsentinel.jcustos.demo.skill.vaadin.security.model.User;
  * including anonymous visitors.
  *
  * <p>No {@code @VisibleFor} and no {@code @RequiresPermission}: the
- * jSentinel scanner finds no restriction annotation, so the
+ * jCustos scanner finds no restriction annotation, so the
  * {@code LoginListener} lets the navigation through without
  * authentication.
  *
@@ -42,11 +42,11 @@ public class PublicHomeView extends Composite<VerticalLayout> {
     content.getThemeList().add("spacing-s");
     content.setAlignItems(FlexComponent.Alignment.START);
 
-    content.add(new H1("jSentinel Vaadin Demo"));
+    content.add(new H1("jCustos Vaadin Demo"));
     content.add(new Paragraph(
         "Welcome. This page is reachable without an account — "
             + "it carries no @VisibleFor / @RequiresPermission, so "
-            + "the jSentinel scanner treats it as unrestricted. "
+            + "the jCustos scanner treats it as unrestricted. "
             + "After signing in, the drawer reveals the dashboard "
             + "and any admin areas your role grants."));
 

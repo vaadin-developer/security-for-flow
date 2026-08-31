@@ -18,7 +18,7 @@ package eu.jsentinel.jcustos.demo.skill.vaadin.security.oidc;
 
 import eu.jsentinel.jcustos.credential.secret.SecretValue;
 import eu.jsentinel.jcustos.dx.bootstrap.OidcBootstrap;
-import eu.jsentinel.jcustos.dx.vaadin.bootstrap.VaadinJSentinelBootstrap;
+import eu.jsentinel.jcustos.dx.vaadin.bootstrap.VaadinJCustosBootstrap;
 import eu.jsentinel.jcustos.dx.vaadin.bootstrap.VaadinSecurity;
 import eu.jsentinel.jcustos.identity.vendor.auth0.Auth0Profile;
 import eu.jsentinel.jcustos.identity.vendor.entra.EntraProfile;
@@ -86,7 +86,7 @@ public final class VendorProfileOidcExample {
    * Builds (but does not {@code install()}) a Vaadin bootstrap with the vendor OIDC
    * profile recorded — so the caller decides when/whether to install against a live IdP.
    */
-  public static VaadinJSentinelBootstrap configure(
+  public static VaadinJCustosBootstrap configure(
       Idp idp, String issuer, String clientId, String clientSecret, URI redirectUri) {
     return VaadinSecurity.bootstrap()
         .oidc(wiring(idp, issuer, clientId, clientSecret, redirectUri));

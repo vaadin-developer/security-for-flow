@@ -16,22 +16,22 @@
  */
 package eu.jsentinel.jcustos.dx.runtime;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Objects;
 
 /**
  * One observation in a {@link HealthStatus} report — typically a
- * {@link JSentinelBootstrapWarning} mapped into the health surface.
+ * {@link JCustosBootstrapWarning} mapped into the health surface.
  * <p>
  * The {@code code} string is the stable diagnostic identifier shared with
- * {@code JSentinelBootstrapWarning#code()} (e.g.
+ * {@code JCustosBootstrapWarning#code()} (e.g.
  * {@code "audit/missing-service"}, {@code "credentials/modern-without-bc"}).
  * Consumers route on the code, not on the human-readable {@code message}.
  *
  * @since 00.74.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public record HealthFinding(Severity severity, String code, String message) {
 
   public HealthFinding {

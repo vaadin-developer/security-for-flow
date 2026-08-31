@@ -18,7 +18,7 @@ package eu.jsentinel.jcustos.session;
 
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.SessionExpired;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.logout.SubjectId;
 
@@ -47,8 +47,8 @@ class SweepingSessionStoreTest {
 
   private static final Instant LOGIN = Instant.parse("2026-08-01T10:00:00Z");
 
-  /** Real recording audit service — core cannot depend on jSentinel-test. */
-  private static final class RecordingAuditService implements JSentinelAuditService {
+  /** Real recording audit service — core cannot depend on jCustos-test. */
+  private static final class RecordingAuditService implements JCustosAuditService {
     final List<AuditEvent> events = new ArrayList<>();
 
     @Override
@@ -64,7 +64,7 @@ class SweepingSessionStoreTest {
 
   private static SessionRecord activeSession(String sid, String subject, Instant at) {
     return new SessionRecord(new SessionId(sid), new SubjectId(subject),
-        TenantId.DEFAULT, at, at, JSentinelVersion.INITIAL, SessionStatus.ACTIVE);
+        TenantId.DEFAULT, at, at, JCustosVersion.INITIAL, SessionStatus.ACTIVE);
   }
 
   private static TimeoutSessionPolicy<Object> policy(Clock clock) {
@@ -216,7 +216,7 @@ class SweepingSessionStoreTest {
     Instant later = LOGIN.plus(Duration.ofDays(1));
     SweepingSessionStore store = new SweepingSessionStore(
         inner, policy(fixed(later)), Duration.ofDays(30), fixed(later),
-        new JSentinelAuditService() {
+        new JCustosAuditService() {
           @Override
           public void publish(AuditEvent event) {
             throw new IllegalStateException("sink down");

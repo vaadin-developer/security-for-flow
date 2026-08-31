@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.audit.integrity.listener;
 
 /*-
  * #%L
- * jSentinel Audit Integrity — tamper-evident audit
+ * jCustos Audit Integrity — tamper-evident audit
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,10 +25,10 @@ package eu.jsentinel.jcustos.audit.integrity.listener;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.api.JSentinelEvent;
-import eu.jsentinel.jcustos.events.api.JSentinelEventCategory;
-import eu.jsentinel.jcustos.events.api.JSentinelEventSeverity;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.api.JCustosEvent;
+import eu.jsentinel.jcustos.events.api.JCustosEventCategory;
+import eu.jsentinel.jcustos.events.api.JCustosEventSeverity;
 
 import java.util.Objects;
 import java.util.Set;
@@ -43,7 +43,7 @@ import java.util.Set;
  *
  * @since 00.80.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 @FunctionalInterface
 public interface AuditRelevancePolicy {
 
@@ -51,7 +51,7 @@ public interface AuditRelevancePolicy {
    * @param event the published event
    * @return {@code true} when the event should be chained
    */
-  boolean isAuditRelevant(JSentinelEvent event);
+  boolean isAuditRelevant(JCustosEvent event);
 
   /** @return a policy chaining every event */
   static AuditRelevancePolicy all() {
@@ -62,7 +62,7 @@ public interface AuditRelevancePolicy {
    * @param minimum the inclusive severity floor
    * @return a policy chaining events at or above {@code minimum}
    */
-  static AuditRelevancePolicy severityAtLeast(JSentinelEventSeverity minimum) {
+  static AuditRelevancePolicy severityAtLeast(JCustosEventSeverity minimum) {
     Objects.requireNonNull(minimum, "minimum");
     return event -> event.severity().compareTo(minimum) >= 0;
   }
@@ -71,22 +71,22 @@ public interface AuditRelevancePolicy {
    * @param categories the chained categories
    * @return a policy chaining events of any of the given categories
    */
-  static AuditRelevancePolicy categories(JSentinelEventCategory... categories) {
-    Set<JSentinelEventCategory> chained = Set.of(categories);
+  static AuditRelevancePolicy categories(JCustosEventCategory... categories) {
+    Set<JCustosEventCategory> chained = Set.of(categories);
     return event -> chained.contains(event.category());
   }
 
   /**
    * @return the documented default: severity at least
-   *     {@link JSentinelEventSeverity#NOTICE}, or any authentication /
+   *     {@link JCustosEventSeverity#NOTICE}, or any authentication /
    *     authorization / admin / integrity event
    */
   static AuditRelevancePolicy auditRelevantDefaults() {
-    return severityAtLeast(JSentinelEventSeverity.NOTICE)
-        .or(categories(JSentinelEventCategory.AUTHENTICATION,
-            JSentinelEventCategory.AUTHORIZATION,
-            JSentinelEventCategory.ADMIN,
-            JSentinelEventCategory.INTEGRITY));
+    return severityAtLeast(JCustosEventSeverity.NOTICE)
+        .or(categories(JCustosEventCategory.AUTHENTICATION,
+            JCustosEventCategory.AUTHORIZATION,
+            JCustosEventCategory.ADMIN,
+            JCustosEventCategory.INTEGRITY));
   }
 
   /**

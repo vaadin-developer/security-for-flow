@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.sequence;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,7 +25,7 @@ package eu.jsentinel.jcustos.events.sequence;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.events.api.EventProducerId;
 import eu.jsentinel.jcustos.events.api.EventSequence;
@@ -36,14 +36,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * In-memory {@link JSentinelEventSequenceStore}. The per-scope counter is held
+ * In-memory {@link JCustosEventSequenceStore}. The per-scope counter is held
  * in a {@link ConcurrentHashMap}; updates are atomic per
  * {@code (tenantId, producerId)} key.
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
-public final class InMemorySequenceStore implements JSentinelEventSequenceStore {
+@ExperimentalJCustosApi
+public final class InMemorySequenceStore implements JCustosEventSequenceStore {
 
   private record Scope(TenantId tenantId, EventProducerId producerId) {
   }

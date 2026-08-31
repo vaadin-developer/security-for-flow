@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.authorization.annotations;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.permissions.RequiresAllPermissionsEvaluator;
 
 import java.lang.annotation.Inherited;
@@ -38,11 +38,11 @@ import static java.lang.annotation.ElementType.TYPE;
  * means "a AND b" or "a OR b". When the rule should be OR, use
  * {@link RequiresAnyPermission} instead.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({TYPE, METHOD})
-@JSentinelAnnotation(RequiresAllPermissionsEvaluator.class)
+@JCustosAnnotation(RequiresAllPermissionsEvaluator.class)
 public @interface RequiresAllPermissions {
 
   /**

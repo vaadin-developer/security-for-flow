@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 
 import java.util.Optional;
@@ -28,7 +28,7 @@ import static java.util.Objects.requireNonNull;
  * In-memory {@link BootstrapStateStore} backed by a
  * {@link ConcurrentHashMap} keyed on {@link TenantId}.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class InMemoryBootstrapStateStore implements BootstrapStateStore {
 
   private final ConcurrentHashMap<TenantId, BootstrapState> states =

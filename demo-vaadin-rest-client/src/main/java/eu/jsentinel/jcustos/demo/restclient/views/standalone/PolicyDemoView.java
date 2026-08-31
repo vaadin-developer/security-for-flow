@@ -20,7 +20,7 @@ import eu.jsentinel.jcustos.authorization.annotations.RequiresPolicy;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleName;
 import eu.jsentinel.jcustos.demo.restclient.backend.RemoteUser;
-import eu.jsentinel.jcustos.demo.restclient.security.ClientJSentinelContext;
+import eu.jsentinel.jcustos.demo.restclient.security.ClientJCustosContext;
 import eu.jsentinel.jcustos.demo.restclient.security.DemoPolicyInitListener;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.Div;
@@ -37,7 +37,7 @@ import com.vaadin.flow.router.Route;
  * <p>The demo policy {@code documents.editor-or-admin} is registered
  * at service init by {@link DemoPolicyInitListener}. The framework's
  * {@code AuthorizationListener} resolves the annotation, looks up the
- * policy through {@code JSentinelServiceResolver.policyRegistry()}, and
+ * policy through {@code JCustosServiceResolver.policyRegistry()}, and
  * reroutes anyone who does not satisfy the rule. Users that reach this
  * view passed the policy.
  */
@@ -80,7 +80,7 @@ public class PolicyDemoView extends Composite<Div> {
   }
 
   private static Paragraph currentUserSummary() {
-    RemoteUser user = ClientJSentinelContext.user().orElse(null);
+    RemoteUser user = ClientJCustosContext.user().orElse(null);
     if (user == null) {
       return new Paragraph(
           "(no cached user) — this should not happen on a protected route.");

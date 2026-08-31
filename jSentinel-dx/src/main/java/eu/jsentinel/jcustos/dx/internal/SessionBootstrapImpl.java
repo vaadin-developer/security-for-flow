@@ -12,7 +12,7 @@ package eu.jsentinel.jcustos.dx.internal;
 
 import eu.jsentinel.jcustos.authorization.api.SubjectIdResolver;
 import eu.jsentinel.jcustos.dx.bootstrap.SessionBootstrap;
-import eu.jsentinel.jcustos.session.JSentinelVersionStore;
+import eu.jsentinel.jcustos.session.JCustosVersionStore;
 import eu.jsentinel.jcustos.session.SessionPolicy;
 import eu.jsentinel.jcustos.session.SessionStore;
 
@@ -23,7 +23,7 @@ import java.util.Objects;
  * Real V00.73 implementation of {@link SessionBootstrap}. Records
  * every selection into the {@link SessionState} held by
  * {@link BootstrapState}; {@code install()} consumes the state and
- * wires the appropriate {@code JSentinelServiceResolver} setters.
+ * wires the appropriate {@code JCustosServiceResolver} setters.
  *
  * <p>{@link #storeBacked(SessionStore)} accepts {@code null} so the
  * install-time validator can emit the stable
@@ -47,7 +47,7 @@ final class SessionBootstrapImpl implements SessionBootstrap {
   }
 
   @Override
-  public SessionBootstrap securityVersion(JSentinelVersionStore store) {
+  public SessionBootstrap securityVersion(JCustosVersionStore store) {
     state.securityVersionStore(Objects.requireNonNull(store, "store"));
     return this;
   }

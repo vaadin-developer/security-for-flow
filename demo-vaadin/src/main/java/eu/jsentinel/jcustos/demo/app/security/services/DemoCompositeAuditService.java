@@ -21,22 +21,22 @@ import eu.jsentinel.jcustos.audit.AuditEventStore;
 import eu.jsentinel.jcustos.audit.AuditQuery;
 import eu.jsentinel.jcustos.audit.InMemoryAuditEventStore;
 import eu.jsentinel.jcustos.audit.LoggingAuditSink;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
-import eu.jsentinel.jcustos.audit.StoreBackedJSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
+import eu.jsentinel.jcustos.audit.StoreBackedJCustosAuditService;
 
 import java.util.List;
 
 /**
- * Demo {@link JSentinelAuditService} that swaps the framework's default
+ * Demo {@link JCustosAuditService} that swaps the framework's default
  * ring-buffer service for the V00.70 Phase-2
- * {@link StoreBackedJSentinelAuditService} so audit events flow through
+ * {@link StoreBackedJCustosAuditService} so audit events flow through
  * the {@link AuditEventStore} SPI — the same path a production
  * deployment with a persistent store (e.g. Eclipse-Store) would take.
  * <p>
  * Composition:
  * <ul>
  *   <li>{@link InMemoryAuditEventStore} — the persistent in-memory
- *       backing store wired into {@link StoreBackedJSentinelAuditService}.</li>
+ *       backing store wired into {@link StoreBackedJCustosAuditService}.</li>
  *   <li>{@link LoggingAuditSink} — a side-channel that mirrors every
  *       event to {@code java.util.logging}, matching the visibility
  *       of the framework default.</li>
@@ -48,11 +48,11 @@ import java.util.List;
  * lifetime. Apps that need bounded retention would instead inject a
  * persistent store with its own {@code purgeOlderThan(...)} schedule.
  *
- * <p>Registered via {@code META-INF/services/eu.jsentinel.jcustos.audit.JSentinelAuditService}.
+ * <p>Registered via {@code META-INF/services/eu.jsentinel.jcustos.audit.JCustosAuditService}.
  */
-public final class DemoCompositeAuditService implements JSentinelAuditService {
+public final class DemoCompositeAuditService implements JCustosAuditService {
 
-  private final StoreBackedJSentinelAuditService persistentDelegate;
+  private final StoreBackedJCustosAuditService persistentDelegate;
   private final LoggingAuditSink loggingSink;
   private final AuditEventStore store;
 
@@ -62,7 +62,7 @@ public final class DemoCompositeAuditService implements JSentinelAuditService {
 
   public DemoCompositeAuditService(AuditEventStore store) {
     this.store = store;
-    this.persistentDelegate = new StoreBackedJSentinelAuditService(store);
+    this.persistentDelegate = new StoreBackedJCustosAuditService(store);
     this.loggingSink = new LoggingAuditSink();
   }
 

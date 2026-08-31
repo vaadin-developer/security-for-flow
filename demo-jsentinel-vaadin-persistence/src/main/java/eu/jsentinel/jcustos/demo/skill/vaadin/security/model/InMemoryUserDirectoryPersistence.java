@@ -13,7 +13,7 @@ import java.util.Map;
  * <pre>
  *   UserDirectoryPersistence persistence = new InMemoryUserDirectoryPersistence();
  *   PersistentUserDirectory directory = new PersistentUserDirectory(
- *       persistence, JSentinelServiceResolver.passwordHashingService());
+ *       persistence, JCustosServiceResolver.passwordHashingService());
  * </pre>
  */
 public final class InMemoryUserDirectoryPersistence implements UserDirectoryPersistence {

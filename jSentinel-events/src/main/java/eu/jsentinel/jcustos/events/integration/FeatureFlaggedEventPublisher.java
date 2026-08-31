@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.events.integration;
 
 /*-
  * #%L
- * jSentinel Events — Security Event Bus core
+ * jCustos Events — Security Event Bus core
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -25,43 +25,43 @@ package eu.jsentinel.jcustos.events.integration;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
-import eu.jsentinel.jcustos.events.api.JSentinelEvent;
-import eu.jsentinel.jcustos.events.bus.JSentinelEventBus;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
+import eu.jsentinel.jcustos.events.api.JCustosEvent;
+import eu.jsentinel.jcustos.events.bus.JCustosEventBus;
 
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
 
 /**
- * Wraps a {@link JSentinelEventBus} and only publishes when bus emission is
+ * Wraps a {@link JCustosEventBus} and only publishes when bus emission is
  * enabled (Konzept §1029, plan P034). This is the building block existing
  * session / token / rate-limit code paths use to emit their events behind the
- * {@link JSentinelEventBusFeatureFlag} without coupling {@code jSentinel-core}'s
+ * {@link JCustosEventBusFeatureFlag} without coupling {@code jCustos-core}'s
  * services to the events module: a host wires the publisher and calls
- * {@link #publishIfEnabled(JSentinelEvent)} where it formerly only audited.
+ * {@link #publishIfEnabled(JCustosEvent)} where it formerly only audited.
  *
  * @since 00.75.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class FeatureFlaggedEventPublisher {
 
-  private final JSentinelEventBus bus;
+  private final JCustosEventBus bus;
   private final BooleanSupplier enabled;
 
   /**
-   * Uses the global {@link JSentinelEventBusFeatureFlag}.
+   * Uses the global {@link JCustosEventBusFeatureFlag}.
    *
    * @param bus the event bus
    */
-  public FeatureFlaggedEventPublisher(JSentinelEventBus bus) {
-    this(bus, JSentinelEventBusFeatureFlag::enabled);
+  public FeatureFlaggedEventPublisher(JCustosEventBus bus) {
+    this(bus, JCustosEventBusFeatureFlag::enabled);
   }
 
   /**
    * @param bus the event bus
    * @param enabled the flag supplier (e.g. for tests or per-deployment config)
    */
-  public FeatureFlaggedEventPublisher(JSentinelEventBus bus, BooleanSupplier enabled) {
+  public FeatureFlaggedEventPublisher(JCustosEventBus bus, BooleanSupplier enabled) {
     this.bus = Objects.requireNonNull(bus, "bus");
     this.enabled = Objects.requireNonNull(enabled, "enabled");
   }
@@ -72,7 +72,7 @@ public final class FeatureFlaggedEventPublisher {
    * @param event the event to publish
    * @return {@code true} if it was published, {@code false} if emission is off
    */
-  public boolean publishIfEnabled(JSentinelEvent event) {
+  public boolean publishIfEnabled(JCustosEvent event) {
     Objects.requireNonNull(event, "event");
     if (!enabled.getAsBoolean()) {
       return false;

@@ -11,7 +11,7 @@
 package eu.jsentinel.jcustos.starter.routes;
 
 import eu.jsentinel.jcustos.authorization.annotations.PublicRoute;
-import eu.jsentinel.jcustos.authorization.impl.JSentinelAnnotationScanner;
+import eu.jsentinel.jcustos.authorization.impl.JCustosAnnotationScanner;
 import eu.jsentinel.jcustos.components.SessionManagementView;
 import eu.jsentinel.jcustos.dx.vaadin.routes.SecureRouteDiscovery;
 import com.vaadin.flow.router.RouteConfiguration;
@@ -38,7 +38,7 @@ import java.util.stream.Stream;
  */
 public final class VaadinRouterSecureRouteDiscovery implements SecureRouteDiscovery {
 
-  private final JSentinelAnnotationScanner scanner = new JSentinelAnnotationScanner();
+  private final JCustosAnnotationScanner scanner = new JCustosAnnotationScanner();
 
   @Override
   public Stream<String> discoverPolicyNames() {
@@ -101,7 +101,7 @@ public final class VaadinRouterSecureRouteDiscovery implements SecureRouteDiscov
 
   /**
    * RF (exit-review, RF02): the deny-by-default diagnostic is about the <em>consumer's</em>
-   * routes. jSentinel ships its own {@code SessionManagementRoute} (a {@link SessionManagementView})
+   * routes. jCustos ships its own {@code SessionManagementRoute} (a {@link SessionManagementView})
    * that carries no consumer annotation and that the consumer cannot annotate — flagging it would
    * break a STRICT boot on a class the consumer does not own. It is therefore excluded here by
    * type, symmetrically with the runtime exemption in {@code AuthorizationListener}.
@@ -112,7 +112,7 @@ public final class VaadinRouterSecureRouteDiscovery implements SecureRouteDiscov
 
   /**
    * RF (exit-review, RF05): a route may legitimately be un-annotated, or it may carry more
-   * than one {@code @JSentinelAnnotation} — which makes {@code scanner.scan} throw. A misconfigured
+   * than one {@code @JCustosAnnotation} — which makes {@code scanner.scan} throw. A misconfigured
    * multi-annotation route is <em>annotated</em> (not a deny-by-default risk) and must not abort
    * discovery, so the scan is guarded per element and such a route is skipped rather than fatal.
    */

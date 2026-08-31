@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.demo.app.browserless;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.SubjectStores;
 import eu.jsentinel.jcustos.demo.app.security.bootstrap.BootstrapWiring;
 import eu.jsentinel.jcustos.demo.app.security.model.DemoUserDirectoryProvider;
@@ -70,7 +70,7 @@ class WorkspacesBrowserlessTest extends BrowserlessTest {
     System.setProperty("security.bootstrap.mode", "DISABLED");
     resetBootstrapWiringSingleton();
 
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
     DemoUserDirectoryProvider.directory().addUser("admin", "admin",
         new MyUser(1L, "Admin",
@@ -88,7 +88,7 @@ class WorkspacesBrowserlessTest extends BrowserlessTest {
 
   @AfterEach
   void tearDown() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
     DemoUserDirectoryProvider.reset();
   }
 

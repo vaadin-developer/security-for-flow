@@ -24,7 +24,7 @@ import java.net.URI;
 /**
  * Fetches OIDC provider metadata from {@code <issuer>/.well-known/openid-configuration}
  * (OIDC Discovery 1.0 / RFC 8414, V00.78). The HTTP implementation
- * ({@code jSentinel-identity-oidc}) caches the result with a TTL and validates that
+ * ({@code jCustos-identity-oidc}) caches the result with a TTL and validates that
  * the returned {@code issuer} matches the requested one. Reuses the OAuth2 transport
  * error type ({@link OAuth2Error}) — JOSE-free contract.
  *

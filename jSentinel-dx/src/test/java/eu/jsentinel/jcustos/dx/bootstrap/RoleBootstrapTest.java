@@ -10,15 +10,15 @@
  */
 package eu.jsentinel.jcustos.dx.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleHierarchy;
 import eu.jsentinel.jcustos.authorization.api.roles.RoleName;
 import eu.jsentinel.jcustos.authorization.api.roles.StaticRoleHierarchy;
-import eu.jsentinel.jcustos.dx.internal.AbstractJSentinelBootstrap;
-import eu.jsentinel.jcustos.dx.runtime.RegisteredJSentinelService;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapMode;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapWarning;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelRuntime;
+import eu.jsentinel.jcustos.dx.internal.AbstractJCustosBootstrap;
+import eu.jsentinel.jcustos.dx.runtime.RegisteredJCustosService;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapMode;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapWarning;
+import eu.jsentinel.jcustos.dx.runtime.JCustosRuntime;
 import eu.jsentinel.jcustos.dx.runtime.Severity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,22 +43,22 @@ class RoleBootstrapTest {
   @BeforeEach
   @AfterEach
   void resetResolver() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   @Test
-  @DisplayName(".hierarchy(...) registers the hierarchy via JSentinelServiceResolver")
+  @DisplayName(".hierarchy(...) registers the hierarchy via JCustosServiceResolver")
   void hierarchyRegistersAndAppearsInRuntime() {
     RoleHierarchy hierarchy = StaticRoleHierarchy.builder()
         .role(new RoleName("ROLE_ADMIN")).inheritsFrom(new RoleName("ROLE_USER"))
         .role(new RoleName("ROLE_USER"))
         .build();
 
-    JSentinelRuntime runtime = new TestBootstrap()
+    JCustosRuntime runtime = new TestBootstrap()
         .roles(r -> r.hierarchy(hierarchy))
         .install();
 
-    assertSame(hierarchy, JSentinelServiceResolver.findRoleHierarchy().orElseThrow());
+    assertSame(hierarchy, JCustosServiceResolver.findRoleHierarchy().orElseThrow());
     boolean entry = runtime.services().stream()
         .anyMatch(s -> RoleHierarchy.class.equals(s.spi())
             && hierarchy.getClass().equals(s.impl())
@@ -69,7 +69,7 @@ class RoleBootstrapTest {
   @Test
   @DisplayName("empty .roles(r -> {}) records INFO roles/missing-hierarchy")
   void emptyRolesRecordsInfo() {
-    JSentinelRuntime runtime = new TestBootstrap()
+    JCustosRuntime runtime = new TestBootstrap()
         .roles(r -> { })
         .install();
     assertTrue(runtime.warnings().stream()
@@ -90,20 +90,20 @@ class RoleBootstrapTest {
   // ── adapter test double ──────────────────────────────────────────
 
   private static final class TestBootstrap
-      extends AbstractJSentinelBootstrap<TestBootstrap> {
+      extends AbstractJCustosBootstrap<TestBootstrap> {
     @Override
-    public JSentinelRuntime install() {
-      List<RegisteredJSentinelService> services = new ArrayList<>();
-      List<JSentinelBootstrapWarning> warnings = new ArrayList<>();
+    public JCustosRuntime install() {
+      List<RegisteredJCustosService> services = new ArrayList<>();
+      List<JCustosBootstrapWarning> warnings = new ArrayList<>();
       applyAuditConfiguration(services, warnings);
       applySessionConfiguration(AdapterKind.VAADIN, services, warnings);
       applyRoleConfiguration(services, warnings);
-      JSentinelBootstrapMode mode = state.mode();
-      if (mode == JSentinelBootstrapMode.STRICT
+      JCustosBootstrapMode mode = state.mode();
+      if (mode == JCustosBootstrapMode.STRICT
           && warnings.stream().anyMatch(w -> w.severity() == Severity.ERROR)) {
-        throw new JSentinelBootstrapException(warnings);
+        throw new JCustosBootstrapException(warnings);
       }
-      return new JSentinelRuntime(services, warnings, mode);
+      return new JCustosRuntime(services, warnings, mode);
     }
   }
 }

@@ -17,8 +17,8 @@
 package eu.jsentinel.jcustos.rest;
 
 import eu.jsentinel.jcustos.authorization.annotations.RequiresPermission;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
-import eu.jsentinel.jcustos.authorization.api.JSentinelSubject;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosSubject;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.session.SessionContext;
 import eu.jsentinel.jcustos.session.SessionDecision;
@@ -45,7 +45,7 @@ class RestSessionLifetimeTest {
 
   @AfterEach
   void resetResolver() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   // ── RestAuthenticationFilter ─────────────────────────────────
@@ -53,7 +53,7 @@ class RestSessionLifetimeTest {
   @Test
   @DisplayName("authenticated request with active session passes through")
   void authFilter_active_passes() {
-    JSentinelServiceResolver.setSessionPolicy(new AlwaysActive<>());
+    JCustosServiceResolver.setSessionPolicy(new AlwaysActive<>());
     AtomicBoolean executed = new AtomicBoolean();
 
     RestAuthenticationFilter filter = new RestAuthenticationFilter(
@@ -70,7 +70,7 @@ class RestSessionLifetimeTest {
   @Test
   @DisplayName("authenticated request with idle-timeout session → 401")
   void authFilter_idleTimeout_unauthorized() {
-    JSentinelServiceResolver.setSessionPolicy(new AlwaysDecide<>(SessionPolicyDecision.idleTimeout()));
+    JCustosServiceResolver.setSessionPolicy(new AlwaysDecide<>(SessionPolicyDecision.idleTimeout()));
     AtomicBoolean executed = new AtomicBoolean();
 
     RestAuthenticationFilter filter = new RestAuthenticationFilter(
@@ -106,7 +106,7 @@ class RestSessionLifetimeTest {
   @Test
   @DisplayName("authorization filter rejects an expired session before evaluating annotations")
   void authzFilter_idleTimeout_unauthorized() throws NoSuchMethodException {
-    JSentinelServiceResolver.setSessionPolicy(new AlwaysDecide<>(SessionPolicyDecision.idleTimeout()));
+    JCustosServiceResolver.setSessionPolicy(new AlwaysDecide<>(SessionPolicyDecision.idleTimeout()));
     AtomicBoolean executed = new AtomicBoolean();
 
     RestAuthorizationFilter filter = new RestAuthorizationFilter(
@@ -125,7 +125,7 @@ class RestSessionLifetimeTest {
   @Test
   @DisplayName("authorization filter passes through when session is Active")
   void authzFilter_active_passes() throws NoSuchMethodException {
-    JSentinelServiceResolver.setSessionPolicy(new AlwaysActive<>());
+    JCustosServiceResolver.setSessionPolicy(new AlwaysActive<>());
     AtomicBoolean executed = new AtomicBoolean();
 
     RestAuthorizationFilter filter = new RestAuthorizationFilter(
@@ -153,8 +153,8 @@ class RestSessionLifetimeTest {
     return new SimpleRestRequest("DELETE", "/api/documents/42", Map.of(), Map.of());
   }
 
-  private static JSentinelSubject subjectWith(Set<PermissionName> perms) {
-    return new JSentinelSubject("u1", "alice", Set.of(), perms);
+  private static JCustosSubject subjectWith(Set<PermissionName> perms) {
+    return new JCustosSubject("u1", "alice", Set.of(), perms);
   }
 
   static final class SecuredHandler {
@@ -177,7 +177,7 @@ class RestSessionLifetimeTest {
     }
 
     @Override
-    public Optional<JSentinelSubject> resolveSubject(RestRequest request) {
+    public Optional<JCustosSubject> resolveSubject(RestRequest request) {
       return Optional.of(subjectWith(permissions));
     }
 

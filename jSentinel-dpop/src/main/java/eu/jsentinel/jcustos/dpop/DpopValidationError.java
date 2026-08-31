@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.dpop;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 /**
  * A sealed taxonomy of the reasons a DPoP proof is rejected (RFC 9449 §4.3, §11),
@@ -25,7 +25,7 @@ import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
  *
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public sealed interface DpopValidationError {
 
   String code();

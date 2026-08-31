@@ -9,7 +9,7 @@ import java.time.Duration;
 
 /**
  * V00.76 declarative JWT-validation sub-builder, exposed via {@code .jwt(...)} on
- * {@link CommonJSentinelBootstrap}; all three adapter facades inherit it.
+ * {@link CommonJCustosBootstrap}; all three adapter facades inherit it.
  *
  * <p>Two mutually-exclusive shapes:
  * <ul>

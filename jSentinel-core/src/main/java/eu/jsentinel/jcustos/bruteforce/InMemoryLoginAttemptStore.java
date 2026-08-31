@@ -16,7 +16,7 @@
  */
 package eu.jsentinel.jcustos.bruteforce;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.util.CapacityBound;
 
 import java.time.Instant;
@@ -36,7 +36,7 @@ import static java.util.Objects.requireNonNull;
  * package-local {@code Ledger} record, mutated atomically through
  * {@code compute}/{@code merge}-style map operations.
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class InMemoryLoginAttemptStore implements LoginAttemptStore {
 
   private final ConcurrentHashMap<LoginAttemptKey, Ledger> ledgers = new ConcurrentHashMap<>();

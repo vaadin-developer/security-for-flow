@@ -19,7 +19,7 @@ package eu.jsentinel.jcustos.test.oidc;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 /**
  * V00.79 stable-API promotion guard. The V00.76 JWT, V00.77 OAuth2 and V00.78 OIDC
  * surfaces are promoted to stable — this test locks that in by asserting a
- * representative sample no longer carries {@link ExperimentalJSentinelApi}, so a
+ * representative sample no longer carries {@link ExperimentalJCustosApi}, so a
  * future change cannot silently re-mark them experimental (a SemVer regression).
  * The V00.79-new types (e.g. {@code VendorProfile}) are still soaking and MUST keep
  * the marker.
@@ -68,20 +68,20 @@ class StableApiPromotionGuardTest {
   };
 
   @Test
-  @DisplayName("the promoted V00.76/77/78 surface no longer carries @ExperimentalJSentinelApi")
+  @DisplayName("the promoted V00.76/77/78 surface no longer carries @ExperimentalJCustosApi")
   void promotedTypesAreStable() {
     for (Class<?> type : PROMOTED) {
-      assertFalse(type.isAnnotationPresent(ExperimentalJSentinelApi.class),
-          type.getName() + " must be promoted to stable (no @ExperimentalJSentinelApi)");
+      assertFalse(type.isAnnotationPresent(ExperimentalJCustosApi.class),
+          type.getName() + " must be promoted to stable (no @ExperimentalJCustosApi)");
     }
   }
 
   @Test
-  @DisplayName("V00.79-new types still carry @ExperimentalJSentinelApi")
+  @DisplayName("V00.79-new types still carry @ExperimentalJCustosApi")
   void newTypesStayExperimental() {
     for (Class<?> type : STILL_EXPERIMENTAL) {
-      assertTrue(type.isAnnotationPresent(ExperimentalJSentinelApi.class),
-          type.getName() + " is V00.79-new and must keep @ExperimentalJSentinelApi");
+      assertTrue(type.isAnnotationPresent(ExperimentalJCustosApi.class),
+          type.getName() + " is V00.79-new and must keep @ExperimentalJCustosApi");
     }
   }
 
@@ -92,8 +92,8 @@ class StableApiPromotionGuardTest {
     // type — the method itself must stay experimental so the soak status propagates.
     var vendor = eu.jsentinel.jcustos.dx.bootstrap.OidcBootstrap.class
         .getMethod("vendor", eu.jsentinel.jcustos.oidc.api.VendorProfile.class);
-    assertTrue(vendor.isAnnotationPresent(ExperimentalJSentinelApi.class),
-        "OidcBootstrap.vendor(VendorProfile) must be @ExperimentalJSentinelApi (it exposes an "
+    assertTrue(vendor.isAnnotationPresent(ExperimentalJCustosApi.class),
+        "OidcBootstrap.vendor(VendorProfile) must be @ExperimentalJCustosApi (it exposes an "
             + "experimental type from an otherwise-stable interface)");
   }
 }

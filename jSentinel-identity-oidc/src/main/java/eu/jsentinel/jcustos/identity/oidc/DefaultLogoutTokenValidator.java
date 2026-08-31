@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.identity.oidc;
 
 import com.svenruppert.functional.result.Result;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.jwt.api.JwtValidationError;
 import eu.jsentinel.jcustos.jwt.api.JwtValidator;
 import eu.jsentinel.jcustos.jwt.api.ValidatedJwt;
@@ -45,7 +45,7 @@ import java.util.function.Supplier;
  *
  * @since 00.79.10
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class DefaultLogoutTokenValidator implements LogoutTokenValidator {
 
   /** OIDC Back-Channel Logout 1.0 §2.4: the required {@code events} member. */

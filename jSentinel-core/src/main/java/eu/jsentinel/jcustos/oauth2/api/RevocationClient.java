@@ -21,7 +21,7 @@ import com.svenruppert.functional.result.Result;
 /**
  * Token revocation (RFC 7009, V00.77) — the RP explicitly invalidates one of its
  * own tokens (logout cleanup, theft recovery). JOSE-free; the HTTP implementation
- * lives in {@code jSentinel-oauth2}.
+ * lives in {@code jCustos-oauth2}.
  *
  * @since 00.77.00
  */

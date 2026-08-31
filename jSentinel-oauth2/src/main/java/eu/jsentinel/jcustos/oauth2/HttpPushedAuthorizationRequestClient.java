@@ -17,7 +17,7 @@
 package eu.jsentinel.jcustos.oauth2;
 
 import com.svenruppert.functional.result.Result;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.oauth2.api.ClientAuthentication;
 import eu.jsentinel.jcustos.oauth2.api.OAuth2Error;
 import eu.jsentinel.jcustos.oauth2.api.PushedAuthorizationRequestClient;
@@ -43,7 +43,7 @@ import java.util.Optional;
  *
  * @since 00.79.20
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class HttpPushedAuthorizationRequestClient implements PushedAuthorizationRequestClient {
 
   private final HttpClient http;

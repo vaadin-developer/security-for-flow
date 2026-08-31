@@ -20,7 +20,7 @@ import eu.jsentinel.jcustos.audit.ApiKeyDenied;
 import eu.jsentinel.jcustos.audit.ApiKeyUsed;
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.authorization.api.permissions.PermissionName;
 import eu.jsentinel.jcustos.authorization.api.tenant.TenantId;
 import eu.jsentinel.jcustos.credential.token.TokenHasher;
@@ -214,7 +214,7 @@ class ApiKeyAuthenticationServiceTest {
     FakeHasher hasher = new FakeHasher();
     seed(store, hasher, "plain", "k");
 
-    JSentinelAuditService throwing = new JSentinelAuditService() {
+    JCustosAuditService throwing = new JCustosAuditService() {
       @Override public void publish(AuditEvent event) { throw new RuntimeException("boom"); }
       @Override public List<AuditEvent> query(AuditQuery query) { return List.of(); }
     };
@@ -241,7 +241,7 @@ class ApiKeyAuthenticationServiceTest {
         () -> new ApiKeyAuthenticationService(store, hasher, audit, TenantId.DEFAULT, null));
   }
 
-  private static final class CollectingAuditService implements JSentinelAuditService {
+  private static final class CollectingAuditService implements JCustosAuditService {
     final List<AuditEvent> published = new ArrayList<>();
     @Override public void publish(AuditEvent event) { published.add(event); }
     @Override public List<AuditEvent> query(AuditQuery query) { return List.copyOf(published); }

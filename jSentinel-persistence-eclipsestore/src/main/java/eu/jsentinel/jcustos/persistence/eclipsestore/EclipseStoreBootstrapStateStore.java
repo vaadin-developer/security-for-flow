@@ -27,9 +27,9 @@ import static java.util.Objects.requireNonNull;
 /** Eclipse-Store-backed {@link BootstrapStateStore}. */
 final class EclipseStoreBootstrapStateStore implements BootstrapStateStore {
 
-  private final EclipseStoreJSentinelStorage storage;
+  private final EclipseStoreJCustosStorage storage;
 
-  EclipseStoreBootstrapStateStore(EclipseStoreJSentinelStorage storage) {
+  EclipseStoreBootstrapStateStore(EclipseStoreJCustosStorage storage) {
     this.storage = storage;
   }
 

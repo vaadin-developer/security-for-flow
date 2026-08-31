@@ -2,11 +2,11 @@ package eu.jsentinel.jcustos.jwt.impl;
 
 /*-
  * #%L
- * jSentinel JWT — standardized JWT validation
+ * jCustos JWT — standardized JWT validation
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2018 - 2026 jSentinel by Sven Ruppert
+ * Copyright (C) 2018 - 2026 jCustos by Sven Ruppert
  * %%
  * Licensed under the EUPL, Version 1.1 or – as soon they will be
  * approved by the European Commission - subsequent versions of the
@@ -33,7 +33,7 @@ import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.svenruppert.functional.result.Result;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJSentinelApi;
+import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.jwt.api.AlgorithmAllowList;
 import eu.jsentinel.jcustos.jwt.api.ClaimExpectations;
 import eu.jsentinel.jcustos.jwt.api.JoseHeader;
@@ -72,7 +72,7 @@ import java.util.function.Supplier;
  *
  * @since 00.76.00
  */
-@ExperimentalJSentinelApi
+@ExperimentalJCustosApi
 public final class NimbusJwtValidator implements JwtValidator {
 
   private final AlgorithmAllowList allowList;
@@ -172,7 +172,7 @@ public final class NimbusJwtValidator implements JwtValidator {
       return Result.failure(new JwtValidationError.SignatureInvalid("token is not a parseable JWS"));
     }
     // JS-SEC-020 (RFC 7515 §4.1.11 / CWE-345): reject any token that declares a
-    // `crit` header parameter. jSentinel understands no crit extensions, so it
+    // `crit` header parameter. jCustos understands no crit extensions, so it
     // rejects them uniformly across all alg families. The RSA/EC path gets this
     // from Nimbus's CriticalHeaderParamsDeferral; the EdDSA path bypasses Nimbus,
     // so enforce it here for consistency and spec compliance.

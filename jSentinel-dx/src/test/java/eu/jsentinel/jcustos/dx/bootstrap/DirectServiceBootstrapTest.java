@@ -10,7 +10,7 @@
  */
 package eu.jsentinel.jcustos.dx.bootstrap;
 
-import eu.jsentinel.jcustos.audit.NoopJSentinelAuditService;
+import eu.jsentinel.jcustos.audit.NoopJCustosAuditService;
 import eu.jsentinel.jcustos.authentication.ApiKeyAuthenticationService;
 import eu.jsentinel.jcustos.authentication.ApiKeyStore;
 import eu.jsentinel.jcustos.authentication.InMemoryApiKeyStore;
@@ -18,14 +18,14 @@ import eu.jsentinel.jcustos.authentication.InMemoryRefreshTokenStore;
 import eu.jsentinel.jcustos.credential.token.Sha256TokenHasher;
 import eu.jsentinel.jcustos.credential.token.TokenHasher;
 import eu.jsentinel.jcustos.authentication.TokenService;
-import eu.jsentinel.jcustos.authorization.api.JSentinelServiceResolver;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.bruteforce.InMemoryLoginAttemptPolicy;
 import eu.jsentinel.jcustos.bruteforce.LoginAttemptPolicy;
-import eu.jsentinel.jcustos.dx.internal.AbstractJSentinelBootstrap;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapMode;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelBootstrapWarning;
-import eu.jsentinel.jcustos.dx.runtime.JSentinelRuntime;
-import eu.jsentinel.jcustos.dx.runtime.RegisteredJSentinelService;
+import eu.jsentinel.jcustos.dx.internal.AbstractJCustosBootstrap;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapMode;
+import eu.jsentinel.jcustos.dx.runtime.JCustosBootstrapWarning;
+import eu.jsentinel.jcustos.dx.runtime.JCustosRuntime;
+import eu.jsentinel.jcustos.dx.runtime.RegisteredJCustosService;
 import eu.jsentinel.jcustos.dx.runtime.Severity;
 import eu.jsentinel.jcustos.logout.LogoutService;
 import eu.jsentinel.jcustos.ratelimiting.InMemoryRateLimitPolicy;
@@ -52,29 +52,29 @@ class DirectServiceBootstrapTest {
   @BeforeEach
   @AfterEach
   void resetResolver() {
-    JSentinelServiceResolver.resetAll();
+    JCustosServiceResolver.resetAll();
   }
 
   @Test
-  @DisplayName(".logout(svc) registers via JSentinelServiceResolver.setLogoutService(...)")
+  @DisplayName(".logout(svc) registers via JCustosServiceResolver.setLogoutService(...)")
   void logoutWiresResolver() {
     LogoutService svc = new RecordingLogoutService();
-    JSentinelRuntime runtime = new TestBootstrap()
+    JCustosRuntime runtime = new TestBootstrap()
         .logout(svc)
         .install();
-    assertSame(svc, JSentinelServiceResolver.findLogoutService().orElseThrow());
+    assertSame(svc, JCustosServiceResolver.findLogoutService().orElseThrow());
     assertTrue(runtime.services().stream()
         .anyMatch(s -> LogoutService.class.equals(s.spi())));
   }
 
   @Test
-  @DisplayName(".bruteForce(policy) registers via JSentinelServiceResolver.setLoginAttemptPolicy(...)")
+  @DisplayName(".bruteForce(policy) registers via JCustosServiceResolver.setLoginAttemptPolicy(...)")
   void bruteForceWiresResolver() {
     LoginAttemptPolicy policy = new InMemoryLoginAttemptPolicy();
-    JSentinelRuntime runtime = new TestBootstrap()
+    JCustosRuntime runtime = new TestBootstrap()
         .bruteForce(policy)
         .install();
-    assertSame(policy, JSentinelServiceResolver.findLoginAttemptPolicy().orElseThrow());
+    assertSame(policy, JCustosServiceResolver.findLoginAttemptPolicy().orElseThrow());
     assertTrue(runtime.services().stream()
         .anyMatch(s -> LoginAttemptPolicy.class.equals(s.spi())));
   }
@@ -84,9 +84,9 @@ class DirectServiceBootstrapTest {
   void rateLimitDxStateOnly() {
     RateLimitPolicy policy = new InMemoryRateLimitPolicy(
         new InMemoryRateLimitStore(),
-        new NoopJSentinelAuditService(),
+        new NoopJCustosAuditService(),
         200, Duration.ofMinutes(1));
-    JSentinelRuntime runtime = new TestBootstrap()
+    JCustosRuntime runtime = new TestBootstrap()
         .rateLimit(policy)
         .install();
     // R029: must NOT masquerade as an actively-wired service.
@@ -106,8 +106,8 @@ class DirectServiceBootstrapTest {
     ApiKeyStore store = new InMemoryApiKeyStore();
     TokenHasher hasher = new Sha256TokenHasher();
     ApiKeyAuthenticationService svc = new ApiKeyAuthenticationService(
-        store, hasher, new NoopJSentinelAuditService());
-    JSentinelRuntime runtime = new TestBootstrap()
+        store, hasher, new NoopJCustosAuditService());
+    JCustosRuntime runtime = new TestBootstrap()
         .apiKeys(svc)
         .install();
     assertFalse(runtime.services().stream()
@@ -123,8 +123,8 @@ class DirectServiceBootstrapTest {
     TokenService svc = new TokenService(
         new InMemoryRefreshTokenStore(),
         new Sha256TokenHasher(),
-        new NoopJSentinelAuditService());
-    JSentinelRuntime runtime = new TestBootstrap()
+        new NoopJCustosAuditService());
+    JCustosRuntime runtime = new TestBootstrap()
         .refreshTokens(svc)
         .install();
     assertFalse(runtime.services().stream()
@@ -140,15 +140,15 @@ class DirectServiceBootstrapTest {
     LogoutService logout = new RecordingLogoutService();
     LoginAttemptPolicy bf = new InMemoryLoginAttemptPolicy();
     RateLimitPolicy rl = new InMemoryRateLimitPolicy(
-        new InMemoryRateLimitStore(), new NoopJSentinelAuditService(),
+        new InMemoryRateLimitStore(), new NoopJCustosAuditService(),
         50, Duration.ofMinutes(1));
     TokenHasher hasher = new Sha256TokenHasher();
     ApiKeyAuthenticationService ak = new ApiKeyAuthenticationService(
-        new InMemoryApiKeyStore(), hasher, new NoopJSentinelAuditService());
+        new InMemoryApiKeyStore(), hasher, new NoopJCustosAuditService());
     TokenService ts = new TokenService(
-        new InMemoryRefreshTokenStore(), hasher, new NoopJSentinelAuditService());
+        new InMemoryRefreshTokenStore(), hasher, new NoopJCustosAuditService());
 
-    JSentinelRuntime runtime = new TestBootstrap()
+    JCustosRuntime runtime = new TestBootstrap()
         .logout(logout)
         .bruteForce(bf)
         .rateLimit(rl)
@@ -180,9 +180,9 @@ class DirectServiceBootstrapTest {
   @DisplayName("JS-SEC-055: in STRICT mode a recorded-not-wired .rateLimit(...) is a hard boot failure")
   void strictModeRateLimitThrows() {
     RateLimitPolicy policy = new InMemoryRateLimitPolicy(
-        new InMemoryRateLimitStore(), new NoopJSentinelAuditService(), 50, Duration.ofMinutes(1));
-    assertThrows(JSentinelBootstrapException.class,
-        () -> new TestBootstrap().mode(JSentinelBootstrapMode.STRICT).rateLimit(policy).install());
+        new InMemoryRateLimitStore(), new NoopJCustosAuditService(), 50, Duration.ofMinutes(1));
+    assertThrows(JCustosBootstrapException.class,
+        () -> new TestBootstrap().mode(JCustosBootstrapMode.STRICT).rateLimit(policy).install());
   }
 
   @Test
@@ -198,18 +198,18 @@ class DirectServiceBootstrapTest {
   // ── adapter test double ──────────────────────────────────────────
 
   private static final class TestBootstrap
-      extends AbstractJSentinelBootstrap<TestBootstrap> {
+      extends AbstractJCustosBootstrap<TestBootstrap> {
     @Override
-    public JSentinelRuntime install() {
-      List<RegisteredJSentinelService> services = new ArrayList<>();
-      List<JSentinelBootstrapWarning> warnings = new ArrayList<>();
+    public JCustosRuntime install() {
+      List<RegisteredJCustosService> services = new ArrayList<>();
+      List<JCustosBootstrapWarning> warnings = new ArrayList<>();
       applyDirectServiceConfiguration(services, warnings);
-      JSentinelBootstrapMode mode = state.mode();
-      if (mode == JSentinelBootstrapMode.STRICT
+      JCustosBootstrapMode mode = state.mode();
+      if (mode == JCustosBootstrapMode.STRICT
           && warnings.stream().anyMatch(w -> w.severity() == Severity.ERROR)) {
-        throw new JSentinelBootstrapException(warnings);
+        throw new JCustosBootstrapException(warnings);
       }
-      return new JSentinelRuntime(services, warnings, mode);
+      return new JCustosRuntime(services, warnings, mode);
     }
   }
 

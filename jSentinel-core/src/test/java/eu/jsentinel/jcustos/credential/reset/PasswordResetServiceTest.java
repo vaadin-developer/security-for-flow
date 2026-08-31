@@ -24,7 +24,7 @@ package eu.jsentinel.jcustos.credential.reset;
 
 import eu.jsentinel.jcustos.audit.AuditEvent;
 import eu.jsentinel.jcustos.audit.AuditQuery;
-import eu.jsentinel.jcustos.audit.JSentinelAuditService;
+import eu.jsentinel.jcustos.audit.JCustosAuditService;
 import eu.jsentinel.jcustos.credential.input.PasswordInputPolicy;
 import eu.jsentinel.jcustos.credential.input.PasswordInputValidator;
 import eu.jsentinel.jcustos.credential.lifecycle.CredentialLifecycleService;
@@ -64,7 +64,7 @@ class PasswordResetServiceTest {
   private static final Instant T0 = Instant.parse("2026-06-01T12:00:00Z");
   private static final Duration TTL = Duration.ofMinutes(15);
 
-  private static final class RecordingAudit implements JSentinelAuditService {
+  private static final class RecordingAudit implements JCustosAuditService {
     final List<AuditEvent> events = new ArrayList<>();
     @Override public void publish(AuditEvent event) { events.add(event); }
     @Override public List<AuditEvent> query(AuditQuery q) { return List.copyOf(events); }
