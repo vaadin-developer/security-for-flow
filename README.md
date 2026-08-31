@@ -1,15 +1,36 @@
-# Security for Flow
+# jCustos — Community Edition
 
 Pluggable authentication, authorization, and annotation-driven protection for
 Vaadin Flow, lightweight REST, and plain-Java / desktop / CLI applications.
 Uses Java SPI (`ServiceLoader`) for application-provided services.
 
-The library is split into a framework-neutral core, three adapters
-(Vaadin, REST, standalone), a contract-only persistence testkit plus an
-Eclipse-Store-backed reference persistence layer, one transport-level
-shared module, and five reference demos — 13 modules in total. Concrete
-roles and permissions live in applications or demo modules — never in
+Free software under the [EUPL 1.2](LICENSE), and complete on its own: a
+framework-neutral core, three adapters (Vaadin, REST, standalone), the fluent
+DX layer, compile-time tooling, modern password hashing, Eclipse-Store
+persistence, the signed security event bus, and the full OIDC relying-party
+stack with six vendor profiles — 37 library and testkit modules plus 15 demos.
+Concrete roles and permissions live in applications or demo modules, never in
 the library.
+
+## Editions
+
+jCustos is open core, split along one line: **building and securing an
+application is free; operating and proving it is commercial.**
+
+This repository is the Community Edition. Everything in it is production-ready
+and unrestricted — nothing is time-limited, feature-gated or nagware. Signed
+event envelopes, replay protection, Argon2id hashing and the whole identity
+stack are security primitives, and security primitives stay free.
+
+The **[Enterprise Edition](docs/editions/edition-matrix.md)** adds what teams
+need when someone external asks what happened: tamper-evident audit chains with
+signed, re-verifiable exports, metrics and health indicators, and event
+exporters for webhooks, SIEM and OpenTelemetry. It plugs into the SPIs defined
+here; this repository never references it.
+
+- [Edition matrix](docs/editions/edition-matrix.md) — what is in which edition
+- [Moving to the Enterprise Edition](docs/editions/migrating-to-the-enterprise-edition.md) — one line per dependency
+- [Contributing](CONTRIBUTING.md) — pull requests need the [CLA](CLA.md)
 
 ## Module Structure
 
