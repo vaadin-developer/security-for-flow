@@ -5,7 +5,7 @@
     <parent>
         <groupId>eu.jsentinel</groupId>
         <artifactId>jCustos-parent</artifactId>
-        <version>00.81.10-SNAPSHOT</version>
+        <version>00.81.10</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
