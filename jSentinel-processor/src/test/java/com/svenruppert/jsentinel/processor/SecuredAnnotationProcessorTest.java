@@ -358,6 +358,94 @@ class SecuredAnnotationProcessorTest {
   }
 
   @Test
+  @DisplayName("BL02: @RequiresPermission({}) on a method fails with processing/empty-security-annotation")
+  void emptyPermissionArrayOnMethodRejected() {
+    JavaFileObject source = JavaFileObjects.forSourceLines(
+        "demo.EmptyPermissionService",
+        "package demo;",
+        "import com.svenruppert.jsentinel.authorization.annotations.Secured;",
+        "import com.svenruppert.jsentinel.authorization.annotations.RequiresPermission;",
+        "",
+        "@Secured",
+        "public class EmptyPermissionService {",
+        "    @RequiresPermission({})",
+        "    public void delete() {}",
+        "}");
+
+    Compilation result = compile(source);
+
+    assertThat(result).failed();
+    assertThat(result)
+        .hadErrorContaining("processing/empty-security-annotation");
+  }
+
+  @Test
+  @DisplayName("BL02: @RequiresRole({}) on a class fails with processing/empty-security-annotation")
+  void emptyRoleArrayOnClassRejected() {
+    JavaFileObject source = JavaFileObjects.forSourceLines(
+        "demo.EmptyRoleClass",
+        "package demo;",
+        "import com.svenruppert.jsentinel.authorization.annotations.Secured;",
+        "import com.svenruppert.jsentinel.authorization.annotations.RequiresRole;",
+        "",
+        "@Secured",
+        "@RequiresRole({})",
+        "public class EmptyRoleClass {",
+        "    public void op() {}",
+        "}");
+
+    Compilation result = compile(source);
+
+    assertThat(result).failed();
+    assertThat(result)
+        .hadErrorContaining("processing/empty-security-annotation");
+  }
+
+  @Test
+  @DisplayName("BL02: a blank entry inside @RequiresAnyPermission fails the build")
+  void blankPermissionEntryRejected() {
+    JavaFileObject source = JavaFileObjects.forSourceLines(
+        "demo.BlankEntryService",
+        "package demo;",
+        "import com.svenruppert.jsentinel.authorization.annotations.Secured;",
+        "import com.svenruppert.jsentinel.authorization.annotations.RequiresAnyPermission;",
+        "",
+        "@Secured",
+        "public class BlankEntryService {",
+        "    @RequiresAnyPermission({\"doc:read\", \" \"})",
+        "    public void read() {}",
+        "}");
+
+    Compilation result = compile(source);
+
+    assertThat(result).failed();
+    assertThat(result)
+        .hadErrorContaining("processing/empty-security-annotation");
+  }
+
+  @Test
+  @DisplayName("BL02: @RequiresPolicy(\"\") fails with processing/empty-security-annotation")
+  void blankPolicyRejected() {
+    JavaFileObject source = JavaFileObjects.forSourceLines(
+        "demo.BlankPolicyService",
+        "package demo;",
+        "import com.svenruppert.jsentinel.authorization.annotations.Secured;",
+        "import com.svenruppert.jsentinel.authorization.annotations.RequiresPolicy;",
+        "",
+        "@Secured",
+        "public class BlankPolicyService {",
+        "    @RequiresPolicy(\"\")",
+        "    public void op() {}",
+        "}");
+
+    Compilation result = compile(source);
+
+    assertThat(result).failed();
+    assertThat(result)
+        .hadErrorContaining("processing/empty-security-annotation");
+  }
+
+  @Test
   @DisplayName("@Secured on a final class produces a compile error")
   void finalClassRejected() {
     JavaFileObject source = JavaFileObjects.forSourceLines(

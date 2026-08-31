@@ -166,6 +166,8 @@ public final class SecuredAnnotationProcessor
     // R031: a class carrying more than one security annotation is a configuration
     // error — the dropped constraint would otherwise be silently unenforced.
     verifyAtMostOneSecurityAnnotation(typeElement);
+    // BL02 (V00.81): an empty constraint must fail the build, not the request.
+    verifyNoEmptySecurityAnnotation(typeElement);
   }
 
   @Override
@@ -177,6 +179,8 @@ public final class SecuredAnnotationProcessor
     // R031: reject a method that carries more than one security annotation
     // before lowering it, so a dropped constraint cannot go unenforced.
     verifyAtMostOneSecurityAnnotation(methodElement);
+    // BL02 (V00.81): an empty constraint must fail the build, not the request.
+    verifyNoEmptySecurityAnnotation(methodElement);
 
     boolean guarded = emitEnforcerCall(body, methodElement);
     if (!guarded) {
@@ -235,6 +239,63 @@ public final class SecuredAnnotationProcessor
               + "the logic across separate methods.",
           element);
     }
+  }
+
+  /**
+   * Emits a {@code processing/empty-security-annotation} compile error when a
+   * security annotation on {@code element} carries an empty value array, a
+   * blank entry, or a blank policy name (BL02, V00.81 / CWE-863). Before this
+   * check the processor lowered e.g. {@code @RequiresPermission({})} into
+   * {@code JSentinelEnforcer.requireAllPermissions()} — a call that only
+   * fails at request time with an {@code IllegalArgumentException}. The
+   * runtime annotation scanner already denies empty constraints
+   * (JS-SEC-010/011); the processor path now surfaces the misconfiguration
+   * where it belongs: at compile time.
+   */
+  private void verifyNoEmptySecurityAnnotation(Element element) {
+    RequiresPermission rp = element.getAnnotation(RequiresPermission.class);
+    if (rp != null) {
+      verifyValues(element, "@RequiresPermission", rp.value());
+    }
+    RequiresAllPermissions rap = element.getAnnotation(RequiresAllPermissions.class);
+    if (rap != null) {
+      verifyValues(element, "@RequiresAllPermissions", rap.value());
+    }
+    RequiresAnyPermission ranyp = element.getAnnotation(RequiresAnyPermission.class);
+    if (ranyp != null) {
+      verifyValues(element, "@RequiresAnyPermission", ranyp.value());
+    }
+    RequiresRole rr = element.getAnnotation(RequiresRole.class);
+    if (rr != null) {
+      verifyValues(element, "@RequiresRole", rr.value());
+    }
+    RequiresPolicy rpol = element.getAnnotation(RequiresPolicy.class);
+    if (rpol != null && rpol.value().isBlank()) {
+      emptyAnnotationError(element, "@RequiresPolicy", "a blank policy name");
+    }
+  }
+
+  private void verifyValues(Element element, String annotationName, String[] values) {
+    if (values.length == 0) {
+      emptyAnnotationError(element, annotationName, "an empty value array");
+      return;
+    }
+    for (String value : values) {
+      if (value == null || value.isBlank()) {
+        emptyAnnotationError(element, annotationName, "a blank entry");
+        return;
+      }
+    }
+  }
+
+  private void emptyAnnotationError(Element element, String annotationName, String what) {
+    messager.printMessage(Diagnostic.Kind.ERROR,
+        "processing/empty-security-annotation: " + annotationName + " on "
+            + element.getSimpleName() + " carries " + what
+            + " — the generated guard would reject every call only at request "
+            + "time. Name the required permission/role/policy, or remove the "
+            + "annotation if the member is intentionally unguarded.",
+        element);
   }
 
   private boolean emitEnforcerCall(CodeBlock.Builder body, Element element) {
