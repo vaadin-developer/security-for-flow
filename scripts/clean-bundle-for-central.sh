@@ -184,9 +184,11 @@ for module in "${MODULES[@]}"; do
     done
     shopt -u nullglob
 
-    # Guard: every non-parent module must carry a non-empty -javadoc.jar.
-    # jCustos-parent is pom-packaging — it has no jar/javadoc at all.
-    if [ "$module" != "jCustos-parent" ]; then
+    # Guard: every jar module must carry a non-empty -javadoc.jar. Detected by
+    # the presence of the main jar rather than by name — a name list silently
+    # stops matching when a module is renamed, which is exactly what happened
+    # when the parent became jCustos-community-parent and jCustos-bom arrived.
+    if [ -f "$dst/$module-$VERSION.jar" ]; then
         jdoc="$dst/$module-$VERSION-javadoc.jar"
         if [ ! -f "$jdoc" ]; then
             echo "ERROR: $module $VERSION has no -javadoc.jar." >&2
@@ -198,7 +200,7 @@ for module in "${MODULES[@]}"; do
             echo "ERROR: $module $VERSION -javadoc.jar is only ${jdoc_size} B" \
                  "(< ${JAVADOC_MIN_BYTES} B threshold) — almost certainly empty." >&2
             echo "       This is the 00.74.10 regression: check that" >&2
-            echo "       docs/javadoc/jsentinel.css exists and the javadoc tool" >&2
+            echo "       docs/javadoc/jcustos.css exists and the javadoc tool" >&2
             echo "       did not abort. Re-run the release build, then re-bundle." >&2
             exit 1
         fi
