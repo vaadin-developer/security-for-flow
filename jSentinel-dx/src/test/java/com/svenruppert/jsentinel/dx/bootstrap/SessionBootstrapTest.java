@@ -126,6 +126,43 @@ class SessionBootstrapTest {
   }
 
   @Test
+  @DisplayName("BL06: STRICT store-backed sessions without any lifetime enforcement throw sessions/no-timeout-policy")
+  void strictStoreWithoutLifetimeThrows() {
+    JSentinelBootstrapException ex = assertThrows(
+        JSentinelBootstrapException.class,
+        () -> new VaadinTestBootstrap()
+            .mode(JSentinelBootstrapMode.STRICT)
+            .sessions(s -> s.storeBacked(new InMemorySessionStore()))
+            .install());
+    assertTrue(ex.warnings().stream()
+        .anyMatch(w -> "sessions/no-timeout-policy".equals(w.code())),
+        "a silent never-expiring session setup must fail a STRICT boot");
+  }
+
+  @Test
+  @DisplayName("BL06: outside STRICT/PRODUCTION the missing lifetime stays a non-fatal finding")
+  void defaultModeStoreWithoutLifetimeBoots() {
+    // default (dev) mode: the same setup boots — the finding is INFO, not a gate
+    new VaadinTestBootstrap()
+        .sessions(s -> s.storeBacked(new InMemorySessionStore()))
+        .install();
+  }
+
+  @Test
+  @DisplayName("BL06: a configured timeout silences sessions/no-timeout-policy")
+  void configuredTimeoutSilencesTheFinding() {
+    JSentinelBootstrapException ex = assertThrows(
+        JSentinelBootstrapException.class,
+        () -> new VaadinTestBootstrap()
+            .mode(JSentinelBootstrapMode.STRICT)
+            .sessions(s -> s.storeBacked(new InMemorySessionStore()).timeout(Duration.ZERO))
+            .install());
+    // invalid-timeout still fires, but never the no-timeout-policy code
+    assertTrue(ex.warnings().stream()
+        .noneMatch(w -> "sessions/no-timeout-policy".equals(w.code())));
+  }
+
+  @Test
   @DisplayName("STRICT securityVersion without subjectIdResolver throws security-version-without-subject-id-resolver")
   void strictJSentinelVersionWithoutResolverThrows() {
     JSentinelBootstrapException ex = assertThrows(

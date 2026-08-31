@@ -808,6 +808,28 @@ public abstract class AbstractJSentinelBootstrap<B extends CommonJSentinelBootst
       return;
     }
 
+    // BL06 (V00.81, CWE-613 / JS-SEC-035): store-backed sessions WITHOUT any
+    // lifetime enforcement are a silent no-op — sessions never expire, even in
+    // PRODUCTION/STRICT. 00.79.40 only shipped a log WARN; gate it the
+    // JS-SEC-056 mode-dependent way so STRICT fails the boot and PRODUCTION
+    // surfaces an ERROR finding, while local dev stays at INFO.
+    boolean storeWithoutLifetime = session.sessionStore() != null
+        && session.policy() == null
+        && !session.timeoutConfigured()
+        && !session.absoluteLifetimeConfigured();
+    if (storeWithoutLifetime) {
+      Severity sev = switch (state.mode()) {
+        case STRICT, PRODUCTION -> Severity.ERROR;
+        default -> Severity.INFO;
+      };
+      warnings.add(new JSentinelBootstrapWarning(sev, "sessions/no-timeout-policy",
+          ".storeBacked(...) sessions are configured without .timeout(...) / "
+              + ".absoluteLifetime(...) / .policy(...) — sessions never expire.",
+          "Configure .timeout(Duration) and .absoluteLifetime(Duration) "
+              + "(TimeoutSessionPolicy defaults are 30 min idle / 12 h absolute), "
+              + "or supply a custom .policy(...)."));
+    }
+
     // Policy: custom .policy(...) wins; otherwise construct TimeoutSessionPolicy
     SessionPolicy<?> effectivePolicy = session.policy();
     if (effectivePolicy == null

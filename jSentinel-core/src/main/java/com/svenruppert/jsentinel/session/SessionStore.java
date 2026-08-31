@@ -32,7 +32,9 @@ import java.util.Optional;
  * ids (an index used by multi-session logout). {@code SessionStore}
  * owns the canonical, queryable representation of every session —
  * including expired and revoked ones, until they age out via
- * retention.
+ * retention. Since V00.81 the retention (and the lazy
+ * ACTIVE→EXPIRED transition) is implemented by wrapping the
+ * concrete store in a {@link SweepingSessionStore}.
  *
  * <p>Mutation pattern: load a record, copy-with via the {@code with…}
  * methods on {@link SessionRecord}, save the new value. Stores upsert
