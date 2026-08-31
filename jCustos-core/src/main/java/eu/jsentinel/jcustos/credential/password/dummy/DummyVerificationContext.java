@@ -34,5 +34,15 @@ public enum DummyVerificationContext {
   ENVELOPE_DECODE_ERROR,
   ENVELOPE_VALIDATION_ERROR,
   PROVIDER_MISSING,
-  PEPPER_KEY_UNKNOWN
+  PEPPER_KEY_UNKNOWN,
+
+  /**
+   * The stored hash used an algorithm other than the preferred one, so the
+   * verification ran a KDF of a different cost. The dummy run brings the total
+   * back up to the preferred cost, keeping a lazy migration from leaking which
+   * accounts are still on the old algorithm (CWE-208).
+   *
+   * @since 00.82.00
+   */
+  NON_PREFERRED_ALGORITHM_COST_FLOOR
 }

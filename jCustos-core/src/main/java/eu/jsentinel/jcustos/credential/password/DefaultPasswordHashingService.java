@@ -80,15 +80,16 @@ import java.util.Optional;
  * differentiated {@link InternalAuditEventType} is preserved for audit
  * sinks.</p>
  *
- * <p><strong>Caveat (JS-SEC-009):</strong> the dummy KDF runs the
- * <em>preferred</em> algorithm/parameters, so the timing profile is
- * observationally equivalent only while every stored hash uses that same
- * preferred algorithm. During a lazy multi-KDF migration (e.g. legacy PBKDF2
- * coexisting with a preferred Argon2id) a wrong-password attempt against an
- * existing-but-unmigrated user runs the stored (legacy) KDF, which can differ
- * in cost from the preferred dummy — a statistical timing side channel that can
- * leak &quot;existing &amp; unmigrated&quot;. Prefer a forced-rehash migration
- * over lazy rehash-on-login when hardening this residual leak.</p>
+ * <p><strong>Cost floor (JS-SEC-009, closed in 00.82.00):</strong> the dummy
+ * KDF runs the <em>preferred</em> algorithm, so a stored hash on a different
+ * algorithm verifies at a different cost. During a lazy multi-KDF migration
+ * (legacy PBKDF2 alongside a preferred Argon2id) that difference is measurable
+ * from outside and separates &quot;existing but unmigrated&quot; from &quot;no
+ * such user&quot; — the very distinction the dummy path exists to hide. A
+ * verification against a non-preferred envelope therefore runs an additional
+ * preferred-cost dummy KDF, putting every outcome on the same floor. The price
+ * is one extra KDF per unmigrated account, which disappears as the migration
+ * completes.</p>
  */
 public final class DefaultPasswordHashingService implements PasswordHashingService {
 
@@ -250,6 +251,18 @@ public final class DefaultPasswordHashingService implements PasswordHashingServi
     ProviderVerificationResult providerResult = resolvedProvider.get()
         .verify(password, envelope, pepperReference);
 
+    // Cost floor (CWE-208). A stored hash on a non-preferred algorithm costs a
+    // different amount to verify than the dummy KDF, which always runs the
+    // preferred one. During a lazy migration that difference is measurable from
+    // outside and separates "existing but unmigrated" from "no such user" —
+    // exactly the distinction the dummy path exists to hide. Topping the run up
+    // with a preferred-cost KDF removes it, at the price of one extra KDF for
+    // accounts that have not migrated yet.
+    if (!isPreferred(envelope)) {
+      dummyService.runDummyKdf(password,
+          DummyVerificationContext.NON_PREFERRED_ALGORITHM_COST_FLOOR);
+    }
+
     return switch (providerResult) {
       case ProviderVerificationResult.Matched ignored ->
           new CredentialVerificationResult.Verified(
@@ -265,6 +278,15 @@ public final class DefaultPasswordHashingService implements PasswordHashingServi
       case ProviderVerificationResult.ProviderError err ->
           failed(err.internalAuditEventType());
     };
+  }
+
+  /**
+   * Whether this envelope was produced by the preferred provider and algorithm —
+   * that is, whether verifying it costs what the dummy path costs.
+   */
+  private boolean isPreferred(PasswordHashEnvelope envelope) {
+    return envelope.providerId().equals(policy.preferredProviderId())
+        && envelope.algorithm().equals(policy.preferredAlgorithm());
   }
 
   private static CredentialVerificationResult.Failed failed(
