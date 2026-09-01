@@ -10,7 +10,6 @@
  */
 package eu.jsentinel.jcustos.dx.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.credential.propagation.OutboundTokenStrategy;
 import eu.jsentinel.jcustos.credential.propagation.TokenCredentialStore;
 
@@ -35,7 +34,6 @@ import eu.jsentinel.jcustos.credential.propagation.TokenCredentialStore;
  *
  * @since 00.74.00
  */
-@ExperimentalJCustosApi("V00.74 token propagation; stable promotion staged for V00.76")
 public interface PropagationBootstrap {
 
   /** Override the SPI-discovered adapter default store. */

@@ -10,7 +10,6 @@
  */
 package eu.jsentinel.jcustos.propagation.oidc.strategy;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.credential.propagation.HeaderValue;
 import eu.jsentinel.jcustos.credential.propagation.OutboundCall;
 import eu.jsentinel.jcustos.credential.propagation.OutboundTokenStrategy;
@@ -39,7 +38,6 @@ import java.util.Optional;
  *
  * @since 00.74.00
  */
-@ExperimentalJCustosApi
 public final class ClientCredentialsStrategy implements OutboundTokenStrategy, HasLogger {
 
   private static final String AUTHORIZATION = "Authorization";

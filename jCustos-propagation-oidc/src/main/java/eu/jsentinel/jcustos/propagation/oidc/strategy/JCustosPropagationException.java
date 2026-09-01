@@ -10,7 +10,6 @@
  */
 package eu.jsentinel.jcustos.propagation.oidc.strategy;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 /**
  * Hard failure of a V00.74 outbound-token strategy — token endpoint
@@ -22,7 +21,6 @@ import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
  *
  * @since 00.74.00
  */
-@ExperimentalJCustosApi
 public class JCustosPropagationException extends RuntimeException {
 
   private static final long serialVersionUID = 1L;

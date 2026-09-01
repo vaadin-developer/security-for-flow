@@ -10,7 +10,6 @@
  */
 package eu.jsentinel.jcustos.credential.propagation;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Map;
 import java.util.Objects;
@@ -36,7 +35,6 @@ import java.util.Objects;
  *
  * @since 00.74.00
  */
-@ExperimentalJCustosApi
 public record OutboundCall(
     String targetServiceName,
     String methodName,

@@ -10,7 +10,6 @@
  */
 package eu.jsentinel.jcustos.propagation.oidc.cache;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -27,7 +26,6 @@ import java.util.Optional;
  *
  * @since 00.74.00
  */
-@ExperimentalJCustosApi
 public interface TokenExchangeCache {
 
   /** No-op cache — every resolve goes to the IDP. */

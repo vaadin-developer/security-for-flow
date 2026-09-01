@@ -10,7 +10,6 @@
  */
 package eu.jsentinel.jcustos.credential.propagation;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -36,7 +35,6 @@ import java.util.Optional;
  *
  * @since 00.74.00
  */
-@ExperimentalJCustosApi("V00.74 token propagation; stable promotion staged for V00.76")
 public final class OutboundHeaderContext {
 
   private static final ThreadLocal<HeaderValue> SLOT = new ThreadLocal<>();

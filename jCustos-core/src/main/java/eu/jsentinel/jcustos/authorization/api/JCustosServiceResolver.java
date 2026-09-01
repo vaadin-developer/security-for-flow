@@ -672,7 +672,6 @@ public final class JCustosServiceResolver {
    * @return the active store
    * @throws IllegalStateException if no SPI implementation is registered
    */
-  @ExperimentalJCustosApi
   public static TokenCredentialStore tokenCredentialStore() {
     return DEFAULT.tokenCredentialStore();
   }
@@ -682,7 +681,6 @@ public final class JCustosServiceResolver {
    *
    * @return the resolved store, or empty if none registered
    */
-  @ExperimentalJCustosApi
   public static Optional<TokenCredentialStore> findTokenCredentialStore() {
     return DEFAULT.findTokenCredentialStore();
   }
@@ -694,7 +692,6 @@ public final class JCustosServiceResolver {
    *
    * @param store the store, or {@code null} to reset
    */
-  @ExperimentalJCustosApi
   public static void setTokenCredentialStore(TokenCredentialStore store) {
     DEFAULT.setTokenCredentialStore(store);
   }
@@ -734,7 +731,6 @@ public final class JCustosServiceResolver {
    * @param name     the lookup key
    * @param strategy the strategy
    */
-  @ExperimentalJCustosApi
   public static void registerOutboundTokenStrategy(String name, OutboundTokenStrategy strategy) {
     DEFAULT.registerOutboundTokenStrategy(name, strategy);
   }
@@ -748,7 +744,6 @@ public final class JCustosServiceResolver {
    * @param name the lookup key
    * @return the strategy, or empty
    */
-  @ExperimentalJCustosApi
   public static Optional<OutboundTokenStrategy> findOutboundTokenStrategy(String name) {
     return DEFAULT.findOutboundTokenStrategy(name);
   }

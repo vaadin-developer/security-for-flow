@@ -11,7 +11,6 @@
 package eu.jsentinel.jcustos.annotations;
 
 import eu.jsentinel.jcustos.authorization.annotations.JCustosAnnotation;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.credential.propagation.PropagateTokenAdvisor;
 
 import java.lang.annotation.ElementType;
@@ -49,7 +48,6 @@ import java.lang.annotation.Target;
  *
  * @since 00.74.00
  */
-@ExperimentalJCustosApi("V00.74 token propagation; stable promotion staged for V00.76")
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})
 @JCustosAnnotation(PropagateTokenAdvisor.class)

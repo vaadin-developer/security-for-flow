@@ -10,7 +10,6 @@
  */
 package eu.jsentinel.jcustos.credential.propagation;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -25,7 +24,6 @@ import java.util.Optional;
  *
  * @since 00.74.00
  */
-@ExperimentalJCustosApi
 public record BearerToken(
     String value,
     Optional<Instant> expiresAt,

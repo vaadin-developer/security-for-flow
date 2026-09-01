@@ -11,7 +11,6 @@
 package eu.jsentinel.jcustos.propagation.proxy;
 
 import eu.jsentinel.jcustos.annotations.PropagateToken;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.credential.propagation.HeaderValue;
 import eu.jsentinel.jcustos.credential.propagation.OutboundCall;
@@ -44,7 +43,6 @@ import java.util.Optional;
  *
  * @since 00.74.00
  */
-@ExperimentalJCustosApi
 public final class PropagatingProxy {
 
   private PropagatingProxy() {

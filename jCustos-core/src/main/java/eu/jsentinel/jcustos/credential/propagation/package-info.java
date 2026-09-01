@@ -13,10 +13,13 @@
  *   <li>{@code PassThroughStrategy} — the core default.</li>
  * </ul>
  *
- * <p>Every public type in this package is annotated
- * {@link eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi}.
- * V00.74 ships the surface; stable-API promotion is staged for V00.76 after
- * at least one real demo adoption.
+ * <p>Every public type in this package is <strong>stable</strong> as of
+ * V00.83. The surface shipped in V00.74 and was promoted once the demo
+ * adoption it was waiting for actually landed: the
+ * {@code demo-jcustos-vaadin-rest-client} backend gateway is a
+ * {@code @PropagateToken} interface whose calls carry no token parameter
+ * and name no {@code Authorization} header. Signatures did not change to
+ * accommodate it.
  *
  * <p><strong>Discipline:</strong> {@code TokenCredential#value()} is the raw
  * token. It is never logged, never persisted, never audited. Every record

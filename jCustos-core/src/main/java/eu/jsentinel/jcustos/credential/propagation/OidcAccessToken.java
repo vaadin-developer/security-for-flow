@@ -10,7 +10,6 @@
  */
 package eu.jsentinel.jcustos.credential.propagation;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.jwt.api.ValidatedJwt;
 
 import java.nio.charset.StandardCharsets;
@@ -33,7 +32,6 @@ import java.util.Optional;
  *
  * @since 00.74.00
  */
-@ExperimentalJCustosApi
 public record OidcAccessToken(
     String value,
     Optional<Instant> expiresAt,

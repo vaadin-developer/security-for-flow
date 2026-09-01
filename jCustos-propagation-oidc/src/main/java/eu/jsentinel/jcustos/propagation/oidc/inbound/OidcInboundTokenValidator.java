@@ -1,6 +1,5 @@
 package eu.jsentinel.jcustos.propagation.oidc.inbound;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
 import eu.jsentinel.jcustos.credential.propagation.OidcAccessToken;
 
@@ -20,7 +19,6 @@ import java.util.Optional;
  *
  * @since 00.76.00
  */
-@ExperimentalJCustosApi
 public final class OidcInboundTokenValidator {
 
   /**

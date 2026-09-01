@@ -42,6 +42,16 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-propagation</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>eu.jsentinel</groupId>
+      <artifactId>jCustos-propagation-oidc</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
     </dependency>

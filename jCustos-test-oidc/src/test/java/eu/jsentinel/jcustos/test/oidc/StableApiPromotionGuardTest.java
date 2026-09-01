@@ -25,14 +25,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * V00.79 stable-API promotion guard. The V00.76 JWT, V00.77 OAuth2 and V00.78 OIDC
- * surfaces are promoted to stable — this test locks that in by asserting a
- * representative sample no longer carries {@link ExperimentalJCustosApi}, so a
- * future change cannot silently re-mark them experimental (a SemVer regression).
- * The V00.79-new types (e.g. {@code VendorProfile}) are still soaking and MUST keep
- * the marker.
+ * Stable-API promotion guard. The V00.76 JWT, V00.77 OAuth2, V00.78 OIDC and
+ * V00.74 token-propagation surfaces are promoted to stable — this test locks that
+ * in by asserting a representative sample no longer carries
+ * {@link ExperimentalJCustosApi}, so a future change cannot silently re-mark them
+ * experimental (a SemVer regression). Types still inside their soak window (e.g.
+ * {@code VendorProfile}) MUST keep the marker.
  */
-@DisplayName("V00.79 stable-API promotion guard")
+@DisplayName("stable-API promotion guard (V00.76–V00.83)")
 class StableApiPromotionGuardTest {
 
   private static final Class<?>[] PROMOTED = {
@@ -60,6 +60,22 @@ class StableApiPromotionGuardTest {
       eu.jsentinel.jcustos.oidc.api.ClaimsToRolesMapper.class,
       eu.jsentinel.jcustos.oidc.api.LogoutInitiator.class,
       eu.jsentinel.jcustos.dx.bootstrap.OidcBootstrap.class,
+      // V00.74 token propagation — promoted in V00.83 once the demo
+      // adoption its Javadoc made a condition actually landed
+      eu.jsentinel.jcustos.annotations.PropagateToken.class,
+      eu.jsentinel.jcustos.credential.propagation.TokenCredential.class,
+      eu.jsentinel.jcustos.credential.propagation.TokenCredentialStore.class,
+      eu.jsentinel.jcustos.credential.propagation.OutboundTokenStrategy.class,
+      eu.jsentinel.jcustos.credential.propagation.OutboundHeaderContext.class,
+      eu.jsentinel.jcustos.credential.propagation.OutboundCall.class,
+      eu.jsentinel.jcustos.credential.propagation.HeaderValue.class,
+      eu.jsentinel.jcustos.credential.propagation.BearerToken.class,
+      eu.jsentinel.jcustos.credential.propagation.PassThroughStrategy.class,
+      eu.jsentinel.jcustos.credential.propagation.PropagateTokenAdvisor.class,
+      eu.jsentinel.jcustos.propagation.proxy.PropagatingProxy.class,
+      eu.jsentinel.jcustos.propagation.oidc.strategy.TokenExchangeStrategy.class,
+      eu.jsentinel.jcustos.propagation.oidc.cache.TokenExchangeCache.class,
+      eu.jsentinel.jcustos.dx.bootstrap.PropagationBootstrap.class,
   };
 
   private static final Class<?>[] STILL_EXPERIMENTAL = {
@@ -82,6 +98,30 @@ class StableApiPromotionGuardTest {
     for (Class<?> type : STILL_EXPERIMENTAL) {
       assertTrue(type.isAnnotationPresent(ExperimentalJCustosApi.class),
           type.getName() + " is V00.79-new and must keep @ExperimentalJCustosApi");
+    }
+  }
+
+  @Test
+  @DisplayName("the propagation accessors on JCustosServiceResolver are promoted too")
+  void propagationResolverAccessorsAreStable() throws NoSuchMethodException {
+    // The resolver class is stable and marks individual methods instead. The
+    // five propagation accessors were promoted in V00.83 alongside the types
+    // they hand out — leaving them marked would have kept the surface
+    // experimental through the back door.
+    Class<?> resolver = eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver.class;
+    var accessors = new java.lang.reflect.Method[] {
+        resolver.getMethod("tokenCredentialStore"),
+        resolver.getMethod("findTokenCredentialStore"),
+        resolver.getMethod("setTokenCredentialStore",
+            eu.jsentinel.jcustos.credential.propagation.TokenCredentialStore.class),
+        resolver.getMethod("registerOutboundTokenStrategy", String.class,
+            eu.jsentinel.jcustos.credential.propagation.OutboundTokenStrategy.class),
+        resolver.getMethod("findOutboundTokenStrategy", String.class),
+    };
+    for (var accessor : accessors) {
+      assertFalse(accessor.isAnnotationPresent(ExperimentalJCustosApi.class),
+          "JCustosServiceResolver." + accessor.getName()
+              + " hands out a promoted propagation type and must be stable too");
     }
   }
 
