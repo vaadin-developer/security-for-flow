@@ -25,14 +25,21 @@ import eu.jsentinel.jcustos.rest.RestResponse;
  * @since 00.72.00
  */
 @FunctionalInterface
-public interface RestDecisionMapper {
+public interface RestDecisionMapper extends
+    eu.jsentinel.jcustos.rest.RestDecisionMapping {
 
   /**
    * Applies the decision to the response.
+   *
+   * <p>Since V00.83 this is the inherited
+   * {@code RestDecisionMapping.apply} — the enforcing filter accepts the
+   * supertype, so a mapper configured here now actually reaches it
+   * (JS-SEC-026). Existing lambdas and implementations are unaffected.
    *
    * @param decision decision
    * @param response response
    * @return {@code true} if the protected handler may continue
    */
+  @Override
   boolean apply(AuthorizationDecision decision, RestResponse response);
 }

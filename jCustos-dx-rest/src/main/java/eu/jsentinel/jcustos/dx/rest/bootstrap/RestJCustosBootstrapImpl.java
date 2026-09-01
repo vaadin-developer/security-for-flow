@@ -52,10 +52,13 @@ final class RestJCustosBootstrapImpl
   }
 
   /**
-   * Records a custom {@link RestDecisionMapper}. <strong>Note (JS-SEC-026):</strong>
-   * this is recorded for diagnostics only — the enforcing {@code RestAuthorizationFilter}
-   * hard-wires {@code HttpStatusDecisionMapper}, so a custom mapper has no runtime effect
-   * unless the application passes it to the filter itself. Full auto-wiring is backlog.
+   * Registers a custom {@link RestDecisionMapper}.
+   *
+   * <p>Since V00.83 this reaches the enforcing {@code RestAuthorizationFilter}:
+   * {@code install()} publishes the effective mapper to
+   * {@code RestDecisionContext}, and the filter consults it per request
+   * (JS-SEC-026 closed). A filter constructed with an explicit mapper still
+   * wins over the published one.
    */
   @Override
   public RestJCustosBootstrap decisionMapper(RestDecisionMapper mapper) {
@@ -64,11 +67,13 @@ final class RestJCustosBootstrapImpl
   }
 
   /**
-   * Records a custom {@link RestErrorBodyStrategy}. <strong>Note (JS-SEC-026):</strong>
-   * recorded for diagnostics only — not consumed by the enforcing
-   * {@code RestAuthorizationFilter}, which returns the conservative default bodies
-   * ({@code "Unauthorized"} / {@code "Forbidden"}). The application must apply a custom
-   * strategy itself. Full auto-wiring is backlog.
+   * Registers a custom {@link RestErrorBodyStrategy}.
+   *
+   * <p>Since V00.83 the default decision mapper renders denials through this
+   * strategy, so it reaches the wire (JS-SEC-026 closed). All three denial
+   * paths — including session expiry — use it. Supplying an explicit
+   * {@link #decisionMapper(RestDecisionMapper)} takes over rendering entirely,
+   * and that mapper is then responsible for the bodies.
    */
   @Override
   public RestJCustosBootstrap errorBodies(RestErrorBodyStrategy strategy) {
@@ -193,18 +198,8 @@ final class RestJCustosBootstrapImpl
               + "@JCustosAutoService(RestSubjectResolver.class)."));
     }
 
-    RestDecisionMapper effectiveDecisionMapper = decisionMapper;
-    boolean decisionMapperDefaulted = false;
-    if (effectiveDecisionMapper == null) {
-      effectiveDecisionMapper = new DefaultRestDecisionMapper();
-      decisionMapperDefaulted = true;
-    }
-    services.add(new RegisteredJCustosService(
-        RestDecisionMapper.class,
-        effectiveDecisionMapper.getClass(),
-        decisionMapperDefaulted ? "bootstrap-default" : "bootstrap-explicit",
-        decisionMapperDefaulted));
-
+    // Bodies first: the default mapper renders through them, so the
+    // strategy has to be known before the mapper is built.
     RestErrorBodyStrategy effectiveErrorBodies = errorBodies;
     boolean errorBodiesDefaulted = false;
     if (effectiveErrorBodies == null) {
@@ -216,6 +211,23 @@ final class RestJCustosBootstrapImpl
         effectiveErrorBodies.getClass(),
         errorBodiesDefaulted ? "bootstrap-default" : "bootstrap-explicit",
         errorBodiesDefaulted));
+
+    RestDecisionMapper effectiveDecisionMapper = decisionMapper;
+    boolean decisionMapperDefaulted = false;
+    if (effectiveDecisionMapper == null) {
+      effectiveDecisionMapper = new DefaultRestDecisionMapper(effectiveErrorBodies);
+      decisionMapperDefaulted = true;
+    }
+    services.add(new RegisteredJCustosService(
+        RestDecisionMapper.class,
+        effectiveDecisionMapper.getClass(),
+        decisionMapperDefaulted ? "bootstrap-default" : "bootstrap-explicit",
+        decisionMapperDefaulted));
+
+    // JS-SEC-026: publish so the enforcing filter can pick it up. Until
+    // V00.83 both values were recorded for diagnostics and never reached
+    // RestAuthorizationFilter, which hard-wired its own mapper.
+    eu.jsentinel.jcustos.rest.RestDecisionContext.publish(effectiveDecisionMapper);
 
     // R05-Rest (V00.76.10): the shared per-concern sub-builder consumption is
     // hoisted into the base. REST symmetry is preserved inside the applyX

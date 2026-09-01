@@ -29,7 +29,7 @@ import eu.jsentinel.jcustos.authorization.api.AuthorizationDecision;
  * rather than a Vaadin reroute or a thrown exception, because HTTP has a
  * first-class challenge mechanism the other adapters lack.
  */
-public final class HttpStatusDecisionMapper {
+public final class HttpStatusDecisionMapper implements RestDecisionMapping {
 
   /**
    * Auth scheme used in the {@code WWW-Authenticate} header when an
@@ -41,6 +41,24 @@ public final class HttpStatusDecisionMapper {
    */
   public static final String STEP_UP_SCHEME = "StepUp";
 
+  private final RestErrorBodies errorBodies;
+
+  /** Uses the generic default bodies. */
+  public HttpStatusDecisionMapper() {
+    this(RestErrorBodies.generic());
+  }
+
+  /**
+   * Uses application-supplied bodies while keeping the status codes and
+   * the RFC 7235 challenge header this class already gets right.
+   *
+   * @param errorBodies body strategy for denied decisions (non-null)
+   * @since 00.83.00
+   */
+  public HttpStatusDecisionMapper(RestErrorBodies errorBodies) {
+    this.errorBodies = java.util.Objects.requireNonNull(errorBodies, "errorBodies");
+  }
+
   /**
    * Applies a decision to the response.
    *
@@ -48,17 +66,18 @@ public final class HttpStatusDecisionMapper {
    * @param response response
    * @return true if the protected handler may continue
    */
+  @Override
   public boolean apply(AuthorizationDecision decision, RestResponse response) {
     return switch (decision) {
       case AuthorizationDecision.Granted() -> true;
       case AuthorizationDecision.Unauthenticated(String ignored) -> {
         response.status(HttpStatus.UNAUTHORIZED.code());
-        response.body("Unauthorized");
+        response.body(errorBodies.bodyFor(decision));
         yield false;
       }
       case AuthorizationDecision.Forbidden(String ignored) -> {
         response.status(HttpStatus.FORBIDDEN.code());
-        response.body("Forbidden");
+        response.body(errorBodies.bodyFor(decision));
         yield false;
       }
       case AuthorizationDecision.StepUpRequired stepUp -> {
@@ -69,7 +88,7 @@ public final class HttpStatusDecisionMapper {
         response.header(
             RestHeaders.WWW_AUTHENTICATE,
             STEP_UP_SCHEME + " method=\"" + stepUp.method() + "\"");
-        response.body("Unauthorized");
+        response.body(errorBodies.bodyFor(decision));
         yield false;
       }
     };

@@ -18,11 +18,29 @@ import eu.jsentinel.jcustos.rest.RestResponse;
  * Default {@link RestDecisionMapper} that delegates to the existing
  * {@link HttpStatusDecisionMapper}.
  *
+ * <p>Since V00.83 it hands the configured {@link RestErrorBodyStrategy}
+ * to that delegate. Before, the two defaults merely happened to agree
+ * and a custom body strategy was inert (JS-SEC-026).
+ *
  * @since 00.72.00
  */
 public final class DefaultRestDecisionMapper implements RestDecisionMapper {
 
-  private final HttpStatusDecisionMapper delegate = new HttpStatusDecisionMapper();
+  private final HttpStatusDecisionMapper delegate;
+
+  /** Uses the generic default bodies. */
+  public DefaultRestDecisionMapper() {
+    this.delegate = new HttpStatusDecisionMapper();
+  }
+
+  /**
+   * @param errorBodies the body strategy to render denials with (non-null)
+   * @since 00.83.00
+   */
+  public DefaultRestDecisionMapper(RestErrorBodyStrategy errorBodies) {
+    this.delegate = new HttpStatusDecisionMapper(
+        java.util.Objects.requireNonNull(errorBodies, "errorBodies"));
+  }
 
   @Override
   public boolean apply(AuthorizationDecision decision, RestResponse response) {

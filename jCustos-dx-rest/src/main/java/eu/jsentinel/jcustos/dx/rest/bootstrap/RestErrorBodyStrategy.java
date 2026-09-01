@@ -24,11 +24,13 @@ import eu.jsentinel.jcustos.authorization.api.AuthorizationDecision;
  * @since 00.72.00
  */
 @FunctionalInterface
-public interface RestErrorBodyStrategy {
+public interface RestErrorBodyStrategy extends
+    eu.jsentinel.jcustos.rest.RestErrorBodies {
 
   /**
    * @param decision the denial decision
    * @return the body string, never {@code null}
    */
+  @Override
   String bodyFor(AuthorizationDecision decision);
 }

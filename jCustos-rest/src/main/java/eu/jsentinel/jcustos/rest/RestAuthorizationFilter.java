@@ -16,7 +16,6 @@
  */
 package eu.jsentinel.jcustos.rest;
 
-import com.svenruppert.dependencies.core.net.HttpStatus;
 import eu.jsentinel.jcustos.audit.AccessDenied;
 import eu.jsentinel.jcustos.audit.AccessGranted;
 import eu.jsentinel.jcustos.audit.AuditEvent;
@@ -51,7 +50,11 @@ public final class RestAuthorizationFilter {
   private final RestSubjectResolver subjectResolver;
   private final JCustosAnnotationScanner scanner;
   private final RestAccessContextFactory contextFactory;
-  private final HttpStatusDecisionMapper decisionMapper;
+  /**
+   * Explicit override, or {@code null} to consult
+   * {@link RestDecisionContext} per request (JS-SEC-026).
+   */
+  private final RestDecisionMapping decisionMapper;
   private final JCustosAuditService auditService;
 
   /**
@@ -64,7 +67,25 @@ public final class RestAuthorizationFilter {
         subjectResolver,
         new JCustosAnnotationScanner(),
         new RestAccessContextFactory(),
-        new HttpStatusDecisionMapper(),
+        null,
+        null);
+  }
+
+  /**
+   * Creates a filter that renders denials through {@code decisionMapper}
+   * instead of consulting {@link RestDecisionContext}.
+   *
+   * @param subjectResolver subject resolver
+   * @param decisionMapper  the mapper to enforce through (non-null)
+   * @since 00.83.00
+   */
+  public RestAuthorizationFilter(RestSubjectResolver subjectResolver,
+                                 RestDecisionMapping decisionMapper) {
+    this(
+        subjectResolver,
+        new JCustosAnnotationScanner(),
+        new RestAccessContextFactory(),
+        java.util.Objects.requireNonNull(decisionMapper, "decisionMapper"),
         null);
   }
 
@@ -72,7 +93,7 @@ public final class RestAuthorizationFilter {
       RestSubjectResolver subjectResolver,
       JCustosAnnotationScanner scanner,
       RestAccessContextFactory contextFactory,
-      HttpStatusDecisionMapper decisionMapper) {
+      RestDecisionMapping decisionMapper) {
     this(subjectResolver, scanner, contextFactory, decisionMapper, null);
   }
 
@@ -80,7 +101,7 @@ public final class RestAuthorizationFilter {
       RestSubjectResolver subjectResolver,
       JCustosAnnotationScanner scanner,
       RestAccessContextFactory contextFactory,
-      HttpStatusDecisionMapper decisionMapper,
+      RestDecisionMapping decisionMapper,
       JCustosAuditService auditService) {
     this.subjectResolver = subjectResolver;
     this.scanner = scanner;
@@ -158,7 +179,7 @@ public final class RestAuthorizationFilter {
             ? AuthorizationDecision.forbidden("deny-by-default:no-security-annotation")
             : AuthorizationDecision.unauthenticated("deny-by-default:no-security-annotation");
         audit(denied, denyContext, denySubject);
-        decisionMapper.apply(denied, response);
+        decisionMapper().apply(denied, response);
         return;
       }
       handler.handle(request, response);
@@ -174,8 +195,12 @@ public final class RestAuthorizationFilter {
         SessionPolicyDecision sessionDecision = policy.evaluate(metadata.get());
         if (!(sessionDecision instanceof SessionPolicyDecision.Active)) {
           auditSessionExpired(metadata.get(), subject.get(), sessionDecision);
-          response.status(HttpStatus.UNAUTHORIZED.code());
-          response.body("Unauthorized");
+          // JS-SEC-026: route the third denial path through the same mapper
+          // as the other two. Writing status and body directly here meant a
+          // configured strategy (problem+json, say) rendered two of three
+          // denials and left this one as plain text.
+          decisionMapper().apply(
+              AuthorizationDecision.unauthenticated("session-expired"), response);
           return;
         }
       }
@@ -184,9 +209,23 @@ public final class RestAuthorizationFilter {
     AccessContext context = contextFactory.create(request, subject, operation, attributes);
     AuthorizationDecision decision = evaluate(pair.get().evaluatorClass(), context, pair.get().annotation());
     audit(decision, context, subject);
-    if (decisionMapper.apply(decision, response)) {
+    if (decisionMapper().apply(decision, response)) {
       handler.handle(request, response);
     }
+  }
+
+  /**
+   * Resolves the mapper for this request: an explicit constructor
+   * argument wins, otherwise whatever the bootstrap published, otherwise
+   * the conservative default. Read per call rather than cached so a
+   * filter constructed before {@code install()} still picks up the
+   * configured mapper.
+   */
+  private RestDecisionMapping decisionMapper() {
+    if (decisionMapper != null) {
+      return decisionMapper;
+    }
+    return RestDecisionContext.mapper().orElseGet(HttpStatusDecisionMapper::new);
   }
 
   private void auditSessionExpired(SessionMetadata metadata,
