@@ -20,17 +20,40 @@ import java.lang.annotation.*;
 
 /**
  * Marks a type or method as part of the experimental security API.
- * <p>
- * Experimental APIs may change in incompatible ways or be removed in future
- * releases without a deprecation period. The role-based access API is the
- * stable path for production use.
- * <p>
- * Currently applies to the permission-based access API:
+ *
+ * <p>Experimental APIs may change in incompatible ways or be removed in
+ * future releases without a deprecation period. Anything <em>not</em>
+ * carrying this marker is covered by the project's SemVer commitments:
+ * interfaces grow only through {@code default} methods, records and enums
+ * only additively, and annotations only through elements with defaults.
+ *
+ * <p>The marker means one of two different things, and the distinction
+ * matters when deciding whether to depend on something:
+ *
  * <ul>
- *   <li>{@code PermissionBasedAccessEvaluator}</li>
- *   <li>{@code PermissionName}</li>
- *   <li>{@code HasPermissions}</li>
+ *   <li><strong>Still soaking.</strong> The surface is expected to become
+ *       stable once it has been carried by at least three minor releases
+ *       and exercised by a real integration. This is the common case.</li>
+ *   <li><strong>A design position.</strong> The permission-based access API
+ *       carries the marker not because it is new but because role-based
+ *       access is the recommended path for production use. Its
+ *       {@link #value()} text says so.</li>
  * </ul>
+ *
+ * <p>Read {@link #value()} where it is set — it distinguishes the two.
+ *
+ * <p>Promotion is a pure annotation removal with no behavioural change, so
+ * it never breaks a compiling caller. The reverse is a SemVer regression;
+ * {@code StableApiPromotionGuardTest} exists to catch it.
+ *
+ * <p>On an otherwise-stable type, this marker may sit on an individual
+ * method — that is how a stable surface exposes a type that is still
+ * soaking, rather than holding the whole surface back. See
+ * {@code OidcBootstrap#vendor(VendorProfile)}.
+ *
+ * <p>The per-release inventory of what was promoted and what was
+ * deliberately kept lives in the release notes, most recently
+ * {@code RELEASE-NOTES-00.83.00.md}.
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

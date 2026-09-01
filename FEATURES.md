@@ -16,6 +16,14 @@ SPI-Datei unter `META-INF/services/`.
 > Konventionen: ✅ = ausgeliefert, voll abgedeckt; ⚠️ = experimentell
 > (`@ExperimentalJCustosApi`); ❌ = bewusst nicht im Scope (siehe
 > § "Was nicht im Scope ist" am Ende).
+>
+> ⚠️ bedeutet zweierlei: entweder *noch in der Reifezeit* (wird stabil,
+> sobald drei Minor-Releases und eine echte Integration hinter dem Typ
+> liegen) oder *bewusste Design-Aussage* — bei der Permission-API etwa
+> steht der Marker dafür, dass rollenbasierter Zugriff der empfohlene
+> Weg ist. Der `value()`-Text am Marker unterscheidet die beiden Fälle.
+> Was pro Release promotet und was bewusst behalten wurde, steht in den
+> Release-Notes (zuletzt `RELEASE-NOTES-00.83.00.md`).
 
 ---
 

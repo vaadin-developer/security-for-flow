@@ -988,17 +988,33 @@ expressed it. `demo-standalone` exercises both side by side
 
 ## Stable vs. Experimental API
 
-**Stable**: role-based access, REST adapter contracts, `JCustosSubject`,
-`AccessContext`, `AuthorizationDecision`, scanner.
+Anything **not** marked `@ExperimentalJCustosApi` is covered by the
+project's SemVer commitments: interfaces grow only through `default`
+methods, records and enums only additively, annotations only through
+elements with defaults.
 
-**Experimental** (marked with `@ExperimentalJCustosApi`): permission-based
-access types — `PermissionBasedAccessEvaluator`, `PermissionName`,
-`HasPermissions`, `PermissionAuthorizationService`. The newer V00.70 stacks
-ship under the same flag: persistence-store SPIs and `Store*`-backed
-services (Phase 2/4/7), the JCustosVersion drift-detection types,
-the account-lifecycle services, the OpenAPI metadata generator,
-the Phase-8 secured Vaadin components, `TenantId` / `ResourceRef` /
-`SubjectIdResolver`. May change in incompatible ways in future releases.
+**Stable** includes role-based access, the REST adapter contracts,
+`JCustosSubject`, `AccessContext`, `AuthorizationDecision` and the
+scanner; the DX bootstrap surface (V00.73); the JWT, OAuth2 and OIDC
+contracts plus their mature implementations (V00.79, extended V00.83);
+and the token-propagation surface (V00.83) — `@PropagateToken`,
+`TokenCredential`, `TokenCredentialStore`, `OutboundTokenStrategy`,
+`PropagatingProxy` and the token-exchange strategies.
+
+**Experimental** means one of two things, and the difference matters:
+
+- *Still soaking* — expected to stabilise after three minor releases and
+  a real integration. Currently the V00.79.20 hardening group (mutual
+  TLS, PAR, JAR, JWE), the DPoP types, the back-channel-logout receiver,
+  the V00.75 event surface, the V00.70 persistence-store SPIs and
+  `Store*`-backed services, and the V00.80 operations modules.
+- *A design position* — the permission-based access API is marked not
+  because it is new but because role-based access is the recommended
+  path for production. Its marker text says so.
+
+Promotion only removes an annotation and never changes behaviour, so it
+cannot break a compiling caller. Each release notes what was promoted
+and what was deliberately kept; see `RELEASE-NOTES-00.83.00.md`.
 
 ## Project-Specific Permissions Live in Applications
 

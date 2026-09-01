@@ -36,8 +36,12 @@
  * <p>The module is framework-neutral — no Vaadin, no REST framework, no
  * Eclipse Store (Konzept §102). Every public type in this package is
  * annotated {@link
- * eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi};
- * stable-API promotion is staged for V00.76 / V00.77 after demo adoption.
+ * eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi}. The
+ * V00.76 / V00.77 target named in earlier releases predates this surface,
+ * which shipped in V00.75, and is not a commitment. Promotion waits on an
+ * audit of the event surface as a whole, including the testkit contract
+ * suites — a larger piece of work than the per-type promotions of V00.83
+ * and deliberately not bundled with them.
  *
  * @since 00.75.00
  */

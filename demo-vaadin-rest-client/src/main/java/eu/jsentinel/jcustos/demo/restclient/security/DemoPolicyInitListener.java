@@ -114,6 +114,12 @@ public final class DemoPolicyInitListener implements VaadinServiceInitListener, 
         // forwards the cached Bearer to the downstream backend.
         // Token-exchange / client-credentials strategies ship in the
         // optional jCustos-propagation-oidc module.
+        //
+        // Note: this demo registers the strategy but does not yet use it.
+        // Its DemoBackendClient still takes an explicit token parameter on
+        // every method, so no @PropagateToken path runs here. The worked
+        // example is demo-jcustos-vaadin-rest-client; converting this
+        // client's token-threading API is separate work.
         .propagation(p -> p.passThrough())
         .install();
 
