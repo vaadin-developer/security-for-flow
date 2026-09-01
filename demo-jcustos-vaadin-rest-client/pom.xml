@@ -40,6 +40,11 @@
         </dependency>
         <dependency>
             <groupId>eu.jsentinel</groupId>
+            <artifactId>jCustos-propagation</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>eu.jsentinel</groupId>
             <artifactId>jCustos-dx</artifactId>
             <version>${project.version}</version>
         </dependency>

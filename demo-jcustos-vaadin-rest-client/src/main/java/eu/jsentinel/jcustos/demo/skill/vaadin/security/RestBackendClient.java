@@ -2,6 +2,11 @@ package eu.jsentinel.jcustos.demo.skill.vaadin.security;
 
 import com.vaadin.flow.server.VaadinSession;
 
+import eu.jsentinel.jcustos.credential.propagation.BearerToken;
+import eu.jsentinel.jcustos.credential.propagation.TokenCredentialStore;
+import eu.jsentinel.jcustos.authorization.api.JCustosServiceResolver;
+import eu.jsentinel.jcustos.propagation.proxy.PropagatingProxy;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -18,11 +23,21 @@ import java.util.regex.Pattern;
  * Thin HTTP client wrapping the {@code jcustos-rest} backend. Used
  * by {@code AuthenticationService} (login → token) and
  * {@code AuthorizationService} (whoami → roles + permissions).
+ *
+ * <p>{@code login} talks to the backend directly — it has no token to
+ * carry yet. Every call that <em>does</em> carry the caller's token
+ * goes through {@link BackendGateway}, a {@code @PropagateToken}
+ * interface wrapped in a {@code PropagatingProxy}. The token therefore
+ * never appears as a method parameter and no call site spells out an
+ * {@code Authorization} header.
  */
 public final class RestBackendClient {
 
   public static final String BASE_URL = "http://localhost:8081";
   public static final String TOKEN_SESSION_KEY = "jcustos.token";
+
+  private static final BackendGateway GATEWAY =
+      PropagatingProxy.wrap(BackendGateway.class, new HttpBackendGateway());
 
   private static final HttpClient CLIENT = HttpClient.newBuilder()
       .connectTimeout(Duration.ofSeconds(5))
@@ -51,6 +66,7 @@ public final class RestBackendClient {
       String token = parsed.get("token");
       if (token == null) return Optional.empty();
       VaadinSession.getCurrent().setAttribute(TOKEN_SESSION_KEY, token);
+      credentialStore().bind(new BearerToken(token));
       return Optional.of(token);
     } catch (Exception e) {
       return Optional.empty();
@@ -59,36 +75,21 @@ public final class RestBackendClient {
 
   /** Returns the whoami JSON body, or empty when the token is absent / expired. */
   public static Optional<String> whoami() {
-    String token = currentToken();
-    if (token == null) return Optional.empty();
-    try {
-      HttpResponse<String> response = CLIENT.send(HttpRequest.newBuilder()
-          .uri(URI.create(BASE_URL + "/api/whoami"))
-          .header("Authorization", "Bearer " + token)
-          .GET()
-          .timeout(Duration.ofSeconds(10))
-          .build(), HttpResponse.BodyHandlers.ofString());
-      if (response.statusCode() != 200) return Optional.empty();
-      return Optional.of(response.body());
-    } catch (Exception e) {
-      return Optional.empty();
-    }
+    return GATEWAY.whoami();
   }
 
   /** Revokes the current token. Best-effort. */
   public static void logout() {
-    String token = currentToken();
-    if (token == null) return;
-    try {
-      CLIENT.send(HttpRequest.newBuilder()
-          .uri(URI.create(BASE_URL + "/api/auth/logout"))
-          .header("Authorization", "Bearer " + token)
-          .POST(HttpRequest.BodyPublishers.noBody())
-          .timeout(Duration.ofSeconds(5))
-          .build(), HttpResponse.BodyHandlers.discarding());
-    } catch (Exception ignored) {
+    GATEWAY.logout();
+    credentialStore().clear();
+    VaadinSession session = VaadinSession.getCurrent();
+    if (session != null) {
+      session.setAttribute(TOKEN_SESSION_KEY, null);
     }
-    VaadinSession.getCurrent().setAttribute(TOKEN_SESSION_KEY, null);
+  }
+
+  private static TokenCredentialStore credentialStore() {
+    return JCustosServiceResolver.tokenCredentialStore();
   }
 
   public static String currentToken() {

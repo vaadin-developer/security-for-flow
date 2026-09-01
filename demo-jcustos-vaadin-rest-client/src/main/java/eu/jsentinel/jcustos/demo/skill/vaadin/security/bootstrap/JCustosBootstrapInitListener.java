@@ -3,6 +3,7 @@ package eu.jsentinel.jcustos.demo.skill.vaadin.security.bootstrap;
 import eu.jsentinel.jcustos.authentication.AuthenticationService;
 import eu.jsentinel.jcustos.authorization.api.AuthorizationService;
 import eu.jsentinel.jcustos.credential.password.PasswordHashingServices;
+import eu.jsentinel.jcustos.credential.propagation.vaadin.VaadinSessionTokenCredentialStore;
 import eu.jsentinel.jcustos.dx.runtime.JCustosRuntime;
 import eu.jsentinel.jcustos.dx.vaadin.bootstrap.VaadinSecurity;
 import eu.jsentinel.jcustos.starter.profile.VaadinJCustosStarter;
@@ -51,6 +52,13 @@ public class JCustosBootstrapInitListener implements VaadinServiceInitListener {
         .stepUpRoute("step-up")
         .audit(a -> a.ringBuffer(256).logging())
         .credentials(c -> c.hashing(PasswordHashingServices.defaults()))
+        // Token propagation: the session-backed store holds the token the
+        // login established, and pass-through forwards it as a Bearer header
+        // on every @PropagateToken call. Switching to token exchange would
+        // be a change here, not in the calling code.
+        .propagation(p -> p
+            .credentialStore(new VaadinSessionTokenCredentialStore())
+            .passThrough())
         .install();
     System.out.println(runtime.log());
   }
