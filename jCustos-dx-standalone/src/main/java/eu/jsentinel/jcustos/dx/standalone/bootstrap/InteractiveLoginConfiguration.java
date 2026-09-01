@@ -16,7 +16,6 @@
  */
 package eu.jsentinel.jcustos.dx.standalone.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 /**
  * Immutable snapshot of the interactive-login configuration
@@ -29,7 +28,6 @@ import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
  *
  * @since 00.74.00
  */
-@ExperimentalJCustosApi
 public record InteractiveLoginConfiguration(
     InteractiveLoginPrompt prompt,
     int maxAttempts

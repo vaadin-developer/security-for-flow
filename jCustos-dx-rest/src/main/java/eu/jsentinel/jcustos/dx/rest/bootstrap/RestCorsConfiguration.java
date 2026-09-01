@@ -16,7 +16,6 @@
  */
 package eu.jsentinel.jcustos.dx.rest.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.List;
 
@@ -47,7 +46,6 @@ import java.util.List;
  *
  * @since 00.74.00
  */
-@ExperimentalJCustosApi
 public record RestCorsConfiguration(
     List<String> allowedOrigins,
     List<String> allowedMethods,

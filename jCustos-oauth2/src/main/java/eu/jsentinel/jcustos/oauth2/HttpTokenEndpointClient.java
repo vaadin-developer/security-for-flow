@@ -43,7 +43,6 @@ package eu.jsentinel.jcustos.oauth2;
 
 import eu.jsentinel.jcustos.util.BoundedHttpBody;
 import com.svenruppert.functional.result.Result;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.credential.secret.SecretValue;
 import eu.jsentinel.jcustos.oauth2.api.ClientAuthentication;
 import eu.jsentinel.jcustos.oauth2.api.OAuth2Error;
@@ -89,7 +88,6 @@ import java.util.function.Supplier;
  *
  * @since 00.77.00
  */
-@ExperimentalJCustosApi
 public final class HttpTokenEndpointClient implements TokenEndpointClient {
 
   private static final Duration TIMEOUT = Duration.ofSeconds(10);

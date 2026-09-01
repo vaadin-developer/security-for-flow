@@ -41,7 +41,6 @@ package eu.jsentinel.jcustos.oauth2;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.oauth2.api.RefreshTokenFamilyStore;
 
 import java.util.HashMap;
@@ -60,7 +59,6 @@ import java.util.Set;
  *
  * @since 00.77.00
  */
-@ExperimentalJCustosApi
 public final class InMemoryRefreshTokenFamilyStore implements RefreshTokenFamilyStore {
 
   private final Map<String, String> currentHashByFamily = new HashMap<>();

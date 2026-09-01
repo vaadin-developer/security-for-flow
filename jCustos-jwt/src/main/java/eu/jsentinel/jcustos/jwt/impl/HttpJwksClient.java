@@ -30,7 +30,6 @@ import com.nimbusds.jose.jwk.AsymmetricJWK;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.svenruppert.dependencies.core.logger.HasLogger;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.jwt.api.JwksClient;
 import eu.jsentinel.jcustos.jwt.api.JwksRefreshResult;
 import eu.jsentinel.jcustos.jwt.api.JwsAlgorithm;
@@ -78,7 +77,6 @@ import java.util.regex.Pattern;
  *
  * @since 00.76.00
  */
-@ExperimentalJCustosApi
 public final class HttpJwksClient implements JwksClient, HasLogger {
 
   private static final Duration DEFAULT_TTL = Duration.ofMinutes(5);

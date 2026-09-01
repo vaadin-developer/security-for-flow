@@ -16,7 +16,6 @@
  */
 package eu.jsentinel.jcustos.dx.rest.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,7 +38,6 @@ import java.util.Objects;
  *
  * @since 00.74.00
  */
-@ExperimentalJCustosApi
 public final class RestOpenApiMetadataBuilder {
 
   private String title;

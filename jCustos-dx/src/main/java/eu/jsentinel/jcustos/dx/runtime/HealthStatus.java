@@ -16,7 +16,6 @@
  */
 package eu.jsentinel.jcustos.dx.runtime;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.time.Instant;
 import java.util.List;
@@ -36,7 +35,6 @@ import java.util.Objects;
  *
  * @since 00.74.10
  */
-@ExperimentalJCustosApi
 public record HealthStatus(
     Health overall,
     List<HealthFinding> findings,

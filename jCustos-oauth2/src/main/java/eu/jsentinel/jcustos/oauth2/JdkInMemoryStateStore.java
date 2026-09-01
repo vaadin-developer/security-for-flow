@@ -41,7 +41,6 @@ package eu.jsentinel.jcustos.oauth2;
  * #L%
  */
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.oauth2.api.StateEntry;
 import eu.jsentinel.jcustos.oauth2.api.StateStore;
 
@@ -62,7 +61,6 @@ import java.util.function.Supplier;
  *
  * @since 00.77.00
  */
-@ExperimentalJCustosApi
 public final class JdkInMemoryStateStore implements StateStore {
 
   /** Default upper bound on retained (unconsumed) entries. */

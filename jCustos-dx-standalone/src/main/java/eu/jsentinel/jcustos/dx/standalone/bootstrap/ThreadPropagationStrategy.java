@@ -16,7 +16,6 @@
  */
 package eu.jsentinel.jcustos.dx.standalone.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 /**
  * Immutable snapshot of the standalone thread-propagation
@@ -27,7 +26,6 @@ import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
  *
  * @since 00.74.00
  */
-@ExperimentalJCustosApi
 public record ThreadPropagationStrategy(ThreadPropagationMode mode) {
 
   /** Validates mode is non-null. */

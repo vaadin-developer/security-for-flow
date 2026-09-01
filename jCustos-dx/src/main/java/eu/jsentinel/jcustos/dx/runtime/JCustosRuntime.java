@@ -16,7 +16,6 @@
  */
 package eu.jsentinel.jcustos.dx.runtime;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.dx.runtime.internal.JsonEncoder;
 
 import java.time.Instant;
@@ -104,7 +103,6 @@ public record JCustosRuntime(
    * @return non-null status line, without a trailing newline
    * @since 00.74.10
    */
-  @ExperimentalJCustosApi
   public String summary() {
     long errors = warnings.stream().filter(w -> w.severity() == Severity.ERROR).count();
     long warns = warnings.stream().filter(w -> w.severity() == Severity.WARNING).count();
@@ -130,7 +128,6 @@ public record JCustosRuntime(
    * @return non-null unmodifiable map preserving deterministic key order
    * @since 00.74.10
    */
-  @ExperimentalJCustosApi
   public Map<String, Object> toMap() {
     Map<String, Object> out = new LinkedHashMap<>();
     out.put("mode", mode.name());
@@ -156,7 +153,6 @@ public record JCustosRuntime(
    * @return non-null JSON string
    * @since 00.74.10
    */
-  @ExperimentalJCustosApi
   public String toJson() {
     return JsonEncoder.encode(toMap());
   }
@@ -178,7 +174,6 @@ public record JCustosRuntime(
    * @return non-null health status snapshot
    * @since 00.74.10
    */
-  @ExperimentalJCustosApi
   public HealthStatus healthCheck() {
     List<HealthFinding> findings = warnings.stream()
         .map(w -> new HealthFinding(w.severity(), w.code(), w.message()))

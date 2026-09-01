@@ -51,7 +51,6 @@ import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.autoservice.api.JCustosAutoService;
 import eu.jsentinel.jcustos.jwt.api.JwsAlgorithm;
 import eu.jsentinel.jcustos.jwt.api.JwtSigner;
@@ -76,7 +75,6 @@ import java.util.Objects;
  *
  * @since 00.77.00
  */
-@ExperimentalJCustosApi
 @JCustosAutoService(JwtSigner.class)
 public final class NimbusJwtSigner implements JwtSigner {
 

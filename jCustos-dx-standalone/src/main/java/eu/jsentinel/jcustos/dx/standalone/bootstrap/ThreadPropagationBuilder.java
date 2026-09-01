@@ -16,7 +16,6 @@
  */
 package eu.jsentinel.jcustos.dx.standalone.bootstrap;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Objects;
 
@@ -36,7 +35,6 @@ import java.util.Objects;
  *
  * @since 00.74.00
  */
-@ExperimentalJCustosApi
 public final class ThreadPropagationBuilder {
 
   private ThreadPropagationMode mode = ThreadPropagationMode.NONE;

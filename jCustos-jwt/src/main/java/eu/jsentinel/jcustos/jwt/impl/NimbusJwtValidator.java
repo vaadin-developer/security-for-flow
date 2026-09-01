@@ -33,7 +33,6 @@ import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.svenruppert.functional.result.Result;
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 import eu.jsentinel.jcustos.jwt.api.AlgorithmAllowList;
 import eu.jsentinel.jcustos.jwt.api.ClaimExpectations;
 import eu.jsentinel.jcustos.jwt.api.JoseHeader;
@@ -72,7 +71,6 @@ import java.util.function.Supplier;
  *
  * @since 00.76.00
  */
-@ExperimentalJCustosApi
 public final class NimbusJwtValidator implements JwtValidator {
 
   private final AlgorithmAllowList allowList;

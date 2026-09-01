@@ -16,7 +16,6 @@
  */
 package eu.jsentinel.jcustos.dx.runtime;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 import java.util.Objects;
 
@@ -31,7 +30,6 @@ import java.util.Objects;
  *
  * @since 00.74.10
  */
-@ExperimentalJCustosApi
 public record HealthFinding(Severity severity, String code, String message) {
 
   public HealthFinding {

@@ -76,11 +76,27 @@ class StableApiPromotionGuardTest {
       eu.jsentinel.jcustos.propagation.oidc.strategy.TokenExchangeStrategy.class,
       eu.jsentinel.jcustos.propagation.oidc.cache.TokenExchangeCache.class,
       eu.jsentinel.jcustos.dx.bootstrap.PropagationBootstrap.class,
+      // V00.76/00.77 identity implementations — promoted in V00.83
+      eu.jsentinel.jcustos.jwt.impl.HttpJwksClient.class,
+      eu.jsentinel.jcustos.jwt.impl.NimbusJwtValidator.class,
+      eu.jsentinel.jcustos.jwt.impl.NimbusJwtSigner.class,
+      eu.jsentinel.jcustos.oauth2.HttpAuthorizationCodeFlow.class,
+      eu.jsentinel.jcustos.oauth2.HttpTokenEndpointClient.class,
+      eu.jsentinel.jcustos.oauth2.RefreshTokenRotator.class,
+      // V00.74 DX surface — promoted in V00.83
+      eu.jsentinel.jcustos.dx.runtime.Health.class,
+      eu.jsentinel.jcustos.dx.runtime.HealthStatus.class,
   };
 
   private static final Class<?>[] STILL_EXPERIMENTAL = {
-      // V00.79-new — own soak time
+      // Deliberately kept — see the keep table in RELEASE-NOTES-00.83.00.md
       eu.jsentinel.jcustos.oidc.api.VendorProfile.class,
+      // V00.79.20 hardening group: awaiting its own audit, not its soak time
+      eu.jsentinel.jcustos.oauth2.MutualTls.class,
+      eu.jsentinel.jcustos.oauth2.AuthorizationRequestSigner.class,
+      // Permission API: the marker is a design statement ("use role-based
+      // access for stable production use"), not a soak status
+      eu.jsentinel.jcustos.authorization.api.permissions.PermissionName.class,
   };
 
   @Test
@@ -122,6 +138,16 @@ class StableApiPromotionGuardTest {
       assertFalse(accessor.isAnnotationPresent(ExperimentalJCustosApi.class),
           "JCustosServiceResolver." + accessor.getName()
               + " hands out a promoted propagation type and must be stable too");
+    }
+  }
+
+  @Test
+  @DisplayName("the V00.74.10 tooling methods on JCustosRuntime are promoted")
+  void runtimeToolingMethodsAreStable() throws NoSuchMethodException {
+    Class<?> runtime = eu.jsentinel.jcustos.dx.runtime.JCustosRuntime.class;
+    for (String name : new String[] {"summary", "toMap", "toJson", "healthCheck"}) {
+      assertFalse(runtime.getMethod(name).isAnnotationPresent(ExperimentalJCustosApi.class),
+          "JCustosRuntime." + name + "() is V00.74.10 tooling API and must be stable");
     }
   }
 

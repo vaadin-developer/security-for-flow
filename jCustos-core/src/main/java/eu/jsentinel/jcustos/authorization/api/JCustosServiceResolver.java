@@ -707,7 +707,6 @@ public final class JCustosServiceResolver {
    *
    * @return the active validator, or empty
    */
-  @ExperimentalJCustosApi
   public static Optional<eu.jsentinel.jcustos.jwt.api.JwtValidator> findJwtValidator() {
     return DEFAULT.findJwtValidator();
   }
@@ -718,7 +717,6 @@ public final class JCustosServiceResolver {
    *
    * @param validator the validator, or {@code null} to reset
    */
-  @ExperimentalJCustosApi
   public static void setJwtValidator(eu.jsentinel.jcustos.jwt.api.JwtValidator validator) {
     DEFAULT.setJwtValidator(validator);
   }

@@ -16,7 +16,6 @@
  */
 package eu.jsentinel.jcustos.dx.runtime;
 
-import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
 
 /**
  * Aggregate health classification of a {@link JCustosRuntime} snapshot.
@@ -32,7 +31,6 @@ import eu.jsentinel.jcustos.authorization.api.ExperimentalJCustosApi;
  *
  * @since 00.74.10
  */
-@ExperimentalJCustosApi
 public enum Health {
   HEALTHY,
   DEGRADED,
